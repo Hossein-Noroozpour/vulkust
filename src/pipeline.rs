@@ -1,33 +1,3 @@
-// Copyright (c) 2016 The vulkano developers
-// Licensed under the Apache License, Version 2.0
-// <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT
-// license <LICENSE-MIT or http://opensource.org/licenses/MIT>,
-// at your option. All files in the project carrying such
-// notice may not be copied, modified, or distributed except
-// according to those terms.
-
-
-// Welcome to the triangle example!
-//
-// This is the only example that is entirely detailed. All the other examples avoid code
-// duplication by using helper functions.
-//
-// This example assumes that you are already more or less familiar with graphics programming
-// and that you want to learn Vulkan. This means that for example it won't go into details about
-// what a vertex or a shader is.
-
-
-// The `vulkano` crate is the main crate that you must use to use Vulkan.
-
-// However the Vulkan library doesn't provide any functionality to create and handle windows, as
-// this would be out of scope. In order to open a window, we are going to use the `winit` crate.
-extern crate winit;
-// The `vulkano_win` crate is the link between `vulkano` and `winit`. Vulkano doesn't know about
-// winit, and winit doesn't know about vulkano, so import a crate that will provide a link between
-// the two.
-extern crate vulkano_win;
-
 use vulkano_win::VkSurfaceBuild;
 
 use vulkano::buffer::BufferUsage;
@@ -57,136 +27,56 @@ use vulkano::swapchain::Swapchain;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub fn run() {
-    // The first step of any vulkan program is to create an instance.
-    let instance = {
-        // When we create an instance, we have to pass a list of extensions that we want to enable.
-        //
-        // All the window-drawing functionalities are part of non-core extensions that we need
-        // to enable manually. To do so, we ask the `vulkano_win` crate for the list of extensions
-        // required to draw to a window.
-        let extensions = vulkano_win::required_extensions();
 
-        // Now creating the instance.
-        Instance::new(None, &extensions, None).expect("failed to create Vulkan instance")
+pub fn run() {
+    let instance = {
+        let extensions = vulkano_win::required_extensions();
+        Instance::new(None, &extensions, None)
+            .expect("Failed to create Vulkan instance")
     };
 
-    // We then choose which physical device to use.
-    //
-    // In a real application, there are three things to take into consideration:
-    //
-    // - Some devices may not support some of the optional features that may be required by your
-    //   application. You should filter out the devices that don't support your app.
-    //
-    // - Not all devices can draw to a certain surface. Once you create your window, you have to
-    //   choose a device that is capable of drawing to it.
-    //
-    // - You probably want to leave the choice between the remaining devices to the user.
-    //
-    // For the sake of the example we are just going to use the first device, which should work
-    // most of the time.
+    /// TODO: Decision is to use the discrete graphic card first and then if there wasn't any choose
+    ///       the on board one
     let physical = vulkano::instance::PhysicalDevice::enumerate(&instance)
-        .next().expect("no device available");
-    // Some little debug infos.
-    println!("Using device: {} (type: {:?})", physical.name(), physical.ty());
-
-    // The objective of this example is to draw a triangle on a window. To do so, we first need to
-    // create the window.
-    //
-    // This is done by creating a `WindowBuilder` from the `winit` crate, then calling the
-    // `build_vk_surface` method provided by the `VkSurfaceBuild` trait from `vulkano_win`. If you
-    // ever get an error about `build_vk_surface` being undefined in one of your projects, this
-    // probably means that you forgot to import this trait.
-    //
-    // This returns a `vulkano_win::Window` object that contains both a cross-platform winit
-    // window and a cross-platform Vulkan surface that represents the surface of the window.
-    let window = winit::WindowBuilder::new().build_vk_surface(&instance).unwrap();
-
-    // The next step is to choose which GPU queue will execute our draw commands.
-    //
-    // Devices can provide multiple queues to run commands in parallel (for example a draw queue
-    // and a compute queue), similar to CPU threads. This is something you have to have to manage
-    // manually in Vulkan.
-    //
-    // In a real-life application, we would probably use at least a graphics queue and a transfers
-    // queue to handle data transfers in parallel. In this example we only use one queue.
-    //
-    // We have to choose which queues to use early on, because we will need this info very soon.
+        .next().expect("No option available to choose as physical device.");
+    #[cfg(build = "debug")] println!("Using device: {} (type: {:?})", physical.name(), physical.ty());
+    let window = winit::WindowBuilder::new().build_vk_surface(&instance)
+        .except("Error in creating Vulkan window.");
+    /// TODO: Maybe in near future we need transfer queue and compute queue
     let queue = physical.queue_families().find(|q| {
-        // We take the first queue that supports drawing to our window.
         q.supports_graphics() && window.surface().is_supported(q).unwrap_or(false)
-    }).expect("couldn't find a graphical queue family");
-
-    // Now initializing the device. This is probably the most important object of Vulkan.
-    //
-    // We have to pass five parameters when creating a device:
-    //
-    // - Which physical device to connect to.
-    //
-    // - A list of optional features and extensions that our program needs to work correctly.
-    //   Some parts of the Vulkan specs are optional and must be enabled manually at device
-    //   creation. In this example the only thing we are going to need is the `khr_swapchain`
-    //   extension that allows us to draw to a window.
-    //
-    // - A list of layers to enable. This is very niche, and you will usually pass `None`.
-    //
-    // - The list of queues that we are going to use. The exact parameter is an iterator whose
-    //   items are `(Queue, f32)` where the floating-point represents the priority of the queue
-    //   between 0.0 and 1.0. The priority of the queue is a hint to the implementation about how
-    //   much it should prioritize queues between one another.
-    //
-    // The list of created queues is returned by the function alongside with the device.
+    }).expect("Couldn't find a graphical queue family");
     let (device, mut queues) = {
         let device_ext = vulkano::device::DeviceExtensions {
             khr_swapchain: true,
-            .. vulkano::device::DeviceExtensions::none()
+            ..vulkano::device::DeviceExtensions::none()
         };
 
         Device::new(&physical, physical.supported_features(), &device_ext,
                     [(queue, 0.5)].iter().cloned()).expect("failed to create device")
     };
-
-    // Since we can request multiple queues, the `queues` variable is in fact an iterator. In this
-    // example we use only one queue, so we just retreive the first and only element of the
-    // iterator and throw it away.
     let queue = queues.next().unwrap();
-
-    // Before we can draw on the surface, we have to create what is called a swapchain. Creating
-    // a swapchain allocates the color buffers that will contain the image that will ultimately
-    // be visible on the screen. These images are returned alongside with the swapchain.
     let (swapchain, images) = {
-        // Querying the capabilities of the surface. When we create the swapchain we can only
-        // pass values that are allowed by the capabilities.
         let caps = window.surface().get_capabilities(&physical)
             .expect("failed to get surface capabilities");
-
-        // We choose the dimensions of the swapchain to match the current dimensions of the window.
-        // If `caps.current_extent` is `None`, this means that the window size will be determined
-        // by the dimensions of the swapchain, in which case we just use a default value.
         let dimensions = caps.current_extent.unwrap_or([1280, 1024]);
-
-        // The present mode determines the way the images will be presented on the screen. This
-        // includes things such as vsync and will affect the framerate of your application. We just
-        // use the first supported value, but you probably want to leave that choice to the user.
+        /// TODO: in far future choose a better approach
         let present = caps.present_modes.iter().next().unwrap();
-
-        // The alpha mode indicates how the alpha value of the final image will behave. For example
-        // you can choose whether the window will be opaque or transparent.
+        /// TODO: this must change
         let alpha = caps.supported_composite_alpha.iter().next().unwrap();
-
-        // Choosing the internal format that the images will have.
+        /// TODO: this must change
         let format = caps.supported_formats[0].0;
-
-        // Please take a look at the docs for the meaning of the parameters we didn't mention.
-        Swapchain::new(&device, &window.surface(), 2, format, dimensions, 1,
-                       &caps.supported_usage_flags, &queue, SurfaceTransform::Identity, alpha,
-                       present, true, None).expect("failed to create swapchain")
+        Swapchain::new(
+            &device, &window.surface(), 2, format, dimensions, 1,
+            &caps.supported_usage_flags, &queue, SurfaceTransform::Identity, alpha,
+            present, true, None
+        ).expect("Failed to create swapchain.")
     };
-
-    // We now create a buffer that will store the shape of our triangle.
     let vertex_buffer = {
         #[derive(Debug, Clone)]
-        struct Vertex { position: [f32; 2] }
+        struct Vertex {
+            position: [f32; 2]
+        }
         impl_vertex!(Vertex, position);
 
         CpuAccessibleBuffer::from_iter(&device, &BufferUsage::all(), Some(queue.family()), [
@@ -195,33 +85,15 @@ pub fn run() {
             Vertex { position: [0.25, -0.1] }
         ].iter().cloned()).expect("failed to create buffer")
     };
-
-    // The next step is to create the shaders.
-    //
-    // The shader creation API provided by the vulkano library is unsafe, for various reasons.
-    //
-    // Instead, in our build script we used the `vulkano-shaders` crate to parse our shaders at
-    // compile time and provide a safe wrapper over vulkano's API. See the `build.rs` file at the
-    // root of the crate. You can find the shaders' source code in the `triangle_fs.glsl` and
-    // `triangle_vs.glsl` files.
-    //
-    // The author knows that this system is crappy and that it would be far better to use a plugin.
-    // Unfortunately plugins aren't available in stable Rust yet.
-    //
-    // The code generated by the build script created a struct named `TriangleShader`, which we
-    // can now use to load the shader.
-    //
-    // Because of some restrictions with the `include!` macro, we need to use a module.
-    mod vs { include!{concat!(env!("OUT_DIR"), "/shaders/src/bin/triangle_vs.glsl")} }
-    let vs = vs::Shader::load(&device).expect("failed to create shader module");
-    mod fs { include!{concat!(env!("OUT_DIR"), "/shaders/src/bin/triangle_fs.glsl")} }
-    let fs = fs::Shader::load(&device).expect("failed to create shader module");
-
-    // At this point, OpenGL initialization would be finished. However in Vulkan it is not. OpenGL
-    // implicitely does a lot of computation whenever you draw. In Vulkan, you have to do all this
-    // manually.
-
-    // The next step is to create a *render pass*, which is an object that describes where the
+    mod vs {
+        include! {"../../src/shaders/solid_vertex.glsl"}
+    }
+    let vs = vs::Shader::load(&device).expect("Failed to create shader module");
+    mod fs {
+        include! {"../../src/shaders/solid_fragment.glsl"}
+    }
+    let fs = fs::Shader::load(&device).expect("Failed to create shader module");
+    // Render-pass is an object that describes where the
     // output of the graphics pipeline will go. It describes the layout of the images
     // where the colors, depth and/or stencil information will be written.
     mod render_pass {
@@ -236,7 +108,7 @@ pub fn run() {
         // Render passes can also have multiple subpasses, the only restriction being that all
         // the passes will use the same framebuffer dimensions. Here we only have one pass, so
         // we use the appropriate macro.
-        single_pass_renderpass!{
+        single_pass_renderpass! {
             attachments: {
                 // `color` is a custom name we give to the first and only attachment.
                 color: {
