@@ -2,5 +2,9 @@
 name = "vulkust"
 version = "0.1.0"
 authors = ["Hossein Noroozpour (Thany Hulixer) <hossein.noroozpour@gmail.com>"]
+links = "vulkan-1"
+build = "build.rs"
 
 [dependencies]
+
+[build-dependencies]

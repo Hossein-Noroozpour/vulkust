@@ -11,7 +11,9 @@ use ::system::vulkan::{
 	vkCreateInstance,
 };
 
-use std::ffi::CString;
+use std::ffi::{
+	CString,
+};
 use std::os::raw::{
 	c_void,
 	c_char,
@@ -19,15 +21,19 @@ use std::os::raw::{
 
 pub fn get_vulkan_layers() -> [*const c_char; 0] {
 	[
+		// CString::new("VK_LAYER_LUNARG_api_dump").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_LUNARG_core_validation").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_LUNARG_image").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_LUNARG_object_tracker").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_LUNARG_parameter_validation").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_LUNARG_screenshot").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_LUNARG_swapchain").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_GOOGLE_threading").unwrap().as_ptr(),
 		// CString::new("VK_LAYER_GOOGLE_unique_objects").unwrap().as_ptr(),
-	]
-}
-
-pub fn get_vulkan_extensions() -> [*const c_char; 3] {
-	[
-		CString::new("VK_KHR_surface").unwrap().as_ptr(),
-		CString::new("VK_KHR_xcb_surface").unwrap().as_ptr(),
-		CString::new("VK_EXT_debug_report").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_LUNARG_vktrace").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_RENDERDOC_Capture").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_NV_optimus").unwrap().as_ptr(),
+		// CString::new("VK_LAYER_LUNARG_standard_validation").unwrap().as_ptr(),
 	]
 }
 
@@ -75,13 +81,21 @@ impl Instance {
 	pub fn new() -> Self {
 		let application_info = VkApplicationInfo {
 			sType: VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO,
-			apiVersion: vkMakeVersion(1, 0, 2),
+			apiVersion: vkMakeVersion(1, 0, 21),
 			applicationVersion: vkMakeVersion(0, 1, 0),
 			pApplicationName: CString::new("Vulkust App").unwrap().as_ptr(),
 		    pEngineName: CString::new("Vulkus").unwrap().as_ptr(),
 		    engineVersion: vkMakeVersion(0, 1, 0),
 		    pNext: 0 as *const c_void,
 		};
+		let vk_khr_surface_ext = CString::new("VK_KHR_surface").unwrap();
+		let vk_khr_win32_surface_ext = CString::new("VK_KHR_win32_surface").unwrap();
+		let vk_ext_debug_report_ext = CString::new("VK_EXT_debug_report").unwrap();
+		let vulkan_extentions = [
+			vk_khr_surface_ext.as_ptr(),
+			vk_khr_win32_surface_ext.as_ptr(),
+			vk_ext_debug_report_ext.as_ptr(),
+		];
 		let instance_create_info = VkInstanceCreateInfo {
 		    sType: VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 		    pNext: 0 as *const c_void,
@@ -89,8 +103,8 @@ impl Instance {
 		    pApplicationInfo: &application_info,
 		    enabledLayerCount: get_vulkan_layers().len() as u32,
 		    ppEnabledLayerNames: get_vulkan_layers().as_ptr(),
-		    enabledExtensionCount: get_vulkan_extensions().len() as u32,
-		    ppEnabledExtensionNames: get_vulkan_extensions().as_ptr(),
+		    enabledExtensionCount: vulkan_extentions.len() as u32,
+		    ppEnabledExtensionNames: vulkan_extentions.as_ptr(),
 		};
 		let mut vk_instance = 0 as VkInstance;
 		vulkan_check!(vkCreateInstance(&instance_create_info, 0 as *const VkAllocationCallbacks, &mut vk_instance));
