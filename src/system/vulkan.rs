@@ -1526,7 +1526,7 @@ pub type PFN_vkInternalFreeNotification =
                                            VkInternalAllocationType,
                                            allocationScope:
                                            VkSystemAllocationScope)>;
-pub type PFN_vkVoidFunction = ::std::option::Option<extern "C" fn()>;
+pub type PFN_vkVoidFunction = unsafe extern "C" fn();
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3460,16 +3460,12 @@ pub type PFN_vkGetPhysicalDeviceMemoryProperties =
                                            VkPhysicalDevice,
                                            pMemoryProperties:
                                            *mut VkPhysicalDeviceMemoryProperties)>;
-pub type PFN_vkGetInstanceProcAddr =
-::std::option::Option<unsafe extern "C" fn(instance: VkInstance,
-                                           pName:
-                                           *const ::std::os::raw::c_char)
-                                           -> PFN_vkVoidFunction>;
-pub type PFN_vkGetDeviceProcAddr =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pName:
-                                           *const ::std::os::raw::c_char)
-                                           -> PFN_vkVoidFunction>;
+pub type PFN_vkGetInstanceProcAddr = unsafe extern "C" fn(
+    instance: VkInstance,
+    pName: *const ::std::os::raw::c_char) -> PFN_vkVoidFunction;
+pub type PFN_vkGetDeviceProcAddr = unsafe extern "C" fn(
+    device: VkDevice,
+    pName: *const ::std::os::raw::c_char) -> PFN_vkVoidFunction;
 pub type PFN_vkCreateDevice =
 ::std::option::Option<unsafe extern "C" fn(physicalDevice:
                                            VkPhysicalDevice,
@@ -4067,11 +4063,12 @@ pub type PFN_vkCmdDrawIndexed =
                                     vertexOffset: int32_t,
                                     firstInstance: uint32_t)>;
 pub type PFN_vkCmdDrawIndirect =
-::std::option::Option<extern "C" fn(commandBuffer: VkCommandBuffer,
-                                    buffer: VkBuffer,
-                                    offset: VkDeviceSize,
-                                    drawCount: uint32_t,
-                                    stride: uint32_t)>;
+::std::option::Option<extern "C" fn(
+    commandBuffer: VkCommandBuffer,
+    buffer: VkBuffer,
+    offset: VkDeviceSize,
+    drawCount: uint32_t,
+    stride: uint32_t)>;
 pub type PFN_vkCmdDrawIndexedIndirect =
 ::std::option::Option<extern "C" fn(commandBuffer: VkCommandBuffer,
                                     buffer: VkBuffer,
@@ -4712,12 +4709,8 @@ pub enum VkDebugReportCallbackEXT_T {}
 
 pub type VkDebugReportCallbackEXT = *mut VkDebugReportCallbackEXT_T;
 
-pub const VK_DEBUG_REPORT_OBJECT_TYPE_BEGIN_RANGE_EXT:
-VkDebugReportObjectTypeEXT =
-VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT;
-pub const VK_DEBUG_REPORT_OBJECT_TYPE_END_RANGE_EXT:
-VkDebugReportObjectTypeEXT =
-VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT;
+pub const VK_DEBUG_REPORT_OBJECT_TYPE_BEGIN_RANGE_EXT: VkDebugReportObjectTypeEXT = VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT;
+pub const VK_DEBUG_REPORT_OBJECT_TYPE_END_RANGE_EXT: VkDebugReportObjectTypeEXT = VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT;
 
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -4756,10 +4749,8 @@ pub enum VkDebugReportObjectTypeEXT {
     VK_DEBUG_REPORT_OBJECT_TYPE_MAX_ENUM_EXT = 2147483647,
 }
 
-pub const VK_DEBUG_REPORT_ERROR_BEGIN_RANGE_EXT: VkDebugReportErrorEXT =
-VkDebugReportErrorEXT::VK_DEBUG_REPORT_ERROR_NONE_EXT;
-pub const VK_DEBUG_REPORT_ERROR_END_RANGE_EXT: VkDebugReportErrorEXT =
-VkDebugReportErrorEXT::VK_DEBUG_REPORT_ERROR_CALLBACK_REF_EXT;
+pub const VK_DEBUG_REPORT_ERROR_BEGIN_RANGE_EXT: VkDebugReportErrorEXT = VkDebugReportErrorEXT::VK_DEBUG_REPORT_ERROR_NONE_EXT;
+pub const VK_DEBUG_REPORT_ERROR_END_RANGE_EXT: VkDebugReportErrorEXT = VkDebugReportErrorEXT::VK_DEBUG_REPORT_ERROR_CALLBACK_REF_EXT;
 
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -4784,20 +4775,20 @@ pub enum VkDebugReportFlagBitsEXT {
 }
 
 pub type VkDebugReportFlagsEXT = VkFlags;
-pub type PFN_vkDebugReportCallbackEXT =
-::std::option::Option<unsafe extern "C" fn(flags: VkDebugReportFlagsEXT,
-                                           objectType:
-                                           VkDebugReportObjectTypeEXT,
-                                           object: uint64_t,
-                                           location: size_t,
-                                           messageCode: int32_t,
-                                           pLayerPrefix:
-                                           *const ::std::os::raw::c_char,
-                                           pMessage:
-                                           *const ::std::os::raw::c_char,
-                                           pUserData:
-                                           *mut ::std::os::raw::c_void)
-                                           -> VkBool32>;
+pub type PFN_vkDebugReportCallbackEXT = unsafe extern "C" fn(
+    flags: VkDebugReportFlagsEXT,
+    objectType:
+    VkDebugReportObjectTypeEXT,
+    object: uint64_t,
+    location: size_t,
+    messageCode: int32_t,
+    pLayerPrefix:
+    *const ::std::os::raw::c_char,
+    pMessage:
+    *const ::std::os::raw::c_char,
+    pUserData:
+    *mut ::std::os::raw::c_void)
+    -> VkBool32;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4814,44 +4805,40 @@ impl ::std::default::Default for VkDebugReportCallbackCreateInfoEXT {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 
-pub type PFN_vkCreateDebugReportCallbackEXT =
-::std::option::Option<unsafe extern "C" fn(instance: VkInstance,
-                                           pCreateInfo:
-                                           *const VkDebugReportCallbackCreateInfoEXT,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pCallback:
-                                           *mut VkDebugReportCallbackEXT)
-                                           -> VkResult>;
-pub type PFN_vkDestroyDebugReportCallbackEXT =
-::std::option::Option<unsafe extern "C" fn(instance: VkInstance,
-                                           callback:
-                                           VkDebugReportCallbackEXT,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkDebugReportMessageEXT =
-::std::option::Option<unsafe extern "C" fn(instance: VkInstance,
-                                           flags: VkDebugReportFlagsEXT,
-                                           objectType:
-                                           VkDebugReportObjectTypeEXT,
-                                           object: uint64_t,
-                                           location: size_t,
-                                           messageCode: int32_t,
-                                           pLayerPrefix:
-                                           *const ::std::os::raw::c_char,
-                                           pMessage:
-                                           *const ::std::os::raw::c_char)>;
+pub type PFN_vkCreateDebugReportCallbackEXT = unsafe extern "C" fn(
+    instance: VkInstance,
+    pCreateInfo: *const VkDebugReportCallbackCreateInfoEXT,
+    pAllocator: *const VkAllocationCallbacks,
+    pCallback: *mut VkDebugReportCallbackEXT) -> VkResult;
+
+pub type PFN_vkDestroyDebugReportCallbackEXT = unsafe extern "C" fn(
+    instance: VkInstance,
+    callback: VkDebugReportCallbackEXT,
+    pAllocator: *const VkAllocationCallbacks);
+
+pub type PFN_vkDebugReportMessageEXT = ::std::option::Option<unsafe extern "C" fn(
+    instance: VkInstance,
+    flags: VkDebugReportFlagsEXT,
+    objectType: VkDebugReportObjectTypeEXT,
+    object: uint64_t,
+    location: size_t,
+    messageCode: int32_t,
+    pLayerPrefix: *const ::std::os::raw::c_char,
+    pMessage: *const ::std::os::raw::c_char)>;
+
 #[link(name = "vulkan-1", kind= "dylib")]
 extern "C" {
-    pub fn vkCreateInstance(pCreateInfo: *const VkInstanceCreateInfo,
-                            pAllocator: *const VkAllocationCallbacks,
-                            pInstance: *mut VkInstance) -> VkResult;
-    pub fn vkDestroyInstance(instance: VkInstance,
-                             pAllocator: *const VkAllocationCallbacks);
-    pub fn vkEnumeratePhysicalDevices(instance: VkInstance,
-                                      pPhysicalDeviceCount: *mut uint32_t,
-                                      pPhysicalDevices: *mut VkPhysicalDevice)
-                                      -> VkResult;
+    pub fn vkCreateInstance(
+        pCreateInfo: *const VkInstanceCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pInstance: *mut VkInstance) -> VkResult;
+    pub fn vkDestroyInstance(
+        instance: VkInstance,
+        pAllocator: *const VkAllocationCallbacks);
+    pub fn vkEnumeratePhysicalDevices(
+        instance: VkInstance,
+        pPhysicalDeviceCount: *mut uint32_t,
+        pPhysicalDevices: *mut VkPhysicalDevice) -> VkResult;
     pub fn vkGetPhysicalDeviceFeatures(physicalDevice: VkPhysicalDevice,
                                        pFeatures:
                                        *mut VkPhysicalDeviceFeatures);
@@ -4883,12 +4870,12 @@ extern "C" {
                                                VkPhysicalDevice,
                                                pMemoryProperties:
                                                *mut VkPhysicalDeviceMemoryProperties);
-    pub fn vkGetInstanceProcAddr(instance: VkInstance,
-                                 pName: *const ::std::os::raw::c_char)
-                                 -> PFN_vkVoidFunction;
-    pub fn vkGetDeviceProcAddr(device: VkDevice,
-                               pName: *const ::std::os::raw::c_char)
-                               -> PFN_vkVoidFunction;
+    pub fn vkGetInstanceProcAddr(
+        instance: VkInstance,
+        pName: *const ::std::os::raw::c_char) -> PFN_vkVoidFunction;
+    pub fn vkGetDeviceProcAddr(
+        device: VkDevice,
+        pName: *const ::std::os::raw::c_char) -> PFN_vkVoidFunction;
     pub fn vkCreateDevice(physicalDevice: VkPhysicalDevice,
                           pCreateInfo: *const VkDeviceCreateInfo,
                           pAllocator: *const VkAllocationCallbacks,
@@ -5463,26 +5450,23 @@ extern "C" {
                                        *const VkAllocationCallbacks,
                                        pSwapchains: *mut VkSwapchainKHR)
                                        -> VkResult;
-    pub fn vkCreateDebugReportCallbackEXT(instance: VkInstance,
-                                          pCreateInfo:
-                                          *const VkDebugReportCallbackCreateInfoEXT,
-                                          pAllocator:
-                                          *const VkAllocationCallbacks,
-                                          pCallback:
-                                          *mut VkDebugReportCallbackEXT)
-                                          -> VkResult;
-    pub fn vkDestroyDebugReportCallbackEXT(instance: VkInstance,
-                                           callback: VkDebugReportCallbackEXT,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks);
-    pub fn vkDebugReportMessageEXT(instance: VkInstance,
-                                   flags: VkDebugReportFlagsEXT,
-                                   objectType: VkDebugReportObjectTypeEXT,
-                                   object: uint64_t, location: size_t,
-                                   messageCode: int32_t,
-                                   pLayerPrefix:
-                                   *const ::std::os::raw::c_char,
-                                   pMessage: *const ::std::os::raw::c_char);
+    pub fn vkCreateDebugReportCallbackEXT(
+        instance: VkInstance,
+        pCreateInfo: *const VkDebugReportCallbackCreateInfoEXT,
+        pAllocator: *const VkAllocationCallbacks,
+        pCallback: *mut VkDebugReportCallbackEXT) -> VkResult;
+    pub fn vkDestroyDebugReportCallbackEXT(
+        instance: VkInstance,
+        callback: VkDebugReportCallbackEXT,
+        pAllocator: *const VkAllocationCallbacks);
+    pub fn vkDebugReportMessageEXT(
+        instance: VkInstance,
+        flags: VkDebugReportFlagsEXT,
+        objectType: VkDebugReportObjectTypeEXT,
+        object: uint64_t, location: size_t,
+        messageCode: int32_t,
+        pLayerPrefix:*const ::std::os::raw::c_char,
+        pMessage: *const ::std::os::raw::c_char);
 }
 
 pub fn vkMakeVersion(major: u32, minor: u32, patch: u32) -> u32 {

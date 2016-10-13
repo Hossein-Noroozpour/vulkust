@@ -2,3 +2,8 @@
 Cargo.lock
 .idea
 assets/
+vulkust-debg.txt
+vulkust-erro.txt
+vulkust-info.txt
+vulkust-perf.txt
+vulkust-warn.txt
