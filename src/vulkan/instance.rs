@@ -154,38 +154,58 @@ impl Instance {
 		    engineVersion: vkMakeVersion(0, 1, 0),
 		    pNext: 0 as *const c_void,
 		};
+		#[cfg(target_os = "windows")]
 		let vk_ly_api_dup = CString::new("VK_LAYER_LUNARG_api_dump").unwrap();
 		let vk_ly_core_val = CString::new("VK_LAYER_LUNARG_core_validation").unwrap();
 		let vk_ly_image = CString::new("VK_LAYER_LUNARG_image").unwrap();
 		let vk_ly_obj_trk = CString::new("VK_LAYER_LUNARG_object_tracker").unwrap();
 		let vk_ly_par_val = CString::new("VK_LAYER_LUNARG_parameter_validation").unwrap();
+		#[cfg(target_os = "windows")]
 		let vk_ly_scrsh = CString::new("VK_LAYER_LUNARG_screenshot").unwrap();
 		let vk_ly_swap = CString::new("VK_LAYER_LUNARG_swapchain").unwrap();
 		let vk_ly_thrd = CString::new("VK_LAYER_GOOGLE_threading").unwrap();
 		let vk_ly_uniq = CString::new("VK_LAYER_GOOGLE_unique_objects").unwrap();
+		#[cfg(target_os = "windows")]
 		let vk_ly_ren_doc = CString::new("VK_LAYER_RENDERDOC_Capture").unwrap();
+		#[cfg(target_os = "windows")]
 		let vk_ly_optimus = CString::new("VK_LAYER_NV_optimus").unwrap();
+		#[cfg(target_os = "windows")]
 		let vk_ly_std_val = CString::new("VK_LAYER_LUNARG_standard_validation").unwrap();
 		let vulkan_layers = [
+			#[cfg(target_os = "windows")]
 			vk_ly_api_dup.as_ptr(),
 			vk_ly_core_val.as_ptr(),
 			vk_ly_image.as_ptr(),
 			vk_ly_obj_trk.as_ptr(),
 			vk_ly_par_val.as_ptr(),
+			#[cfg(target_os = "windows")]
 			vk_ly_scrsh.as_ptr(),
 			vk_ly_swap.as_ptr(),
 			vk_ly_thrd.as_ptr(),
 			vk_ly_uniq.as_ptr(),
+			#[cfg(target_os = "windows")]
 			vk_ly_ren_doc.as_ptr(),
+			#[cfg(target_os = "windows")]
 			vk_ly_optimus.as_ptr(),
+			#[cfg(target_os = "windows")]
 			vk_ly_std_val.as_ptr(),
 		];
 		let vk_khr_surface_ext = CString::new("VK_KHR_surface").unwrap();
+		#[cfg(target_os = "windows")]
 		let vk_khr_win32_surface_ext = CString::new("VK_KHR_win32_surface").unwrap();
+		#[cfg(target_os = "linux")]
+		let vk_khr_xcb_surface_ext = CString::new("VK_KHR_xcb_surface").unwrap();
+		#[cfg(target_os = "linux")]
+		let vk_khr_xlib_surface_ext = CString::new("VK_KHR_xlib_surface").unwrap();
 		let vk_ext_debug_report_ext = CString::new("VK_EXT_debug_report").unwrap();
 		let vulkan_extentions = [
 			vk_khr_surface_ext.as_ptr(),
+			#[cfg(target_os = "windows")]
 			vk_khr_win32_surface_ext.as_ptr(),
+			#[cfg(target_os = "linux")]
+			vk_khr_xcb_surface_ext.as_ptr(),
+			#[cfg(target_os = "linux")]
+			vk_khr_xlib_surface_ext.as_ptr(),
 			vk_ext_debug_report_ext.as_ptr(),
 		];
 		let instance_create_info = VkInstanceCreateInfo {
@@ -212,7 +232,6 @@ impl Instance {
 		    pfnCallback: vulkan_debug_callback,
 		    pUserData: 0 as *mut c_void,
 		};
-		let mut vk_debug_callback = 0 as VkDebugReportCallbackEXT;
 		let vk_proc_name = CString::new("vkCreateDebugReportCallbackEXT").unwrap();
 		let vk_create_debug_report_callback_ext = unsafe {
 			transmute::<PFN_vkVoidFunction, PFN_vkCreateDebugReportCallbackEXT>(
@@ -229,10 +248,10 @@ impl Instance {
 			error_file: error_file,
 			info_file: info_file,
 			vk_instance: vk_instance,
-			vk_debug_callback: vk_debug_callback,
+			vk_debug_callback: 0 as VkDebugReportCallbackEXT,
 		};
 		report_callback_create_info.pUserData = unsafe { transmute::<&mut Instance, *mut c_void>(&mut instance) };
-		vulkan_check!(vk_create_debug_report_callback_ext(vk_instance, &report_callback_create_info, 0 as *const VkAllocationCallbacks, &mut vk_debug_callback));
+		vulkan_check!(vk_create_debug_report_callback_ext(vk_instance, &report_callback_create_info, 0 as *const VkAllocationCallbacks, &mut instance.vk_debug_callback));
 		return instance;
 	}
 }

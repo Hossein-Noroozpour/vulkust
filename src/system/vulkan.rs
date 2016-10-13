@@ -4826,7 +4826,14 @@ pub type PFN_vkDebugReportMessageEXT = ::std::option::Option<unsafe extern "C" f
     pLayerPrefix: *const ::std::os::raw::c_char,
     pMessage: *const ::std::os::raw::c_char)>;
 
-#[link(name = "vulkan-1", kind= "dylib")]
+// #[cfg(target_os = "linux")]
+// const vulkan_library_name: &'static str = "vulkan";
+// #[cfg(not(target_os = "linux"))]
+// const vulkan_library_name: &'static str = "vulkan-1";
+//
+//
+#[cfg_attr(target_os = "linux", link(name = "vulkan", kind= "dylib"))]
+#[cfg_attr(target_os = "windows", link(name = "vulkan-1", kind= "dylib"))]
 extern "C" {
     pub fn vkCreateInstance(
         pCreateInfo: *const VkInstanceCreateInfo,

@@ -2,7 +2,10 @@ use std::env;
 
 const ERROR_NO_VULKAN_SDK: &'static str =
     "Error in founding Vulkan SDK path, please make sure you installed vulkan sdk";
+#[cfg(target_os = "linux")]
+const VULKAN: &'static str = "vulkan";
 
+#[cfg(not(target_os = "linux"))]
 const VULKAN: &'static str = "vulkan-1";
 
 fn main() {
