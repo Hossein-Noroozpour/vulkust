@@ -20,5 +20,5 @@ fn main() {
     // println!("cargo:root={}\\bin", vulkan_sdk_path);
     // println!("cargo:libdir={}\\bin", vulkan_sdk_path);
     // println!("cargo:include={}\\include", vulkan_sdk_path);
-    println!("cargo:rustc-flags=-l {} -L {}\\bin", VULKAN, vulkan_sdk_path);
+    println!("cargo:rustc-flags=-l {} -L {}/x86_64/lib", VULKAN, vulkan_sdk_path);
 }

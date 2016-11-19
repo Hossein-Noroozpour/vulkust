@@ -1,7 +1,7 @@
 #![feature(stmt_expr_attributes)]
+#[macro_use] pub mod system;
 mod pipeline;
 mod vulkan;
-mod system;
 
 fn main() {
 	pipeline::run();

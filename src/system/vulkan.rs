@@ -5479,3 +5479,39 @@ extern "C" {
 pub fn vkMakeVersion(major: u32, minor: u32, patch: u32) -> u32 {
     (major << 22) | (minor << 12) | patch
 }
+
+#[macro_export] macro_rules! vulkan_check {
+    ( $x:expr ) => {
+        unsafe {
+            match $x {
+                VkResult::VK_SUCCESS => {},
+				VkResult::VK_NOT_READY => { println!("VK_NOT_READY in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_TIMEOUT => { println!("VK_TIMEOUT in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_EVENT_SET => { println!("VK_EVENT_SET in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_EVENT_RESET => { println!("VK_EVENT_RESET in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_INCOMPLETE => { println!("VK_INCOMPLETE in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_OUT_OF_HOST_MEMORY => { println!("VK_ERROR_OUT_OF_HOST_MEMORY in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_OUT_OF_DEVICE_MEMORY => { println!("VK_ERROR_OUT_OF_DEVICE_MEMORY in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_INITIALIZATION_FAILED => { println!("VK_ERROR_INITIALIZATION_FAILED in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_DEVICE_LOST => { println!("VK_ERROR_DEVICE_LOST in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_MEMORY_MAP_FAILED => { println!("VK_ERROR_MEMORY_MAP_FAILED in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_LAYER_NOT_PRESENT => { println!("VK_ERROR_LAYER_NOT_PRESENT in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_EXTENSION_NOT_PRESENT => { println!("VK_ERROR_EXTENSION_NOT_PRESENT in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_FEATURE_NOT_PRESENT => { println!("VK_ERROR_FEATURE_NOT_PRESENT in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_INCOMPATIBLE_DRIVER => { println!("VK_ERROR_INCOMPATIBLE_DRIVER in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_TOO_MANY_OBJECTS => { println!("VK_ERROR_TOO_MANY_OBJECTS in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED => { println!("VK_ERROR_FORMAT_NOT_SUPPORTED in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_SURFACE_LOST_KHR => { println!("VK_ERROR_SURFACE_LOST_KHR in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_NATIVE_WINDOW_IN_USE_KHR => { println!("VK_ERROR_NATIVE_WINDOW_IN_USE_KHR in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_SUBOPTIMAL_KHR => { println!("VK_SUBOPTIMAL_KHR in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_OUT_OF_DATE_KHR => { println!("VK_ERROR_OUT_OF_DATE_KHR in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_INCOMPATIBLE_DISPLAY_KHR => { println!("VK_ERROR_INCOMPATIBLE_DISPLAY_KHR in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_VALIDATION_FAILED_EXT => { println!("VK_ERROR_VALIDATION_FAILED_EXT in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_ERROR_INVALID_SHADER_NV => { println!("VK_ERROR_INVALID_SHADER_NV in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_RESULT_RANGE_SIZE => { println!("VK_RESULT_RANGE_SIZE in file: {:?}, line: {:?}", file!(), line!()) },
+			    VkResult::VK_RESULT_MAX_ENUM => { println!("VK_RESULT_MAX_ENUM in file: {:?}, line: {:?}", file!(), line!()) },
+				// _ => { println!("Unknown error in file: {:?}, line: {:?}", file!(), line!()) },
+            }
+        }
+    };
+}

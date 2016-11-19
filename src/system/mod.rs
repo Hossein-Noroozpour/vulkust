@@ -1,1 +1,1 @@
-pub mod vulkan;
+#[macro_use] pub mod vulkan;

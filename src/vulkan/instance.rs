@@ -19,6 +19,8 @@ use ::system::vulkan::{
 	PFN_vkVoidFunction,
 	PFN_vkCreateDebugReportCallbackEXT,
 	PFN_vkDestroyDebugReportCallbackEXT,
+
+//	vulkan_check,
 };
 
 use std::fs::File;
@@ -32,51 +34,17 @@ use std::os::raw::{
 	c_char,
 };
 use std::mem::transmute;
+use std::time::Duration;
+use std::thread;
 
 pub struct Instance {
+	pub vk_instance: VkInstance,
+	vk_debug_callback: VkDebugReportCallbackEXT,
 	debug_file: File,
 	warning_file: File,
 	performance_file: File,
 	error_file: File,
 	info_file: File,
-	vk_instance: VkInstance,
-	vk_debug_callback: VkDebugReportCallbackEXT,
-}
-
-macro_rules! vulkan_check {
-    ( $x:expr ) => {
-        unsafe {
-            match $x {
-                VkResult::VK_SUCCESS => {},
-				VkResult::VK_NOT_READY => { println!("VK_NOT_READY in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_TIMEOUT => { println!("VK_TIMEOUT in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_EVENT_SET => { println!("VK_EVENT_SET in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_EVENT_RESET => { println!("VK_EVENT_RESET in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_INCOMPLETE => { println!("VK_INCOMPLETE in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_OUT_OF_HOST_MEMORY => { println!("VK_ERROR_OUT_OF_HOST_MEMORY in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_OUT_OF_DEVICE_MEMORY => { println!("VK_ERROR_OUT_OF_DEVICE_MEMORY in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_INITIALIZATION_FAILED => { println!("VK_ERROR_INITIALIZATION_FAILED in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_DEVICE_LOST => { println!("VK_ERROR_DEVICE_LOST in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_MEMORY_MAP_FAILED => { println!("VK_ERROR_MEMORY_MAP_FAILED in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_LAYER_NOT_PRESENT => { println!("VK_ERROR_LAYER_NOT_PRESENT in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_EXTENSION_NOT_PRESENT => { println!("VK_ERROR_EXTENSION_NOT_PRESENT in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_FEATURE_NOT_PRESENT => { println!("VK_ERROR_FEATURE_NOT_PRESENT in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_INCOMPATIBLE_DRIVER => { println!("VK_ERROR_INCOMPATIBLE_DRIVER in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_TOO_MANY_OBJECTS => { println!("VK_ERROR_TOO_MANY_OBJECTS in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED => { println!("VK_ERROR_FORMAT_NOT_SUPPORTED in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_SURFACE_LOST_KHR => { println!("VK_ERROR_SURFACE_LOST_KHR in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_NATIVE_WINDOW_IN_USE_KHR => { println!("VK_ERROR_NATIVE_WINDOW_IN_USE_KHR in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_SUBOPTIMAL_KHR => { println!("VK_SUBOPTIMAL_KHR in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_OUT_OF_DATE_KHR => { println!("VK_ERROR_OUT_OF_DATE_KHR in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_INCOMPATIBLE_DISPLAY_KHR => { println!("VK_ERROR_INCOMPATIBLE_DISPLAY_KHR in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_VALIDATION_FAILED_EXT => { println!("VK_ERROR_VALIDATION_FAILED_EXT in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_ERROR_INVALID_SHADER_NV => { println!("VK_ERROR_INVALID_SHADER_NV in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_RESULT_RANGE_SIZE => { println!("VK_RESULT_RANGE_SIZE in file: {:?}, line: {:?}", file!(), line!()) },
-			    VkResult::VK_RESULT_MAX_ENUM => { println!("VK_RESULT_MAX_ENUM in file: {:?}, line: {:?}", file!(), line!()) },
-				// _ => { println!("Unknown error in file: {:?}, line: {:?}", file!(), line!()) },
-            }
-        }
-    };
 }
 
 const VULKAN_LOG_INFO_FILE_NAME: &'static str = "vulkust-info.txt";
@@ -109,10 +77,11 @@ unsafe extern fn vulkan_debug_callback(
 		obj_type, src_obj, location, msg_code,
 		CStr::from_ptr(layer_prefix).to_str(),
 		CStr::from_ptr(msg).to_str(), user_data);
+    println!("String is: {}", &s);
 	if s.len() != file.write(s.as_bytes()).expect("Can not write to file.") {
 		panic!("Can not write to file. Size is not correct.");
 	}
-	return 0;
+	return 0u32
 }
 
 fn init_debug_files() -> (File, File, File, File, File) {
@@ -138,7 +107,7 @@ fn init_debug_files() -> (File, File, File, File, File) {
 	if INIT_STR.len() != debug_file.write(INIT_STR.as_bytes()).expect(ERROR_FILE_CREATION) {
 		panic!("{}", ERROR_FILE_CREATION);
 	}
-	return (info_file, warning_file, performance_file, error_file, debug_file);
+	return (info_file, warning_file, performance_file, error_file, debug_file)
 }
 
 impl Instance {
