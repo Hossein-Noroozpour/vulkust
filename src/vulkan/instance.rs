@@ -23,8 +23,6 @@ use ::system::vulkan::{
 //	vulkan_check,
 };
 
-use std::fs::File;
-use std::io::Write;
 use std::ffi::{
 	CString,
 	CStr,
@@ -34,80 +32,39 @@ use std::os::raw::{
 	c_char,
 };
 use std::mem::transmute;
-use std::time::Duration;
-use std::thread;
 
 pub struct Instance {
 	pub vk_instance: VkInstance,
 	vk_debug_callback: VkDebugReportCallbackEXT,
-	debug_file: File,
-	warning_file: File,
-	performance_file: File,
-	error_file: File,
-	info_file: File,
 }
-
-const VULKAN_LOG_INFO_FILE_NAME: &'static str = "vulkust-info.txt";
-const VULKAN_LOG_WARN_FILE_NAME: &'static str = "vulkust-warn.txt";
-const VULKAN_LOG_PERF_FILE_NAME: &'static str = "vulkust-perf.txt";
-const VULKAN_LOG_ERRO_FILE_NAME: &'static str = "vulkust-erro.txt";
-const VULKAN_LOG_DEBG_FILE_NAME: &'static str = "vulkust-debg.txt";
 
 unsafe extern fn vulkan_debug_callback(
 	flags: VkDebugReportFlagsEXT,
 	obj_type: VkDebugReportObjectTypeEXT,
 	src_obj: u64, location: usize, msg_code: i32, layer_prefix: *const c_char,
 	msg: *const c_char, user_data: *mut c_void) -> u32 {
-	let instance = transmute::<*mut c_void, *mut Instance>(user_data);
-	let file: &mut File =
-		if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32) != 0 {
-			&mut ((*instance).info_file)
-		} else if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32) != 0 {
-			&mut ((*instance).warning_file)
-		} else if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32) != 0 {
-			&mut ((*instance).performance_file)
-		} else if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32) != 0 {
-			&mut ((*instance).error_file)
-		} else if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32) != 0 {
-			&mut ((*instance).debug_file)
-		} else {
-			&mut ((*instance).debug_file)
-		};
-	let s = format!("obj_type: {:?}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: {:?}, msg : {:?}, user_data {:?}\n",
-		obj_type, src_obj, location, msg_code,
+    let mut flg = String::new();
+    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32) != 0 {
+        flg += "info, ";
+    }
+    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32) != 0 {
+        flg += "warn, ";
+    }
+    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32) != 0 {
+        flg += "performance, ";
+    }
+    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32) != 0 {
+        flg += "error, ";
+    }
+    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32) != 0 {
+        flg += "debug, ";
+    }
+    println!("flag: {}, obj_type: {:?}, src_obj: {:?}, location: {:?}, msg_code: {:?}, \
+        layer_prefix: {:?}, msg : {:?}, user_data {:?}",
+		flg, obj_type, src_obj, location, msg_code,
 		CStr::from_ptr(layer_prefix).to_str(),
 		CStr::from_ptr(msg).to_str(), user_data);
-    println!("String is: {}", &s);
-	if s.len() != file.write(s.as_bytes()).expect("Can not write to file.") {
-		panic!("Can not write to file. Size is not correct.");
-	}
 	return 0u32
-}
-
-fn init_debug_files() -> (File, File, File, File, File) {
-	const INIT_STR: &'static str = "started\n";
-	const ERROR_FILE_CREATION: &'static str = "Can not create log file";
-	let mut info_file = File::create(VULKAN_LOG_INFO_FILE_NAME).expect(ERROR_FILE_CREATION);
-	if INIT_STR.len() != info_file.write(INIT_STR.as_bytes()).expect(ERROR_FILE_CREATION) {
-		panic!("{}", ERROR_FILE_CREATION);
-	}
-	let mut warning_file = File::create(VULKAN_LOG_WARN_FILE_NAME).expect(ERROR_FILE_CREATION);
-	if INIT_STR.len() != warning_file.write(INIT_STR.as_bytes()).expect(ERROR_FILE_CREATION) {
-		panic!("{}", ERROR_FILE_CREATION);
-	}
-	let mut performance_file = File::create(VULKAN_LOG_PERF_FILE_NAME).expect(ERROR_FILE_CREATION);
-	if INIT_STR.len() != performance_file.write(INIT_STR.as_bytes()).expect(ERROR_FILE_CREATION) {
-		panic!("{}", ERROR_FILE_CREATION);
-	}
-	let mut error_file = File::create(VULKAN_LOG_ERRO_FILE_NAME).expect(ERROR_FILE_CREATION);
-	if INIT_STR.len() != error_file.write(INIT_STR.as_bytes()).expect(ERROR_FILE_CREATION) {
-		panic!("{}", ERROR_FILE_CREATION);
-	}
-	let mut debug_file = File::create(VULKAN_LOG_DEBG_FILE_NAME).expect(ERROR_FILE_CREATION);
-	if INIT_STR.len() != debug_file.write(INIT_STR.as_bytes()).expect(ERROR_FILE_CREATION) {
-		panic!("{}", ERROR_FILE_CREATION);
-	}
-	return (info_file, warning_file, performance_file, error_file, debug_file)
 }
 
 impl Instance {
@@ -209,13 +166,7 @@ impl Instance {
 			transmute::<usize, PFN_vkCreateDebugReportCallbackEXT>(0) } {
 			panic!("Error in finding vkCreateDebugReportCallbackEXT process location.");
 		}
-		let (debug_file, warning_file, performance_file, error_file, info_file) = init_debug_files();
 		let mut instance = Instance {
-			debug_file: debug_file,
-			warning_file: warning_file,
-			performance_file: performance_file,
-			error_file: error_file,
-			info_file: info_file,
 			vk_instance: vk_instance,
 			vk_debug_callback: 0 as VkDebugReportCallbackEXT,
 		};
