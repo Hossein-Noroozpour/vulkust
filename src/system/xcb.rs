@@ -98,6 +98,7 @@ pub type u_int32_t = ::std::os::raw::c_uint;
 pub type u_int64_t = ::std::os::raw::c_ulong;
 pub type register_t = ::std::os::raw::c_long;
 pub type __sig_atomic_t = ::std::os::raw::c_int;
+pub const XCB_COPY_FROM_PARENT: u64 = 0;
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -5300,6 +5301,7 @@ extern "C" {
     pub static mut daylight: ::std::os::raw::c_int;
     pub static mut timezone: ::std::os::raw::c_long;
 }
+#[link(name = "xcb", kind= "dylib")]
 extern "C" {
     pub fn select(__nfds: ::std::os::raw::c_int, __readfds: *mut fd_set,
                   __writefds: *mut fd_set, __exceptfds: *mut fd_set,
@@ -5954,19 +5956,17 @@ extern "C" {
      -> *mut xcb_query_tree_reply_t;
     pub fn xcb_intern_atom_sizeof(_buffer: *const ::std::os::raw::c_void)
      -> ::std::os::raw::c_int;
-    pub fn xcb_intern_atom(c: *mut xcb_connection_t, only_if_exists: uint8_t,
-                           name_len: uint16_t,
-                           name: *const ::std::os::raw::c_char)
-     -> xcb_intern_atom_cookie_t;
+    pub fn xcb_intern_atom(
+        c: *mut xcb_connection_t, only_if_exists: uint8_t, name_len: uint16_t,
+        name: *const ::std::os::raw::c_char) -> xcb_intern_atom_cookie_t;
     pub fn xcb_intern_atom_unchecked(c: *mut xcb_connection_t,
                                      only_if_exists: uint8_t,
                                      name_len: uint16_t,
                                      name: *const ::std::os::raw::c_char)
      -> xcb_intern_atom_cookie_t;
-    pub fn xcb_intern_atom_reply(c: *mut xcb_connection_t,
-                                 cookie: xcb_intern_atom_cookie_t,
-                                 e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_intern_atom_reply_t;
+    pub fn xcb_intern_atom_reply(
+        c: *mut xcb_connection_t, cookie: xcb_intern_atom_cookie_t,
+        e: *mut *mut xcb_generic_error_t) -> *mut xcb_intern_atom_reply_t;
     pub fn xcb_get_atom_name_sizeof(_buffer: *const ::std::os::raw::c_void)
      -> ::std::os::raw::c_int;
     pub fn xcb_get_atom_name(c: *mut xcb_connection_t, atom: xcb_atom_t)
@@ -7338,9 +7338,9 @@ extern "C" {
                              display: *mut ::std::os::raw::c_int,
                              screen: *mut ::std::os::raw::c_int)
      -> ::std::os::raw::c_int;
-    pub fn xcb_connect(displayname: *const ::std::os::raw::c_char,
-                       screenp: *mut ::std::os::raw::c_int)
-     -> *mut xcb_connection_t;
+    pub fn xcb_connect(
+        displayname: *const ::std::os::raw::c_char,
+        screenp: *mut ::std::os::raw::c_int) -> *mut xcb_connection_t;
     pub fn xcb_connect_to_display_with_auth_info(display:
                                                      *const ::std::os::raw::c_char,
                                                  auth: *mut xcb_auth_info_t,

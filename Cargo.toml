@@ -4,9 +4,10 @@ version = "0.1.0"
 authors = ["Hossein Noroozpour (Thany Hulixer) <hossein.noroozpour@gmail.com>"]
 links = "vulkan-1"
 build = "build.rs"
-description = "Game engine"
+description = "Vulakn based game engine"
 license = "GPL-1.0"
 
 [dependencies]
+libc = "0.2"
 
 [build-dependencies]
