@@ -5,7 +5,7 @@ authors = ["Hossein Noroozpour (Thany Hulixer) <hossein.noroozpour@gmail.com>"]
 links = "vulkan-1"
 build = "build.rs"
 description = "Game engine"
-license = "GPL"
+license = "GPL-1.0"
 
 [dependencies]
 
