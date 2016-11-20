@@ -3466,19 +3466,14 @@ pub type PFN_vkGetInstanceProcAddr = unsafe extern "C" fn(
 pub type PFN_vkGetDeviceProcAddr = unsafe extern "C" fn(
     device: VkDevice,
     pName: *const ::std::os::raw::c_char) -> PFN_vkVoidFunction;
-pub type PFN_vkCreateDevice =
-::std::option::Option<unsafe extern "C" fn(physicalDevice:
-                                           VkPhysicalDevice,
-                                           pCreateInfo:
-                                           *const VkDeviceCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pDevice: *mut VkDevice)
-                                           -> VkResult>;
-pub type PFN_vkDestroyDevice =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
+pub type PFN_vkCreateDevice = unsafe extern "C" fn(
+    physicalDevice: VkPhysicalDevice,
+    pCreateInfo: *const VkDeviceCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pDevice: *mut VkDevice) -> VkResult;
+pub type PFN_vkDestroyDevice = unsafe extern "C" fn(
+    device: VkDevice,
+    pAllocator: *const VkAllocationCallbacks);
 pub type PFN_vkEnumerateInstanceExtensionProperties =
 ::std::option::Option<unsafe extern "C" fn(pLayerName:
                                            *const ::std::os::raw::c_char,
@@ -3507,11 +3502,11 @@ pub type PFN_vkEnumerateDeviceLayerProperties =
                                            pProperties:
                                            *mut VkLayerProperties)
                                            -> VkResult>;
-pub type PFN_vkGetDeviceQueue =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           queueFamilyIndex: uint32_t,
-                                           queueIndex: uint32_t,
-                                           pQueue: *mut VkQueue)>;
+pub type PFN_vkGetDeviceQueue = unsafe extern "C" fn(
+    device: VkDevice,
+    queueFamilyIndex: uint32_t,
+    queueIndex: uint32_t,
+    pQueue: *mut VkQueue);
 pub type PFN_vkQueueSubmit =
 ::std::option::Option<unsafe extern "C" fn(queue: VkQueue,
                                            submitCount: uint32_t,
