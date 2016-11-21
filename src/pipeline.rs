@@ -8,7 +8,7 @@ pub fn run() {
 	let ins = Instance::new();
 	println!("Instance created.");
 	let dev = Device::new(&ins);
-	let win = Window::new(800, 500);
+	let win = Window::new();
 	let _ = dev;
     std::thread::sleep(std::time::Duration::from_millis(4000));
 }

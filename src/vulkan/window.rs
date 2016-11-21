@@ -34,6 +34,10 @@ use ::system::vulkan::{
     VkOffset2D,
 };
 
+use ::system::vulkan_xcb::{
+    VkXcbSurfaceCreateInfoKHR
+};
+
 use std::default::Default;
 use std::ffi::CString;
 use std::mem::transmute;
@@ -44,13 +48,20 @@ use std::os::raw::{
     c_void,
 };
 
+use instance::Instance;
+
 pub struct Window {
 
 }
 
 impl Window {
+    pub fn new(ins: &Instance) -> Self {
+        let w = Window::os_window(900, 500);
+        w
+    }
+
     #[cfg(target_os = "linux")]
-    pub fn new(width: u32, height: u32) -> Self {
+    pub fn os_window(ins: &Instance, width: u32, height: u32) -> Self {
         let mut setup = 0 as *const xcb_setup_t;
         let mut iter = xcb_screen_iterator_t::default();
         let mut screen = 0 as c_int;
@@ -116,6 +127,13 @@ impl Window {
         unsafe {
             xcb_flush(xcb_connection);
         }
+        let create_info = VkXcbSurfaceCreateInfoKHR {
+            sType: VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,
+            connection: _xcb_connection,
+            window: xcb_window,
+            ..VkXcbSurfaceCreateInfoKHR::default()
+        };
+        vulkan_check!(vkCreateXcbSurfaceKHR(ins.vk_instance, &create_info as *const , nullptr, &_surface ) );
         Window {}
     }
 }

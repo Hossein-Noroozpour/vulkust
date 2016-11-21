@@ -4841,14 +4841,13 @@ extern "C" {
         instance: VkInstance,
         pPhysicalDeviceCount: *mut uint32_t,
         pPhysicalDevices: *mut VkPhysicalDevice) -> VkResult;
-    pub fn vkGetPhysicalDeviceFeatures(physicalDevice: VkPhysicalDevice,
-                                       pFeatures:
-                                       *mut VkPhysicalDeviceFeatures);
-    pub fn vkGetPhysicalDeviceFormatProperties(physicalDevice:
-                                               VkPhysicalDevice,
-                                               format: VkFormat,
-                                               pFormatProperties:
-                                               *mut VkFormatProperties);
+    pub fn vkGetPhysicalDeviceFeatures(
+        physicalDevice: VkPhysicalDevice,
+        pFeatures: *mut VkPhysicalDeviceFeatures);
+    pub fn vkGetPhysicalDeviceFormatProperties(
+        physicalDevice: VkPhysicalDevice,
+        format: VkFormat,
+        pFormatProperties: *mut VkFormatProperties);
     pub fn vkGetPhysicalDeviceImageFormatProperties(physicalDevice:
                                                     VkPhysicalDevice,
                                                     format: VkFormat,
