@@ -1,6 +1,16 @@
 #![allow(dead_code, non_camel_case_types, non_upper_case_globals, non_snake_case)]
-use system::vulkan::*;
-use system::xcb::*;
+use system::vulkan::{
+    VkFlags,
+    VkResult,
+    VkInstance,
+    VkSurfaceKHR,
+    VkStructureType,
+    VkAllocationCallbacks,
+};
+use system::xcb::{
+    xcb_window_t,
+    xcb_connection_t,
+};
 
 pub type VkXcbSurfaceCreateFlagsKHR = VkFlags;
 
@@ -8,11 +18,11 @@ pub type VkXcbSurfaceCreateFlagsKHR = VkFlags;
 #[derive(Copy, Clone)]
 #[derive(Debug)]
 pub struct VkXcbSurfaceCreateInfoKHR {
-    sType: VkStructureType,
-    pNext: *const ::std::os::raw::c_void,
-    flags: VkXcbSurfaceCreateFlagsKHR,
-    connection: *mut xcb_connection_t,
-    window: xcb_window_t,
+    pub sType: VkStructureType,
+    pub pNext: *const ::std::os::raw::c_void,
+    pub flags: VkXcbSurfaceCreateFlagsKHR,
+    pub connection: *mut xcb_connection_t,
+    pub window: xcb_window_t,
 }
 
 impl ::std::default::Default for VkXcbSurfaceCreateInfoKHR {

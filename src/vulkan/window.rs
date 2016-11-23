@@ -6,7 +6,9 @@ use ::system::xcb::{
     xcb_flush,
     xcb_setup_t,
     xcb_connect,
+    xcb_window_t,
     xcb_get_setup,
+    xcb_disconnect,
     xcb_map_window,
     xcb_generate_id,
     xcb_screen_next,
@@ -15,6 +17,7 @@ use ::system::xcb::{
     xcb_connection_t,
     xcb_event_mask_t,
     xcb_create_window,
+    xcb_destroy_window,
     xcb_window_class_t,
     xcb_config_window_t,
     xcb_generic_error_t,
@@ -22,7 +25,6 @@ use ::system::xcb::{
     xcb_configure_window,
     xcb_intern_atom_reply,
     xcb_screen_iterator_t,
-    xcb_intern_atom_cookie_t,
     xcb_setup_roots_iterator,
 
     XCB_COPY_FROM_PARENT,
@@ -30,14 +32,21 @@ use ::system::xcb::{
 
 use ::system::vulkan::{
     VkRect2D,
+    VkResult,
     VkExtent2D,
     VkOffset2D,
+    VkSurfaceKHR,
+    VkStructureType,
+    vkDestroySurfaceKHR,
+    VkAllocationCallbacks,
 };
 
 use ::system::vulkan_xcb::{
-    VkXcbSurfaceCreateInfoKHR
+    vkCreateXcbSurfaceKHR,
+    VkXcbSurfaceCreateInfoKHR,
 };
 
+use std::mem::zeroed;
 use std::default::Default;
 use std::ffi::CString;
 use std::mem::transmute;
@@ -45,25 +54,25 @@ use std::os::raw::{
     c_int,
     c_uint,
     c_char,
-    c_void,
+};
+use std::sync::{
+    Arc,
+    RwLock,
 };
 
-use instance::Instance;
+use super::device::Device;
 
-pub struct Window {
-
+#[cfg(target_os = "linux")]
+struct OsWindow {
+    connection: *mut xcb_connection_t,
+    window: xcb_window_t
 }
 
-impl Window {
-    pub fn new(ins: &Instance) -> Self {
-        let w = Window::os_window(900, 500);
-        w
-    }
-
-    #[cfg(target_os = "linux")]
-    pub fn os_window(ins: &Instance, width: u32, height: u32) -> Self {
-        let mut setup = 0 as *const xcb_setup_t;
-        let mut iter = xcb_screen_iterator_t::default();
+#[cfg(target_os = "linux")]
+impl OsWindow {
+    fn new(window: &mut Window, width: u32, height: u32) -> Self {
+        let setup: *const xcb_setup_t;
+        let mut iter: xcb_screen_iterator_t;
         let mut screen = 0 as c_int;
         let xcb_connection = unsafe { xcb_connect(0 as *const c_char, &mut screen as *mut c_int) };
         if xcb_connection == (0 as *mut xcb_connection_t) {
@@ -71,10 +80,12 @@ impl Window {
         }
         setup = unsafe {xcb_get_setup(xcb_connection) };
         iter = unsafe { xcb_setup_roots_iterator(setup) };
+        let _ = setup;
         for _ in 0..screen {
             unsafe { xcb_screen_next(&mut iter as *mut xcb_screen_iterator_t); }
         }
-        let mut xcb_screen = iter.data;
+        let xcb_screen = iter.data;
+        let _ = iter;
         let dimensions = VkRect2D {
             offset: VkOffset2D {
                 x: 0,
@@ -85,9 +96,9 @@ impl Window {
                 height: height
             },
         };
-        let mut value_mask: c_uint = 0;
+        let value_mask: c_uint;
         let mut value_list = [0 as c_uint; 32];
-        let mut xcb_window = unsafe { xcb_generate_id(xcb_connection) };
+        let xcb_window = unsafe { xcb_generate_id(xcb_connection) };
         value_mask = (xcb_cw_t::XCB_CW_BACK_PIXEL as c_uint) |
             (xcb_cw_t::XCB_CW_EVENT_MASK as c_uint);
         value_list[0] = unsafe { (*xcb_screen).black_pixel };
@@ -102,7 +113,7 @@ impl Window {
                 value_mask, value_list.as_ptr() as *const u32);
         }
         let wm_protocols = CString::new("WM_PROTOCOLS").unwrap();
-        let mut cookie = unsafe { xcb_intern_atom(xcb_connection, 1, 12, wm_protocols.as_ptr()) };
+        let cookie = unsafe { xcb_intern_atom(xcb_connection, 1, 12, wm_protocols.as_ptr()) };
         let reply = unsafe { xcb_intern_atom_reply(
             xcb_connection, cookie, 0 as *mut *mut xcb_generic_error_t) };
         let wm_delete_window = CString::new("WM_DELETE_WINDOW").unwrap();
@@ -129,11 +140,69 @@ impl Window {
         }
         let create_info = VkXcbSurfaceCreateInfoKHR {
             sType: VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,
-            connection: _xcb_connection,
+            connection: xcb_connection,
             window: xcb_window,
             ..VkXcbSurfaceCreateInfoKHR::default()
         };
-        vulkan_check!(vkCreateXcbSurfaceKHR(ins.vk_instance, &create_info as *const , nullptr, &_surface ) );
-        Window {}
+        let dev = window.device.read().unwrap();
+        let ins = dev.instance.read().unwrap();
+        vulkan_check!(vkCreateXcbSurfaceKHR(ins.vk_instance,
+            &create_info as *const VkXcbSurfaceCreateInfoKHR, 0 as *const VkAllocationCallbacks,
+            &mut window.surface as *mut VkSurfaceKHR));
+        OsWindow {
+            connection: xcb_connection,
+            window: xcb_window,
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+impl Default for OsWindow {
+    fn default() -> Self {
+        unsafe {
+            zeroed()
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+impl Drop for OsWindow {
+    fn drop(&mut self) {
+        if self.connection == 0 as *mut xcb_connection_t {
+            return;
+        }
+        unsafe { xcb_destroy_window(self.connection, self.window); }
+        unsafe { xcb_disconnect(self.connection); }
+        self.connection = 0 as *mut xcb_connection_t;
+    }
+}
+
+
+pub struct Window {
+    device: Arc<RwLock<Device>>,
+    window: OsWindow,
+    surface: VkSurfaceKHR,
+}
+
+impl Window {
+    pub fn new(device: Arc<RwLock<Device>>) -> Self {
+        let mut window = Window {
+            device: device,
+            window: OsWindow::default(),
+            surface: 0 as VkSurfaceKHR,
+        };
+        window.window = OsWindow::new(&mut window, 900, 500);
+        window
+    }
+}
+
+impl Drop for Window {
+    fn drop(&mut self) {
+        let dev = self.device.read().unwrap();
+        let ins = dev.instance.read().unwrap();
+        unsafe {
+            vkDestroySurfaceKHR(ins.vk_instance, self.surface, 0 as *const VkAllocationCallbacks);
+        }
+        self.window = OsWindow::default();
     }
 }

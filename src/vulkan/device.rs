@@ -1,5 +1,6 @@
 use super::instance::Instance;
-use ::system::vulkan::{
+
+use super::super::system::vulkan::{
     VkQueue,
     uint32_t,
     VkDevice,
@@ -20,24 +21,30 @@ use ::system::vulkan::{
 
 use std::default::Default;
 use std::ffi::CString;
+use std::sync::{
+    Arc,
+    RwLock,
+};
 
 pub struct Device {
-    vk_device: VkDevice,
+    pub instance: Arc<RwLock<Instance>>,
+    pub vk_device: VkDevice,
 }
 
 impl Device {
-    pub fn new(instance: &Instance) -> Self {
+    pub fn new(instance: Arc<RwLock<Instance>>) -> Self {
         let mut gpu_count: uint32_t = 0;
+        let ins = instance.read().unwrap();
         vulkan_check!(
             vkEnumeratePhysicalDevices(
-                instance.vk_instance,
+                ins.vk_instance,
                 &mut gpu_count as *mut uint32_t,
                 0 as *mut VkPhysicalDevice));
         println!("Number of devices is: {}", gpu_count);
         let mut devices = vec![0 as VkPhysicalDevice; gpu_count as usize];
         vulkan_check!(
             vkEnumeratePhysicalDevices(
-                instance.vk_instance,
+                ins.vk_instance,
                 &mut gpu_count as *mut uint32_t,
                 devices.as_mut_ptr() as *mut VkPhysicalDevice));
         let gpu = devices[0]; // TODO: it can be better
@@ -93,6 +100,7 @@ impl Device {
             vkGetDeviceQueue(device, graphics_family_index, 0, &mut queue as *mut VkQueue);
         }
         Device {
+            instance: instance.clone(),
             vk_device: device,
         }
     }
