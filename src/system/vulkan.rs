@@ -4372,22 +4372,15 @@ pub type PFN_vkGetPhysicalDeviceSurfaceSupportKHR =
                                            surface: VkSurfaceKHR,
                                            pSupported: *mut VkBool32)
                                            -> VkResult>;
-pub type PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR =
-::std::option::Option<unsafe extern "C" fn(physicalDevice:
-                                           VkPhysicalDevice,
-                                           surface: VkSurfaceKHR,
-                                           pSurfaceCapabilities:
-                                           *mut VkSurfaceCapabilitiesKHR)
-                                           -> VkResult>;
-pub type PFN_vkGetPhysicalDeviceSurfaceFormatsKHR =
-::std::option::Option<unsafe extern "C" fn(physicalDevice:
-                                           VkPhysicalDevice,
-                                           surface: VkSurfaceKHR,
-                                           pSurfaceFormatCount:
-                                           *mut uint32_t,
-                                           pSurfaceFormats:
-                                           *mut VkSurfaceFormatKHR)
-                                           -> VkResult>;
+pub type PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = unsafe extern "C" fn(
+    physicalDevice: VkPhysicalDevice,
+    surface: VkSurfaceKHR,
+    pSurfaceCapabilities: *mut VkSurfaceCapabilitiesKHR) -> VkResult;
+pub type PFN_vkGetPhysicalDeviceSurfaceFormatsKHR = unsafe extern "C" fn(
+    physicalDevice: VkPhysicalDevice,
+    surface: VkSurfaceKHR,
+    pSurfaceFormatCount: *mut uint32_t,
+    pSurfaceFormats: *mut VkSurfaceFormatKHR) -> VkResult;
 pub type PFN_vkGetPhysicalDeviceSurfacePresentModesKHR =
 ::std::option::Option<unsafe extern "C" fn(physicalDevice:
                                            VkPhysicalDevice,
@@ -5364,14 +5357,9 @@ extern "C" {
                                                      pSurfaceCapabilities:
                                                      *mut VkSurfaceCapabilitiesKHR)
                                                      -> VkResult;
-    pub fn vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice:
-                                                VkPhysicalDevice,
-                                                surface: VkSurfaceKHR,
-                                                pSurfaceFormatCount:
-                                                *mut uint32_t,
-                                                pSurfaceFormats:
-                                                *mut VkSurfaceFormatKHR)
-                                                -> VkResult;
+    pub fn vkGetPhysicalDeviceSurfaceFormatsKHR(
+        physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR, pSurfaceFormatCount: *mut uint32_t,
+        pSurfaceFormats: *mut VkSurfaceFormatKHR) -> VkResult;
     pub fn vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice:
                                                      VkPhysicalDevice,
                                                      surface: VkSurfaceKHR,

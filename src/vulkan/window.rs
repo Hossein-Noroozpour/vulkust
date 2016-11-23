@@ -30,8 +30,9 @@ use ::system::xcb::{
     XCB_COPY_FROM_PARENT,
 };
 
-use ::system::vulkan::{
+use super::super::system::vulkan::{
     VkRect2D,
+    VkFormat,
     VkResult,
     VkExtent2D,
     VkOffset2D,
@@ -39,6 +40,9 @@ use ::system::vulkan::{
     VkStructureType,
     vkDestroySurfaceKHR,
     VkAllocationCallbacks,
+    VkSurfaceCapabilitiesKHR,
+    vkGetPhysicalDeviceSurfaceSupportKHR,
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
 };
 
 use ::system::vulkan_xcb::{
@@ -192,6 +196,47 @@ impl Window {
             surface: 0 as VkSurfaceKHR,
         };
         window.window = OsWindow::new(&mut window, 900, 500);
+        let dev = window.device.read().unwrap();
+        let mut wsi_supported = 0u32;
+        unsafe {
+            vkGetPhysicalDeviceSurfaceSupportKHR(
+                dev.gpu, dev.graphics_family_index, window.surface, &mut wsi_supported as *mut u32);
+        }
+        if wsi_supported != 0 {
+            panic!("Error WSI is not supported for device.");
+        }
+        let mut surface_capabilities = VkSurfaceCapabilitiesKHR::default();
+        unsafe {
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+                dev.gpu, window.surface,
+                &mut surface_capabilities as *mut VkSurfaceCapabilitiesKHR);
+        }
+        let mut (window_width, window_height) =
+            if surface_capabilities.currentExtent.width < u32::max_value() {
+                (surface_capabilities.currentExtent.width,
+                    surface_capabilities.currentExtent.height)
+            }
+        let mut format_count = 0u32;
+        unsafe {
+            vkGetPhysicalDeviceSurfaceFormatsKHR(
+                dev.gpu, window.surface,
+                &format_count as *mut u32, 0 as *mut VkSurfaceFormatKHR);
+        }
+        if format_count == 0 {
+            panic!("Surface formats missing.");
+        }
+        let mut formats = [VkSurfaceFormatKHR::default(); format_count as usize];
+        unsafe {
+            vkGetPhysicalDeviceSurfaceFormatsKHR(
+                dev.gpu, window.surface, &format_count as *mut u32,
+                formats.as_mut_ptr() as *mut VkSurfaceFormatKHR);
+        }
+        if formats[0].format == VkFormat::VK_FORMAT_UNDEFINED {
+            surface_format.format		= VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
+            surface_format.colorSpace	= VkFormat::VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+        } else {
+            surface_format = formats[ 0 ];
+        }
         window
     }
 }
