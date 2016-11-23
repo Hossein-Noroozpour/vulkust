@@ -37,15 +37,18 @@ use super::super::system::vulkan::{
     VkExtent2D,
     VkOffset2D,
     VkSurfaceKHR,
+    VkColorSpaceKHR,
     VkStructureType,
+    VkSurfaceFormatKHR,
     vkDestroySurfaceKHR,
     VkAllocationCallbacks,
     VkSurfaceCapabilitiesKHR,
+    vkGetPhysicalDeviceSurfaceFormatsKHR,
     vkGetPhysicalDeviceSurfaceSupportKHR,
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
 };
 
-use ::system::vulkan_xcb::{
+use super::super::system::vulkan_xcb::{
     vkCreateXcbSurfaceKHR,
     VkXcbSurfaceCreateInfoKHR,
 };
@@ -186,6 +189,7 @@ pub struct Window {
     device: Arc<RwLock<Device>>,
     window: OsWindow,
     surface: VkSurfaceKHR,
+    surface_format: VkSurfaceFormatKHR,
 }
 
 impl Window {
@@ -194,13 +198,18 @@ impl Window {
             device: device,
             window: OsWindow::default(),
             surface: 0 as VkSurfaceKHR,
+            surface_format: VkSurfaceFormatKHR::default(),
         };
         window.window = OsWindow::new(&mut window, 900, 500);
-        let dev = window.device.read().unwrap();
+        window.initialize_surface();
+        return window;
+    }
+    fn initialize_surface(&mut self) {
+        let dev = self.device.read().unwrap();
         let mut wsi_supported = 0u32;
         unsafe {
             vkGetPhysicalDeviceSurfaceSupportKHR(
-                dev.gpu, dev.graphics_family_index, window.surface, &mut wsi_supported as *mut u32);
+                dev.gpu, dev.graphics_family_index, self.surface, &mut wsi_supported as *mut u32);
         }
         if wsi_supported != 0 {
             panic!("Error WSI is not supported for device.");
@@ -208,36 +217,36 @@ impl Window {
         let mut surface_capabilities = VkSurfaceCapabilitiesKHR::default();
         unsafe {
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-                dev.gpu, window.surface,
+                dev.gpu, self.surface,
                 &mut surface_capabilities as *mut VkSurfaceCapabilitiesKHR);
         }
-        let mut (window_width, window_height) =
-            if surface_capabilities.currentExtent.width < u32::max_value() {
-                (surface_capabilities.currentExtent.width,
-                    surface_capabilities.currentExtent.height)
-            }
+//        let window_width;
+//        let window_height;
+//        if surface_capabilities.currentExtent.width < u32::max_value() {
+//            window_width = surface_capabilities.currentExtent.width;
+//            window_height = surface_capabilities.currentExtent.height;
+//        }
         let mut format_count = 0u32;
         unsafe {
             vkGetPhysicalDeviceSurfaceFormatsKHR(
-                dev.gpu, window.surface,
-                &format_count as *mut u32, 0 as *mut VkSurfaceFormatKHR);
+                dev.gpu, self.surface,
+                &mut format_count as *mut u32, 0 as *mut VkSurfaceFormatKHR);
         }
         if format_count == 0 {
             panic!("Surface formats missing.");
         }
-        let mut formats = [VkSurfaceFormatKHR::default(); format_count as usize];
+        let mut formats = vec![VkSurfaceFormatKHR::default(); format_count as usize];
         unsafe {
             vkGetPhysicalDeviceSurfaceFormatsKHR(
-                dev.gpu, window.surface, &format_count as *mut u32,
+                dev.gpu, self.surface, &mut format_count as *mut u32,
                 formats.as_mut_ptr() as *mut VkSurfaceFormatKHR);
         }
-        if formats[0].format == VkFormat::VK_FORMAT_UNDEFINED {
-            surface_format.format		= VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
-            surface_format.colorSpace	= VkFormat::VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+        if (formats[0].format as u32) == (VkFormat::VK_FORMAT_UNDEFINED as u32) {
+            self.surface_format.format = VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
+            self.surface_format.colorSpace = VkColorSpaceKHR::VK_COLORSPACE_SRGB_NONLINEAR_KHR;
         } else {
-            surface_format = formats[ 0 ];
+            self.surface_format = formats[0];
         }
-        window
     }
 }
 
