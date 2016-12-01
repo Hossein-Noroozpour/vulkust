@@ -24,14 +24,14 @@ impl Swapchain {
             imageArrayLayers: 1,
             imageUsage: VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             imageSharingMode: VkSharingMode::VK_SHARING_MODE_EXCLUSIVE,
+            queueFamilyIndexCount: 0,
+            pQueueFamilyIndices: nullptr,
+            preTransform: VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+            compositeAlpha: VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+            presentMode: present_mode,
+            clipped: VK_TRUE,
+            oldSwapchain: VK_NULL_HANDLE,
         };
-        swapchain_create_info.queueFamilyIndexCount		= 0;
-        swapchain_create_info.pQueueFamilyIndices		= nullptr;
-        swapchain_create_info.preTransform				= VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-        swapchain_create_info.compositeAlpha			= VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        swapchain_create_info.presentMode				= present_mode;
-        swapchain_create_info.clipped					= VK_TRUE;
-        swapchain_create_info.oldSwapchain				= VK_NULL_HANDLE;
 
         ErrorCheck( vkCreateSwapchainKHR( _renderer->GetVulkanDevice(), &swapchain_create_info, nullptr, &_swapchain ) );
 

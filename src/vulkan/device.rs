@@ -33,6 +33,17 @@ pub struct Device {
     pub graphics_family_index: u32,
 }
 
+// TODO: it need a good way to find the better physical device
+// TODO: in case it was needed: device properties
+// TODO: in case it was needed: feature
+// TODO: in case it was needed: memory properties
+// TODO: in case it was needed: queue family properties
+// TODO: in case it was needed: more than graphic queue, maybe compute or transfer; it must try to
+//                              find dedicated queue at first but if there wasn't any dedicated
+//                              choose non-dedicated
+// TODO: in case it was needed: debug marker extension if it was present and we had a external
+//                              debug tool
+
 impl Device {
     pub fn new(instance: Arc<RwLock<Instance>>) -> Self {
         let mut gpu_count: uint32_t = 0;
