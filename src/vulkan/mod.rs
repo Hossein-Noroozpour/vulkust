@@ -3,6 +3,7 @@ pub mod device;
 pub mod window;
 pub mod command;
 pub mod swapchain;
+pub mod image;
 
 use std;
 use std::sync::{
