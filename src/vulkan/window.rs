@@ -165,7 +165,7 @@ impl OsWindow {
         let ins = dev.instance.read().unwrap();
         vulkan_check!(vkCreateXcbSurfaceKHR(ins.vk_instance,
             &create_info as *const VkXcbSurfaceCreateInfoKHR, 0 as *const VkAllocationCallbacks,
-            &mut window.surface as *mut VkSurfaceKHR));
+            &mut window.vk_surface as *mut VkSurfaceKHR));
         OsWindow {
             connection: xcb_connection,
             window: xcb_window,
@@ -196,11 +196,11 @@ impl Drop for OsWindow {
 
 
 pub struct Window {
-    device: Arc<RwLock<Device>>,
     window: OsWindow,
-    vk_surface: VkSurfaceKHR,
-    vk_surface_format: VkSurfaceFormatKHR,
-    vk_surface_capabilities: VkSurfaceCapabilitiesKHR,
+    pub device: Arc<RwLock<Device>>,
+    pub vk_surface: VkSurfaceKHR,
+    pub vk_surface_format: VkSurfaceFormatKHR,
+    pub vk_surface_capabilities: VkSurfaceCapabilitiesKHR,
 }
 
 impl Window {
@@ -236,7 +236,7 @@ impl Window {
             let ptr_supports_present = supports_present.as_mut_ptr();
             for i in 0..queue_count {
                 vulkan_check!(vkGetPhysicalDeviceSurfaceSupportKHR(
-                    dev.gpu, i, self.surface, ptr_supports_present.offset(i as isize)));
+                    dev.gpu, i, self.vk_surface, ptr_supports_present.offset(i as isize)));
             }
         }
         let mut graphics_queue_node_index = u32::max_value();
