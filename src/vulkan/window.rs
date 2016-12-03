@@ -231,7 +231,7 @@ impl Window {
         }
         let mut supports_present = vec![0 as VkBool32; queue_count as usize];
         {
-            let mut ptr_supports_present = supports_present.as_mut_ptr();
+            let ptr_supports_present = supports_present.as_mut_ptr();
             for i in 0..queue_count {
                 vulkan_check!(vkGetPhysicalDeviceSurfaceSupportKHR(
                     dev.gpu, i, self.surface, ptr_supports_present.offset(i as isize)));

@@ -2,6 +2,7 @@ use super::super::super::system::vulkan::{
     VkResult,
     VkCommandBuffer,
     VkStructureType,
+    vkFreeCommandBuffers,
     VkCommandBufferLevel,
     vkBeginCommandBuffer,
     VkCommandBufferBeginInfo,
@@ -28,7 +29,7 @@ impl Buffer {
         let device = pool.device.read().unwrap();
         let cmd_buf_allocate_info = VkCommandBufferAllocateInfo {
             sType: VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            commandPool: pool.vk_cmd_pool,
+            commandPool: pool.vk_pool,
             level: VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY,
             commandBufferCount: 1,
             ..VkCommandBufferAllocateInfo::default()
@@ -45,6 +46,16 @@ impl Buffer {
         Buffer {
             pool: cmd_pool.clone(),
             vk_buffer: vk_buffer,
+        }
+    }
+}
+
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        let pool = self.pool.read().unwrap();
+        let device = pool.device.read().unwrap();
+        unsafe {
+            vkFreeCommandBuffers(device.vk_device, pool.vk_pool, 1, &mut self.vk_buffer);
         }
     }
 }

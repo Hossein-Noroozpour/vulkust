@@ -3,6 +3,7 @@ use super::super::super::system::vulkan::{
     VkCommandPool,
     VkStructureType,
     vkCreateCommandPool,
+    vkDestroyCommandPool,
     VkAllocationCallbacks,
     VkCommandPoolCreateInfo,
     VkCommandPoolCreateFlagBits,
@@ -18,7 +19,7 @@ use std::sync::{
 
 pub struct Pool {
     pub device: Arc<RwLock<Device>>,
-    pub vk_cmd_pool: VkCommandPool,
+    pub vk_pool: VkCommandPool,
 }
 
 impl Pool {
@@ -38,9 +39,16 @@ impl Pool {
         }
         Pool {
             device: device,
-            vk_cmd_pool: vk_cmd_pool,
+            vk_pool: vk_cmd_pool,
         }
     }
 }
 
-// TODO: write drop function for it
+impl Drop for Pool {
+    fn drop(&mut self) {
+        let device = self.device.read().unwrap();
+        unsafe {
+            vkDestroyCommandPool(device.vk_device, self.vk_pool, 0 as *const VkAllocationCallbacks);
+        }
+    }
+}
