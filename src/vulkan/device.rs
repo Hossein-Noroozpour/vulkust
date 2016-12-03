@@ -40,9 +40,7 @@ pub struct Device {
 // TODO: in case it was needed: queue family properties
 // TODO: in case it was needed: more than graphic queue, maybe compute or transfer; it must try to
 //                              find dedicated queue at first but if there wasn't any dedicated
-//                              choose non-dedicated
-// TODO: in case it was needed: debug marker extension if it was present and we had a external
-//                              debug tool
+// TODO: in case it was needed: memory properties
 
 impl Device {
     pub fn new(instance: Arc<RwLock<Instance>>) -> Self {

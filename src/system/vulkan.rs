@@ -5345,12 +5345,11 @@ extern "C" {
                                 pCommandBuffers: *const VkCommandBuffer);
     pub fn vkDestroySurfaceKHR(instance: VkInstance, surface: VkSurfaceKHR,
                                pAllocator: *const VkAllocationCallbacks);
-    pub fn vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice:
-                                                VkPhysicalDevice,
-                                                queueFamilyIndex: uint32_t,
-                                                surface: VkSurfaceKHR,
-                                                pSupported: *mut VkBool32)
-                                                -> VkResult;
+    pub fn vkGetPhysicalDeviceSurfaceSupportKHR(
+        physicalDevice: VkPhysicalDevice,
+        queueFamilyIndex: uint32_t,
+        surface: VkSurfaceKHR,
+        pSupported: *mut VkBool32) -> VkResult;
     pub fn vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice:
                                                      VkPhysicalDevice,
                                                      surface: VkSurfaceKHR,

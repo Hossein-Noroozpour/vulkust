@@ -1,7 +1,7 @@
 extern crate libc;
 
 #[cfg(target_os = "linux")]
-use ::system::xcb::{
+use super::super::system::xcb::{
     xcb_cw_t,
     xcb_flush,
     xcb_setup_t,
@@ -34,17 +34,21 @@ use super::super::system::vulkan::{
     VkRect2D,
     VkFormat,
     VkResult,
+    VkBool32,
     VkExtent2D,
     VkOffset2D,
     VkSurfaceKHR,
+    VkQueueFlagBits,
     VkColorSpaceKHR,
     VkStructureType,
     VkSurfaceFormatKHR,
     vkDestroySurfaceKHR,
     VkAllocationCallbacks,
+    VkQueueFamilyProperties,
     VkSurfaceCapabilitiesKHR,
     vkGetPhysicalDeviceSurfaceFormatsKHR,
     vkGetPhysicalDeviceSurfaceSupportKHR,
+    vkGetPhysicalDeviceQueueFamilyProperties,
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
 };
 
@@ -109,8 +113,14 @@ impl OsWindow {
         value_mask = (xcb_cw_t::XCB_CW_BACK_PIXEL as c_uint) |
             (xcb_cw_t::XCB_CW_EVENT_MASK as c_uint);
         value_list[0] = unsafe { (*xcb_screen).black_pixel };
-        value_list[1] = (xcb_event_mask_t::XCB_EVENT_MASK_KEY_RELEASE as c_uint) |
-            (xcb_event_mask_t::XCB_EVENT_MASK_EXPOSURE as c_uint);
+        value_list[1] =
+            (xcb_event_mask_t::XCB_EVENT_MASK_KEY_RELEASE as c_uint) |
+            (xcb_event_mask_t::XCB_EVENT_MASK_KEY_PRESS as c_uint) |
+            (xcb_event_mask_t::XCB_EVENT_MASK_EXPOSURE as c_uint) |
+            (xcb_event_mask_t::XCB_EVENT_MASK_STRUCTURE_NOTIFY as c_uint) |
+            (xcb_event_mask_t::XCB_EVENT_MASK_POINTER_MOTION as c_uint) |
+            (xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_PRESS as c_uint) |
+            (xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_RELEASE as c_uint);
         unsafe {
             xcb_create_window(
                 xcb_connection, XCB_COPY_FROM_PARENT as u8, xcb_window, (*xcb_screen).root,
@@ -205,13 +215,66 @@ impl Window {
         return window;
     }
     fn initialize_surface(&mut self) {
-        let dev = self.device.read().unwrap();
+        let mut dev = self.device.write().unwrap();
+        let mut queue_count = 0u32;
+        unsafe {
+            vkGetPhysicalDeviceQueueFamilyProperties(
+                dev.gpu, &mut queue_count, 0 as *mut VkQueueFamilyProperties);
+        }
+        if queue_count < 1 {
+            panic!("Error no queue found.");
+        }
+        let mut queue_props = vec![VkQueueFamilyProperties::default(); queue_count as usize];
+        unsafe {
+            vkGetPhysicalDeviceQueueFamilyProperties(
+                dev.gpu, &mut queue_count, queue_props.as_mut_ptr());
+        }
+        let mut supports_present = vec![0 as VkBool32; queue_count as usize];
+        {
+            let mut ptr_supports_present = supports_present.as_mut_ptr();
+            for i in 0..queue_count {
+                vulkan_check!(vkGetPhysicalDeviceSurfaceSupportKHR(
+                    dev.gpu, i, self.surface, ptr_supports_present.offset(i as isize)));
+            }
+        }
+        let mut graphics_queue_node_index = u32::max_value();
+        let mut present_queue_node_index = u32::max_value();
+        for i in 0..queue_count {
+            if (queue_props[i as usize].queueFlags &
+                (VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 {
+                if graphics_queue_node_index == u32::max_value() {
+                    graphics_queue_node_index = i;
+                }
+                if supports_present[i as usize] != 0 as VkBool32 {
+                    graphics_queue_node_index = i;
+                    present_queue_node_index = i;
+                    break;
+                }
+            }
+        }
+        if present_queue_node_index == u32::max_value() {
+            for i in 0..queue_count {
+                if supports_present[i as usize] != 0 as VkBool32 {
+                    present_queue_node_index = i;
+                    break;
+                }
+            }
+        }
+        if graphics_queue_node_index == u32::max_value() ||
+            present_queue_node_index == u32::max_value() {
+            panic!("Could not find a graphics and/or presenting queue!");
+        }
+        // TODO: Add support for separate graphics and presenting queue
+        if graphics_queue_node_index != present_queue_node_index {
+            panic!("Separate graphics and presenting queues are not supported yet!");
+        }
+        dev.graphics_family_index = graphics_queue_node_index;
         let mut wsi_supported = 0u32;
         unsafe {
             vkGetPhysicalDeviceSurfaceSupportKHR(
                 dev.gpu, dev.graphics_family_index, self.surface, &mut wsi_supported as *mut u32);
         }
-        if wsi_supported != 0 {
+        if wsi_supported == 0 {
             panic!("Error WSI is not supported for device.");
         }
         let mut surface_capabilities = VkSurfaceCapabilitiesKHR::default();
@@ -220,12 +283,6 @@ impl Window {
                 dev.gpu, self.surface,
                 &mut surface_capabilities as *mut VkSurfaceCapabilitiesKHR);
         }
-//        let window_width;
-//        let window_height;
-//        if surface_capabilities.currentExtent.width < u32::max_value() {
-//            window_width = surface_capabilities.currentExtent.width;
-//            window_height = surface_capabilities.currentExtent.height;
-//        }
         let mut format_count = 0u32;
         unsafe {
             vkGetPhysicalDeviceSurfaceFormatsKHR(
