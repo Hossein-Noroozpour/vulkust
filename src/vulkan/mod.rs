@@ -17,6 +17,7 @@ pub fn run() {
         dev.clone(),
         dev.read().unwrap().graphics_family_index);
     let win = Arc::new(RwLock::new(window::Window::new(dev.clone())));
+    let swp = Arc::new(RwLock::new(swapchain::Swapchain::new(win.clone())));
     std::thread::sleep(std::time::Duration::from_millis(4000));
     let _ = win;
 }

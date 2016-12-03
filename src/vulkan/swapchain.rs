@@ -39,7 +39,7 @@ pub struct Swapchain {
 }
 
 impl Swapchain {
-    pub fn new(window: Arc<RwLock<Window>>, width: u32, height: u32) -> Self {
+    pub fn new(window: Arc<RwLock<Window>>) -> Self {
         let win = window.read().unwrap();
         let dev = win.device.read().unwrap();
         if win.vk_surface_capabilities.maxImageCount < 2 {
