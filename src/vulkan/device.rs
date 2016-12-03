@@ -28,7 +28,7 @@ use std::sync::{
 
 pub struct Device {
     pub instance: Arc<RwLock<Instance>>,
-    pub device: VkDevice,
+    pub vk_device: VkDevice,
     pub gpu: VkPhysicalDevice,
     pub graphics_family_index: u32,
 }
@@ -112,7 +112,7 @@ impl Device {
         }
         Device {
             instance: instance.clone(),
-            device: device,
+            vk_device: device,
             gpu: gpu,
             graphics_family_index: graphics_family_index,
         }
@@ -122,7 +122,7 @@ impl Device {
 impl Drop for Device {
     fn drop(&mut self) {
         unsafe {
-            vkDestroyDevice(self.device, 0 as *const VkAllocationCallbacks);
+            vkDestroyDevice(self.vk_device, 0 as *const VkAllocationCallbacks);
         }
     }
 }

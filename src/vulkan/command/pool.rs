@@ -17,8 +17,8 @@ use std::sync::{
 };
 
 pub struct Pool {
-    device: Arc<RwLock<Device>>,
-    vk_cmd_pool: VkCommandPool,
+    pub device: Arc<RwLock<Device>>,
+    pub vk_cmd_pool: VkCommandPool,
 }
 
 impl Pool {
@@ -33,7 +33,7 @@ impl Pool {
         {
             let dev = device.read().unwrap();
             vulkan_check!(vkCreateCommandPool(
-                dev.device, &vk_cmd_pool_info, 0 as *const VkAllocationCallbacks,
+                dev.vk_device, &vk_cmd_pool_info, 0 as *const VkAllocationCallbacks,
                 &mut vk_cmd_pool));
         }
         Pool {
