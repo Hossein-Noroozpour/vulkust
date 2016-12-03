@@ -198,8 +198,9 @@ impl Drop for OsWindow {
 pub struct Window {
     device: Arc<RwLock<Device>>,
     window: OsWindow,
-    surface: VkSurfaceKHR,
-    surface_format: VkSurfaceFormatKHR,
+    vk_surface: VkSurfaceKHR,
+    vk_surface_format: VkSurfaceFormatKHR,
+    vk_surface_capabilities: VkSurfaceCapabilitiesKHR,
 }
 
 impl Window {
@@ -207,8 +208,9 @@ impl Window {
         let mut window = Window {
             device: device,
             window: OsWindow::default(),
-            surface: 0 as VkSurfaceKHR,
-            surface_format: VkSurfaceFormatKHR::default(),
+            vk_surface: 0 as VkSurfaceKHR,
+            vk_surface_format: VkSurfaceFormatKHR::default(),
+            vk_surface_capabilities: VkSurfaceCapabilitiesKHR::default(),
         };
         window.window = OsWindow::new(&mut window, 900, 500);
         window.initialize_surface();
@@ -272,21 +274,20 @@ impl Window {
         let mut wsi_supported = 0u32;
         unsafe {
             vkGetPhysicalDeviceSurfaceSupportKHR(
-                dev.gpu, dev.graphics_family_index, self.surface, &mut wsi_supported as *mut u32);
+                dev.gpu, dev.graphics_family_index, self.vk_surface, &mut wsi_supported as *mut u32);
         }
         if wsi_supported == 0 {
             panic!("Error WSI is not supported for device.");
         }
-        let mut surface_capabilities = VkSurfaceCapabilitiesKHR::default();
         unsafe {
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-                dev.gpu, self.surface,
-                &mut surface_capabilities as *mut VkSurfaceCapabilitiesKHR);
+                dev.gpu, self.vk_surface,
+                &mut self.vk_surface_capabilities as *mut VkSurfaceCapabilitiesKHR);
         }
         let mut format_count = 0u32;
         unsafe {
             vkGetPhysicalDeviceSurfaceFormatsKHR(
-                dev.gpu, self.surface,
+                dev.gpu, self.vk_surface,
                 &mut format_count as *mut u32, 0 as *mut VkSurfaceFormatKHR);
         }
         if format_count == 0 {
@@ -295,14 +296,14 @@ impl Window {
         let mut formats = vec![VkSurfaceFormatKHR::default(); format_count as usize];
         unsafe {
             vkGetPhysicalDeviceSurfaceFormatsKHR(
-                dev.gpu, self.surface, &mut format_count as *mut u32,
+                dev.gpu, self.vk_surface, &mut format_count as *mut u32,
                 formats.as_mut_ptr() as *mut VkSurfaceFormatKHR);
         }
         if (formats[0].format as u32) == (VkFormat::VK_FORMAT_UNDEFINED as u32) {
-            self.surface_format.format = VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
-            self.surface_format.colorSpace = VkColorSpaceKHR::VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+            self.vk_surface_format.format = VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
+            self.vk_surface_format.colorSpace = VkColorSpaceKHR::VK_COLORSPACE_SRGB_NONLINEAR_KHR;
         } else {
-            self.surface_format = formats[0];
+            self.vk_surface_format = formats[0];
         }
     }
 }
@@ -312,7 +313,7 @@ impl Drop for Window {
         let dev = self.device.read().unwrap();
         let ins = dev.instance.read().unwrap();
         unsafe {
-            vkDestroySurfaceKHR(ins.vk_instance, self.surface, 0 as *const VkAllocationCallbacks);
+            vkDestroySurfaceKHR(ins.vk_instance, self.vk_surface, 0 as *const VkAllocationCallbacks);
         }
         self.window = OsWindow::default();
     }

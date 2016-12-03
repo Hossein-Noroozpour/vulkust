@@ -4442,15 +4442,11 @@ impl ::std::default::Default for VkPresentInfoKHR {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 
-pub type PFN_vkCreateSwapchainKHR =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkSwapchainCreateInfoKHR,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pSwapchain:
-                                           *mut VkSwapchainKHR)
-                                           -> VkResult>;
+pub type PFN_vkCreateSwapchainKHR = unsafe extern "C" fn(
+    device: VkDevice,
+    pCreateInfo: *const VkSwapchainCreateInfoKHR,
+    pAllocator: *const VkAllocationCallbacks,
+    pSwapchain: *mut VkSwapchainKHR) -> VkResult;
 pub type PFN_vkDestroySwapchainKHR =
 ::std::option::Option<unsafe extern "C" fn(device: VkDevice,
                                            swapchain: VkSwapchainKHR,
@@ -5028,10 +5024,11 @@ extern "C" {
                                        pSubresource:
                                        *const VkImageSubresource,
                                        pLayout: *mut VkSubresourceLayout);
-    pub fn vkCreateImageView(device: VkDevice,
-                             pCreateInfo: *const VkImageViewCreateInfo,
-                             pAllocator: *const VkAllocationCallbacks,
-                             pView: *mut VkImageView) -> VkResult;
+    pub fn vkCreateImageView(
+        device: VkDevice,
+        pCreateInfo: *const VkImageViewCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pView: *mut VkImageView) -> VkResult;
     pub fn vkDestroyImageView(device: VkDevice, imageView: VkImageView,
                               pAllocator: *const VkAllocationCallbacks);
     pub fn vkCreateShaderModule(device: VkDevice,
@@ -5333,51 +5330,46 @@ extern "C" {
                               stageFlags: VkShaderStageFlags,
                               offset: uint32_t, size: uint32_t,
                               pValues: *const ::std::os::raw::c_void);
-    pub fn vkCmdBeginRenderPass(commandBuffer: VkCommandBuffer,
-                                pRenderPassBegin:
-                                *const VkRenderPassBeginInfo,
-                                contents: VkSubpassContents);
-    pub fn vkCmdNextSubpass(commandBuffer: VkCommandBuffer,
-                            contents: VkSubpassContents);
+    pub fn vkCmdBeginRenderPass(
+        commandBuffer: VkCommandBuffer, pRenderPassBegin: *const VkRenderPassBeginInfo,
+        contents: VkSubpassContents);
+    pub fn vkCmdNextSubpass(
+        commandBuffer: VkCommandBuffer, contents: VkSubpassContents);
     pub fn vkCmdEndRenderPass(commandBuffer: VkCommandBuffer);
-    pub fn vkCmdExecuteCommands(commandBuffer: VkCommandBuffer,
-                                commandBufferCount: uint32_t,
-                                pCommandBuffers: *const VkCommandBuffer);
-    pub fn vkDestroySurfaceKHR(instance: VkInstance, surface: VkSurfaceKHR,
-                               pAllocator: *const VkAllocationCallbacks);
+    pub fn vkCmdExecuteCommands(
+        commandBuffer: VkCommandBuffer, commandBufferCount: uint32_t,
+        pCommandBuffers: *const VkCommandBuffer);
+    pub fn vkDestroySurfaceKHR(
+        instance: VkInstance, surface: VkSurfaceKHR, pAllocator: *const VkAllocationCallbacks);
     pub fn vkGetPhysicalDeviceSurfaceSupportKHR(
         physicalDevice: VkPhysicalDevice,
         queueFamilyIndex: uint32_t,
         surface: VkSurfaceKHR,
         pSupported: *mut VkBool32) -> VkResult;
-    pub fn vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice:
-                                                     VkPhysicalDevice,
-                                                     surface: VkSurfaceKHR,
-                                                     pSurfaceCapabilities:
-                                                     *mut VkSurfaceCapabilitiesKHR)
-                                                     -> VkResult;
+    pub fn vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+        physicalDevice: VkPhysicalDevice,
+        surface: VkSurfaceKHR,
+        pSurfaceCapabilities: *mut VkSurfaceCapabilitiesKHR) -> VkResult;
     pub fn vkGetPhysicalDeviceSurfaceFormatsKHR(
-        physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR, pSurfaceFormatCount: *mut uint32_t,
-        pSurfaceFormats: *mut VkSurfaceFormatKHR) -> VkResult;
-    pub fn vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice:
-                                                     VkPhysicalDevice,
-                                                     surface: VkSurfaceKHR,
-                                                     pPresentModeCount:
-                                                     *mut uint32_t,
-                                                     pPresentModes:
-                                                     *mut VkPresentModeKHR)
-                                                     -> VkResult;
-    pub fn vkCreateSwapchainKHR(device: VkDevice,
-                                pCreateInfo: *const VkSwapchainCreateInfoKHR,
-                                pAllocator: *const VkAllocationCallbacks,
-                                pSwapchain: *mut VkSwapchainKHR) -> VkResult;
-    pub fn vkDestroySwapchainKHR(device: VkDevice, swapchain: VkSwapchainKHR,
-                                 pAllocator: *const VkAllocationCallbacks);
-    pub fn vkGetSwapchainImagesKHR(device: VkDevice,
-                                   swapchain: VkSwapchainKHR,
-                                   pSwapchainImageCount: *mut uint32_t,
-                                   pSwapchainImages: *mut VkImage)
-                                   -> VkResult;
+        physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR,
+        pSurfaceFormatCount: *mut uint32_t, pSurfaceFormats: *mut VkSurfaceFormatKHR) -> VkResult;
+    pub fn vkGetPhysicalDeviceSurfacePresentModesKHR(
+        physicalDevice: VkPhysicalDevice,
+        surface: VkSurfaceKHR,
+        pPresentModeCount: *mut uint32_t,
+        pPresentModes: *mut VkPresentModeKHR) -> VkResult;
+    pub fn vkCreateSwapchainKHR(
+        device: VkDevice,
+        pCreateInfo: *const VkSwapchainCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks,
+        pSwapchain: *mut VkSwapchainKHR) -> VkResult;
+    pub fn vkDestroySwapchainKHR(
+        device: VkDevice, swapchain: VkSwapchainKHR, pAllocator: *const VkAllocationCallbacks);
+    pub fn vkGetSwapchainImagesKHR(
+        device: VkDevice,
+        swapchain: VkSwapchainKHR,
+        pSwapchainImageCount: *mut uint32_t,
+        pSwapchainImages: *mut VkImage) -> VkResult;
     pub fn vkAcquireNextImageKHR(device: VkDevice, swapchain: VkSwapchainKHR,
                                  timeout: uint64_t, semaphore: VkSemaphore,
                                  fence: VkFence, pImageIndex: *mut uint32_t)
