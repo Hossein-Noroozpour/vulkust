@@ -3426,12 +3426,8 @@ pub type PFN_vkGetPhysicalDeviceFeatures =
                                            VkPhysicalDevice,
                                            pFeatures:
                                            *mut VkPhysicalDeviceFeatures)>;
-pub type PFN_vkGetPhysicalDeviceFormatProperties =
-::std::option::Option<unsafe extern "C" fn(physicalDevice:
-                                           VkPhysicalDevice,
-                                           format: VkFormat,
-                                           pFormatProperties:
-                                           *mut VkFormatProperties)>;
+pub type PFN_vkGetPhysicalDeviceFormatProperties = unsafe extern "C" fn(
+    physicalDevice: VkPhysicalDevice, format: VkFormat, pFormatProperties: *mut VkFormatProperties);
 pub type PFN_vkGetPhysicalDeviceImageFormatProperties =
 ::std::option::Option<unsafe extern "C" fn(physicalDevice:
                                            VkPhysicalDevice,
@@ -3455,11 +3451,8 @@ pub type PFN_vkGetPhysicalDeviceQueueFamilyProperties =
                                            *mut uint32_t,
                                            pQueueFamilyProperties:
                                            *mut VkQueueFamilyProperties)>;
-pub type PFN_vkGetPhysicalDeviceMemoryProperties =
-::std::option::Option<unsafe extern "C" fn(physicalDevice:
-                                           VkPhysicalDevice,
-                                           pMemoryProperties:
-                                           *mut VkPhysicalDeviceMemoryProperties)>;
+pub type PFN_vkGetPhysicalDeviceMemoryProperties = unsafe extern "C" fn(
+    physicalDevice: VkPhysicalDevice, pMemoryProperties: *mut VkPhysicalDeviceMemoryProperties);
 pub type PFN_vkGetInstanceProcAddr = unsafe extern "C" fn(
     instance: VkInstance,
     pName: *const ::std::os::raw::c_char) -> PFN_vkVoidFunction;
@@ -3516,14 +3509,9 @@ pub type PFN_vkQueueWaitIdle =
 ::std::option::Option<extern "C" fn(queue: VkQueue) -> VkResult>;
 pub type PFN_vkDeviceWaitIdle =
 ::std::option::Option<extern "C" fn(device: VkDevice) -> VkResult>;
-pub type PFN_vkAllocateMemory =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pAllocateInfo:
-                                           *const VkMemoryAllocateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pMemory: *mut VkDeviceMemory)
-                                           -> VkResult>;
+pub type PFN_vkAllocateMemory = unsafe extern "C" fn(
+    device: VkDevice, pAllocateInfo: *const VkMemoryAllocateInfo,
+    pAllocator: *const VkAllocationCallbacks, pMemory: *mut VkDeviceMemory) -> VkResult;
 pub type PFN_vkFreeMemory =
 ::std::option::Option<unsafe extern "C" fn(device: VkDevice,
                                            memory: VkDeviceMemory,
@@ -3563,21 +3551,16 @@ pub type PFN_vkBindBufferMemory =
                                     memory: VkDeviceMemory,
                                     memoryOffset: VkDeviceSize)
                                     -> VkResult>;
-pub type PFN_vkBindImageMemory =
-::std::option::Option<extern "C" fn(device: VkDevice, image: VkImage,
-                                    memory: VkDeviceMemory,
-                                    memoryOffset: VkDeviceSize)
-                                    -> VkResult>;
+pub type PFN_vkBindImageMemory = extern "C" fn(
+    device: VkDevice, image: VkImage, memory: VkDeviceMemory,
+    memoryOffset: VkDeviceSize) -> VkResult;
 pub type PFN_vkGetBufferMemoryRequirements =
 ::std::option::Option<unsafe extern "C" fn(device: VkDevice,
                                            buffer: VkBuffer,
                                            pMemoryRequirements:
                                            *mut VkMemoryRequirements)>;
-pub type PFN_vkGetImageMemoryRequirements =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           image: VkImage,
-                                           pMemoryRequirements:
-                                           *mut VkMemoryRequirements)>;
+pub type PFN_vkGetImageMemoryRequirements = unsafe extern "C" fn(
+    device: VkDevice, image: VkImage, pMemoryRequirements: *mut VkMemoryRequirements);
 pub type PFN_vkGetImageSparseMemoryRequirements =
 ::std::option::Option<unsafe extern "C" fn(device: VkDevice,
                                            image: VkImage,
@@ -3643,134 +3626,54 @@ pub type PFN_vkDestroySemaphore =
                                            semaphore: VkSemaphore,
                                            pAllocator:
                                            *const VkAllocationCallbacks)>;
-pub type PFN_vkCreateEvent =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkEventCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pEvent: *mut VkEvent)
-                                           -> VkResult>;
-pub type PFN_vkDestroyEvent =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           event: VkEvent,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkGetEventStatus =
-::std::option::Option<extern "C" fn(device: VkDevice, event: VkEvent)
-    -> VkResult>;
-pub type PFN_vkSetEvent =
-::std::option::Option<extern "C" fn(device: VkDevice, event: VkEvent)
-    -> VkResult>;
-pub type PFN_vkResetEvent =
-::std::option::Option<extern "C" fn(device: VkDevice, event: VkEvent)
-    -> VkResult>;
-pub type PFN_vkCreateQueryPool =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkQueryPoolCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pQueryPool: *mut VkQueryPool)
-                                           -> VkResult>;
-pub type PFN_vkDestroyQueryPool =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           queryPool: VkQueryPool,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkGetQueryPoolResults =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           queryPool: VkQueryPool,
-                                           firstQuery: uint32_t,
-                                           queryCount: uint32_t,
-                                           dataSize: size_t,
-                                           pData:
-                                           *mut ::std::os::raw::c_void,
-                                           stride: VkDeviceSize,
-                                           flags: VkQueryResultFlags)
-                                           -> VkResult>;
-pub type PFN_vkCreateBuffer =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkBufferCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pBuffer: *mut VkBuffer)
-                                           -> VkResult>;
-pub type PFN_vkDestroyBuffer =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           buffer: VkBuffer,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkCreateBufferView =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkBufferViewCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pView: *mut VkBufferView)
-                                           -> VkResult>;
-pub type PFN_vkDestroyBufferView =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           bufferView: VkBufferView,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkCreateImage =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkImageCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pImage: *mut VkImage)
-                                           -> VkResult>;
-pub type PFN_vkDestroyImage =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           image: VkImage,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkGetImageSubresourceLayout =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           image: VkImage,
-                                           pSubresource:
-                                           *const VkImageSubresource,
-                                           pLayout:
-                                           *mut VkSubresourceLayout)>;
-pub type PFN_vkCreateImageView =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkImageViewCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pView: *mut VkImageView)
-                                           -> VkResult>;
-pub type PFN_vkDestroyImageView =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           imageView: VkImageView,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkCreateShaderModule =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkShaderModuleCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pShaderModule:
-                                           *mut VkShaderModule)
-                                           -> VkResult>;
-pub type PFN_vkDestroyShaderModule =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           shaderModule: VkShaderModule,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkCreatePipelineCache =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkPipelineCacheCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pPipelineCache:
-                                           *mut VkPipelineCache)
-                                           -> VkResult>;
+pub type PFN_vkCreateEvent = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkEventCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pEvent: *mut VkEvent) -> VkResult;
+pub type PFN_vkDestroyEvent = unsafe extern "C" fn(
+    device: VkDevice, event: VkEvent, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkGetEventStatus = extern "C" fn(device: VkDevice, event: VkEvent) -> VkResult;
+pub type PFN_vkSetEvent = extern "C" fn(device: VkDevice, event: VkEvent) -> VkResult;
+pub type PFN_vkResetEvent = extern "C" fn(device: VkDevice, event: VkEvent) -> VkResult;
+pub type PFN_vkCreateQueryPool = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkQueryPoolCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pQueryPool: *mut VkQueryPool) -> VkResult;
+pub type PFN_vkDestroyQueryPool = unsafe extern "C" fn(
+    device: VkDevice, queryPool: VkQueryPool, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkGetQueryPoolResults = unsafe extern "C" fn(
+    device: VkDevice, queryPool: VkQueryPool, firstQuery: uint32_t, queryCount: uint32_t,
+    dataSize: size_t, pData: *mut ::std::os::raw::c_void, stride: VkDeviceSize,
+    flags: VkQueryResultFlags) -> VkResult;
+pub type PFN_vkCreateBuffer = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkBufferCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pBuffer: *mut VkBuffer) -> VkResult;
+pub type PFN_vkDestroyBuffer = unsafe extern "C" fn(
+    device: VkDevice, buffer: VkBuffer, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkCreateBufferView = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkBufferViewCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pView: *mut VkBufferView) -> VkResult;
+pub type PFN_vkDestroyBufferView = unsafe extern "C" fn(
+    device: VkDevice, bufferView: VkBufferView, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkCreateImage = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkImageCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pImage: *mut VkImage) -> VkResult;
+pub type PFN_vkDestroyImage = unsafe extern "C" fn(
+    device: VkDevice, image: VkImage, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkGetImageSubresourceLayout = unsafe extern "C" fn(
+    device: VkDevice, image: VkImage, pSubresource: *const VkImageSubresource,
+    pLayout: *mut VkSubresourceLayout);
+pub type PFN_vkCreateImageView = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkImageViewCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pView: *mut VkImageView) -> VkResult;
+pub type PFN_vkDestroyImageView = unsafe extern "C" fn(
+    device: VkDevice, imageView: VkImageView, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkCreateShaderModule = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkShaderModuleCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pShaderModule: *mut VkShaderModule) -> VkResult;
+pub type PFN_vkDestroyShaderModule = unsafe extern "C" fn(
+    device: VkDevice, shaderModule: VkShaderModule, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkCreatePipelineCache = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkPipelineCacheCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pPipelineCache: *mut VkPipelineCache) -> VkResult;
 pub type PFN_vkDestroyPipelineCache =
 ::std::option::Option<unsafe extern "C" fn(device: VkDevice,
                                            pipelineCache: VkPipelineCache,
@@ -4653,14 +4556,9 @@ pub type PFN_vkGetDisplayPlaneCapabilitiesKHR =
                                            pCapabilities:
                                            *mut VkDisplayPlaneCapabilitiesKHR)
                                            -> VkResult>;
-pub type PFN_vkCreateDisplayPlaneSurfaceKHR =
-::std::option::Option<unsafe extern "C" fn(instance: VkInstance,
-                                           pCreateInfo:
-                                           *const VkDisplaySurfaceCreateInfoKHR,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pSurface: *mut VkSurfaceKHR)
-                                           -> VkResult>;
+pub type PFN_vkCreateDisplayPlaneSurfaceKHR = unsafe extern "C" fn(
+    instance: VkInstance, pCreateInfo: *const VkDisplaySurfaceCreateInfoKHR,
+    pAllocator: *const VkAllocationCallbacks, pSurface: *mut VkSurfaceKHR) -> VkResult;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4678,24 +4576,13 @@ impl ::std::default::Default for VkDisplayPresentInfoKHR {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 
-pub type PFN_vkCreateSharedSwapchainsKHR =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           swapchainCount: uint32_t,
-                                           pCreateInfos:
-                                           *const VkSwapchainCreateInfoKHR,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pSwapchains:
-                                           *mut VkSwapchainKHR)
-                                           -> VkResult>;
-
+pub type PFN_vkCreateSharedSwapchainsKHR = unsafe extern "C" fn(
+    device: VkDevice, swapchainCount: uint32_t, pCreateInfos: *const VkSwapchainCreateInfoKHR,
+    pAllocator: *const VkAllocationCallbacks, pSwapchains: *mut VkSwapchainKHR) -> VkResult;
 pub enum VkDebugReportCallbackEXT_T {}
-
 pub type VkDebugReportCallbackEXT = *mut VkDebugReportCallbackEXT_T;
-
 pub const VK_DEBUG_REPORT_OBJECT_TYPE_BEGIN_RANGE_EXT: VkDebugReportObjectTypeEXT = VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT;
 pub const VK_DEBUG_REPORT_OBJECT_TYPE_END_RANGE_EXT: VkDebugReportObjectTypeEXT = VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT;
-
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -4760,19 +4647,9 @@ pub enum VkDebugReportFlagBitsEXT {
 
 pub type VkDebugReportFlagsEXT = VkFlags;
 pub type PFN_vkDebugReportCallbackEXT = unsafe extern "C" fn(
-    flags: VkDebugReportFlagsEXT,
-    objectType:
-    VkDebugReportObjectTypeEXT,
-    object: uint64_t,
-    location: size_t,
-    messageCode: int32_t,
-    pLayerPrefix:
-    *const ::std::os::raw::c_char,
-    pMessage:
-    *const ::std::os::raw::c_char,
-    pUserData:
-    *mut ::std::os::raw::c_void)
-    -> VkBool32;
+    flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT, object: uint64_t,
+    location: size_t, messageCode: int32_t, pLayerPrefix: *const ::std::os::raw::c_char,
+    pMessage: *const ::std::os::raw::c_char, pUserData: *mut ::std::os::raw::c_void) -> VkBool32;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4810,12 +4687,6 @@ pub type PFN_vkDebugReportMessageEXT = ::std::option::Option<unsafe extern "C" f
     pLayerPrefix: *const ::std::os::raw::c_char,
     pMessage: *const ::std::os::raw::c_char)>;
 
-// #[cfg(target_os = "linux")]
-// const vulkan_library_name: &'static str = "vulkan";
-// #[cfg(not(target_os = "linux"))]
-// const vulkan_library_name: &'static str = "vulkan-1";
-//
-//
 #[cfg_attr(target_os = "linux", link(name = "vulkan", kind= "dylib"))]
 #[cfg_attr(target_os = "windows", link(name = "vulkan-1", kind= "dylib"))]
 extern "C" {
@@ -4837,200 +4708,143 @@ extern "C" {
         physicalDevice: VkPhysicalDevice,
         format: VkFormat,
         pFormatProperties: *mut VkFormatProperties);
-    pub fn vkGetPhysicalDeviceImageFormatProperties(physicalDevice:
-                                                    VkPhysicalDevice,
-                                                    format: VkFormat,
-                                                    type_: VkImageType,
-                                                    tiling: VkImageTiling,
-                                                    usage: VkImageUsageFlags,
-                                                    flags: VkImageCreateFlags,
-                                                    pImageFormatProperties:
-                                                    *mut VkImageFormatProperties)
-                                                    -> VkResult;
-    pub fn vkGetPhysicalDeviceProperties(physicalDevice: VkPhysicalDevice,
-                                         pProperties:
-                                         *mut VkPhysicalDeviceProperties);
-    pub fn vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice:
-                                                    VkPhysicalDevice,
-                                                    pQueueFamilyPropertyCount:
-                                                    *mut uint32_t,
-                                                    pQueueFamilyProperties:
-                                                    *mut VkQueueFamilyProperties);
-    pub fn vkGetPhysicalDeviceMemoryProperties(physicalDevice:
-                                               VkPhysicalDevice,
-                                               pMemoryProperties:
-                                               *mut VkPhysicalDeviceMemoryProperties);
+    pub fn vkGetPhysicalDeviceImageFormatProperties(
+        physicalDevice: VkPhysicalDevice, format: VkFormat, type_: VkImageType,
+        tiling: VkImageTiling, usage: VkImageUsageFlags, flags: VkImageCreateFlags,
+        pImageFormatProperties: *mut VkImageFormatProperties) -> VkResult;
+    pub fn vkGetPhysicalDeviceProperties(
+        physicalDevice: VkPhysicalDevice, pProperties: *mut VkPhysicalDeviceProperties);
+    pub fn vkGetPhysicalDeviceQueueFamilyProperties(
+        physicalDevice: VkPhysicalDevice, pQueueFamilyPropertyCount: *mut uint32_t,
+        pQueueFamilyProperties: *mut VkQueueFamilyProperties);
+    pub fn vkGetPhysicalDeviceMemoryProperties(
+        physicalDevice: VkPhysicalDevice, pMemoryProperties: *mut VkPhysicalDeviceMemoryProperties);
     pub fn vkGetInstanceProcAddr(
         instance: VkInstance,
         pName: *const ::std::os::raw::c_char) -> PFN_vkVoidFunction;
     pub fn vkGetDeviceProcAddr(
         device: VkDevice,
         pName: *const ::std::os::raw::c_char) -> PFN_vkVoidFunction;
-    pub fn vkCreateDevice(physicalDevice: VkPhysicalDevice,
-                          pCreateInfo: *const VkDeviceCreateInfo,
-                          pAllocator: *const VkAllocationCallbacks,
-                          pDevice: *mut VkDevice) -> VkResult;
-    pub fn vkDestroyDevice(device: VkDevice,
-                           pAllocator: *const VkAllocationCallbacks);
-    pub fn vkEnumerateInstanceExtensionProperties(pLayerName:
-                                                  *const ::std::os::raw::c_char,
-                                                  pPropertyCount:
-                                                  *mut uint32_t,
-                                                  pProperties:
-                                                  *mut VkExtensionProperties)
-                                                  -> VkResult;
-    pub fn vkEnumerateDeviceExtensionProperties(physicalDevice:
-                                                VkPhysicalDevice,
-                                                pLayerName:
-                                                *const ::std::os::raw::c_char,
-                                                pPropertyCount: *mut uint32_t,
-                                                pProperties:
-                                                *mut VkExtensionProperties)
-                                                -> VkResult;
-    pub fn vkEnumerateInstanceLayerProperties(pPropertyCount: *mut uint32_t,
-                                              pProperties:
-                                              *mut VkLayerProperties)
-                                              -> VkResult;
-    pub fn vkEnumerateDeviceLayerProperties(physicalDevice: VkPhysicalDevice,
-                                            pPropertyCount: *mut uint32_t,
-                                            pProperties:
-                                            *mut VkLayerProperties)
-                                            -> VkResult;
-    pub fn vkGetDeviceQueue(device: VkDevice, queueFamilyIndex: uint32_t,
-                            queueIndex: uint32_t, pQueue: *mut VkQueue);
-    pub fn vkQueueSubmit(queue: VkQueue, submitCount: uint32_t,
-                         pSubmits: *const VkSubmitInfo, fence: VkFence)
-                         -> VkResult;
+    pub fn vkCreateDevice(
+        physicalDevice: VkPhysicalDevice, pCreateInfo: *const VkDeviceCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pDevice: *mut VkDevice) -> VkResult;
+    pub fn vkDestroyDevice(device: VkDevice, pAllocator: *const VkAllocationCallbacks);
+    pub fn vkEnumerateInstanceExtensionProperties(
+        pLayerName: *const ::std::os::raw::c_char, pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkExtensionProperties) -> VkResult;
+    pub fn vkEnumerateDeviceExtensionProperties(
+        physicalDevice: VkPhysicalDevice, pLayerName: *const ::std::os::raw::c_char,
+        pPropertyCount: *mut uint32_t, pProperties: *mut VkExtensionProperties) -> VkResult;
+    pub fn vkEnumerateInstanceLayerProperties(
+        pPropertyCount: *mut uint32_t, pProperties: *mut VkLayerProperties) -> VkResult;
+    pub fn vkEnumerateDeviceLayerProperties(
+        physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkLayerProperties) -> VkResult;
+    pub fn vkGetDeviceQueue(
+        device: VkDevice, queueFamilyIndex: uint32_t, queueIndex: uint32_t, pQueue: *mut VkQueue);
+    pub fn vkQueueSubmit(
+        queue: VkQueue, submitCount: uint32_t, pSubmits: *const VkSubmitInfo,
+        fence: VkFence) -> VkResult;
     pub fn vkQueueWaitIdle(queue: VkQueue) -> VkResult;
     pub fn vkDeviceWaitIdle(device: VkDevice) -> VkResult;
-    pub fn vkAllocateMemory(device: VkDevice,
-                            pAllocateInfo: *const VkMemoryAllocateInfo,
-                            pAllocator: *const VkAllocationCallbacks,
-                            pMemory: *mut VkDeviceMemory) -> VkResult;
-    pub fn vkFreeMemory(device: VkDevice, memory: VkDeviceMemory,
-                        pAllocator: *const VkAllocationCallbacks);
-    pub fn vkMapMemory(device: VkDevice, memory: VkDeviceMemory,
-                       offset: VkDeviceSize, size: VkDeviceSize,
-                       flags: VkMemoryMapFlags,
-                       ppData: *mut *mut ::std::os::raw::c_void) -> VkResult;
+    pub fn vkAllocateMemory(
+        device: VkDevice, pAllocateInfo: *const VkMemoryAllocateInfo,
+        pAllocator: *const VkAllocationCallbacks, pMemory: *mut VkDeviceMemory) -> VkResult;
+    pub fn vkFreeMemory(
+        device: VkDevice, memory: VkDeviceMemory, pAllocator: *const VkAllocationCallbacks);
+    pub fn vkMapMemory(
+        device: VkDevice, memory: VkDeviceMemory, offset: VkDeviceSize, size: VkDeviceSize,
+        flags: VkMemoryMapFlags, ppData: *mut *mut ::std::os::raw::c_void) -> VkResult;
     pub fn vkUnmapMemory(device: VkDevice, memory: VkDeviceMemory);
-    pub fn vkFlushMappedMemoryRanges(device: VkDevice,
-                                     memoryRangeCount: uint32_t,
-                                     pMemoryRanges:
-                                     *const VkMappedMemoryRange)
-                                     -> VkResult;
-    pub fn vkInvalidateMappedMemoryRanges(device: VkDevice,
-                                          memoryRangeCount: uint32_t,
-                                          pMemoryRanges:
-                                          *const VkMappedMemoryRange)
-                                          -> VkResult;
-    pub fn vkGetDeviceMemoryCommitment(device: VkDevice,
-                                       memory: VkDeviceMemory,
-                                       pCommittedMemoryInBytes:
-                                       *mut VkDeviceSize);
-    pub fn vkBindBufferMemory(device: VkDevice, buffer: VkBuffer,
-                              memory: VkDeviceMemory,
-                              memoryOffset: VkDeviceSize) -> VkResult;
-    pub fn vkBindImageMemory(device: VkDevice, image: VkImage,
-                             memory: VkDeviceMemory,
-                             memoryOffset: VkDeviceSize) -> VkResult;
-    pub fn vkGetBufferMemoryRequirements(device: VkDevice, buffer: VkBuffer,
-                                         pMemoryRequirements:
-                                         *mut VkMemoryRequirements);
-    pub fn vkGetImageMemoryRequirements(device: VkDevice, image: VkImage,
-                                        pMemoryRequirements:
-                                        *mut VkMemoryRequirements);
-    pub fn vkGetImageSparseMemoryRequirements(device: VkDevice,
-                                              image: VkImage,
-                                              pSparseMemoryRequirementCount:
-                                              *mut uint32_t,
-                                              pSparseMemoryRequirements:
-                                              *mut VkSparseImageMemoryRequirements);
-    pub fn vkGetPhysicalDeviceSparseImageFormatProperties(physicalDevice:
-                                                          VkPhysicalDevice,
-                                                          format: VkFormat,
-                                                          type_: VkImageType,
-                                                          samples:
-                                                          VkSampleCountFlagBits,
-                                                          usage:
-                                                          VkImageUsageFlags,
-                                                          tiling:
-                                                          VkImageTiling,
-                                                          pPropertyCount:
-                                                          *mut uint32_t,
-                                                          pProperties:
-                                                          *mut VkSparseImageFormatProperties);
-    pub fn vkQueueBindSparse(queue: VkQueue, bindInfoCount: uint32_t,
-                             pBindInfo: *const VkBindSparseInfo,
-                             fence: VkFence) -> VkResult;
-    pub fn vkCreateFence(device: VkDevice,
-                         pCreateInfo: *const VkFenceCreateInfo,
-                         pAllocator: *const VkAllocationCallbacks,
-                         pFence: *mut VkFence) -> VkResult;
-    pub fn vkDestroyFence(device: VkDevice, fence: VkFence,
-                          pAllocator: *const VkAllocationCallbacks);
-    pub fn vkResetFences(device: VkDevice, fenceCount: uint32_t,
-                         pFences: *const VkFence) -> VkResult;
+    pub fn vkFlushMappedMemoryRanges(
+        device: VkDevice, memoryRangeCount: uint32_t,
+        pMemoryRanges: *const VkMappedMemoryRange) -> VkResult;
+    pub fn vkInvalidateMappedMemoryRanges(
+        device: VkDevice, memoryRangeCount: uint32_t,
+        pMemoryRanges: *const VkMappedMemoryRange) -> VkResult;
+    pub fn vkGetDeviceMemoryCommitment(
+        device: VkDevice, memory: VkDeviceMemory, pCommittedMemoryInBytes: *mut VkDeviceSize);
+    pub fn vkBindBufferMemory(
+        device: VkDevice, buffer: VkBuffer, memory: VkDeviceMemory,
+        memoryOffset: VkDeviceSize) -> VkResult;
+    pub fn vkBindImageMemory(
+        device: VkDevice, image: VkImage, memory: VkDeviceMemory,
+        memoryOffset: VkDeviceSize) -> VkResult;
+    pub fn vkGetBufferMemoryRequirements(
+        device: VkDevice, buffer: VkBuffer, pMemoryRequirements: *mut VkMemoryRequirements);
+    pub fn vkGetImageMemoryRequirements(
+        device: VkDevice, image: VkImage, pMemoryRequirements: *mut VkMemoryRequirements);
+    pub fn vkGetImageSparseMemoryRequirements(
+        device: VkDevice, image: VkImage, pSparseMemoryRequirementCount: *mut uint32_t,
+        pSparseMemoryRequirements: *mut VkSparseImageMemoryRequirements);
+    pub fn vkGetPhysicalDeviceSparseImageFormatProperties(
+        physicalDevice: VkPhysicalDevice, format: VkFormat, type_: VkImageType,
+        samples: VkSampleCountFlagBits, usage: VkImageUsageFlags, tiling: VkImageTiling,
+        pPropertyCount: *mut uint32_t, pProperties: *mut VkSparseImageFormatProperties);
+    pub fn vkQueueBindSparse(
+        queue: VkQueue, bindInfoCount: uint32_t, pBindInfo: *const VkBindSparseInfo,
+        fence: VkFence) -> VkResult;
+    pub fn vkCreateFence(
+        device: VkDevice, pCreateInfo: *const VkFenceCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pFence: *mut VkFence) -> VkResult;
+    pub fn vkDestroyFence(
+        device: VkDevice, fence: VkFence, pAllocator: *const VkAllocationCallbacks);
+    pub fn vkResetFences(
+        device: VkDevice, fenceCount: uint32_t, pFences: *const VkFence) -> VkResult;
     pub fn vkGetFenceStatus(device: VkDevice, fence: VkFence) -> VkResult;
-    pub fn vkWaitForFences(device: VkDevice, fenceCount: uint32_t,
-                           pFences: *const VkFence, waitAll: VkBool32,
-                           timeout: uint64_t) -> VkResult;
-    pub fn vkCreateSemaphore(device: VkDevice,
-                             pCreateInfo: *const VkSemaphoreCreateInfo,
-                             pAllocator: *const VkAllocationCallbacks,
-                             pSemaphore: *mut VkSemaphore) -> VkResult;
-    pub fn vkDestroySemaphore(device: VkDevice, semaphore: VkSemaphore,
-                              pAllocator: *const VkAllocationCallbacks);
-    pub fn vkCreateEvent(device: VkDevice,
-                         pCreateInfo: *const VkEventCreateInfo,
-                         pAllocator: *const VkAllocationCallbacks,
-                         pEvent: *mut VkEvent) -> VkResult;
-    pub fn vkDestroyEvent(device: VkDevice, event: VkEvent,
-                          pAllocator: *const VkAllocationCallbacks);
+    pub fn vkWaitForFences(
+        device: VkDevice, fenceCount: uint32_t, pFences: *const VkFence, waitAll: VkBool32,
+        timeout: uint64_t) -> VkResult;
+    pub fn vkCreateSemaphore(
+        device: VkDevice, pCreateInfo: *const VkSemaphoreCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pSemaphore: *mut VkSemaphore) -> VkResult;
+    pub fn vkDestroySemaphore(
+        device: VkDevice, semaphore: VkSemaphore, pAllocator: *const VkAllocationCallbacks);
+    pub fn vkCreateEvent(
+        device: VkDevice, pCreateInfo: *const VkEventCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pEvent: *mut VkEvent) -> VkResult;
+    pub fn vkDestroyEvent(
+        device: VkDevice, event: VkEvent, pAllocator: *const VkAllocationCallbacks);
     pub fn vkGetEventStatus(device: VkDevice, event: VkEvent) -> VkResult;
     pub fn vkSetEvent(device: VkDevice, event: VkEvent) -> VkResult;
     pub fn vkResetEvent(device: VkDevice, event: VkEvent) -> VkResult;
-    pub fn vkCreateQueryPool(device: VkDevice,
-                             pCreateInfo: *const VkQueryPoolCreateInfo,
-                             pAllocator: *const VkAllocationCallbacks,
-                             pQueryPool: *mut VkQueryPool) -> VkResult;
-    pub fn vkDestroyQueryPool(device: VkDevice, queryPool: VkQueryPool,
-                              pAllocator: *const VkAllocationCallbacks);
-    pub fn vkGetQueryPoolResults(device: VkDevice, queryPool: VkQueryPool,
-                                 firstQuery: uint32_t, queryCount: uint32_t,
-                                 dataSize: size_t,
-                                 pData: *mut ::std::os::raw::c_void,
-                                 stride: VkDeviceSize,
-                                 flags: VkQueryResultFlags) -> VkResult;
-    pub fn vkCreateBuffer(device: VkDevice,
-                          pCreateInfo: *const VkBufferCreateInfo,
-                          pAllocator: *const VkAllocationCallbacks,
-                          pBuffer: *mut VkBuffer) -> VkResult;
-    pub fn vkDestroyBuffer(device: VkDevice, buffer: VkBuffer,
-                           pAllocator: *const VkAllocationCallbacks);
-    pub fn vkCreateBufferView(device: VkDevice,
-                              pCreateInfo: *const VkBufferViewCreateInfo,
-                              pAllocator: *const VkAllocationCallbacks,
-                              pView: *mut VkBufferView) -> VkResult;
-    pub fn vkDestroyBufferView(device: VkDevice, bufferView: VkBufferView,
-                               pAllocator: *const VkAllocationCallbacks);
-    pub fn vkCreateImage(device: VkDevice,
-                         pCreateInfo: *const VkImageCreateInfo,
-                         pAllocator: *const VkAllocationCallbacks,
-                         pImage: *mut VkImage) -> VkResult;
-    pub fn vkDestroyImage(device: VkDevice, image: VkImage,
-                          pAllocator: *const VkAllocationCallbacks);
-    pub fn vkGetImageSubresourceLayout(device: VkDevice, image: VkImage,
-                                       pSubresource:
-                                       *const VkImageSubresource,
-                                       pLayout: *mut VkSubresourceLayout);
+    pub fn vkCreateQueryPool(
+        device: VkDevice, pCreateInfo: *const VkQueryPoolCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pQueryPool: *mut VkQueryPool) -> VkResult;
+    pub fn vkDestroyQueryPool(
+        device: VkDevice, queryPool: VkQueryPool, pAllocator: *const VkAllocationCallbacks);
+    pub fn vkGetQueryPoolResults(
+        device: VkDevice, queryPool: VkQueryPool, firstQuery: uint32_t, queryCount: uint32_t,
+        dataSize: size_t, pData: *mut ::std::os::raw::c_void, stride: VkDeviceSize,
+        flags: VkQueryResultFlags) -> VkResult;
+    pub fn vkCreateBuffer(
+        device: VkDevice, pCreateInfo: *const VkBufferCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pBuffer: *mut VkBuffer) -> VkResult;
+    pub fn vkDestroyBuffer(
+        device: VkDevice, buffer: VkBuffer, pAllocator: *const VkAllocationCallbacks);
+    pub fn vkCreateBufferView(
+        device: VkDevice, pCreateInfo: *const VkBufferViewCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pView: *mut VkBufferView) -> VkResult;
+    pub fn vkDestroyBufferView(
+        device: VkDevice, bufferView: VkBufferView, pAllocator: *const VkAllocationCallbacks);
+    pub fn vkCreateImage(
+        device: VkDevice,
+        pCreateInfo: *const VkImageCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pImage: *mut VkImage) -> VkResult;
+    pub fn vkDestroyImage(
+        device: VkDevice, image: VkImage,
+        pAllocator: *const VkAllocationCallbacks);
+    pub fn vkGetImageSubresourceLayout(
+        device: VkDevice, image: VkImage, pSubresource: *const VkImageSubresource,
+        pLayout: *mut VkSubresourceLayout);
     pub fn vkCreateImageView(
         device: VkDevice,
         pCreateInfo: *const VkImageViewCreateInfo,
         pAllocator: *const VkAllocationCallbacks,
         pView: *mut VkImageView) -> VkResult;
-    pub fn vkDestroyImageView(device: VkDevice, imageView: VkImageView,
-                              pAllocator: *const VkAllocationCallbacks);
+    pub fn vkDestroyImageView(
+        device: VkDevice, imageView: VkImageView, pAllocator: *const VkAllocationCallbacks);
     pub fn vkCreateShaderModule(device: VkDevice,
                                 pCreateInfo: *const VkShaderModuleCreateInfo,
                                 pAllocator: *const VkAllocationCallbacks,

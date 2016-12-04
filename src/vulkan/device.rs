@@ -5,17 +5,25 @@ use super::super::system::vulkan::{
     uint32_t,
     VkDevice,
     VkResult,
+    VkFormat,
     vkCreateDevice,
     VkStructureType,
     vkDestroyDevice,
     VkQueueFlagBits,
     VkPhysicalDevice,
     vkGetDeviceQueue,
+    VkFormatProperties,
     VkDeviceCreateInfo,
+    VkMemoryRequirements,
+    VkMemoryPropertyFlags,
     VkAllocationCallbacks,
     VkDeviceQueueCreateInfo,
     VkQueueFamilyProperties,
+    VkFormatFeatureFlagBits,
     vkEnumeratePhysicalDevices,
+    VkPhysicalDeviceMemoryProperties,
+    vkGetPhysicalDeviceFormatProperties,
+    vkGetPhysicalDeviceMemoryProperties,
     vkGetPhysicalDeviceQueueFamilyProperties,
 };
 
@@ -31,16 +39,16 @@ pub struct Device {
     pub vk_device: VkDevice,
     pub gpu: VkPhysicalDevice,
     pub graphics_family_index: u32,
+    pub vk_mem_prop: VkPhysicalDeviceMemoryProperties,
+    pub vk_depth_format: VkFormat,
 }
 
 // TODO: it need a good way to find the better physical device
 // TODO: in case it was needed: device properties
 // TODO: in case it was needed: feature
-// TODO: in case it was needed: memory properties
 // TODO: in case it was needed: queue family properties
 // TODO: in case it was needed: more than graphic queue, maybe compute or transfer; it must try to
 //                              find dedicated queue at first but if there wasn't any dedicated
-// TODO: in case it was needed: memory properties
 
 impl Device {
     pub fn new(instance: Arc<RwLock<Instance>>) -> Self {
@@ -110,12 +118,63 @@ impl Device {
         unsafe {
             vkGetDeviceQueue(device, graphics_family_index, 0, &mut queue as *mut VkQueue);
         }
+        let mut memory_properties = VkPhysicalDeviceMemoryProperties::default();
+        unsafe {
+            vkGetPhysicalDeviceMemoryProperties(
+                gpu, &mut memory_properties as *mut VkPhysicalDeviceMemoryProperties);
+        }
+        let mut depth_format = VkFormat::VK_FORMAT_UNDEFINED;
+        for format in vec![
+            VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT,
+            VkFormat::VK_FORMAT_D32_SFLOAT,
+            VkFormat::VK_FORMAT_D24_UNORM_S8_UINT,
+        ] {
+            let mut format_props = VkFormatProperties::default();
+            unsafe {
+                vkGetPhysicalDeviceFormatProperties(
+                    gpu, format, &mut format_props as *mut VkFormatProperties);
+            }
+            // TODO: I must be careful maybe in future there must be more necessary features
+            //       for a format
+            if VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT as u32 &
+                format_props.optimalTilingFeatures != 0 {
+                depth_format = format;
+                break;
+            }
+        }
+        if depth_format as u32 == VkFormat::VK_FORMAT_UNDEFINED as u32 {
+            panic!("Depth format not found!");
+        }
         Device {
             instance: instance.clone(),
             vk_device: device,
             gpu: gpu,
             graphics_family_index: graphics_family_index,
+            vk_mem_prop: memory_properties,
+            vk_depth_format: depth_format,
         }
+    }
+
+    pub fn choose_heap_from_flags(
+        &self, memory_requirements: &VkMemoryRequirements,
+        required_flags: VkMemoryPropertyFlags, preferred_flags: VkMemoryPropertyFlags) -> u32 {
+        for i in 0..32u32 {
+            if memory_requirements.memoryTypeBits & (1 << i) != 0 {
+                if (self.vk_mem_prop.memoryTypes[i as usize].propertyFlags & preferred_flags) ==
+                    preferred_flags {
+                    return i;
+                }
+            }
+        }
+        for i in 0..32u32 {
+            if memory_requirements.memoryTypeBits & (1 << i) != 0 {
+                if (self.vk_mem_prop.memoryTypes[i as usize].propertyFlags & required_flags) ==
+                    required_flags {
+                    return i;
+                }
+            }
+        }
+        panic!("Required memory type not found")
     }
 }
 
