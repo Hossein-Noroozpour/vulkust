@@ -3512,11 +3512,8 @@ pub type PFN_vkDeviceWaitIdle =
 pub type PFN_vkAllocateMemory = unsafe extern "C" fn(
     device: VkDevice, pAllocateInfo: *const VkMemoryAllocateInfo,
     pAllocator: *const VkAllocationCallbacks, pMemory: *mut VkDeviceMemory) -> VkResult;
-pub type PFN_vkFreeMemory =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           memory: VkDeviceMemory,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
+pub type PFN_vkFreeMemory = unsafe extern "C" fn(
+    device: VkDevice, memory: VkDeviceMemory, pAllocator: *const VkAllocationCallbacks);
 pub type PFN_vkMapMemory =
 ::std::option::Option<unsafe extern "C" fn(device: VkDevice,
                                            memory: VkDeviceMemory,

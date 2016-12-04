@@ -6,6 +6,7 @@ use super::super::system::vulkan::{
     VkFormat,
     VkExtent3D,
     VkImageType,
+    vkFreeMemory,
     vkCreateImage,
     VkImageTiling,
     VkDeviceMemory,
@@ -35,6 +36,7 @@ pub struct Image {
     device: Arc<RwLock<Device>>,
     vk_image: VkImage,
     vk_format: VkFormat,
+    vk_mem: VkDeviceMemory,
 }
 
 impl Image {
@@ -91,6 +93,7 @@ impl Image {
             device: device.clone(),
             vk_image: vk_image,
             vk_format: format,
+            vk_mem: vk_mem,
         }
     }
 }
@@ -99,6 +102,7 @@ impl Drop for Image {
     fn drop(&mut self) {
         let dev = self.device.read().unwrap();
         unsafe {
+            vkFreeMemory(dev.vk_device, self.vk_mem,  0 as *const VkAllocationCallbacks);
             vkDestroyImage(dev.vk_device, self.vk_image, 0 as *const VkAllocationCallbacks);
         }
     }

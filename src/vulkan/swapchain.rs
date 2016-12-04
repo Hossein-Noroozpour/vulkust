@@ -26,6 +26,8 @@ use super::super::system::vulkan::{
 };
 
 use super::window::Window;
+use super::image::view::View as ImageView;
+use super::image::Image;
 
 use std::sync::{
     Arc,
@@ -34,6 +36,7 @@ use std::sync::{
 
 pub struct Swapchain {
     window: Arc<RwLock<Window>>,
+    depth_stencil_image_view: ImageView,
     vk_image_views: Vec<VkImageView>,
     vk_swapchain: VkSwapchainKHR,
 }
@@ -107,6 +110,13 @@ impl Swapchain {
         }
         Swapchain {
             window: window.clone(),
+            depth_stencil_image_view: ImageView::new_depth_stencil(Arc::new(RwLock::new(
+                Image::new_depth_with_format(
+                    win.device.clone(),
+                    win.vk_surface_capabilities.currentExtent.width,
+                    win.vk_surface_capabilities.currentExtent.height
+                )
+            ))),
             vk_image_views: vk_image_views,
             vk_swapchain: vk_swapchain,
         }
