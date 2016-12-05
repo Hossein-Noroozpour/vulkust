@@ -3671,18 +3671,11 @@ pub type PFN_vkDestroyShaderModule = unsafe extern "C" fn(
 pub type PFN_vkCreatePipelineCache = unsafe extern "C" fn(
     device: VkDevice, pCreateInfo: *const VkPipelineCacheCreateInfo,
     pAllocator: *const VkAllocationCallbacks, pPipelineCache: *mut VkPipelineCache) -> VkResult;
-pub type PFN_vkDestroyPipelineCache =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pipelineCache: VkPipelineCache,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkGetPipelineCacheData =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pipelineCache: VkPipelineCache,
-                                           pDataSize: *mut size_t,
-                                           pData:
-                                           *mut ::std::os::raw::c_void)
-                                           -> VkResult>;
+pub type PFN_vkDestroyPipelineCache = unsafe extern "C" fn(
+    device: VkDevice, pipelineCache: VkPipelineCache, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkGetPipelineCacheData = unsafe extern "C" fn(
+    device: VkDevice, pipelineCache: VkPipelineCache, pDataSize: *mut size_t,
+    pData: *mut ::std::os::raw::c_void) -> VkResult;
 pub type PFN_vkMergePipelineCaches =
 ::std::option::Option<unsafe extern "C" fn(device: VkDevice,
                                            dstCache: VkPipelineCache,
@@ -3815,14 +3808,9 @@ pub type PFN_vkDestroyFramebuffer =
                                            framebuffer: VkFramebuffer,
                                            pAllocator:
                                            *const VkAllocationCallbacks)>;
-pub type PFN_vkCreateRenderPass =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkRenderPassCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pRenderPass: *mut VkRenderPass)
-                                           -> VkResult>;
+pub type PFN_vkCreateRenderPass = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkRenderPassCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pRenderPass: *mut VkRenderPass) -> VkResult;
 pub type PFN_vkDestroyRenderPass =
 ::std::option::Option<unsafe extern "C" fn(device: VkDevice,
                                            renderPass: VkRenderPass,
@@ -4947,10 +4935,9 @@ extern "C" {
                                pFramebuffer: *mut VkFramebuffer) -> VkResult;
     pub fn vkDestroyFramebuffer(device: VkDevice, framebuffer: VkFramebuffer,
                                 pAllocator: *const VkAllocationCallbacks);
-    pub fn vkCreateRenderPass(device: VkDevice,
-                              pCreateInfo: *const VkRenderPassCreateInfo,
-                              pAllocator: *const VkAllocationCallbacks,
-                              pRenderPass: *mut VkRenderPass) -> VkResult;
+    pub fn vkCreateRenderPass(
+        device: VkDevice, pCreateInfo: *const VkRenderPassCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pRenderPass: *mut VkRenderPass) -> VkResult;
     pub fn vkDestroyRenderPass(device: VkDevice, renderPass: VkRenderPass,
                                pAllocator: *const VkAllocationCallbacks);
     pub fn vkGetRenderAreaGranularity(device: VkDevice,
@@ -5263,6 +5250,8 @@ extern "C" {
 pub fn vkMakeVersion(major: u32, minor: u32, patch: u32) -> u32 {
     (major << 22) | (minor << 12) | patch
 }
+
+pub const VK_SUBPASS_EXTERNAL: u32 = !0u32;
 
 #[macro_export] macro_rules! vulkan_check {
     ( $x:expr ) => {

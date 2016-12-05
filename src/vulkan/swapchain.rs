@@ -2,27 +2,43 @@ use super::super::system::vulkan::{
     VkImage,
     VkResult,
     VkImageView,
+    VkRenderPass,
+    VkImageLayout,
     VkSharingMode,
     VkSwapchainKHR,
     VkImageViewType,
     VkStructureType,
+    VkAccessFlagBits,
     VkPresentModeKHR,
     vkCreateImageView,
     vkDestroyImageView,
     VkImageAspectFlags,
     VkComponentSwizzle,
     VkComponentMapping,
+    VkAttachmentLoadOp,
+    VkAttachmentStoreOp,
+    VkPipelineBindPoint,
+    VkSubpassDependency,
+    VkDependencyFlagBits,
     vkCreateSwapchainKHR,
     VkImageUsageFlagBits,
+    VkSubpassDescription,
+    VkAttachmentReference,
+    VkSampleCountFlagBits,
     VkImageAspectFlagBits,
     VkImageViewCreateInfo,
     vkDestroySwapchainKHR,
     VkAllocationCallbacks,
+    VkRenderPassCreateInfo,
+    VkPipelineStageFlagBits,
     VkImageSubresourceRange,
+    VkAttachmentDescription,
     vkGetSwapchainImagesKHR,
     VkSwapchainCreateInfoKHR,
     VkCompositeAlphaFlagBitsKHR,
     VkSurfaceTransformFlagBitsKHR,
+
+    VK_SUBPASS_EXTERNAL
 };
 
 use super::window::Window;
@@ -39,6 +55,7 @@ pub struct Swapchain {
     depth_stencil_image_view: ImageView,
     vk_image_views: Vec<VkImageView>,
     vk_swapchain: VkSwapchainKHR,
+    vk_render_pass: VkRenderPass,
 }
 
 impl Swapchain {
@@ -108,6 +125,57 @@ impl Swapchain {
                 dev.vk_device, &color_attachment_view as *const VkImageViewCreateInfo,
                 0 as *const VkAllocationCallbacks, ptr_vk_image_views.offset(i as isize)));
         }
+        let mut attachments = [VkAttachmentDescription::default(); 2];
+        attachments[0].format = win.vk_surface_format;
+        attachments[0].samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+        attachments[0].loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[0].storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[0].stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[0].stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[0].initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[0].finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        attachments[1].format = dev.vk_depth_format;
+        attachments[1].samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+        attachments[1].loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[1].storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[1].stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[1].stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[1].initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[1].finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        let mut color_reference = VkAttachmentReference::default();
+        color_reference.layout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        let mut depth_reference = VkAttachmentReference::default();
+        depth_reference.layout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        let mut subpass_description = VkSubpassDescription::default();
+        subpass_description.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass_description.colorAttachmentCount = 1;
+        subpass_description.pColorAttachments = &color_reference as *const VkAttachmentReference;
+        subpass_description.pDepthStencilAttachment = &depthReference as *const VkAttachmentReference;
+        let mut dependencies = [VkSubpassDependency::default(); 2];
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[0].dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[0].dstAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as u32 | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
+        dependencies[0].dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[1].srcAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as u32 | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
+        dependencies[1].dstAccessMask = VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[1].dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
+        let mut render_pass_info = VkRenderPassCreateInfo::default();
+        render_pass_info.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        render_pass_info.attachmentCount = attachments.len() as u32;
+        render_pass_info.pAttachments = attachments.as_ptr() as *const VkAttachmentDescription;
+        render_pass_info.subpassCount = 1;
+        render_pass_info.pSubpasses = &subpass_description as *const VkSubpassDescription;
+        render_pass_info.dependencyCount = dependencies.len() as u32;
+        render_pass_info.pDependencies = dependencies.as_ptr() as *const VkSubpassDependency;
+        let mut vk_render_pass = 0 as VkRenderPass;
+        vulkan_check!(vkCreateRenderPass(
+            dev.vk_devic, &render_pass_info as *const VkRenderPassCreateInfo,
+            0 as *const VkAllocationCallbacks, &mut vk_render_pass as *mut VkRenderPass));
         Swapchain {
             window: window.clone(),
             depth_stencil_image_view: ImageView::new_depth_stencil(Arc::new(RwLock::new(
@@ -119,6 +187,7 @@ impl Swapchain {
             ))),
             vk_image_views: vk_image_views,
             vk_swapchain: vk_swapchain,
+            vk_render_pass: vk_render_pass,
         }
     }
 }
