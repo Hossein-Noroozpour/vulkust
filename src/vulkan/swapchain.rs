@@ -11,12 +11,14 @@ use super::super::system::vulkan::{
     VkAccessFlagBits,
     VkPresentModeKHR,
     vkCreateImageView,
+    vkCreateRenderPass,
     vkDestroyImageView,
     VkImageAspectFlags,
     VkComponentSwizzle,
     VkComponentMapping,
     VkAttachmentLoadOp,
     VkAttachmentStoreOp,
+    vkDestroyRenderPass,
     VkPipelineBindPoint,
     VkSubpassDependency,
     VkDependencyFlagBits,
@@ -125,8 +127,15 @@ impl Swapchain {
                 dev.vk_device, &color_attachment_view as *const VkImageViewCreateInfo,
                 0 as *const VkAllocationCallbacks, ptr_vk_image_views.offset(i as isize)));
         }
+        let depth_stencil_image_view = ImageView::new_depth_stencil(Arc::new(RwLock::new(
+            Image::new_depth_with_format(
+                win.device.clone(),
+                win.vk_surface_capabilities.currentExtent.width,
+                win.vk_surface_capabilities.currentExtent.height
+            )
+        )));
         let mut attachments = [VkAttachmentDescription::default(); 2];
-        attachments[0].format = win.vk_surface_format;
+        attachments[0].format = win.vk_surface_format.format;
         attachments[0].samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         attachments[0].loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachments[0].storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
@@ -150,20 +159,20 @@ impl Swapchain {
         subpass_description.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass_description.colorAttachmentCount = 1;
         subpass_description.pColorAttachments = &color_reference as *const VkAttachmentReference;
-        subpass_description.pDepthStencilAttachment = &depthReference as *const VkAttachmentReference;
+        subpass_description.pDepthStencilAttachment = &depth_reference as *const VkAttachmentReference;
         let mut dependencies = [VkSubpassDependency::default(); 2];
         dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[0].srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[0].dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[0].srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT as u32;
+        dependencies[0].dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+        dependencies[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT as u32;
         dependencies[0].dstAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as u32 | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
-        dependencies[0].dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
+        dependencies[0].dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;
         dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[1].srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[1].dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[1].srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+        dependencies[1].dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT as u32;
         dependencies[1].srcAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as u32 | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
-        dependencies[1].dstAccessMask = VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT;
-        dependencies[1].dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
+        dependencies[1].dstAccessMask = VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT as u32;
+        dependencies[1].dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;
         let mut render_pass_info = VkRenderPassCreateInfo::default();
         render_pass_info.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         render_pass_info.attachmentCount = attachments.len() as u32;
@@ -174,17 +183,11 @@ impl Swapchain {
         render_pass_info.pDependencies = dependencies.as_ptr() as *const VkSubpassDependency;
         let mut vk_render_pass = 0 as VkRenderPass;
         vulkan_check!(vkCreateRenderPass(
-            dev.vk_devic, &render_pass_info as *const VkRenderPassCreateInfo,
+            dev.vk_device, &render_pass_info as *const VkRenderPassCreateInfo,
             0 as *const VkAllocationCallbacks, &mut vk_render_pass as *mut VkRenderPass));
         Swapchain {
             window: window.clone(),
-            depth_stencil_image_view: ImageView::new_depth_stencil(Arc::new(RwLock::new(
-                Image::new_depth_with_format(
-                    win.device.clone(),
-                    win.vk_surface_capabilities.currentExtent.width,
-                    win.vk_surface_capabilities.currentExtent.height
-                )
-            ))),
+            depth_stencil_image_view: depth_stencil_image_view,
             vk_image_views: vk_image_views,
             vk_swapchain: vk_swapchain,
             vk_render_pass: vk_render_pass,
@@ -196,6 +199,10 @@ impl Drop for Swapchain {
     fn drop(&mut self) {
         let win = self.window.read().unwrap();
         let dev = win.device.read().unwrap();
+        unsafe {
+            vkDestroyRenderPass(
+                dev.vk_device, self.vk_render_pass, 0 as *const VkAllocationCallbacks);
+        }
         for i in 0..self.vk_image_views.len() {
             unsafe {
                 vkDestroyImageView(

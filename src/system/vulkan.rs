@@ -3811,25 +3811,13 @@ pub type PFN_vkDestroyFramebuffer =
 pub type PFN_vkCreateRenderPass = unsafe extern "C" fn(
     device: VkDevice, pCreateInfo: *const VkRenderPassCreateInfo,
     pAllocator: *const VkAllocationCallbacks, pRenderPass: *mut VkRenderPass) -> VkResult;
-pub type PFN_vkDestroyRenderPass =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           renderPass: VkRenderPass,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkGetRenderAreaGranularity =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           renderPass: VkRenderPass,
-                                           pGranularity:
-                                           *mut VkExtent2D)>;
-pub type PFN_vkCreateCommandPool =
-::std::option::Option<unsafe extern "C" fn(device: VkDevice,
-                                           pCreateInfo:
-                                           *const VkCommandPoolCreateInfo,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks,
-                                           pCommandPool:
-                                           *mut VkCommandPool)
-                                           -> VkResult>;
+pub type PFN_vkDestroyRenderPass = unsafe extern "C" fn(
+    device: VkDevice, renderPass: VkRenderPass, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkGetRenderAreaGranularity = unsafe extern "C" fn(
+    device: VkDevice, renderPass: VkRenderPass, pGranularity: *mut VkExtent2D);
+pub type PFN_vkCreateCommandPool = unsafe extern "C" fn(
+    device: VkDevice, pCreateInfo: *const VkCommandPoolCreateInfo,
+    pAllocator: *const VkAllocationCallbacks, pCommandPool: *mut VkCommandPool) -> VkResult;
 pub type PFN_vkDestroyCommandPool =
 ::std::option::Option<unsafe extern "C" fn(device: VkDevice,
                                            commandPool: VkCommandPool,
@@ -4938,8 +4926,8 @@ extern "C" {
     pub fn vkCreateRenderPass(
         device: VkDevice, pCreateInfo: *const VkRenderPassCreateInfo,
         pAllocator: *const VkAllocationCallbacks, pRenderPass: *mut VkRenderPass) -> VkResult;
-    pub fn vkDestroyRenderPass(device: VkDevice, renderPass: VkRenderPass,
-                               pAllocator: *const VkAllocationCallbacks);
+    pub fn vkDestroyRenderPass(
+        device: VkDevice, renderPass: VkRenderPass, pAllocator: *const VkAllocationCallbacks);
     pub fn vkGetRenderAreaGranularity(device: VkDevice,
                                       renderPass: VkRenderPass,
                                       pGranularity: *mut VkExtent2D);

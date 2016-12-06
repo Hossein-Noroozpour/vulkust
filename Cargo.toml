@@ -8,6 +8,6 @@ description = "Vulakn based game engine"
 license = "GPL-1.0"
 
 [dependencies]
-libc = "0.2"
+libc = "*"
 
 [build-dependencies]
