@@ -33,10 +33,10 @@ use std::sync::{
 };
 
 pub struct Image {
-    device: Arc<RwLock<Device>>,
-    vk_image: VkImage,
-    vk_format: VkFormat,
-    vk_mem: VkDeviceMemory,
+    pub device: Arc<RwLock<Device>>,
+    pub vk_image: VkImage,
+    pub vk_format: VkFormat,
+    pub vk_mem: VkDeviceMemory,
 }
 
 impl Image {

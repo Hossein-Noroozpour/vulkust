@@ -5,9 +5,11 @@ use super::super::system::vulkan::{
     VkRenderPass,
     VkImageLayout,
     VkSharingMode,
+    VkFramebuffer,
     VkSwapchainKHR,
     VkImageViewType,
     VkStructureType,
+    VkPipelineCache,
     VkAccessFlagBits,
     VkPresentModeKHR,
     vkCreateImageView,
@@ -18,6 +20,7 @@ use super::super::system::vulkan::{
     VkComponentMapping,
     VkAttachmentLoadOp,
     VkAttachmentStoreOp,
+    vkCreateFramebuffer,
     vkDestroyRenderPass,
     VkPipelineBindPoint,
     VkSubpassDependency,
@@ -25,18 +28,23 @@ use super::super::system::vulkan::{
     vkCreateSwapchainKHR,
     VkImageUsageFlagBits,
     VkSubpassDescription,
+    vkDestroyFramebuffer,
     VkAttachmentReference,
     VkSampleCountFlagBits,
     VkImageAspectFlagBits,
     VkImageViewCreateInfo,
     vkDestroySwapchainKHR,
     VkAllocationCallbacks,
+    vkCreatePipelineCache,
+    vkDestroyPipelineCache,
     VkRenderPassCreateInfo,
+    VkFramebufferCreateInfo,
     VkPipelineStageFlagBits,
     VkImageSubresourceRange,
     VkAttachmentDescription,
     vkGetSwapchainImagesKHR,
     VkSwapchainCreateInfoKHR,
+    VkPipelineCacheCreateInfo,
     VkCompositeAlphaFlagBitsKHR,
     VkSurfaceTransformFlagBitsKHR,
 
@@ -58,6 +66,8 @@ pub struct Swapchain {
     vk_image_views: Vec<VkImageView>,
     vk_swapchain: VkSwapchainKHR,
     vk_render_pass: VkRenderPass,
+    vk_pipeline_cache: VkPipelineCache,
+    vk_frame_buffers: Vec<VkFramebuffer>,
 }
 
 impl Swapchain {
@@ -185,12 +195,38 @@ impl Swapchain {
         vulkan_check!(vkCreateRenderPass(
             dev.vk_device, &render_pass_info as *const VkRenderPassCreateInfo,
             0 as *const VkAllocationCallbacks, &mut vk_render_pass as *mut VkRenderPass));
+        let mut pipeline_cache_create_info = VkPipelineCacheCreateInfo::default();
+        pipeline_cache_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+        let mut vk_pipeline_cache = 0 as VkPipelineCache;
+        vulkan_check!(vkCreatePipelineCache(
+            dev.vk_device, &pipeline_cache_create_info as *const VkPipelineCacheCreateInfo,
+            0 as *const VkAllocationCallbacks, &mut vk_pipeline_cache as *mut VkPipelineCache));
+        let mut attachments = [0 as VkImageView; 2];
+        attachments[1] = depth_stencil_image_view.vk_view;
+        let mut frame_buffer_create_info = VkFramebufferCreateInfo::default();
+        frame_buffer_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        frame_buffer_create_info.renderPass = vk_render_pass;
+        frame_buffer_create_info.attachmentCount = 2;
+        frame_buffer_create_info.pAttachments = attachments.as_ptr() as *const VkImageView;
+        frame_buffer_create_info.width = win.vk_surface_capabilities.currentExtent.width;
+        frame_buffer_create_info.height = win.vk_surface_capabilities.currentExtent.height;
+        frame_buffer_create_info.layers = 1;
+        let mut vk_frame_buffers = vec![0 as VkFramebuffer; vk_image_views.len()];
+        for i in 0..vk_frame_buffers.len() {
+            attachments[0] = vk_image_views[i];
+            let mut ptr_frame_buffer = unsafe {vk_frame_buffers.as_mut_ptr().offset(i as isize)};
+            vulkan_check!(vkCreateFramebuffer(
+                dev.vk_device, &frame_buffer_create_info as *const VkFramebufferCreateInfo,
+                0 as *const VkAllocationCallbacks, ptr_frame_buffer));
+        }
         Swapchain {
             window: window.clone(),
             depth_stencil_image_view: depth_stencil_image_view,
             vk_image_views: vk_image_views,
             vk_swapchain: vk_swapchain,
             vk_render_pass: vk_render_pass,
+            vk_pipeline_cache: vk_pipeline_cache,
+            vk_frame_buffers: vk_frame_buffers,
         }
     }
 }
@@ -199,14 +235,21 @@ impl Drop for Swapchain {
     fn drop(&mut self) {
         let win = self.window.read().unwrap();
         let dev = win.device.read().unwrap();
+        for i in 0..self.vk_frame_buffers.len() {
+            unsafe {
+                vkDestroyFramebuffer(dev.vk_device, self.vk_frame_buffers[i], 0 as *const VkAllocationCallbacks);
+            }
+        }
+        unsafe {
+            vkDestroyPipelineCache(dev.vk_device, self.vk_pipeline_cache, 0 as *const VkAllocationCallbacks);
+        }
         unsafe {
             vkDestroyRenderPass(
                 dev.vk_device, self.vk_render_pass, 0 as *const VkAllocationCallbacks);
         }
         for i in 0..self.vk_image_views.len() {
             unsafe {
-                vkDestroyImageView(
-                    dev.vk_device, self.vk_image_views[i], 0 as *const VkAllocationCallbacks);
+                vkDestroyImageView(dev.vk_device, self.vk_image_views[i], 0 as *const VkAllocationCallbacks);
             }
         }
         unsafe {

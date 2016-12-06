@@ -20,8 +20,8 @@ use std::sync::{
 };
 
 pub struct View {
-    image: Arc<RwLock<Image>>,
-    vk_view: VkImageView,
+    pub image: Arc<RwLock<Image>>,
+    pub vk_view: VkImageView,
 }
 
 impl View {
