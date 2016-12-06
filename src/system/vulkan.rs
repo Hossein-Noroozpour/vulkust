@@ -4482,27 +4482,15 @@ impl ::std::default::Default for VkDisplaySurfaceCreateInfoKHR {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 
-pub type PFN_vkGetPhysicalDeviceDisplayPropertiesKHR =
-::std::option::Option<unsafe extern "C" fn(physicalDevice:
-                                           VkPhysicalDevice,
-                                           pPropertyCount: *mut uint32_t,
-                                           pProperties:
-                                           *mut VkDisplayPropertiesKHR)
-                                           -> VkResult>;
-pub type PFN_vkGetPhysicalDeviceDisplayPlanePropertiesKHR =
-::std::option::Option<unsafe extern "C" fn(physicalDevice:
-                                           VkPhysicalDevice,
-                                           pPropertyCount: *mut uint32_t,
-                                           pProperties:
-                                           *mut VkDisplayPlanePropertiesKHR)
-                                           -> VkResult>;
-pub type PFN_vkGetDisplayPlaneSupportedDisplaysKHR =
-::std::option::Option<unsafe extern "C" fn(physicalDevice:
-                                           VkPhysicalDevice,
-                                           planeIndex: uint32_t,
-                                           pDisplayCount: *mut uint32_t,
-                                           pDisplays: *mut VkDisplayKHR)
-                                           -> VkResult>;
+pub type PFN_vkGetPhysicalDeviceDisplayPropertiesKHR = unsafe extern "C" fn(
+    physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
+    pProperties: *mut VkDisplayPropertiesKHR) -> VkResult;
+pub type PFN_vkGetPhysicalDeviceDisplayPlanePropertiesKHR = unsafe extern "C" fn(
+    physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
+    pProperties: *mut VkDisplayPlanePropertiesKHR) -> VkResult;
+pub type PFN_vkGetDisplayPlaneSupportedDisplaysKHR = unsafe extern "C" fn(
+    physicalDevice: VkPhysicalDevice, planeIndex: uint32_t, pDisplayCount: *mut uint32_t,
+    pDisplays: *mut VkDisplayKHR) -> VkResult;
 pub type PFN_vkGetDisplayModePropertiesKHR =
 ::std::option::Option<unsafe extern "C" fn(physicalDevice:
                                            VkPhysicalDevice,
@@ -4640,25 +4628,17 @@ impl ::std::default::Default for VkDebugReportCallbackCreateInfoEXT {
 }
 
 pub type PFN_vkCreateDebugReportCallbackEXT = unsafe extern "C" fn(
-    instance: VkInstance,
-    pCreateInfo: *const VkDebugReportCallbackCreateInfoEXT,
-    pAllocator: *const VkAllocationCallbacks,
-    pCallback: *mut VkDebugReportCallbackEXT) -> VkResult;
+    instance: VkInstance, pCreateInfo: *const VkDebugReportCallbackCreateInfoEXT,
+    pAllocator: *const VkAllocationCallbacks, pCallback: *mut VkDebugReportCallbackEXT) -> VkResult;
 
 pub type PFN_vkDestroyDebugReportCallbackEXT = unsafe extern "C" fn(
-    instance: VkInstance,
-    callback: VkDebugReportCallbackEXT,
+    instance: VkInstance, callback: VkDebugReportCallbackEXT,
     pAllocator: *const VkAllocationCallbacks);
 
-pub type PFN_vkDebugReportMessageEXT = ::std::option::Option<unsafe extern "C" fn(
-    instance: VkInstance,
-    flags: VkDebugReportFlagsEXT,
-    objectType: VkDebugReportObjectTypeEXT,
-    object: uint64_t,
-    location: size_t,
-    messageCode: int32_t,
-    pLayerPrefix: *const ::std::os::raw::c_char,
-    pMessage: *const ::std::os::raw::c_char)>;
+pub type PFN_vkDebugReportMessageEXT = unsafe extern "C" fn(
+    instance: VkInstance, flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT,
+    object: uint64_t, location: size_t, messageCode: int32_t,
+    pLayerPrefix: *const ::std::os::raw::c_char, pMessage: *const ::std::os::raw::c_char);
 
 #[cfg_attr(target_os = "linux", link(name = "vulkan", kind= "dylib"))]
 #[cfg_attr(target_os = "windows", link(name = "vulkan-1", kind= "dylib"))]
@@ -4818,23 +4798,16 @@ extern "C" {
         pView: *mut VkImageView) -> VkResult;
     pub fn vkDestroyImageView(
         device: VkDevice, imageView: VkImageView, pAllocator: *const VkAllocationCallbacks);
-    pub fn vkCreateShaderModule(device: VkDevice,
-                                pCreateInfo: *const VkShaderModuleCreateInfo,
-                                pAllocator: *const VkAllocationCallbacks,
-                                pShaderModule: *mut VkShaderModule)
-                                -> VkResult;
-    pub fn vkDestroyShaderModule(device: VkDevice,
-                                 shaderModule: VkShaderModule,
-                                 pAllocator: *const VkAllocationCallbacks);
-    pub fn vkCreatePipelineCache(device: VkDevice,
-                                 pCreateInfo:
-                                 *const VkPipelineCacheCreateInfo,
-                                 pAllocator: *const VkAllocationCallbacks,
-                                 pPipelineCache: *mut VkPipelineCache)
-                                 -> VkResult;
-    pub fn vkDestroyPipelineCache(device: VkDevice,
-                                  pipelineCache: VkPipelineCache,
-                                  pAllocator: *const VkAllocationCallbacks);
+    pub fn vkCreateShaderModule(
+        device: VkDevice, pCreateInfo: *const VkShaderModuleCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pShaderModule: *mut VkShaderModule) -> VkResult;
+    pub fn vkDestroyShaderModule(
+        device: VkDevice, shaderModule: VkShaderModule, pAllocator: *const VkAllocationCallbacks);
+    pub fn vkCreatePipelineCache(
+        device: VkDevice, pCreateInfo: *const VkPipelineCacheCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pPipelineCache: *mut VkPipelineCache) -> VkResult;
+    pub fn vkDestroyPipelineCache(
+        device: VkDevice, pipelineCache: VkPipelineCache, pAllocator: *const VkAllocationCallbacks);
     pub fn vkGetPipelineCacheData(device: VkDevice,
                                   pipelineCache: VkPipelineCache,
                                   pDataSize: *mut size_t,
@@ -5103,19 +5076,13 @@ extern "C" {
     pub fn vkCmdWriteTimestamp(commandBuffer: VkCommandBuffer,
                                pipelineStage: VkPipelineStageFlagBits,
                                queryPool: VkQueryPool, query: uint32_t);
-    pub fn vkCmdCopyQueryPoolResults(commandBuffer: VkCommandBuffer,
-                                     queryPool: VkQueryPool,
-                                     firstQuery: uint32_t,
-                                     queryCount: uint32_t,
-                                     dstBuffer: VkBuffer,
-                                     dstOffset: VkDeviceSize,
-                                     stride: VkDeviceSize,
-                                     flags: VkQueryResultFlags);
-    pub fn vkCmdPushConstants(commandBuffer: VkCommandBuffer,
-                              layout: VkPipelineLayout,
-                              stageFlags: VkShaderStageFlags,
-                              offset: uint32_t, size: uint32_t,
-                              pValues: *const ::std::os::raw::c_void);
+    pub fn vkCmdCopyQueryPoolResults(
+        commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, firstQuery: uint32_t,
+        queryCount: uint32_t, dstBuffer: VkBuffer, dstOffset: VkDeviceSize, stride: VkDeviceSize,
+        flags: VkQueryResultFlags);
+    pub fn vkCmdPushConstants(
+        commandBuffer: VkCommandBuffer, layout: VkPipelineLayout, stageFlags: VkShaderStageFlags,
+        offset: uint32_t, size: uint32_t, pValues: *const ::std::os::raw::c_void);
     pub fn vkCmdBeginRenderPass(
         commandBuffer: VkCommandBuffer, pRenderPassBegin: *const VkRenderPassBeginInfo,
         contents: VkSubpassContents);

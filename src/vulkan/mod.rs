@@ -11,7 +11,7 @@ use std::sync::{
     RwLock,
 };
 
-pub fn run() {
+pub fn initialize(fullscreen_mode: bool) {
     let ins = Arc::new(RwLock::new(instance::Instance::new()));
     let dev = Arc::new(RwLock::new(device::Device::new(ins.clone())));
     let cmd_pool = command::pool::Pool::new(
