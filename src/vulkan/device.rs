@@ -176,6 +176,19 @@ impl Device {
         }
         panic!("Required memory type not found")
     }
+
+    pub fn get_memory_type_index(type_bits: u32, properties: VkMemoryPropertyFlags) -> u32 {
+        for i in 0..deviceMemoryProperties.memoryTypeCount {
+            if (typeBits & 1) == 1 {
+                if (deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties {
+                    return i;
+                }
+            }
+            typeBits >>= 1;
+        }
+        panic!("Could not find a suitable memory type!");
+        return 0;
+    }
 }
 
 impl Drop for Device {
