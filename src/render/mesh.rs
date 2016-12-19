@@ -2,12 +2,14 @@ use libc::{
     c_void,
     memcpy,
 };
-
 use super::super::system::vulkan::{
     vkMapMemory,
+    VkBufferCopy,
     vkUnmapMemory,
     vkCreateBuffer,
     VkDeviceMemory,
+    vkCmdCopyBuffer,
+    VkCommandBuffer,
     VkStructureType,
     vkAllocateMemory,
     vkBindBufferMemory,
@@ -17,11 +19,14 @@ use super::super::system::vulkan::{
     VkMemoryRequirements,
     VkBufferUsageFlagBits,
     VkAllocationCallbacks,
+    VkCommandBufferBeginInfo,
     VkMemoryPropertyFlagBits,
     vkGetBufferMemoryRequirements,
 };
 
 use super::super::vulkan::device::Device;
+use super::super::vulkan::command::buffer::Buffer as CmdBuff;
+use super::super::vulkan::Driver;
 
 use std::default::Default;
 use std::mem::zeroed;
@@ -50,8 +55,9 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn new(device: Arc<RwLock<Device>>) {
-        let dev = device.read().unwrap();
+    pub fn new(device: Arc<RwLock<Driver>>) {
+        let drv = driver.read().unwrap();
+        let dev = drv.device.read().unwrap();
         let vertex_buffer = [
             1.0f32, 1.0f32, 0.0f32,   1.0f32,  0.0f32, 0.0f32,   -1.0f32, 1.0f32, 0.0f32,
             0.0f32, 1.0f32, 0.0f32,   0.0f32, -1.0f32, 0.0f32,    0.0f32, 0.0f32, 1.0f32,
@@ -70,78 +76,55 @@ impl Mesh {
         vertex_buffer_info.sType = VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         vertex_buffer_info.size = vertex_buffer_size;
         vertex_buffer_info.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        vulkan_check!(
-            vkCreateBuffer(
-                dev.vk_device, &vertex_buffer_info, 0 as *const VkAllocationCallbacks,
-                &staging_buffers.vertices.buffer));
+        vulkan_check!(vkCreateBuffer(
+            dev.vk_device, &vertex_buffer_info, 0 as *const VkAllocationCallbacks,&staging_buffers.vertices.buffer));
         vulkan_check!(vkGetBufferMemoryRequirements(
             dev.vk_device, staging_buffers[0].buffer, &mem_rs));
         mem_alloc.allocationSize = mem_rs.size;
         mem_alloc.memoryTypeIndex = getMemoryTypeIndex(
-            mem_rs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            mem_rs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         vulkan_check!(vkAllocateMemory(dev.vk_device, &mem_alloc, 0, &staging_buffers[0].memory));
         vulkan_check!(vkMapMemory(dev.vk_device, staging_buffers[0].memory, 0, mem_alloc.allocationSize, 0, &data));
         memcpy(data, vertex_buffer.as_ptr(), vertex_buffer_size);
         vulkan_check!(vkUnmapMemory(dev.vk_device, staging_buffers[0].memory));
         vulkan_check!(vkBindBufferMemory(dev.vk_device, staging_buffers[0].buffer, staging_buffers[0].memory, 0));
-        vertex_buffer_info.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | 
-            VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        vertex_buffer_info.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         vulakn_check!(vkCreateBuffer(dev.vk_device, &vertex_buffer_info, 0, &vertices.buffer));
         vkGetBufferMemoryRequirements(device, vertices.buffer, &memReqs);
         memAlloc.allocationSize = memReqs.size;
-        memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        memAlloc.memoryTypeIndex = dev.get_memory_type_index(mem_rs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         vulkan_check!(vkAllocateMemory(device, &memAlloc, nullptr, &vertices.memory));
         vulkan_check!(vkBindBufferMemory(device, vertices.buffer, vertices.memory, 0));
-
-        // Index buffer
-        VkBufferCreateInfo indexbufferInfo = {};
-        indexbufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        indexbufferInfo.size = indexBufferSize;
-        indexbufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        // Copy index data to a buffer visible to the host (staging buffer)
-        vulkan_check!(vkCreateBuffer(device, &indexbufferInfo, nullptr, &staging_buffers.indices.buffer));
-        vkGetBufferMemoryRequirements(device, staging_buffers.indices.buffer, &memReqs);
-        memAlloc.allocationSize = memReqs.size;
-        memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        let mut index_buffer_info = VkBufferCreateInfo::default();
+        index_buffer_info.sType = VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        index_buffer_info.size = index_buffer_size;
+        index_buffer_info.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        vulkan_check!(vkCreateBuffer(
+            dev.vk_device, &index_buffer_info, 0 as *const VkAllocationCallback, &staging_buffers[1].buffer));
+        vulkan_check!(vkGetBufferMemoryRequirements(dev.vk_device, staging_buffers[1].buffer, &mem_rs));
+        mem_alloc.allocationSize = mem_rs.size;
+        mem_alloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         vulkan_check!(vkAllocateMemory(device, &memAlloc, nullptr, &staging_buffers.indices.memory));
         vulkan_check!(vkMapMemory(device, staging_buffers.indices.memory, 0, indexBufferSize, 0, &data));
         memcpy(data, indexBuffer.data(), indexBufferSize);
         vkUnmapMemory(device, staging_buffers.indices.memory);
         vulkan_check!(vkBindBufferMemory(device, staging_buffers.indices.buffer, staging_buffers.indices.memory, 0));
-
-        // Create destination buffer with device only visibility
-        indexbufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        index_buffer_info.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         vulkan_check!(vkCreateBuffer(device, &indexbufferInfo, nullptr, &indices.buffer));
         vkGetBufferMemoryRequirements(device, indices.buffer, &memReqs);
         memAlloc.allocationSize = memReqs.size;
         memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         vulkan_check!(vkAllocateMemory(device, &memAlloc, nullptr, &indices.memory));
         vulkan_check!(vkBindBufferMemory(device, indices.buffer, indices.memory, 0));
-
-        VkCommandBufferBeginInfo cmdBufferBeginInfo = {};
-        cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        cmdBufferBeginInfo.pNext = nullptr;
-
-        // Buffer copies have to be submitted to a queue, so we need a command buffer for them
-        // Note: Some devices offer a dedicated transfer queue (with only the transfer bit set) that may be faster when doing lots of copies
-        VkCommandBuffer copyCmd = getCommandBuffer(true);
-
-        // Put buffer region copies into command buffer
-        VkBufferCopy copyRegion = {};
-
-        // Vertex buffer
-        copyRegion.size = vertexBufferSize;
-        vkCmdCopyBuffer(copyCmd, staging_buffers.vertices.buffer, vertices.buffer, 1, &copyRegion);
-        // Index buffer
-        copyRegion.size = indexBufferSize;
-        vkCmdCopyBuffer(copyCmd, staging_buffers.indices.buffer, indices.buffer, 1, &copyRegion);
-
-        // Flushing the command buffer will also submit it to the queue and uses a fence to ensure that all commands have been executed before returning
-        flushCommandBuffer(copyCmd);
-
-        // Destroy staging buffers
-        // Note: Staging buffer must not be deleted before the copies have been submitted and executed
+        let mut cmd_buffer_begin_info = VkCommandBufferBeginInfo::default();
+        cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        let copy_cmd = CmdBuff::new(drv.cmd_pool);
+        let mut copy_region = VkBufferCopy::default();
+        copy_region.size = vertex_buffer_size;
+        vulkan_check!(vkCmdCopyBuffer(copy_cmd, staging_buffers[0].buffer, vertices.buffer, 1, &copy_region));
+        copy_region.size = index_buffer_size;
+        vulkan_check!(vkCmdCopyBuffer(copy_cmd, staging_buffers[1].buffer, indices.buffer, 1, &copy_region));
+        copy_cmd.flush();
         vkDestroyBuffer(device, staging_buffers.vertices.buffer, nullptr);
         vkFreeMemory(device, staging_buffers.vertices.memory, nullptr);
         vkDestroyBuffer(device, staging_buffers.indices.buffer, nullptr);

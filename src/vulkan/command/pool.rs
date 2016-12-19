@@ -24,12 +24,10 @@ pub struct Pool {
 
 impl Pool {
     pub fn new(device: Arc<RwLock<Device>>, queue_family_index: u32) -> Self {
-        let vk_cmd_pool_info = VkCommandPoolCreateInfo {
-            sType: VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-            queueFamilyIndex: queue_family_index,
-            flags: VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT as u32,
-            ..VkCommandPoolCreateInfo::default()
-        };
+        let vk_cmd_pool_info = VkCommandPoolCreateInfo::default();
+        vk_cmd_pool_info.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        vk_cmd_pool_info.queueFamilyIndex = queue_family_index;
+        vk_cmd_pool_info.flags = VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT as u32;
         let mut vk_cmd_pool = 0 as VkCommandPool;
         {
             let dev = device.read().unwrap();
