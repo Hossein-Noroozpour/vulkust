@@ -1,54 +1,11 @@
-use libc::{
-    void,
-    memcpy,
-};
-use super::super::system::vulkan::{
-    vkMapMemory,
-    VkBufferCopy,
-    vkUnmapMemory,
-    vkCreateBuffer,
-    VkDeviceMemory,
-    vkCmdCopyBuffer,
-    VkCommandBuffer,
-    VkStructureType,
-    vkAllocateMemory,
-    vkBindBufferMemory,
-    VkBufferUsageFlags,
-    VkBufferCreateInfo,
-    VkMemoryAllocateInfo,
-    VkMemoryRequirements,
-    VkBufferUsageFlagBits,
-    VkAllocationCallbacks,
-    VkCommandBufferBeginInfo,
-    VkMemoryPropertyFlagBits,
-    vkGetBufferMemoryRequirements,
-};
-
 use super::super::vulkan::device::Device;
 use super::super::vulkan::command::buffer::Buffer as CmdBuff;
 use super::super::vulkan::Driver;
+use super::super::vulkan::buffer::Buffer;
 
-use std::default::Default;
-use std::mem::zeroed;
 use std::sync::{
     Arc,
-    RwLock,
 };
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-struct StagingBuffer {
-    memory: VkDeviceMemory,
-    buffer: VkBuffer,
-}
-
-impl Default for StagingBuffer {
-    fn default() -> Self {
-        unsafe {
-            zeroed()
-        }
-    }
-}
 
 pub struct Mesh {
 
@@ -56,9 +13,7 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn new(driver: Arc<Driver>) {
-        let drv = driver.read().unwrap();
-        let dev = drv.device.read().unwrap();
-        let vertex_buffer = [
+        let vertex_buffer = vec![
             1.0f32, 1.0f32, 0.0f32,   1.0f32,  0.0f32, 0.0f32,   -1.0f32, 1.0f32, 0.0f32,
             0.0f32, 1.0f32, 0.0f32,   0.0f32, -1.0f32, 0.0f32,    0.0f32, 0.0f32, 1.0f32,
         ];
@@ -66,10 +21,7 @@ impl Mesh {
         let index_buffer = [0u32, 1u32, 2u32];
         let indices_count = 3u32;
         let index_buffer_size = 12u32;
-        // TODO: all vulkan-sys related works must move to vulkan module
-        let mut data = 0 as *mut c_void;
-        //let mut staging_buffers = [StagingBuffer::default(); 2];
-        let mut vertex_buffer = Buffer::new_in_vram(driver.device, vertex_buffer, );
+        let mut vertex_buffer = Buffer::new_in_vram(driver.device, vertex_buffer);
 //        stgvb.
 //
 //

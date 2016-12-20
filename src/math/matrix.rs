@@ -17,7 +17,7 @@ use ::math::vector::{
     MathVector,
     VectorElement,
 };
-use ::io::file::Stream;
+use super::super::io::file::Stream;
 
 pub trait Mat {
     fn read(&mut self, s: &mut Stream);

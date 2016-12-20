@@ -14,7 +14,7 @@ use std::ops::{
 use std::fmt::Debug;
 
 use ::io::file::Stream;
-use ::math::num::Number;
+use super::num::Number;
 
 pub enum Axis {
     X,

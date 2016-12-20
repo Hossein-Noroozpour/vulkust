@@ -13,22 +13,22 @@ use std::sync::{
     RwLock,
 };
 
-struct Driver {
-    instance: Arc<RwLock<instance::Instance>>,
-    device: Arc<RwLock<device::Device>>,
-    cmd_pool: Arc<RwLock<command::pool::Pool>>,
-    window: Arc<RwLock<window::Window>>,
-    swapchain: Arc<RwLock<swapchain::Swapchain>>,
+pub struct Driver {
+    pub instance: Arc<instance::Instance>,
+    pub device: Arc<device::Device>,
+    pub cmd_pool: Arc<command::pool::Pool>,
+    pub window: Arc<window::Window>,
+    pub swapchain: Arc<swapchain::Swapchain>,
 }
 
 impl Driver {
     pub fn new(fullscreen_mode: bool) -> Self {
-        let ins = Arc::new(RwLock::new(instance::Instance::new()));
-        let dev = Arc::new(RwLock::new(device::Device::new(ins.clone())));
-        let cmd_pool = Arc::new(RwLock::new(command::pool::Pool::new(
-            dev.clone(), dev.read().unwrap().graphics_family_index)));
-        let win = Arc::new(RwLock::new(window::Window::new(dev.clone())));
-        let swp = Arc::new(RwLock::new(swapchain::Swapchain::new(win.clone())));
+        let ins = Arc::new(instance::Instance::new());
+        let dev = Arc::new(device::Device::new(ins.clone()));
+        let cmd_pool = Arc::new(command::pool::Pool::new(
+            dev.clone(), dev.graphics_family_index));
+        let win = Arc::new(window::Window::new(dev.clone()));
+        let swp = Arc::new(swapchain::Swapchain::new(win.clone()));
         Driver {
             instance: ins,
             device: dev,

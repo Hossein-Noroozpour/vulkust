@@ -20,8 +20,8 @@ use std::sync::{
 use std::default::Default;
 
 pub struct Fence {
-    device: Arc<Device>,
-    vk_fence: VkFence,
+    pub device: Arc<Device>,
+    pub vk_fence: VkFence,
 }
 
 impl Fence {

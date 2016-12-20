@@ -52,9 +52,8 @@ pub struct Device {
 //                              find dedicated queue at first but if there wasn't any dedicated
 
 impl Device {
-    pub fn new(instance: Arc<RwLock<Instance>>) -> Self {
+    pub fn new(instance: Arc<Instance>) -> Self {
         let mut gpu_count: uint32_t = 0;
-        let ins = instance.read().unwrap();
         vulkan_check!(
             vkEnumeratePhysicalDevices(
                 ins.vk_instance,
@@ -157,6 +156,41 @@ impl Device {
         }
     }
 
+    fn get_graphic_family_index() -> u32 {
+        let mut graphics_queue_node_index = u32::max_value();
+        let mut present_queue_node_index = u32::max_value();
+        for i in 0..queue_count {
+            if (queue_props[i as usize].queueFlags &
+                (VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 {
+                if graphics_queue_node_index == u32::max_value() {
+                    graphics_queue_node_index = i;
+                }
+                if supports_present[i as usize] != 0 as VkBool32 {
+                    graphics_queue_node_index = i;
+                    present_queue_node_index = i;
+                    break;
+                }
+            }
+        }
+        if present_queue_node_index == u32::max_value() {
+            for i in 0..queue_count {
+                if supports_present[i as usize] != 0 as VkBool32 {
+                    present_queue_node_index = i;
+                    break;
+                }
+            }
+        }
+        if graphics_queue_node_index == u32::max_value() ||
+            present_queue_node_index == u32::max_value() {
+            panic!("Could not find a graphics and/or presenting queue!");
+        }
+        // TODO: Add support for separate graphics and presenting queue
+        if graphics_queue_node_index != present_queue_node_index {
+            panic!("Separate graphics and presenting queues are not supported yet!");
+        }
+        graphics_queue_node_index
+    }
+
     pub fn choose_heap_from_flags(
         &self, memory_requirements: &VkMemoryRequirements,
         required_flags: VkMemoryPropertyFlags, preferred_flags: VkMemoryPropertyFlags) -> u32 {
@@ -179,7 +213,7 @@ impl Device {
         panic!("Required memory type not found")
     }
 
-    pub fn get_memory_type_index(type_bits: u32, properties: VkMemoryPropertyFlags) -> u32 {
+    pub fn get_memory_type_index(&self, type_bits: u32, properties: VkMemoryPropertyFlags) -> u32 {
         for i in 0..deviceMemoryProperties.memoryTypeCount {
             if (typeBits & 1) == 1 {
                 if (deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties {

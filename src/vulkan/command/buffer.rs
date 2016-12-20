@@ -27,9 +27,7 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    pub fn new(cmd_pool: Arc<RwLock<Pool>>) -> Self {
-        let pool = cmd_pool.read().unwrap();
-        let device = pool.device.read().unwrap();
+    pub fn new(cmd_pool: Arc<Pool>) -> Self {
         let mut cmd_buf_allocate_info = VkCommandBufferAllocateInfo::default();
         cmd_buf_allocate_info.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         cmd_buf_allocate_info.commandPool = pool.vk_pool;
@@ -47,9 +45,7 @@ impl Buffer {
             vk_buffer: vk_buffer,
         }
     }
-    pub fn flush(&self) {
-        let pool = self.pool.read().unwrap();
-        let dev = pool.device.read().unwrap();
+    pub fn flush(&self) {;
         let fence = Fence::new(pool.device.clone());
         vulkan_check!(vkEndCommandBuffer(self.vk_buffer));
         let submit_info = VkSubmitInfo::default();
@@ -63,7 +59,6 @@ impl Buffer {
 
 impl Drop for Buffer {
     fn drop(&mut self) {
-        let pool = self.pool.read().unwrap();
         let device = pool.device.read().unwrap();
         unsafe {
             vkFreeCommandBuffers(device.vk_device, pool.vk_pool, 1, &mut self.vk_buffer);

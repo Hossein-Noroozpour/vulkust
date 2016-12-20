@@ -1,5 +1,3 @@
-extern crate libc;
-
 #[cfg(target_os = "linux")]
 use super::super::system::xcb::{
     xcb_cw_t,
@@ -26,7 +24,6 @@ use super::super::system::xcb::{
     xcb_intern_atom_reply,
     xcb_screen_iterator_t,
     xcb_setup_roots_iterator,
-
     XCB_COPY_FROM_PARENT,
 };
 
@@ -56,6 +53,8 @@ use super::super::system::vulkan_xcb::{
     vkCreateXcbSurfaceKHR,
     VkXcbSurfaceCreateInfoKHR,
 };
+
+use libc;
 
 use std::mem::zeroed;
 use std::default::Default;
@@ -89,7 +88,7 @@ impl OsWindow {
         if xcb_connection == (0 as *mut xcb_connection_t) {
             panic!("Cannot find a compatible Vulkan ICD.");
         }
-        setup = unsafe {xcb_get_setup(xcb_connection) };
+        setup = unsafe { xcb_get_setup(xcb_connection) };
         iter = unsafe { xcb_setup_roots_iterator(setup) };
         let _ = setup;
         for _ in 0..screen {
@@ -115,12 +114,12 @@ impl OsWindow {
         value_list[0] = unsafe { (*xcb_screen).black_pixel };
         value_list[1] =
             (xcb_event_mask_t::XCB_EVENT_MASK_KEY_RELEASE as c_uint) |
-            (xcb_event_mask_t::XCB_EVENT_MASK_KEY_PRESS as c_uint) |
-            (xcb_event_mask_t::XCB_EVENT_MASK_EXPOSURE as c_uint) |
-            (xcb_event_mask_t::XCB_EVENT_MASK_STRUCTURE_NOTIFY as c_uint) |
-            (xcb_event_mask_t::XCB_EVENT_MASK_POINTER_MOTION as c_uint) |
-            (xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_PRESS as c_uint) |
-            (xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_RELEASE as c_uint);
+                (xcb_event_mask_t::XCB_EVENT_MASK_KEY_PRESS as c_uint) |
+                (xcb_event_mask_t::XCB_EVENT_MASK_EXPOSURE as c_uint) |
+                (xcb_event_mask_t::XCB_EVENT_MASK_STRUCTURE_NOTIFY as c_uint) |
+                (xcb_event_mask_t::XCB_EVENT_MASK_POINTER_MOTION as c_uint) |
+                (xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_PRESS as c_uint) |
+                (xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_RELEASE as c_uint);
         unsafe {
             xcb_create_window(
                 xcb_connection, XCB_COPY_FROM_PARENT as u8, xcb_window, (*xcb_screen).root,
@@ -131,12 +130,16 @@ impl OsWindow {
         }
         let wm_protocols = CString::new("WM_PROTOCOLS").unwrap();
         let cookie = unsafe { xcb_intern_atom(xcb_connection, 1, 12, wm_protocols.as_ptr()) };
-        let reply = unsafe { xcb_intern_atom_reply(
-            xcb_connection, cookie, 0 as *mut *mut xcb_generic_error_t) };
+        let reply = unsafe {
+            xcb_intern_atom_reply(
+                xcb_connection, cookie, 0 as *mut *mut xcb_generic_error_t)
+        };
         let wm_delete_window = CString::new("WM_DELETE_WINDOW").unwrap();
         let cookie2 = unsafe { xcb_intern_atom(xcb_connection, 0, 16, wm_delete_window.as_ptr()) };
-        let xcb_atom_window_reply = unsafe { xcb_intern_atom_reply(
-            xcb_connection, cookie2, 0 as *mut *mut xcb_generic_error_t) };
+        let xcb_atom_window_reply = unsafe {
+            xcb_intern_atom_reply(
+                xcb_connection, cookie2, 0 as *mut *mut xcb_generic_error_t)
+        };
         unsafe {
             xcb_change_property(
                 xcb_connection, xcb_prop_mode_t::XCB_PROP_MODE_REPLACE as u8, xcb_window,
@@ -161,9 +164,7 @@ impl OsWindow {
             window: xcb_window,
             ..VkXcbSurfaceCreateInfoKHR::default()
         };
-        let dev = window.device.read().unwrap();
-        let ins = dev.instance.read().unwrap();
-        vulkan_check!(vkCreateXcbSurfaceKHR(ins.vk_instance,
+        vulkan_check!(vkCreateXcbSurfaceKHR(window.device.instance.vk_instance,
             &create_info as *const VkXcbSurfaceCreateInfoKHR, 0 as *const VkAllocationCallbacks,
             &mut window.vk_surface as *mut VkSurfaceKHR));
         OsWindow {
@@ -204,7 +205,7 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new(device: Arc<RwLock<Device>>) -> Self {
+    pub fn new(device: Arc<Device>) -> Self {
         let mut window = Window {
             device: device,
             window: OsWindow::default(),
@@ -217,7 +218,6 @@ impl Window {
         return window;
     }
     fn initialize_surface(&mut self) {
-        let mut dev = self.device.write().unwrap();
         let mut queue_count = 0u32;
         unsafe {
             vkGetPhysicalDeviceQueueFamilyProperties(
@@ -239,55 +239,55 @@ impl Window {
                     dev.gpu, i, self.vk_surface, ptr_supports_present.offset(i as isize)));
             }
         }
-        let mut graphics_queue_node_index = u32::max_value();
-        let mut present_queue_node_index = u32::max_value();
-        for i in 0..queue_count {
-            if (queue_props[i as usize].queueFlags &
-                (VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 {
-                if graphics_queue_node_index == u32::max_value() {
-                    graphics_queue_node_index = i;
-                }
-                if supports_present[i as usize] != 0 as VkBool32 {
-                    graphics_queue_node_index = i;
-                    present_queue_node_index = i;
-                    break;
-                }
-            }
-        }
-        if present_queue_node_index == u32::max_value() {
-            for i in 0..queue_count {
-                if supports_present[i as usize] != 0 as VkBool32 {
-                    present_queue_node_index = i;
-                    break;
-                }
-            }
-        }
-        if graphics_queue_node_index == u32::max_value() ||
-            present_queue_node_index == u32::max_value() {
-            panic!("Could not find a graphics and/or presenting queue!");
-        }
-        // TODO: Add support for separate graphics and presenting queue
-        if graphics_queue_node_index != present_queue_node_index {
-            panic!("Separate graphics and presenting queues are not supported yet!");
-        }
-        dev.graphics_family_index = graphics_queue_node_index;
+//        let mut graphics_queue_node_index = u32::max_value();
+//        let mut present_queue_node_index = u32::max_value();
+//        for i in 0..queue_count {
+//            if (queue_props[i as usize].queueFlags &
+//                (VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 {
+//                if graphics_queue_node_index == u32::max_value() {
+//                    graphics_queue_node_index = i;
+//                }
+//                if supports_present[i as usize] != 0 as VkBool32 {
+//                    graphics_queue_node_index = i;
+//                    present_queue_node_index = i;
+//                    break;
+//                }
+//            }
+//        }
+//        if present_queue_node_index == u32::max_value() {
+//            for i in 0..queue_count {
+//                if supports_present[i as usize] != 0 as VkBool32 {
+//                    present_queue_node_index = i;
+//                    break;
+//                }
+//            }
+//        }
+//        if graphics_queue_node_index == u32::max_value() ||
+//            present_queue_node_index == u32::max_value() {
+//            panic!("Could not find a graphics and/or presenting queue!");
+//        }
+//        // TODO: Add support for separate graphics and presenting queue
+//        if graphics_queue_node_index != present_queue_node_index {
+//            panic!("Separate graphics and presenting queues are not supported yet!");
+//        }
+//        dev.graphics_family_index = graphics_queue_node_index;
         let mut wsi_supported = 0u32;
         unsafe {
             vkGetPhysicalDeviceSurfaceSupportKHR(
-                dev.gpu, dev.graphics_family_index, self.vk_surface, &mut wsi_supported as *mut u32);
+                self.device.gpu, self.device.graphics_family_index, self.vk_surface, &mut wsi_supported as *mut u32);
         }
         if wsi_supported == 0 {
             panic!("Error WSI is not supported for device.");
         }
         unsafe {
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-                dev.gpu, self.vk_surface,
+                self.device.gpu, self.vk_surface,
                 &mut self.vk_surface_capabilities as *mut VkSurfaceCapabilitiesKHR);
         }
         let mut format_count = 0u32;
         unsafe {
             vkGetPhysicalDeviceSurfaceFormatsKHR(
-                dev.gpu, self.vk_surface,
+                self.device.gpu, self.vk_surface,
                 &mut format_count as *mut u32, 0 as *mut VkSurfaceFormatKHR);
         }
         if format_count == 0 {
@@ -296,7 +296,7 @@ impl Window {
         let mut formats = vec![VkSurfaceFormatKHR::default(); format_count as usize];
         unsafe {
             vkGetPhysicalDeviceSurfaceFormatsKHR(
-                dev.gpu, self.vk_surface, &mut format_count as *mut u32,
+                self.device.gpu, self.vk_surface, &mut format_count as *mut u32,
                 formats.as_mut_ptr() as *mut VkSurfaceFormatKHR);
         }
         if (formats[0].format as u32) == (VkFormat::VK_FORMAT_UNDEFINED as u32) {
@@ -310,10 +310,8 @@ impl Window {
 
 impl Drop for Window {
     fn drop(&mut self) {
-        let dev = self.device.read().unwrap();
-        let ins = dev.instance.read().unwrap();
         unsafe {
-            vkDestroySurfaceKHR(ins.vk_instance, self.vk_surface, 0 as *const VkAllocationCallbacks);
+            vkDestroySurfaceKHR(self.device.instance.vk_instance, self.vk_surface, 0 as *const VkAllocationCallbacks);
         }
         self.window = OsWindow::default();
     }

@@ -71,9 +71,7 @@ pub struct Swapchain {
 }
 
 impl Swapchain {
-    pub fn new(window: Arc<RwLock<Window>>) -> Self {
-        let win = window.read().unwrap();
-        let dev = win.device.read().unwrap();
+    pub fn new(window: Arc<Window>) -> Self {
         if win.vk_surface_capabilities.maxImageCount < 2 {
             panic!("Vulkan driver does not support 2 double image buffering.");
         }
@@ -233,8 +231,6 @@ impl Swapchain {
 
 impl Drop for Swapchain {
     fn drop(&mut self) {
-        let win = self.window.read().unwrap();
-        let dev = win.device.read().unwrap();
         for i in 0..self.vk_frame_buffers.len() {
             unsafe {
                 vkDestroyFramebuffer(dev.vk_device, self.vk_frame_buffers[i], 0 as *const VkAllocationCallbacks);

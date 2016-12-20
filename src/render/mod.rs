@@ -9,5 +9,5 @@ pub fn initialize() {
     #[cfg(not(debug_assertions))]
     const FULLSCREEN_MODE: bool = true;
     #[cfg(not(target_os = "android"))]
-    vulkan::initialize(FULLSCREEN_MODE);
+    let driver = vulkan::Driver::new(FULLSCREEN_MODE);
 }
