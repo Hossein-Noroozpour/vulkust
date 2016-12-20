@@ -197,7 +197,7 @@ impl Drop for OsWindow {
 
 pub struct Window {
     window: OsWindow,
-    pub device: Arc<RwLock<Device>>,
+    pub device: Arc<Device>,
     pub vk_surface: VkSurfaceKHR,
     pub vk_surface_format: VkSurfaceFormatKHR,
     pub vk_surface_capabilities: VkSurfaceCapabilitiesKHR,

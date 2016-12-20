@@ -13,7 +13,7 @@ use super::super::super::system::vulkan::{
 };
 
 use super::pool::Pool;
-use super::fence::Fence;
+use super::super::fence::Fence;
 
 use std::sync::{
     Arc,
@@ -22,7 +22,7 @@ use std::sync::{
 use std::default::Default;
 
 pub struct Buffer {
-    pool: Arc<RwLock<Pool>>,
+    pool: Arc<Pool>,
     vk_buffer: VkCommandBuffer,
 }
 

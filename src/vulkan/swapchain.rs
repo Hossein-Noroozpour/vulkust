@@ -61,7 +61,7 @@ use std::sync::{
 };
 
 pub struct Swapchain {
-    window: Arc<RwLock<Window>>,
+    window: Arc<Window>,
     depth_stencil_image_view: ImageView,
     vk_image_views: Vec<VkImageView>,
     vk_swapchain: VkSwapchainKHR,

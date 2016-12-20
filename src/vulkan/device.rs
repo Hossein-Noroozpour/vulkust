@@ -35,7 +35,7 @@ use std::sync::{
 };
 
 pub struct Device {
-    pub instance: Arc<RwLock<Instance>>,
+    pub instance: Arc<Instance>,
     pub vk_device: VkDevice,
     pub gpu: VkPhysicalDevice,
     pub vk_queue: VkQueue,

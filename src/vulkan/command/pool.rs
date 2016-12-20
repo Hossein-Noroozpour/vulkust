@@ -18,7 +18,7 @@ use std::sync::{
 };
 
 pub struct Pool {
-    pub device: Arc<RwLock<Device>>,
+    pub device: Arc<Device>,
     pub vk_pool: VkCommandPool,
 }
 

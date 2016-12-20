@@ -1,10 +1,11 @@
-pub mod instance;
-pub mod device;
-pub mod window;
+pub mod buffer;
 pub mod command;
-pub mod swapchain;
-pub mod image;
+pub mod device;
 pub mod fence;
+pub mod image;
+pub mod instance;
+pub mod swapchain;
+pub mod window;
 
 use std;
 use std::sync::{

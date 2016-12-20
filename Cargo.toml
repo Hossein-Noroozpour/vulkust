@@ -9,5 +9,6 @@ license = "GPL-1.0"
 
 [dependencies]
 libc = "*"
+num = "*"
 
 [build-dependencies]

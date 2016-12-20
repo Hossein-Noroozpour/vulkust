@@ -1,4 +1,4 @@
-use super::super::super::system::vulkan::{
+use super::super::system::vulkan::{
     VkFence,
     VkResult,
     VkSubmitInfo,
@@ -20,7 +20,7 @@ use std::sync::{
 use std::default::Default;
 
 pub struct Fence {
-    device: Arc<RwLock<Device>>,
+    device: Arc<Device>,
     vk_fence: VkFence,
 }
 
