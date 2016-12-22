@@ -6,6 +6,7 @@ use super::super::system::vulkan::{
     VkDevice,
     VkResult,
     VkFormat,
+    VkSurfaceKHR,
     vkCreateDevice,
     VkStructureType,
     vkDestroyDevice,
@@ -53,20 +54,7 @@ pub struct Device {
 
 impl Device {
     pub fn new(instance: Arc<Instance>) -> Self {
-        let mut gpu_count: uint32_t = 0;
-        vulkan_check!(
-            vkEnumeratePhysicalDevices(
-                ins.vk_instance,
-                &mut gpu_count as *mut uint32_t,
-                0 as *mut VkPhysicalDevice));
-        println!("Number of devices is: {}", gpu_count);
-        let mut devices = vec![0 as VkPhysicalDevice; gpu_count as usize];
-        vulkan_check!(
-            vkEnumeratePhysicalDevices(
-                ins.vk_instance,
-                &mut gpu_count as *mut uint32_t,
-                devices.as_mut_ptr() as *mut VkPhysicalDevice));
-        let gpu = devices[0]; // TODO: it can be better
+
         let mut family_count: uint32_t = 0;
         unsafe {
             vkGetPhysicalDeviceQueueFamilyProperties(
@@ -156,7 +144,28 @@ impl Device {
         }
     }
 
-    fn get_graphic_family_index() -> u32 {
+    fn init_graphic_family_queue(gpu: VkPhysicalDevice, vk_surface: VkS) -> u32 {
+        let mut queue_count = 0u32;
+        unsafe {
+            vkGetPhysicalDeviceQueueFamilyProperties(
+                self.gpu, &mut queue_count, 0 as *mut VkQueueFamilyProperties);
+        }
+        if queue_count < 1 {
+            panic!("Error no queue found.");
+        }
+        let mut queue_props = vec![VkQueueFamilyProperties::default(); queue_count as usize];
+        unsafe {
+            vkGetPhysicalDeviceQueueFamilyProperties(
+                self.gpu, &mut queue_count, queue_props.as_mut_ptr());
+        }
+        let mut supports_present = vec![0 as VkBool32; queue_count as usize];
+        {
+            let ptr_supports_present = supports_present.as_mut_ptr();
+            for i in 0..queue_count {
+                vulkan_check!(vkGetPhysicalDeviceSurfaceSupportKHR(
+                    self.gpu, i, vk_surface, ptr_supports_present.offset(i as isize)));
+            }
+        }
         let mut graphics_queue_node_index = u32::max_value();
         let mut present_queue_node_index = u32::max_value();
         for i in 0..queue_count {

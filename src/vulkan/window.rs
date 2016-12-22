@@ -218,27 +218,27 @@ impl Window {
         return window;
     }
     fn initialize_surface(&mut self) {
-        let mut queue_count = 0u32;
-        unsafe {
-            vkGetPhysicalDeviceQueueFamilyProperties(
-                dev.gpu, &mut queue_count, 0 as *mut VkQueueFamilyProperties);
-        }
-        if queue_count < 1 {
-            panic!("Error no queue found.");
-        }
-        let mut queue_props = vec![VkQueueFamilyProperties::default(); queue_count as usize];
-        unsafe {
-            vkGetPhysicalDeviceQueueFamilyProperties(
-                dev.gpu, &mut queue_count, queue_props.as_mut_ptr());
-        }
-        let mut supports_present = vec![0 as VkBool32; queue_count as usize];
-        {
-            let ptr_supports_present = supports_present.as_mut_ptr();
-            for i in 0..queue_count {
-                vulkan_check!(vkGetPhysicalDeviceSurfaceSupportKHR(
-                    dev.gpu, i, self.vk_surface, ptr_supports_present.offset(i as isize)));
-            }
-        }
+//        let mut queue_count = 0u32;
+//        unsafe {
+//            vkGetPhysicalDeviceQueueFamilyProperties(
+//                dev.gpu, &mut queue_count, 0 as *mut VkQueueFamilyProperties);
+//        }
+//        if queue_count < 1 {
+//            panic!("Error no queue found.");
+//        }
+//        let mut queue_props = vec![VkQueueFamilyProperties::default(); queue_count as usize];
+//        unsafe {
+//            vkGetPhysicalDeviceQueueFamilyProperties(
+//                dev.gpu, &mut queue_count, queue_props.as_mut_ptr());
+//        }
+//        let mut supports_present = vec![0 as VkBool32; queue_count as usize];
+//        {
+//            let ptr_supports_present = supports_present.as_mut_ptr();
+//            for i in 0..queue_count {
+//                vulkan_check!(vkGetPhysicalDeviceSurfaceSupportKHR(
+//                    dev.gpu, i, self.vk_surface, ptr_supports_present.offset(i as isize)));
+//            }
+//        }
 //        let mut graphics_queue_node_index = u32::max_value();
 //        let mut present_queue_node_index = u32::max_value();
 //        for i in 0..queue_count {
