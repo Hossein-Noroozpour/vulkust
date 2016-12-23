@@ -13,3 +13,8 @@ num = "*"
 image = "*"
 
 [build-dependencies]
+
+
+[lib]
+name = "vulkust"
+crate-type = ["dylib"]
