@@ -1,14 +1,10 @@
-use libc::{
+#[cfg(debug_assertions)]
+use std::os::raw::{
     c_int,
-    c_void,
     c_char,
-    dlopen,
-    dlclose,
-    dlsym,
-    dlerror,
-    RTLD_LAZY,
 };
 
+#[cfg(debug_assertions)]
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
 pub enum Priority {
@@ -23,45 +19,72 @@ pub enum Priority {
     Silent  = 8,
 }
 
-type WriteFunPtr = unsafe extern "C" fn(priority: c_int, tag: *const u8, text: *const u8) -> c_int;
-
-pub struct Log {
-    write_fun_ptr: WriteFunPtr,
-    dylib_handle: *mut c_void,
+#[cfg(debug_assertions)]
+#[cfg_attr(target_os = "android", link(name = "log", kind= "dylib"))]
+extern "C" {
+    pub fn __android_log_write(priority: c_int, tag: *const c_char, text: *const c_char) -> c_int;
 }
 
-impl Log {
-    pub fn new() -> Self {
-        let dylib_handle = unsafe {
-            dlopen("/system/lib/liblog.so".as_ptr() as *const c_char, RTLD_LAZY)
-        };
-        if dylib_handle == 0 as *mut c_void {
-            panic!("Android log shared library not found!");
-        }
-        let write = unsafe {
-            dlerror();
-            dlsym(dylib_handle, "__android_log_write".as_ptr() as *const c_char) as WriteFunPtr
-        };
-        if 0 as *mut c_char != unsafe { dlerror() } {
-            panic!("Android log write function not found!");
-        }
-        Log {
-            write_fun_ptr: write,
-            dylib_handle: dylib_handle,
-        }
-    }
-
-    pub fn write(&self, s: &str) {
+#[cfg(debug_assertions)]
+#[macro_export]
+macro_rules! logerr {
+    ( $x:expr ) => {
         unsafe {
-            (self.write_fun_ptr)(
-                Priority::Debug as c_int, "vulkust-rust".as_ptr() as *const c_char,
-                s.as_ptr() as *const c_char);
+            ::system::android::log::__android_log_write(
+                log::Priority::Error as ::std::os::raw::c_int,
+                "vulkust-rust\0".as_ptr(),
+                format!("Msg: {:?} in file: {} in line: {}\0", $x, file!(), line!()).as_ptr());
         }
     }
 }
 
-impl Drop for Log {
-    fn drop(&mut self) {
-        unsafe {dlclose(self.dylib_handle);}
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! logerr {
+    ( $x:expr ) => {
+        $x
+    }
+}
+
+#[cfg(debug_assertions)]
+#[macro_export]
+macro_rules! logdbg {
+    ( $x:expr ) => {
+        unsafe {
+            ::system::android::log::__android_log_write(
+                log::Priority::Debug as ::std::os::raw::c_int,
+                "vulkust-rust\0".as_ptr(),
+                format!("Msg: {:?} in file: {} in line: {}\0", $x, file!(), line!()).as_ptr());
+        }
+    }
+}
+
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! logdbg {
+    ( $x:expr ) => {
+        $x
+    }
+}
+
+#[cfg(debug_assertions)]
+#[macro_export]
+macro_rules! logftl {
+    ( $x:expr ) => {
+        unsafe {
+            ::system::android::log::__android_log_write(
+                log::Priority::Fatal as ::std::os::raw::c_int,
+                "vulkust-rust\0".as_ptr(),
+                format!("Msg: {:?} in file: {} in line: {}\0", $x, file!(), line!()).as_ptr());
+        }
+        panic!("Exit");
+    }
+}
+
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! logftl {
+    ( $x:expr ) => {
+        panic!("Exit {:?}", $x);
     }
 }
