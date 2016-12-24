@@ -25,4 +25,6 @@ const JNI_VERSION_1_6: i32 = 0x00010006;
 
 #[no_mangle] pub unsafe extern fn Java_com_gearoenix_vulkust_GameActivity_initialize(env: *const JNIEnv, this: jobject) {
     println!("Initializing with env: {:?} and obj: {:?}!", env, this);
+    let l = log::Log::new();
+    l.write("Hello");
 }
