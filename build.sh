@@ -1,3 +1,4 @@
+#!/bin/sh
 clear
 clear
 cargo build --release --target=arm-linux-androideabi

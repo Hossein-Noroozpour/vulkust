@@ -1,3 +1,4 @@
+#!/bin/sh
 clear
 clear
 cargo build --target=arm-linux-androideabi

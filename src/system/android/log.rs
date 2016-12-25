@@ -29,9 +29,10 @@ extern "C" {
 #[macro_export]
 macro_rules! logerr {
     ( $x:expr ) => {
+        #[allow(unused_unsafe)]
         unsafe {
             ::system::android::log::__android_log_write(
-                log::Priority::Error as ::std::os::raw::c_int,
+                ::system::android::log::Priority::Error as ::std::os::raw::c_int,
                 "vulkust-rust\0".as_ptr(),
                 format!("Msg: {:?} in file: {} in line: {}\0", $x, file!(), line!()).as_ptr());
         }
@@ -41,18 +42,17 @@ macro_rules! logerr {
 #[cfg(not(debug_assertions))]
 #[macro_export]
 macro_rules! logerr {
-    ( $x:expr ) => {
-        $x
-    }
+    ( $x:expr ) => {{}}
 }
 
 #[cfg(debug_assertions)]
 #[macro_export]
 macro_rules! logdbg {
     ( $x:expr ) => {
+        #[allow(unused_unsafe)]
         unsafe {
             ::system::android::log::__android_log_write(
-                log::Priority::Debug as ::std::os::raw::c_int,
+                ::system::android::log::Priority::Debug as ::std::os::raw::c_int,
                 "vulkust-rust\0".as_ptr(),
                 format!("Msg: {:?} in file: {} in line: {}\0", $x, file!(), line!()).as_ptr());
         }
@@ -62,18 +62,17 @@ macro_rules! logdbg {
 #[cfg(not(debug_assertions))]
 #[macro_export]
 macro_rules! logdbg {
-    ( $x:expr ) => {
-        $x
-    }
+    ( $x:expr ) => {{}}
 }
 
 #[cfg(debug_assertions)]
 #[macro_export]
 macro_rules! logftl {
     ( $x:expr ) => {
+        #[allow(unused_unsafe)]
         unsafe {
             ::system::android::log::__android_log_write(
-                log::Priority::Fatal as ::std::os::raw::c_int,
+                ::system::android::log::Priority::Fatal as ::std::os::raw::c_int,
                 "vulkust-rust\0".as_ptr(),
                 format!("Msg: {:?} in file: {} in line: {}\0", $x, file!(), line!()).as_ptr());
         }

@@ -1,13 +1,9 @@
-pub mod vertex;
-pub mod mesh;
+pub mod config;
+//pub mod vertex;
+//pub mod mesh;
 
 use super::vulkan;
 
 pub fn initialize() {
-    #[cfg(debug_assertions)]
-    const FULLSCREEN_MODE: bool = false;
-    #[cfg(not(debug_assertions))]
-    const FULLSCREEN_MODE: bool = true;
-    #[cfg(not(target_os = "android"))]
-    let driver = vulkan::Driver::new(FULLSCREEN_MODE);
+    let driver = vulkan::Driver::new(config::FULLSCREEN_MODE);
 }

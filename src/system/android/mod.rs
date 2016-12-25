@@ -7,6 +7,8 @@ use std::os::raw::{
     c_void,
 };
 
+use super::super::render;
+
 pub type JavaVM = *const c_void;
 pub type JNIEnv = *const c_void;
 pub type jobject = *const c_void;
@@ -29,5 +31,6 @@ const JNI_VERSION_1_6: i32 = 0x00010006;
 #[no_mangle] pub unsafe extern fn Java_com_gearoenix_vulkust_GameActivity_initialize(env: *const JNIEnv, this: jobject) {
     #![allow(unused_unsafe)]
     logdbg!(format!("Initializing with env: {:?} and obj: {:?}!", env, this));
-    logerr!("Hello to all rusticians!");
+    render::initialize();
+    logdbg!("Initialization is done.");
 }
