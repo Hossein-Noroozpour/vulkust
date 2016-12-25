@@ -421,3 +421,18 @@ pub struct JavaVMInitArgs {
 impl Default for JavaVMInitArgs {
     fn default() -> Self { unsafe { zeroed() } }
 }
+
+const JNI_VERSION_1_6: jint = 0x00010006;
+
+#[no_mangle]
+pub unsafe extern fn JNI_OnLoad(vm: *const JavaVM, reserved: *const c_void) -> jint {
+    #![allow(unused_unsafe)]
+    logdbg!(format!("Started with vm: {:?} and reserved: {:?}!", vm, reserved));
+    JNI_VERSION_1_6
+}
+
+#[no_mangle]
+pub unsafe extern fn JNI_OnUnload(vm: *const JavaVM, reserved: *const c_void) {
+    #![allow(unused_unsafe)]
+    logdbg!(format!("Ended with vm: {:?} and reserved: {:?}!", vm, reserved));
+}
