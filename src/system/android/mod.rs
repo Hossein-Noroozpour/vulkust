@@ -9,8 +9,7 @@ use std::os::raw::{
 
 use super::super::render;
 
-pub type JavaVM = *const c_void;
-pub type JNIEnv = *const c_void;
+
 pub type jobject = *const c_void;
 
 
