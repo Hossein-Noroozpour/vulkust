@@ -1,7 +1,7 @@
 #![allow(non_camel_case_types, non_upper_case_globals, non_snake_case)]
 
-#[macro_use]
-pub mod log;
+#[macro_use] pub mod log;
+#[macro_use] pub mod activity;
 
 use std::os::raw::{
     c_void,
