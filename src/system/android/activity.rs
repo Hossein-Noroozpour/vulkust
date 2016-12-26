@@ -6,6 +6,28 @@ use std::os::raw::{
     c_int,
 };
 
+use super::jni::{
+    JavaVM,
+    JNIEnv,
+    jobject,
+};
+
+use super::asset::{
+    AAssetManager,
+};
+
+use super::rect::{
+    ARect,
+};
+
+use super::input::{
+    AInputQueue,
+};
+
+use super::window::{
+    ANativeWindow,
+};
+
 pub struct ANativeActivity {
     callbacks: *mut ANativeActivityCallbacks,
     vm: *mut JavaVM,
@@ -20,22 +42,22 @@ pub struct ANativeActivity {
 }
 
 pub struct ANativeActivityCallbacks {
-    onStart: *mut unsafe extern fn(activity: *mut ANativeActivity),
-    onResume: *mut unsafe extern fn(activity: *mut ANativeActivity),
-    onSaveInstanceState: *mut unsafe extern fn(activity: *mut ANativeActivity, outSize: *mut usize),
-    onPause: *mut unsafe extern fn(activity: *mut ANativeActivity),
-    onStop: *mut unsafe extern fn(activity: *mut ANativeActivity),
-    onDestroy: *mut unsafe extern fn(activity: *mut ANativeActivity),
-    onWindowFocusChanged: *mut unsafe extern fn(activity: *mut ANativeActivity, hasFocus: c_int),
-    onNativeWindowCreated: *mut unsafe extern fn(activity: *mut ANativeActivity, window: *mut ANativeWindow),
-    onNativeWindowResized: *mut unsafe extern fn(activity: *mut ANativeActivity, window: *mut ANativeWindow),
-    onNativeWindowRedrawNeeded: *mut unsafe extern fn(activity: *mut ANativeActivity, window: *mut ANativeWindow),
-    onNativeWindowDestroyed: *mut unsafe extern fn(activity: *mut ANativeActivity, window: *mut ANativeWindow),
-    onInputQueueCreated: *mut unsafe extern fn(activity: *mut ANativeActivity, queue: *mut AInputQueue),
-    onInputQueueDestroyed: *mut unsafe extern fn(activity: *mut ANativeActivity, queue: *mut AInputQueue),
-    onContentRectChanged: *mut unsafe extern fn(activity: *mut ANativeActivity, rect: *const ARect),
-    onConfigurationChanged: *mut unsafe extern fn(activity: *mut ANativeActivity),
-    onLowMemory: *mut unsafe extern fn(activity: *mut ANativeActivity),
+    onStart: unsafe extern fn(activity: *mut ANativeActivity),
+    onResume: unsafe extern fn(activity: *mut ANativeActivity),
+    onSaveInstanceState: unsafe extern fn(activity: *mut ANativeActivity, outSize: *mut usize),
+    onPause: unsafe extern fn(activity: *mut ANativeActivity),
+    onStop: unsafe extern fn(activity: *mut ANativeActivity),
+    onDestroy: unsafe extern fn(activity: *mut ANativeActivity),
+    onWindowFocusChanged: unsafe extern fn(activity: *mut ANativeActivity, hasFocus: c_int),
+    onNativeWindowCreated: unsafe extern fn(activity: *mut ANativeActivity, window: *mut ANativeWindow),
+    onNativeWindowResized: unsafe extern fn(activity: *mut ANativeActivity, window: *mut ANativeWindow),
+    onNativeWindowRedrawNeeded: unsafe extern fn(activity: *mut ANativeActivity, window: *mut ANativeWindow),
+    onNativeWindowDestroyed: unsafe extern fn(activity: *mut ANativeActivity, window: *mut ANativeWindow),
+    onInputQueueCreated: unsafe extern fn(activity: *mut ANativeActivity, queue: *mut AInputQueue),
+    onInputQueueDestroyed: unsafe extern fn(activity: *mut ANativeActivity, queue: *mut AInputQueue),
+    onContentRectChanged: unsafe extern fn(activity: *mut ANativeActivity, rect: *const ARect),
+    onConfigurationChanged: unsafe extern fn(activity: *mut ANativeActivity),
+    onLowMemory: unsafe extern fn(activity: *mut ANativeActivity),
 }
 
 #[no_mangle]
