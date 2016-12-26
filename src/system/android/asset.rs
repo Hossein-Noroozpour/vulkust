@@ -4,17 +4,9 @@ use std::os::raw::{
     c_void,
 };
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct AAssetManager;
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct AAssetDir;
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct AAsset;
+pub type AAssetManager = c_void;
+pub type AAssetDir = c_void;
+pub type AAsset = c_void;
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]

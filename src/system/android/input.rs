@@ -29,9 +29,7 @@ pub enum AMeta {
     SymOn = 4,
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct AInputEvent;
+pub type AInputEvent = c_void;
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
@@ -137,9 +135,7 @@ pub enum AinputMotionRange {
     Orientation = 8,
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct AInputQueue;
+pub type AInputQueue = c_void;
 
 extern {
     pub fn AInputEvent_getType(event: *const AInputEvent) -> i32;

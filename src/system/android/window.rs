@@ -14,10 +14,10 @@ pub enum WindowFormat {
     Rgb565 = 4,
 }
 
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct ANativeWindow;
+pub type ANativeWindow = c_void;
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ANativeWindowBuffer {
     pub width: i32,
     pub height: i32,

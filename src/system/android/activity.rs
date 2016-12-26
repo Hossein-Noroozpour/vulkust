@@ -28,6 +28,8 @@ use super::window::{
     ANativeWindow,
 };
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ANativeActivity {
     callbacks: *mut ANativeActivityCallbacks,
     vm: *mut JavaVM,
@@ -41,6 +43,8 @@ pub struct ANativeActivity {
     obbPath: *const c_char,
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ANativeActivityCallbacks {
     onStart: unsafe extern fn(activity: *mut ANativeActivity),
     onResume: unsafe extern fn(activity: *mut ANativeActivity),
@@ -61,8 +65,11 @@ pub struct ANativeActivityCallbacks {
 }
 
 #[no_mangle]
-pub unsafe extern fn ANativeActivity_onCreate(activity: *mut ANativeActivity, savedState: *mut c_void, savedStateSize: usize) {}
+pub unsafe extern fn ANativeActivity_onCreate(activity: *mut ANativeActivity, savedState: *mut c_void, savedStateSize: usize) {
+    logdbg!("Native activity created.");
+}
 
+#[cfg_attr(target_os = "android", link(name = "android", kind= "dylib"))]
 extern {
     pub fn ANativeActivity_finish(activity: *mut ANativeActivity);
     pub fn ANativeActivity_setWindowFormat(activity: *mut ANativeActivity, format: i32);

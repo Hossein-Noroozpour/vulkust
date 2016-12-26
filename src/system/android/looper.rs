@@ -3,9 +3,7 @@ use std::os::raw::{
     c_void,
 };
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ALooper;
+pub type ALooper = c_void;
 
 
 #[repr(u32)]
