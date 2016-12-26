@@ -67,6 +67,21 @@ pub struct ANativeActivityCallbacks {
 #[no_mangle]
 pub unsafe extern fn ANativeActivity_onCreate(activity: *mut ANativeActivity, savedState: *mut c_void, savedStateSize: usize) {
     logdbg!("Native activity created.");
+//    activity->callbacks->onDestroy = onDestroy;
+//    activity->callbacks->onStart = onStart;
+//    activity->callbacks->onResume = onResume;
+//    activity->callbacks->onSaveInstanceState = onSaveInstanceState;
+//    activity->callbacks->onPause = onPause;
+//    activity->callbacks->onStop = onStop;
+//    activity->callbacks->onConfigurationChanged = onConfigurationChanged;
+//    activity->callbacks->onLowMemory = onLowMemory;
+//    activity->callbacks->onWindowFocusChanged = onWindowFocusChanged;
+//    activity->callbacks->onNativeWindowCreated = onNativeWindowCreated;
+//    activity->callbacks->onNativeWindowDestroyed = onNativeWindowDestroyed;
+//    activity->callbacks->onInputQueueCreated = onInputQueueCreated;
+//    activity->callbacks->onInputQueueDestroyed = onInputQueueDestroyed;
+
+    (*activity).instance = android_app_create(activity, savedState, savedStateSize);
 }
 
 #[cfg_attr(target_os = "android", link(name = "android", kind= "dylib"))]
@@ -90,4 +105,29 @@ pub enum ShowSoftInputFlagBits {
 pub enum HideSoftInputFlagBits {
     IMPLICIT_ONLY = 0x0001,
     NOT_ALWAYS = 0x0002,
+}
+
+// Rust Part ---------------------------------------------------------------------------------------
+
+fn android_app_create(activity: *mut ANativeActivity, savedState: *mut c_void, savedStateSize: usize) -> *mut c_void {
+    use super::super::super::core::application::BasicApplication;
+    use super::application::Application as AndroidApp;
+    use std::mem::transmute;
+    // todo
+    //onDestroy
+//    onStart
+//    onResume
+//    onSaveInstanceState
+//    onPause
+//    onStop
+//    onConfigurationChanged
+//    onLowMemory
+//    onWindowFocusChanged
+//    onNativeWindowCreated
+//    onNativeWindowDestroyed
+//    onInputQueueCreated
+//    onInputQueueDestroyed
+    unsafe {
+        transmute(&mut BasicApplication::new(AndroidApp {}))
+    }
 }
