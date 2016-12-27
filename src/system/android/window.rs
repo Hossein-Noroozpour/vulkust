@@ -35,6 +35,7 @@ impl Default for ANativeWindowBuffer {
     }
 }
 
+#[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
 extern {
     pub fn ANativeWindow_acquire(window: *mut ANativeWindow);
     pub fn ANativeWindow_release(window: *mut ANativeWindow);

@@ -64,6 +64,12 @@ impl Application {
     pub fn on_low_memory(&mut self, activity: *mut ANativeActivity) {
         logdbg!(format!("Activity {:?} on_low_memory.", activity));
     }
+
+    pub fn new() -> Self {
+        Application {
+
+        }
+    }
 }
 
 impl SysApp for Application {}

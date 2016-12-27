@@ -17,6 +17,7 @@ pub enum AAssetMode {
     BUFFER = 3,
 }
 
+#[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
 extern {
     pub fn AAssetManager_openDir(mgr: *mut AAssetManager, dir_name: *const c_char) -> *mut AAssetDir;
     pub fn AAssetManager_open(mgr: *mut AAssetManager, filename: *const c_char, mode: c_int) -> *mut AAsset;

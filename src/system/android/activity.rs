@@ -10,14 +10,11 @@ use std::sync::{
     RwLock,
 };
 use std::mem::transmute;
-
-
 use super::jni::{
     JavaVM,
     JNIEnv,
     jobject,
 };
-
 use super::super::super::core::application::BasicApplication;
 use super::application::Application as AndroidApp;
 use super::asset::{
@@ -109,69 +106,83 @@ unsafe extern fn on_start(activity: *mut ANativeActivity) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_start(activity);
 }
+
 unsafe extern fn on_resume(activity: *mut ANativeActivity) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_resume(activity);
 }
+
 unsafe extern fn on_save_instance_state(activity: *mut ANativeActivity, size: *mut usize) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_save_instance_state(activity, size);
 }
+
 unsafe extern fn on_pause(activity: *mut ANativeActivity) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_pause(activity);
 }
+
 unsafe extern fn on_stop(activity: *mut ANativeActivity) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_stop(activity);
 }
+
 unsafe extern fn on_destroy(activity: *mut ANativeActivity) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_destroy(activity);
 }
+
 unsafe extern fn on_window_focus_changed(activity: *mut ANativeActivity, has_focus: c_int) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_window_focus_changed(activity, has_focus as i64);
 }
+
 unsafe extern fn on_native_window_created(activity: *mut ANativeActivity, window: *mut ANativeWindow) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_native_window_created(activity, window);
 }
+
 unsafe extern fn on_native_window_resized(activity: *mut ANativeActivity, window: *mut ANativeWindow) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_native_window_resized(activity, window);
 }
+
 unsafe extern fn on_native_window_redraw_needed(activity: *mut ANativeActivity, window: *mut ANativeWindow) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_native_window_redraw_needed(activity, window);
 }
+
 unsafe extern fn on_native_window_destroyed(activity: *mut ANativeActivity, window: *mut ANativeWindow) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_native_window_created(activity, window);
 }
+
 unsafe extern fn on_input_queue_created(activity: *mut ANativeActivity, queue: *mut AInputQueue) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_input_queue_created(activity, queue);
 }
+
 unsafe extern fn on_input_queue_destroyed(activity: *mut ANativeActivity, queue: *mut AInputQueue) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_input_queue_destroyed(activity, queue);
 }
+
 unsafe extern fn on_content_rect_changed(activity: *mut ANativeActivity, rect: *const ARect) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_content_rect_changed(activity, rect);
 }
+
 unsafe extern fn on_configuration_changed(activity: *mut ANativeActivity) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_configuration_changed(activity);
 }
+
 unsafe extern fn on_low_memory(activity: *mut ANativeActivity) {
     let app: *mut AndroidApp = transmute((*activity).instance);
     (*app).on_low_memory(activity);
 }
 
 fn android_app_create(activity: *mut ANativeActivity, savedState: *mut c_void, savedStateSize: usize) -> *mut c_void {
-    let mut app = AndroidApp {};
     unsafe {
         (*(*activity).callbacks).onStart = on_start;
         (*(*activity).callbacks).onResume = on_resume;
@@ -190,7 +201,7 @@ fn android_app_create(activity: *mut ANativeActivity, savedState: *mut c_void, s
         (*(*activity).callbacks).onConfigurationChanged = on_configuration_changed;
         (*(*activity).callbacks).onLowMemory = on_low_memory;
     }
-    // todo
+    let mut app = AndroidApp::new();
     unsafe {
         transmute(&mut app)
     }

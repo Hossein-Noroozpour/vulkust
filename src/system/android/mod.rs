@@ -7,6 +7,8 @@ pub mod application;
 #[macro_use]
 pub mod asset;
 #[macro_use]
+pub mod config;
+#[macro_use]
 pub mod input;
 #[macro_use]
 pub mod jni;
