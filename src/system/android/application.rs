@@ -80,10 +80,11 @@ impl Application {
     }
 
     pub fn new(activity: *mut ANativeActivity) -> Self {
-        let activity_ptr: usize = unsafe {std::mem::transmute(activity) };
+        let activity_copy: usize = unsafe {std::mem::transmute(activity) };
+
         let main_thread = thread::spawn(move || {
             logdbg!("In another thread");
-            let activity: *mut ANativeActivity = unsafe {std::mem::transmute(activity_ptr) };
+            let activity: *mut ANativeActivity = unsafe {std::mem::transmute(activity_copy) };
             let config = unsafe { AConfiguration_new() };
             unsafe { AConfiguration_fromAssetManager(config, (*activity).assetManager); }
             logdbg!(*config);
