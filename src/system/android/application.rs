@@ -1,18 +1,32 @@
+use std;
 use std::process::exit;
-
+use std::thread;
+use std::sync::{
+    mpsc,
+    Arc
+};
 use super::super::application::Application as SysApp;
 use super::activity::ANativeActivity;
 use super::rect::{
     ARect,
 };
+//use super::asset::{
+//    AAssetManager,
+//};
 use super::input::{
     AInputQueue,
 };
 use super::window::{
     ANativeWindow,
 };
+use super::config::{
+    AConfiguration_new,
+    AConfiguration_fromAssetManager,
+};
 
-pub struct Application {}
+pub struct Application {
+    pub main_thread: thread::JoinHandle<()>,
+}
 
 impl Application {
     pub fn on_start(&mut self, activity: *mut ANativeActivity) {
@@ -65,9 +79,36 @@ impl Application {
         logdbg!(format!("Activity {:?} on_low_memory.", activity));
     }
 
-    pub fn new() -> Self {
+    pub fn new(activity: *mut ANativeActivity) -> Self {
+        let activity_ptr: usize = unsafe {std::mem::transmute(activity) };
+        let main_thread = thread::spawn(move || {
+            logdbg!("In another thread");
+            let activity: *mut ANativeActivity = unsafe {std::mem::transmute(activity_ptr) };
+            let config = unsafe { AConfiguration_new() };
+            unsafe { AConfiguration_fromAssetManager(config, (*activity).assetManager); }
+            logdbg!(*config);
+//
+//            android_app -> cmdPollSource.id = LOOPER_ID_MAIN;
+//            android_app -> cmdPollSource.app = android_app;
+//            android_app -> cmdPollSource.process = process_cmd;
+//            android_app-> inputPollSource.id = LOOPER_ID_INPUT;
+//            android_app -> inputPollSource.app = android_app;
+//            android_app -> inputPollSource.process = process_input;
+//
+//            ALooper * looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
+//            ALooper_addFd(looper, android_app -> msgread, LOOPER_ID_MAIN, ALOOPER_EVENT_INPUT, NULL,
+//            & android_app -> cmdPollSource);
+//            android_app -> looper = looper;
+//
+//            pthread_mutex_lock(& android_app -> mutex);
+//            android_app -> running = 1;
+//            pthread_cond_broadcast( & android_app -> cond);
+//            pthread_mutex_unlock( & android_app -> mutex);
+//
+//            android_main(android_app);
+        });
         Application {
-
+            main_thread: main_thread
         }
     }
 }

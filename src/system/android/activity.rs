@@ -33,16 +33,16 @@ use super::window::{
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct ANativeActivity {
-    callbacks: *mut ANativeActivityCallbacks,
-    vm: *mut JavaVM,
-    env: *mut JNIEnv,
-    class: jobject,
-    internalDataPath: *const c_char,
-    externalDataPath: *const c_char,
-    sdkVersion: i32,
-    instance: *mut c_void,
-    assetManager: *mut AAssetManager,
-    obbPath: *const c_char,
+    pub callbacks: *mut ANativeActivityCallbacks,
+    pub vm: *mut JavaVM,
+    pub env: *mut JNIEnv,
+    pub class: jobject,
+    pub internalDataPath: *const c_char,
+    pub externalDataPath: *const c_char,
+    pub sdkVersion: i32,
+    pub instance: *mut c_void,
+    pub assetManager: *mut AAssetManager,
+    pub obbPath: *const c_char,
 }
 
 type activity_receiver = unsafe extern fn(activity: *mut ANativeActivity);
@@ -55,22 +55,22 @@ type activity_rect_receiver = unsafe extern fn(activity: *mut ANativeActivity, r
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct ANativeActivityCallbacks {
-    onStart: activity_receiver,
-    onResume: activity_receiver,
-    onSaveInstanceState: activity_size_receiver,
-    onPause: activity_receiver,
-    onStop: activity_receiver,
-    onDestroy: activity_receiver,
-    onWindowFocusChanged: activity_int_receiver,
-    onNativeWindowCreated: activity_window_receiver,
-    onNativeWindowResized: activity_window_receiver,
-    onNativeWindowRedrawNeeded: activity_window_receiver,
-    onNativeWindowDestroyed: activity_window_receiver,
-    onInputQueueCreated: activity_input_receiver,
-    onInputQueueDestroyed: activity_input_receiver,
-    onContentRectChanged: activity_rect_receiver,
-    onConfigurationChanged: activity_receiver,
-    onLowMemory: activity_receiver,
+    pub onStart: activity_receiver,
+    pub onResume: activity_receiver,
+    pub onSaveInstanceState: activity_size_receiver,
+    pub onPause: activity_receiver,
+    pub onStop: activity_receiver,
+    pub onDestroy: activity_receiver,
+    pub onWindowFocusChanged: activity_int_receiver,
+    pub onNativeWindowCreated: activity_window_receiver,
+    pub onNativeWindowResized: activity_window_receiver,
+    pub onNativeWindowRedrawNeeded: activity_window_receiver,
+    pub onNativeWindowDestroyed: activity_window_receiver,
+    pub onInputQueueCreated: activity_input_receiver,
+    pub onInputQueueDestroyed: activity_input_receiver,
+    pub onContentRectChanged: activity_rect_receiver,
+    pub onConfigurationChanged: activity_receiver,
+    pub onLowMemory: activity_receiver,
 }
 
 #[no_mangle]
@@ -201,7 +201,7 @@ fn android_app_create(activity: *mut ANativeActivity, savedState: *mut c_void, s
         (*(*activity).callbacks).onConfigurationChanged = on_configuration_changed;
         (*(*activity).callbacks).onLowMemory = on_low_memory;
     }
-    let mut app = AndroidApp::new();
+    let mut app = AndroidApp::new(activity);
     unsafe {
         transmute(&mut app)
     }
