@@ -5,6 +5,10 @@ use std::sync::{
     mpsc,
     Arc
 };
+use libc::{
+    c_int,
+    pipe,
+};
 use super::super::application::Application as SysApp;
 use super::activity::ANativeActivity;
 use super::rect::{
@@ -27,6 +31,12 @@ use super::config::{
 pub struct Application {
     pub main_thread: thread::JoinHandle<()>,
 }
+
+struct AndroidPollSource {
+    id: i32,
+    android_app: *mut Application,
+    process: fn (android_app: *mut Application, source: *mut AndroidPollSource),
+};
 
 impl Application {
     pub fn on_start(&mut self, activity: *mut ANativeActivity) {
@@ -88,17 +98,23 @@ impl Application {
             let config = unsafe { AConfiguration_new() };
             unsafe { AConfiguration_fromAssetManager(config, (*activity).assetManager); }
             logdbg!(*config);
-//
-//            android_app -> cmdPollSource.id = LOOPER_ID_MAIN;
-//            android_app -> cmdPollSource.app = android_app;
-//            android_app -> cmdPollSource.process = process_cmd;
-//            android_app-> inputPollSource.id = LOOPER_ID_INPUT;
-//            android_app -> inputPollSource.app = android_app;
-//            android_app -> inputPollSource.process = process_input;
-//
-//            ALooper * looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
-//            ALooper_addFd(looper, android_app -> msgread, LOOPER_ID_MAIN, ALOOPER_EVENT_INPUT, NULL,
-//            & android_app -> cmdPollSource);
+            let mut cmd_poll_source = AndroidPollSource {
+                id: LOOPER_ID_MAIN,
+                android_app: android_app,
+                process: process_cmd,
+            };
+            let mut input_poll_source = AndroidPollSource {
+                id: LOOPER_ID_INPUT,
+                android_app: android_app,
+                process: process_input,
+            };
+            let mut looper = unsafe { ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS) };
+            let mut pipe_fds = [0 as c_int, 2];
+            unsafe { pipe(pipe_fds.as_mut_ptr() as *mut c_int); }
+            unsafe { ALooper_addFd(
+                looper, pipe_fds[0], LOOPER_ID_MAIN, ALOOPER_EVENT_INPUT, 0 as ALooperCallbackFunc,
+                transmute(&mut cmd_poll_source))
+            };
 //            android_app -> looper = looper;
 //
 //            pthread_mutex_lock(& android_app -> mutex);
