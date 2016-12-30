@@ -1,4 +1,4 @@
-use std::os::raw::{
+use libc::{
     c_int,
     c_void,
 };
@@ -6,7 +6,7 @@ use std::os::raw::{
 pub type ALooper = c_void;
 
 
-#[repr(u32)]
+#[repr(i32)]
 #[derive(Debug, Copy, Clone)]
 pub enum ALooperPrepare {
     AllowNonCallbacks = 1,
@@ -22,7 +22,7 @@ pub enum ALooperPoll {
     Error = -4,
 }
 
-#[repr(u32)]
+#[repr(i32)]
 #[derive(Debug, Copy, Clone)]
 pub enum ALooperEvent {
     Input = 1,

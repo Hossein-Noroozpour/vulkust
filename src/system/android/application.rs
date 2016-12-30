@@ -5,14 +5,26 @@ use std::sync::{
     mpsc,
     Arc
 };
+use std::mem::transmute;
 use libc::{
     c_int,
     pipe,
+};
+use super::super::super::core::application::{
+    BasicApplication as CoreApp,
+    Application as CoreAppTrait,
 };
 use super::super::application::Application as SysApp;
 use super::activity::ANativeActivity;
 use super::rect::{
     ARect,
+};
+use super::looper::{
+    ALooper_prepare,
+    ALooperPrepare,
+    ALooper_addFd,
+    ALooperEvent,
+    ALooperCallbackFunc,
 };
 //use super::asset::{
 //    AAssetManager,
@@ -33,10 +45,17 @@ pub struct Application {
 }
 
 struct AndroidPollSource {
-    id: i32,
+    id: LooperId,
     android_app: *mut Application,
     process: fn (android_app: *mut Application, source: *mut AndroidPollSource),
-};
+}
+#[repr(i32)]
+#[derive(Debug, Clone, Copy)]
+enum LooperId {
+    Main = 1,
+    Input = 2,
+    User = 3,
+}
 
 impl Application {
     pub fn on_start(&mut self, activity: *mut ANativeActivity) {
@@ -91,42 +110,44 @@ impl Application {
 
     pub fn new(activity: *mut ANativeActivity) -> Self {
         let activity_copy: usize = unsafe {std::mem::transmute(activity) };
-
+        let mut android_app = Application {
+            main_thread: thread::spawn(move || {})
+        };
+        let android_app_copy: usize = unsafe {std::mem::transmute(&mut android_app) };
         let main_thread = thread::spawn(move || {
             logdbg!("In another thread");
             let activity: *mut ANativeActivity = unsafe {std::mem::transmute(activity_copy) };
+            let android_app: *mut Application = unsafe {std::mem::transmute(android_app_copy) };
             let config = unsafe { AConfiguration_new() };
             unsafe { AConfiguration_fromAssetManager(config, (*activity).assetManager); }
             logdbg!(*config);
             let mut cmd_poll_source = AndroidPollSource {
-                id: LOOPER_ID_MAIN,
+                id: LooperId::Main,
                 android_app: android_app,
                 process: process_cmd,
             };
             let mut input_poll_source = AndroidPollSource {
-                id: LOOPER_ID_INPUT,
+                id: LooperId::Input,
                 android_app: android_app,
                 process: process_input,
             };
-            let mut looper = unsafe { ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS) };
+            let mut looper = unsafe { ALooper_prepare(ALooperPrepare::AllowNonCallbacks as c_int) };
             let mut pipe_fds = [0 as c_int, 2];
             unsafe { pipe(pipe_fds.as_mut_ptr() as *mut c_int); }
             unsafe { ALooper_addFd(
-                looper, pipe_fds[0], LOOPER_ID_MAIN, ALOOPER_EVENT_INPUT, 0 as ALooperCallbackFunc,
-                transmute(&mut cmd_poll_source))
+                looper, pipe_fds[0], LooperId::Main as c_int, ALooperEvent::Input as c_int,
+                transmute(0), transmute(&mut cmd_poll_source))
             };
 //            android_app -> looper = looper;
-//
 //            pthread_mutex_lock(& android_app -> mutex);
 //            android_app -> running = 1;
 //            pthread_cond_broadcast( & android_app -> cond);
 //            pthread_mutex_unlock( & android_app -> mutex);
-//
-//            android_main(android_app);
+            let mut core_app = CoreApp::new();
+            core_app.main();
         });
-        Application {
-            main_thread: main_thread
-        }
+        android_app.main_thread = main_thread;
+        android_app
     }
 }
 
