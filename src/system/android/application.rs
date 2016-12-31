@@ -152,3 +152,11 @@ impl Application {
 }
 
 impl SysApp for Application {}
+
+fn process_cmd(android_app: *mut Application, source: *mut AndroidPollSource) {
+
+}
+
+fn process_input(android_app: *mut Application, source: *mut AndroidPollSource) {
+
+}

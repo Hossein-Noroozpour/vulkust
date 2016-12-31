@@ -16,6 +16,8 @@ impl BasicApplication {
 
 impl Application for BasicApplication {
     fn main(&mut self) {
-
+        loop {
+            logdbg!("main loop");
+        }
     }
 }
