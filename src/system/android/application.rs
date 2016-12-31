@@ -10,6 +10,7 @@ use libc;
 use libc::{
     c_int,
     pipe,
+    c_void,
 };
 use super::super::super::core::application::{
     BasicApplication as CoreApp,
@@ -25,6 +26,7 @@ use super::looper::{
     ALooperPrepare,
     ALooper_addFd,
     ALooperEvent,
+    ALooper,
     ALooperCallbackFunc,
 };
 //use super::asset::{
@@ -47,7 +49,76 @@ pub struct Application {
     msg_read_fd: c_int,
     input_queue: *mut AInputQueue,
     pending_input_queue: *mut AInputQueue,
-    looper
+    looper: *mut ALooper,
+    user_data: *mut c_void,
+    on_app_cmd: fn (app: *mut Application, cmd: i32),
+
+    // Fill this in with the function to process input events.  At this point
+    // the event has already been pre-dispatched, and it will be finished upon
+    // return.  Return 1 if you have handled the event, 0 for any default
+    // dispatching.
+    int32_t (*onInputEvent)(struct android_app* app, AInputEvent* event);
+
+    // The ANativeActivity object instance that this app is running in.
+    ANativeActivity* activity;
+
+    // The current configuration the app is running in.
+    AConfiguration* config;
+
+    // This is the last instance's saved state, as provided at creation time.
+    // It is NULL if there was no state.  You can use this as you need; the
+    // memory will remain around until you call android_app_exec_cmd() for
+    // APP_CMD_RESUME, at which point it will be freed and savedState set to NULL.
+    // These variables should only be changed when processing a APP_CMD_SAVE_STATE,
+    // at which point they will be initialized to NULL and you can malloc your
+    // state and place the information here.  In that case the memory will be
+    // freed for you later.
+    void* savedState;
+    size_t savedStateSize;
+
+    // The ALooper associated with the app's thread.
+    ALooper* looper;
+
+    // When non-NULL, this is the input queue from which the app will
+    // receive user input events.
+    AInputQueue* inputQueue;
+
+    // When non-NULL, this is the window surface that the app can draw in.
+    ANativeWindow* window;
+
+    // Current content rectangle of the window; this is the area where the
+    // window's content should be placed to be seen by the user.
+    ARect contentRect;
+
+    // Current state of the app's activity.  May be either APP_CMD_START,
+    // APP_CMD_RESUME, APP_CMD_PAUSE, or APP_CMD_STOP; see below.
+    int activityState;
+
+    // This is non-zero when the application's NativeActivity is being
+    // destroyed and waiting for the app thread to complete.
+    int destroyRequested;
+
+    // -------------------------------------------------
+    // Below are "private" implementation of the glue code.
+
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+
+    int msgread;
+    int msgwrite;
+
+    pthread_t thread;
+
+    struct android_poll_source cmdPollSource;
+    struct android_poll_source inputPollSource;
+
+    int running;
+    int stateSaved;
+    int destroyed;
+    int redrawNeeded;
+    AInputQueue* pendingInputQueue;
+    ANativeWindow* pendingWindow;
+    ARect pendingContentRect;
 }
 
 struct AndroidPollSource {
@@ -148,24 +219,26 @@ impl Application {
             let config = unsafe { AConfiguration_new() };
             unsafe { AConfiguration_fromAssetManager(config, (*activity).assetManager); }
             logdbg!(*config);
-            let mut cmd_poll_source = AndroidPollSource {
+            let mut cmd_poll_source = Box::new(AndroidPollSource {
                 id: LooperId::Main,
                 android_app: android_app,
                 process: process_cmd,
-            };
-            let mut input_poll_source = AndroidPollSource {
+            });
+            let mut input_poll_source = Box::new(AndroidPollSource {
                 id: LooperId::Input,
                 android_app: android_app,
                 process: process_input,
+            });
+            (*android_app).looper = unsafe {
+                ALooper_prepare(ALooperPrepare::AllowNonCallbacks as c_int)
             };
-            let mut looper = unsafe { ALooper_prepare(ALooperPrepare::AllowNonCallbacks as c_int) };
             let mut pipe_fds = [0 as c_int, 2];
             (*android_app).msg_read_fd = pipe_fds[0];
             unsafe { pipe(pipe_fds.as_mut_ptr() as *mut c_int); }
             unsafe { ALooper_addFd(
                 looper, pipe_fds[0], LooperId::Main as c_int, ALooperEvent::Input as c_int,
-                transmute(0), transmute(&mut cmd_poll_source))
-            };
+                transmute(0), transmute(&mut (*cmd_poll_source)));
+            }
 //            android_app -> looper = looper;
 //            pthread_mutex_lock(& android_app -> mutex);
 //            android_app -> running = 1;
@@ -200,7 +273,7 @@ fn android_app_read_cmd(android_app: *mut Application) -> u8 {
 fn android_app_pre_exec_cmd(android_app: *mut Application, cmd: u8) {
     match cmd {
         AppCmd::InputChanged => {
-            logdbg!("AppCmd::InputChanged\n");
+            logdbg!("AppCmd::InputChanged");
             // pthread_mutex_lock(&android_app->mutex); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             if (*android_app).input_queue != 0 as *mut AInputQueue {
                 AInputQueue_detachLooper((*android_app).input_queue);
@@ -208,16 +281,16 @@ fn android_app_pre_exec_cmd(android_app: *mut Application, cmd: u8) {
             (*android_app).input_queue = (*android_app).pending_input_queue;
             if (*android_app).input_queue != 0 as *mut AInputQueue {
                 logdbg!("Attaching input queue to looper");
-                AInputQueue_attachLooper((*android_app).input_queue, android_app->looper, LOOPER_ID_INPUT, NULL,
-            &android_app->inputPollSource);
+                AInputQueue_attachLooper(
+                    (*android_app).input_queue, (*android_app).looper, LooperId::Input, 0,
+                    &mut android_app -> inputPollSource);
             }
-            pthread_cond_broadcast(&android_app->cond);
-            pthread_mutex_unlock(&android_app->mutex);
-            break;
-
-            case APP_CMD_INIT_WINDOW:
-            LOGV("APP_CMD_INIT_WINDOW\n");
-            pthread_mutex_lock(&android_app->mutex);
+            //            pthread_cond_broadcast(&android_app->cond);
+            //            pthread_mutex_unlock(&android_app->mutex);
+        },
+        AppCmd::InitWindow => {
+            logdbg!("APP_CMD_INIT_WINDOW");
+//            pthread_mutex_lock(&android_app->mutex);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             android_app->window = android_app->pendingWindow;
             pthread_cond_broadcast(&android_app->cond);
             pthread_mutex_unlock(&android_app->mutex);
