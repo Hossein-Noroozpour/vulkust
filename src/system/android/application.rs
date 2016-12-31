@@ -6,6 +6,7 @@ use std::sync::{
     Arc
 };
 use std::mem::transmute;
+use libc;
 use libc::{
     c_int,
     pipe,
@@ -31,6 +32,7 @@ use super::looper::{
 //};
 use super::input::{
     AInputQueue,
+    AInputQueue_detachLooper,
 };
 use super::window::{
     ANativeWindow,
@@ -41,7 +43,11 @@ use super::config::{
 };
 
 pub struct Application {
-    pub main_thread: thread::JoinHandle<()>,
+    main_thread: thread::JoinHandle<()>,
+    msg_read_fd: c_int,
+    input_queue: *mut AInputQueue,
+    pending_input_queue: *mut AInputQueue,
+    looper
 }
 
 struct AndroidPollSource {
@@ -55,6 +61,27 @@ enum LooperId {
     Main = 1,
     Input = 2,
     User = 3,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy)]
+enum AppCmd {
+    InputChanged,
+    InitWindow,
+    TermWindow,
+    WindowResized,
+    WindowRedrawNeeded,
+    ContentRectChanged,
+    GainedFocus,
+    LostFocus,
+    ConfigChanged,
+    LowMemory,
+    Start,
+    Resume,
+    SaveState,
+    Pause,
+    Stop,
+    Destroy,
 }
 
 impl Application {
@@ -133,6 +160,7 @@ impl Application {
             };
             let mut looper = unsafe { ALooper_prepare(ALooperPrepare::AllowNonCallbacks as c_int) };
             let mut pipe_fds = [0 as c_int, 2];
+            (*android_app).msg_read_fd = pipe_fds[0];
             unsafe { pipe(pipe_fds.as_mut_ptr() as *mut c_int); }
             unsafe { ALooper_addFd(
                 looper, pipe_fds[0], LooperId::Main as c_int, ALooperEvent::Input as c_int,
@@ -153,8 +181,83 @@ impl Application {
 
 impl SysApp for Application {}
 
-fn process_cmd(android_app: *mut Application, source: *mut AndroidPollSource) {
+fn android_app_read_cmd(android_app: *mut Application) -> u8 {
+    let mut cmd = 0u8;
+    if read((*android_app).msgread, &mut cmd, 1) == 1 {
+        match cmd as AppCmd {
+            AppCmd::SaveState => {
+                // TODO
+                // free_saved_state(android_app);
+            }
+        }
+        return cmd;
+    } else {
+        logftl!("No data on command pipe!");
+    }
+    return u8::max_value();
+}
 
+fn android_app_pre_exec_cmd(android_app: *mut Application, cmd: u8) {
+    match cmd {
+        AppCmd::InputChanged => {
+            logdbg!("AppCmd::InputChanged\n");
+            // pthread_mutex_lock(&android_app->mutex); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (*android_app).input_queue != 0 as *mut AInputQueue {
+                AInputQueue_detachLooper((*android_app).input_queue);
+            }
+            (*android_app).input_queue = (*android_app).pending_input_queue;
+            if (*android_app).input_queue != 0 as *mut AInputQueue {
+                logdbg!("Attaching input queue to looper");
+                AInputQueue_attachLooper((*android_app).input_queue, android_app->looper, LOOPER_ID_INPUT, NULL,
+            &android_app->inputPollSource);
+            }
+            pthread_cond_broadcast(&android_app->cond);
+            pthread_mutex_unlock(&android_app->mutex);
+            break;
+
+            case APP_CMD_INIT_WINDOW:
+            LOGV("APP_CMD_INIT_WINDOW\n");
+            pthread_mutex_lock(&android_app->mutex);
+            android_app->window = android_app->pendingWindow;
+            pthread_cond_broadcast(&android_app->cond);
+            pthread_mutex_unlock(&android_app->mutex);
+            break;
+
+            case APP_CMD_TERM_WINDOW:
+            LOGV("APP_CMD_TERM_WINDOW\n");
+            pthread_cond_broadcast(&android_app->cond);
+            break;
+
+            case APP_CMD_RESUME:
+            case APP_CMD_START:
+            case APP_CMD_PAUSE:
+            case APP_CMD_STOP:
+            LOGV("activityState=%d\n", cmd);
+            pthread_mutex_lock(&android_app->mutex);
+            android_app->activityState = cmd;
+            pthread_cond_broadcast(&android_app->cond);
+            pthread_mutex_unlock(&android_app->mutex);
+            break;
+
+            case APP_CMD_CONFIG_CHANGED:
+            LOGV("APP_CMD_CONFIG_CHANGED\n");
+            AConfiguration_fromAssetManager(android_app->config,
+            android_app->activity->assetManager);
+            print_cur_config(android_app);
+            break;
+
+            case APP_CMD_DESTROY:
+            LOGV("APP_CMD_DESTROY\n");
+            android_app->destroyRequested = 1;
+            break;
+            }
+            }
+
+fn process_cmd(android_app: *mut Application, source: *mut AndroidPollSource) {
+    let cmd = android_app_read_cmd(app);
+    android_app_pre_exec_cmd(app, cmd);
+    if (app->onAppCmd != NULL) app->onAppCmd(app, cmd);
+    android_app_post_exec_cmd(app, cmd);
 }
 
 fn process_input(android_app: *mut Application, source: *mut AndroidPollSource) {
