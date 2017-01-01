@@ -185,7 +185,7 @@ impl Debug for AConfiguration {
         unsafe { AConfiguration_getLanguage(self, lang.as_mut_ptr()); }
         unsafe { AConfiguration_getCountry(self, country.as_mut_ptr()); }
         write!(
-            f, "AConfiguration {{\n\tmcc : {:?}\n\tmnc : {:?}\n\tlang : {}{}\n\tcnt : {}{}\
+            f, "\nAConfiguration {{\n\tmcc : {:?}\n\tmnc : {:?}\n\tlang : {}{}\n\tcnt : {}{}\
             \n\torientation : {:?}\n\ttouch : {:?}\n\tdens : {:?}\n\tkeys : {:?}\n\tnav : {:?}\
             \n\tkeysHid : {:?}\n\tnavHid : {:?}\n\tsdk : {:?}\n\tsize : {:?}\n\tlong : {:?}\
             \n\tmodeType : {:?}\n\tmodeNight : {:?}\n}}",

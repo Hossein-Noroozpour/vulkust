@@ -68,8 +68,8 @@ pub struct Application {
     // This is the last instance's saved state, as provided at creation time.
     // It is NULL if there was no state.  You can use this as you need; the
     // memory will remain around until you call android_app_exec_cmd() for
-    // APP_CMD_RESUME, at which point it will be freed and savedState set to NULL.
-    // These variables should only be changed when processing a APP_CMD_SAVE_STATE,
+    // AppCmdResume, at which point it will be freed and savedState set to NULL.
+    // These variables should only be changed when processing a AppCmdSaveState,
     // at which point they will be initialized to NULL and you can malloc your
     // state and place the information here.  In that case the memory will be
     // freed for you later.
@@ -90,8 +90,8 @@ pub struct Application {
     // window's content should be placed to be seen by the user.
     ARect contentRect;
 
-    // Current state of the app's activity.  May be either APP_CMD_START,
-    // APP_CMD_RESUME, APP_CMD_PAUSE, or APP_CMD_STOP; see below.
+    // Current state of the app's activity.  May be either AppCmdStart,
+    // AppCmdResume, AppCmdPause, or AppCmdStop; see below.
     int activityState;
 
     // This is non-zero when the application's NativeActivity is being
@@ -239,11 +239,11 @@ impl Application {
                 looper, pipe_fds[0], LooperId::Main as c_int, ALooperEvent::Input as c_int,
                 transmute(0), transmute(&mut (*cmd_poll_source)));
             }
-//            android_app -> looper = looper;
-//            pthread_mutex_lock(& android_app -> mutex);
-//            android_app -> running = 1;
-//            pthread_cond_broadcast( & android_app -> cond);
-//            pthread_mutex_unlock( & android_app -> mutex);
+//            AndroidApp -> looper = looper;
+//            pthread_mutex_lock(& AndroidApp -> mutex);
+//            AndroidApp -> running = 1;
+//            pthread_cond_broadcast( & AndroidApp -> cond);
+//            pthread_mutex_unlock( & AndroidApp -> mutex);
             let mut core_app = CoreApp::new();
             core_app.main();
         });
@@ -260,7 +260,7 @@ fn android_app_read_cmd(android_app: *mut Application) -> u8 {
         match cmd as AppCmd {
             AppCmd::SaveState => {
                 // TODO
-                // free_saved_state(android_app);
+                // free_saved_state(AndroidApp);
             }
         }
         return cmd;
@@ -274,7 +274,7 @@ fn android_app_pre_exec_cmd(android_app: *mut Application, cmd: u8) {
     match cmd {
         AppCmd::InputChanged => {
             logdbg!("AppCmd::InputChanged");
-            // pthread_mutex_lock(&android_app->mutex); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // pthread_mutex_lock(&AndroidApp->mutex); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             if (*android_app).input_queue != 0 as *mut AInputQueue {
                 AInputQueue_detachLooper((*android_app).input_queue);
             }
@@ -285,19 +285,19 @@ fn android_app_pre_exec_cmd(android_app: *mut Application, cmd: u8) {
                     (*android_app).input_queue, (*android_app).looper, LooperId::Input, 0,
                     &mut android_app -> inputPollSource);
             }
-            //            pthread_cond_broadcast(&android_app->cond);
-            //            pthread_mutex_unlock(&android_app->mutex);
+            //            pthread_cond_broadcast(&AndroidApp->cond);
+            //            pthread_mutex_unlock(&AndroidApp->mutex);
         },
         AppCmd::InitWindow => {
-            logdbg!("APP_CMD_INIT_WINDOW");
-//            pthread_mutex_lock(&android_app->mutex);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            logdbg!("AppCmdInitWindow");
+//            pthread_mutex_lock(&AndroidApp->mutex);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             android_app->window = android_app->pendingWindow;
             pthread_cond_broadcast(&android_app->cond);
             pthread_mutex_unlock(&android_app->mutex);
             break;
 
             case APP_CMD_TERM_WINDOW:
-            LOGV("APP_CMD_TERM_WINDOW\n");
+            LOGV("AppCmdTermWindow\n");
             pthread_cond_broadcast(&android_app->cond);
             break;
 
@@ -305,7 +305,7 @@ fn android_app_pre_exec_cmd(android_app: *mut Application, cmd: u8) {
             case APP_CMD_START:
             case APP_CMD_PAUSE:
             case APP_CMD_STOP:
-            LOGV("activityState=%d\n", cmd);
+            LOGV("activity_state=%d\n", cmd);
             pthread_mutex_lock(&android_app->mutex);
             android_app->activityState = cmd;
             pthread_cond_broadcast(&android_app->cond);
@@ -313,14 +313,14 @@ fn android_app_pre_exec_cmd(android_app: *mut Application, cmd: u8) {
             break;
 
             case APP_CMD_CONFIG_CHANGED:
-            LOGV("APP_CMD_CONFIG_CHANGED\n");
+            LOGV("AppCmdConfigChanged\n");
             AConfiguration_fromAssetManager(android_app->config,
             android_app->activity->assetManager);
             print_cur_config(android_app);
             break;
 
             case APP_CMD_DESTROY:
-            LOGV("APP_CMD_DESTROY\n");
+            LOGV("AppCmdDestroy\n");
             android_app->destroyRequested = 1;
             break;
             }
