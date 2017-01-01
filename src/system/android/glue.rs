@@ -34,7 +34,7 @@ struct AndroidApp {
     pub activity: *mut activity::ANativeActivity,
     pub config: *mut config::AConfiguration,
     pub saved_state: *mut libc::c_void,
-    pub saved_state_size: usize,
+    pub saved_state_size: libc::size_t,
     pub looper: *mut looper::ALooper,
     pub input_queue: *mut input::AInputQueue,
     pub window: *mut ANativeWindow,
@@ -252,7 +252,7 @@ unsafe extern fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_voi
 
 unsafe extern fn android_app_create(
     activity: *mut ANativeActivity, saved_state: *mut libc::c_void,
-    saved_state_size: usize) -> *mut libc::c_void {
+    saved_state_size: libc::size_t) -> *mut libc::c_void {
     let mut android_app: *mut AndroidApp = transmute(libc::malloc(size_of::<AndroidApp>()));
     libc::memset(android_app, 0, size_of::<AndroidApp>());
     android_app.activity = activity;
@@ -298,148 +298,142 @@ unsafe extern fn android_app_set_input(android_app: *mut AndroidApp, input_queue
     libc::pthread_mutex_unlock(&(*android_app).mutex);
 }
 
-static void android_app_set_window(struct android_app* android_app, ANativeWindow* window) {
-pthread_mutex_lock(&android_app->mutex);
-if (android_app->pendingWindow != NULL) {
-android_app_write_cmd(android_app, APP_CMD_TERM_WINDOW);
-}
-android_app->pendingWindow = window;
-if (window != NULL) {
-android_app_write_cmd(android_app, APP_CMD_INIT_WINDOW);
-}
-while (android_app->window != android_app->pendingWindow) {
-pthread_cond_wait(&android_app->cond, &android_app->mutex);
-}
-pthread_mutex_unlock(&android_app->mutex);
-}
-
-static void android_app_set_activity_state(struct android_app* android_app, int8_t cmd) {
-pthread_mutex_lock(&android_app->mutex);
-android_app_write_cmd(android_app, cmd);
-while (android_app->activityState != cmd) {
-pthread_cond_wait(&android_app->cond, &android_app->mutex);
-}
-pthread_mutex_unlock(&android_app->mutex);
+unsafe extern fn android_app_set_window(android_app: *mut AndroidApp, window: *mut ANativeWindow) {
+    libc::pthread_mutex_lock(&(*android_app).mutex);
+    if (*android_app).pending_window != ptr::null_mut() {
+        android_app_write_cmd(android_app, AppCmd::TermWindow);
+    }
+    (*android_app).pending_window = window;
+    if window != ptr::null_mut() {
+        android_app_write_cmd(android_app, AppCmd::InitWindow);
+    }
+    while (*android_app).window != (*android_app).pending_window {
+        libc::pthread_cond_wait(&(*android_app).cond, &(*android_app).mutex);
+    }
+    libc::pthread_mutex_unlock(&(*android_app).mutex);
 }
 
-static void android_app_free(struct android_app* android_app) {
-pthread_mutex_lock(&android_app->mutex);
-android_app_write_cmd(android_app, APP_CMD_DESTROY);
-while (!android_app->destroyed) {
-pthread_cond_wait(&android_app->cond, &android_app->mutex);
-}
-pthread_mutex_unlock(&android_app->mutex);
-
-close(android_app->msgread);
-close(android_app->msgwrite);
-pthread_cond_destroy(&android_app->cond);
-pthread_mutex_destroy(&android_app->mutex);
-free(android_app);
+unsafe extern fn android_app_set_activity_state(android_app: *mut AndroidApp, cmd: i8) {
+    libc::pthread_mutex_lock(&(*android_app).mutex);
+    android_app_write_cmd(android_app, cmd);
+    while (*android_app).activityState != cmd {
+        libc::pthread_cond_wait(&(*android_app).cond, &(*android_app).mutex);
+    }
+    libc::pthread_mutex_unlock(&(*android_app).mutex);
 }
 
-static void onDestroy(ANativeActivity* activity) {
-logdbg!("Destroy: %p\n", activity);
-android_app_free((struct android_app*)activity->instance);
+unsafe extern fn android_app_free(android_app: *mut AndroidApp) {
+    libc::pthread_mutex_lock(&(*android_app).mutex);
+    android_app_write_cmd(android_app, AppCmd::Destroy);
+    while (*android_app).destroyed == 0 {
+        libc::pthread_cond_wait(&(*android_app).cond, &(*android_app).mutex);
+    }
+    libc::pthread_mutex_unlock(&(*android_app).mutex);
+    libc::close((*android_app).msg_read_fd);
+    libc::close((*android_app).msg_write_fd);
+    libc::pthread_cond_destroy(&(*android_app).cond);
+    libc::pthread_mutex_destroy(&(*android_app).mutex);
+    libc::free(android_app);
 }
 
-static void onStart(ANativeActivity* activity) {
-logdbg!("Start: %p\n", activity);
-android_app_set_activity_state((struct android_app*)activity->instance, APP_CMD_START);
+unsafe extern fn on_destroy(activity: *mut ANativeActivity) {
+    logdbg!(format!("Destroy: {:?}", activity));
+    android_app_free(transmute((*activity).instance));
 }
 
-static void onResume(ANativeActivity* activity) {
-logdbg!("Resume: %p\n", activity);
-android_app_set_activity_state((struct android_app*)activity->instance, APP_CMD_RESUME);
+unsafe extern fn on_start(activity: *mut ANativeActivity) {
+    logdbg!(format!("Start: {:?}", activity));
+    android_app_set_activity_state(transmute((*activity).instance), AppCmd::Start);
 }
 
-static void* onSaveInstanceState(ANativeActivity* activity, size_t* outLen) {
-struct android_app* android_app = (struct android_app*)activity->instance;
-void* savedState = NULL;
-
-logdbg!("SaveInstanceState: %p\n", activity);
-pthread_mutex_lock(&android_app->mutex);
-android_app->stateSaved = 0;
-android_app_write_cmd(android_app, APP_CMD_SAVE_STATE);
-while (!android_app->stateSaved) {
-pthread_cond_wait(&android_app->cond, &android_app->mutex);
+unsafe extern fn on_resume(activity: *mut ANativeActivity) {
+    logdbg!(format!("Resume: {:?}", activity));
+    android_app_set_activity_state(transmute((*activity).instance), AppCmd::Resume);
 }
 
-if (android_app->savedState != NULL) {
-savedState = android_app->savedState;
-*outLen = android_app->savedStateSize;
-android_app->savedState = NULL;
-android_app->savedStateSize = 0;
+unsafe extern fn on_save_instance_state(activity: *mut ANativeActivity, out_len: *mut libc::size_t) -> *mut libc::c_void {
+    let mut android_app = transmute((*activity).instance);
+    let mut saved_state: *mut libc::c_void = ptr::null_mut();
+    logdbg!("SaveInstanceState: {:?}", activity);
+    libc::pthread_mutex_lock(&(*android_app).mutex);
+    (*android_app).state_saved = 0;
+    android_app_write_cmd(android_app, AppCmd::SaveState);
+    while (*android_app).state_saved == 0 {
+        libc::pthread_cond_wait(&(*android_app).cond, &(*android_app).mutex);
+    }
+    if (*android_app).saved_state != ptr::null_mut() {
+        saved_state = (*android_app).saved_state;
+        *out_len = (*android_app).saved_state_size;
+        (*android_app).saved_state = ptr::null_mut();
+        (*android_app).saved_state_size = 0;
+    }
+    libc::pthread_mutex_unlock(&(*android_app).mutex);
+    return saved_state;
 }
 
-pthread_mutex_unlock(&android_app->mutex);
-
-return savedState;
+unsafe extern fn on_pause(activity: *mut ANativeActivity) {
+    logdbg!(format!("Pause: {:?}", activity));
+    android_app_set_activity_state(transmute((*activity).instance), AppCmd::Pause);
 }
 
-static void onPause(ANativeActivity* activity) {
-logdbg!("Pause: %p\n", activity);
-android_app_set_activity_state((struct android_app*)activity->instance, APP_CMD_PAUSE);
+unsafe extern fn on_stop(activity: *mut ANativeActivity) {
+    logdbg!(format!("Stop: {:?}", activity));
+    android_app_set_activity_state(transmute((*activity).instance), AppCmd::Stop);
 }
 
-static void onStop(ANativeActivity* activity) {
-logdbg!("Stop: %p\n", activity);
-android_app_set_activity_state((struct android_app*)activity->instance, APP_CMD_STOP);
+unsafe extern fn on_configuration_changed(activity: *mut ANativeActivity) {
+    let mut android_app: *mut AndroidApp = transmute((*activity).instance);
+    logdbg!(format!("ConfigurationChanged: {:?}", activity));
+    android_app_write_cmd(android_app, AppCmd::ConfigChanged);
 }
 
-static void onConfigurationChanged(ANativeActivity* activity) {
-struct android_app* android_app = (struct android_app*)activity->instance;
-logdbg!("ConfigurationChanged: %p\n", activity);
-android_app_write_cmd(android_app, APP_CMD_CONFIG_CHANGED);
+unsafe extern fn on_low_memory(activity: *mut ANativeActivity) {
+    let mut android_app: *mut AndroidApp = transmute((*activity).instance);
+    logdbg!(format!("LowMemory: {:?}", activity));
+    android_app_write_cmd(android_app, AppCmd::LowMemory);
+}
+unsafe extern fn on_window_focus_changed(activity: *mut ANativeActivity, focused: libc::c_int) {
+    logdbg!(format!("WindowFocusChanged: {:?} -- {:?}", activity, focused));
+    android_app_write_cmd(transmute((*activity).instance), if focused != 0  {
+        AppCmd::GainedFocus } else { AppCmd::LostFocus });
+}
+unsafe extern fn on_native_window_created(activity: *mut ANativeActivity, window: *mut ANativeWindow) {
+    logdbg!(format!("NativeWindowCreated: {:?} -- {:?}", activity, window));
+    android_app_set_window(transmute((*activity).instance), window);
 }
 
-static void onLowMemory(ANativeActivity* activity) {
-struct android_app* android_app = (struct android_app*)activity->instance;
-logdbg!("LowMemory: %p\n", activity);
-android_app_write_cmd(android_app, APP_CMD_LOW_MEMORY);
+unsafe extern fn on_native_window_destroyed(activity: *mut ANativeActivity, window: *mut ANativeWindow) {
+    logdbg!(format!("NativeWindowDestroyed: {:?} -- {:?}", activity, window));
+    android_app_set_window(transmute((*activity).instance), ptr::null_mut());
 }
 
-static void onWindowFocusChanged(ANativeActivity* activity, int focused) {
-logdbg!("WindowFocusChanged: %p -- %d\n", activity, focused);
-android_app_write_cmd((struct android_app*)activity->instance,
-focused ? APP_CMD_GAINED_FOCUS : APP_CMD_LOST_FOCUS);
+unsafe extern fn on_input_queue_created(activity: *mut ANativeActivity, queue: *mut AInputQueue) {
+    logdbg!(format!("InputQueueCreated: {:?} -- {:?}", activity, queue));
+    android_app_set_input(transmute((*activity).instance), queue);
 }
 
-static void onNativeWindowCreated(ANativeActivity* activity, ANativeWindow* window) {
-logdbg!("NativeWindowCreated: %p -- %p\n", activity, window);
-android_app_set_window((struct android_app*)activity->instance, window);
+unsafe extern fn on_input_queue_destroyed(activity: *mut ANativeActivity, queue: *mut AInputQueue) {
+    logdbg!(format!("InputQueueDestroyed: {:?} -- {:?}", activity, queue));
+    android_app_set_input(transmute((*activity).instance), ptr::null_mut());
 }
 
-static void onNativeWindowDestroyed(ANativeActivity* activity, ANativeWindow* window) {
-logdbg!("NativeWindowDestroyed: %p -- %p\n", activity, window);
-android_app_set_window((struct android_app*)activity->instance, NULL);
-}
+#[allow(non_snake_case)]
+#[no_mangle]
+unsafe extern fn ANativeActivity_onCreate(activity: *mut ANativeActivity, saved_state: *mut libc::c_void, saved_state_size: libc::size_t) {
+    logdbg!(format!("Creating: {:?}", activity));
+    (*(*activity).callbacks).onDestroy = on_destroy;
+    (*(*activity).callbacks).onStart = on_start;
+    (*(*activity).callbacks).onResume = on_resume;
+    (*(*activity).callbacks).onSaveInstanceState = on_save_instance_state;
+    (*(*activity).callbacks).onPause = on_pause;
+    (*(*activity).callbacks).onStop = on_stop;
+    (*(*activity).callbacks).onConfigurationChanged = on_configuration_changed;
+    (*(*activity).callbacks).onLowMemory = on_low_memory;
+    (*(*activity).callbacks).onWindowFocusChanged = on_window_focus_changed;
+    (*(*activity).callbacks).onNativeWindowCreated = on_native_window_created;
+    (*(*activity).callbacks).onNativeWindowDestroyed = on_native_window_destroyed;
+    (*(*activity).callbacks).onInputQueueCreated = on_input_queue_created;
+    (*(*activity).callbacks).onInputQueueDestroyed = on_input_queue_destroyed;
 
-static void onInputQueueCreated(ANativeActivity* activity, AInputQueue* queue) {
-logdbg!("InputQueueCreated: %p -- %p\n", activity, queue);
-android_app_set_input((struct android_app*)activity->instance, queue);
-}
-
-static void onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue) {
-logdbg!("InputQueueDestroyed: %p -- %p\n", activity, queue);
-android_app_set_input((struct android_app*)activity->instance, NULL);
-}
-
-void ANativeActivity_onCreate(ANativeActivity* activity,
-void* savedState, size_t savedStateSize) {
-logdbg!("Creating: %p\n", activity);
-activity->callbacks->onDestroy = onDestroy;
-activity->callbacks->onStart = onStart;
-activity->callbacks->onResume = onResume;
-activity->callbacks->onSaveInstanceState = onSaveInstanceState;
-activity->callbacks->onPause = onPause;
-activity->callbacks->onStop = onStop;
-activity->callbacks->onConfigurationChanged = onConfigurationChanged;
-activity->callbacks->onLowMemory = onLowMemory;
-activity->callbacks->onWindowFocusChanged = onWindowFocusChanged;
-activity->callbacks->onNativeWindowCreated = onNativeWindowCreated;
-activity->callbacks->onNativeWindowDestroyed = onNativeWindowDestroyed;
-activity->callbacks->onInputQueueCreated = onInputQueueCreated;
-activity->callbacks->onInputQueueDestroyed = onInputQueueDestroyed;
-
-activity->instance = android_app_create(activity, savedState, savedStateSize);
+    (*activity).instance = android_app_create(activity, saved_state, saved_state_size);
 }
