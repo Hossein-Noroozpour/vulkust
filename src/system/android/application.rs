@@ -4,20 +4,22 @@ use std::ptr::{
 use std::mem::transmute;
 use libc;
 use super::looper::ALooper_pollAll;
+use super::super::super::core::application::Application as CoreApp;
 use super::glue::{
     AppCmd,
     AndroidApp,
     AndroidPollSource,
 };
 
-#[repr(C)]
 pub struct Application {
     window_initialized: bool,
+    core_app: CoreApp,
 }
 
 impl Application {
     pub fn initialize(&mut self) {
         self.window_initialized = false;
+        self.core_app.initialize();
     }
     pub fn main(&mut self, android_app: *mut AndroidApp) {
         logdbg!("I'm in");
@@ -35,11 +37,12 @@ impl Application {
         }
     }
 
-    pub fn handle_cmd(&mut self, app: *mut AndroidApp, cmd: i32) {
+    fn handle_cmd(&mut self, app: *mut AndroidApp, cmd: i32) {
         match unsafe { transmute::<i8, AppCmd>(cmd as i8) } {
             AppCmd::InitWindow => {
                 //            initialize(app);
-                self.window_initialized = false;
+                self.core_app.start();
+                self.window_initialized = true;
                 logdbg!("Window has been shown!");
             },
             AppCmd::TermWindow => {

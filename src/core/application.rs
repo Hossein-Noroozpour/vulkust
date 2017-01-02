@@ -1,23 +1,14 @@
-//use super::super::system::application::Application as SysApp;
+use super::super::vulkan::Driver as VulkanDriver;
 
-pub struct BasicApplication {
+pub struct Application {
+    pub vulkan_driver: VulkanDriver,
 }
 
-pub trait Application {
-    fn main(&mut self);
-}
-
-impl BasicApplication {
-    pub fn new() -> Self {
-        BasicApplication {
-        }
+impl Application {
+    pub fn initialize(&mut self) {
+        logdbg!("Initializing");
+        self.vulkan_driver.initialize();
+        logdbg!("done!");
     }
-}
-
-impl Application for BasicApplication {
-    fn main(&mut self) {
-        loop {
-            logdbg!("main loop");
-        }
-    }
+    pub fn start(&mut self) {}
 }
