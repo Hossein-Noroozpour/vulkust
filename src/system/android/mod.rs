@@ -19,4 +19,6 @@ pub mod looper;
 #[macro_use]
 pub mod rect;
 #[macro_use]
+pub mod vulkan;
+#[macro_use]
 pub mod window;
