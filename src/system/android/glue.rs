@@ -164,8 +164,8 @@ unsafe extern fn android_app_pre_exec_cmd(android_app: *mut AndroidApp, cmd: App
             logdbg!("AppCmdDestroy");
             (*android_app).destroy_requested = 1;
         },
-        _ => {
-            logftl!("Unexpected behaviour!");
+        c @ _ => {
+            logdbg!(format!("Unhandled value {:?}", c));
         },
     }
 }
