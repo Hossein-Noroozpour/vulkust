@@ -5,11 +5,6 @@ use libc::{
     c_char,
     c_int,
 };
-use std::sync::{
-    Arc,
-    RwLock,
-};
-use std::mem::transmute;
 use super::jni::{
     JavaVM,
     JNIEnv,

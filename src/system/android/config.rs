@@ -175,9 +175,6 @@ use std::fmt::{
 };
 
 #[cfg(debug_assertions)]
-use std::mem::transmute;
-
-#[cfg(debug_assertions)]
 impl Debug for AConfiguration {
     fn fmt(&self, f: &mut Formatter) -> Result {
         let mut lang = [0 as c_char; 2];
