@@ -17,9 +17,11 @@ pub struct Application {
 }
 
 impl Application {
-    pub fn initialize(&mut self) {
-        self.window_initialized = false;
-        self.core_app.initialize();
+    pub fn new() -> Self {
+        Application {
+            window_initialized: false,
+            core_app: CoreApp::new(),
+        }
     }
     pub fn main(&mut self, android_app: *mut AndroidApp) {
         logdbg!("I'm in");

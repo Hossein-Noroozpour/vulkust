@@ -202,6 +202,7 @@ impl Drop for Instance {
                 vk_destroy_debug_report_callback_ext(
                     self.vk_instance, self.vk_debug_callback, 0 as *const VkAllocationCallbacks);
             }
+            logerr!("Instance is deleted now!");
             vkDestroyInstance(self.vk_instance, 0 as *const VkAllocationCallbacks);
         }
     }

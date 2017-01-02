@@ -261,17 +261,15 @@ extern fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
             looper::ALooperEvent::Input as i32, transmute(0usize),
             transmute(&mut (*android_app).cmd_poll_source));
         libc::pthread_mutex_lock(&mut (*android_app).mutex);
-//        logerr!("locked");
         (*android_app).running = 1;
         libc::pthread_cond_broadcast(&mut ((*android_app).cond));
         libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-//        logerr!("unlocked");
-        (*android_app).user_data = libc::malloc(size_of::<Application>());
-        libc::memset((*android_app).user_data, 0, size_of::<Application>());
-        let app: *mut Application = transmute((*android_app).user_data);
-        (*app).initialize();
-        (*app).main(android_app);
-        // android_main(android_app);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        {
+            let mut app = Application::new();
+            (*android_app).user_data = transmute(&mut app);
+            let app: *mut Application = transmute((*android_app).user_data);
+            (*app).main(android_app);
+        }
         android_app_destroy(android_app);
         ptr::null_mut()
     }

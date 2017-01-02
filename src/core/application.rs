@@ -5,10 +5,11 @@ pub struct Application {
 }
 
 impl Application {
-    pub fn initialize(&mut self) {
+    pub fn new() -> Self {
         logdbg!("Initializing");
-        self.vulkan_driver.initialize();
-        logdbg!("done!");
+        Application {
+            vulkan_driver: VulkanDriver::new(),
+        }
     }
     pub fn start(&mut self) {}
 }

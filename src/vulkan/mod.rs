@@ -21,8 +21,10 @@ pub struct Driver {
 }
 
 impl Driver {
-    pub fn initialize(&mut self) {
-        self.instance = Arc::new(instance::Instance::new());
+    pub fn new() -> Self {
+        Driver {
+            instance: Arc::new(instance::Instance::new()),
+        }
 //        let dev = Arc::new(device::Device::new(ins.clone()));
 //        let cmd_pool = Arc::new(command::pool::Pool::new(
 //            dev.clone(), dev.graphics_family_index));
