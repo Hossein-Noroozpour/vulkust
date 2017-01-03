@@ -4,6 +4,7 @@
 //pub mod fence;
 //pub mod image;
 pub mod instance;
+pub mod surface;
 //pub mod swapchain;
 //pub mod window;
 
@@ -14,6 +15,7 @@ use std::sync::{
 
 pub struct Driver {
     pub instance: Arc<instance::Instance>,
+    pub surface: Option<Arc<surface::Surface>>
 //    pub device: Arc<device::Device>,
 //    pub cmd_pool: Arc<command::pool::Pool>,
 //    pub window: Arc<window::Window>,
@@ -24,6 +26,7 @@ impl Driver {
     pub fn new() -> Self {
         Driver {
             instance: Arc::new(instance::Instance::new()),
+            surface: None,
         }
 //        let dev = Arc::new(device::Device::new(ins.clone()));
 //        let cmd_pool = Arc::new(command::pool::Pool::new(

@@ -1,3 +1,8 @@
+use std::default::Default;
+use std::mem::zeroed;
+use libc::{
+    c_void,
+};
 use super::super::vulkan::{
     VkFlags,
     VkResult,
@@ -6,11 +11,6 @@ use super::super::vulkan::{
     VkStructureType,
     VkAllocationCallbacks,
 };
-
-use libc::{
-    c_void,
-};
-
 use super::window::ANativeWindow;
 
 pub const VK_KHR_ANDROID_SURFACE_SPEC_VERSION: u32 = 6u32;
@@ -25,6 +25,14 @@ pub struct VkAndroidSurfaceCreateInfoKHR {
     pub pointer_next: *const c_void,
     pub flags: VkAndroidSurfaceCreateFlagsKHR,
     pub window: *mut ANativeWindow,
+}
+
+impl Default for VkAndroidSurfaceCreateInfoKHR {
+    fn default() -> Self {
+        unsafe {
+            zeroed()
+        }
+    }
 }
 
 pub type PfnVkCreateAndroidSurfaceKhr = unsafe extern fn (
