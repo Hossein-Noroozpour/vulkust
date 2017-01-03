@@ -1,5 +1,5 @@
 use super::super::vulkan::Driver as VulkanDriver;
-
+use super::super::vulkan::surface::Surface;
 pub struct Application {
     pub vulkan_driver: VulkanDriver,
 }
@@ -11,5 +11,7 @@ impl Application {
             vulkan_driver: VulkanDriver::new(),
         }
     }
-    pub fn start(&mut self) {}
+    pub fn initialize(&mut self, surface: Surface) {
+        self.vulkan_driver.initialize(surface);
+    }
 }

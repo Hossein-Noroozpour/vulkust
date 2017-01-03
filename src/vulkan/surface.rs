@@ -5,6 +5,7 @@ use super::super::system::vulkan::{
     VkResult,
     VkSurfaceKHR,
     VkStructureType,
+    vkDestroySurfaceKHR,
 };
 #[cfg(target_os = "android")]
 use super::super::system::android::vulkan::{
@@ -35,6 +36,14 @@ impl Surface {
         Surface {
             instance: instance,
             vk_surface: vk_surface,
+        }
+    }
+}
+
+impl Drop for Surface {
+    fn drop(&mut self) {
+        unsafe {
+            vkDestroySurfaceKHR(self.instance.vk_instance, self.vk_surface, null());
         }
     }
 }

@@ -2,7 +2,6 @@ use std::ptr::{
     null_mut,
 };
 use std::mem::transmute;
-use std::sync::Arc;
 use libc;
 use super::looper::ALooper_pollAll;
 use super::super::super::vulkan::surface::Surface;
@@ -44,11 +43,10 @@ impl Application {
     fn handle_cmd(&mut self, app: *mut AndroidApp, cmd: i32) {
         match unsafe { transmute::<i8, AppCmd>(cmd as i8) } {
             AppCmd::InitWindow => {
-                //            initialize(app);
-                self.core_app.start();
                 self.window_initialized = true;
-                self.core_app.vulkan_driver.surface = Some(Arc::new(Surface::new(
-                    self.core_app.vulkan_driver.instance.clone(), unsafe { (*app).window })));
+                let surface = Surface::new(
+                    self.core_app.vulkan_driver.instance.clone(), unsafe{(*app).window});
+                self.core_app.initialize(surface);
                 logdbg!("Window has been shown!");
             },
             AppCmd::TermWindow => {
