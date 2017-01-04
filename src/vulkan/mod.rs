@@ -41,4 +41,9 @@ impl Driver {
         self.physical_device = Some(Arc::new(
             device::physical::Physical::new(self.instance.clone())));
     }
+
+    pub fn terminate(&mut self) {
+        self.physical_device = None;
+        self.surface = None;
+    }
 }

@@ -189,15 +189,20 @@ impl Instance {
 impl Drop for Instance {
     fn drop(&mut self) {
         unsafe {
+            logerr!("Instance is deleted now!");
             #[cfg(debug_assertions)]
             {
+                logerr!("Instance is deleted now!");
                 let vk_proc_name = CString::new("vkDestroyDebugReportCallbackEXT").unwrap();
+                logerr!("Instance is deleted now!");
                 let vk_destroy_debug_report_callback_ext: PFN_vkDestroyDebugReportCallbackEXT =
                     transmute(vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()));
+                logerr!("Instance is deleted now!");
                 if vk_destroy_debug_report_callback_ext == transmute(0usize) {
                     logftl!("Error in finding vkDestroyDebugReportCallbackEXT process location.");
                 }
-                vk_destroy_debug_report_callback_ext(
+                logerr!("Instance is deleted now!");
+                (vk_destroy_debug_report_callback_ext)(
                     self.vk_instance, self.vk_debug_callback, null());
             }
             logerr!("Instance is deleted now!");

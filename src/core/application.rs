@@ -14,4 +14,8 @@ impl Application {
     pub fn initialize(&mut self, surface: Surface) {
         self.vulkan_driver.initialize(surface);
     }
+
+    pub fn terminate(&mut self) {
+        self.vulkan_driver.terminate();
+    }
 }

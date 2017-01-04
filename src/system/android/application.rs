@@ -50,7 +50,7 @@ impl Application {
                 logdbg!("Window has been shown!");
             },
             AppCmd::TermWindow => {
-                // terminate();
+                self.core_app.terminate();
                 logdbg!("Window has been terminated!");
             },
             c @ _ => {
