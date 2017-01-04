@@ -165,6 +165,8 @@ unsafe extern fn android_app_pre_exec_cmd(android_app: *mut AndroidApp, cmd: App
             (*android_app).destroy_requested = 1;
         },
         c @ _ => {
+            #[cfg(not(debug_assertions))]
+            let _ = c;
             logdbg!(format!("Unhandled value {:?}", c));
         },
     }
@@ -446,6 +448,8 @@ unsafe extern fn on_native_window_created(
 
 unsafe extern fn on_native_window_destroyed(
     activity: *mut activity::ANativeActivity, window: *mut window::ANativeWindow) {
+    #[cfg(not(debug_assertions))]
+    let _ = window;
     logdbg!(format!("NativeWindowDestroyed: {:?} -- {:?}", activity, window));
     android_app_set_window(transmute((*activity).instance), ptr::null_mut());
 }
@@ -458,6 +462,8 @@ unsafe extern fn on_input_queue_created(
 
 unsafe extern fn on_input_queue_destroyed(
     activity: *mut activity::ANativeActivity, queue: *mut input::AInputQueue) {
+    #[cfg(not(debug_assertions))]
+    let _ = queue;
     logdbg!(format!("InputQueueDestroyed: {:?} -- {:?}", activity, queue));
     android_app_set_input(transmute((*activity).instance), ptr::null_mut());
 }

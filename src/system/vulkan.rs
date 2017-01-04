@@ -1,4 +1,6 @@
 #![allow(dead_code, non_camel_case_types, non_upper_case_globals, non_snake_case)]
+use libc::{c_void};
+
 pub type ptrdiff_t = isize;
 pub type size_t = usize;
 pub type wchar_t = ::std::os::raw::c_int;
@@ -4468,7 +4470,7 @@ pub type VkDebugReportFlagsEXT = VkFlags;
 pub type PFN_vkDebugReportCallbackEXT = unsafe extern "C" fn(
     flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT, object: uint64_t,
     location: size_t, messageCode: int32_t, pLayerPrefix: *const ::std::os::raw::c_char,
-    pMessage: *const ::std::os::raw::c_char, pUserData: *mut ::std::os::raw::c_void) -> VkBool32;
+    pMessage: *const ::std::os::raw::c_char, pUserData: *mut c_void) -> VkBool32;
 
 #[repr(C)]
 #[derive(Copy, Clone)]

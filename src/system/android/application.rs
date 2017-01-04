@@ -54,6 +54,8 @@ impl Application {
                 logdbg!("Window has been terminated!");
             },
             c @ _ => {
+                #[cfg(not(debug_assertions))]
+                let _ = c;
                 logdbg!(format!("event {:?} not handled in app {:?} ", c, app));
             }
         }

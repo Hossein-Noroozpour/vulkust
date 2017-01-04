@@ -1,11 +1,15 @@
-use std::ffi::{
-    CString,
-};
+#[cfg(debug_assertions)]
+use std::ffi::CStr;
+use std::ffi::CString;
+use std::ptr::null;
+#[cfg(debug_assertions)]
+use std::ptr::null_mut;
 use std::default::Default;
 use std::mem::zeroed;
-#[cfg(all(not(target_os = "android"), debug_assertions))]
+#[cfg(debug_assertions)]
 use std::mem::transmute;
-
+#[cfg(debug_assertions)]
+use libc::{c_char, c_void};
 use super::super::system::vulkan::{
     VkResult,
     VkInstance,
@@ -15,20 +19,12 @@ use super::super::system::vulkan::{
     VkApplicationInfo,
     vkDestroyInstance,
     VkInstanceCreateInfo,
-    VkAllocationCallbacks,
 };
-
 #[cfg(debug_assertions)]
 use super::super::system::vulkan::{
     VkLayerProperties,
-    vkEnumerateInstanceLayerProperties,
-};
-
-#[cfg(all(not(target_os = "android"), debug_assertions))]
-use super::super::system::vulkan::{
     VkDebugReportFlagsEXT,
-    VkInstanceCreateFlags,
-    VkAllocationCallbacks,
+    vkGetInstanceProcAddr,
     VkDebugReportCallbackEXT,
     VkDebugReportFlagBitsEXT,
     VkDebugReportObjectTypeEXT,
@@ -47,7 +43,7 @@ use super::super::util::string::{
 
 pub struct Instance {
     pub vk_instance: VkInstance,
-    #[cfg(all(not(target_os = "android"), debug_assertions))]
+    #[cfg(debug_assertions)]
     vk_debug_callback: VkDebugReportCallbackEXT,
 }
 
@@ -59,7 +55,7 @@ impl Default for Instance {
     }
 }
 
-#[cfg(all(not(target_os = "android"), debug_assertions))]
+#[cfg(debug_assertions)]
 unsafe extern fn vulkan_debug_callback(
     flags: VkDebugReportFlagsEXT,
     obj_type: VkDebugReportObjectTypeEXT,
@@ -81,11 +77,11 @@ unsafe extern fn vulkan_debug_callback(
     if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32) != 0 {
         flg += "debug, ";
     }
-    println!("flag: {}, obj_type: {:?}, src_obj: {:?}, location: {:?}, msg_code: {:?}, \
+    logdbg!(format!("flag: {}, obj_type: {:?}, src_obj: {:?}, location: {:?}, msg_code: {:?}, \
         layer_prefix: {:?}, msg : {:?}, user_data {:?}",
              flg, obj_type, src_obj, location, msg_code,
              CStr::from_ptr(layer_prefix).to_str(),
-             CStr::from_ptr(msg).to_str(), user_data);
+             CStr::from_ptr(msg).to_str(), user_data));
     return 0u32
 }
 
@@ -107,31 +103,32 @@ impl Instance {
         let vk_platform_surface_ext = CString::new("VK_KHR_xcb_surface").unwrap();
         #[cfg(target_os = "android")]
         let vk_platform_surface_ext = CString::new("VK_KHR_android_surface").unwrap();
-        #[cfg(all(not(target_os = "android"), debug_assertions))]
+        #[cfg(debug_assertions)]
         let vk_ext_debug_report_ext = CString::new("VK_EXT_debug_report").unwrap();
         let mut vulkan_extensions = Vec::new();
         vulkan_extensions.push(vk_khr_surface_ext.as_ptr());
         vulkan_extensions.push(vk_platform_surface_ext.as_ptr());
-        #[cfg(all(not(target_os = "android"), debug_assertions))]
+        #[cfg(debug_assertions)]
         vulkan_extensions.push(vk_ext_debug_report_ext.as_ptr());
         let mut instance_create_info = VkInstanceCreateInfo::default();
         instance_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
         #[cfg(debug_assertions)]
+        let layers_names = Instance::enumerate_layers();
+        #[cfg(debug_assertions)]
+        let vulkan_layers = cstrings_to_ptrs(&layers_names);
+        #[cfg(debug_assertions)]
         {
-            let layers_names = Instance::enumerate_layers();
-            let vulkan_layers = cstrings_to_ptrs(&layers_names);
             instance_create_info.enabledLayerCount = vulkan_layers.len() as u32;
-            instance_create_info.ppEnabledLayerNames = if vulkan_layers.len() != 0 {
-                vulkan_layers.as_ptr() } else { 0 as *const *const u8 };
+            instance_create_info.ppEnabledLayerNames = vulkan_layers.as_ptr();
         }
         instance_create_info.enabledExtensionCount = vulkan_extensions.len() as u32;
         instance_create_info.ppEnabledExtensionNames = vulkan_extensions.as_ptr();
         let mut vk_instance = 0 as VkInstance;
-        vulkan_check!(vkCreateInstance( & instance_create_info, 0 as *const VkAllocationCallbacks, & mut vk_instance));
+        vulkan_check!(vkCreateInstance(&instance_create_info, null(), &mut vk_instance));
         let mut instance = Instance::default();
         instance.vk_instance = vk_instance;
-        #[cfg(all(not(target_os = "android"), debug_assertions))]
+        #[cfg(debug_assertions)]
         instance.set_report_callback();
         return instance;
     }
@@ -152,58 +149,59 @@ impl Instance {
             let name = slice_to_string(&available_layers[i].layerName);
             let des = slice_to_string(&available_layers[i].description);
             logdbg!(format!("Layer {} with des: {} found.", name, des));
-            layers_names.push(name);
+            layers_names.push("VK_LAYER_GOOGLE_threading".to_string());
+            layers_names.push("VK_LAYER_LUNARG_parameter_validation".to_string());
+            layers_names.push("VK_LAYER_LUNARG_object_tracker".to_string());
+            layers_names.push("VK_LAYER_LUNARG_core_validation".to_string());
+            layers_names.push("VK_LAYER_LUNARG_image".to_string());
+            layers_names.push("VK_LAYER_LUNARG_swapchain".to_string());
+            layers_names.push("VK_LAYER_GOOGLE_unique_objects".to_string());
         }
         strings_to_cstrings(layers_names)
     }
 
-    #[cfg(all(not(target_os = "android"), debug_assertions))]
+    #[cfg(debug_assertions)]
     fn set_report_callback(&mut self) {
-        let mut report_callback_create_info = VkDebugReportCallbackCreateInfoEXT {
-            sType: VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
-            pNext: 0 as *const c_void,
-            flags: (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32)
+        let mut report_callback_create_info = VkDebugReportCallbackCreateInfoEXT::default();
+        report_callback_create_info.sType =
+            VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+        report_callback_create_info.flags =
+            (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32)
                 | (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32)
                 | (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
                 | (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32)
                 | (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32)
-                as VkDebugReportFlagsEXT,
-            pfnCallback: vulkan_debug_callback,
-            pUserData: 0 as *mut c_void,
-        };
+                as VkDebugReportFlagsEXT;
+        report_callback_create_info.pfnCallback = vulkan_debug_callback;
+        report_callback_create_info.pUserData = null_mut();
         let vk_proc_name = CString::new("vkCreateDebugReportCallbackEXT").unwrap();
-        let vk_create_debug_report_callback_ext = unsafe {
-            transmute::<PFN_vkVoidFunction, PFN_vkCreateDebugReportCallbackEXT>(
-                vkGetInstanceProcAddr(vk_instance, vk_proc_name.as_ptr()))
+        let vk_create_debug_report_callback_ext: PFN_vkCreateDebugReportCallbackEXT = unsafe {
+            transmute(vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()))
         };
-        if vk_create_debug_report_callback_ext == unsafe {
-            transmute::<usize, PFN_vkCreateDebugReportCallbackEXT>(0)
-        } {
+        if vk_create_debug_report_callback_ext == unsafe { transmute(0usize) } {
             logftl!("Error in finding vkCreateDebugReportCallbackEXT process location.");
         }
-        report_callback_create_info.pUserData = unsafe { transmute::<&mut Instance, *mut c_void>(&mut instance) };
-        vulkan_check!(vk_create_debug_report_callback_ext(vk_instance, & report_callback_create_info, 0 as * const VkAllocationCallbacks, & mut instance.vk_debug_callback));
+        vulkan_check!(vk_create_debug_report_callback_ext(
+            self.vk_instance, &report_callback_create_info, null(), &mut self.vk_debug_callback));
     }
 }
 
 impl Drop for Instance {
     fn drop(&mut self) {
         unsafe {
-            #[cfg(all(not(target_os = "android"), debug_assertions))]
+            #[cfg(debug_assertions)]
             {
                 let vk_proc_name = CString::new("vkDestroyDebugReportCallbackEXT").unwrap();
-                let vk_destroy_debug_report_callback_ext =
-                transmute::<PFN_vkVoidFunction, PFN_vkDestroyDebugReportCallbackEXT>(
-                    vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()));
-                if vk_destroy_debug_report_callback_ext ==
-                    transmute::<usize, PFN_vkDestroyDebugReportCallbackEXT>(0) {
+                let vk_destroy_debug_report_callback_ext: PFN_vkDestroyDebugReportCallbackEXT =
+                    transmute(vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()));
+                if vk_destroy_debug_report_callback_ext == transmute(0usize) {
                     logftl!("Error in finding vkDestroyDebugReportCallbackEXT process location.");
                 }
                 vk_destroy_debug_report_callback_ext(
-                    self.vk_instance, self.vk_debug_callback, 0 as *const VkAllocationCallbacks);
+                    self.vk_instance, self.vk_debug_callback, null());
             }
             logerr!("Instance is deleted now!");
-            vkDestroyInstance(self.vk_instance, 0 as *const VkAllocationCallbacks);
+            vkDestroyInstance(self.vk_instance, null());
         }
     }
 }
