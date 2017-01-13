@@ -31,7 +31,7 @@ impl Surface {
         create_info.window = window;
         vulkan_check!(vkCreateAndroidSurfaceKHR(
                 instance.vk_instance, &create_info, null(), &mut vk_surface));
-        logerr!(format!("vk surface {:?}", vk_surface));
+        logdbg!(format!("vk surface {:?}", vk_surface));
         Surface {
             instance: instance,
             vk_surface: vk_surface,
@@ -42,7 +42,7 @@ impl Surface {
 impl Drop for Surface {
     fn drop(&mut self) {
         unsafe {
-            logerr!(format!("terminated {:?}", self.vk_surface));
+            logdbg!(format!("terminated {:?}", self.vk_surface));
             vkDestroySurfaceKHR(self.instance.vk_instance, self.vk_surface, null());
         }
     }
