@@ -17,6 +17,7 @@ pub struct Driver {
     pub instance: Arc<instance::Instance>,
     pub surface: Option<Arc<surface::Surface>>,
     pub physical_device: Option<Arc<device::physical::Physical>>,
+    pub logical_device: Option<Arc<device::logical::Logical>>,
 //    pub cmd_pool: Arc<command::pool::Pool>,
 //    pub window: Arc<window::Window>,
 //    pub swapchain: Arc<swapchain::Swapchain>,
@@ -28,6 +29,7 @@ impl Driver {
             instance: Arc::new(instance::Instance::new()),
             surface: None,
             physical_device: None,
+            logical_device: None,
         }
 //        let dev = Arc::new(device::Device::new(ins.clone()));
 //        let cmd_pool = Arc::new(command::pool::Pool::new(
@@ -38,11 +40,14 @@ impl Driver {
 
     pub fn initialize(&mut self, surface: surface::Surface) {
         self.surface = Some(Arc::new(surface));
-        self.physical_device = Some(Arc::new(
-            device::physical::Physical::new(self.instance.clone())));
+        let physical_device = Arc::new(device::physical::Physical::new(self.instance.clone()));
+        let logical_device = Arc::new(device::logical::Logical::new(physical_device.clone()));
+        self.physical_device = Some(physical_device);
+        self.logical_device = Some(logical_device);
     }
 
     pub fn terminate(&mut self) {
+        self.logical_device = None;
         self.physical_device = None;
         self.surface = None;
     }

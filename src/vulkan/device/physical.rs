@@ -1,13 +1,22 @@
 use std::sync::Arc;
+use std::ptr::null_mut;
 use super::super::super::system::vulkan::{
     VkResult,
     VkPhysicalDevice,
+    VkQueueFamilyProperties,
     vkEnumeratePhysicalDevices,
+    vkGetPhysicalDeviceQueueFamilyProperties,
 };
 use super::super::instance::Instance;
+// this properties of device is using in setup process no other time, no in rendering procedure
+// if this assumption was wrong cache this properties in this structure.
+//     Properties
+//     Features
+//     MemoryProperties
+//     QueueFamilyProperties
 pub struct Physical {
-    instance: Arc<Instance>,
-    vk_physical_device: VkPhysicalDevice,
+    pub instance: Arc<Instance>,
+    pub vk_physical_device: VkPhysicalDevice,
 }
 impl Physical {
     pub fn new(instance: Arc<Instance>) -> Self {
@@ -28,6 +37,19 @@ impl Physical {
             self.instance.vk_instance, &mut gpu_count,
             devices.as_mut_ptr() as *mut VkPhysicalDevice));
         self.vk_physical_device = devices[0];
+    }
+    pub fn get_queue_family_properties(&self) -> Vec<VkQueueFamilyProperties> {
+        let mut count = 0u32;
+        unsafe {
+            vkGetPhysicalDeviceQueueFamilyProperties(
+                self.vk_physical_device, &mut count, null_mut());
+        }
+        let mut families = vec![VkQueueFamilyProperties::default(); count as usize];
+        unsafe {
+            vkGetPhysicalDeviceQueueFamilyProperties(
+                self.vk_physical_device, &mut count, families.as_mut_ptr());
+        }
+        return families;
     }
 }
 impl Drop for Physical {
