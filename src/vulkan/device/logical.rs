@@ -28,7 +28,7 @@ impl Logical {
         let mut queue_create_infos = vec![VkDeviceQueueCreateInfo::default(); 1];
         let default_queue_priority = 0f32;
         // graphic, compute, transfer
-        let mut queue_family_indices = [0u32; 3];
+        let mut queue_family_indices = Vec::<u32>::new();
         let queue_family_properties = physical_device.get_queue_family_properties();
         let get_queue_family_index = move |queue_flags: VkQueueFlagBits| -> u32 {
             if queue_flags as u32 & VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32 != 0 {
@@ -56,15 +56,17 @@ impl Logical {
                     return i as u32;
                 }
             }
-            logftl!("No queue family found");
+            logerr!(format!("No queue family found for {:?}", queue_flags));
+            return 0xFFFFFFFF;
         };
-        queue_family_indices[0] = get_queue_family_index(VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT);
+        queue_family_indices.push(get_queue_family_index(VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT));
         queue_create_infos[0].sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queue_create_infos[0].queueFamilyIndex = queue_family_indices[0];
         queue_create_infos[0].queueCount = 1;
         queue_create_infos[0].pQueuePriorities = &default_queue_priority;
-        queue_family_indices[1] = get_queue_family_index(VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT);
-        if queue_family_indices[0] != queue_family_indices[1] {
+        queue_family_indices.push(get_queue_family_index(VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT));
+        if queue_family_indices[1] != 0xFFFFFFFF &&
+            queue_family_indices[1] != queue_family_indices[0] {
             let mut queue_info = VkDeviceQueueCreateInfo::default();
             queue_info.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queue_info.queueFamilyIndex = queue_family_indices[1];
@@ -72,8 +74,10 @@ impl Logical {
             queue_info.pQueuePriorities = &default_queue_priority;
             queue_create_infos.push(queue_info);
         }
-        queue_family_indices[2] = get_queue_family_index(VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT);
-        if (queue_family_indices[2] != queue_family_indices[1]) && (queue_family_indices[2] != queue_family_indices[0]) {
+        queue_family_indices.push(get_queue_family_index(VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT));
+        if queue_family_indices[2] != 0xFFFFFFFF &&
+            queue_family_indices[2] != queue_family_indices[1] &&
+            queue_family_indices[2] != queue_family_indices[0] {
             let mut queue_info = VkDeviceQueueCreateInfo::default();
             queue_info.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queue_info.queueFamilyIndex = queue_family_indices[2];

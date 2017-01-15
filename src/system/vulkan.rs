@@ -1113,9 +1113,8 @@ pub enum VkSampleCountFlagBits {
 
 pub type VkSampleCountFlags = VkFlags;
 
-#[derive(Copy, Clone)]
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum VkQueueFlagBits {
     VK_QUEUE_GRAPHICS_BIT = 1,
     VK_QUEUE_COMPUTE_BIT = 2,
