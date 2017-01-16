@@ -2,9 +2,13 @@ use std::sync::Arc;
 use std::ptr::null_mut;
 use super::super::super::system::vulkan::{
     VkResult,
+    VkFormat,
     VkPhysicalDevice,
+    VkFormatProperties,
+    VkFormatFeatureFlagBits,
     VkQueueFamilyProperties,
     vkEnumeratePhysicalDevices,
+    vkGetPhysicalDeviceFormatProperties,
     vkGetPhysicalDeviceQueueFamilyProperties,
 };
 use super::super::instance::Instance;
@@ -50,6 +54,28 @@ impl Physical {
                 self.vk_physical_device, &mut count, families.as_mut_ptr());
         }
         return families;
+    }
+    pub fn get_supported_depth_format(&self) -> VkFormat {
+        let depth_formats = vec![
+            VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT,
+            VkFormat::VK_FORMAT_D32_SFLOAT,
+            VkFormat::VK_FORMAT_D24_UNORM_S8_UINT,
+            VkFormat::VK_FORMAT_D16_UNORM_S8_UINT,
+            VkFormat::VK_FORMAT_D16_UNORM,
+        ];
+        for format in depth_formats {
+            let mut format_props = VkFormatProperties::default();
+            unsafe {
+                vkGetPhysicalDeviceFormatProperties(
+                    self.vk_physical_device, format, &mut format_props);
+            }
+            if format_props.optimalTilingFeatures as u32 &
+                VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
+                != 0 {
+                return format;
+            }
+        }
+        logftl!("No depth format found!");
     }
 }
 impl Drop for Physical {

@@ -39,9 +39,13 @@ impl Driver {
     }
 
     pub fn initialize(&mut self, surface: surface::Surface) {
-        self.surface = Some(Arc::new(surface));
+        let surface = Arc::new(surface);
         let physical_device = Arc::new(device::physical::Physical::new(self.instance.clone()));
         let logical_device = Arc::new(device::logical::Logical::new(physical_device.clone()));
+        logerr!("Reached!!");
+        logdbg!(format!("Depth format is: {:?}", physical_device.get_supported_depth_format()));
+        logerr!("Reached!!");
+        self.surface = Some(surface);
         self.physical_device = Some(physical_device);
         self.logical_device = Some(logical_device);
     }
