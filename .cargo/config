@@ -1,0 +1,6 @@
+
+[build]
+target = "armv7-linux-androideabi"
+
+[target.armv7-linux-androideabi]
+linker = "/home/thany/Libraries/ndk-toolchains/arm-ndk13-p24/bin/clang"
