@@ -6,7 +6,7 @@ build = "build.rs"
 description = "Vulakn based game engine"
 license = "GPL-1.0"
 
-[feature]
+[features]
 log = []
 
 [dependencies]

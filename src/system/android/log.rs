@@ -1,10 +1,10 @@
-#[cfg(debug_assertions)]
+#[cfg(feature = "log")]
 use std::os::raw::{
     c_int,
     c_char,
 };
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "log")]
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
 pub enum Priority {
@@ -19,13 +19,13 @@ pub enum Priority {
     Silent  = 8,
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "log")]
 #[cfg_attr(target_os = "android", link(name = "log", kind= "dylib"))]
 extern "C" {
     pub fn __android_log_write(priority: c_int, tag: *const c_char, text: *const c_char) -> c_int;
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "log")]
 #[macro_export]
 macro_rules! logerr {
     ( $x:expr ) => {
@@ -39,13 +39,13 @@ macro_rules! logerr {
     }
 }
 
-#[cfg(not(debug_assertions))]
+#[cfg(not(feature = "log"))]
 #[macro_export]
 macro_rules! logerr {
     ( $x:expr ) => {{}}
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "log")]
 #[macro_export]
 macro_rules! logdbg {
     ( $x:expr ) => {
@@ -59,13 +59,13 @@ macro_rules! logdbg {
     }
 }
 
-#[cfg(not(debug_assertions))]
+#[cfg(not(feature = "log"))]
 #[macro_export]
 macro_rules! logdbg {
     ( $x:expr ) => {{}}
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "log")]
 #[macro_export]
 macro_rules! logftl {
     ( $x:expr ) => {
@@ -80,7 +80,7 @@ macro_rules! logftl {
     }
 }
 
-#[cfg(not(debug_assertions))]
+#[cfg(not(feature = "log"))]
 #[macro_export]
 macro_rules! logftl {
     ( $x:expr ) => {
