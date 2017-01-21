@@ -1,14 +1,14 @@
-#[cfg(debug_assertions)]
+#[cfg(feature = "android-debug")]
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::ptr::null;
-#[cfg(debug_assertions)]
+#[cfg(feature = "android-debug")]
 use std::ptr::null_mut;
 use std::default::Default;
 use std::mem::zeroed;
-#[cfg(debug_assertions)]
+#[cfg(feature = "android-debug")]
 use std::mem::transmute;
-#[cfg(debug_assertions)]
+#[cfg(feature = "android-debug")]
 use libc::{c_char, c_void};
 use super::super::system::vulkan::{
     VkResult,
@@ -20,7 +20,7 @@ use super::super::system::vulkan::{
     vkDestroyInstance,
     VkInstanceCreateInfo,
 };
-#[cfg(debug_assertions)]
+#[cfg(feature = "android-debug")]
 use super::super::system::vulkan::{
     VkLayerProperties,
     VkDebugReportFlagsEXT,
@@ -34,7 +34,7 @@ use super::super::system::vulkan::{
     PFN_vkDestroyDebugReportCallbackEXT,
 };
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "android-debug")]
 use super::super::util::string::{
     slice_to_string,
     strings_to_cstrings,
@@ -43,7 +43,7 @@ use super::super::util::string::{
 
 pub struct Instance {
     pub vk_instance: VkInstance,
-    #[cfg(debug_assertions)]
+    #[cfg(feature = "android-debug")]
     vk_debug_callback: VkDebugReportCallbackEXT,
 }
 
@@ -55,7 +55,7 @@ impl Default for Instance {
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "android-debug")]
 unsafe extern fn vulkan_debug_callback(
     flags: VkDebugReportFlagsEXT,
     obj_type: VkDebugReportObjectTypeEXT,
@@ -103,21 +103,21 @@ impl Instance {
         let vk_platform_surface_ext = CString::new("VK_KHR_xcb_surface").unwrap();
         #[cfg(target_os = "android")]
         let vk_platform_surface_ext = CString::new("VK_KHR_android_surface").unwrap();
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "android-debug")]
         let vk_ext_debug_report_ext = CString::new("VK_EXT_debug_report").unwrap();
         let mut vulkan_extensions = Vec::new();
         vulkan_extensions.push(vk_khr_surface_ext.as_ptr());
         vulkan_extensions.push(vk_platform_surface_ext.as_ptr());
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "android-debug")]
         vulkan_extensions.push(vk_ext_debug_report_ext.as_ptr());
         let mut instance_create_info = VkInstanceCreateInfo::default();
         instance_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "android-debug")]
         let layers_names = Instance::enumerate_layers();
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "android-debug")]
         let vulkan_layers = cstrings_to_ptrs(&layers_names);
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "android-debug")]
         {
             instance_create_info.enabledLayerCount = vulkan_layers.len() as u32;
             instance_create_info.ppEnabledLayerNames = vulkan_layers.as_ptr();
@@ -128,12 +128,12 @@ impl Instance {
         vulkan_check!(vkCreateInstance(&instance_create_info, null(), &mut vk_instance));
         let mut instance = Instance::default();
         instance.vk_instance = vk_instance;
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "android-debug")]
         instance.set_report_callback();
         return instance;
     }
 
-    #[cfg(debug_assertions)]
+    #[cfg(feature = "android-debug")]
     fn enumerate_layers() -> Vec<CString> {
         let mut layer_count = 0u32;
         unsafe {
@@ -160,7 +160,7 @@ impl Instance {
         strings_to_cstrings(layers_names)
     }
 
-    #[cfg(debug_assertions)]
+    #[cfg(feature = "android-debug")]
     fn set_report_callback(&mut self) {
         let mut report_callback_create_info = VkDebugReportCallbackCreateInfoEXT::default();
         report_callback_create_info.sType =
@@ -189,7 +189,7 @@ impl Instance {
 impl Drop for Instance {
     fn drop(&mut self) {
         unsafe {
-            #[cfg(debug_assertions)]
+            #[cfg(feature = "android-debug")]
             {
                 let vk_proc_name = CString::new("vkDestroyDebugReportCallbackEXT").unwrap();
                 let vk_destroy_debug_report_callback_ext: PFN_vkDestroyDebugReportCallbackEXT =
