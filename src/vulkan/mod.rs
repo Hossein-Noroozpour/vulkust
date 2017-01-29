@@ -5,7 +5,7 @@ pub mod device;
 //pub mod image;
 pub mod instance;
 pub mod surface;
-//pub mod swapchain;
+pub mod swapchain;
 //pub mod window;
 
 //use std;
@@ -18,6 +18,7 @@ pub struct Driver {
     pub surface: Option<Arc<surface::Surface>>,
     pub physical_device: Option<Arc<device::physical::Physical>>,
     pub logical_device: Option<Arc<device::logical::Logical>>,
+    pub swapchain: Option<Arc<swapchain::Swapchain>>,
 //    pub cmd_pool: Arc<command::pool::Pool>,
 //    pub window: Arc<window::Window>,
 //    pub swapchain: Arc<swapchain::Swapchain>,
@@ -30,6 +31,7 @@ impl Driver {
             surface: None,
             physical_device: None,
             logical_device: None,
+            swapchain: None,
         }
 //        let dev = Arc::new(device::Device::new(ins.clone()));
 //        let cmd_pool = Arc::new(command::pool::Pool::new(
@@ -43,14 +45,17 @@ impl Driver {
         let physical_device = Arc::new(device::physical::Physical::new(self.instance.clone()));
         let logical_device = Arc::new(device::logical::Logical::new(physical_device.clone()));
         logerr!("Reached!!");
-        logdbg!(format!("Depth format is: {:?}", physical_device.get_supported_depth_format()));
+        let swapchain = Arc::new(swapchain::Swapchain::new(logical_device.clone(), surface.clone()));
         logerr!("Reached!!");
+        logdbg!(format!("Depth format is: {:?}", physical_device.get_supported_depth_format()));
         self.surface = Some(surface);
         self.physical_device = Some(physical_device);
         self.logical_device = Some(logical_device);
+        self.swapchain = Some(swapchain);
     }
 
     pub fn terminate(&mut self) {
+        self.swapchain = None;
         self.logical_device = None;
         self.physical_device = None;
         self.surface = None;

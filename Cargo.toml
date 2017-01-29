@@ -8,6 +8,8 @@ license = "GPL-1.0"
 
 [features]
 log = []
+vulkan-debug = ["log"]
+intensive-debug = ["log"]
 
 [dependencies]
 libc = "*"

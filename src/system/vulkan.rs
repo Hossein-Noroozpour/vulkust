@@ -6,8 +6,7 @@ pub type size_t = usize;
 pub type wchar_t = ::std::os::raw::c_int;
 
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct max_align_t {
     pub __clang_max_align_nonce1: ::std::os::raw::c_longlong,
     pub __clang_max_align_nonce2: f64,
@@ -160,9 +159,8 @@ pub const VK_PIPELINE_CACHE_HEADER_VERSION_RANGE_SIZE:
 VkPipelineCacheHeaderVersion =
 VkPipelineCacheHeaderVersion::VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[repr(u32)]
-#[derive(Debug)]
 pub enum VkPipelineCacheHeaderVersion {
     VK_PIPELINE_CACHE_HEADER_VERSION_ONE = 1,
     VK_PIPELINE_CACHE_HEADER_VERSION_MAX_ENUM = 2147483647,
@@ -172,9 +170,8 @@ pub const VK_RESULT_BEGIN_RANGE: VkResult =
 VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED;
 pub const VK_RESULT_END_RANGE: VkResult = VkResult::VK_INCOMPLETE;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[repr(i32)]
-#[derive(Debug)]
 pub enum VkResult {
     VK_SUCCESS = 0,
     VK_NOT_READY = 1,

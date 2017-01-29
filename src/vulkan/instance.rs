@@ -1,14 +1,14 @@
-#[cfg(feature = "android-debug")]
+#[cfg(feature = "vulkan-debug")]
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::ptr::null;
-#[cfg(feature = "android-debug")]
+#[cfg(feature = "vulkan-debug")]
 use std::ptr::null_mut;
 use std::default::Default;
 use std::mem::zeroed;
-#[cfg(feature = "android-debug")]
+#[cfg(feature = "intensive-debug")]
 use std::mem::transmute;
-#[cfg(feature = "android-debug")]
+#[cfg(feature = "vulkan-debug")]
 use libc::{c_char, c_void};
 use super::super::system::vulkan::{
     VkResult,
@@ -18,9 +18,11 @@ use super::super::system::vulkan::{
     vkCreateInstance,
     VkApplicationInfo,
     vkDestroyInstance,
+    PFN_vkVoidFunction,
     VkInstanceCreateInfo,
+    vkGetInstanceProcAddr,
 };
-#[cfg(feature = "android-debug")]
+#[cfg(feature = "vulkan-debug")]
 use super::super::system::vulkan::{
     VkLayerProperties,
     VkDebugReportFlagsEXT,
@@ -34,7 +36,7 @@ use super::super::system::vulkan::{
     PFN_vkDestroyDebugReportCallbackEXT,
 };
 
-#[cfg(feature = "android-debug")]
+#[cfg(feature = "vulkan-debug")]
 use super::super::util::string::{
     slice_to_string,
     strings_to_cstrings,
@@ -43,7 +45,7 @@ use super::super::util::string::{
 
 pub struct Instance {
     pub vk_instance: VkInstance,
-    #[cfg(feature = "android-debug")]
+    #[cfg(feature = "vulkan-debug")]
     vk_debug_callback: VkDebugReportCallbackEXT,
 }
 
@@ -55,7 +57,7 @@ impl Default for Instance {
     }
 }
 
-#[cfg(feature = "android-debug")]
+#[cfg(feature = "vulkan-debug")]
 unsafe extern fn vulkan_debug_callback(
     flags: VkDebugReportFlagsEXT,
     obj_type: VkDebugReportObjectTypeEXT,
@@ -103,21 +105,21 @@ impl Instance {
         let vk_platform_surface_ext = CString::new("VK_KHR_xcb_surface").unwrap();
         #[cfg(target_os = "android")]
         let vk_platform_surface_ext = CString::new("VK_KHR_android_surface").unwrap();
-        #[cfg(feature = "android-debug")]
+        #[cfg(feature = "vulkan-debug")]
         let vk_ext_debug_report_ext = CString::new("VK_EXT_debug_report").unwrap();
         let mut vulkan_extensions = Vec::new();
         vulkan_extensions.push(vk_khr_surface_ext.as_ptr());
         vulkan_extensions.push(vk_platform_surface_ext.as_ptr());
-        #[cfg(feature = "android-debug")]
+        #[cfg(feature = "vulkan-debug")]
         vulkan_extensions.push(vk_ext_debug_report_ext.as_ptr());
         let mut instance_create_info = VkInstanceCreateInfo::default();
         instance_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
-        #[cfg(feature = "android-debug")]
+        #[cfg(feature = "vulkan-debug")]
         let layers_names = Instance::enumerate_layers();
-        #[cfg(feature = "android-debug")]
+        #[cfg(feature = "vulkan-debug")]
         let vulkan_layers = cstrings_to_ptrs(&layers_names);
-        #[cfg(feature = "android-debug")]
+        #[cfg(feature = "vulkan-debug")]
         {
             instance_create_info.enabledLayerCount = vulkan_layers.len() as u32;
             instance_create_info.ppEnabledLayerNames = vulkan_layers.as_ptr();
@@ -128,12 +130,12 @@ impl Instance {
         vulkan_check!(vkCreateInstance(&instance_create_info, null(), &mut vk_instance));
         let mut instance = Instance::default();
         instance.vk_instance = vk_instance;
-        #[cfg(feature = "android-debug")]
+        #[cfg(feature = "vulkan-debug")]
         instance.set_report_callback();
         return instance;
     }
 
-    #[cfg(feature = "android-debug")]
+    #[cfg(feature = "vulkan-debug")]
     fn enumerate_layers() -> Vec<CString> {
         let mut layer_count = 0u32;
         unsafe {
@@ -160,7 +162,7 @@ impl Instance {
         strings_to_cstrings(layers_names)
     }
 
-    #[cfg(feature = "android-debug")]
+    #[cfg(feature = "vulkan-debug")]
     fn set_report_callback(&mut self) {
         let mut report_callback_create_info = VkDebugReportCallbackCreateInfoEXT::default();
         report_callback_create_info.sType =
@@ -184,12 +186,26 @@ impl Instance {
         vulkan_check!(vk_create_debug_report_callback_ext(
             self.vk_instance, &report_callback_create_info, null(), &mut self.vk_debug_callback));
     }
+
+    pub fn get_function(&self, s: &str) -> PFN_vkVoidFunction {
+        let n = CString::new(s).unwrap();
+        let proc_addr = unsafe { vkGetInstanceProcAddr(self.vk_instance, n.as_ptr()) };
+        #[cfg(feature = "intensive-debug")]
+        {
+            if proc_addr == unsafe { transmute(0usize) } {
+                logftl!("Function pointer not found");
+            }
+
+            logerr!(format!("fun ptr {:?}", proc_addr));
+        }
+        return proc_addr;
+    }
 }
 
 impl Drop for Instance {
     fn drop(&mut self) {
         unsafe {
-            #[cfg(feature = "android-debug")]
+            #[cfg(feature = "vulkan-debug")]
             {
                 let vk_proc_name = CString::new("vkDestroyDebugReportCallbackEXT").unwrap();
                 let vk_destroy_debug_report_callback_ext: PFN_vkDestroyDebugReportCallbackEXT =

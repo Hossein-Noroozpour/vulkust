@@ -85,12 +85,10 @@ impl Logical {
             queue_info.pQueuePriorities = &default_queue_priority;
             queue_create_infos.push(queue_info);
         }
-        logerr!("Reached!!");
         let vk_khr_swapchain_ext = CString::new("VK_KHR_swapchain").unwrap();
         let vulkan_extensions = [
             vk_khr_swapchain_ext.as_ptr()
         ];
-        logerr!("Reached!!");
         let mut device_create_info = VkDeviceCreateInfo::default();
         device_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         device_create_info.queueCreateInfoCount = queue_create_infos.len() as u32;
@@ -98,14 +96,11 @@ impl Logical {
 // device_create_info.pEnabledFeatures = &enabledFeatures; TODO: maybe in future i need this
         device_create_info.enabledExtensionCount = vulkan_extensions.len() as u32;
         device_create_info.ppEnabledExtensionNames = vulkan_extensions.as_ptr();
-        logerr!("Reached!!");
         vulkan_check!(vkCreateDevice(
             physical_device.vk_physical_device, &device_create_info, null(),
             &mut this.vk_device));
 // commandPool = createCommandPool(queueFamilyIndices.graphics); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // it has command pool but I don't know
-        logerr!("Reached!!");
-        println!("1111111111111111111111111111111111111111111111111111111111111111111111111111111");
         return this;
     }
 }

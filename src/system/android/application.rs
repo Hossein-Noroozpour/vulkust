@@ -38,6 +38,7 @@ impl Application {
                 }
             }
         }
+        logftl!("unexpected");
     }
 
     fn handle_cmd(&mut self, app: *mut AndroidApp, cmd: i32) {

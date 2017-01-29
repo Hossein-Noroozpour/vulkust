@@ -249,7 +249,7 @@ extern fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
         config::AConfiguration_fromAssetManager(
             (*android_app).config, (*(*android_app).activity).assetManager);
         logdbg!("Configure is :");
-        logdbg!(*(*android_app).config);
+        logdbg!(*((*android_app).config));
         (*android_app).cmd_poll_source.id = LooperId::Main as i32;
         (*android_app).cmd_poll_source.app = android_app;
         (*android_app).cmd_poll_source.process = process_cmd;

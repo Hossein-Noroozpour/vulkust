@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use std::ptr::null_mut;
+use std::mem::transmute;
 use super::super::super::system::vulkan::{
     VkResult,
     VkFormat,
@@ -7,11 +8,14 @@ use super::super::super::system::vulkan::{
     VkFormatProperties,
     VkFormatFeatureFlagBits,
     VkQueueFamilyProperties,
+    VkSurfaceCapabilitiesKHR,
     vkEnumeratePhysicalDevices,
     vkGetPhysicalDeviceFormatProperties,
     vkGetPhysicalDeviceQueueFamilyProperties,
+    PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
 };
 use super::super::instance::Instance;
+use super::super::surface::Surface;
 // this properties of device is using in setup process no other time, no in rendering procedure
 // if this assumption was wrong cache this properties in this structure.
 //     Properties
@@ -76,6 +80,17 @@ impl Physical {
             }
         }
         logftl!("No depth format found!");
+    }
+    pub fn get_surface_capabilities(&self, surface: Arc<Surface>) -> VkSurfaceCapabilitiesKHR {
+        let mut caps = VkSurfaceCapabilitiesKHR::default();
+        let vk_get_physical_device_surface_capabilities_khr:
+            PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = unsafe {transmute(
+            self.instance.get_function("vkGetPhysicalDeviceSurfaceCapabilitiesKHR")
+        )};
+        logdbg!(format!("gpu: {:?}, surface: {:?}", self.vk_physical_device, surface.vk_surface));
+        vulkan_check!((vk_get_physical_device_surface_capabilities_khr)(
+            self.vk_physical_device, surface.vk_surface, &mut caps));
+        return caps;
     }
 }
 impl Drop for Physical {
