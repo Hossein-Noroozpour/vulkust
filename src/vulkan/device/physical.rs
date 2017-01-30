@@ -90,6 +90,7 @@ impl Physical {
         logdbg!(format!("gpu: {:?}, surface: {:?}", self.vk_physical_device, surface.vk_surface));
         vulkan_check!((vk_get_physical_device_surface_capabilities_khr)(
             self.vk_physical_device, surface.vk_surface, &mut caps));
+        logerr!("reached");
         return caps;
     }
 }

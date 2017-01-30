@@ -44,7 +44,6 @@ impl Driver {
         let surface = Arc::new(surface);
         let physical_device = Arc::new(device::physical::Physical::new(self.instance.clone()));
         let logical_device = Arc::new(device::logical::Logical::new(physical_device.clone()));
-        logerr!("Reached!!");
         let swapchain = Arc::new(swapchain::Swapchain::new(logical_device.clone(), surface.clone()));
         logerr!("Reached!!");
         logdbg!(format!("Depth format is: {:?}", physical_device.get_supported_depth_format()));

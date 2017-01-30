@@ -96,9 +96,11 @@ impl Logical {
 // device_create_info.pEnabledFeatures = &enabledFeatures; TODO: maybe in future i need this
         device_create_info.enabledExtensionCount = vulkan_extensions.len() as u32;
         device_create_info.ppEnabledExtensionNames = vulkan_extensions.as_ptr();
+        logerr!("reached!");
         vulkan_check!(vkCreateDevice(
             physical_device.vk_physical_device, &device_create_info, null(),
             &mut this.vk_device));
+        logerr!("reached!");
 // commandPool = createCommandPool(queueFamilyIndices.graphics); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // it has command pool but I don't know
         return this;

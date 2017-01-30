@@ -4061,8 +4061,7 @@ pub enum VkCompositeAlphaFlagBitsKHR {
 pub type VkCompositeAlphaFlagsKHR = VkFlags;
 
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct VkSurfaceCapabilitiesKHR {
     pub minImageCount: uint32_t,
     pub maxImageCount: uint32_t,
