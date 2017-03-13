@@ -12,15 +12,18 @@ impl Application {
         }
     }
 
-    fn initialize(&self) {
+    fn initialize(&mut self) {
+        self.x += 1;
         loginfo!(self.x);
     }
 
-    fn update(&self) {
+    fn update(&mut self) {
+        self.x += 3;
         loginfo!(self.x);
     }
 
-    fn terminate(&self) {
+    fn terminate(&mut self) {
+        self.x = 0;
         loginfo!(self.x);
     }
 }

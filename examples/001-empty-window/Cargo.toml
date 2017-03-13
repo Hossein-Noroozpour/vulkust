@@ -11,7 +11,7 @@ vulkan-debug = ["log"]
 intensive-debug = ["log"]
 
 [dependencies]
-vulkust = { path = "../../" }
+vulkust = { path = "../../vulkust" }
 
 [profile.release]
 lto = true
