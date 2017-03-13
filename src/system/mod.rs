@@ -5,5 +5,7 @@ pub mod android;
 pub mod application;
 #[macro_use]
 pub mod vulkan;
-//#[cfg(target_os = "linux")] pub mod xcb;
+#[cfg(target_os = "linux")]
+#[macro_use]
+pub mod linux;
 //#[cfg(target_os = "linux")] pub mod vulkan_xcb;
