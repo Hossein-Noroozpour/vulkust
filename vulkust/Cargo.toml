@@ -1,0 +1,17 @@
+[package]
+name = "vulkust"
+version = "0.1.0"
+authors = ["Hossein Noroozpour (Thany Hulixer) <hossein.noroozpour@gmail.com>"]
+build = "build.rs"
+description = "Vulakn based game engine"
+license = "GPL-1.0"
+
+[features]
+log = []
+vulkan-debug = ["log"]
+intensive-debug = ["log"]
+
+[dependencies]
+libc = "*"
+
+[build-dependencies]
