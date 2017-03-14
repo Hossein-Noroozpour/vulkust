@@ -2,10 +2,9 @@
 macro_rules! start {
     ($App:ident) => {
         fn main() {
-            let mut app = $App::new();
-            app.initialize();
-            app.update();
-            app.terminate();
+            use vulkust::system::application::Application as SysApp;
+            let mut app = Box::new(SysApp::<$App>::new());
+            app.run();
         }
     };
 }

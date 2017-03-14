@@ -1,33 +1,29 @@
-#[cfg(target_os = "android")]
-use android;
-#[cfg(target_os = "linux")]
-use linux;
-use super::super::core::application::Application as CoreApp;
-use super::super::render::engine::Engine as RenderEngine;
+use super::super::core::application::ApplicationTrait;
+use super::super::render::engine::{RenderEngine, EngineTrait as RenderEngineTrait};
+use super::os::{OsApplication, ApplicationTrait as OsApplicationTrait};
 
 use std::ptr::{
-    null,
     null_mut,
 };
 
-pub struct Application <App, RenderEng> where App: CoreApp, RenderEng: RenderEngine {
-	connection: *mut xcb::xcb_connection_t,
-    screen: *mut xcb::xcb_screen_t,
-    window: *mut xcb::xcb_window_t,
-    atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t,
-   	core_app: App,
-    render_engine: RenderEng,
+pub struct Application <CoreApp> where CoreApp: ApplicationTrait {
+    os_app: OsApplication<CoreApp>,
+    render_engine: RenderEngine<CoreApp>,
+   	core_app: CoreApp,
 }
 
-impl<App, RenderEng> Application <App, RenderEng> where App: CoreApp, RenderEng: RenderEngine {
-	fn new(a: App, r: RenderEng) -> Self {
+impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
+	pub fn new() -> Self {
+        let mut o = OsApplication::new();
+        let mut r = RenderEngine::new();
+        let mut c = CoreApp::new();
 		Application {
-            connection: null_mut(),
-            screen:  null_mut(),
-            window: null_mut(),
-            atom_wm_delete_window: null_mut(),
-           	core_app: a,
+            os_app: o,
             render_engine: r,
+            core_app: c,
 		}
 	}
+    pub fn run(&mut self) {
+        self.core_app.update();
+    }
 }
