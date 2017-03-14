@@ -1,24 +1,12 @@
-#[macro_use]
-pub mod log;
-#[macro_use]
-pub mod activity;
-#[macro_use]
+// pub mod log;
+// pub mod activity;
 pub mod application;
-#[macro_use]
-pub mod asset;
-#[macro_use]
-pub mod config;
-#[macro_use]
-pub mod glue;
-#[macro_use]
-pub mod input;
-#[macro_use]
-pub mod jni;
-#[macro_use]
-pub mod looper;
-#[macro_use]
-pub mod rect;
-#[macro_use]
-pub mod vulkan;
-#[macro_use]
-pub mod window;
+// pub mod asset;
+// pub mod config;
+// pub mod glue;
+// pub mod input;
+// pub mod jni;
+// pub mod looper;
+// pub mod rect;
+// pub mod vulkan;
+// pub mod window;
