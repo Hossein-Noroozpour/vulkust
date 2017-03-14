@@ -12,5 +12,6 @@ intensive-debug = ["log"]
 
 [dependencies]
 libc = "*"
+winapi = "*"
 
 [build-dependencies]
