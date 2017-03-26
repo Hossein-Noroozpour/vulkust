@@ -2,10 +2,6 @@ use super::super::core::application::ApplicationTrait;
 use super::super::render::engine::{RenderEngine, EngineTrait as RenderEngineTrait};
 use super::os::{OsApplication, ApplicationTrait as OsApplicationTrait};
 
-use std::ptr::{
-    null_mut,
-};
-
 pub struct Application <CoreApp> where CoreApp: ApplicationTrait {
     os_app: OsApplication<CoreApp>,
     render_engine: RenderEngine<CoreApp>,

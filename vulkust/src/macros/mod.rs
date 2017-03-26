@@ -28,25 +28,37 @@ macro_rules! start {
 
 #[macro_export]
 macro_rules! logi {
-    ($x:expr) => {
-        print!("Vulkust Information MSG in file: {} line: {}", file!(), line!());
-        println!($x);
+    ($fmt:expr) => {
+        print!("Vulkust Information MSG in file: {} line: {} ", file!(), line!());
+        println!($fmt);
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        print!("Vulkust Information MSG in file: {} line: {} ", file!(), line!());
+        println!($fmt, $($arg)*);
     };
 }
 
 #[macro_export]
 macro_rules! loge {
-    ($x:expr) => {
-        print!("Vulkust Error MSG in file: {} line: {}", file!(), line!());
-        println!($x);
+    ($fmt:expr) => {
+        print!("Vulkust Error MSG in file: {} line: {} ", file!(), line!());
+        println!($fmt);
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        print!("Vulkust Error MSG in file: {} line: {} ", file!(), line!());
+        println!($fmt, $($arg)*);
     };
 }
 
 #[macro_export]
 macro_rules! logf {
-    ($x:expr) => {
-        print!("Vulkust Fatal MSG in file: {} line: {}", file!(), line!());
-        panic!($x);
+    ($fmt:expr) => {
+        print!("Vulkust Fatal MSG in file: {} line: {} ", file!(), line!());
+        panic!($fmt);
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        print!("Vulkust Fatal MSG in file: {} line: {} ", file!(), line!());
+        panic!($fmt, $($arg)*);
     };
 }
 

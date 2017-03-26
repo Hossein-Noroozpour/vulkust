@@ -1,6 +1,5 @@
 use std::ffi::CString;
 use std::os::raw::c_char;
-use std::ffi::OsStr;
 use std::iter::once;
 
 pub fn slice_to_string(s: &[u8]) -> String {
