@@ -27,8 +27,33 @@ macro_rules! start {
 }
 
 #[macro_export]
-macro_rules! loginfo {
+macro_rules! logi {
     ($x:expr) => {
-        println!("Vulkust Information MSG:{:?} file: {} line: {}", $x, file!(), line!());
+        print!("Vulkust Information MSG in file: {} line: {}", file!(), line!());
+        println!($x);
     };
+}
+
+#[macro_export]
+macro_rules! loge {
+    ($x:expr) => {
+        print!("Vulkust Error MSG in file: {} line: {}", file!(), line!());
+        println!($x);
+    };
+}
+
+#[macro_export]
+macro_rules! logf {
+    ($x:expr) => {
+        print!("Vulkust Fatal MSG in file: {} line: {}", file!(), line!());
+        panic!($x);
+    };
+}
+
+macro_rules! default_window_width {
+    () => ( 1280 as _ )
+}
+
+macro_rules! default_window_height {
+    () => ( 720 as _ )
 }

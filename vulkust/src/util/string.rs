@@ -1,5 +1,7 @@
 use std::ffi::CString;
 use std::os::raw::c_char;
+use std::ffi::OsStr;
+use std::iter::once;
 
 pub fn slice_to_string(s: &[u8]) -> String {
     let mut r = String::new();
@@ -26,4 +28,8 @@ pub fn cstrings_to_ptrs(cs: &Vec<CString>) -> Vec<*const c_char> {
         r.push(c.as_ptr());
     }
     r
+}
+
+pub fn string_to_cwstring(s: &str) -> Vec<u16> {
+    s.encode_utf16().chain(once(0)).collect()
 }

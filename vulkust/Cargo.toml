@@ -6,12 +6,16 @@ description = "Vulakn based game engine"
 license = "GPL-1.0"
 
 [features]
-log = []
-vulkan-debug = ["log"]
-intensive-debug = ["log"]
+no-log = []
+no-vulkan-debug = []
+no-intensive-debug = []
+fullscreen = []
 
 [dependencies]
 libc = "*"
 winapi = "*"
+kernel32-sys = "*"
+user32-sys = "*"
+gdi32-sys = "*"
 
 [build-dependencies]

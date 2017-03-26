@@ -9,20 +9,18 @@ struct Application {
 
 impl CoreApp for Application {
     fn new() -> Self {
-        Application {
-           x: 32,
-        }
+        Application { x: 32 }
     }
 
     fn update(&mut self) -> bool {
         self.x += 3;
-        loginfo!(self.x);
+        logi!("{:?}", self.x);
         return false;
     }
 
     fn terminate(&mut self) {
         self.x = 0;
-        loginfo!(self.x);
+        logi!("{:?}", self.x);
     }
 }
 
