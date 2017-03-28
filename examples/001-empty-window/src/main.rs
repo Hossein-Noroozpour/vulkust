@@ -13,7 +13,7 @@ impl CoreApp for Application {
     }
 
     fn update(&mut self) -> bool {
-        self.x += 3;
+        self.x += 1;
         logi!("{:?}", self.x);
         return false;
     }
