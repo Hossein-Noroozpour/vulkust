@@ -10,23 +10,17 @@ pub struct Application <CoreApp> where CoreApp: ApplicationTrait {
 
 impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
 	pub fn new() -> Self {
-        let mut o = OsApplication::new();
-        let mut r = RenderEngine::new();
-        let mut c = CoreApp::new();
-
-        o.set_core_app(&mut c);
-        o.set_rnd_eng(&mut r);
-
-        r.set_os_app(&mut o);
-        r.set_core_app(&mut c);
-
         Application {
-            os_app: o,
-            render_engine: r,
-            core_app: c,
+            os_app: OsApplication::new(),
+            render_engine: RenderEngine::new(),
+            core_app: CoreApp::new(),
 		}
 	}
     pub fn run(&mut self) {
+        self.os_app.set_core_app(&mut self.core_app);
+        self.os_app.set_rnd_eng(&mut self.render_engine);
+        self.render_engine.set_os_app(&mut self.os_app);
+        self.render_engine.set_core_app(&mut self.core_app);
         self.os_app.start();
         self.render_engine.initialize();
         self.core_app.initialize(&mut self.os_app, &mut self.render_engine);

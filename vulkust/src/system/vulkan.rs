@@ -1,5 +1,6 @@
 #![allow(dead_code, non_camel_case_types, non_upper_case_globals, non_snake_case)]
-use libc::{c_void};
+extern crate libc;
+use self::libc::{c_void};
 
 pub type ptrdiff_t = isize;
 pub type size_t = usize;
@@ -1943,10 +1944,10 @@ impl ::std::default::Default for VkExtensionProperties {
 #[repr(C)]
 #[derive(Copy)]
 pub struct VkLayerProperties {
-    pub layerName: [::std::os::raw::c_char; 256usize],
+    pub layerName: [u8; 256usize],
     pub specVersion: uint32_t,
     pub implementationVersion: uint32_t,
-    pub description: [::std::os::raw::c_char; 256usize],
+    pub description: [u8; 256usize],
 }
 
 impl ::std::clone::Clone for VkLayerProperties {
@@ -5026,39 +5027,3 @@ pub fn vkMakeVersion(major: u32, minor: u32, patch: u32) -> u32 {
 }
 
 pub const VK_SUBPASS_EXTERNAL: u32 = !0u32;
-
-#[macro_export] macro_rules! vulkan_check {
-    ( $x:expr ) => {
-        unsafe {
-            match $x {
-                VkResult::VK_SUCCESS => {},
-				VkResult::VK_NOT_READY => { logerr!("VK_NOT_READY") },
-			    VkResult::VK_TIMEOUT => { logerr!("VK_TIMEOUT") },
-			    VkResult::VK_EVENT_SET => { logerr!("VK_EVENT_SET") },
-			    VkResult::VK_EVENT_RESET => { logerr!("VK_EVENT_RESET") },
-			    VkResult::VK_INCOMPLETE => { logerr!("VK_INCOMPLETE") },
-			    VkResult::VK_ERROR_OUT_OF_HOST_MEMORY => { logerr!("VK_ERROR_OUT_OF_HOST_MEMORY") },
-			    VkResult::VK_ERROR_OUT_OF_DEVICE_MEMORY => { logerr!("VK_ERROR_OUT_OF_DEVICE_MEMORY") },
-			    VkResult::VK_ERROR_INITIALIZATION_FAILED => { logerr!("VK_ERROR_INITIALIZATION_FAILED") },
-			    VkResult::VK_ERROR_DEVICE_LOST => { logerr!("VK_ERROR_DEVICE_LOST") },
-			    VkResult::VK_ERROR_MEMORY_MAP_FAILED => { logerr!("VK_ERROR_MEMORY_MAP_FAILED") },
-			    VkResult::VK_ERROR_LAYER_NOT_PRESENT => { logerr!("VK_ERROR_LAYER_NOT_PRESENT") },
-			    VkResult::VK_ERROR_EXTENSION_NOT_PRESENT => { logerr!("VK_ERROR_EXTENSION_NOT_PRESENT") },
-			    VkResult::VK_ERROR_FEATURE_NOT_PRESENT => { logerr!("VK_ERROR_FEATURE_NOT_PRESENT") },
-			    VkResult::VK_ERROR_INCOMPATIBLE_DRIVER => { logerr!("VK_ERROR_INCOMPATIBLE_DRIVER") },
-			    VkResult::VK_ERROR_TOO_MANY_OBJECTS => { logerr!("VK_ERROR_TOO_MANY_OBJECTS") },
-			    VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED => { logerr!("VK_ERROR_FORMAT_NOT_SUPPORTED") },
-			    VkResult::VK_ERROR_SURFACE_LOST_KHR => { logerr!("VK_ERROR_SURFACE_LOST_KHR") },
-			    VkResult::VK_ERROR_NATIVE_WINDOW_IN_USE_KHR => { logerr!("VK_ERROR_NATIVE_WINDOW_IN_USE_KHR") },
-			    VkResult::VK_SUBOPTIMAL_KHR => { logerr!("VK_SUBOPTIMAL_KHR") },
-			    VkResult::VK_ERROR_OUT_OF_DATE_KHR => { logerr!("VK_ERROR_OUT_OF_DATE_KHR") },
-			    VkResult::VK_ERROR_INCOMPATIBLE_DISPLAY_KHR => { logerr!("VK_ERROR_INCOMPATIBLE_DISPLAY_KHR") },
-			    VkResult::VK_ERROR_VALIDATION_FAILED_EXT => { logerr!("VK_ERROR_VALIDATION_FAILED_EXT") },
-			    VkResult::VK_ERROR_INVALID_SHADER_NV => { logerr!("VK_ERROR_INVALID_SHADER_NV") },
-			    VkResult::VK_RESULT_RANGE_SIZE => { logerr!("VK_RESULT_RANGE_SIZE") },
-			    VkResult::VK_RESULT_MAX_ENUM => { logerr!("VK_RESULT_MAX_ENUM") },
-				// _ => { logerr!("Unknown error") },
-            }
-        }
-    };
-}

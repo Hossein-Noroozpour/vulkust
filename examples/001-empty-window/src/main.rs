@@ -1,27 +1,26 @@
 #[macro_use]
 extern crate vulkust;
 
-use vulkust::core::application::ApplicationTrait as CoreApp;
+use vulkust::core::application::ApplicationTrait as MyAppTrait;
 
-struct Application {
-    x: i32,
+struct MyGame {
+    x: u64,
 }
 
-impl CoreApp for Application {
+impl MyAppTrait for MyGame {
     fn new() -> Self {
-        Application { x: 32 }
+        MyGame { x: 0 }
     }
 
     fn update(&mut self) -> bool {
         self.x += 1;
-        logi!("{:?}", self.x);
         return false;
     }
 
     fn terminate(&mut self) {
+        logi!("{}", self.x);
         self.x = 0;
-        logi!("{:?}", self.x);
     }
 }
 
-start!(Application);
+start!(MyGame);
