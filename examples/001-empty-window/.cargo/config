@@ -1,5 +1,0 @@
-[build]
-target = "armv7-linux-androideabi x86_64-unknown-linux-gnu x86_64-pc-windows-msvc"
-
-[target.armv7-linux-androideabi]
-linker = "/home/hossein/Libraries/android-toolchaines/ndk13-p24-armv7a/bin/clang++"

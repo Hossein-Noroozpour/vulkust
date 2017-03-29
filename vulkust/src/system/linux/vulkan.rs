@@ -7,7 +7,7 @@ use system::vulkan::{
     VkStructureType,
     VkAllocationCallbacks,
 };
-use system::xcb::{
+use super::xcb::{
     xcb_window_t,
     xcb_connection_t,
 };
@@ -15,8 +15,7 @@ use system::xcb::{
 pub type VkXcbSurfaceCreateFlagsKHR = VkFlags;
 
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct VkXcbSurfaceCreateInfoKHR {
     pub sType: VkStructureType,
     pub pNext: *const ::std::os::raw::c_void,

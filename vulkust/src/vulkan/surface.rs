@@ -7,6 +7,7 @@ use super::super::system::vulkan::{
     VkStructureType,
     vkDestroySurfaceKHR,
 };
+// Android
 #[cfg(target_os = "android")]
 use super::super::system::android::vulkan::{
     VkAndroidSurfaceCreateInfoKHR,
@@ -14,6 +15,15 @@ use super::super::system::android::vulkan::{
 };
 #[cfg(target_os = "android")]
 use super::super::system::android::window::ANativeWindow;
+// Linux
+#[cfg(target_os = "linux")]
+use super::super::system::linux::vulkan::{
+    VkXcbSurfaceCreateInfoKHR,
+    vkCreateXcbSurfaceKHR,
+};
+#[cfg(target_os = "linux")]
+use super::super::system::linux::xcb;
+
 use super::instance::Instance;
 
 pub struct Surface {
@@ -37,12 +47,29 @@ impl Surface {
             vk_surface: vk_surface,
         }
     }
+    #[cfg(target_os = "linux")]
+    pub fn new(
+            instance: Arc<Instance>, connection: *mut xcb::xcb_connection_t,
+            window: xcb::xcb_window_t,) -> Self {
+        let mut vk_surface = 0 as VkSurfaceKHR;
+        let mut create_info = VkXcbSurfaceCreateInfoKHR::default();
+        create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+        create_info.window = window;
+        create_info.connection = connection;
+        vulkan_check!(vkCreateXcbSurfaceKHR(
+                instance.vk_instance, &create_info, null(), &mut vk_surface));
+        logi!("vk surface {:?}", vk_surface);
+        Surface {
+            instance: instance,
+            vk_surface: vk_surface,
+        }
+    }
 }
 
 impl Drop for Surface {
     fn drop(&mut self) {
         unsafe {
-            logdbg!(format!("terminated {:?}", self.vk_surface));
+            logi!("terminated {:?}", self.vk_surface);
             vkDestroySurfaceKHR(self.instance.vk_instance, self.vk_surface, null());
         }
     }

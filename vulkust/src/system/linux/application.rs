@@ -17,13 +17,13 @@ use std::ffi::CString;
 
 pub struct Application<CoreApp>
     where CoreApp: ApplicationTrait {
-    connection: *mut xcb::xcb_connection_t,
-    screen: *mut xcb::xcb_screen_t,
-    window: xcb::xcb_window_t,
-    atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t,
-    core_app: *mut CoreApp,
-    render_engine: *mut RenderEngine<CoreApp>,
-    is_running: bool,
+    pub connection: *mut xcb::xcb_connection_t,
+    pub screen: *mut xcb::xcb_screen_t,
+    pub window: xcb::xcb_window_t,
+    pub atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t,
+    pub core_app: *mut CoreApp,
+    pub render_engine: *mut RenderEngine<CoreApp>,
+    pub is_running: bool,
 }
 
 impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>

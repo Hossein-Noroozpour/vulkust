@@ -14,22 +14,15 @@ use super::super::super::system::vulkan::{
     vkGetPhysicalDeviceQueueFamilyProperties,
     PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
 };
-use super::super::instance::Instance;
 use super::super::surface::Surface;
-// this properties of device is using in setup process no other time, no in rendering procedure
-// if this assumption was wrong cache this properties in this structure.
-//     Properties
-//     Features
-//     MemoryProperties
-//     QueueFamilyProperties
 pub struct Physical {
-    pub instance: Arc<Instance>,
+    pub surface: Arc<Surface>,
     pub vk_physical_device: VkPhysicalDevice,
 }
 impl Physical {
-    pub fn new(instance: Arc<Instance>) -> Self {
+    pub fn new(surface: Arc<Surface>) -> Self {
         let mut physical = Physical {
-            instance: instance,
+            surface: surface,
             vk_physical_device: 0 as VkPhysicalDevice,
         };
         physical.init_physical_device();
@@ -38,11 +31,11 @@ impl Physical {
     fn init_physical_device(&mut self) {
         let mut gpu_count = 0u32;
         vulkan_check!(vkEnumeratePhysicalDevices(
-            self.instance.vk_instance, &mut gpu_count as *mut u32, 0 as *mut VkPhysicalDevice));
-        logdbg!(format!("Number of devices is: {}", gpu_count));
+            self.surface.instance.vk_instance, &mut gpu_count as *mut u32, 0 as *mut VkPhysicalDevice));
+        logi!("Number of devices is: {}", gpu_count);
         let mut devices = vec![0 as VkPhysicalDevice; gpu_count as usize];
         vulkan_check!(vkEnumeratePhysicalDevices(
-            self.instance.vk_instance, &mut gpu_count,
+            self.surface.instance.vk_instance, &mut gpu_count,
             devices.as_mut_ptr() as *mut VkPhysicalDevice));
         self.vk_physical_device = devices[0];
     }
@@ -79,18 +72,17 @@ impl Physical {
                 return format;
             }
         }
-        logftl!("No depth format found!");
+        logf!("No depth format found!");
     }
-    pub fn get_surface_capabilities(&self, surface: Arc<Surface>) -> VkSurfaceCapabilitiesKHR {
+    pub fn get_surface_capabilities(&self) -> VkSurfaceCapabilitiesKHR {
         let mut caps = VkSurfaceCapabilitiesKHR::default();
         let vk_get_physical_device_surface_capabilities_khr:
-            PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = unsafe {transmute(
-            self.instance.get_function("vkGetPhysicalDeviceSurfaceCapabilitiesKHR")
-        )};
-        logdbg!(format!("gpu: {:?}, surface: {:?}", self.vk_physical_device, surface.vk_surface));
+            PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = unsafe {
+                transmute(self.surface.instance.get_function("vkGetPhysicalDeviceSurfaceCapabilitiesKHR"))
+            };
+        logi!("gpu: {:?}, surface: {:?}", self.vk_physical_device, self.surface.vk_surface);
         vulkan_check!((vk_get_physical_device_surface_capabilities_khr)(
-            self.vk_physical_device, surface.vk_surface, &mut caps));
-        logerr!("reached");
+            self.vk_physical_device, self.surface.vk_surface, &mut caps));
         return caps;
     }
 }
