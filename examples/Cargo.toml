@@ -1,0 +1,4 @@
+[workspace]
+members = [
+    "001-empty-window",
+]
