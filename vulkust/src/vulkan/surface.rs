@@ -1,12 +1,7 @@
 use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;
-use super::super::system::vulkan::{
-    VkResult,
-    VkSurfaceKHR,
-    VkStructureType,
-    vkDestroySurfaceKHR,
-};
+use super::super::system::vulkan as vk;
 // Android
 #[cfg(target_os = "android")]
 use super::super::system::android::vulkan::{
@@ -28,7 +23,7 @@ use super::instance::Instance;
 
 pub struct Surface {
     pub instance: Arc<Instance>,
-    pub vk_surface: VkSurfaceKHR,
+    pub vk_surface: vk::VkSurfaceKHR,
 }
 
 impl Surface {
@@ -51,9 +46,9 @@ impl Surface {
     pub fn new(
             instance: Arc<Instance>, connection: *mut xcb::xcb_connection_t,
             window: xcb::xcb_window_t,) -> Self {
-        let mut vk_surface = 0 as VkSurfaceKHR;
+        let mut vk_surface = 0 as vk::VkSurfaceKHR;
         let mut create_info = VkXcbSurfaceCreateInfoKHR::default();
-        create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+        create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
         create_info.window = window;
         create_info.connection = connection;
         vulkan_check!(vkCreateXcbSurfaceKHR(
@@ -70,7 +65,7 @@ impl Drop for Surface {
     fn drop(&mut self) {
         unsafe {
             logi!("terminated {:?}", self.vk_surface);
-            vkDestroySurfaceKHR(self.instance.vk_instance, self.vk_surface, null());
+            vk::vkDestroySurfaceKHR(self.instance.vk_instance, self.vk_surface, null());
         }
     }
 }

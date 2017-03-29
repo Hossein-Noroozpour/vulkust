@@ -11,30 +11,7 @@ use std::mem::zeroed;
 use std::mem::transmute;
 #[cfg(not(feature = "no-vulkan-debug"))]
 use self::libc::{c_char, c_void};
-use super::super::system::vulkan::{
-    VkResult,
-    VkInstance,
-    vkMakeVersion,
-    VkStructureType,
-    vkCreateInstance,
-    VkApplicationInfo,
-    vkDestroyInstance,
-    PFN_vkVoidFunction,
-    VkInstanceCreateInfo,
-    vkGetInstanceProcAddr,
-};
-#[cfg(not(feature = "no-vulkan-debug"))]
-use super::super::system::vulkan::{
-    VkLayerProperties,
-    VkDebugReportFlagsEXT,
-    VkDebugReportCallbackEXT,
-    VkDebugReportFlagBitsEXT,
-    VkDebugReportObjectTypeEXT,
-    vkEnumerateInstanceLayerProperties,
-    VkDebugReportCallbackCreateInfoEXT,
-    PFN_vkCreateDebugReportCallbackEXT,
-    PFN_vkDestroyDebugReportCallbackEXT,
-};
+use super::super::system::vulkan as vk;
 
 #[cfg(not(feature = "no-vulkan-debug"))]
 use super::super::util::string::{
@@ -44,9 +21,9 @@ use super::super::util::string::{
 };
 
 pub struct Instance {
-    pub vk_instance: VkInstance,
+    pub vk_instance: vk::VkInstance,
     #[cfg(not(feature = "no-vulkan-debug"))]
-    vk_debug_callback: VkDebugReportCallbackEXT,
+    vk_debug_callback: vk::VkDebugReportCallbackEXT,
 }
 
 impl Default for Instance {
@@ -59,45 +36,46 @@ impl Default for Instance {
 
 #[cfg(not(feature = "no-vulkan-debug"))]
 unsafe extern fn vulkan_debug_callback(
-    flags: VkDebugReportFlagsEXT,
-    obj_type: VkDebugReportObjectTypeEXT,
+    flags: vk::VkDebugReportFlagsEXT,
+    obj_type: vk::VkDebugReportObjectTypeEXT,
     src_obj: u64, location: usize, msg_code: i32, layer_prefix: *const c_char,
     msg: *const c_char, user_data: *mut c_void) -> u32 {
     let mut flg = String::new();
-    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32) != 0 {
+    if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32) != 0 {
         flg += "info, ";
     }
-    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32) != 0 {
+    if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32) != 0 {
         flg += "warn, ";
     }
-    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32) != 0 {
+    if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
+            != 0 {
         flg += "performance, ";
     }
-    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32) != 0 {
+    if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32) != 0 {
         flg += "error, ";
     }
-    if flags & (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32) != 0 {
+    if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32) != 0 {
         flg += "debug, ";
     }
-    logi!("{}", format!("flag: {}, obj_type: {:?}, src_obj: {:?}, location: {:?}, msg_code: {:?}, \
-        layer_prefix: {:?}, msg : {:?}, user_data {:?}",
-             flg, obj_type, src_obj, location, msg_code,
-             CStr::from_ptr(layer_prefix).to_str(),
-             CStr::from_ptr(msg).to_str(), user_data));
-    return 0u32
+    logi!("flag: {}, obj_type: {:?}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: \
+            {:?}, msg : {:?}, user_data {:?}",
+            flg, obj_type, src_obj, location, msg_code,
+            CStr::from_ptr(layer_prefix).to_str(),
+            CStr::from_ptr(msg).to_str(), user_data);
+    0u32
 }
 
 impl Instance {
     pub fn new() -> Self {
         let application_name = CString::new("Vulkust App").unwrap();
         let engine_name = CString::new("Vulkust").unwrap();
-        let mut application_info = VkApplicationInfo::default();
-        application_info.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        application_info.apiVersion = vkMakeVersion(1, 0, 21);
-        application_info.applicationVersion = vkMakeVersion(0, 1, 0);
+        let mut application_info = vk::VkApplicationInfo::default();
+        application_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        application_info.apiVersion = vk::vkMakeVersion(1, 0, 21);
+        application_info.applicationVersion = vk::vkMakeVersion(0, 1, 0);
         application_info.pApplicationName = application_name.as_ptr();
         application_info.pEngineName = engine_name.as_ptr();
-        application_info.engineVersion = vkMakeVersion(0, 1, 0);
+        application_info.engineVersion = vk::vkMakeVersion(0, 1, 0);
         let vk_khr_surface_ext = CString::new("VK_KHR_surface").unwrap();
         #[cfg(target_os = "windows")]
         let vk_platform_surface_ext = CString::new("VK_KHR_win32_surface").unwrap();
@@ -112,8 +90,8 @@ impl Instance {
         vulkan_extensions.push(vk_platform_surface_ext.as_ptr());
         #[cfg(not(feature = "no-vulkan-debug"))]
         vulkan_extensions.push(vk_ext_debug_report_ext.as_ptr());
-        let mut instance_create_info = VkInstanceCreateInfo::default();
-        instance_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        let mut instance_create_info = vk::VkInstanceCreateInfo::default();
+        instance_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
         #[cfg(not(feature = "no-vulkan-debug"))]
         let layers_names = Instance::enumerate_layers();
@@ -126,8 +104,8 @@ impl Instance {
         }
         instance_create_info.enabledExtensionCount = vulkan_extensions.len() as u32;
         instance_create_info.ppEnabledExtensionNames = vulkan_extensions.as_ptr();
-        let mut vk_instance = 0 as VkInstance;
-        vulkan_check!(vkCreateInstance(&instance_create_info, null(), &mut vk_instance));
+        let mut vk_instance = 0 as vk::VkInstance;
+        vulkan_check!(vk::vkCreateInstance(&instance_create_info, null(), &mut vk_instance));
         let mut instance = Instance::default();
         instance.vk_instance = vk_instance;
         #[cfg(not(feature = "no-vulkan-debug"))]
@@ -139,12 +117,12 @@ impl Instance {
     fn enumerate_layers() -> Vec<CString> {
         let mut layer_count = 0u32;
         unsafe {
-            vkEnumerateInstanceLayerProperties(&mut layer_count, 0 as *mut VkLayerProperties);
+            vk::vkEnumerateInstanceLayerProperties(&mut layer_count, null_mut());
         }
         logi!("Number of layers found is: {}", layer_count);
-        let mut available_layers = vec![VkLayerProperties::default(); layer_count as usize];
+        let mut available_layers = vec![vk::VkLayerProperties::default(); layer_count as usize];
         unsafe {
-            vkEnumerateInstanceLayerProperties(&mut layer_count, available_layers.as_mut_ptr());
+            vk::vkEnumerateInstanceLayerProperties(&mut layer_count, available_layers.as_mut_ptr());
         }
         let mut layers_names = Vec::new();
         for i in 0..available_layers.len() {
@@ -164,21 +142,21 @@ impl Instance {
 
     #[cfg(not(feature = "no-vulkan-debug"))]
     fn set_report_callback(&mut self) {
-        let mut report_callback_create_info = VkDebugReportCallbackCreateInfoEXT::default();
+        let mut report_callback_create_info = vk::VkDebugReportCallbackCreateInfoEXT::default();
         report_callback_create_info.sType =
-            VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+            vk::VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
         report_callback_create_info.flags =
-            (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32)
-                | (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32)
-                | (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
-                | (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32)
-                | (VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32)
-                as VkDebugReportFlagsEXT;
+            (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32)
+                | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32)
+                | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
+                | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32)
+                | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32)
+                as vk::VkDebugReportFlagsEXT;
         report_callback_create_info.pfnCallback = vulkan_debug_callback;
         report_callback_create_info.pUserData = null_mut();
         let vk_proc_name = CString::new("vkCreateDebugReportCallbackEXT").unwrap();
-        let vk_create_debug_report_callback_ext: PFN_vkCreateDebugReportCallbackEXT = unsafe {
-            transmute(vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()))
+        let vk_create_debug_report_callback_ext: vk::PFN_vkCreateDebugReportCallbackEXT = unsafe {
+            transmute(vk::vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()))
         };
         if vk_create_debug_report_callback_ext == unsafe { transmute(0usize) } {
             logf!("Error in finding vkCreateDebugReportCallbackEXT process location.");
@@ -187,9 +165,9 @@ impl Instance {
             self.vk_instance, &report_callback_create_info, null(), &mut self.vk_debug_callback));
     }
 
-    pub fn get_function(&self, s: &str) -> PFN_vkVoidFunction {
+    pub fn get_function(&self, s: &str) -> vk::PFN_vkVoidFunction {
         let n = CString::new(s).unwrap();
-        let proc_addr = unsafe { vkGetInstanceProcAddr(self.vk_instance, n.as_ptr()) };
+        let proc_addr = unsafe { vk::vkGetInstanceProcAddr(self.vk_instance, n.as_ptr()) };
         #[cfg(not(feature = "no-intensive-debug"))]
         {
             if proc_addr == unsafe { transmute(0usize) } {
@@ -208,8 +186,8 @@ impl Drop for Instance {
             #[cfg(not(feature = "no-vulkan-debug"))]
             {
                 let vk_proc_name = CString::new("vkDestroyDebugReportCallbackEXT").unwrap();
-                let vk_destroy_debug_report_callback_ext: PFN_vkDestroyDebugReportCallbackEXT =
-                    transmute(vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()));
+                let vk_destroy_debug_report_callback_ext: vk::PFN_vkDestroyDebugReportCallbackEXT =
+                    transmute(vk::vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()));
                 if vk_destroy_debug_report_callback_ext == transmute(0usize) {
                     logf!("Error in finding vkDestroyDebugReportCallbackEXT process location.");
                 }
@@ -217,7 +195,7 @@ impl Drop for Instance {
                     self.vk_instance, self.vk_debug_callback, null());
             }
             logi!("Instance is deleted now!");
-            vkDestroyInstance(self.vk_instance, null());
+            vk::vkDestroyInstance(self.vk_instance, null());
         }
     }
 }

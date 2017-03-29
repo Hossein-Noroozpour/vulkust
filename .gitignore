@@ -2,9 +2,15 @@ target
 target/
 /target
 /target/
-Cargo.lock
 .idea
+/.idea
+.idea/
+/.idea/
+assets
 assets/
+/assets
+/assets/
+*.lock
 *.rs.bk
 *.txt
 *.iml
