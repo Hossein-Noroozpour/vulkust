@@ -1,2 +1,2 @@
-// pub mod logical;
+pub mod logical;
 pub mod physical;

@@ -1,116 +1,63 @@
 use std::sync::Arc;
-use std::ptr::{null, null_mut};
-use std::ffi::CString;
+use std::ptr::null;
 use std::default::Default;
-use super::super::super::system::vulkan::{
-    VkResult,
-    VkDevice,
-    vkCreateDevice,
-    vkDestroyDevice,
-    VkStructureType,
-    VkQueueFlagBits,
-    VkDeviceCreateInfo,
-    VkDeviceQueueCreateInfo,
-};
+use std::collections::HashSet;
+use super::super::super::system::vulkan as vk;
 use super::physical::Physical;
+use super::super::super::util::string::{
+    strings_to_cstrings,
+    cstrings_to_ptrs,
+};
 
 pub struct Logical {
     pub physical_device: Arc<Physical>,
-    pub vk_device: VkDevice,
+    pub vk_data: vk::VkDevice,
 }
 
 impl Logical {
     pub fn new(physical_device: Arc<Physical>) -> Self {
-        let mut this = Logical {
-            physical_device: physical_device.clone(),
-            vk_device: null_mut(),
-        };
-        let mut queue_create_infos = vec![VkDeviceQueueCreateInfo::default(); 1];
-        let default_queue_priority = 0f32;
-        // graphic, compute, transfer
-        let mut queue_family_indices = Vec::<u32>::new();
-        let queue_family_properties = physical_device.get_queue_family_properties();
-        let get_queue_family_index = move |queue_flags: VkQueueFlagBits| -> u32 {
-            if queue_flags as u32 & VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32 != 0 {
-                for i in 0..queue_family_properties.len() {
-                    if queue_family_properties[i].queueFlags as u32 & queue_flags as u32 != 0 &&
-                        queue_family_properties[i].queueFlags as u32 &
-                            VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32 == 0 {
-                        return i as u32;
-                    }
-                }
-            }
-            if queue_flags as u32 & VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32 != 0 {
-                for i in 0..queue_family_properties.len() {
-                    if queue_family_properties[i].queueFlags as u32 & queue_flags as u32 != 0 &&
-                        queue_family_properties[i].queueFlags as u32 &
-                            VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32 == 0 &&
-                        queue_family_properties[i].queueFlags as u32 &
-                            VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32 == 0 {
-                        return i as u32;
-                    }
-                }
-            }
-            for i in 0..queue_family_properties.len() {
-                if queue_family_properties[i].queueFlags as u32 & queue_flags as u32 != 0 {
-                    return i as u32;
-                }
-            }
-            logerr!(format!("No queue family found for {:?}", queue_flags));
-            return 0xFFFFFFFF;
-        };
-        queue_family_indices.push(get_queue_family_index(VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT));
-        queue_create_infos[0].sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queue_create_infos[0].queueFamilyIndex = queue_family_indices[0];
-        queue_create_infos[0].queueCount = 1;
-        queue_create_infos[0].pQueuePriorities = &default_queue_priority;
-        queue_family_indices.push(get_queue_family_index(VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT));
-        if queue_family_indices[1] != 0xFFFFFFFF &&
-            queue_family_indices[1] != queue_family_indices[0] {
-            let mut queue_info = VkDeviceQueueCreateInfo::default();
-            queue_info.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queue_info.queueFamilyIndex = queue_family_indices[1];
-            queue_info.queueCount = 1;
-            queue_info.pQueuePriorities = &default_queue_priority;
-            queue_create_infos.push(queue_info);
+        let mut device_extensions = Vec::new();
+        device_extensions.push("VK_KHR_swapchain".to_string());
+        let device_extensions = strings_to_cstrings(device_extensions);
+        let device_extensions = cstrings_to_ptrs(&device_extensions);
+        let mut queue_family_index_set = HashSet::new();
+        queue_family_index_set.insert(physical_device.graphics_queue_node_index);
+        queue_family_index_set.insert(physical_device.transfer_queue_node_index);
+        queue_family_index_set.insert(physical_device.compute_queue_node_index);
+        queue_family_index_set.insert(physical_device.present_queue_node_index);
+        let mut queue_create_info_s = Vec::new();
+        let queue_priorities = vec![1f32];
+        // TODO: create as many as possible queue to separate independent works as many as possible
+        // on the queues but it is not required currently
+        for q in queue_family_index_set {
+            let mut queue_create_info = vk::VkDeviceQueueCreateInfo::default();
+            queue_create_info.sType =
+                vk::VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queue_create_info.queueCount = 1;
+            queue_create_info.queueFamilyIndex = q;
+            queue_create_info.pQueuePriorities = queue_priorities.as_ptr();
+            queue_create_info_s.push(queue_create_info);
         }
-        queue_family_indices.push(get_queue_family_index(VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT));
-        if queue_family_indices[2] != 0xFFFFFFFF &&
-            queue_family_indices[2] != queue_family_indices[1] &&
-            queue_family_indices[2] != queue_family_indices[0] {
-            let mut queue_info = VkDeviceQueueCreateInfo::default();
-            queue_info.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queue_info.queueFamilyIndex = queue_family_indices[2];
-            queue_info.queueCount = 1;
-            queue_info.pQueuePriorities = &default_queue_priority;
-            queue_create_infos.push(queue_info);
+        let mut device_create_info = vk::VkDeviceCreateInfo::default();
+        device_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        device_create_info.queueCreateInfoCount = queue_create_info_s.len() as u32;
+        device_create_info.pQueueCreateInfos = queue_create_info_s.as_ptr();
+        device_create_info.enabledExtensionCount = device_extensions.len() as u32;
+        device_create_info.ppEnabledExtensionNames = device_extensions.as_ptr();
+        let mut vk_data = 0 as vk::VkDevice;
+        vulkan_check!(vk::vkCreateDevice(
+            physical_device.vk_data, &device_create_info, null(), &mut vk_data));
+        Logical {
+            physical_device: physical_device,
+            vk_data: vk_data,
         }
-        let vk_khr_swapchain_ext = CString::new("VK_KHR_swapchain").unwrap();
-        let vulkan_extensions = [
-            vk_khr_swapchain_ext.as_ptr()
-        ];
-        let mut device_create_info = VkDeviceCreateInfo::default();
-        device_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        device_create_info.queueCreateInfoCount = queue_create_infos.len() as u32;
-        device_create_info.pQueueCreateInfos = queue_create_infos.as_ptr();
-// device_create_info.pEnabledFeatures = &enabledFeatures; TODO: maybe in future i need this
-        device_create_info.enabledExtensionCount = vulkan_extensions.len() as u32;
-        device_create_info.ppEnabledExtensionNames = vulkan_extensions.as_ptr();
-        logerr!("reached!");
-        vulkan_check!(vkCreateDevice(
-            physical_device.vk_physical_device, &device_create_info, null(),
-            &mut this.vk_device));
-        logerr!("reached!");
-// commandPool = createCommandPool(queueFamilyIndices.graphics); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// it has command pool but I don't know
-        return this;
     }
 }
 
 impl Drop for Logical {
     fn drop(&mut self) {
         unsafe {
-            vkDestroyDevice(self.vk_device, null());
+            vk::vkDestroyDevice(self.vk_data, null());
         }
     }
 }
