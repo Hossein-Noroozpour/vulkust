@@ -1,109 +1,47 @@
 pub mod view;
 
-use super::super::system::vulkan::{
-    VkImage,
-    VkResult,
-    VkFormat,
-    VkExtent3D,
-    VkImageType,
-    vkFreeMemory,
-    vkCreateImage,
-    VkImageTiling,
-    VkDeviceMemory,
-    vkDestroyImage,
-    VkStructureType,
-    vkAllocateMemory,
-    VkImageCreateInfo,
-    vkBindImageMemory,
-    VkMemoryRequirements,
-    VkMemoryAllocateInfo,
-    VkImageUsageFlagBits,
-    VkSampleCountFlagBits,
-    VkAllocationCallbacks,
-    VkMemoryPropertyFlagBits,
-    vkGetImageMemoryRequirements,
-};
+use super::super::system::vulkan as vk;
+use super::device::logical::Logical as LogicalDevice;
+use super::memory::allocate_with_requirements;
 
-use super::device::Device;
-
-use std::default::Default;
+//use std::default::Default;
 use std::sync::{
     Arc,
-    RwLock,
 };
+use std::ptr::null;
 
 pub struct Image {
-    pub device: Arc<RwLock<Device>>,
-    pub vk_image: VkImage,
-    pub vk_format: VkFormat,
-    pub vk_mem: VkDeviceMemory,
+    pub logical_device: Arc<LogicalDevice>,
+    pub vk_data: vk::VkImage,
+//    pub vk_format: VkFormat,
+    pub vk_mem: vk::VkDeviceMemory,
 }
 
 impl Image {
-    pub fn new_depth_with_format(
-        device: Arc<RwLock<Device>>, width: u32, height: u32) -> Self {
-        let format = device.read().unwrap().vk_depth_format;
-        Image::new_with_format_samples_tiling_usage(
-            device, format, width, height, VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-            VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
-            (VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32) |
-                (VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT as u32))
-    }
-
-    pub fn new_with_format_samples_tiling_usage(
-        device: Arc<RwLock<Device>>, format: VkFormat, width: u32, height: u32,
-        samples: VkSampleCountFlagBits, tiling: VkImageTiling,
-        usage: u32) -> Self {
-        let dev = device.read().unwrap();
-        let mut image_ci = VkImageCreateInfo::default();
-        image_ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        image_ci.imageType = VkImageType::VK_IMAGE_TYPE_2D;
-        image_ci.format = format;
-        image_ci.extent = VkExtent3D {
-            width: width,
-            height: height,
-            depth: 1,
-        };
-        image_ci.mipLevels = 1;
-        image_ci.arrayLayers = 1;
-        image_ci.samples = samples;
-        image_ci.tiling = tiling;
-        image_ci.usage = usage;
-        let mut vk_image = 0 as VkImage;
-        vulkan_check!(vkCreateImage(
-            dev.vk_device, &image_ci as *const VkImageCreateInfo,
-            0 as *const VkAllocationCallbacks, &mut vk_image as *mut VkImage));
-        let mut vk_mem_req = VkMemoryRequirements::default();
+    pub fn new_with_info(logical_device: Arc<LogicalDevice>, info: &vk::VkImageCreateInfo)
+        -> Self {
+        let mut vk_data = 0 as vk::VkImage;
+        vulkan_check!(vk::vkCreateImage(logical_device.vk_data, info, null(), &mut vk_data));
+        let mut mem_requirements = vk::VkMemoryRequirements::default();
         unsafe {
-            vkGetImageMemoryRequirements(
-                dev.vk_device, vk_image, &mut vk_mem_req as *mut VkMemoryRequirements);
+            vk::vkGetImageMemoryRequirements(
+                logical_device.vk_data, vk_data, &mut mem_requirements);
         }
-        let mut mem_alloc = VkMemoryAllocateInfo::default();
-        mem_alloc.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        mem_alloc.allocationSize = vk_mem_req.size;
-        mem_alloc.memoryTypeIndex = dev.choose_heap_from_flags(
-            &vk_mem_req, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32,
-            VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32); // !!!!
-        let mut vk_mem = 0 as VkDeviceMemory;
-        vulkan_check!(vkAllocateMemory(
-            dev.vk_device, &mem_alloc as *const VkMemoryAllocateInfo,
-            0 as *const VkAllocationCallbacks, &mut vk_mem as *mut VkDeviceMemory));
-        vulkan_check!(vkBindImageMemory(dev.vk_device, vk_image, vk_mem, 0));
+        let memory = allocate_with_requirements(&logical_device, mem_requirements);
+        vulkan_check!(vk::vkBindImageMemory(logical_device.vk_data, vk_data, memory, 0));
         Image {
-            device: device.clone(),
-            vk_image: vk_image,
-            vk_format: format,
-            vk_mem: vk_mem,
+            logical_device: logical_device,
+            vk_data: vk_data,
+            vk_mem: memory,
         }
     }
 }
 
 impl Drop for Image {
     fn drop(&mut self) {
-        let dev = self.device.read().unwrap();
         unsafe {
-            vkFreeMemory(dev.vk_device, self.vk_mem,  0 as *const VkAllocationCallbacks);
-            vkDestroyImage(dev.vk_device, self.vk_image, 0 as *const VkAllocationCallbacks);
+            vk::vkDestroyImage(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkFreeMemory(self.logical_device.vk_data, self.vk_mem,  null());
         }
     }
 }

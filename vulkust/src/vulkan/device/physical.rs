@@ -11,6 +11,7 @@ pub struct Physical {
     pub compute_queue_node_index: u32,
     pub present_queue_node_index: u32,
     pub vk_data: vk::VkPhysicalDevice,
+    pub memory_properties: vk::VkPhysicalDeviceMemoryProperties,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -26,6 +27,10 @@ impl Physical {
     pub fn new(surface: Arc<Surface>) -> Self {
         let devices = Self::enumerate_devices(surface.instance.vk_data);
         let (vk_data, si) = Self::choose_best_device(&devices, &surface);
+        let mut memory_properties = vk::VkPhysicalDeviceMemoryProperties::default();
+        unsafe {
+            vk::vkGetPhysicalDeviceMemoryProperties(vk_data, &mut memory_properties);
+        }
         let physical = Physical {
             surface: surface,
             graphics_queue_node_index: si.graphics_queue_node_index,
@@ -33,6 +38,7 @@ impl Physical {
             compute_queue_node_index: si.compute_queue_node_index,
             present_queue_node_index: si.present_queue_node_index,
             vk_data: vk_data,
+            memory_properties: memory_properties,
         };
         physical
     }
