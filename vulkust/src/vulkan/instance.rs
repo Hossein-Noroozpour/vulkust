@@ -21,7 +21,7 @@ use super::super::util::string::{
 };
 
 pub struct Instance {
-    pub vk_instance: vk::VkInstance,
+    pub vk_data: vk::VkInstance,
     #[cfg(not(feature = "no-vulkan-debug"))]
     vk_debug_callback: vk::VkDebugReportCallbackEXT,
 }
@@ -107,7 +107,7 @@ impl Instance {
         let mut vk_instance = 0 as vk::VkInstance;
         vulkan_check!(vk::vkCreateInstance(&instance_create_info, null(), &mut vk_instance));
         let mut instance = Instance::default();
-        instance.vk_instance = vk_instance;
+        instance.vk_data = vk_instance;
         #[cfg(not(feature = "no-vulkan-debug"))]
         instance.set_report_callback();
         return instance;
@@ -130,11 +130,12 @@ impl Instance {
             let des = slice_to_string(&available_layers[i].description);
             logi!("Layer {} with des: {} found.", name, des);
         }
+        // TODO: in future change this to enumeration and arrangement
         layers_names.push("VK_LAYER_GOOGLE_threading".to_string());
         layers_names.push("VK_LAYER_LUNARG_parameter_validation".to_string());
         layers_names.push("VK_LAYER_LUNARG_object_tracker".to_string());
         layers_names.push("VK_LAYER_LUNARG_core_validation".to_string());
-        layers_names.push("VK_LAYER_LUNARG_image".to_string());
+//        layers_names.push("VK_LAYER_LUNARG_image".to_string());
         layers_names.push("VK_LAYER_LUNARG_swapchain".to_string());
         layers_names.push("VK_LAYER_GOOGLE_unique_objects".to_string());
         strings_to_cstrings(layers_names)
@@ -156,18 +157,18 @@ impl Instance {
         report_callback_create_info.pUserData = null_mut();
         let vk_proc_name = CString::new("vkCreateDebugReportCallbackEXT").unwrap();
         let vk_create_debug_report_callback_ext: vk::PFN_vkCreateDebugReportCallbackEXT = unsafe {
-            transmute(vk::vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()))
+            transmute(vk::vkGetInstanceProcAddr(self.vk_data, vk_proc_name.as_ptr()))
         };
         if vk_create_debug_report_callback_ext == unsafe { transmute(0usize) } {
             logf!("Error in finding vkCreateDebugReportCallbackEXT process location.");
         }
         vulkan_check!(vk_create_debug_report_callback_ext(
-            self.vk_instance, &report_callback_create_info, null(), &mut self.vk_debug_callback));
+            self.vk_data, &report_callback_create_info, null(), &mut self.vk_debug_callback));
     }
 
     pub fn get_function(&self, s: &str) -> vk::PFN_vkVoidFunction {
         let n = CString::new(s).unwrap();
-        let proc_addr = unsafe { vk::vkGetInstanceProcAddr(self.vk_instance, n.as_ptr()) };
+        let proc_addr = unsafe { vk::vkGetInstanceProcAddr(self.vk_data, n.as_ptr()) };
         #[cfg(not(feature = "no-intensive-debug"))]
         {
             if proc_addr == unsafe { transmute(0usize) } {
@@ -187,15 +188,15 @@ impl Drop for Instance {
             {
                 let vk_proc_name = CString::new("vkDestroyDebugReportCallbackEXT").unwrap();
                 let vk_destroy_debug_report_callback_ext: vk::PFN_vkDestroyDebugReportCallbackEXT =
-                    transmute(vk::vkGetInstanceProcAddr(self.vk_instance, vk_proc_name.as_ptr()));
+                    transmute(vk::vkGetInstanceProcAddr(self.vk_data, vk_proc_name.as_ptr()));
                 if vk_destroy_debug_report_callback_ext == transmute(0usize) {
                     logf!("Error in finding vkDestroyDebugReportCallbackEXT process location.");
                 }
                 (vk_destroy_debug_report_callback_ext)(
-                    self.vk_instance, self.vk_debug_callback, null());
+                    self.vk_data, self.vk_debug_callback, null());
             }
             logi!("Instance is deleted now!");
-            vk::vkDestroyInstance(self.vk_instance, null());
+            vk::vkDestroyInstance(self.vk_data, null());
         }
     }
 }

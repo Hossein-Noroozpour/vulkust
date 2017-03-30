@@ -23,7 +23,7 @@ use super::instance::Instance;
 
 pub struct Surface {
     pub instance: Arc<Instance>,
-    pub vk_surface: vk::VkSurfaceKHR,
+    pub vk_data: vk::VkSurfaceKHR,
 }
 
 impl Surface {
@@ -52,11 +52,11 @@ impl Surface {
         create_info.window = window;
         create_info.connection = connection;
         vulkan_check!(vkCreateXcbSurfaceKHR(
-                instance.vk_instance, &create_info, null(), &mut vk_surface));
+                instance.vk_data, &create_info, null(), &mut vk_surface));
         logi!("vk surface {:?}", vk_surface);
         Surface {
             instance: instance,
-            vk_surface: vk_surface,
+            vk_data: vk_surface,
         }
     }
 }
@@ -64,8 +64,8 @@ impl Surface {
 impl Drop for Surface {
     fn drop(&mut self) {
         unsafe {
-            logi!("terminated {:?}", self.vk_surface);
-            vk::vkDestroySurfaceKHR(self.instance.vk_instance, self.vk_surface, null());
+            logi!("terminated {:?}", self.vk_data);
+            vk::vkDestroySurfaceKHR(self.instance.vk_data, self.vk_data, null());
         }
     }
 }
