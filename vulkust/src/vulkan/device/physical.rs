@@ -69,7 +69,6 @@ impl Physical {
         logi!("The chosen device is: {:?} and its score-indices is: {:?}", device, highest_score);
         return (device, highest_score);
     }
-
     fn get_device_queue_family_properties(
         device: vk::VkPhysicalDevice) -> Vec<vk::VkQueueFamilyProperties> {
         let mut count = 0u32;
@@ -86,11 +85,9 @@ impl Physical {
         }
         queue_props
     }
-
     pub fn get_queue_family_properties(&self) -> Vec<vk::VkQueueFamilyProperties> {
         Self::get_device_queue_family_properties(self.vk_data)
     }
-
     fn score_device(device: vk::VkPhysicalDevice, surface: &Arc<Surface>) -> ScoreIndices {
         let mut score_indices = ScoreIndices {
             score: -1,
@@ -218,6 +215,15 @@ impl Physical {
         vulkan_check!((vk_get_physical_device_surface_capabilities_khr)(
             self.vk_data, self.surface.vk_data, &mut caps));
         return caps;
+    }
+    pub fn get_surface_formats(&self) -> Vec<vk::VkSurfaceFormatKHR> {
+        let mut count = 0u32;
+        vulkan_check!(vk::vkGetPhysicalDeviceSurfaceFormatsKHR(
+            self.vk_data, self.surface.vk_data, &mut count, null_mut()));
+        let mut result = vec![vk::VkSurfaceFormatKHR::default(); count as usize];
+        vulkan_check!(vk::vkGetPhysicalDeviceSurfaceFormatsKHR(
+            self.vk_data, self.surface.vk_data, &mut count, result.as_mut_ptr()));
+        result
     }
 }
 

@@ -174,8 +174,7 @@ impl Instance {
             if proc_addr == unsafe { transmute(0usize) } {
                 logf!("Function pointer not found");
             }
-
-            loge!("fun ptr {:?}", proc_addr);
+            logi!("fun ptr {:?}", proc_addr);
         }
         return proc_addr;
     }

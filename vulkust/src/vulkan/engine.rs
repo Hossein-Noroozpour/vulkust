@@ -8,6 +8,7 @@ use super::instance::Instance;
 use super::surface::Surface;
 use super::device::physical::Physical as PhysicalDevice;
 use super::device::logical::Logical as LogicalDevice;
+use super::swapchain::Swapchain;
 
 pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub core_app: *mut CoreApp,
@@ -16,6 +17,7 @@ pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub surface: Option<Arc<Surface>>,
     pub physical_device: Option<Arc<PhysicalDevice>>,
     pub logical_device: Option<Arc<LogicalDevice>>,
+    pub swapchain: Option<Arc<Swapchain>>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: ApplicationTrait {
@@ -27,6 +29,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             surface: None,
             physical_device: None,
             logical_device: None,
+            swapchain: None,
         }
     }
 
@@ -47,10 +50,12 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             unsafe { (*self.os_app).window }));
         let physical_device = Arc::new(PhysicalDevice::new(surface.clone()));
         let logical_device = Arc::new(LogicalDevice::new(physical_device.clone()));
+        let swapchain = Arc::new(Swapchain::new(logical_device.clone()));
         self.instance = Some(instance);
         self.surface = Some(surface);
         self.physical_device = Some(physical_device);
         self.logical_device = Some(logical_device);
+        self.swapchain = Some(swapchain);
     }
 
     fn update(&mut self) {
@@ -58,6 +63,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
     }
 
     fn terminate(&mut self) {
+        self.swapchain = None;
         self.logical_device = None;
         self.physical_device = None;
         self.surface = None;
