@@ -8,5 +8,6 @@ pub mod engine;
 pub mod image;
 pub mod instance;
 pub mod memory;
+pub mod render_pass;
 pub mod surface;
 pub mod swapchain;

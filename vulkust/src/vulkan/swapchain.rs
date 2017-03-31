@@ -9,6 +9,7 @@ use std::sync::{
 
 pub struct Swapchain {
     pub logical_device: Arc<LogicalDevice>,
+    pub surface_format: vk::VkSurfaceFormatKHR,
     pub vk_data: vk::VkSwapchainKHR,
 }
 
@@ -91,6 +92,7 @@ impl Swapchain {
             logical_device.vk_data, &swapchain_create_info, null(), &mut vk_data));
         Swapchain {
             logical_device: logical_device,
+            surface_format: best_surface_format,
             vk_data: vk_data,
         }
     }
