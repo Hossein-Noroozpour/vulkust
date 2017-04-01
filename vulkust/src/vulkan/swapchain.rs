@@ -1,8 +1,10 @@
 use super::super::system::vulkan as vk;
 use super::device::logical::Logical as LogicalDevice;
-use std::ptr::null;
-//use super::image::view::View as ImageView;
-//use super::image::Image;
+use std::ptr::{
+    null,
+    null_mut,
+};
+use super::image::view::View as ImageView;
 use std::sync::{
     Arc,
 };
@@ -10,6 +12,7 @@ use std::sync::{
 pub struct Swapchain {
     pub logical_device: Arc<LogicalDevice>,
     pub surface_format: vk::VkSurfaceFormatKHR,
+    pub image_views: Vec<ImageView>,
     pub vk_data: vk::VkSwapchainKHR,
 }
 
@@ -90,9 +93,21 @@ impl Swapchain {
         let mut vk_data = 0 as vk::VkSwapchainKHR;
         vulkan_check!(vk::vkCreateSwapchainKHR(
             logical_device.vk_data, &swapchain_create_info, null(), &mut vk_data));
+        let mut count = 0;
+        vulkan_check!(vk::vkGetSwapchainImagesKHR(
+            logical_device.vk_data, vk_data, &mut count, null_mut()));
+        let mut images = vec![0 as vk::VkImage; count as usize];
+        vulkan_check!(vk::vkGetSwapchainImagesKHR(
+            logical_device.vk_data, vk_data, &mut count, images.as_mut_ptr()));
+        let mut views = Vec::new();
+        for i in 0..(count as usize) {
+            views.push(ImageView::new_with_vk_image(
+                logical_device.clone(), images[i], best_surface_format.format));
+        }
         Swapchain {
             logical_device: logical_device,
             surface_format: best_surface_format,
+            image_views: views,
             vk_data: vk_data,
         }
     }
@@ -100,6 +115,7 @@ impl Swapchain {
 
 impl Drop for Swapchain {
     fn drop(&mut self) {
+        self.image_views.clear();
         unsafe {
             vk::vkDestroySwapchainKHR(
                 self.logical_device.vk_data, self.vk_data, null());

@@ -35,12 +35,21 @@ impl Image {
             vk_mem: memory,
         }
     }
+    pub fn new_with_vk_data(logical_device: Arc<LogicalDevice>, vk_image: vk::VkImage) -> Self {
+        Image {
+            logical_device: logical_device,
+            vk_data: vk_image,
+            vk_mem: 0 as vk::VkDeviceMemory,
+        }
+    }
 }
 
 impl Drop for Image {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyImage(self.logical_device.vk_data, self.vk_data, null());
+            if self.vk_mem != 0 as vk::VkDeviceMemory {
+                vk::vkDestroyImage(self.logical_device.vk_data, self.vk_data, null());
+            }
             vk::vkFreeMemory(self.logical_device.vk_data, self.vk_mem,  null());
         }
     }
