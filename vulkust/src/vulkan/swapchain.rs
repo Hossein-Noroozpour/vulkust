@@ -12,7 +12,7 @@ use std::sync::{
 pub struct Swapchain {
     pub logical_device: Arc<LogicalDevice>,
     pub surface_format: vk::VkSurfaceFormatKHR,
-    pub image_views: Vec<ImageView>,
+    pub image_views: Vec<Arc<ImageView>>,
     pub vk_data: vk::VkSwapchainKHR,
 }
 
@@ -101,8 +101,8 @@ impl Swapchain {
             logical_device.vk_data, vk_data, &mut count, images.as_mut_ptr()));
         let mut views = Vec::new();
         for i in 0..(count as usize) {
-            views.push(ImageView::new_with_vk_image(
-                logical_device.clone(), images[i], best_surface_format.format));
+            views.push(Arc::new(ImageView::new_with_vk_image(
+                logical_device.clone(), images[i], best_surface_format.format)));
         }
         Swapchain {
             logical_device: logical_device,

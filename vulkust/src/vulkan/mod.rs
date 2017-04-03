@@ -5,6 +5,7 @@ pub mod macros;
 pub mod device;
 pub mod engine;
  //pub mod fence;
+pub mod framebuffer;
 pub mod image;
 pub mod instance;
 pub mod memory;

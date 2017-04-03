@@ -11,6 +11,7 @@ use super::device::logical::Logical as LogicalDevice;
 use super::swapchain::Swapchain;
 use super::image::view::View as ImageView;
 use super::render_pass::RenderPass;
+use super::framebuffer::Framebuffer;
 
 pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub core_app: *mut CoreApp,
@@ -22,6 +23,7 @@ pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub swapchain: Option<Arc<Swapchain>>,
     pub depth_stencil_image_view: Option<Arc<ImageView>>,
     pub render_pass: Option<Arc<RenderPass>>,
+    pub framebuffers: Vec<Arc<Framebuffer>>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: ApplicationTrait {
@@ -36,6 +38,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             swapchain: None,
             depth_stencil_image_view: None,
             render_pass: None,
+            framebuffers: Vec::new(),
         }
     }
 
@@ -59,6 +62,10 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         let swapchain = Arc::new(Swapchain::new(logical_device.clone()));
         let depth_stencil = Arc::new(ImageView::new_depth_stencil(logical_device.clone()));
         let render_pass = Arc::new(RenderPass::new(swapchain.clone()));
+        for v in swapchain.image_views.clone() {
+            self.framebuffers.push(Arc::new(Framebuffer::new(
+                v.clone(), depth_stencil.clone(), render_pass.clone())));
+        }
         self.instance = Some(instance);
         self.surface = Some(surface);
         self.physical_device = Some(physical_device);
@@ -73,6 +80,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
     }
 
     fn terminate(&mut self) {
+        self.framebuffers.clear();
         self.render_pass = None;
         self.depth_stencil_image_view = None;
         self.swapchain = None;
