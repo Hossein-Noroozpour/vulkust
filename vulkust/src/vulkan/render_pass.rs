@@ -35,9 +35,11 @@ impl RenderPass {
             vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         let mut colour_reference = vk::VkAttachmentReference::default();
         colour_reference.layout = vk::VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colour_reference.attachment = 0;
         let mut depth_reference = vk::VkAttachmentReference::default();
         depth_reference.layout =
             vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depth_reference.attachment = 1;
         let mut subpass_description = vk::VkSubpassDescription::default();
         subpass_description.pipelineBindPoint =
             vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;

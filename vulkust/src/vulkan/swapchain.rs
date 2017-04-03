@@ -34,6 +34,7 @@ impl Swapchain {
                 best_surface_format.format = vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
             }
         }
+        logi!("The specified format is {:?}", best_surface_format);
         let mut swapchain_images_count = surface_caps.minImageCount + 1;
         if surface_caps.maxImageCount > 0 && swapchain_images_count > surface_caps.maxImageCount {
             swapchain_images_count = surface_caps.maxImageCount;
@@ -93,7 +94,7 @@ impl Swapchain {
         let mut vk_data = 0 as vk::VkSwapchainKHR;
         vulkan_check!(vk::vkCreateSwapchainKHR(
             logical_device.vk_data, &swapchain_create_info, null(), &mut vk_data));
-        let mut count = 0;
+        let mut count = 0u32;
         vulkan_check!(vk::vkGetSwapchainImagesKHR(
             logical_device.vk_data, vk_data, &mut count, null_mut()));
         let mut images = vec![0 as vk::VkImage; count as usize];

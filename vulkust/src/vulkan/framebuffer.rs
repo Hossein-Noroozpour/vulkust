@@ -38,3 +38,12 @@ impl Framebuffer {
         }
     }
 }
+
+impl Drop for Framebuffer {
+    fn drop(&mut self) {
+        unsafe {
+            vk::vkDestroyFramebuffer(
+                self.color_buffer.image.logical_device.vk_data, self.vk_data, null());
+        }
+    }
+}

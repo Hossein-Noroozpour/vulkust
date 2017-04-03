@@ -132,6 +132,7 @@ impl Instance {
         }
         // TODO: in future change this to enumeration and arrangement
         layers_names.push("VK_LAYER_GOOGLE_threading".to_string());
+        // layers_names.push("VK_LAYER_LUNARG_api_dump".to_string());
         layers_names.push("VK_LAYER_LUNARG_parameter_validation".to_string());
         layers_names.push("VK_LAYER_LUNARG_object_tracker".to_string());
         layers_names.push("VK_LAYER_LUNARG_core_validation".to_string());
@@ -148,11 +149,11 @@ impl Instance {
             vk::VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
         report_callback_create_info.flags =
             (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32)
-                | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32)
-                | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
-                | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32)
-                | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32)
-                as vk::VkDebugReportFlagsEXT;
+            | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32)
+            | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
+            | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32)
+            | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32)
+            as vk::VkDebugReportFlagsEXT;
         report_callback_create_info.pfnCallback = vulkan_debug_callback;
         report_callback_create_info.pUserData = null_mut();
         let vk_proc_name = CString::new("vkCreateDebugReportCallbackEXT").unwrap();
