@@ -231,6 +231,19 @@ impl Physical {
             self.vk_data, self.surface.vk_data, &mut count, result.as_mut_ptr()));
         result
     }
+    pub fn get_memory_type_index(&self, type_bits: u32, properties: u32) -> u32 {
+		// Iterate over all memory types available for the device used in this example
+		for i in 0..self.memory_properties.memoryTypeCount {
+			if (type_bits & 1) == 1 {
+				if (self.memory_properties.memoryTypes[i as usize].propertyFlags as u32)
+                        & properties == properties {
+					return i;
+				}
+			}
+			type_bits >>= 1;
+		}
+		logf!("Could not find the requsted memory type.");
+	}
 }
 
 impl Drop for Physical {
