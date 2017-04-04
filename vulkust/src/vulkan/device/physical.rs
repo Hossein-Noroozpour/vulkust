@@ -233,6 +233,7 @@ impl Physical {
     }
     pub fn get_memory_type_index(&self, type_bits: u32, properties: u32) -> u32 {
 		// Iterate over all memory types available for the device used in this example
+        let mut type_bits = type_bits;
 		for i in 0..self.memory_properties.memoryTypeCount {
 			if (type_bits & 1) == 1 {
 				if (self.memory_properties.memoryTypes[i as usize].propertyFlags as u32)

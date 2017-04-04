@@ -12,6 +12,7 @@ use super::super::super::util::string::{
 pub struct Logical {
     pub physical_device: Arc<Physical>,
     pub vk_data: vk::VkDevice,
+    pub vk_graphic_queue: vk::VkQueue,
 }
 
 impl Logical {
@@ -47,9 +48,15 @@ impl Logical {
         let mut vk_data = 0 as vk::VkDevice;
         vulkan_check!(vk::vkCreateDevice(
             physical_device.vk_data, &device_create_info, null(), &mut vk_data));
+        let mut vk_graphic_queue = 0 as vk::VkQueue;
+        unsafe {
+            vk::vkGetDeviceQueue(
+                vk_data, physical_device.graphics_queue_node_index, 0, &mut vk_graphic_queue);
+        }
         Logical {
             physical_device: physical_device,
             vk_data: vk_data,
+            vk_graphic_queue: vk_graphic_queue,
         }
     }
 }

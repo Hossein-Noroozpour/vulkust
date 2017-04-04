@@ -1,13 +1,13 @@
 use super::super::super::system::vulkan as vk;
 
 use super::pool::Pool;
-// use super::super::fence::Fence;
+use super::super::fence::Fence;
 use std::sync::Arc;
 use std::default::Default;
 
 pub struct Buffer {
-    pool: Arc<Pool>,
-    vk_data: vk::VkCommandBuffer,
+    pub pool: Arc<Pool>,
+    pub vk_data: vk::VkCommandBuffer,
 }
 
 impl Buffer {
@@ -30,22 +30,23 @@ impl Buffer {
         }
     }
     pub fn flush(&self) {;
-        let fence = Fence::new(pool.device.clone());
+        let fence = Fence::new(self.pool.logical_device.clone());
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
         let mut submit_info = vk::VkSubmitInfo::default();
         submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submit_info.commandBufferCount = 1;
         submit_info.pCommandBuffers = &self.vk_data;
-        vulkan_check!(vk::vkQueueSubmit(dev.vk_queue, 1, &submit_info, fence.vk_data));
+        vulkan_check!(vk::vkQueueSubmit(
+            self.pool.logical_device.vk_graphic_queue, 1, &submit_info, fence.vk_data));
         fence.wait();
     }
 }
 
 impl Drop for Buffer {
     fn drop(&mut self) {
-        let device = pool.device.read().unwrap();
         unsafe {
-            vkFreeCommandBuffers(device.vk_device, pool.vk_pool, 1, &mut self.vk_buffer);
+            vk::vkFreeCommandBuffers(
+                self.pool.logical_device.vk_data, self.pool.vk_data, 1, &mut self.vk_data);
         }
     }
 }

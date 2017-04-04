@@ -1,54 +1,37 @@
-use super::super::system::vulkan::{
-    VkFence,
-    VkResult,
-    VkSubmitInfo,
-    VkCommandBuffer,
-    VkStructureType,
-    VkFenceCreateInfo,
-    vkFreeCommandBuffers,
-    VkCommandBufferLevel,
-    vkBeginCommandBuffer,
-    VkCommandBufferBeginInfo,
-    vkAllocateCommandBuffers,
-    VkCommandBufferAllocateInfo,
-};
-
-use std::sync::{
-    Arc,
-    RwLock,
-};
+use super::super::system::vulkan as vk;
+use super::device::logical::Logical as LogicalDevice;
+use std::sync::Arc;
 use std::default::Default;
+use std::ptr::null;
 
 pub struct Fence {
-    pub device: Arc<Device>,
-    pub vk_fence: VkFence,
+    pub logical_device: Arc<LogicalDevice>,
+    pub vk_data: vk::VkFence,
 }
 
 impl Fence {
-    pub fn new(device: Arc<RwLock<Device>>) -> Self {
-        let dev = device.read().unwrap();
-        let fence_create_info = VkFenceCreateInfo::default();
-        fence_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        let vk_fence = 0 as VkFence;
-        vulkan_check!(vkCreateFence(dev.vk_device, &fence_create_info, 0, &vk_fence));
+    pub fn new(logical_device: Arc<LogicalDevice>) -> Self {
+        let mut fence_create_info = vk::VkFenceCreateInfo::default();
+        fence_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        let mut vk_data = 0 as vk::VkFence;
+        vulkan_check!(vk::vkCreateFence(
+            logical_device.vk_data, &fence_create_info, null(), &mut vk_data));
         Fence {
-            device: device.clone(),
-            vk_fence: vk_fence,
+            logical_device: logical_device,
+            vk_data: vk_data,
         }
     }
 
     pub fn wait(&self) {
-        let dev = self.device.read().unwrap();
-        vulkan_check!(vkWaitForFences(dev.vk_device, 1, &self.vk_fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
-        vkDestroyFence(device, fence, nullptr);
+        vulkan_check!(vk::vkWaitForFences(
+            self.logical_device.vk_data, 1, &self.vk_data, 1u32, 100000000000));
     }
 }
 
 impl Drop for Fence {
     fn drop(&mut self) {
-        let dev = self.device.read().unwrap();
         unsafe {
-            vkDestroyFence(dev.vk_device, self.vk_fence, 0 as *const VkAllocationCallbacks);
+            vk::vkDestroyFence(self.logical_device.vk_data, self.vk_data, null());
         }
     }
 }

@@ -7,7 +7,7 @@ pub mod memory;
 pub mod instance;
 pub mod buffer;
 pub mod engine;
-//pub mod fence;
+pub mod fence;
 pub mod framebuffer;
 pub mod render_pass;
 pub mod surface;

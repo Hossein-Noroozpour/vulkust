@@ -12,6 +12,7 @@ use super::swapchain::Swapchain;
 use super::image::view::View as ImageView;
 use super::render_pass::RenderPass;
 use super::framebuffer::Framebuffer;
+use super::command::pool::Pool as CmdPool;
 
 pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub core_app: *mut CoreApp,
@@ -24,6 +25,7 @@ pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub depth_stencil_image_view: Option<Arc<ImageView>>,
     pub render_pass: Option<Arc<RenderPass>>,
     pub framebuffers: Vec<Arc<Framebuffer>>,
+    pub graphic_cmd_pool: Option<Arc<CmdPool>>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: ApplicationTrait {
@@ -39,6 +41,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             depth_stencil_image_view: None,
             render_pass: None,
             framebuffers: Vec::new(),
+            graphic_cmd_pool: None,
         }
     }
 
@@ -66,6 +69,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             self.framebuffers.push(Arc::new(Framebuffer::new(
                 v.clone(), depth_stencil.clone(), render_pass.clone())));
         }
+        let graphic_cmd_pool = Arc::new(CmdPool::new(logical_device.clone()));
         self.instance = Some(instance);
         self.surface = Some(surface);
         self.physical_device = Some(physical_device);
@@ -73,6 +77,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         self.swapchain = Some(swapchain);
         self.depth_stencil_image_view = Some(depth_stencil);
         self.render_pass = Some(render_pass);
+        self.graphic_cmd_pool = Some(graphic_cmd_pool);
     }
 
     fn update(&mut self) {
@@ -80,6 +85,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
     }
 
     fn terminate(&mut self) {
+        self.graphic_cmd_pool = None;
         self.framebuffers.clear();
         self.render_pass = None;
         self.depth_stencil_image_view = None;
