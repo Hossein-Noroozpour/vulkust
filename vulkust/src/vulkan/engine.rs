@@ -87,7 +87,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         let mesh_buff = Arc::new(Buffer::new(
             logical_device.clone(), graphic_cmd_pool.clone(),
             unsafe {transmute(vertices.as_ptr())}, vertices.len() as u32 * 4,
-            indices.as_ptr(), indices.len() as u32 * 4
+            unsafe {transmute(indices.as_ptr())}, indices.len() as u32 * 4
         ));
         self.instance = Some(instance);
         self.surface = Some(surface);

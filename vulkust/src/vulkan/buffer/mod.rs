@@ -1,3 +1,5 @@
+pub mod uniform;
+
 use super::super::system::vulkan as vk;
 use super::device::logical::Logical as LogicalDevice;
 use super::command::pool::Pool as CmdPool;
@@ -26,8 +28,8 @@ pub struct Buffer {
 impl Buffer {
     pub fn new(
         logical_device: Arc<LogicalDevice>, cmd_pool: Arc<CmdPool>,
-        vertex_buffer: *const c_void, vertex_buffer_size: u32,
-        index_buffer: *const u32, index_buffer_size: u32) -> Buffer {
+        vertex_buffer: *const u8, vertex_buffer_size: u32,
+        index_buffer: *const u8, index_buffer_size: u32) -> Buffer {
 		let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
 		mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		let mut mem_reqs = vk::VkMemoryRequirements::default();
@@ -59,7 +61,7 @@ impl Buffer {
             logical_device.vk_data, staging_buffers_vertices_memory, 0,
             mem_alloc.allocationSize, 0, &mut data));
     	unsafe {
-            copy(vertex_buffer, data, vertex_buffer_size as usize);
+            copy(vertex_buffer, transmute(data), vertex_buffer_size as usize);
     	    vk::vkUnmapMemory(logical_device.vk_data, staging_buffers_vertices_memory);
         }
     	vulkan_check!(vk::vkBindBufferMemory(
@@ -107,7 +109,7 @@ impl Buffer {
             logical_device.vk_data, staging_buffers_indices_memory, 0,
             mem_alloc.allocationSize, 0, &mut data));
     	unsafe {
-            copy(transmute(index_buffer), data, index_buffer_size as usize);
+            copy(index_buffer, transmute(data), index_buffer_size as usize);
             vk::vkUnmapMemory(logical_device.vk_data, staging_buffers_indices_memory);
         }
     	vulkan_check!(vk::vkBindBufferMemory(
