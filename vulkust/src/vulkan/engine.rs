@@ -15,6 +15,7 @@ use super::framebuffer::Framebuffer;
 use super::command::pool::Pool as CmdPool;
 // for the triangle
 use super::buffer::Buffer;
+use super::buffer::uniform::Uniform;
 use std::mem::transmute;
 
 
@@ -30,7 +31,9 @@ pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub render_pass: Option<Arc<RenderPass>>,
     pub framebuffers: Vec<Arc<Framebuffer>>,
     pub graphic_cmd_pool: Option<Arc<CmdPool>>,
+    // for triangle
     pub mesh_buff: Option<Arc<Buffer>>,
+    pub uniform: Option<Arc<Uniform>>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: ApplicationTrait {
@@ -48,6 +51,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             framebuffers: Vec::new(),
             graphic_cmd_pool: None,
             mesh_buff: None,
+            uniform: None,
         }
     }
 
@@ -89,6 +93,25 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             unsafe {transmute(vertices.as_ptr())}, vertices.len() as u32 * 4,
             unsafe {transmute(indices.as_ptr())}, indices.len() as u32 * 4
         ));
+        let uniform_data = [
+            1.0f32, 0.0f32, 0.0f32, 0.0f32,
+            0.0f32, 1.0f32, 0.0f32, 0.0f32,
+            0.0f32, 0.0f32, 1.0f32, 0.0f32,
+            0.0f32, 0.0f32, 0.0f32, 1.0f32,
+
+            1.0f32, 0.0f32, 0.0f32, 0.0f32,
+            0.0f32, 1.0f32, 0.0f32, 0.0f32,
+            0.0f32, 0.0f32, 1.0f32, 0.0f32,
+            0.0f32, 0.0f32, 0.0f32, 1.0f32,
+
+            1.0f32, 0.0f32, 0.0f32, 0.0f32,
+            0.0f32, 1.0f32, 0.0f32, 0.0f32,
+            0.0f32, 0.0f32, 1.0f32, 0.0f32,
+            0.0f32, 0.0f32, 0.0f32, 1.0f32,
+        ];
+        let uniform = Arc::new(Uniform::new(
+            logical_device.clone(), graphic_cmd_pool.clone(), uniform_data.len() as u32));
+        uniform.update(unsafe { transmute(uniform_data.as_ptr()) });
         self.instance = Some(instance);
         self.surface = Some(surface);
         self.physical_device = Some(physical_device);
@@ -98,6 +121,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         self.render_pass = Some(render_pass);
         self.graphic_cmd_pool = Some(graphic_cmd_pool);
         self.mesh_buff = Some(mesh_buff);
+        self.uniform = Some(uniform);
     }
 
     fn update(&mut self) {
@@ -105,6 +129,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
     }
 
     fn terminate(&mut self) {
+        self.uniform = None;
         self.mesh_buff = None;
         self.graphic_cmd_pool = None;
         self.framebuffers.clear();
