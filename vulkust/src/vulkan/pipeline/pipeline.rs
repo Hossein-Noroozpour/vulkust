@@ -18,7 +18,7 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
-    fn new(layout: Arc<Layout>, render_pass: Arc<RenderPass>, pipeline_cache: Arc<Cache>) -> Self {
+    pub fn new(layout: Arc<Layout>, render_pass: Arc<RenderPass>, pipeline_cache: Arc<Cache>) -> Self {
 		let mut pipeline_create_info = vk::VkGraphicsPipelineCreateInfo::default();
 		pipeline_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -128,6 +128,14 @@ impl Pipeline {
             render_pass: render_pass,
             cache: pipeline_cache,
             vk_data: vk_data,
+        }
+    }
+}
+
+impl Drop for Pipeline {
+    fn drop(&mut self) {
+        unsafe {
+            vk::vkDestroyPipeline(self.layout.logical_device.vk_data, self.vk_data, null());
         }
     }
 }

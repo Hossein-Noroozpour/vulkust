@@ -1,6 +1,5 @@
 use std::ptr::null_mut;
 use std::sync::Arc;
-
 use super::super::render::engine::EngineTrait;
 use super::super::core::application::ApplicationTrait;
 use super::super::system::os::OsApplication;
@@ -17,6 +16,10 @@ use super::command::pool::Pool as CmdPool;
 use super::buffer::Buffer;
 use super::buffer::uniform::Uniform;
 use super::pipeline::layout::Layout;
+use super::pipeline::pipeline::Pipeline;
+use super::pipeline::cache::Cache as PipelineCache;
+use super::descriptor::pool::Pool as DescriptorPool;
+use super::descriptor::set::Set as DescriptorSet;
 use std::mem::transmute;
 
 
@@ -36,6 +39,10 @@ pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub mesh_buff: Option<Arc<Buffer>>,
     pub uniform: Option<Arc<Uniform>>,
     pub pipeline_layout: Option<Arc<Layout>>,
+    pub pipeline_cache: Option<Arc<PipelineCache>>,
+    pub pipeline: Option<Arc<Pipeline>>,
+    pub descriptor_pool: Option<Arc<DescriptorPool>>,
+    pub descriptor_set: Option<Arc<DescriptorSet>>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: ApplicationTrait {
@@ -55,6 +62,10 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             mesh_buff: None,
             uniform: None,
             pipeline_layout: None,
+            pipeline_cache: None,
+            pipeline: None,
+            descriptor_pool: None,
+            descriptor_set: None,
         }
     }
 
@@ -116,6 +127,12 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             logical_device.clone(), graphic_cmd_pool.clone(), uniform_data.len() as u32 * 4));
         uniform.update(unsafe { transmute(uniform_data.as_ptr()) });
         let pipeline_layout = Arc::new(Layout::new(logical_device.clone()));
+        let pipeline_cache = Arc::new(PipelineCache::new(logical_device.clone()));
+        let pipeline = Arc::new(Pipeline::new(
+            pipeline_layout.clone(), render_pass.clone(), pipeline_cache.clone()));
+        let descriptor_pool = Arc::new(DescriptorPool::new(logical_device.clone()));
+        let descriptor_set = Arc::new(DescriptorSet::new(
+            descriptor_pool.clone(), pipeline_layout.clone(), uniform.clone()));
         self.instance = Some(instance);
         self.surface = Some(surface);
         self.physical_device = Some(physical_device);
@@ -127,6 +144,10 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         self.mesh_buff = Some(mesh_buff);
         self.uniform = Some(uniform);
         self.pipeline_layout = Some(pipeline_layout);
+        self.pipeline_cache = Some(pipeline_cache);
+        self.pipeline = Some(pipeline);
+        self.descriptor_pool = Some(descriptor_pool);
+        self.descriptor_set = Some(descriptor_set);
     }
 
     fn update(&mut self) {
@@ -134,6 +155,10 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
     }
 
     fn terminate(&mut self) {
+        self.descriptor_set = None;
+        self.descriptor_pool = None;
+        self.pipeline = None;
+        self.pipeline_cache = None;
         self.pipeline_layout = None;
         self.uniform = None;
         self.mesh_buff = None;

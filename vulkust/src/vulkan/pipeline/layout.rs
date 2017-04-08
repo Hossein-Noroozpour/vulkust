@@ -5,6 +5,7 @@ use super::super::super::system::vulkan as vk;
 use super::super::device::logical::Logical as LogicalDevice;
 pub struct Layout {
     pub logical_device: Arc<LogicalDevice>,
+    // TODO: make it a different module
     pub descriptor_set_layout: vk::VkDescriptorSetLayout,
     pub vk_data: vk::VkPipelineLayout,
 }

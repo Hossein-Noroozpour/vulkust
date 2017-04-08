@@ -4,8 +4,8 @@ use std::sync::Arc;
 use super::super::super::system::vulkan as vk;
 use super::super::device::logical::Logical as LogicalDevice;
 pub struct Pool {
-    logical_device: Arc<LogicalDevice>,
-    vk_data: vk::VkDescriptorPool,
+    pub logical_device: Arc<LogicalDevice>,
+    pub vk_data: vk::VkDescriptorPool,
 }
 impl Pool {
     pub fn new(logical_device: Arc<LogicalDevice>) -> Self {
@@ -24,6 +24,14 @@ impl Pool {
         Pool {
             logical_device: logical_device,
             vk_data: vk_data,
+        }
+    }
+}
+
+impl Drop for Pool {
+    fn drop(&mut self) {
+        unsafe {
+            vk::vkDestroyDescriptorPool(self.logical_device.vk_data, self.vk_data, null());
         }
     }
 }
