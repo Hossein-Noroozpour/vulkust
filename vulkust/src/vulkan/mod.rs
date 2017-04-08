@@ -3,6 +3,7 @@ pub mod macros;
 
 pub mod command;
 pub mod device;
+pub mod descriptor;
 pub mod image;
 pub mod memory;
 pub mod pipeline;
