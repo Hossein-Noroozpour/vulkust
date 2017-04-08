@@ -5,6 +5,7 @@ pub mod command;
 pub mod device;
 pub mod image;
 pub mod memory;
+pub mod pipeline;
 pub mod buffer;
 pub mod engine;
 pub mod fence;
