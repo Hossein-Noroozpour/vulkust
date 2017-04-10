@@ -6,10 +6,10 @@ use super::super::pipeline::layout::Layout as PipelineLayout;
 use super::super::buffer::uniform::Uniform as UniformBuffer;
 use super::pool::Pool;
 pub struct Set {
-    pool: Arc<Pool>,
-    pipeline_layout: Arc<PipelineLayout>,
-    buffer: Arc<UniformBuffer>,
-    vk_data: vk::VkDescriptorSet,
+    pub pool: Arc<Pool>,
+    pub pipeline_layout: Arc<PipelineLayout>,
+    pub buffer: Arc<UniformBuffer>,
+    pub vk_data: vk::VkDescriptorSet,
 }
 impl Set {
     pub fn new(

@@ -3227,19 +3227,18 @@ impl ::std::default::Default for VkClearDepthStencilValue {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct VkClearValue {
-    pub _bindgen_data_: [u32; 4usize],
+    pub data: [f32; 4usize],
 }
 
 impl VkClearValue {
     pub unsafe fn color(&mut self) -> *mut VkClearColorValue {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        let raw: *mut u8 = ::std::mem::transmute(&self.data);
         ::std::mem::transmute(raw.offset(0))
     }
     pub unsafe fn depthStencil(&mut self) -> *mut VkClearDepthStencilValue {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        let raw: *mut u8 = ::std::mem::transmute(&self.data);
         ::std::mem::transmute(raw.offset(0))
     }
 }

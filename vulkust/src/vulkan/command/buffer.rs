@@ -29,6 +29,23 @@ impl Buffer {
             vk_data: vk_data,
         }
     }
+    pub fn begin_render_pass_with_info(&self, render_pass_begin_info: vk::VkRenderPassBeginInfo) {
+        unsafe {
+            vk::vkCmdBeginRenderPass(
+                self.vk_data, &render_pass_begin_info,
+                vk::VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+        }
+    }
+    pub fn set_viewport(&self, viewport: vk::VkViewport) {
+        unsafe {
+            vk::vkCmdSetViewport(self.vk_data, 0, 1, &viewport);
+        }
+    }
+    pub fn set_scissor(&self, rec: vk::VkRect2D) {
+        unsafe {
+            vk::vkCmdSetScissor(self.vk_data, 0, 1, &rec);
+        }
+    }
     pub fn flush(&self) {;
         let fence = Fence::new(self.pool.logical_device.clone());
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));

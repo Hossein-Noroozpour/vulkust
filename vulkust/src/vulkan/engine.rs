@@ -1,5 +1,9 @@
-use std::ptr::null_mut;
+use std::ptr::{
+    null_mut,
+    null,
+};
 use std::sync::Arc;
+use super::super::system::vulkan as vk;
 use super::super::render::engine::EngineTrait;
 use super::super::core::application::ApplicationTrait;
 use super::super::system::os::OsApplication;
@@ -20,6 +24,7 @@ use super::pipeline::pipeline::Pipeline;
 use super::pipeline::cache::Cache as PipelineCache;
 use super::descriptor::pool::Pool as DescriptorPool;
 use super::descriptor::set::Set as DescriptorSet;
+use super::command::buffer::Buffer as CmdBuffer;
 use std::mem::transmute;
 
 
@@ -43,6 +48,7 @@ pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub pipeline: Option<Arc<Pipeline>>,
     pub descriptor_pool: Option<Arc<DescriptorPool>>,
     pub descriptor_set: Option<Arc<DescriptorSet>>,
+    pub draw_commands: Vec<CmdBuffer>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: ApplicationTrait {
@@ -66,6 +72,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             pipeline: None,
             descriptor_pool: None,
             descriptor_set: None,
+            draw_commands: Vec::new(),
         }
     }
 
@@ -148,6 +155,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         self.pipeline = Some(pipeline);
         self.descriptor_pool = Some(descriptor_pool);
         self.descriptor_set = Some(descriptor_set);
+        self.initialize_draw_commands();
     }
 
     fn update(&mut self) {
@@ -155,6 +163,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
     }
 
     fn terminate(&mut self) {
+        self.draw_commands.clear();
         self.descriptor_set = None;
         self.descriptor_pool = None;
         self.pipeline = None;
@@ -171,5 +180,69 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         self.physical_device = None;
         self.surface = None;
         self.instance = None;
+    }
+}
+
+impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
+    fn initialize_draw_commands(&mut self) {
+        let mut clear_values = [vk::VkClearValue::default(); 2];
+		clear_values[0].data = [0.4, 0.4, 0.4, 1.0];
+		clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
+        let surface_caps = self.physical_device.as_ref().unwrap().get_surface_capabilities();
+		let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
+		render_pass_begin_info.sType =
+            vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		render_pass_begin_info.renderPass = self.render_pass.as_ref().unwrap().vk_data;
+		render_pass_begin_info.renderArea.offset.x = 0;
+		render_pass_begin_info.renderArea.offset.y = 0;
+		render_pass_begin_info.renderArea.extent.width = surface_caps.currentExtent.width;
+		render_pass_begin_info.renderArea.extent.height = surface_caps.currentExtent.height;
+		render_pass_begin_info.clearValueCount = 2;
+		render_pass_begin_info.pClearValues = clear_values.as_ptr();
+        let mut draw_commands = Vec::new();
+        let images_count = self.framebuffers.len();
+		for i in 0..images_count {
+			render_pass_begin_info.framebuffer = self.framebuffers[i].vk_data;
+            let draw_command = CmdBuffer::new(self.graphic_cmd_pool.as_ref().unwrap().clone());
+			draw_command.begin_render_pass_with_info(render_pass_begin_info);
+			let mut viewport = vk::VkViewport::default();
+            viewport.x = 0.0;
+            viewport.y = 0.0;
+			viewport.height = surface_caps.currentExtent.height as f32;
+			viewport.width = surface_caps.currentExtent.width as f32;
+			viewport.minDepth = 0.0;
+			viewport.maxDepth = 1.0;
+			draw_command.set_viewport(viewport);
+            let mut scissor = vk::VkRect2D::default();
+			scissor.extent.width = surface_caps.currentExtent.width;
+			scissor.extent.height = surface_caps.currentExtent.height;
+			scissor.offset.x = 0;
+			scissor.offset.y = 0;
+			draw_command.set_scissor(scissor);
+			unsafe {
+                vk::vkCmdBindDescriptorSets(
+                    draw_command.vk_data, vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    self.pipeline_layout.as_ref().unwrap().vk_data, 0, 1,
+                    &(self.descriptor_set.as_ref().unwrap().vk_data), 0, null());
+                vk::vkCmdBindPipeline(
+                    draw_command.vk_data,
+                    vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    self.pipeline.as_ref().unwrap().vk_data);
+			    let offsets = 0 as vk::VkDeviceSize;
+			    vk::vkCmdBindVertexBuffers(
+                    draw_command.vk_data, 0, 1, &(self.mesh_buff.as_ref().unwrap().vertices_buffer),
+                    &offsets);
+			    vk::vkCmdBindIndexBuffer(
+                    draw_command.vk_data, self.mesh_buff.as_ref().unwrap().indices_buffer, 0,
+                    vk::VkIndexType::VK_INDEX_TYPE_UINT32);
+			    vk::vkCmdDrawIndexed(
+                    draw_command.vk_data, self.mesh_buff.as_ref().unwrap().indices_count, 1, 0, 0, 1);
+
+			    vk::vkCmdEndRenderPass(draw_command.vk_data);
+            }
+		    vulkan_check!(vk::vkEndCommandBuffer(draw_command.vk_data));
+            draw_commands.push(draw_command);
+		}
+        self.draw_commands = draw_commands;
     }
 }
