@@ -4948,10 +4948,9 @@ extern "C" {
         swapchain: VkSwapchainKHR,
         pSwapchainImageCount: *mut uint32_t,
         pSwapchainImages: *mut VkImage) -> VkResult;
-    pub fn vkAcquireNextImageKHR(device: VkDevice, swapchain: VkSwapchainKHR,
-                                 timeout: uint64_t, semaphore: VkSemaphore,
-                                 fence: VkFence, pImageIndex: *mut uint32_t)
-                                 -> VkResult;
+    pub fn vkAcquireNextImageKHR(
+        device: VkDevice, swapchain: VkSwapchainKHR, timeout: uint64_t, semaphore: VkSemaphore,
+        fence: VkFence, pImageIndex: *mut uint32_t) -> VkResult;
     pub fn vkQueuePresentKHR(queue: VkQueue,
                              pPresentInfo: *const VkPresentInfoKHR)
                              -> VkResult;

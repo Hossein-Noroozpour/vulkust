@@ -7,6 +7,7 @@ pub mod descriptor;
 pub mod image;
 pub mod memory;
 pub mod pipeline;
+pub mod synchronizer;
 pub mod buffer;
 pub mod engine;
 pub mod fence;

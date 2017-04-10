@@ -25,6 +25,8 @@ use super::pipeline::cache::Cache as PipelineCache;
 use super::descriptor::pool::Pool as DescriptorPool;
 use super::descriptor::set::Set as DescriptorSet;
 use super::command::buffer::Buffer as CmdBuffer;
+use super::synchronizer::semaphore::Semaphore;
+use super::fence::Fence;
 use std::mem::transmute;
 
 
@@ -49,6 +51,9 @@ pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub descriptor_pool: Option<Arc<DescriptorPool>>,
     pub descriptor_set: Option<Arc<DescriptorSet>>,
     pub draw_commands: Vec<CmdBuffer>,
+    pub present_complete_semaphore: Option<Semaphore>,
+    pub render_complete_semaphore: Option<Semaphore>,
+    pub wait_fences: Vec<Fence>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: ApplicationTrait {
@@ -73,6 +78,9 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             descriptor_pool: None,
             descriptor_set: None,
             draw_commands: Vec::new(),
+            present_complete_semaphore: None,
+            render_complete_semaphore: None,
+            wait_fences: Vec::new(),
         }
     }
 
@@ -140,6 +148,9 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         let descriptor_pool = Arc::new(DescriptorPool::new(logical_device.clone()));
         let descriptor_set = Arc::new(DescriptorSet::new(
             descriptor_pool.clone(), pipeline_layout.clone(), uniform.clone()));
+        let present_complete_semaphore = Semaphore::new(logical_device.clone());
+        let render_complete_semaphore = Semaphore::new(logical_device.clone());
+        let wait_fences = Vec::new();
         self.instance = Some(instance);
         self.surface = Some(surface);
         self.physical_device = Some(physical_device);
@@ -156,13 +167,56 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         self.descriptor_pool = Some(descriptor_pool);
         self.descriptor_set = Some(descriptor_set);
         self.initialize_draw_commands();
+        self.present_complete_semaphore = Some(present_complete_semaphore);
+        self.render_complete_semaphore = Some(render_complete_semaphore);
+        for _ in 0..self.framebuffers.len() {
+            self.wait_fences.push(Fence::new_signaled(logical_device.clone()));
+        }
     }
 
     fn update(&mut self) {
-        // TODO
+        let vk_device = self.logical_device.as_ref().unwrap().vk_data;
+	    let current_buffer = self.swapchain.as_ref().unwrap().get_next_image_index(
+            self.present_complete_semaphore.as_ref().unwrap()) as usize;
+		vulkan_check!(vk::vkWaitForFences(
+            vk_device, 1, &(self.wait_fences[current_buffer].vk_data), 1u32, u64::max_value()));
+		vulkan_check!(vk::vkResetFences(
+            vk_device, 1, &(self.wait_fences[current_buffer].vk_data)));
+		let wait_stage_mask =
+            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+		let mut submit_info = vk::VkSubmitInfo::default();
+		submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_info.pWaitDstStageMask = &wait_stage_mask;
+		submit_info.pWaitSemaphores = &(self.present_complete_semaphore.as_ref().unwrap().vk_data);
+		submit_info.waitSemaphoreCount = 1;
+		submit_info.pSignalSemaphores =
+            &(self.render_complete_semaphore.as_ref().unwrap().vk_data);
+		submit_info.signalSemaphoreCount = 1;
+		submit_info.pCommandBuffers = &(self.draw_commands[current_buffer].vk_data);
+		submit_info.commandBufferCount = 1;
+		vulkan_check!(vk::vkQueueSubmit(
+            self.logical_device.as_ref().unwrap().vk_graphic_queue, 1, &submit_info,
+            self.wait_fences[current_buffer].vk_data));
+
+            VkPresentInfoKHR presentInfo = {};
+    		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    		presentInfo.pNext = NULL;
+    		presentInfo.swapchainCount = 1;
+    		presentInfo.pSwapchains = &swapChain;
+    		presentInfo.pImageIndices = &imageIndex;
+    		// Check if a wait semaphore has been specified to wait for before presenting the image
+    		if (waitSemaphore != VK_NULL_HANDLE)
+    		{
+    			presentInfo.pWaitSemaphores = &waitSemaphore;
+    			presentInfo.waitSemaphoreCount = 1;
+    		}
+    	vulkan_check!(vk::vkQueuePresentKHR(self.logical_device.vk_data, &presentInfo));
     }
 
     fn terminate(&mut self) {
+        self.wait_fences.clear();
+        self.render_complete_semaphore = None;
+        self.present_complete_semaphore = None;
         self.draw_commands.clear();
         self.descriptor_set = None;
         self.descriptor_pool = None;

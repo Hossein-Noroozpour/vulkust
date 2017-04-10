@@ -1,4 +1,5 @@
 use super::super::system::vulkan as vk;
+use super::synchronizer::semaphore::Semaphore;
 use super::device::logical::Logical as LogicalDevice;
 use std::ptr::{
     null,
@@ -111,6 +112,13 @@ impl Swapchain {
             image_views: views,
             vk_data: vk_data,
         }
+    }
+    pub fn get_next_image_index(&self, sem: &Semaphore) -> u32 {
+        let mut image_index = 0u32;
+        vulkan_check!(vk::vkAcquireNextImageKHR(
+            self.logical_device.vk_data, self.vk_data, u64::max_value(), sem.vk_data,
+            0 as vk::VkFence, &mut image_index));
+        return image_index;
     }
 }
 
