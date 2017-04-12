@@ -150,7 +150,6 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             descriptor_pool.clone(), pipeline_layout.clone(), uniform.clone()));
         let present_complete_semaphore = Semaphore::new(logical_device.clone());
         let render_complete_semaphore = Semaphore::new(logical_device.clone());
-        let wait_fences = Vec::new();
         self.instance = Some(instance);
         self.surface = Some(surface);
         self.physical_device = Some(physical_device);
@@ -170,7 +169,8 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         self.present_complete_semaphore = Some(present_complete_semaphore);
         self.render_complete_semaphore = Some(render_complete_semaphore);
         for _ in 0..self.framebuffers.len() {
-            self.wait_fences.push(Fence::new_signaled(logical_device.clone()));
+            self.wait_fences.push(Fence::new_signaled(
+                self.logical_device.as_ref().unwrap().clone()));
         }
     }
 
@@ -197,20 +197,16 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
 		vulkan_check!(vk::vkQueueSubmit(
             self.logical_device.as_ref().unwrap().vk_graphic_queue, 1, &submit_info,
             self.wait_fences[current_buffer].vk_data));
-
-            VkPresentInfoKHR presentInfo = {};
-    		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    		presentInfo.pNext = NULL;
-    		presentInfo.swapchainCount = 1;
-    		presentInfo.pSwapchains = &swapChain;
-    		presentInfo.pImageIndices = &imageIndex;
-    		// Check if a wait semaphore has been specified to wait for before presenting the image
-    		if (waitSemaphore != VK_NULL_HANDLE)
-    		{
-    			presentInfo.pWaitSemaphores = &waitSemaphore;
-    			presentInfo.waitSemaphoreCount = 1;
-    		}
-    	vulkan_check!(vk::vkQueuePresentKHR(self.logical_device.vk_data, &presentInfo));
+        let image_index = current_buffer as u32;
+        let mut present_info = vk::VkPresentInfoKHR::default();
+    	present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    	present_info.swapchainCount = 1;
+    	present_info.pSwapchains = &(self.swapchain.as_ref().unwrap().vk_data);
+    	present_info.pImageIndices = &image_index;
+    	present_info.pWaitSemaphores = &(self.render_complete_semaphore.as_ref().unwrap().vk_data);
+    	present_info.waitSemaphoreCount = 1;
+    	vulkan_check!(vk::vkQueuePresentKHR(
+            self.logical_device.as_ref().unwrap().vk_graphic_queue, &present_info));
     }
 
     fn terminate(&mut self) {
