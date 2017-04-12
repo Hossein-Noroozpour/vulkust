@@ -59,6 +59,11 @@ impl Logical {
             vk_graphic_queue: vk_graphic_queue,
         }
     }
+    pub fn wait_idle(&self) {
+        unsafe {
+            vk::vkDeviceWaitIdle(self.vk_data);
+        }
+    }
 }
 
 impl Drop for Logical {
