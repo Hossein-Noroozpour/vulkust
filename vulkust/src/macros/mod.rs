@@ -71,18 +71,16 @@ macro_rules! logf {
 #[cfg(target_os = "android")]
 macro_rules! logi {
     ($fmt:expr) => {
-        extern crate vulkust;
-        ::vulkust::system::android::log::print(
-            ::vulkust::system::android::log::Priority::Info,
-            format!("Vulkust Information MSG in file: {} line: {} ", file!(), line!()) +
+        let s = format!("Vulkust Information MSG in file: {} line: {} {}", file!(), line!(),
             format!($fmt));
+        $crate::system::android::log::print(
+            $crate::system::android::log::Priority::Info, &s);
     };
     ($fmt:expr, $($arg:tt)*) => {
-        extern crate vulkust;
-        ::vulkust::system::android::log::print(
-            ::vulkust::system::android::log::Priority::Info,
-            format!("Vulkust Information MSG in file: {} line: {} ", file!(), line!()) +
+        let s = format!("Vulkust Information MSG in file: {} line: {} {}", file!(), line!(),
             format!($fmt, $($arg)*));
+        $crate::system::android::log::print(
+            $crate::system::android::log::Priority::Info, &s);
     };
 }
 
@@ -90,18 +88,16 @@ macro_rules! logi {
 #[cfg(target_os = "android")]
 macro_rules! loge {
     ($fmt:expr) => {
-        extern crate vulkust;
-        ::vulkust::system::android::log::print(
-            ::vulkust::system::android::log::Priority::Error,
-            format!("Vulkust Error MSG in file: {} line: {} ", file!(), line!()) +
+        let s = format!("Vulkust Error MSG in file: {} line: {} {}", file!(), line!(),
             format!($fmt));
+        $crate::system::android::log::print(
+            $crate::system::android::log::Priority::Error, &s);
     };
     ($fmt:expr, $($arg:tt)*) => {
-        extern crate vulkust;
-        ::vulkust::system::android::log::print(
-            ::vulkust::system::android::log::Priority::Error,
-            format!("Vulkust Error MSG in file: {} line: {} ", file!(), line!()) +
+        let s = format!("Vulkust Error MSG in file: {} line: {} {}", file!(), line!(),
             format!($fmt, $($arg)*));
+        $crate::system::android::log::print(
+            $crate::system::android::log::Priority::Error, &s);
     };
 }
 
@@ -109,19 +105,17 @@ macro_rules! loge {
 #[cfg(target_os = "android")]
 macro_rules! logf {
     ($fmt:expr) => {
-        extern crate vulkust;
-        ::vulkust::system::android::log::print(
-            ::vulkust::system::android::log::Priority::Fatal,
-            format!("Vulkust Fatal MSG in file: {} line: {} ", file!(), line!()) +
+        let s = format!("Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(),
             format!($fmt));
+        $crate::system::android::log::print(
+            $crate::system::android::log::Priority::Fatal, &s);
         panic!("Terminated!");
     };
     ($fmt:expr, $($arg:tt)*) => {
-        extern crate vulkust;
-        ::vulkust::system::android::log::print(
-            ::vulkust::system::android::log::Priority::Fatal,
-            format!("Vulkust Fatal MSG in file: {} line: {} ", file!(), line!()) +
+        let s = format!("Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(),
             format!($fmt, $($arg)*));
+        $crate::system::android::log::print(
+            $crate::system::android::log::Priority::Fatal, &s);
         panic!("Terminated!");
     };
 }
