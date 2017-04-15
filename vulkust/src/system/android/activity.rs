@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types, non_upper_case_globals, non_snake_case)]
-
-use libc::{
+extern crate libc;
+use self::libc::{
     c_void,
     c_char,
     c_int,

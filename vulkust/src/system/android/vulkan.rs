@@ -1,6 +1,7 @@
+extern crate libc;
 use std::default::Default;
 use std::mem::zeroed;
-use libc::{
+use self::libc::{
     c_void,
 };
 use super::super::vulkan::{

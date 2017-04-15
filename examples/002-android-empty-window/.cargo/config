@@ -1,0 +1,5 @@
+[build]
+target = "armv7-linux-androideabi"
+
+[target.armv7-linux-androideabi]
+linker = "/home/hossein/Libraries/android-toolchaines/ndk13-p24-armv7a/bin/arm-linux-androideabi-clang++"
