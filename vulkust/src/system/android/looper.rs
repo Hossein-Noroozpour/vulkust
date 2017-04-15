@@ -1,4 +1,5 @@
-use libc::{
+extern crate libc;
+use self::libc::{
     c_int,
     c_void,
 };

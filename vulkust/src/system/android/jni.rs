@@ -428,7 +428,7 @@ const JNI_VERSION_1_6: jint = 0x00010006;
 pub unsafe extern fn JNI_OnLoad(vm: *const JavaVM, reserved: *const c_void) -> jint {
     #[cfg(not(debug_assertions))]
     let _ = (vm, reserved);
-    logdbg!(format!("Started with vm: {:?} and reserved: {:?}!", vm, reserved));
+    logi!("Started with vm: {:?} and reserved: {:?}!", vm, reserved);
     JNI_VERSION_1_6
 }
 
@@ -436,5 +436,5 @@ pub unsafe extern fn JNI_OnLoad(vm: *const JavaVM, reserved: *const c_void) -> j
 pub unsafe extern fn JNI_OnUnload(vm: *const JavaVM, reserved: *const c_void) {
     #[cfg(not(debug_assertions))]
     let _ = (vm, reserved);
-    logdbg!(format!("Ended with vm: {:?} and reserved: {:?}!", vm, reserved));
+    logi!("Ended with vm: {:?} and reserved: {:?}!", vm, reserved);
 }

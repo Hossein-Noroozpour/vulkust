@@ -1,10 +1,10 @@
-#[cfg(feature = "log")]
+#[cfg(not(feature = "no-log"))]
 use std::os::raw::{
     c_int,
     c_char,
 };
 
-#[cfg(feature = "log")]
+#[cfg(not(feature = "no-log"))]
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
 pub enum Priority {
@@ -19,71 +19,17 @@ pub enum Priority {
     Silent  = 8,
 }
 
-#[cfg(feature = "log")]
+#[cfg(not(feature = "no-log"))]
 #[cfg_attr(target_os = "android", link(name = "log", kind= "dylib"))]
 extern "C" {
     pub fn __android_log_write(priority: c_int, tag: *const c_char, text: *const c_char) -> c_int;
 }
 
-#[cfg(feature = "log")]
-#[macro_export]
-macro_rules! logerr {
-    ( $x:expr ) => {
-        #[allow(unused_unsafe)]
-        unsafe {
-            ::system::android::log::__android_log_write(
-                ::system::android::log::Priority::Error as ::std::os::raw::c_int,
-                "vulkust-rust\0".as_ptr(),
-                format!("Msg: {:?} in file: {} in line: {}\0", $x, file!(), line!()).as_ptr());
-        }
-    }
-}
-
-#[cfg(not(feature = "log"))]
-#[macro_export]
-macro_rules! logerr {
-    ( $x:expr ) => {{}}
-}
-
-#[cfg(feature = "log")]
-#[macro_export]
-macro_rules! logdbg {
-    ( $x:expr ) => {
-        #[allow(unused_unsafe)]
-        unsafe {
-            ::system::android::log::__android_log_write(
-                ::system::android::log::Priority::Debug as ::std::os::raw::c_int,
-                "vulkust-rust\0".as_ptr(),
-                format!("Msg: {:?} in file: {} in line: {}\0", $x, file!(), line!()).as_ptr());
-        }
-    }
-}
-
-#[cfg(not(feature = "log"))]
-#[macro_export]
-macro_rules! logdbg {
-    ( $x:expr ) => {{}}
-}
-
-#[cfg(feature = "log")]
-#[macro_export]
-macro_rules! logftl {
-    ( $x:expr ) => {
-        #[allow(unused_unsafe)]
-        unsafe {
-            ::system::android::log::__android_log_write(
-                ::system::android::log::Priority::Fatal as ::std::os::raw::c_int,
-                "vulkust-rust\0".as_ptr(),
-                format!("Msg: {:?} in file: {} in line: {}\0", $x, file!(), line!()).as_ptr());
-        }
-        panic!("Exit");
-    }
-}
-
-#[cfg(not(feature = "log"))]
-#[macro_export]
-macro_rules! logftl {
-    ( $x:expr ) => {
-        panic!("Exit {:?}", $x);
+#[cfg(not(feature = "no-log"))]
+pub fn print(priority: Priority, text: &String) {
+    let tag = CString::new("vulkust").unwrap();
+    let text = CString::new(text).unwrap();
+    unsafe {
+        __android_log_write(priority as c_int, tag.as_ptr(), text.as_ptr());
     }
 }

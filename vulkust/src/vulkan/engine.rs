@@ -102,6 +102,10 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         #[cfg(target_os = "windows")]
         let surface = Arc::new(Surface::new(
             instance.clone(), ));
+        #[cfg(target_os = "android")]
+        let surface = Arc::new(Surface::new(
+            instance.clone(),
+            unsafe { (*self.os_app).window }));
         let physical_device = Arc::new(PhysicalDevice::new(surface.clone()));
         let logical_device = Arc::new(LogicalDevice::new(physical_device.clone()));
         let swapchain = Arc::new(Swapchain::new(logical_device.clone()));
