@@ -18,11 +18,16 @@ pub struct Application <CoreApp> where CoreApp: ApplicationTrait {
 impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
     #[cfg(any(target_os = "linux", target_os = "windows"))]
 	pub fn new() -> Self {
-        Application {
+        let mut this = Application {
             os_app: OsApplication::new(null()),
             render_engine: RenderEngine::new(),
             core_app: CoreApp::new(),
-		}
+		};
+        this.os_app.set_core_app(&mut this.core_app);
+        this.os_app.set_rnd_eng(&mut this.render_engine);
+        this.render_engine.set_os_app(&mut this.os_app);
+        this.render_engine.set_core_app(&mut this.core_app);
+        this
 	}
     #[cfg(target_os = "android")]
 	pub fn new(
@@ -35,18 +40,19 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
             saved_state: saved_state,
             saved_state_size: saved_state_size,
         };
-        Application {
+        let mut this = Application {
             os_app: OsApplication::new(unsafe { transmute(&args) }),
             render_engine: RenderEngine::new(),
             core_app: CoreApp::new(),
-		}
+		};
+        this.os_app.set_core_app(&mut this.core_app);
+        this.os_app.set_rnd_eng(&mut this.render_engine);
+        this.render_engine.set_os_app(&mut this.os_app);
+        this.render_engine.set_core_app(&mut this.core_app);
+        this
 	}
-
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
     pub fn run(&mut self) {
-        self.os_app.set_core_app(&mut self.core_app);
-        self.os_app.set_rnd_eng(&mut self.render_engine);
-        self.render_engine.set_os_app(&mut self.os_app);
-        self.render_engine.set_core_app(&mut self.core_app);
         self.os_app.start();
         self.render_engine.initialize();
         self.core_app.initialize(&mut self.os_app, &mut self.render_engine);

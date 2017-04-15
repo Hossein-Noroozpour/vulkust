@@ -12,5 +12,5 @@ vulkust = { path = "../../vulkust" }
 lto = true
 
 [lib]
-name = "main"
+name = "app"
 crate-type = ["cdylib"]

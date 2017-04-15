@@ -1,4 +1,3 @@
-pub mod log;
 pub mod activity;
 pub mod application;
 pub mod asset;
@@ -6,6 +5,7 @@ pub mod config;
 pub mod glue;
 pub mod input;
 pub mod jni;
+pub mod log;
 pub mod looper;
 pub mod rect;
 pub mod vulkan;
