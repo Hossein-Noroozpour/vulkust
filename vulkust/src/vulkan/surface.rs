@@ -59,6 +59,23 @@ impl Surface {
             vk_data: vk_surface,
         }
     }
+    #[cfg(target_os = "windows")]
+    pub fn new(
+            instance: Arc<Instance>, connection: *mut xcb::xcb_connection_t,
+            window: xcb::xcb_window_t,) -> Self {
+        let mut vk_surface = 0 as vk::VkSurfaceKHR;
+        let mut create_info = VkXcbSurfaceCreateInfoKHR::default();
+        create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+        create_info.window = window;
+        create_info.connection = connection;
+        vulkan_check!(vkCreateXcbSurfaceKHR(
+                instance.vk_data, &create_info, null(), &mut vk_surface));
+        logi!("vk surface {:?}", vk_surface);
+        Surface {
+            instance: instance,
+            vk_data: vk_surface,
+        }
+    }
 }
 
 impl Drop for Surface {
