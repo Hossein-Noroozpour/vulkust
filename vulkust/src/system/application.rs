@@ -54,7 +54,6 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
 	}
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     pub fn run(&mut self) {
-        self.os_app.start();
         self.render_engine.initialize();
         self.core_app.initialize(&mut self.os_app, &mut self.render_engine);
         self.os_app.execute();
