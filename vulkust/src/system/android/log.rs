@@ -27,8 +27,9 @@ extern "C" {
 
 #[cfg(not(feature = "no-log"))]
 pub fn print(priority: Priority, text: &String) {
+    use std::ffi::CString;
     let tag = CString::new("vulkust").unwrap();
-    let text = CString::new(text).unwrap();
+    let text = CString::new(text.as_str()).unwrap();
     unsafe {
         __android_log_write(priority as c_int, tag.as_ptr(), text.as_ptr());
     }
