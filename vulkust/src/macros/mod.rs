@@ -22,8 +22,7 @@ macro_rules! start {
             saved_state_size: usize) {
             use std::mem::transmute;
             use vulkust::system::application::Application as SysApp;
-            Box::new(SysApp::<$App>::new(
-                activity, transmute(saved_state), transmute(saved_state_size)));
+            SysApp::<$App>::new(activity, transmute(saved_state), transmute(saved_state_size));
         }
     };
 }

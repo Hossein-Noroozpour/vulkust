@@ -52,8 +52,8 @@ impl Texture {
             Ok(img) => {
                 data = img.raw_pixels();
                 match img {
-                    ImageLuma8(_) => panic!("Not supported yet."),
-                    ImageLumaA8(_) => panic!("Not supported yet."),
+                    ImageLuma8(_) => logf!("Not supported yet."),
+                    ImageLumaA8(_) => logf!("Not supported yet."),
                     ImageRgb8(dimg) => {
                         imgw = dimg.width() as u32;
                         imgh = dimg.height() as u32;
@@ -67,8 +67,7 @@ impl Texture {
                 }
             }
             Err(err) => {
-                println!("{:?}", err);
-                panic!("Error in image library");
+                logf!("Error {:?} in image library", err);
             }
         }
         Rc::new(Texture {

@@ -89,7 +89,7 @@ impl<CoreApp> OsApplicationTrait <CoreApp> for Application<CoreApp>
         }
         unsafe {
             (*activity).instance = glue::android_app_create::<CoreApp>(
-            activity, saved_state, saved_state_size, transmute(&mut app));
+                activity, saved_state, saved_state_size, transmute(&mut app));
         }
         app
 	}
@@ -115,19 +115,22 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
         let mut source = 0 as *mut AndroidPollSource;
         while unsafe { (*android_app).destroy_requested } == 0 {
             if unsafe { ALooper_pollAll(
-                if self.window_initialized { 1 } else { 0 }, null_mut(),
+                if self.window_initialized { 0 } else { 0 }, null_mut(),
                 &mut events, transmute(&mut source)) } >= 0 {
                 if source != null_mut() {
+                    loge!("reached");
                     unsafe { ((*source).process)(android_app, source); }
+                    loge!("reached");
                 }
             }
         }
-        logf!("unexpected");
+        loge!("Unexpected flow.");
     }
     fn handle_cmd(&mut self, app: *mut AndroidApp, cmd: i32) {
         match unsafe { transmute::<i8, AppCmd>(cmd as i8) } {
             AppCmd::InitWindow => {
                 self.window_initialized = true;
+                self.window = unsafe {(*app).window};
                 // let surface = Surface::new(
                 //     self.core_app.vulkan_driver.instance.clone(), unsafe{(*app).window});
                 // self.core_app.initialize(surface);
@@ -148,4 +151,10 @@ unsafe extern fn handle_cmd<CoreApp>(android_app: *mut AndroidApp, cmd: i32)
     where CoreApp: ApplicationTrait {
     let app: *mut Application<CoreApp> = transmute((*android_app).user_data);
     (*app).handle_cmd(android_app, cmd);
+}
+
+impl<CoreApp> Drop for Application<CoreApp> where CoreApp: ApplicationTrait {
+    fn drop(&mut self) {
+        loge!("Error unexpected deletion of Os Application.");
+    }
 }

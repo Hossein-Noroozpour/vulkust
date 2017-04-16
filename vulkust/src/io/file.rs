@@ -42,8 +42,7 @@ impl Stream {
                 s
             }
             Err(e) => {
-                println!("{:?}", e);
-                panic!("Error in file reading.");
+                logf!("Error {:?} in file reading.", e);
             }
         }
     }
@@ -53,12 +52,11 @@ impl Stream {
         match self.reader.read(&mut byte) {
             Ok(size) => {
                 if size != 1 {
-                    panic!("Error read size is not equal to size of bool.");
+                    logf!("Error read size is not equal to size of bool.");
                 }
             }
             Err(e) => {
-                println!("{:?}", e);
-                panic!("Error in reading file.");
+                logf!("Error {:?} in reading file.", e);
             }
         }
         if byte[0] == 0 {
@@ -77,12 +75,11 @@ impl Stream {
             match self.reader.read(bytes) {
                 Ok(size) => {
                     if size != t_size {
-                        panic!("Error read size is not equal to size of bool.");
+                        logf!("Error read size is not equal to size of bool.");
                     }
                 }
                 Err(e) => {
-                    println!("{:?}", e);
-                    panic!("Error in reading file.");
+                    logf!("Error {:?} in reading file.", e);
                 }
             }
             if self.not_same_endianness {

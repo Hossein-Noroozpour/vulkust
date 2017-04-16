@@ -52,8 +52,8 @@ impl MainWindow {
             Ok(img) => {
                 data = img.raw_pixels();
                 match img {
-                    ImageLuma8(_) => panic!("Not supported yet."),
-                    ImageLumaA8(_) => panic!("Not supported yet."),
+                    ImageLuma8(_) => logf!("Not supported yet."),
+                    ImageLumaA8(_) => logf!("Not supported yet."),
                     ImageRgb8(dimg) => {
                         imgw = dimg.width() as i32;
                         imgh = dimg.height() as i32;
@@ -71,8 +71,7 @@ impl MainWindow {
                 }
             }
             Err(err) => {
-                println!("{:?}", err);
-                panic!("Error in image library");
+                logf!("Error {:?} in image library", err);
             }
         }
         let imgpixbuf = Box::new(Pixbuf::new_from_vec)(data, 0 as Colorspace, imghasalpha, imgbps, imgw, imgh, imgs);

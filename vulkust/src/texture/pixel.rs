@@ -7,7 +7,7 @@ pub enum Format {
 
 fn pixel_length(f: Format) -> u32 {
     match f {
-        Format::UNKNOWN => panic!("UNKNOWN pixel format."),
+        Format::UNKNOWN => logf!("UNKNOWN pixel format."),
         Format::RGB8 => 3,
         Format::RGBA8 => 4,
     }
