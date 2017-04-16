@@ -22,8 +22,7 @@ macro_rules! start {
             saved_state_size: usize) {
             use std::mem::transmute;
             use vulkust::system::application::Application as SysApp;
-            Box::new(SysApp::<$App>::new(
-                activity, transmute(saved_state), transmute(saved_state_size)));
+            SysApp::<$App>::new(activity, transmute(saved_state), transmute(saved_state_size));
         }
     };
 }
@@ -71,13 +70,14 @@ macro_rules! logf {
 #[cfg(target_os = "android")]
 macro_rules! logi {
     ($fmt:expr) => {
-        let s = format!("Vulkust Information MSG in file: {} line: {} {}", file!(), line!(),
-            format!($fmt));
+        let s = format!(
+            "Vulkust Information MSG in file: {} line: {} {}", file!(), line!(), format!($fmt));
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Info, &s);
     };
     ($fmt:expr, $($arg:tt)*) => {
-        let s = format!("Vulkust Information MSG in file: {} line: {} {}", file!(), line!(),
+        let s = format!(
+            "Vulkust Information MSG in file: {} line: {} {}", file!(), line!(),
             format!($fmt, $($arg)*));
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Info, &s);
@@ -88,13 +88,14 @@ macro_rules! logi {
 #[cfg(target_os = "android")]
 macro_rules! loge {
     ($fmt:expr) => {
-        let s = format!("Vulkust Error MSG in file: {} line: {} {}", file!(), line!(),
-            format!($fmt));
+        let s = format!(
+            "Vulkust Error MSG in file: {} line: {} {}", file!(), line!(), format!($fmt));
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Error, &s);
     };
     ($fmt:expr, $($arg:tt)*) => {
-        let s = format!("Vulkust Error MSG in file: {} line: {} {}", file!(), line!(),
+        let s = format!(
+            "Vulkust Error MSG in file: {} line: {} {}", file!(), line!(),
             format!($fmt, $($arg)*));
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Error, &s);
@@ -105,8 +106,8 @@ macro_rules! loge {
 #[cfg(target_os = "android")]
 macro_rules! logf {
     ($fmt:expr) => {
-        let s = format!("Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(),
-            format!($fmt));
+        let s = format!(
+            "Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(), format!($fmt));
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Fatal, &s);
         panic!("Terminated!");

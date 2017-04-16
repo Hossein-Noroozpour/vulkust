@@ -15,19 +15,26 @@ use super::rect;
 use super::application::Application;
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct AndroidPollSource {
     pub id: i32,
     pub app: *mut AndroidApp,
     pub process: unsafe extern fn(app: *mut AndroidApp, source: *mut AndroidPollSource),
 }
 
+impl Drop for AndroidPollSource {
+    fn drop(&mut self) {
+        loge!("Unexpected deletion of AndroidPollSource struct.");
+    }
+}
+
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct AndroidApp {
     pub user_data: *mut libc::c_void,
     pub on_app_cmd: unsafe extern fn(app: *mut AndroidApp, cmd: i32),
-    pub on_input_event: unsafe extern fn(app: *mut AndroidApp, event: *mut input::AInputEvent) -> i32,
+    pub on_input_event: unsafe extern fn(
+        app: *mut AndroidApp, event: *mut input::AInputEvent) -> i32,
     pub activity: *mut activity::ANativeActivity,
     pub config: *mut config::AConfiguration,
     pub saved_state: *mut libc::c_void,
@@ -52,6 +59,12 @@ pub struct AndroidApp {
     pub pending_input_queue: *mut input::AInputQueue,
     pub pending_window: *mut window::ANativeWindow,
     pub pending_content_rect: rect::ARect,
+}
+
+impl Drop for AndroidApp {
+    fn drop(&mut self) {
+        loge!("Unexpected deletion of AndroidApp struct.");
+    }
 }
 
 #[repr(i32)]
@@ -110,8 +123,9 @@ unsafe extern fn android_app_read_cmd(android_app: *mut AndroidApp) -> i8 {
         }
         return cmd as i8;
     } else {
-        logf!("No data on command pipe!");
+        loge!("No data on command pipe!");
     }
+    0
 }
 
 unsafe extern fn android_app_pre_exec_cmd(android_app: *mut AndroidApp, cmd: AppCmd) {
@@ -250,8 +264,7 @@ extern fn android_app_entry<CoreApp>(param: *mut libc::c_void) -> *mut libc::c_v
         (*android_app).config = config::AConfiguration_new();
         config::AConfiguration_fromAssetManager(
             (*android_app).config, (*(*android_app).activity).assetManager);
-        logi!("Configure is :");
-        logi!("{:?}", *((*android_app).config));
+        logi!("Configure is: {:?}", *((*android_app).config));
         (*android_app).cmd_poll_source.id = LooperId::Main as i32;
         (*android_app).cmd_poll_source.app = android_app;
         (*android_app).cmd_poll_source.process = process_cmd;
@@ -332,7 +345,8 @@ unsafe extern fn android_app_set_input(
 //    loge!("unlocked!");
 }
 
-unsafe extern fn android_app_set_window(android_app: *mut AndroidApp, window: *mut window::ANativeWindow) {
+unsafe extern fn android_app_set_window(
+    android_app: *mut AndroidApp, window: *mut window::ANativeWindow) {
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
 //    loge!("locked");
     if (*android_app).pending_window != ptr::null_mut() {
@@ -346,6 +360,7 @@ unsafe extern fn android_app_set_window(android_app: *mut AndroidApp, window: *m
         libc::pthread_cond_wait(&mut (*android_app).cond, &mut (*android_app).mutex);
     }
     libc::pthread_mutex_unlock(&mut (*android_app).mutex);
+    loge!("reached");
 //    loge!("unlocked");
 }
 

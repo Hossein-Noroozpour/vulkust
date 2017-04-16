@@ -61,7 +61,7 @@ impl TexturesManager {
                     texture_type = TextureType::CubeMap;
                 }
                 _ => {
-                    panic!("Unknown texture type.");
+                    logf!("Unknown texture type.");
                 }
             }
             let offset = s.read(&0u32) as u64;

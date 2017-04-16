@@ -68,7 +68,7 @@ impl<E> KDNode<E> where E: VectorElement {
                 Axis::X => if midpt.x >= triangles[index].get_midpoint(vertices).x { right_indices.push(index); } else { left_indices.push(index); },
                 Axis::Y => if midpt.y >= triangles[index].get_midpoint(vertices).y { right_indices.push(index); } else { left_indices.push(index); },
                 Axis::Z => if midpt.z >= triangles[index].get_midpoint(vertices).z { right_indices.push(index); } else { left_indices.push(index); },
-                _ => panic!("Unexpected Axis value.")
+                _ => logf!("Unexpected Axis value.")
             }
         }
 
