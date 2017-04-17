@@ -61,6 +61,9 @@ impl Physical {
             compute_queue_node_index: u32::max_value(),
             present_queue_node_index: u32::max_value(),
         };
+        // if devices.len() == 1 {
+        //     return (devices[0], 1);
+        // }
         let mut device: vk::VkPhysicalDevice = null_mut();
         for d in devices {
             let score = Self::score_device(*d, surface);
@@ -107,15 +110,50 @@ impl Physical {
             return score_indices;
         }
         let mut supports_present = vec![false; queue_family_properties.len()];
+        loge!("{:?}", surface.vk_data);
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        use std::ffi::CString;
+        let vk_proc_name = CString::new("vkGetPhysicalDeviceSurfaceSupportKHR").unwrap();
+        let vk_get_physical_device_surface_support_khr:
+            vk::PFN_vkGetPhysicalDeviceSurfaceSupportKHR = unsafe { transmute(
+                vk::vkGetInstanceProcAddr(
+                    surface.instance.vk_data, vk_proc_name.as_ptr()))};
+        if vk_get_physical_device_surface_support_khr == unsafe { transmute(0usize) } {
+            loge!("22222222222222222222222222222222222222222222222222222222222");
+            loge!("22222222222222222222222222222222222222222222222222222222222");
+            loge!("22222222222222222222222222222222222222222222222222222222222");
+            loge!("22222222222222222222222222222222222222222222222222222222222");
+            loge!("22222222222222222222222222222222222222222222222222222222222");
+            loge!("22222222222222222222222222222222222222222222222222222222222");
+            loge!("22222222222222222222222222222222222222222222222222222222222");
+            loge!("22222222222222222222222222222222222222222222222222222222222");
+        }
+        // let pfn
         for i in 0..(queue_family_properties.len() as u32) {
             let mut b = 0 as vk::VkBool32;
             unsafe {
-                vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
+                vk_get_physical_device_surface_support_khr(device, i, surface.vk_data, &mut b);
+                // vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
             }
             if b != 0 {
                 supports_present[i as usize] = true;
             }
         }
+        loge!("3333333333333333333333333333333333333333333333333");
+        loge!("3333333333333333333333333333333333333333333333333");
+        loge!("3333333333333333333333333333333333333333333333333");
+        loge!("3333333333333333333333333333333333333333333333333");
+        loge!("3333333333333333333333333333333333333333333333333");
+        loge!("3333333333333333333333333333333333333333333333333");
+        loge!("3333333333333333333333333333333333333333333333333");
+        loge!("3333333333333333333333333333333333333333333333333");
         for i in 0..queue_family_properties.len() {
             if ((queue_family_properties[i].queueFlags as u32) &
                 (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&

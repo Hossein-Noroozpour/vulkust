@@ -36,12 +36,12 @@ impl Default for VkAndroidSurfaceCreateInfoKHR {
     }
 }
 
-pub type PfnVkCreateAndroidSurfaceKhr = unsafe extern fn (
+pub type PfnVkCreateAndroidSurfaceKhr = unsafe extern "C" fn (
     instance: VkInstance, p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
     p_allocator: *const VkAllocationCallbacks, p_surface: *mut VkSurfaceKHR) -> VkResult;
 
-#[cfg_attr(target_os = "android", link(name = "vulkan", kind= "dylib"))]
-extern {
+#[link(name = "vulkan", kind= "dylib")]
+extern "C" {
     pub fn vkCreateAndroidSurfaceKHR(
         instance: VkInstance, p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
         p_allocator: *const VkAllocationCallbacks, p_surface: *mut VkSurfaceKHR) -> VkResult;

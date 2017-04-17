@@ -4091,18 +4091,13 @@ impl ::std::default::Default for VkSurfaceFormatKHR {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 
-pub type PFN_vkDestroySurfaceKHR =
-::std::option::Option<unsafe extern "C" fn(instance: VkInstance,
-                                           surface: VkSurfaceKHR,
-                                           pAllocator:
-                                           *const VkAllocationCallbacks)>;
-pub type PFN_vkGetPhysicalDeviceSurfaceSupportKHR =
-::std::option::Option<unsafe extern "C" fn(physicalDevice:
-                                           VkPhysicalDevice,
-                                           queueFamilyIndex: uint32_t,
-                                           surface: VkSurfaceKHR,
-                                           pSupported: *mut VkBool32)
-                                           -> VkResult>;
+pub type PFN_vkDestroySurfaceKHR = unsafe extern "C" fn(
+    instance: VkInstance, surface: VkSurfaceKHR, pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkGetPhysicalDeviceSurfaceSupportKHR = unsafe extern fn(
+    physicalDevice: VkPhysicalDevice,
+    queueFamilyIndex: uint32_t,
+    surface: VkSurfaceKHR,
+    pSupported: *mut VkBool32) -> VkResult;
 pub type PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = unsafe extern "C" fn(
     physicalDevice: VkPhysicalDevice,
     surface: VkSurfaceKHR,

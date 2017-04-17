@@ -12,6 +12,7 @@ use super::super::system::vulkan as vk;
 use super::super::system::android::vulkan::{
     VkAndroidSurfaceCreateInfoKHR,
     vkCreateAndroidSurfaceKHR,
+    PfnVkCreateAndroidSurfaceKhr,
 };
 #[cfg(target_os = "android")]
 use super::super::system::android::window::ANativeWindow;
@@ -41,8 +42,27 @@ impl Surface {
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
         create_info.window = window;
-        vulkan_check!(vkCreateAndroidSurfaceKHR(
+        // let fun_ptr: usize = unsafe { transmute(vkCreateAndroidSurfaceKHR) };
+        // loge!("fun_ptr {:?}", vkCreateAndroidSurfaceKHR == 0 as PfnVkCreateAndroidSurfaceKhr);
+        loge!("Reached");
+        loge!("window {:?}", window);
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        use std::mem::transmute;
+        use std::ffi::CString;
+        let vk_proc_name = CString::new("vkCreateAndroidSurfaceKHR").unwrap();
+        let proc_ptr: PfnVkCreateAndroidSurfaceKhr = unsafe { transmute(vk::vkGetInstanceProcAddr(
+            instance.vk_data, vk_proc_name.as_ptr()))};
+        vulkan_check!(proc_ptr(
                 instance.vk_data, &create_info, null(), &mut vk_data));
+        // vulkan_check!(vkCreateAndroidSurfaceKHR(
+        //         instance.vk_data, &create_info, null(), &mut vk_data));
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
         logi!("vk surface {:?}", vk_data);
         Surface {
             instance: instance,

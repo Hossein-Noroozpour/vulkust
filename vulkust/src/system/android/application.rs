@@ -2,12 +2,13 @@ extern crate libc;
 use std;
 use std::mem::transmute;
 use std::ptr::null_mut;
+use std::mem::forget;
 use self::libc::{
     c_void,
     size_t,
 };
 use super::super::super::core::application::ApplicationTrait;
-use super::super::super::render::engine::RenderEngine;
+use super::super::super::render::engine::{RenderEngine, EngineTrait as RenderEngineTrait};
 use super::super::os::{
     OsApplication,
     ApplicationTrait as OsApplicationTrait
@@ -98,12 +99,20 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
     fn handle_cmd(&mut self, app: *mut AndroidApp, cmd: i32) {
         match unsafe { transmute::<i8, AppCmd>(cmd as i8) } {
             AppCmd::InitWindow => {
+                logi!("Window has been shown!");
                 self.window_initialized = true;
                 self.window = unsafe {(*app).window};
-                // let surface = Surface::new(
-                //     self.core_app.vulkan_driver.instance.clone(), unsafe{(*app).window});
-                // self.core_app.initialize(surface);
-                logi!("Window has been shown!");
+                let mut render_engine = RenderEngine::new();
+                let mut core_app = CoreApp::new();
+                self.set_core_app(&mut core_app);
+                self.set_rnd_eng(&mut render_engine);
+                render_engine.set_os_app(self);
+                render_engine.set_core_app(&mut core_app);
+                render_engine.initialize();
+                loge!("reached");
+                core_app.initialize(self, self.render_engine);
+                forget(render_engine);
+                forget(core_app);
             },
             AppCmd::TermWindow => {
                 // self.core_app.terminate();

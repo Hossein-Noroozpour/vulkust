@@ -40,17 +40,9 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
             saved_state: saved_state,
             saved_state_size: saved_state_size,
         };
-        let mut os_app = OsApplication::new(unsafe { transmute(&args) });
-        let mut render_engine = RenderEngine::new();
-        let mut core_app = CoreApp::new();
+        let mut os_app = OsApplication::<CoreApp>::new(unsafe { transmute(&args) });
         use std::mem::forget;
-        os_app.set_core_app(&mut core_app);
-        os_app.set_rnd_eng(&mut render_engine);
-        render_engine.set_os_app(&mut os_app);
-        render_engine.set_core_app(&mut core_app);
         forget(os_app);
-        forget(render_engine);
-        forget(core_app);
 	}
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     pub fn run(&mut self) {
