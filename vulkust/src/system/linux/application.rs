@@ -98,9 +98,6 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
         unsafe { xcb::xcb_map_window(this.connection, this.window); }
         this
     }
-    fn start(&mut self) -> bool {
-        return true;
-    }
     fn set_core_app(&mut self, c: *mut CoreApp) {
         self.core_app = c;
     }

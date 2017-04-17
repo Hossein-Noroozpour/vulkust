@@ -101,7 +101,9 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             unsafe { (*self.os_app).window }));
         #[cfg(target_os = "windows")]
         let surface = Arc::new(Surface::new(
-            instance.clone(), ));
+            instance.clone(),
+            unsafe { (*self.os_app).h_instance },
+            unsafe { (*self.os_app).h_window }));
         #[cfg(target_os = "android")]
         let surface = Arc::new(Surface::new(
             instance.clone(),
