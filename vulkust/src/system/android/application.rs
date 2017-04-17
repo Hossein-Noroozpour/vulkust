@@ -50,44 +50,18 @@ impl<CoreApp> OsApplicationTrait <CoreApp> for Application<CoreApp>
 		};
         unsafe {
             (*(*activity).callbacks).onDestroy = glue::on_destroy;
-        }
-        unsafe {
             (*(*activity).callbacks).onStart = glue::on_start;
-        }
-        unsafe {
             (*(*activity).callbacks).onResume = glue::on_resume;
-        }
-        unsafe {
             (*(*activity).callbacks).onSaveInstanceState = glue::on_save_instance_state;
-        }
-        unsafe {
             (*(*activity).callbacks).onPause = glue::on_pause;
-        }
-        unsafe {
             (*(*activity).callbacks).onStop = glue::on_stop;
-        }
-        unsafe {
             (*(*activity).callbacks).onConfigurationChanged = glue::on_configuration_changed;
-        }
-        unsafe {
             (*(*activity).callbacks).onLowMemory = glue::on_low_memory;
-        }
-        unsafe {
             (*(*activity).callbacks).onWindowFocusChanged = glue::on_window_focus_changed;
-        }
-        unsafe {
             (*(*activity).callbacks).onNativeWindowCreated = glue::on_native_window_created;
-        }
-        unsafe {
             (*(*activity).callbacks).onNativeWindowDestroyed = glue::on_native_window_destroyed;
-        }
-        unsafe {
             (*(*activity).callbacks).onInputQueueCreated = glue::on_input_queue_created;
-        }
-        unsafe {
             (*(*activity).callbacks).onInputQueueDestroyed = glue::on_input_queue_destroyed;
-        }
-        unsafe {
             (*activity).instance = glue::android_app_create::<CoreApp>(
                 activity, saved_state, saved_state_size, transmute(&mut app));
         }
