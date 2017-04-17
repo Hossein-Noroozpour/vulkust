@@ -360,7 +360,6 @@ unsafe extern fn android_app_set_window(
         libc::pthread_cond_wait(&mut (*android_app).cond, &mut (*android_app).mutex);
     }
     libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-    loge!("reached");
 //    loge!("unlocked");
 }
 

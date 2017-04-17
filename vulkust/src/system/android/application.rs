@@ -67,9 +67,6 @@ impl<CoreApp> OsApplicationTrait <CoreApp> for Application<CoreApp>
         }
         app
 	}
-    fn start(&mut self) -> bool {
-        return true;
-    }
     fn set_core_app(&mut self, c: *mut CoreApp) {
         self.core_app = c;
     }
@@ -92,9 +89,7 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
                 if self.window_initialized { 0 } else { 0 }, null_mut(),
                 &mut events, transmute(&mut source)) } >= 0 {
                 if source != null_mut() {
-                    loge!("reached");
                     unsafe { ((*source).process)(android_app, source); }
-                    loge!("reached");
                 }
             }
         }
