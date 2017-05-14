@@ -8,5 +8,4 @@ pub mod jni;
 pub mod log;
 pub mod looper;
 pub mod rect;
-pub mod vulkan;
 pub mod window;

@@ -1,4 +1,6 @@
 #![allow(dead_code, non_camel_case_types, non_upper_case_globals, non_snake_case)]
+#[cfg(target_os = "windows")]
+extern crate winapi;
 
 use std::os::raw::{
     c_int,
@@ -4065,6 +4067,64 @@ pub type PFN_VkCreateAndroidSurfaceKhr = unsafe extern "C" fn(
     instance: VkInstance, p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
     p_allocator: *const VkAllocationCallbacks, p_surface: *mut VkSurfaceKHR) -> VkResult;
 
+#[cfg(target_os = "linux")]
+use super::linux::xcb::{
+    xcb_window_t,
+    xcb_connection_t,
+};
+#[cfg(not(target_os = "linux"))]
+type xcb_window_t = c_void;
+#[cfg(not(target_os = "linux"))]
+type xcb_connection_t = c_void;
+
+pub type VkXcbSurfaceCreateFlagsKHR = VkFlags;
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct VkXcbSurfaceCreateInfoKHR {
+    pub sType: VkStructureType,
+    pub pNext: *const ::std::os::raw::c_void,
+    pub flags: VkXcbSurfaceCreateFlagsKHR,
+    pub connection: *mut xcb_connection_t,
+    pub window: xcb_window_t,
+}
+
+impl Default for VkXcbSurfaceCreateInfoKHR {
+    fn default() -> Self {
+        unsafe {
+            zeroed()
+        }
+    }
+}
+
+pub type VkWin32SurfaceCreateFlagsKHR = VkFlags;
+
+#[cfg(target_os = "windows")]
+use winapi::minwindef::HINSTANCE;
+#[cfg(not(target_os = "windows"))]
+type HINSTANCE = c_int;
+#[cfg(target_os = "windows")]
+use winapi::windef::HWND;
+#[cfg(not(target_os = "windows"))]
+type HWND = c_int;
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct VkWin32SurfaceCreateInfoKHR {
+    pub sType: VkStructureType,
+    pub pNext: *const c_void,
+    pub flags: VkWin32SurfaceCreateFlagsKHR,
+    pub hinstance: HINSTANCE,
+    pub hwnd: HWND,
+}
+impl Default for VkWin32SurfaceCreateInfoKHR {
+    fn default() -> Self {
+        unsafe {
+            zeroed()
+        }
+    }
+}
+
 #[cfg_attr(target_os = "linux", link(name = "vulkan", kind = "dylib"))]
 #[cfg_attr(target_os = "windows", link(name = "vulkan-1", kind = "dylib"))]
 #[cfg_attr(target_os = "android", link(name = "vulkan", kind = "dylib"))]
@@ -4219,9 +4279,11 @@ extern "C" {
         device: VkDevice, shaderModule: VkShaderModule, pAllocator: *const VkAllocationCallbacks);
     pub fn vkCreatePipelineCache(
         device: VkDevice, pCreateInfo: *const VkPipelineCacheCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pPipelineCache: *mut VkPipelineCache) -> VkResult;
+        pAllocator: *const VkAllocationCallbacks,
+        pPipelineCache: *mut VkPipelineCache) -> VkResult;
     pub fn vkDestroyPipelineCache(
-        device: VkDevice, pipelineCache: VkPipelineCache, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice, pipelineCache: VkPipelineCache,
+        pAllocator: *const VkAllocationCallbacks);
     pub fn vkGetPipelineCacheData(
         device: VkDevice, pipelineCache: VkPipelineCache, pDataSize: *mut size_t,
         pData: *mut c_void) -> VkResult;
@@ -4230,8 +4292,8 @@ extern "C" {
         pSrcCaches: *const VkPipelineCache) -> VkResult;
     pub fn vkCreateGraphicsPipelines(
         device: VkDevice, pipelineCache: VkPipelineCache, createInfoCount: uint32_t,
-        pCreateInfos: *const VkGraphicsPipelineCreateInfo, pAllocator: *const VkAllocationCallbacks,
-        pPipelines: *mut VkPipeline) -> VkResult;
+        pCreateInfos: *const VkGraphicsPipelineCreateInfo,
+        pAllocator: *const VkAllocationCallbacks, pPipelines: *mut VkPipeline) -> VkResult;
     pub fn vkCreateComputePipelines(
         device: VkDevice, pipelineCache: VkPipelineCache, createInfoCount: uint32_t,
         pCreateInfos: *const VkComputePipelineCreateInfo, pAllocator: *const VkAllocationCallbacks,
@@ -4264,27 +4326,19 @@ extern "C" {
     pub fn vkDestroyDescriptorPool(
         device: VkDevice, descriptorPool: VkDescriptorPool,
         pAllocator: *const VkAllocationCallbacks);
-    pub fn vkResetDescriptorPool(device: VkDevice,
-                                 descriptorPool: VkDescriptorPool,
-                                 flags: VkDescriptorPoolResetFlags)
-                                 -> VkResult;
-    pub fn vkAllocateDescriptorSets(device: VkDevice,
-                                    pAllocateInfo:
-                                    *const VkDescriptorSetAllocateInfo,
-                                    pDescriptorSets: *mut VkDescriptorSet)
-                                    -> VkResult;
-    pub fn vkFreeDescriptorSets(device: VkDevice,
-                                descriptorPool: VkDescriptorPool,
-                                descriptorSetCount: uint32_t,
-                                pDescriptorSets: *const VkDescriptorSet)
-                                -> VkResult;
-    pub fn vkUpdateDescriptorSets(device: VkDevice,
-                                  descriptorWriteCount: uint32_t,
-                                  pDescriptorWrites:
-                                  *const VkWriteDescriptorSet,
-                                  descriptorCopyCount: uint32_t,
-                                  pDescriptorCopies:
-                                  *const VkCopyDescriptorSet);
+    pub fn vkResetDescriptorPool(
+        device: VkDevice, descriptorPool: VkDescriptorPool,
+        flags: VkDescriptorPoolResetFlags) -> VkResult;
+    pub fn vkAllocateDescriptorSets(
+        device: VkDevice, pAllocateInfo: *const VkDescriptorSetAllocateInfo,
+        pDescriptorSets: *mut VkDescriptorSet) -> VkResult;
+    pub fn vkFreeDescriptorSets(
+        device: VkDevice, descriptorPool: VkDescriptorPool, descriptorSetCount: uint32_t,
+        pDescriptorSets: *const VkDescriptorSet) -> VkResult;
+    pub fn vkUpdateDescriptorSets(
+        device: VkDevice, descriptorWriteCount: uint32_t,
+        pDescriptorWrites: *const VkWriteDescriptorSet, descriptorCopyCount: uint32_t,
+        pDescriptorCopies: *const VkCopyDescriptorSet);
     pub fn vkCreateFramebuffer(
         device: VkDevice, pCreateInfo: *const VkFramebufferCreateInfo,
         pAllocator: *const VkAllocationCallbacks, pFramebuffer: *mut VkFramebuffer) -> VkResult;
@@ -4311,9 +4365,8 @@ extern "C" {
         device: VkDevice, commandPool: VkCommandPool,
         commandBufferCount: uint32_t,
         pCommandBuffers: *const VkCommandBuffer);
-    pub fn vkBeginCommandBuffer(commandBuffer: VkCommandBuffer,
-                                pBeginInfo: *const VkCommandBufferBeginInfo)
-                                -> VkResult;
+    pub fn vkBeginCommandBuffer(
+        commandBuffer: VkCommandBuffer, pBeginInfo: *const VkCommandBufferBeginInfo) -> VkResult;
     pub fn vkEndCommandBuffer(commandBuffer: VkCommandBuffer) -> VkResult;
     pub fn vkResetCommandBuffer(commandBuffer: VkCommandBuffer,
                                 flags: VkCommandBufferResetFlags) -> VkResult;
@@ -4444,29 +4497,23 @@ extern "C" {
                            *const VkBufferMemoryBarrier,
                            imageMemoryBarrierCount: uint32_t,
                            pImageMemoryBarriers: *const VkImageMemoryBarrier);
-    pub fn vkCmdPipelineBarrier(commandBuffer: VkCommandBuffer,
-                                srcStageMask: VkPipelineStageFlags,
-                                dstStageMask: VkPipelineStageFlags,
-                                dependencyFlags: VkDependencyFlags,
-                                memoryBarrierCount: uint32_t,
-                                pMemoryBarriers: *const VkMemoryBarrier,
-                                bufferMemoryBarrierCount: uint32_t,
-                                pBufferMemoryBarriers:
-                                *const VkBufferMemoryBarrier,
-                                imageMemoryBarrierCount: uint32_t,
-                                pImageMemoryBarriers:
-                                *const VkImageMemoryBarrier);
-    pub fn vkCmdBeginQuery(commandBuffer: VkCommandBuffer,
-                           queryPool: VkQueryPool, query: uint32_t,
-                           flags: VkQueryControlFlags);
-    pub fn vkCmdEndQuery(commandBuffer: VkCommandBuffer,
-                         queryPool: VkQueryPool, query: uint32_t);
-    pub fn vkCmdResetQueryPool(commandBuffer: VkCommandBuffer,
-                               queryPool: VkQueryPool, firstQuery: uint32_t,
-                               queryCount: uint32_t);
-    pub fn vkCmdWriteTimestamp(commandBuffer: VkCommandBuffer,
-                               pipelineStage: VkPipelineStageFlagBits,
-                               queryPool: VkQueryPool, query: uint32_t);
+    pub fn vkCmdPipelineBarrier(
+        commandBuffer: VkCommandBuffer, srcStageMask: VkPipelineStageFlags,
+        dstStageMask: VkPipelineStageFlags, dependencyFlags: VkDependencyFlags,
+        memoryBarrierCount: uint32_t, pMemoryBarriers: *const VkMemoryBarrier,
+        bufferMemoryBarrierCount: uint32_t, pBufferMemoryBarriers: *const VkBufferMemoryBarrier,
+        imageMemoryBarrierCount: uint32_t, pImageMemoryBarriers: *const VkImageMemoryBarrier);
+    pub fn vkCmdBeginQuery(
+        commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, query: uint32_t,
+        flags: VkQueryControlFlags);
+    pub fn vkCmdEndQuery(
+        commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, query: uint32_t);
+    pub fn vkCmdResetQueryPool(
+        commandBuffer: VkCommandBuffer, queryPool: VkQueryPool,
+        firstQuery: uint32_t, queryCount: uint32_t);
+    pub fn vkCmdWriteTimestamp(
+        commandBuffer: VkCommandBuffer, pipelineStage: VkPipelineStageFlagBits,
+        queryPool: VkQueryPool, query: uint32_t);
     pub fn vkCmdCopyQueryPoolResults(
         commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, firstQuery: uint32_t,
         queryCount: uint32_t, dstBuffer: VkBuffer, dstOffset: VkDeviceSize, stride: VkDeviceSize,
@@ -4517,54 +4564,30 @@ extern "C" {
     pub fn vkAcquireNextImageKHR(
         device: VkDevice, swapchain: VkSwapchainKHR, timeout: uint64_t, semaphore: VkSemaphore,
         fence: VkFence, pImageIndex: *mut uint32_t) -> VkResult;
-    pub fn vkQueuePresentKHR(queue: VkQueue,
-                             pPresentInfo: *const VkPresentInfoKHR)
-                             -> VkResult;
-    pub fn vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice:
-                                                   VkPhysicalDevice,
-                                                   pPropertyCount:
-                                                   *mut uint32_t,
-                                                   pProperties:
-                                                   *mut VkDisplayPropertiesKHR)
-                                                   -> VkResult;
-    pub fn vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice:
-                                                        VkPhysicalDevice,
-                                                        pPropertyCount:
-                                                        *mut uint32_t,
-                                                        pProperties:
-                                                        *mut VkDisplayPlanePropertiesKHR)
-                                                        -> VkResult;
-    pub fn vkGetDisplayPlaneSupportedDisplaysKHR(physicalDevice:
-                                                 VkPhysicalDevice,
-                                                 planeIndex: uint32_t,
-                                                 pDisplayCount: *mut uint32_t,
-                                                 pDisplays: *mut VkDisplayKHR)
-                                                 -> VkResult;
-    pub fn vkGetDisplayModePropertiesKHR(physicalDevice: VkPhysicalDevice,
-                                         display: VkDisplayKHR,
-                                         pPropertyCount: *mut uint32_t,
-                                         pProperties:
-                                         *mut VkDisplayModePropertiesKHR)
-                                         -> VkResult;
-    pub fn vkCreateDisplayModeKHR(physicalDevice: VkPhysicalDevice,
-                                  display: VkDisplayKHR,
-                                  pCreateInfo:
-                                  *const VkDisplayModeCreateInfoKHR,
-                                  pAllocator: *const VkAllocationCallbacks,
-                                  pMode: *mut VkDisplayModeKHR) -> VkResult;
-    pub fn vkGetDisplayPlaneCapabilitiesKHR(physicalDevice: VkPhysicalDevice,
-                                            mode: VkDisplayModeKHR,
-                                            planeIndex: uint32_t,
-                                            pCapabilities:
-                                            *mut VkDisplayPlaneCapabilitiesKHR)
-                                            -> VkResult;
-    pub fn vkCreateDisplayPlaneSurfaceKHR(instance: VkInstance,
-                                          pCreateInfo:
-                                          *const VkDisplaySurfaceCreateInfoKHR,
-                                          pAllocator:
-                                          *const VkAllocationCallbacks,
-                                          pSurface: *mut VkSurfaceKHR)
-                                          -> VkResult;
+    pub fn vkQueuePresentKHR(
+        queue: VkQueue, pPresentInfo: *const VkPresentInfoKHR) -> VkResult;
+    pub fn vkGetPhysicalDeviceDisplayPropertiesKHR(
+        physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkDisplayPropertiesKHR) -> VkResult;
+    pub fn vkGetPhysicalDeviceDisplayPlanePropertiesKHR(
+        physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkDisplayPlanePropertiesKHR) -> VkResult;
+    pub fn vkGetDisplayPlaneSupportedDisplaysKHR(
+        physicalDevice: VkPhysicalDevice, planeIndex: uint32_t, pDisplayCount: *mut uint32_t,
+        pDisplays: *mut VkDisplayKHR) -> VkResult;
+    pub fn vkGetDisplayModePropertiesKHR(
+        physicalDevice: VkPhysicalDevice, display: VkDisplayKHR, pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkDisplayModePropertiesKHR) -> VkResult;
+    pub fn vkCreateDisplayModeKHR(
+        physicalDevice: VkPhysicalDevice, display: VkDisplayKHR,
+        pCreateInfo: *const VkDisplayModeCreateInfoKHR, pAllocator: *const VkAllocationCallbacks,
+        pMode: *mut VkDisplayModeKHR) -> VkResult;
+    pub fn vkGetDisplayPlaneCapabilitiesKHR(
+        physicalDevice: VkPhysicalDevice, mode: VkDisplayModeKHR, planeIndex: uint32_t,
+        pCapabilities: *mut VkDisplayPlaneCapabilitiesKHR) -> VkResult;
+    pub fn vkCreateDisplayPlaneSurfaceKHR(
+        instance: VkInstance, pCreateInfo: *const VkDisplaySurfaceCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks, pSurface: *mut VkSurfaceKHR) -> VkResult;
     pub fn vkCreateSharedSwapchainsKHR(
         device: VkDevice, swapchainCount: uint32_t, pCreateInfos: *const VkSwapchainCreateInfoKHR,
         pAllocator: *const VkAllocationCallbacks, pSwapchains: *mut VkSwapchainKHR) -> VkResult;
@@ -4583,6 +4606,15 @@ extern "C" {
     pub fn vkCreateAndroidSurfaceKHR(
         instance: VkInstance, p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
         p_allocator: *const VkAllocationCallbacks, p_surface: *mut VkSurfaceKHR) -> VkResult;
+    #[cfg(target_os = "linux")]
+    pub fn vkCreateXcbSurfaceKHR(
+        instance: VkInstance, pCreateInfo: *const VkXcbSurfaceCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks, pSurface: *mut VkSurfaceKHR) -> VkResult;
+    #[cfg(target_os = "windows")]
+    pub fn vkCreateWin32SurfaceKHR(
+        instance: vk::VkInstance, pCreateInfo: *const VkWin32SurfaceCreateInfoKHR,
+        pAllocator: *const vk::VkAllocationCallbacks,
+        pSurface: *mut vk::VkSurfaceKHR) -> vk::VkResult;
 }
 
 pub fn vkMakeVersion(major: u32, minor: u32, patch: u32) -> u32 {

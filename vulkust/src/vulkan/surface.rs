@@ -4,21 +4,7 @@ use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;
 use super::super::system::vulkan as vk;
-#[cfg(target_os = "android")]
-use super::super::system::android::vulkan::{
-    VkAndroidSurfaceCreateInfoKHR,
-    vkCreateAndroidSurfaceKHR,
-    PfnVkCreateAndroidSurfaceKhr,
-};
-#[cfg(target_os = "android")]
-use super::super::system::android::window::ANativeWindow;
-#[cfg(target_os = "linux")]
-use super::super::system::linux::vulkan::{
-    VkXcbSurfaceCreateInfoKHR,
-    vkCreateXcbSurfaceKHR,
-};
-#[cfg(target_os = "linux")]
-use super::super::system::linux::xcb;
+use super::super::system::os::OsApplication;
 #[cfg(target_os = "windows")]
 use super::super::system::windows::vulkan::{
     VkWin32SurfaceCreateInfoKHR,
@@ -33,19 +19,12 @@ pub struct Surface {
 impl Surface {
     #[cfg(target_os = "android")]
     pub fn new(instance: Arc<Instance>, window: *mut ANativeWindow) -> Self {
+        use super::super::system::android::window::ANativeWindow;
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let mut create_info = VkAndroidSurfaceCreateInfoKHR::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
         create_info.window = window;
-        // let fun_ptr: usize = unsafe { transmute(vkCreateAndroidSurfaceKHR) };
-        // loge!("fun_ptr {:?}", vkCreateAndroidSurfaceKHR == 0 as PfnVkCreateAndroidSurfaceKhr);
-        loge!("Reached");
-        loge!("window {:?}", window);
-        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
-        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
-        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
-        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
         use std::mem::transmute;
         use std::ffi::CString;
         let vk_proc_name = CString::new("vkCreateAndroidSurfaceKHR").unwrap();
@@ -55,11 +34,6 @@ impl Surface {
                 instance.vk_data, &create_info, null(), &mut vk_data));
         // vulkan_check!(vkCreateAndroidSurfaceKHR(
         //         instance.vk_data, &create_info, null(), &mut vk_data));
-        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
-        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
-        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
-        loge!("111111111111111111111111111111111111111111111111111111111111111111111111111111111");
-        logi!("vk surface {:?}", vk_data);
         Surface {
             instance: instance,
             vk_data: vk_data,
@@ -67,8 +41,7 @@ impl Surface {
     }
     #[cfg(target_os = "linux")]
     pub fn new(
-            instance: Arc<Instance>, connection: *mut xcb::xcb_connection_t,
-            window: xcb::xcb_window_t,) -> Self {
+            instance: Arc<Instance>, os_app: *mut OsApplication) -> Self {
         let mut vk_surface = 0 as vk::VkSurfaceKHR;
         let mut create_info = VkXcbSurfaceCreateInfoKHR::default();
         create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;

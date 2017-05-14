@@ -10,7 +10,10 @@ use std::mem::zeroed;
 #[cfg(not(feature = "no-intensive-debug"))]
 use std::mem::transmute;
 #[cfg(not(feature = "no-vulkan-debug"))]
-use self::libc::{c_char, c_void};
+use std::os::raw::{
+    c_char,
+    c_void,
+};
 use super::super::system::vulkan as vk;
 
 #[cfg(not(feature = "no-vulkan-debug"))]

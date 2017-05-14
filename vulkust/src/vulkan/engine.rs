@@ -94,7 +94,6 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
 
     fn initialize(&mut self) {
         let instance = Arc::new(Instance::new());
-        loge!("os app {:?}", self.os_app);
         #[cfg(target_os = "linux")]
         let surface = Arc::new(Surface::new(
             instance.clone(),
