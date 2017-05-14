@@ -9,7 +9,10 @@ use super::super::os::{ApplicationTrait as OsApplicationTrait};
 use std::ptr::{
     null_mut,
 };
-use std::os::raw::c_int;
+use std::os::raw::{
+    c_int,
+    c_void,
+};
 use std::mem::{
     transmute,
 };
@@ -28,7 +31,8 @@ pub struct Application<CoreApp>
 
 impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
     where CoreApp: ApplicationTrait {
-    fn new() -> Self {
+    fn new(args: *const c_void) -> Self {
+        let _ = args;
         let mut scr = 0 as c_int;
         let mut this = Application {
             connection: unsafe { xcb::xcb_connect(null_mut(), &mut scr) },
