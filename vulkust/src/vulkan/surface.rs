@@ -3,10 +3,6 @@ extern crate winapi;
 use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;
-#[cfg(target_os = "windows")]
-use self::winapi::minwindef::HINSTANCE;
-#[cfg(target_os = "windows")]
-use self::winapi::windef::HWND;
 use super::super::system::vulkan as vk;
 #[cfg(target_os = "android")]
 use super::super::system::android::vulkan::{
@@ -89,6 +85,8 @@ impl Surface {
     #[cfg(target_os = "windows")]
     pub fn new(
             instance: Arc<Instance>, hinstance: HINSTANCE, hwnd: HWND) -> Self {
+        use self::winapi::minwindef::HINSTANCE;
+        use self::winapi::windef::HWND;
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let mut create_info = VkWin32SurfaceCreateInfoKHR::default();
         create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
