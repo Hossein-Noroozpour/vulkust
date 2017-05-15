@@ -5,6 +5,7 @@ use std::ptr::null;
 use std::sync::Arc;
 use super::super::system::vulkan as vk;
 use super::super::system::os::OsApplication;
+use super::super::core::application::ApplicationTrait as CoreAppTrait;
 #[cfg(target_os = "windows")]
 use super::super::system::windows::vulkan::{
     VkWin32SurfaceCreateInfoKHR,
@@ -40,14 +41,15 @@ impl Surface {
         }
     }
     #[cfg(target_os = "linux")]
-    pub fn new(
-            instance: Arc<Instance>, os_app: *mut OsApplication) -> Self {
+    pub fn new<CoreApp>(
+            instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
+            where CoreApp: CoreAppTrait  {
         let mut vk_surface = 0 as vk::VkSurfaceKHR;
-        let mut create_info = VkXcbSurfaceCreateInfoKHR::default();
+        let mut create_info = vk::VkXcbSurfaceCreateInfoKHR::default();
         create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-        create_info.window = window;
-        create_info.connection = connection;
-        vulkan_check!(vkCreateXcbSurfaceKHR(
+        create_info.window = unsafe { (*os_app).window };
+        create_info.connection = unsafe { (*os_app).connection };
+        vulkan_check!(vk::vkCreateXcbSurfaceKHR(
                 instance.vk_data, &create_info, null(), &mut vk_surface));
         logi!("vk surface {:?}", vk_surface);
         Surface {
