@@ -111,7 +111,6 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
     fn execute(&mut self) -> bool {
         unsafe { xcb::xcb_flush(self.connection); }
         while self.is_running {
-            logi!("Reached");
             loop {
                 let event = unsafe { xcb::xcb_poll_for_event(self.connection) };
                 if event == null_mut() {
@@ -120,12 +119,8 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
                 self.handle_event(event);
                 unsafe { libc::free(transmute(event)); }
             }
-            logi!("Reached");
-            let tmp: usize = unsafe { transmute(self.render_engine) };
-            logi!("You must go {}", tmp);
-            unsafe { (*(self.render_engine)).update(); }
             unsafe { (*(self.core_app)).update(); }
-            // render();
+            unsafe { (*(self.render_engine)).update(); }
         }
         return true;
     }
