@@ -64,5 +64,8 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
 impl<CoreApp> Drop for Application<CoreApp> where CoreApp: ApplicationTrait {
     fn drop(&mut self) {
         logi!("Main system application got deleted.");
+        unsafe { Box::from_raw(self.core_app); }
+        unsafe { Box::from_raw(self.render_engine); }
+        unsafe { Box::from_raw(self.os_app); }
     }
 }
