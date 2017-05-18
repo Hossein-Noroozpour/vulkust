@@ -172,8 +172,9 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
 
     fn update(&mut self) {
         let vk_device = self.logical_device.as_ref().unwrap().vk_data;
+        let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
 	    let current_buffer = self.swapchain.as_ref().unwrap().get_next_image_index(
-            self.present_complete_semaphore.as_ref().unwrap()) as usize;
+            present_complete_semaphore) as usize;
 		vulkan_check!(vk::vkWaitForFences(
             vk_device, 1, &(self.wait_fences[current_buffer].vk_data), 1u32, u64::max_value()));
 		vulkan_check!(vk::vkResetFences(
