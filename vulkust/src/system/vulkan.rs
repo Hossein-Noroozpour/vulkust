@@ -4037,15 +4037,10 @@ pub type PFN_vkDebugReportMessageEXT = unsafe extern "C" fn(
 
 #[cfg(target_os = "android")]
 use super::android::window::ANativeWindow;
-
-#[cfg(not(target_os = "android"))]
-type ANativeWindow = c_void;
-
 pub const VK_KHR_ANDROID_SURFACE_SPEC_VERSION: u32 = 6u32;
 pub const VK_KHR_ANDROID_SURFACE_EXTENSION_NAME: &'static str = "VK_KHR_android_surface";
-
 type VkAndroidSurfaceCreateFlagsKHR = VkFlags;
-
+#[cfg(target_os = "android")]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct VkAndroidSurfaceCreateInfoKHR {
@@ -4054,7 +4049,7 @@ pub struct VkAndroidSurfaceCreateInfoKHR {
     pub flags: VkAndroidSurfaceCreateFlagsKHR,
     pub window: *mut ANativeWindow,
 }
-
+#[cfg(target_os = "android")]
 impl Default for VkAndroidSurfaceCreateInfoKHR {
     fn default() -> Self {
         unsafe {
@@ -4062,7 +4057,7 @@ impl Default for VkAndroidSurfaceCreateInfoKHR {
         }
     }
 }
-
+#[cfg(target_os = "android")]
 pub type PFN_VkCreateAndroidSurfaceKhr = unsafe extern "C" fn(
     instance: VkInstance, p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
     p_allocator: *const VkAllocationCallbacks, p_surface: *mut VkSurfaceKHR) -> VkResult;
@@ -4072,13 +4067,9 @@ use super::linux::xcb::{
     xcb_window_t,
     xcb_connection_t,
 };
-#[cfg(not(target_os = "linux"))]
-type xcb_window_t = c_void;
-#[cfg(not(target_os = "linux"))]
-type xcb_connection_t = c_void;
-
+#[cfg(target_os = "linux")]
 pub type VkXcbSurfaceCreateFlagsKHR = VkFlags;
-
+#[cfg(target_os = "linux")]
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct VkXcbSurfaceCreateInfoKHR {
@@ -4088,7 +4079,7 @@ pub struct VkXcbSurfaceCreateInfoKHR {
     pub connection: *mut xcb_connection_t,
     pub window: xcb_window_t,
 }
-
+#[cfg(target_os = "linux")]
 impl Default for VkXcbSurfaceCreateInfoKHR {
     fn default() -> Self {
         unsafe {

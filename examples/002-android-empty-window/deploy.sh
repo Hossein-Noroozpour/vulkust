@@ -2,4 +2,4 @@
 clear
 clear
 cargo build &&\
-cp target/armv7-linux-androideabi/debug/libapp.so ../../../Vulkust/app/src/main/jniLibs/armeabi-v7a/libapp.so
+cp target/aarch64-linux-android/debug/libapp.so ../../../Vulkust/app/src/main/jniLibs/arm64-v8a/libmain.so

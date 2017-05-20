@@ -1,5 +1,5 @@
 [build]
-target = "armv7-linux-androideabi"
+target = "aarch64-linux-android"
 
-[target.armv7-linux-androideabi]
-linker = "../../../toolchains/ndk-24-armv7a/bin/arm-linux-androideabi-clang++.cmd"
+[target.aarch64-linux-android]
+linker = "../../../toolchains/ndk-24-arm64/bin/aarch64-linux-android-clang++.cmd"

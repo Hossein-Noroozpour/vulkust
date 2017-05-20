@@ -19,18 +19,20 @@ pub struct Surface {
 
 impl Surface {
     #[cfg(target_os = "android")]
-    pub fn new(instance: Arc<Instance>, window: *mut ANativeWindow) -> Self {
+    pub fn new<CoreApp>(
+            instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
+            where CoreApp: CoreAppTrait  {
         use super::super::system::android::window::ANativeWindow;
         let mut vk_data = 0 as vk::VkSurfaceKHR;
-        let mut create_info = VkAndroidSurfaceCreateInfoKHR::default();
+        let mut create_info = vk::VkAndroidSurfaceCreateInfoKHR::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-        create_info.window = window;
+        create_info.window = unsafe { (*os_app).window };
         use std::mem::transmute;
         use std::ffi::CString;
         let vk_proc_name = CString::new("vkCreateAndroidSurfaceKHR").unwrap();
-        let proc_ptr: PfnVkCreateAndroidSurfaceKhr = unsafe { transmute(vk::vkGetInstanceProcAddr(
-            instance.vk_data, vk_proc_name.as_ptr()))};
+        let proc_ptr: vk::PFN_VkCreateAndroidSurfaceKhr = unsafe { transmute(
+            vk::vkGetInstanceProcAddr(instance.vk_data, vk_proc_name.as_ptr()))};
         vulkan_check!(proc_ptr(
                 instance.vk_data, &create_info, null(), &mut vk_data));
         // vulkan_check!(vkCreateAndroidSurfaceKHR(
