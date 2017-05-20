@@ -22,21 +22,17 @@ impl Surface {
     pub fn new<CoreApp>(
             instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
             where CoreApp: CoreAppTrait  {
+        loge!("Reached {:?}", os_app);
         use super::super::system::android::window::ANativeWindow;
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let mut create_info = vk::VkAndroidSurfaceCreateInfoKHR::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
         create_info.window = unsafe { (*os_app).window };
-        use std::mem::transmute;
-        use std::ffi::CString;
-        let vk_proc_name = CString::new("vkCreateAndroidSurfaceKHR").unwrap();
-        let proc_ptr: vk::PFN_VkCreateAndroidSurfaceKhr = unsafe { transmute(
-            vk::vkGetInstanceProcAddr(instance.vk_data, vk_proc_name.as_ptr()))};
-        vulkan_check!(proc_ptr(
+        loge!("{:?}.{:?}", os_app, create_info.window);
+        vulkan_check!(vk::vkCreateAndroidSurfaceKHR(
                 instance.vk_data, &create_info, null(), &mut vk_data));
-        // vulkan_check!(vkCreateAndroidSurfaceKHR(
-        //         instance.vk_data, &create_info, null(), &mut vk_data));
+        loge!("Reached");
         Surface {
             instance: instance,
             vk_data: vk_data,

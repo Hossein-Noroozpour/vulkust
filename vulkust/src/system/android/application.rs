@@ -102,14 +102,10 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
                 logi!("Window has been shown!");
                 self.window_initialized = true;
                 self.window = unsafe {(*app).window};
-                let mut render_engine = Box::into_raw(Box::new(RenderEngine::new()));
-                let mut core_app = Box::into_raw(Box::new(CoreApp::new()));
-                self.set_core_app(core_app);
-                self.set_rnd_eng(render_engine);
-                unsafe { (*render_engine).set_os_app(self) };
-                unsafe { (*render_engine).set_core_app(core_app) };
-                unsafe { (*render_engine).initialize() };
-                unsafe { (*core_app).initialize(self, self.render_engine) };
+                loge!("{:?}", self.window);
+                unsafe { (*self.render_engine).initialize() };
+                unsafe { (*self.core_app).initialize(
+                    (*self.render_engine).os_app, self.render_engine) };
             },
             AppCmd::TermWindow => {
                 logi!("Window has been terminated!");

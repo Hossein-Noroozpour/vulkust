@@ -94,6 +94,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
 
     fn initialize(&mut self) {
         let instance = Arc::new(Instance::new());
+        loge!("Reached");
         let surface = Arc::new(Surface::new(instance.clone(), self.os_app));
         let physical_device = Arc::new(PhysicalDevice::new(surface.clone()));
         let logical_device = Arc::new(LogicalDevice::new(physical_device.clone()));

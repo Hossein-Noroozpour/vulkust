@@ -5,6 +5,7 @@ use std::mem::{
     transmute,
     forget,
 };
+use std::os::raw::c_void as std_void;
 #[cfg(target_os = "android")]
 use self::libc::{
     c_void,
@@ -21,18 +22,7 @@ pub struct Application <CoreApp> where CoreApp: ApplicationTrait {
 impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
     #[cfg(any(target_os = "linux", target_os = "windows"))]
 	pub fn new() -> Self {
-        let mut os_app = Box::into_raw(Box::new(OsApplication::<CoreApp>::new(null())));
-        let mut render_engine = Box::into_raw(Box::new(RenderEngine::<CoreApp>::new()));
-        let mut core_app = Box::into_raw(Box::new(CoreApp::new()));
-        unsafe { (*os_app).set_core_app(core_app)};
-        unsafe { (*os_app).set_rnd_eng(render_engine)};
-        unsafe { (*render_engine).set_os_app(os_app)};
-        unsafe { (*render_engine).set_core_app(core_app)};
-        Application {
-            os_app: os_app,
-            render_engine: render_engine,
-            core_app: core_app,
-		}
+        Self::set(null())
 	}
     #[cfg(target_os = "android")]
 	pub fn new(
@@ -45,9 +35,26 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
             saved_state: saved_state,
             saved_state_size: saved_state_size,
         };
-        let mut os_app = OsApplication::<CoreApp>::new(unsafe { transmute(&args) });
-        forget(os_app);
+        let _ = Self::set(unsafe { transmute(&args) });
 	}
+
+    fn set(args: *const std_void) -> Self {
+        let mut os_app = Box::into_raw(Box::new(OsApplication::<CoreApp>::new(args)));
+        loge!("Reached {:?}", os_app);
+        
+        let mut render_engine = Box::into_raw(Box::new(RenderEngine::<CoreApp>::new()));
+        let mut core_app = Box::into_raw(Box::new(CoreApp::new()));
+        unsafe { (*os_app).set_core_app(core_app)};
+        unsafe { (*os_app).set_rnd_eng(render_engine)};
+        unsafe { (*render_engine).set_os_app(os_app)};
+        unsafe { (*render_engine).set_core_app(core_app)};
+        Application {
+            os_app: os_app,
+            render_engine: render_engine,
+            core_app: core_app,
+		}
+    }
+
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     pub fn run(&mut self) {
         let pt1: usize = unsafe { transmute(self.render_engine)};
@@ -60,7 +67,7 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
         unsafe { (*self.render_engine).terminate() };
     }
 }
-
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 impl<CoreApp> Drop for Application<CoreApp> where CoreApp: ApplicationTrait {
     fn drop(&mut self) {
         logi!("Main system application got deleted.");
