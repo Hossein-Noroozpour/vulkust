@@ -16,5 +16,6 @@ pub trait ApplicationTrait<CoreApp>
     fn new(args: *const c_void) -> Self;
     fn set_core_app(&mut self, c: *mut CoreApp);
     fn set_rnd_eng(&mut self, r: *mut RenderEngine<CoreApp>);
+    fn initialize(&mut self) -> bool;
     fn execute(&mut self) -> bool;
 }

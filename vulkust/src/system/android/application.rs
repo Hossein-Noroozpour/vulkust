@@ -22,6 +22,8 @@ use super::glue::{
 };
 use super::window::ANativeWindow;
 use super::looper::ALooper_pollAll;
+
+#[derive(Clone, Copy)]
 pub struct Args {
     pub activity: *mut ANativeActivity,
     pub saved_state: *mut c_void,
@@ -33,12 +35,14 @@ pub struct Application <CoreApp>
     pub render_engine: *mut RenderEngine<CoreApp>,
     pub window: *mut ANativeWindow,
     pub window_initialized: bool,
+    pub args: Args,
 }
 
 impl<CoreApp> OsApplicationTrait <CoreApp> for Application<CoreApp>
         where CoreApp: ApplicationTrait {
 	fn new(args: *const std::os::raw::c_void) -> Self {
-        let ref args: &Args = unsafe { transmute(args) };
+        let args: *mut Args = unsafe { transmute(args) };
+        let args = unsafe {(*args).clone()};
         let activity = args.activity;
         let saved_state = args.saved_state;
         let saved_state_size = args.saved_state_size;
@@ -48,6 +52,7 @@ impl<CoreApp> OsApplicationTrait <CoreApp> for Application<CoreApp>
             render_engine: null_mut(),
             window: null_mut(),
             window_initialized: false,
+            args: args
 		};
         unsafe {
             (*(*activity).callbacks).onDestroy = glue::on_destroy;
@@ -63,8 +68,6 @@ impl<CoreApp> OsApplicationTrait <CoreApp> for Application<CoreApp>
             (*(*activity).callbacks).onNativeWindowDestroyed = glue::on_native_window_destroyed;
             (*(*activity).callbacks).onInputQueueCreated = glue::on_input_queue_created;
             (*(*activity).callbacks).onInputQueueDestroyed = glue::on_input_queue_destroyed;
-            (*activity).instance = glue::android_app_create::<CoreApp>(
-                activity, saved_state, saved_state_size, transmute(&mut app));
         }
         app
 	}
@@ -73,6 +76,14 @@ impl<CoreApp> OsApplicationTrait <CoreApp> for Application<CoreApp>
     }
     fn set_rnd_eng(&mut self, r: *mut RenderEngine<CoreApp>) {
         self.render_engine = r;
+    }
+    fn initialize(&mut self) -> bool {
+        unsafe {
+            (*self.args.activity).instance = glue::android_app_create::<CoreApp>(
+                self.args.activity, self.args.saved_state, self.args.saved_state_size,
+                transmute((*self.render_engine).os_app))
+        }
+        return true;
     }
     fn execute(&mut self) -> bool {
         return true;

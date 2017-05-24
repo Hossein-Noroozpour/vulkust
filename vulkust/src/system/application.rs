@@ -41,13 +41,14 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
     fn set(args: *const std_void) -> Self {
         let mut os_app = Box::into_raw(Box::new(OsApplication::<CoreApp>::new(args)));
         loge!("Reached {:?}", os_app);
-        
+
         let mut render_engine = Box::into_raw(Box::new(RenderEngine::<CoreApp>::new()));
         let mut core_app = Box::into_raw(Box::new(CoreApp::new()));
         unsafe { (*os_app).set_core_app(core_app)};
         unsafe { (*os_app).set_rnd_eng(render_engine)};
         unsafe { (*render_engine).set_os_app(os_app)};
         unsafe { (*render_engine).set_core_app(core_app)};
+        unsafe { (*os_app).initialize()};
         Application {
             os_app: os_app,
             render_engine: render_engine,
