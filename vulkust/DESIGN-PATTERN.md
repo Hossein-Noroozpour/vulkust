@@ -1,7 +1,14 @@
 ###Design pattern rules
-
-- import std first, external library, ffi related second, outer modules third, neighbor last. 
-- It is better to avoid big constructor, in big constructors there is several mistakes:
-   - Perhaps your mistaking in your design, the structure that you are creating must be divided to other structures.
-   - If the previous was not applicable try to create a default version of your structure and then try to break it down 
-   to several functions for initializing each data field of structure.
+- import std first, external library, ffi related second, outer modules third,
+  neighbor last.
+- It is better to avoid big constructor, in big constructors there is several
+  mistakes:
+  - Perhaps your mistaking in your design, the structure that you are creating
+    must be divided to other structures.
+  - If the previous was not applicable try to create a default version of your
+    structure and then try to break it down to several functions for
+    initializing each data field of structure.
+- Modules and their roles:
+  - System: It's responsible for taking care of FFI related stuffs.
+  - IO: An interface around FFI part of file system, network, other 
+    input-output things and logic of program.
