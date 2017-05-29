@@ -1,8 +1,8 @@
 #[cfg(feature = "d3d12")]
 use super::super::d3d12::engine::Engine;
-#[cfg(feature = "metal")]
+#[cfg(any(feature = "metal", target_os = "macos"))]
 use super::super::metal::engine::Engine;
-#[cfg(all(not(feature = "metal"), not(feature = "d3d12")))]
+#[cfg(all(not(feature = "metal"), not(feature = "d3d12"), not(target_os = "macos")))]
 use super::super::vulkan::engine::Engine;
 
 use super::super::core::application::ApplicationTrait;

@@ -18,8 +18,7 @@ use std::mem::{
 };
 use std::ffi::CString;
 
-pub struct Application<CoreApp>
-    where CoreApp: ApplicationTrait {
+pub struct Application<CoreApp> where CoreApp: ApplicationTrait {
     pub connection: *mut xcb::xcb_connection_t,
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,

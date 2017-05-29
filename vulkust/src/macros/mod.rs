@@ -28,7 +28,7 @@ macro_rules! start {
 }
 
 #[macro_export]
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
 macro_rules! logi {
     ($fmt:expr) => {
         print!("Vulkust Information MSG in file: {} line: {} ", file!(), line!());
@@ -41,7 +41,7 @@ macro_rules! logi {
 }
 
 #[macro_export]
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
 macro_rules! loge {
     ($fmt:expr) => {
         print!("Vulkust Error MSG in file: {} line: {} ", file!(), line!());
@@ -54,7 +54,7 @@ macro_rules! loge {
 }
 
 #[macro_export]
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
 macro_rules! logf {
     ($fmt:expr) => {
         print!("Vulkust Fatal MSG in file: {} line: {} ", file!(), line!());

@@ -3,6 +3,8 @@ use std::os::raw::c_void;
 use super::android::application::Application;
 #[cfg(target_os = "linux")]
 use super::linux::application::Application;
+#[cfg(target_os = "macos")]
+use super::mac::application::Application;
 #[cfg(target_os = "windows")]
 use super::windows::application::Application;
 
