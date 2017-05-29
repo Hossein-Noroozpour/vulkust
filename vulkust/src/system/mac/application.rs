@@ -18,6 +18,7 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
         }
     }
     fn initialize(&mut self) -> bool {
+        
         true
     }
     fn set_core_app(&mut self, c: *mut CoreApp) {

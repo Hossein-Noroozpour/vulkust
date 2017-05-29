@@ -1,4 +1,9 @@
 #[macro_use]
+pub extern crate objc;
+#[macro_use]
+pub extern crate bitflags;
+
+#[macro_use]
 pub mod macros;
 pub mod core;
 pub mod io;

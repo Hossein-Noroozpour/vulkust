@@ -17,5 +17,7 @@ winapi = "*"
 kernel32-sys = "*"
 user32-sys = "*"
 gdi32-sys = "*"
+objc = "*"
+bitflags = "*"
 
 [build-dependencies]
