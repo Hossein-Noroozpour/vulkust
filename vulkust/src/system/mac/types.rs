@@ -19,15 +19,31 @@ pub type CGFloat = f64;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct NSSize {
-    pub width: f64,
-    pub height: f64,
+    pub width: CGFloat,
+    pub height: CGFloat,
+}
+
+unsafe impl objc::Encode for NSSize {
+    fn encode() -> objc::Encoding {
+        let encoding = format!(
+            "{{CGSize={}{}}}", CGFloat::encode().as_str(), CGFloat::encode().as_str());
+        unsafe { objc::Encoding::from_str(&encoding) }
+    }
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct NSPoint {
-    pub x: f64,
-    pub y: f64,
+    pub x: CGFloat,
+    pub y: CGFloat,
+}
+
+unsafe impl objc::Encode for NSPoint {
+    fn encode() -> objc::Encoding {
+        let encoding = format!(
+            "{{CGPoint={}{}}}", CGFloat::encode().as_str(), CGFloat::encode().as_str());
+        unsafe { objc::Encoding::from_str(&encoding) }
+    }
 }
 
 #[repr(C)]
@@ -35,6 +51,14 @@ pub struct NSPoint {
 pub struct NSRect {
     pub origin: NSPoint,
     pub size: NSSize,
+}
+
+unsafe impl objc::Encode for NSRect {
+    fn encode() -> objc::Encoding {
+        let encoding = format!(
+            "{{CGRect={}{}}}", NSPoint::encode().as_str(), NSSize::encode().as_str());
+        unsafe { objc::Encoding::from_str(&encoding) }
+    }
 }
 
 
