@@ -8,3 +8,4 @@ pub mod game_view_controller;
 pub mod renderer;
 pub mod shader_types;
 pub mod types;
+pub mod util;

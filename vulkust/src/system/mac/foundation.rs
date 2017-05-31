@@ -1,4 +1,5 @@
 use super::super::super::objc;
+use super::super::metal::{CGFloat};
 use super::types::*;
 
 pub fn ns_make_rect(x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat) -> NSRect {

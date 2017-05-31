@@ -1,20 +1,7 @@
 use super::super::super::objc;
+use super::super::metal::{CGFloat, NSInteger, NSUInteger};
 
 pub type Id = *mut objc::runtime::Object;
-
-#[cfg(target_pointer_width = "32")]
-pub type NSInteger = i32;
-#[cfg(target_pointer_width = "32")]
-pub type NSUInteger = u32;
-#[cfg(target_pointer_width = "32")]
-pub type CGFloat = f32;
-
-#[cfg(target_pointer_width = "64")]
-pub type NSInteger = i64;
-#[cfg(target_pointer_width = "64")]
-pub type NSUInteger = u64;
-#[cfg(target_pointer_width = "64")]
-pub type CGFloat = f64;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default)]
