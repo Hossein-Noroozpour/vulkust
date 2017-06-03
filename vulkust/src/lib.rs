@@ -11,7 +11,6 @@ pub mod io;
 #[macro_use]
 pub mod metal;
 pub mod render;
-#[macro_use]
 pub mod system;
 #[macro_use]
 pub mod util;

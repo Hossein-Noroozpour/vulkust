@@ -1,12 +1,10 @@
-use super::super::super::objc;
-use super::super::super::objc::runtime::{Object, Sel, YES, BOOL};
+use super::super::super::objc::runtime::{Object, Sel};
 use super::super::metal as mtl;
 
 pub const DEVICE_VAR_NAME: &str = "mtl_device";
 pub const RENDERER_VAR_NAME: &str = "mtl_renderer";
 pub const CLASS_NAME: &str = "GameViewController";
 pub const SUPER_CLASS_NAME: &str = "NSViewController";
-
 
 //- (void)metalViewDidLoad
 extern fn metal_view_did_load(_this: &mut Object, _cmd: Sel) {
@@ -16,90 +14,111 @@ extern fn metal_view_did_load(_this: &mut Object, _cmd: Sel) {
     // [_renderer drawRectResized:_view.bounds.size];
 }
 
-// // Called whenever view changes orientation or layout is changed
+// Called whenever view changes orientation or layout is changed
 // - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
-// {
-//     [_renderer drawRectResized:view.bounds.size];
-// }
-//
-// // Called whenever the view needs to render
+extern fn mtl_view(this: &mut Object, _cmd: Sel, view: mtl::Id, _size: mtl::NSSize) {
+    let bounds: mtl::NSRect = unsafe { msg_send![view, bounds] };
+    let renderer: &mtl::Id = unsafe { this.get_ivar(RENDERER_VAR_NAME) };
+    unsafe { msg_send![*renderer, drawRectResized:bounds.size] };
+}
+
+// Called whenever the view needs to render
 // - (void)drawInMTKView:(nonnull MTKView *)view
-// {
-//     @autoreleasepool
-//     {
-//         [_renderer update];
-//     }
-// }
-//
-// // Methods to get and set state of the our ultimate render destination (i.e. the drawable)
+extern fn draw_in_mtk_view(this: &mut Object, _cmd: Sel, _view: mtl::Id) {
+    let pool = mtl::NsAutoReleasePool::new();
+    unsafe { msg_send![*this.get_ivar::<mtl::Id>(RENDERER_VAR_NAME), update]; }
+    let _ = pool;
+}
+
+// Methods to get and set state of the our ultimate render destination (i.e. the drawable)
 // # pragma mark RenderDestinationProvider implementation
-//
 // - (MTLRenderPassDescriptor*) currentRenderPassDescriptor
-// {
-//     return _view.currentRenderPassDescriptor;
-// }
-//
+extern fn get_current_render_pass_descriptor(this: &mut Object, _cmd: Sel) -> mtl::Id {
+    let view: mtl::Id = unsafe { msg_send![this, view] };
+    let desc: mtl::Id = unsafe { msg_send![view, currentRenderPassDescriptor] };
+    return desc;
+}
+
 // - (MTLPixelFormat) colorPixelFormat
-// {
-//     return _view.colorPixelFormat;
-// }
-//
+extern fn get_color_pixel_format(this: &mut Object, _cmd: Sel) -> mtl::NSUInteger {
+    let view: mtl::Id = unsafe { msg_send![this, view] };
+    unsafe { msg_send![view, colorPixelFormat] }
+}
+
 // - (void) setColorPixelFormat: (MTLPixelFormat) pixelFormat
-// {
-//     _view.colorPixelFormat = pixelFormat;
-// }
-//
+extern fn set_color_pixel_format(this: &mut Object, _cmd: Sel, frmt: mtl::NSUInteger) {
+    let view: mtl::Id = unsafe { msg_send![this, view] };
+    unsafe { msg_send![view, setColorPixelFormat:frmt] };
+}
+
 // - (MTLPixelFormat) depthStencilPixelFormat
-// {
-//     return _view.depthStencilPixelFormat;
-// }
-//
+extern fn get_depth_stencil_pixel_format(this: &mut Object, _cmd: Sel) -> mtl::NSUInteger {
+    let view: mtl::Id = unsafe { msg_send![this, view] };
+    unsafe { msg_send![view, depthStencilPixelFormat] }
+}
+
 // - (void) setDepthStencilPixelFormat: (MTLPixelFormat) pixelFormat
-// {
-//     _view.depthStencilPixelFormat = pixelFormat;
-// }
-//
+extern fn set_depth_stencil_pixel_format(this: &mut Object, _cmd: Sel, frmt: mtl::NSUInteger) {
+    let view: mtl::Id = unsafe { msg_send![this, view] };
+    unsafe { msg_send![view, setDepthStencilPixelFormat:frmt] };
+}
+
 // - (NSUInteger) sampleCount
-// {
-//     return _view.sampleCount;
-// }
-//
+extern fn get_sample_count(this: &mut Object, _cmd: Sel) -> mtl::NSUInteger {
+    let view: mtl::Id = unsafe { msg_send![this, view] };
+    return unsafe { msg_send![view, sampleCount] };
+}
+
 // - (void) setSampleCount:(NSUInteger) sampleCount
-// {
-//     _view.sampleCount = sampleCount;
-// }
-//
+extern fn set_sample_count(this: &mut Object, _cmd: Sel, sample_count: mtl::NSUInteger) {
+    let view: mtl::Id = unsafe { msg_send![this, view] };
+    unsafe { msg_send![view, setSampleCount:sample_count] };
+}
+
 // - (id<MTLDrawable>) currentDrawable
-// {
-//     return _view.currentDrawable;
-// }
-//
-// @end
-
-
+extern fn get_current_drawable(this: &mut Object, _cmd: Sel) -> mtl::Id {
+    let view: mtl::Id = unsafe { msg_send![this, view] };
+    return unsafe { msg_send![view, currentDrawable] };
+}
 
 pub fn register() {
-    let super_class = get_class!(SUPER_CLASS_NAME);
-    let mut self_class = dec_class!(CLASS_NAME, super_class);
+    let mut self_class = mtl::dec_class_s(CLASS_NAME, SUPER_CLASS_NAME);
     self_class.add_ivar::<mtl::Id>(DEVICE_VAR_NAME);
     self_class.add_ivar::<mtl::Id>(RENDERER_VAR_NAME);
     unsafe {
         self_class.add_method(
             sel!(metalViewDidLoad),
             metal_view_did_load as extern fn(&mut Object, Sel));
-        // self_class.add_method(
-        //     sel!(applicationWillFinishLaunching:),
-        //     application_will_finish_launching as extern fn(&Object, Sel, Id));
-        // self_class.add_method(
-        //     sel!(applicationDidFinishLaunching:),
-        //     application_did_finish_launching as extern fn(&Object, Sel, Id));
-        // self_class.add_method(
-        //     sel!(applicationWillTerminate:),
-        //     application_will_terminate as extern fn(&Object, Sel, Id));
-        // self_class.add_method(
-        //     sel!(applicationShouldTerminateAfterLastWindowClosed:),
-        //     application_should_terminate_after_last_window_closed
-        //     as extern fn(&Object, Sel, Id) -> BOOL);
+        self_class.add_method(
+            sel!(mtkView:v:),
+            mtl_view as extern fn(&mut Object, Sel, mtl::Id, mtl::NSSize));
+        self_class.add_method(
+            sel!(drawInMTKView:),
+            draw_in_mtk_view as extern fn(&mut Object, Sel, mtl::Id));
+        self_class.add_method(
+            sel!(currentRenderPassDescriptor),
+            get_current_render_pass_descriptor as extern fn(&mut Object, Sel) -> mtl::Id);
+        self_class.add_method(
+            sel!(colorPixelFormat),
+            get_color_pixel_format as extern fn(&mut Object, Sel) -> mtl::NSUInteger);
+        self_class.add_method(
+            sel!(setColorPixelFormat:),
+            set_color_pixel_format as extern fn(&mut Object, Sel, mtl::NSUInteger));
+        self_class.add_method(
+            sel!(depthStencilPixelFormat),
+            get_depth_stencil_pixel_format as extern fn(&mut Object, Sel) -> mtl::NSUInteger);
+        self_class.add_method(
+            sel!(setDepthStencilPixelFormat:),
+            set_depth_stencil_pixel_format as extern fn(&mut Object, Sel, mtl::NSUInteger));
+        self_class.add_method(
+            sel!(sampleCount),
+            get_sample_count as extern fn(&mut Object, Sel) -> mtl::NSUInteger);
+        self_class.add_method(
+            sel!(setSampleCount:),
+            set_sample_count as extern fn(&mut Object, Sel, mtl::NSUInteger));
+        self_class.add_method(
+            sel!(currentDrawable),
+            get_current_drawable as extern fn(&mut Object, Sel) -> mtl::Id);
     }
     self_class.register();
 }

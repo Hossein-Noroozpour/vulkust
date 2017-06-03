@@ -1,13 +1,11 @@
 use std::ptr::null_mut;
 use std::os::raw::c_void;
-use super::super::super::objc;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::render::engine::RenderEngine;
 use super::super::os::ApplicationTrait as OsApplicationTrait;
-use super::types::*;
+use super::super::metal as mtl;
 use super::app_delegate;
 use super::game_view_controller;
-use super::util::{get_instance};
 // use super::foundation::*;
 
 pub struct Application<CoreApp> where CoreApp: ApplicationTrait  {
@@ -26,10 +24,10 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
     fn initialize(&mut self) -> bool {
         app_delegate::register();
         game_view_controller::register();
-        let pool = get_instance("NSAutoreleasePool");
-        let ns_application = get_class!("NSApplication");
-        let ns_application: Id = unsafe { msg_send![ns_application, sharedApplication] };
-        let app_delegate = get_instance(app_delegate::CLASS_NAME);
+        let pool = mtl::NsAutoReleasePool::new();
+        let ns_application = mtl::get_class("NSApplication");
+        let ns_application: mtl::Id = unsafe { msg_send![ns_application, sharedApplication] };
+        let app_delegate = mtl::get_instance(app_delegate::CLASS_NAME);
         unsafe { msg_send![app_delegate, initialize]};
         unsafe { msg_send![ns_application, setDelegate:app_delegate] };
         logi!("Reached.");
@@ -78,7 +76,7 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
 
 
         unsafe { msg_send![ns_application, run] };
-        unsafe { msg_send![pool, drain]; }
+        let _ = pool;
         true
     }
     fn set_core_app(&mut self, c: *mut CoreApp) {

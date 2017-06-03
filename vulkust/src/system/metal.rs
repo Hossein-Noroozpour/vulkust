@@ -1,4 +1,6 @@
-use super::super::objc::runtime::Object;
+use super::super::objc;
+use super::super::objc::runtime::{Object, Class};
+use super::super::objc::declare::{ClassDecl};
 
 // types ------------------------------------------------------------------------------------------
 
@@ -18,7 +20,12 @@ pub type CGFloat = f64;
 
 pub type Id = *mut Object;
 
+// const ------------------------------------------------------------------------------------------
+
+pub const NS_AUTO_RELEASE_POOL: &str = "NSAutoreleasePool";
+
 // structs ----------------------------------------------------------------------------------------
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct ClearColor {
@@ -38,6 +45,91 @@ impl ClearColor {
         }
     }
 }
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Default)]
+pub struct NSSize {
+    pub width: CGFloat,
+    pub height: CGFloat,
+}
+
+unsafe impl objc::Encode for NSSize {
+    fn encode() -> objc::Encoding {
+        let encoding = format!(
+            "{{CGSize={}{}}}", CGFloat::encode().as_str(), CGFloat::encode().as_str());
+        unsafe { objc::Encoding::from_str(&encoding) }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Default)]
+pub struct NSPoint {
+    pub x: CGFloat,
+    pub y: CGFloat,
+}
+
+unsafe impl objc::Encode for NSPoint {
+    fn encode() -> objc::Encoding {
+        let encoding = format!(
+            "{{CGPoint={}{}}}", CGFloat::encode().as_str(), CGFloat::encode().as_str());
+        unsafe { objc::Encoding::from_str(&encoding) }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Default)]
+pub struct NSRect {
+    pub origin: NSPoint,
+    pub size: NSSize,
+}
+
+unsafe impl objc::Encode for NSRect {
+    fn encode() -> objc::Encoding {
+        let encoding = format!(
+            "{{CGRect={}{}}}", NSPoint::encode().as_str(), NSSize::encode().as_str());
+        unsafe { objc::Encoding::from_str(&encoding) }
+    }
+}
+
+impl NSRect {
+    pub fn new(x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat) -> Self {
+        NSRect {
+            origin: NSPoint {
+                x: x,
+                y: y,
+            },
+            size: NSSize {
+                width: w,
+                height: h,
+            },
+        }
+    }
+}
+
+// TODO: I don't like auto release pool try to remove it, and you must right the drop
+pub struct NSString {
+    pub s: Id,
+}
+
+impl NSString {
+    pub fn new(string: &str) -> Self {
+        let s: Id = alloc("NSString");
+        let s: Id = unsafe { msg_send![s,
+            initWithBytes:string.as_ptr()
+            length:string.len()
+            encoding:NS_UTF8_STRING_ENCODING]};
+        NSString {
+            s: s
+        }
+    }
+}
+
+// TODO: remove auto release pool in future.
+// impl Drop for NSString {
+//     fn drop(&mut self) {
+//
+//     }
+// }
 
 // enums ------------------------------------------------------------------------------------------
 
@@ -170,6 +262,56 @@ bitflags! {
     }
 }
 
+bitflags! {
+    pub struct NsWindowStyleMask: NSUInteger {
+        const NS_BORDERLESS_WINDOW_MASK                 = 0;
+        const NS_TITLED_WINDOW_MASK                     = 1 << 0;
+        const NS_CLOSABLE_WINDOW_MASK                   = 1 << 1;
+        const NS_MINIATURIZABLE_WINDOW_MASK             = 1 << 2;
+        const NS_RESIZABLE_WINDOW_MASK                  = 1 << 3;
+        const NS_TEXTURED_BACKGROUND_WINDOW_MASK        = 1 << 8;
+        const NS_UNIFIED_TITLE_AND_TOOLBAR_WINDOW_MASK  = 1 << 12;
+        const NS_FULLSCREEN_WINDOW_MASK                 = 1 << 14;
+        const NS_FULLSIZE_CONTENT_VIEW_WINDOW_MASK      = 1 << 15;
+    }
+}
+
+bitflags! {
+    pub struct NsBackingStoreType: NSUInteger {
+        const NS_BACKING_STORE_RETAINED    = 0;
+        const NS_BACKING_STORE_NONRETAINED = 1;
+        const NS_BACKING_STORE_BUFFERED    = 2;
+    }
+}
+
+bitflags! {
+    pub struct NsStringEncoding: NSInteger {
+        const NS_ASCII_STRING_ENCODING = 1;
+        const NS_NEXTSTEP_STRING_ENCODING = 2;
+        const NS_JAPANESE_EUC_STRING_ENCODING = 3;
+        const NS_UTF8_STRING_ENCODING = 4;
+        const NS_ISO_LATIN1_STRING_ENCODING = 5;
+        const NS_SYMBOL_STRING_ENCODING = 6;
+        const NS_NON_LOSSY_ASCII_STRING_ENCODING = 7;
+        const NS_SHIFT_JIS_STRING_ENCODING = 8;
+        const NS_ISOLATIN2_STRING_ENCODING = 9;
+        const NS_UNICODE_STRING_ENCODING = 10;
+        const NS_WINDOWS_CP1251_STRING_ENCODING = 11;
+        const NS_WINDOWS_CP1252_STRING_ENCODING = 12;
+        const NS_WINDOWS_CP1253_STRING_ENCODING = 13;
+        const NS_WINDOWS_CP1254_STRING_ENCODING = 14;
+        const NS_WINDOWS_CP1250_STRING_ENCODING = 15;
+        const NS_ISO2022JP_STRING_ENCODING = 21;
+        const NS_MACOS_ROMAN_STRING_ENCODING = 30;
+        const NS_UTF16_STRING_ENCODING = NS_UNICODE_STRING_ENCODING.bits;
+        const NS_UTF16_BIG_ENDIAN_STRING_ENCODING = 0x90000100;
+        const NS_UTF16_LITTLE_ENDIAN_STRING_ENCODING = 0x94000100;
+        const NS_UTF32_STRING_ENCODING = 0x8c000100;
+        const NS_UTF32_BIG_ENDIAN_STRING_ENCODING = 0x98000100;
+        const NS_UTF32_LITTLE_ENDIAN_STRING_ENCODING = 0x9c000100;
+    }
+}
+
 // external linkages ------------------------------------------------------------------------------
 
 #[link(name = "Metal", kind = "framework")]
@@ -182,10 +324,94 @@ extern "C" {
     // pub fn MTKMetalVertexFormatFromModelIO() -> *mut Object;
 }
 
+#[link(name = "Foundation", kind = "framework")]
+extern {
+    // pub static NSDefaultRunLoopMode: mtl::Id;
+}
+
+#[link(name = "AppKit", kind = "framework")]
+extern {
+    // pub static NSImageHintCTM: Id;
+}
+
+// Rustified ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // functions --------------------------------------------------------------------------------------
+
+pub fn get_class(s: &str) -> &Class {
+    match Class::get(s) {
+        Some(c) => { c },
+        None => { logf!("Class: {:?} does not exist.", s); },
+    }
+}
+
+pub fn get_instance(s: &str) -> Id {
+    let c = match Class::get(s) {
+        Some(c) => { c },
+        None => { logf!("Class: {:?} does not exist.", s); },
+    };
+    let r: Id = unsafe { msg_send![c, alloc] };
+    let r: Id = unsafe { msg_send![r, init] };
+    return r;
+}
+
+pub fn dec_class(s: &str, c: &Class) -> ClassDecl {
+    match ClassDecl::new(s, c) {
+        Some(c) => { c },
+        None => {
+            logf!("Can not create class {} with super class {:?}.", s, c);
+        },
+    }
+}
+
+pub fn dec_class_s(s: &str, c: &str) -> ClassDecl {
+    let c = match Class::get(c) {
+        Some(c) => { c },
+        None => { logf!("Class: {} does not exist.", c); },
+    };
+    match ClassDecl::new(s, c) {
+        Some(c) => { c },
+        None => {
+            logf!("Can not create class {} with super class {:?}.", s, c);
+        },
+    }
+}
+
+pub fn set_ivar<T>(id: Id, name: &str, value: T) where T: objc::Encode {
+    unsafe { (*id).set_ivar(name, value); }
+}
+
+pub fn alloc(s: &str) -> Id {
+    let c = match Class::get(s) {
+        Some(c) => { c },
+        None => { logf!("Class: {:?} does not exist.", s); },
+    };
+    unsafe { msg_send![c, alloc] }
+}
 
 pub fn create_system_default_device() -> Id {
     unsafe {
         MTLCreateSystemDefaultDevice()
+    }
+}
+
+// struct -----------------------------------------------------------------------------------------
+
+pub struct NsAutoReleasePool {
+    pool: Id
+}
+
+impl NsAutoReleasePool {
+    pub fn new() -> Self {
+        NsAutoReleasePool {
+            pool: get_instance(NS_AUTO_RELEASE_POOL),
+        }
+    }
+}
+
+impl Drop for NsAutoReleasePool {
+    fn drop(&mut self) {
+        unsafe {
+            msg_send![self.pool, drain];
+        }
     }
 }
