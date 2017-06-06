@@ -17,15 +17,8 @@ use ::math::vector::{
     MathVector,
     VectorElement,
 };
-use super::super::io::file::Stream;
 
-pub trait Mat {
-    fn read(&mut self, s: &mut Stream);
-}
-
-pub trait Mat4<E>: Mat + Mul<Vec3<E>> + Mul where E: VectorElement, Self: Sized {
-}
-
+#[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct Mat4x4<E> where E: VectorElement {
     pub data: [[E; 4]; 4],
@@ -91,16 +84,6 @@ impl<E> Mat4x4<E> where E: VectorElement {
     }
 }
 
-impl<E> Mat for Mat4x4<E> where E: VectorElement {
-    fn read(&mut self, s: &mut Stream) {
-        for i in 0..4 {
-            for j in 0..4 {
-                self.data[j][i] = num::cast(s.read(&0f32)).unwrap();
-            }
-        }
-    }
-}
-
 impl<E> Mul<Vec3<E>> for Mat4x4<E> where E: VectorElement {
     type Output = Vec3<E>;
     fn mul(self, o: Vec3<E>) -> Vec3<E> {
@@ -127,5 +110,3 @@ impl<E> Mul<Mat4x4<E>> for Mat4x4<E> where E: VectorElement {
         m
     }
 }
-
-impl<E> Mat4<E> for Mat4x4<E> where E: VectorElement {}

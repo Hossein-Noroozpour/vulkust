@@ -12,8 +12,6 @@ use std::ops::{
     DivAssign,
 };
 use std::fmt::Debug;
-
-use ::io::file::Stream;
 use super::num::Number;
 
 pub enum Axis {
@@ -81,7 +79,6 @@ pub trait MathVector <ElementType>:
     fn square_length(&self) -> ElementType;
     fn normalize(&mut self);
     fn normalized(&self) -> Self;
-    fn read(&mut self, s: &mut Stream);
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -227,12 +224,6 @@ impl<T> MathVector<T> for Vec3<T> where T: VectorElement {
             z: self.z / len
         }
     }
-
-    fn read(&mut self, s: &mut Stream) {
-        self.x = num::cast::<f32, T>(s.read(&0f32)).unwrap();
-        self.y = num::cast::<f32, T>(s.read(&0f32)).unwrap();
-        self.z = num::cast::<f32, T>(s.read(&0f32)).unwrap();
-    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -367,10 +358,5 @@ impl<T> MathVector<T> for Vec2<T> where T: VectorElement {
             x: self.x / len,
             y: self.y / len,
         }
-    }
-
-    fn read(&mut self, s: &mut Stream) {
-        self.x = s.read::<T>(&num::cast(0).unwrap());
-        self.y = s.read::<T>(&num::cast(0).unwrap());
     }
 }

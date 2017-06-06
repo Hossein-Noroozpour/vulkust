@@ -1,12 +1,19 @@
+use std::mem::transmute;
 use super::super::super::objc::runtime::{Object, Sel, YES, BOOL};
 use super::super::metal as mtl;
 use super::game_view_controller as gvc;
+use super::application::Application as App;
+use super::super::super::core::application::ApplicationTrait;
 
 pub const CLASS_NAME: &str = "AppDelegate";
 pub const SUPER_CLASS_NAME: &str = "NSObject";
 pub const WINDOW_VAR_NAME: &str = "window";
+pub const APP_VAR_NAME: &str = "vukust_os_app";
 
-extern fn initialize(this: &mut Object, _cmd: Sel) {
+extern fn initialize<CoreApp>(this: &mut Object, _cmd: Sel) where CoreApp: ApplicationTrait {
+    let app: *mut App<CoreApp> = unsafe {
+        transmute(this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME))
+    };
     let main_screen: mtl::Id = unsafe { msg_send![mtl::get_class("NSScreen"), mainScreen] };
     let frame: mtl::NSRect = unsafe { msg_send![main_screen, frame] };
     let frame = mtl::NSRect::new(0.0, 0.0, frame.size.width / 2.0, frame.size.height / 2.0);
@@ -21,9 +28,14 @@ extern fn initialize(this: &mut Object, _cmd: Sel) {
     unsafe { (*this).set_ivar("window", window); }
     unsafe { msg_send![window, center]; }
     let device = mtl::create_system_default_device();
+    unsafe { (*app).metal_device = device; }
     let game_view = mtl::get_instance(gvc::CLASS_NAME);
+    unsafe { (*app).game_view_controller = game_view; }
     mtl::set_ivar(game_view, gvc::DEVICE_VAR_NAME, device);
-    let metal_view: mtl::Id = unsafe { msg_send![mtl::alloc("MTKView"), initWithFrame:frame device:device] };
+    let metal_view: mtl::Id = unsafe {
+        msg_send![mtl::alloc("MTKView"), initWithFrame:frame device:device]
+    };
+    unsafe { (*app).metal_view = metal_view; }
     let clear_color = mtl::ClearColor::new(0.0, 0.0, 0.0, 1.0);
     let pixel_format = mtl::PIXEL_FORMAT_BGRA8_UNORM;
     let depth_stencil_format = mtl::PIXEL_FORMAT_DEPTH32_FLOAT;
@@ -57,14 +69,16 @@ extern fn application_should_terminate_after_last_window_closed(
     return YES;
 }
 
-pub fn register() {
+pub fn register<CoreApp>() where CoreApp: ApplicationTrait {
     let ns_object_class = mtl::get_class(SUPER_CLASS_NAME);
     let mut app_delegate_class = mtl::dec_class(CLASS_NAME, ns_object_class);
     app_delegate_class.add_ivar::<mtl::Id>(WINDOW_VAR_NAME);
+    app_delegate_class.add_ivar::<mtl::NSUInteger>(APP_VAR_NAME);
+
     unsafe {
         app_delegate_class.add_method(
             sel!(initialize),
-            initialize as extern fn(&mut Object, Sel));
+            initialize::<CoreApp> as extern fn(&mut Object, Sel));
         app_delegate_class.add_method(
             sel!(applicationWillFinishLaunching:),
             application_will_finish_launching as extern fn(&Object, Sel, mtl::Id));

@@ -9,13 +9,7 @@ pub trait Read: StdRead {
         r
     }
     fn read_typed_bytes(&mut self, des: *mut u8, count: usize) {
-        let mut b = vec![0u8; count];
-        if match self.read(&mut b) {
-            Ok(c) => { c },
-            Err(_) => { logf!("Error in reading stream."); },
-        } < count {
-            logf!("Expected bytes are not in stream.");
-        }
+        let mut b = self.read_bytes(count);
         let b = b.as_ptr();
         if self.is_endian_compatible() {
             for i in 0..count {
@@ -34,5 +28,22 @@ pub trait Read: StdRead {
                 j -= 1;
             }
         }
+    }
+    fn read_bytes(&mut self, count: usize) -> Vec<u8> {
+        let mut b = vec![0u8; count];
+        if match self.read(&mut b) {
+            Ok(c) => { c },
+            Err(_) => { logf!("Error in reading stream."); },
+        } < count {
+            logf!("Expected bytes are not in stream.");
+        }
+        return b;
+    }
+    fn read_bool(&mut self) -> bool {
+        let mut b = self.read_bytes(1);
+        if b[0] == 1 {
+            return true;
+        }
+        return false;
     }
 }

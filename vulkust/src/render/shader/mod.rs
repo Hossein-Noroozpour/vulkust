@@ -5,6 +5,7 @@ use super::super::core::resource::Resource;
 pub trait ShaderTrait {
 }
 
+#[derive(Debug)]
 pub struct Shader {
 
 }

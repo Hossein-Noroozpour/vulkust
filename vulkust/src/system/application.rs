@@ -1,9 +1,6 @@
 #[cfg(target_os = "android")]
 extern crate libc;
 use std::ptr::null;
-use std::mem::{
-    transmute,
-};
 use std::os::raw::c_void as std_void;
 #[cfg(target_os = "android")]
 use self::libc::{
@@ -58,9 +55,6 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
 
     #[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
     pub fn run(&mut self) {
-        let pt1: usize = unsafe { transmute(self.render_engine)};
-        let pt2: usize = unsafe { transmute((*self.os_app).render_engine)};
-        logi!("p1 = {}, p2 = {}", pt1, pt2);
         unsafe { (*self.render_engine).initialize() };
         unsafe { (*self.core_app).initialize(self.os_app, self.render_engine) };
         unsafe { (*self.os_app).execute() };

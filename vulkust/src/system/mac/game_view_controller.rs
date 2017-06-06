@@ -1,8 +1,13 @@
+use std::mem::transmute;
 use super::super::super::objc::runtime::{Object, Sel};
+use super::super::super::render::engine::{RenderEngine, EngineTrait};
+use super::super::super::core::application::ApplicationTrait;
 use super::super::metal as mtl;
+use super::application::Application as App;
 
 pub const DEVICE_VAR_NAME: &str = "mtl_device";
 pub const RENDERER_VAR_NAME: &str = "mtl_renderer";
+pub const APP_VAR_NAME: &str = "vukust_os_app";
 pub const CLASS_NAME: &str = "GameViewController";
 pub const SUPER_CLASS_NAME: &str = "NSViewController";
 
@@ -24,10 +29,11 @@ extern fn mtl_view(this: &mut Object, _cmd: Sel, view: mtl::Id, _size: mtl::NSSi
 
 // Called whenever the view needs to render
 // - (void)drawInMTKView:(nonnull MTKView *)view
-extern fn draw_in_mtk_view(this: &mut Object, _cmd: Sel, _view: mtl::Id) {
-    let pool = mtl::NsAutoReleasePool::new();
-    unsafe { msg_send![*this.get_ivar::<mtl::Id>(RENDERER_VAR_NAME), update]; }
-    let _ = pool;
+extern fn draw_in_mtk_view<CoreApp>(this: &mut Object, _cmd: Sel, _view: mtl::Id)
+        where CoreApp: ApplicationTrait {
+    let app: &App<CoreApp> = unsafe { transmute(this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
+    let renderer: &mut RenderEngine<CoreApp> = unsafe { transmute(app.render_engine) };
+    renderer.update();
 }
 
 // Methods to get and set state of the our ultimate render destination (i.e. the drawable)
@@ -81,10 +87,12 @@ extern fn get_current_drawable(this: &mut Object, _cmd: Sel) -> mtl::Id {
     return unsafe { msg_send![view, currentDrawable] };
 }
 
-pub fn register() {
+pub fn register<CoreApp>() where CoreApp: ApplicationTrait {
     let mut self_class = mtl::dec_class_s(CLASS_NAME, SUPER_CLASS_NAME);
     self_class.add_ivar::<mtl::Id>(DEVICE_VAR_NAME);
     self_class.add_ivar::<mtl::Id>(RENDERER_VAR_NAME);
+    self_class.add_ivar::<mtl::NSUInteger>(APP_VAR_NAME);
+
     unsafe {
         self_class.add_method(
             sel!(metalViewDidLoad),
@@ -94,7 +102,7 @@ pub fn register() {
             mtl_view as extern fn(&mut Object, Sel, mtl::Id, mtl::NSSize));
         self_class.add_method(
             sel!(drawInMTKView:),
-            draw_in_mtk_view as extern fn(&mut Object, Sel, mtl::Id));
+            draw_in_mtk_view::<CoreApp> as extern fn(&mut Object, Sel, mtl::Id));
         self_class.add_method(
             sel!(currentRenderPassDescriptor),
             get_current_render_pass_descriptor as extern fn(&mut Object, Sel) -> mtl::Id);

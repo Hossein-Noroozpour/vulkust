@@ -5,16 +5,26 @@ use super::super::super::core::resource::manager::Manager as ResourceManager;
 use super::super::super::core::resource::Resource;
 use super::Shader;
 
+#[derive(Debug)]
 pub struct Manager<File> where File: Read {
     pub cached: BTreeMap<u64, Weak<Resource>>,
     pub offsets: BTreeMap<u64, u64>,
     pub file: Arc<Mutex<File>>,
 }
 
-impl<File> ResourceManager<File> for Manager<File> where File: Read {
-    fn read_tabale(&mut self, file: Arc<Mutex<File>>) {
-        self.file = file.clone();
-        let mut file = file.lock().unwrap();
+impl<File> Manager<File> where File: Read {
+    pub fn new(file: Arc<Mutex<File>>) -> Self {
+        Manager {
+            cached: BTreeMap::new(),
+            offsets: BTreeMap::new(),
+            file: file,
+        }
+    }
+}
+
+impl<File> ResourceManager for Manager<File> where File: Read {
+    fn read_tabale(&mut self) {
+        let mut file = self.file.lock().unwrap();
         let count = file.read_type::<u16>();
         for _ in 0..count {
             let id = file.read_type::<u16>() as u64;
