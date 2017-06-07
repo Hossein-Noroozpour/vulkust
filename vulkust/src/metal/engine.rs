@@ -1,6 +1,8 @@
 use std::ptr::null_mut;
 use super::super::core::application::ApplicationTrait;
 use super::super::core::resource::manager::Manager as ResourceManager;
+use super::super::math::matrix::{Mat4x4, Mat3x3};
+use super::super::math::vector::Vec3;
 use super::super::system::os::OsApplication;
 use super::super::render::engine::EngineTrait;
 use super::super::system::metal as mtl;
@@ -13,34 +15,16 @@ pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
 const MAX_BUFFERS_COUNT: mtl::NSUInteger = 3;
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct Mat4x4 {
-    pub data: [[f32; 4]; 4],
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct Mat3x3 {
-    pub data: [[f32; 3]; 3],
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct Vec3 {
-    pub data: [f32; 3],
-}
-
-#[repr(C)]
 #[derive(Debug)]
 pub struct Uniforms {
-    pub projectionMatrix: Mat4x4,
-    pub viewMatrix: Mat4x4,
+    pub projectionMatrix: Mat4x4<f32>,
+    pub viewMatrix: Mat4x4<f32>,
     pub materialShininess: f32,
-    pub modelViewMatrix: Mat4x4,
-    pub normalMatrix: Mat3x3,
-    pub ambientLightColor: Vec3,
-    pub directionalLightDirection: Vec3,
-    pub directionalLightColor: Vec3,
+    pub modelViewMatrix: Mat4x4<f32>,
+    pub normalMatrix: Mat3x3<f32>,
+    pub ambientLightColor: Vec3<f32>,
+    pub directionalLightDirection: Vec3<f32>,
+    pub directionalLightColor: Vec3<f32>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: ApplicationTrait {

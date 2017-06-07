@@ -1,5 +1,3 @@
-extern crate num;
-
 use std::ops::{
     Add,
     Sub,
@@ -12,7 +10,7 @@ use std::ops::{
     DivAssign,
 };
 use std::fmt::Debug;
-use super::num::Number;
+use super::number::Float;
 
 pub enum Axis {
     X,
@@ -21,68 +19,18 @@ pub enum Axis {
     W,
 }
 
-pub trait VectorElement:
-        Add<Output=Self> +
-        Sub<Output=Self> +
-        Mul<Output=Self> +
-        Div<Output=Self> +
-        Neg<Output=Self> +
-        AddAssign +
-        SubAssign +
-        MulAssign +
-        DivAssign +
-        num::NumCast +
-        Number +
-        PartialOrd +
-        Copy +
-        Clone +
-        Debug {
-}
-
-impl<T> VectorElement for T where
-    T:
-        Add<Output=T> +
-        Sub<Output=T> +
-        Mul<Output=T> +
-        Div<Output=T> +
-        Neg<Output=T> +
-        AddAssign +
-        SubAssign +
-        MulAssign +
-        DivAssign +
-        num::NumCast +
-        Number +
-        PartialOrd +
-        Copy +
-        Clone +
-        Debug {
-
-}
-
-pub trait MathVector <ElementType>:
-        Sized +
-        Add<Output=Self> +
-        AddAssign +
-        Sub<Output=Self> +
-        SubAssign +
-        Mul<ElementType, Output=Self> +
-        MulAssign<ElementType> +
-        Div<ElementType, Output=Self> +
-        DivAssign<ElementType> +
-        Neg<Output=Self>
-    where ElementType: VectorElement {
-    fn new(e: ElementType) -> Self;
-    fn dot(&self, o: &Self) -> ElementType;
-    fn cross(&self, o: &Self) -> Self;
-    fn length(&self) -> ElementType;
-    fn absolute_length(&self) -> ElementType;
-    fn square_length(&self) -> ElementType;
-    fn normalize(&mut self);
-    fn normalized(&self) -> Self;
-}
-
+#[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Vec3<T> where T: VectorElement, Vec3<T>: MathVector<T> {
+pub struct Vec4<T> where T: Float {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+    pub w: T,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct Vec3<T> where T: Float {
     pub x: T,
     pub y: T,
     pub z: T,
@@ -92,7 +40,7 @@ macro_rules! as_expr { ($e:expr) => {$e} }
 
 macro_rules! op3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec3<T> where T: VectorElement {
+        impl<T> $tra for Vec3<T> where T: Float {
             type Output = Vec3<T>;
             fn $func(self, other: Vec3<T>) -> Vec3<T> {
                 Vec3 {
@@ -107,7 +55,7 @@ macro_rules! op3 {
 
 macro_rules! sop3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec3<T> where T: VectorElement {
+        impl<T> $tra<T> for Vec3<T> where T: Float {
             type Output = Vec3<T>;
             fn $func(self, other: T) -> Vec3<T> {
                 Vec3 {
@@ -122,7 +70,7 @@ macro_rules! sop3 {
 
 macro_rules! opasg3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec3<T> where T: VectorElement {
+        impl<T> $tra for Vec3<T> where T: Float {
             fn $func(&mut self, other: Vec3<T>) {
                 as_expr!(self.x $opt other.x);
                 as_expr!(self.y $opt other.y);
@@ -134,7 +82,7 @@ macro_rules! opasg3 {
 
 macro_rules! sopasg3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec3<T> where T: VectorElement {
+        impl<T> $tra<T> for Vec3<T> where T: Float {
             fn $func(&mut self, other: T) {
                 as_expr!(self.x $opt other);
                 as_expr!(self.y $opt other);
@@ -164,7 +112,7 @@ sopasg3!(sub_assign, SubAssign, -=);
 sopasg3!(mul_assign, MulAssign, *=);
 sopasg3!(div_assign, DivAssign, /=);
 
-impl<E> Neg for Vec3<E> where E: VectorElement {
+impl<E> Neg for Vec3<E> where E: Float {
     type Output = Vec3<E>;
     fn neg(self) -> Vec3<E> {
         Vec3 {
@@ -175,7 +123,7 @@ impl<E> Neg for Vec3<E> where E: VectorElement {
     }
 }
 
-impl<T> MathVector<T> for Vec3<T> where T: VectorElement {
+impl<T> Vec3<T> where T: Float {
 
     fn new(e: T) -> Vec3<T> {
         Vec3 {
@@ -198,11 +146,11 @@ impl<T> MathVector<T> for Vec3<T> where T: VectorElement {
     }
 
     fn length(&self) -> T {
-        (self.x * self.x + self.y * self.y + self.z * self.z).square_root()
+        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
     fn absolute_length(&self) -> T {
-        self.x.absolute() + self.y.absolute() + self.z.absolute()
+        self.x.abs() + self.y.abs() + self.z.abs()
     }
 
     fn square_length(&self) -> T {
@@ -210,14 +158,14 @@ impl<T> MathVector<T> for Vec3<T> where T: VectorElement {
     }
 
     fn normalize(&mut self) {
-        let len = (self.x * self.x + self.y * self.y + self.z * self.z).square_root();
+        let len = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
         self.x /= len;
         self.y /= len;
         self.z /= len;
     }
 
     fn normalized(&self) -> Vec3<T> {
-        let len = (self.x * self.x + self.y * self.y + self.z * self.z).square_root();
+        let len = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
         Vec3 {
             x: self.x / len,
             y: self.y / len,
@@ -226,15 +174,16 @@ impl<T> MathVector<T> for Vec3<T> where T: VectorElement {
     }
 }
 
+#[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Vec2<T> where T: VectorElement, Vec2<T>: MathVector<T> {
+pub struct Vec2<T> where T: Float {
     pub x: T,
     pub y: T,
 }
 
 macro_rules! op2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec2<T> where T: VectorElement {
+        impl<T> $tra for Vec2<T> where T: Float {
             type Output = Vec2<T>;
             fn $func(self, other: Vec2<T>) -> Vec2<T> {
                 Vec2 {
@@ -248,7 +197,7 @@ macro_rules! op2 {
 
 macro_rules! sop2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec2<T> where T: VectorElement {
+        impl<T> $tra<T> for Vec2<T> where T: Float {
             type Output = Vec2<T>;
             fn $func(self, other: T) -> Vec2<T> {
                 Vec2 {
@@ -262,7 +211,7 @@ macro_rules! sop2 {
 
 macro_rules! opasg2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec2<T> where T: VectorElement {
+        impl<T> $tra for Vec2<T> where T: Float {
             fn $func(&mut self, other: Vec2<T>) {
                 as_expr!(self.x $opt other.x);
                 as_expr!(self.y $opt other.y);
@@ -273,7 +222,7 @@ macro_rules! opasg2 {
 
 macro_rules! sopasg2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec2<T> where T: VectorElement {
+        impl<T> $tra<T> for Vec2<T> where T: Float {
             fn $func(&mut self, other: T) {
                 as_expr!(self.x $opt other);
                 as_expr!(self.y $opt other);
@@ -302,7 +251,7 @@ sopasg2!(sub_assign, SubAssign, -=);
 sopasg2!(mul_assign, MulAssign, *=);
 sopasg2!(div_assign, DivAssign, /=);
 
-impl<E> Neg for Vec2<E> where E: VectorElement {
+impl<E> Neg for Vec2<E> where E: Float {
     type Output = Vec2<E>;
     fn neg(self) -> Vec2<E> {
         Vec2 {
@@ -312,7 +261,7 @@ impl<E> Neg for Vec2<E> where E: VectorElement {
     }
 }
 
-impl<T> MathVector<T> for Vec2<T> where T: VectorElement {
+impl<T> Vec2<T> where T: Float {
 
     fn new(e: T) -> Vec2<T> {
         Vec2 {
@@ -329,17 +278,17 @@ impl<T> MathVector<T> for Vec2<T> where T: VectorElement {
         println!("{:?}", o);
         println!("In 2D we can not have a cross product");
         Vec2 {
-            x: num::cast(0).unwrap(),
-            y: num::cast(0).unwrap(),
+            x: T::new(0.0),
+            y: T::new(0.0),
         }
     }
 
     fn length(&self) -> T {
-        (self.x * self.x + self.y * self.y).square_root()
+        (self.x * self.x + self.y * self.y).sqrt()
     }
 
     fn absolute_length(&self) -> T {
-        self.x.absolute() + self.y.absolute()
+        self.x.abs() + self.y.abs()
     }
 
     fn square_length(&self) -> T {
@@ -347,13 +296,13 @@ impl<T> MathVector<T> for Vec2<T> where T: VectorElement {
     }
 
     fn normalize(&mut self) {
-        let len = (self.x * self.x + self.y * self.y).square_root();
+        let len = (self.x * self.x + self.y * self.y).sqrt();
         self.x /= len;
         self.y /= len;
     }
 
     fn normalized(&self) -> Vec2<T> {
-        let len = (self.x * self.x + self.y * self.y).square_root();
+        let len = (self.x * self.x + self.y * self.y).sqrt();
         Vec2 {
             x: self.x / len,
             y: self.y / len,

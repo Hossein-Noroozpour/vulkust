@@ -19,6 +19,5 @@ user32-sys = "*"
 gdi32-sys = "*"
 objc = "*"
 bitflags = "*"
-num = "*"
 
 [build-dependencies]
