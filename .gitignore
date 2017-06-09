@@ -15,3 +15,5 @@ assets/
 *.txt
 *.iml
 *.spv
+.DS_Store
+data.gx3d
