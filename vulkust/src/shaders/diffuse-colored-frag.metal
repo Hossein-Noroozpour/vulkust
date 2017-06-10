@@ -68,7 +68,7 @@ typedef struct
 } ColorInOut;
 
 // Fragment function
-fragment float4 fragmentLighting(ColorInOut in [[stage_in]],
+fragment float4 main_func(ColorInOut in [[stage_in]],
                                  constant Uniforms & uniforms [[ buffer(kBufferIndexUniforms) ]],
                                  texture2d<half> colorMap     [[ texture(kTextureIndexColor) ]])
 {
