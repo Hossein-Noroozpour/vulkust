@@ -1,6 +1,5 @@
 use std::ptr::null_mut;
 use super::super::core::application::ApplicationTrait;
-use super::super::core::resource::manager::Manager as ResourceManager;
 use super::super::math::matrix::{Mat4x4, Mat3x3};
 use super::super::math::vector::Vec3;
 use super::super::system::os::OsApplication;
@@ -45,7 +44,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
 
     fn initialize(&mut self) {
         let asset_manager = unsafe {&mut (*self.os_app).asset_manager };
-        asset_manager.shader_manager.get_resource(1);
+        let shader = asset_manager.get_shader(1, self.os_app);
     }
 
     fn update(&mut self) {

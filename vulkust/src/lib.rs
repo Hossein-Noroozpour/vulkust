@@ -6,7 +6,6 @@ extern crate bitflags;
 #[macro_use]
 pub mod macros;
 pub mod core;
-pub mod io;
 pub mod math;
 #[cfg(any(target_os = "macos"))]
 #[macro_use]

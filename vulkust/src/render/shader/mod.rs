@@ -1,19 +1,5 @@
 pub mod manager;
+pub mod stage;
 
-use super::super::core::resource::Resource;
-
-pub trait ShaderTrait {
-}
-
-#[derive(Debug)]
-pub struct Shader {
-
-}
-
-impl ShaderTrait for Shader {
-
-}
-
-impl Resource for Shader {
-
-}
+#[cfg(any(feature = "metal", target_os = "macos"))]
+pub use super::super::metal::shader::ShaderTrait;

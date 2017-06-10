@@ -3,10 +3,10 @@ use std::os::raw::c_void;
 use std::mem::transmute;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::core::asset::manager::Manager as AssetManager;
-use super::super::super::io::file::File;
-use super::super::super::io::read::Read;
+// use super::super::super::io::read::Read;
 use super::super::super::render::engine::RenderEngine;
 use super::super::os::ApplicationTrait as OsApplicationTrait;
+use super::super::file::File;
 use super::super::metal as mtl;
 use super::app_delegate;
 use super::game_view_controller;
@@ -20,7 +20,7 @@ pub struct Application<CoreApp> where CoreApp: ApplicationTrait  {
     pub game_view_controller: mtl::Id,
     pub metal_device: mtl::Id,
     pub metal_view: mtl::Id,
-    pub asset_manager: AssetManager<File>,
+    pub asset_manager: AssetManager,
     pub ns_autorelease_pool: mtl::NsAutoReleasePool, // TODO: remove it I don't like it
 }
 
@@ -41,6 +41,7 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
         }
     }
     fn initialize(&mut self) -> bool {
+        self.asset_manager.initialize();
         let app: mtl::NSUInteger = unsafe { transmute((*self.render_engine).os_app) };
         app_delegate::register::<CoreApp>();
         game_view_controller::register::<CoreApp>();
