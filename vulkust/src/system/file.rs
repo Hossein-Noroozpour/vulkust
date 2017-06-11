@@ -1,7 +1,6 @@
 use std::fs::File as StdFile;
 use std::io::{BufReader, Read, Seek, SeekFrom, Result};
 use std::mem::{transmute, size_of};
-use std::slice::from_raw_parts_mut;
 
 #[derive(Debug)]
 pub struct File {
@@ -32,7 +31,7 @@ impl File {
         match StdFile::open(file_name) {
             Ok(f) => {
                 let mut s = File {
-                    endian_compatible: false,
+                    endian_compatible: true,
                     reader: BufReader::new(f)
                 };
                 s.check_endian();
@@ -45,20 +44,20 @@ impl File {
     }
 
     pub fn read_typed_bytes(&mut self, des: *mut u8, count: usize) {
-        let mut b = self.read_bytes(count);
-        let b = b.as_ptr();
+        let b = self.read_bytes(count);
         if self.endian_compatible {
             for i in 0..count {
                 unsafe {
-                    *des.offset(i as isize) = *b.offset(i as isize);
+                    *des.offset(i as isize) = b[i];
                 }
             }
         } else {
-            let mut i = 0usize;
+            let mut i = 0isize;
             let mut j = count - 1;
+            let count = count as isize;
             while i < count {
                 unsafe {
-                    *des.offset(i as isize) = *b.offset(j as isize);
+                    *des.offset(i) = b[j];
                 }
                 i += 1;
                 j -= 1;
@@ -68,17 +67,24 @@ impl File {
 
     pub fn read_bytes(&mut self, count: usize) -> Vec<u8> {
         let mut b = vec![0u8; count];
-        if match self.read(&mut b) {
-            Ok(c) => { c },
-            Err(_) => { logf!("Error in reading stream."); },
-        } < count {
-            logf!("Expected bytes are not in stream.");
+        let mut read_count = 0;
+        while read_count < count {
+            let tmp_count = match self.read(&mut b[read_count..count]) {
+                Ok(c) => { c },
+                Err(_) => { logf!("Error in reading stream."); },
+            };
+            read_count += tmp_count;
+            if tmp_count == 0 {
+                logf!(
+                    "Expected bytes count is {} but the read bytes count is {}.",
+                    count, read_count);
+            }
         }
         return b;
     }
 
     pub fn read_bool(&mut self) -> bool {
-        let mut b = self.read_bytes(1);
+        let b = self.read_bytes(1);
         if b[0] == 1 {
             return true;
         }

@@ -120,11 +120,3 @@ macro_rules! logf {
         panic!("Terminated!");
     };
 }
-
-macro_rules! default_window_width {
-    () => ( 1280 as _ )
-}
-
-macro_rules! default_window_height {
-    () => ( 720 as _ )
-}

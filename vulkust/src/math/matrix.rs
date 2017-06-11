@@ -1,16 +1,8 @@
 use std::ops::{
-    Add,
-    Sub,
     Mul,
-    Div,
-    AddAssign,
-    SubAssign,
-    MulAssign,
-    DivAssign
 };
 use super::number::Float;
 use super::vector::{
-    Vec2,
     Vec3,
 };
 

@@ -3,7 +3,7 @@ use super::super::super::render::shader::ShaderTrait;
 use super::super::super::system::file::File;
 use super::super::super::system::os::OsApplication;
 use super::super::application::ApplicationTrait;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 
 #[derive(Debug)]
 pub struct Manager {

@@ -2,7 +2,6 @@ pub mod manager;
 pub mod stage;
 
 use std::fmt::Debug;
-use std::mem::transmute;
 use super::super::system::file::File;
 use super::super::system::os::OsApplication;
 use super::super::core::application::ApplicationTrait;
@@ -22,8 +21,10 @@ impl Shader {
             where CoreApp: ApplicationTrait {
         let device = unsafe { (*os_app).metal_device };
         let size: u64 = file.read_type();
+        logi!("shader size is: {}", size);
         let vertex = file.read_bytes(size as usize);
         let size: u64 = file.read_type();
+        logi!("shader size is: {}", size);
         let fragment = file.read_bytes(size as usize);
         Shader {
             vertex: Stage::new(vertex, device),

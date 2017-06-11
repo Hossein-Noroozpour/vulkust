@@ -51,11 +51,11 @@ impl Float for f64 {
     }
 
     fn sqrt(&self) -> Self {
-        self.sqrt()
+        f64::sqrt(*self)
     }
 
     fn abs(&self) -> Self {
-        self.abs()
+        f64::abs(*self)
     }
 
     fn to(&self) -> f64 {
@@ -69,11 +69,11 @@ impl Float for f32 {
     }
 
     fn sqrt(&self) -> Self {
-        self.sqrt()
+        f32::sqrt(*self)
     }
 
     fn abs(&self) -> Self {
-        self.abs()
+        f32::abs(*self)
     }
 
     fn to(&self) -> f64 {

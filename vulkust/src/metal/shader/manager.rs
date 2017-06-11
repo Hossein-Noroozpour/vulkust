@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
-use std::sync::{Weak, Arc, Mutex};
-use std::io::{Seek, SeekFrom, Result};
+use std::sync::{Weak, Arc};
+use std::io::{Seek, SeekFrom};
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
 use super::super::super::system::os::OsApplication;
@@ -25,6 +25,7 @@ impl Manager {
         for _ in 0..count {
             let id: u64 = file.read_type();
             let offset: u64 = file.read_type();
+            logi!("Shader with id: {} and offset {} loaded.", id, offset);
             self.offsets.insert(id, offset);
         }
     }
@@ -52,7 +53,7 @@ impl Manager {
                             logf!("Seeked offset does not match!");
                         }
                     },
-                    Error => {
+                    _ => {
                         logf!("Can not seek to the requested offset.");
                     },
                 };

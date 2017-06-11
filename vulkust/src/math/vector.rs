@@ -9,9 +9,9 @@ use std::ops::{
     MulAssign,
     DivAssign,
 };
-use std::fmt::Debug;
 use super::number::Float;
 
+#[derive(Debug, Clone, Copy)]
 pub enum Axis {
     X,
     Y,
@@ -124,8 +124,7 @@ impl<E> Neg for Vec3<E> where E: Float {
 }
 
 impl<T> Vec3<T> where T: Float {
-
-    fn new(e: T) -> Vec3<T> {
+    pub fn new(e: T) -> Vec3<T> {
         Vec3 {
             x: e,
             y: e,
@@ -133,11 +132,11 @@ impl<T> Vec3<T> where T: Float {
         }
     }
 
-    fn dot(&self, o: &Vec3<T>) -> T {
+    pub fn dot(&self, o: &Vec3<T>) -> T {
         self.x * o.x + self.y * o.y + self.z * o.z
     }
 
-    fn cross(&self, o: &Vec3<T>) -> Vec3<T> {
+    pub fn cross(&self, o: &Vec3<T>) -> Vec3<T> {
         Vec3 {
             x: self.y * o.z - self.z * o.y,
             y: self.z * o.x - self.x * o.z,
@@ -145,26 +144,26 @@ impl<T> Vec3<T> where T: Float {
         }
     }
 
-    fn length(&self) -> T {
+    pub fn length(&self) -> T {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
-    fn absolute_length(&self) -> T {
+    pub fn absolute_length(&self) -> T {
         self.x.abs() + self.y.abs() + self.z.abs()
     }
 
-    fn square_length(&self) -> T {
+    pub fn square_length(&self) -> T {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
-    fn normalize(&mut self) {
+    pub fn normalize(&mut self) {
         let len = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
         self.x /= len;
         self.y /= len;
         self.z /= len;
     }
 
-    fn normalized(&self) -> Vec3<T> {
+    pub fn normalized(&self) -> Vec3<T> {
         let len = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
         Vec3 {
             x: self.x / len,
@@ -262,19 +261,18 @@ impl<E> Neg for Vec2<E> where E: Float {
 }
 
 impl<T> Vec2<T> where T: Float {
-
-    fn new(e: T) -> Vec2<T> {
+    pub fn new(e: T) -> Vec2<T> {
         Vec2 {
             x: e,
             y: e,
         }
     }
 
-    fn dot(&self, o: &Vec2<T>) -> T {
+    pub fn dot(&self, o: &Vec2<T>) -> T {
         self.x * o.x + self.y * o.y
     }
 
-    fn cross(&self, o: &Vec2<T>) -> Vec2<T> {
+    pub fn cross(&self, o: &Vec2<T>) -> Vec2<T> {
         println!("{:?}", o);
         println!("In 2D we can not have a cross product");
         Vec2 {
@@ -283,25 +281,25 @@ impl<T> Vec2<T> where T: Float {
         }
     }
 
-    fn length(&self) -> T {
+    pub fn length(&self) -> T {
         (self.x * self.x + self.y * self.y).sqrt()
     }
 
-    fn absolute_length(&self) -> T {
+    pub fn absolute_length(&self) -> T {
         self.x.abs() + self.y.abs()
     }
 
-    fn square_length(&self) -> T {
+    pub fn square_length(&self) -> T {
         self.x * self.x + self.y * self.y
     }
 
-    fn normalize(&mut self) {
+    pub fn normalize(&mut self) {
         let len = (self.x * self.x + self.y * self.y).sqrt();
         self.x /= len;
         self.y /= len;
     }
 
-    fn normalized(&self) -> Vec2<T> {
+    pub fn normalized(&self) -> Vec2<T> {
         let len = (self.x * self.x + self.y * self.y).sqrt();
         Vec2 {
             x: self.x / len,

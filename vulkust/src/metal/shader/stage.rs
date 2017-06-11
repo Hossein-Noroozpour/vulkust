@@ -1,7 +1,5 @@
 use std::ptr::null_mut;
 use super::super::super::system::metal as mtl;
-use super::super::super::core::application::ApplicationTrait;
-use super::super::engine::Engine;
 
 #[derive(Debug)]
 pub struct Stage {
