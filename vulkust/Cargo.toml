@@ -17,7 +17,9 @@ winapi = "*"
 kernel32-sys = "*"
 user32-sys = "*"
 gdi32-sys = "*"
-objc = "*"
+# This feautres are for debug mode remove them in future
+objc = { version = "*", features = ["exception", "verify_message"] }
 bitflags = "*"
+block = "*"
 
 [build-dependencies]

@@ -12,7 +12,7 @@ pub const APP_VAR_NAME: &str = "vukust_os_app";
 
 extern fn initialize<CoreApp>(this: &mut Object, _cmd: Sel) where CoreApp: ApplicationTrait {
     let app: *mut App<CoreApp> = unsafe {
-        transmute(this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME))
+        transmute(*this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME))
     };
     let main_screen: mtl::Id = unsafe { msg_send![mtl::get_class("NSScreen"), mainScreen] };
     let frame: mtl::NSRect = unsafe { msg_send![main_screen, frame] };

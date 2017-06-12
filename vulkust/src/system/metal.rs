@@ -1,3 +1,5 @@
+use std::os::raw::{c_void};
+use std::mem::transmute;
 use super::super::objc;
 use super::super::objc::runtime::{Object, Class};
 use super::super::objc::declare::{ClassDecl};
@@ -23,6 +25,13 @@ pub type Id = *mut Object;
 // const ------------------------------------------------------------------------------------------
 
 pub const NS_AUTO_RELEASE_POOL: &str = "NSAutoreleasePool";
+pub const RESOURCE_CPU_CACHE_MODE_SHIFT: NSUInteger = 0;
+pub const RESOURCE_CPU_CACHE_MODE_MASK: NSUInteger = 0xF << RESOURCE_CPU_CACHE_MODE_SHIFT;
+pub const RESOURCE_STORAGE_MODE_SHIFT: NSUInteger = 4;
+pub const RESOURCE_STORAGE_MODE_MASK: NSUInteger = 0xF << RESOURCE_STORAGE_MODE_SHIFT;
+pub const RESOURCE_HAZARD_TRACKING_MODE_SHIFT: NSUInteger = 8;
+pub const RESOURCE_HAZARD_TRACKING_MODE_MASK: NSUInteger =
+    0x1 << RESOURCE_HAZARD_TRACKING_MODE_SHIFT;
 
 // structs ----------------------------------------------------------------------------------------
 
@@ -33,6 +42,10 @@ pub struct ClearColor {
     pub green: f64,
     pub blue: f64,
     pub alpha: f64,
+}
+
+unsafe impl objc::Encode for ClearColor {
+    fn encode() -> objc::Encoding { unsafe { objc::Encoding::from_str("{?=dddd}") } }
 }
 
 impl ClearColor {
@@ -114,14 +127,27 @@ pub struct NSString {
 impl NSString {
     pub fn new(string: &str) -> Self {
         let s: Id = alloc("NSString");
-        let s: Id = unsafe { msg_send![s,
-            initWithBytes:string.as_ptr()
-            length:string.len()
-            encoding:NS_UTF8_STRING_ENCODING]};
+        let s: Id = unsafe {
+            let string_ptr: *const c_void = transmute(string.as_ptr());
+            msg_send![
+                s,
+                initWithBytes:string_ptr
+                length:string.len()
+                encoding:NS_UTF8_STRING_ENCODING]
+        };
         NSString {
             s: s
         }
     }
+}
+
+#[repr(C)]
+pub struct IdPtr {
+    pub id: *mut Id,
+}
+
+unsafe impl objc::Encode for IdPtr {
+    fn encode() -> objc::Encoding { unsafe { objc::Encoding::from_str("^@") } }
 }
 
 // TODO: remove auto release pool in future.
@@ -132,6 +158,48 @@ impl NSString {
 // }
 
 // enums ------------------------------------------------------------------------------------------
+
+bitflags! {
+    pub struct CPUCacheMode: NSUInteger {
+        const CPU_CACHE_MODE_DEFAULT_CACHE = 0;
+        const CPU_CACHE_MODE_WRITE_COMBINED = 1;
+    }
+}
+
+bitflags! {
+    pub struct StorageMode: NSUInteger {
+        const STORAGE_MODE_SHARED = 0;
+        const STORAGE_MODE_MANAGED = 1;
+        const STORAGE_MODE_PRIVATE = 2;
+        const STORAGE_MODE_MEMORYLESS = 3;
+    }
+}
+
+bitflags! {
+    pub struct ResourceOptions: NSUInteger {
+        const RESOURCE_CPU_CACHE_MODE_DEFAULT_CACHE =
+            CPU_CACHE_MODE_DEFAULT_CACHE.bits << RESOURCE_CPU_CACHE_MODE_SHIFT;
+        const RESOURCE_CPU_CACHE_MODE_WRITE_COMBINED =
+            CPU_CACHE_MODE_WRITE_COMBINED.bits << RESOURCE_CPU_CACHE_MODE_SHIFT;
+        const RESOURCE_STORAGE_MODE_SHARED =
+            STORAGE_MODE_SHARED.bits << RESOURCE_STORAGE_MODE_SHIFT;
+        const RESOURCE_STORAGE_MODE_MANAGED =
+            STORAGE_MODE_MANAGED.bits << RESOURCE_STORAGE_MODE_SHIFT;
+        const RESOURCE_STORAGE_MODE_PRIVATE =
+            STORAGE_MODE_PRIVATE.bits << RESOURCE_STORAGE_MODE_SHIFT;
+        const RESOURCE_STORAGE_MODE_MEMORYLESS =
+            STORAGE_MODE_MEMORYLESS.bits << RESOURCE_STORAGE_MODE_SHIFT;
+        const RESOURCE_HAZARD_TRACKING_MODE_UNTRACKED = 0x1 << RESOURCE_HAZARD_TRACKING_MODE_SHIFT;
+        const RESOURCE_OPTION_CPU_CACHE_MODE_DEFAULT =
+            RESOURCE_CPU_CACHE_MODE_DEFAULT_CACHE.bits;
+        const RESOURCE_OPTION_CPU_CACHE_MODE_WRITE_COMBINED =
+            RESOURCE_CPU_CACHE_MODE_WRITE_COMBINED.bits;
+    }
+}
+
+unsafe impl objc::Encode for ResourceOptions {
+    fn encode() -> objc::Encoding { NSUInteger::encode() }
+}
 
 bitflags! {
     pub struct PixelFormat: NSUInteger {
@@ -175,8 +243,8 @@ bitflags! {
         const PIXEL_FORMAT_RGB10A2_UINT                         = 91;
         const PIXEL_FORMAT_RG11B10_FLOAT                        = 92;
         const PIXEL_FORMAT_RGB9E5_FLOAT                         = 93;
-        const PIXEL_FORMAT_BGR10_XR                            = 554;
-        const PIXEL_FORMAT_BGR10_XR_SRGB                       = 555;
+        const PIXEL_FORMAT_BGR10_XR                             = 554;
+        const PIXEL_FORMAT_BGR10_XR_SRGB                        = 555;
         const PIXEL_FORMAT_RG32_UINT                            = 103;
         const PIXEL_FORMAT_RG32_SINT                            = 104;
         const PIXEL_FORMAT_RG32_FLOAT                           = 105;
@@ -185,17 +253,17 @@ bitflags! {
         const PIXEL_FORMAT_RGBA16_UINT                          = 113;
         const PIXEL_FORMAT_RGBA16_SINT                          = 114;
         const PIXEL_FORMAT_RGBA16_FLOAT                         = 115;
-        const PIXEL_FORMAT_BGRA10_XR                           = 552;
-        const PIXEL_FORMAT_BGRA10_XR_SRGB                      = 553;
+        const PIXEL_FORMAT_BGRA10_XR                            = 552;
+        const PIXEL_FORMAT_BGRA10_XR_SRGB                       = 553;
         const PIXEL_FORMAT_RGBA32_UINT                          = 123;
         const PIXEL_FORMAT_RGBA32_SINT                          = 124;
         const PIXEL_FORMAT_RGBA32_FLOAT                         = 125;
-        const PIXEL_FORMAT_BC1_RGBA                            = 130;
-        const PIXEL_FORMAT_BC1_RGBA_SRGB                       = 131;
-        const PIXEL_FORMAT_BC2_RGBA                            = 132;
-        const PIXEL_FORMAT_BC2_RGBA_SRGB                       = 133;
-        const PIXEL_FORMAT_BC3_RGBA                            = 134;
-        const PIXEL_FORMAT_BC3_RGBA_SRGB                       = 135;
+        const PIXEL_FORMAT_BC1_RGBA                             = 130;
+        const PIXEL_FORMAT_BC1_RGBA_SRGB                        = 131;
+        const PIXEL_FORMAT_BC2_RGBA                             = 132;
+        const PIXEL_FORMAT_BC2_RGBA_SRGB                        = 133;
+        const PIXEL_FORMAT_BC3_RGBA                             = 134;
+        const PIXEL_FORMAT_BC3_RGBA_SRGB                        = 135;
         const PIXEL_FORMAT_BC4_R_UNORM                          = 140;
         const PIXEL_FORMAT_BC4_R_SNORM                          = 141;
         const PIXEL_FORMAT_BC5_RG_UNORM                         = 142;
@@ -204,62 +272,66 @@ bitflags! {
         const PIXEL_FORMAT_BC6H_RGBU_FLOAT                      = 151;
         const PIXEL_FORMAT_BC7_RGBA_UNORM                       = 152;
         const PIXEL_FORMAT_BC7_RGBA_UNORM_SRGB                  = 153;
-        const PIXEL_FORMAT_PVRTC_RGB_2BPP                      = 160;
-        const PIXEL_FORMAT_PVRTC_RGB_2BPP_SRGB                 = 161;
-        const PIXEL_FORMAT_PVRTC_RGB_4BPP                      = 162;
-        const PIXEL_FORMAT_PVRTC_RGB_4BPP_SRGB                 = 163;
-        const PIXEL_FORMAT_PVRTC_RGBA_2BPP                     = 164;
-        const PIXEL_FORMAT_PVRTC_RGBA_2BPP_SRGB                = 165;
-        const PIXEL_FORMAT_PVRTC_RGBA_4BPP                     = 166;
-        const PIXEL_FORMAT_PVRTC_RGBA_4BPP_SRGB                = 167;
+        const PIXEL_FORMAT_PVRTC_RGB_2BPP                       = 160;
+        const PIXEL_FORMAT_PVRTC_RGB_2BPP_SRGB                  = 161;
+        const PIXEL_FORMAT_PVRTC_RGB_4BPP                       = 162;
+        const PIXEL_FORMAT_PVRTC_RGB_4BPP_SRGB                  = 163;
+        const PIXEL_FORMAT_PVRTC_RGBA_2BPP                      = 164;
+        const PIXEL_FORMAT_PVRTC_RGBA_2BPP_SRGB                 = 165;
+        const PIXEL_FORMAT_PVRTC_RGBA_4BPP                      = 166;
+        const PIXEL_FORMAT_PVRTC_RGBA_4BPP_SRGB                 = 167;
         const PIXEL_FORMAT_EAC_R11_UNORM                        = 170;
         const PIXEL_FORMAT_EAC_R11_SNORM                        = 172;
         const PIXEL_FORMAT_EAC_RG11_UNORM                       = 174;
         const PIXEL_FORMAT_EAC_RG11_SNORM                       = 176;
-        const PIXEL_FORMAT_EAC_RGBA8                           = 178;
-        const PIXEL_FORMAT_EAC_RGBA8_SRGB                      = 179;
-        const PIXEL_FORMAT_ETC2_RGB8                           = 180;
-        const PIXEL_FORMAT_ETC2_RGB8_SRGB                      = 181;
-        const PIXEL_FORMAT_ETC2_RGB8A1                         = 182;
-        const PIXEL_FORMAT_ETC2_RGB8A1_SRGB                    = 183;
-        const PIXEL_FORMAT_ASTC_4X4_SRGB                       = 186;
-        const PIXEL_FORMAT_ASTC_5X4_SRGB                       = 187;
-        const PIXEL_FORMAT_ASTC_5X5_SRGB                       = 188;
-        const PIXEL_FORMAT_ASTC_6X5_SRGB                       = 189;
-        const PIXEL_FORMAT_ASTC_6X6_SRGB                       = 190;
-        const PIXEL_FORMAT_ASTC_8X5_SRGB                       = 192;
-        const PIXEL_FORMAT_ASTC_8X6_SRGB                       = 193;
-        const PIXEL_FORMAT_ASTC_8X8_SRGB                       = 194;
-        const PIXEL_FORMAT_ASTC_10X5_SRGB                      = 195;
-        const PIXEL_FORMAT_ASTC_10X6_SRGB                      = 196;
-        const PIXEL_FORMAT_ASTC_10X8_SRGB                      = 197;
-        const PIXEL_FORMAT_ASTC_10X10_SRGB                     = 198;
-        const PIXEL_FORMAT_ASTC_12X10_SRGB                     = 199;
-        const PIXEL_FORMAT_ASTC_12X12_SRGB                     = 200;
-        const PIXEL_FORMAT_ASTC_4X4_LDR                        = 204;
-        const PIXEL_FORMAT_ASTC_5X4_LDR                        = 205;
-        const PIXEL_FORMAT_ASTC_5X5_LDR                        = 206;
-        const PIXEL_FORMAT_ASTC_6X5_LDR                        = 207;
-        const PIXEL_FORMAT_ASTC_6X6_LDR                        = 208;
-        const PIXEL_FORMAT_ASTC_8X5_LDR                        = 210;
-        const PIXEL_FORMAT_ASTC_8X6_LDR                        = 211;
-        const PIXEL_FORMAT_ASTC_8X8_LDR                        = 212;
-        const PIXEL_FORMAT_ASTC_10X5_LDR                       = 213;
-        const PIXEL_FORMAT_ASTC_10X6_LDR                       = 214;
-        const PIXEL_FORMAT_ASTC_10X8_LDR                       = 215;
-        const PIXEL_FORMAT_ASTC_10X10_LDR                      = 216;
-        const PIXEL_FORMAT_ASTC_12X10_LDR                      = 217;
-        const PIXEL_FORMAT_ASTC_12X12_LDR                      = 218;
-        const PIXEL_FORMAT_GBGR422                             = 240;
-        const PIXEL_FORMAT_BGRG422                             = 241;
+        const PIXEL_FORMAT_EAC_RGBA8                            = 178;
+        const PIXEL_FORMAT_EAC_RGBA8_SRGB                       = 179;
+        const PIXEL_FORMAT_ETC2_RGB8                            = 180;
+        const PIXEL_FORMAT_ETC2_RGB8_SRGB                       = 181;
+        const PIXEL_FORMAT_ETC2_RGB8A1                          = 182;
+        const PIXEL_FORMAT_ETC2_RGB8A1_SRGB                     = 183;
+        const PIXEL_FORMAT_ASTC_4X4_SRGB                        = 186;
+        const PIXEL_FORMAT_ASTC_5X4_SRGB                        = 187;
+        const PIXEL_FORMAT_ASTC_5X5_SRGB                        = 188;
+        const PIXEL_FORMAT_ASTC_6X5_SRGB                        = 189;
+        const PIXEL_FORMAT_ASTC_6X6_SRGB                        = 190;
+        const PIXEL_FORMAT_ASTC_8X5_SRGB                        = 192;
+        const PIXEL_FORMAT_ASTC_8X6_SRGB                        = 193;
+        const PIXEL_FORMAT_ASTC_8X8_SRGB                        = 194;
+        const PIXEL_FORMAT_ASTC_10X5_SRGB                       = 195;
+        const PIXEL_FORMAT_ASTC_10X6_SRGB                       = 196;
+        const PIXEL_FORMAT_ASTC_10X8_SRGB                       = 197;
+        const PIXEL_FORMAT_ASTC_10X10_SRGB                      = 198;
+        const PIXEL_FORMAT_ASTC_12X10_SRGB                      = 199;
+        const PIXEL_FORMAT_ASTC_12X12_SRGB                      = 200;
+        const PIXEL_FORMAT_ASTC_4X4_LDR                         = 204;
+        const PIXEL_FORMAT_ASTC_5X4_LDR                         = 205;
+        const PIXEL_FORMAT_ASTC_5X5_LDR                         = 206;
+        const PIXEL_FORMAT_ASTC_6X5_LDR                         = 207;
+        const PIXEL_FORMAT_ASTC_6X6_LDR                         = 208;
+        const PIXEL_FORMAT_ASTC_8X5_LDR                         = 210;
+        const PIXEL_FORMAT_ASTC_8X6_LDR                         = 211;
+        const PIXEL_FORMAT_ASTC_8X8_LDR                         = 212;
+        const PIXEL_FORMAT_ASTC_10X5_LDR                        = 213;
+        const PIXEL_FORMAT_ASTC_10X6_LDR                        = 214;
+        const PIXEL_FORMAT_ASTC_10X8_LDR                        = 215;
+        const PIXEL_FORMAT_ASTC_10X10_LDR                       = 216;
+        const PIXEL_FORMAT_ASTC_12X10_LDR                       = 217;
+        const PIXEL_FORMAT_ASTC_12X12_LDR                       = 218;
+        const PIXEL_FORMAT_GBGR422                              = 240;
+        const PIXEL_FORMAT_BGRG422                              = 241;
         const PIXEL_FORMAT_DEPTH16_UNORM                        = 250;
         const PIXEL_FORMAT_DEPTH32_FLOAT                        = 252;
-        const PIXEL_FORMAT_STENCIL8                            = 253;
+        const PIXEL_FORMAT_STENCIL8                             = 253;
         const PIXEL_FORMAT_DEPTH24_UNORM_STENCIL8               = 255;
         const PIXEL_FORMAT_DEPTH32_FLOAT_STENCIL8               = 260;
-        const PIXEL_FORMAT_X32_STENCIL8                        = 261;
-        const PIXEL_FORMAT_X24_STENCIL8                        = 262;
+        const PIXEL_FORMAT_X32_STENCIL8                         = 261;
+        const PIXEL_FORMAT_X24_STENCIL8                         = 262;
     }
+}
+
+unsafe impl objc::Encode for PixelFormat {
+    fn encode() -> objc::Encoding { NSUInteger::encode() }
 }
 
 bitflags! {
@@ -282,6 +354,10 @@ bitflags! {
         const NS_BACKING_STORE_NONRETAINED = 1;
         const NS_BACKING_STORE_BUFFERED    = 2;
     }
+}
+
+unsafe impl objc::Encode for NsBackingStoreType {
+    fn encode() -> objc::Encoding { NSUInteger::encode() }
 }
 
 bitflags! {
@@ -310,6 +386,10 @@ bitflags! {
         const NS_UTF32_BIG_ENDIAN_STRING_ENCODING = 0x98000100;
         const NS_UTF32_LITTLE_ENDIAN_STRING_ENCODING = 0x9c000100;
     }
+}
+
+unsafe impl objc::Encode for NsStringEncoding {
+    fn encode() -> objc::Encoding { NSUInteger::encode() }
 }
 
 // external linkages ------------------------------------------------------------------------------

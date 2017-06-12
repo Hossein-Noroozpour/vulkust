@@ -1,4 +1,5 @@
 use std::ptr::null_mut;
+use std::mem::size_of;
 use super::super::core::application::ApplicationTrait;
 use super::super::math::matrix::{Mat4x4, Mat3x3};
 use super::super::math::vector::Vec3;
@@ -43,8 +44,15 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
     }
 
     fn initialize(&mut self) {
+        let device = unsafe { (*self.os_app).metal_device };
         let asset_manager = unsafe {&mut (*self.os_app).asset_manager };
         let shader = asset_manager.get_shader(1, self.os_app);
+        let uniform_buffer_size: mtl::NSUInteger =
+            ((size_of::<Uniforms>() as mtl::NSUInteger & !0xFF) + 0x100) * MAX_BUFFERS_COUNT;
+        let dynamic_uniform_buffer: mtl::Id = unsafe {
+            msg_send![device, newBufferWithLength:uniform_buffer_size
+                options:mtl::RESOURCE_STORAGE_MODE_SHARED] };
+
     }
 
     fn update(&mut self) {
