@@ -1,7 +1,9 @@
-use std::os::raw::{c_void};
+use std;
+use std::os::raw::{c_void, c_char};
+use std::ffi::CStr;
 use std::mem::transmute;
 use super::super::objc;
-use super::super::objc::runtime::{Object, Class};
+pub use super::super::objc::runtime::{Object, Class, YES};
 use super::super::objc::declare::{ClassDecl};
 
 // types ------------------------------------------------------------------------------------------
@@ -141,6 +143,23 @@ impl NSString {
     }
 }
 
+impl std::fmt::Display for NSString {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let ptr: *const c_char  = unsafe { msg_send![
+            self.s, cStringUsingEncoding:NS_UTF8_STRING_ENCODING] };
+        let string = unsafe { CStr::from_ptr(ptr) }.to_string_lossy().into_owned();
+        write!(f, "NSString({})", string)
+    }
+}
+
+impl std::fmt::Debug for NSString {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+
+
 #[repr(C)]
 pub struct IdPtr {
     pub id: *mut Id,
@@ -150,6 +169,51 @@ unsafe impl objc::Encode for IdPtr {
     fn encode() -> objc::Encoding { unsafe { objc::Encoding::from_str("^@") } }
 }
 
+#[repr(C)]
+pub struct NSError {
+    pub err: Id,
+}
+
+impl NSError {
+    pub fn null() -> Self {
+        NSError {
+            err: 0 as Id,
+        }
+    }
+    pub fn to_string(&self) -> String {
+        let des = NSString { s: unsafe { msg_send![self.err, localizedDescription] } };
+        let rec = NSString { s: unsafe { msg_send![self.err, localizedRecoveryOptions] } };
+        let sug = NSString { s: unsafe { msg_send![self.err, localizedRecoverySuggestion] } };
+        let res = NSString { s: unsafe { msg_send![self.err, localizedFailureReason] } };
+        format!("NSError(localizedDescription({}), ", des) +
+            &format!("localizedRecoveryOptions({}), ", rec) +
+            &format!("localizedRecoverySuggestion({}), ", sug) +
+            &format!("localizedFailureReason({}))", res)
+    }
+    pub fn as_ptr(&mut self) -> IdPtr {
+        IdPtr {
+            id: &mut self.err,
+        }
+    }
+}
+
+unsafe impl objc::Encode for NSError {
+    fn encode() -> objc::Encoding { unsafe { objc::Encoding::from_str("@") } }
+}
+
+impl std::fmt::Debug for NSError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
+impl std::fmt::Display for NSError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
+
 // TODO: remove auto release pool in future.
 // impl Drop for NSString {
 //     fn drop(&mut self) {
@@ -158,6 +222,23 @@ unsafe impl objc::Encode for IdPtr {
 // }
 
 // enums ------------------------------------------------------------------------------------------
+
+bitflags! {
+    pub struct CompareFunction: NSUInteger {
+        const COMPARE_FUNCTION_NEVER = 0;
+        const COMPARE_FUNCTION_LESS = 1;
+        const COMPARE_FUNCTION_EQUAL = 2;
+        const COMPARE_FUNCTION_LESS_EQUAL = 3;
+        const COMPARE_FUNCTION_GREATER = 4;
+        const COMPARE_FUNCTION_NOT_EQUAL = 5;
+        const COMPARE_FUNCTION_GREATER_EQUAL = 6;
+        const COMPARE_FUNCTION_ALWAYS = 7;
+    }
+}
+
+unsafe impl objc::Encode for CompareFunction {
+    fn encode() -> objc::Encoding { NSUInteger::encode() }
+}
 
 bitflags! {
     pub struct CPUCacheMode: NSUInteger {

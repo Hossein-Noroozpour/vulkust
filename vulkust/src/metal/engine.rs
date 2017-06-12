@@ -1,3 +1,5 @@
+#![allow(resolve_trait_on_defaulted_unit)]
+
 use std::ptr::null_mut;
 use std::mem::size_of;
 use super::super::core::application::ApplicationTrait;
@@ -10,21 +12,29 @@ use super::super::system::metal as mtl;
 pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub core_app: *mut CoreApp,
     pub os_app: *mut OsApplication<CoreApp>,
+    pub depth_state: mtl::Id,
+    pub command_queue: mtl::Id,
 }
 
-const MAX_BUFFERS_COUNT: mtl::NSUInteger = 3;
+pub const MAX_BUFFERS_COUNT: mtl::NSUInteger = 3;
+pub const BUFFER_INDEX_MESH_POSITIONS: mtl::NSUInteger = 0;
+pub const BUFFER_INDEX_MESH_GENERICS:  mtl::NSUInteger = 1;
+pub const BUFFER_INDEX_UNIFORMS:       mtl::NSUInteger = 2;
+pub const VERTEX_ATTRIBUTE_POSITION:   mtl::NSUInteger = 0;
+pub const VERTEX_ATTRIBUTE_TEXCOORD:   mtl::NSUInteger = 1;
+pub const VERTEX_ATTRIBUTE_NORMAL:     mtl::NSUInteger = 2;
 
 #[repr(C)]
 #[derive(Debug)]
 pub struct Uniforms {
-    pub projectionMatrix: Mat4x4<f32>,
-    pub viewMatrix: Mat4x4<f32>,
-    pub materialShininess: f32,
-    pub modelViewMatrix: Mat4x4<f32>,
-    pub normalMatrix: Mat3x3<f32>,
-    pub ambientLightColor: Vec3<f32>,
-    pub directionalLightDirection: Vec3<f32>,
-    pub directionalLightColor: Vec3<f32>,
+    pub projection_matrix: Mat4x4<f32>,
+    pub view_matrix: Mat4x4<f32>,
+    pub material_shininess: f32,
+    pub model_view_matrix: Mat4x4<f32>,
+    pub normal_matrix: Mat3x3<f32>,
+    pub ambient_light_color: Vec3<f32>,
+    pub directional_light_direction: Vec3<f32>,
+    pub directional_light_color: Vec3<f32>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: ApplicationTrait {
@@ -32,6 +42,8 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         Engine {
             core_app: null_mut(),
             os_app: null_mut(),
+            depth_state: null_mut(),
+            command_queue: null_mut(),
         }
     }
 
@@ -44,6 +56,20 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
     }
 
     fn initialize(&mut self) {
+        self.load_metal();
+    }
+
+    fn update(&mut self) {
+
+    }
+
+    fn terminate(&mut self) {
+
+    }
+}
+
+impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
+    fn load_metal(&mut self) {
         let device = unsafe { (*self.os_app).metal_device };
         let asset_manager = unsafe {&mut (*self.os_app).asset_manager };
         let shader = asset_manager.get_shader(1, self.os_app);
@@ -55,12 +81,6 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
         let label = mtl::NSString::new("UniformBuffer");
         unsafe { msg_send![dynamic_uniform_buffer, setLabel:label.s]; }
         let vertex_descriptor = mtl::get_instance("MTLVertexDescriptor");
-        const BUFFER_INDEX_MESH_POSITIONS: mtl::NSUInteger = 0;
-        const BUFFER_INDEX_MESH_GENERICS:  mtl::NSUInteger = 1;
-        const BUFFER_INDEX_UNIFORMS:       mtl::NSUInteger = 2;
-        const VERTEX_ATTRIBUTE_POSITION:   mtl::NSUInteger = 0;
-        const VERTEX_ATTRIBUTE_TEXCOORD:   mtl::NSUInteger = 1;
-        const VERTEX_ATTRIBUTE_NORMAL:     mtl::NSUInteger = 2;
         let attributes: mtl::Id = unsafe { msg_send![vertex_descriptor, attributes] };
         let attribute: mtl::Id = unsafe { msg_send![
             attributes, objectAtIndexedSubscript:VERTEX_ATTRIBUTE_POSITION] };
@@ -127,35 +147,34 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             msg_send![pipeline_state_descriptor,
                 setFragmentFunction:shader.as_shader().fragment.function];
             msg_send![pipeline_state_descriptor, setVertexDescriptor:vertex_descriptor];
-            msg_send![pipeline_state_descriptor, setcolorAttachments[0].pixelFormat = _renderDestination.colorPixelFormat];
+            let color_attachments: mtl::Id = msg_send![
+                pipeline_state_descriptor, colorAttachments];
+            let color_attachment: mtl::Id = msg_send![
+                color_attachments, objectAtIndexedSubscript:0 as mtl::NSUInteger];
+            msg_send![color_attachment, setPixelFormat:color_format];
+            msg_send![
+                color_attachments, setObject:color_attachment
+                atIndexedSubscript:0 as mtl::NSUInteger];
             msg_send![pipeline_state_descriptor,
                 setDepthAttachmentPixelFormat:depth_stencil_format];
             msg_send![pipeline_state_descriptor,
                 setStencilAttachmentPixelFormat:depth_stencil_format];
         }
-        //
-        // NSError *error = NULL;
-        // _pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
-        // if (!_pipelineState)
-        // {
-        //     NSLog(@"Failed to created pipeline state, error %@", error);
-        // }
-        //
-        // MTLDepthStencilDescriptor *depthStateDesc = [[MTLDepthStencilDescriptor alloc] init];
-        // depthStateDesc.depthCompareFunction = MTLCompareFunctionLess;
-        // depthStateDesc.depthWriteEnabled = YES;
-        // _depthState = [_device newDepthStencilStateWithDescriptor:depthStateDesc];
-        //
-        // // Create the command queue
-        // _commandQueue = [_device newCommandQueue];
-
-    }
-
-    fn update(&mut self) {
-
-    }
-
-    fn terminate(&mut self) {
-
+        let mut error = mtl::NSError::null();
+        let pipeline_state: mtl::Id = unsafe { msg_send![
+            device,
+            newRenderPipelineStateWithDescriptor:pipeline_state_descriptor
+            error:error.as_ptr()] };
+        if pipeline_state == null_mut() {
+            logf!("Failed to created pipeline state, error is {}", error);
+        }
+        let depth_state_desc = mtl::get_instance("MTLDepthStencilDescriptor");
+        unsafe {
+            msg_send![depth_state_desc, setDepthCompareFunction:mtl::COMPARE_FUNCTION_LESS];
+            msg_send![depth_state_desc, setDepthWriteEnabled:mtl::YES];
+        }
+        self.depth_state = unsafe { msg_send![
+            device, newDepthStencilStateWithDescriptor:depth_state_desc] };
+        self.command_queue = unsafe { msg_send![device, newCommandQueue] };
     }
 }
