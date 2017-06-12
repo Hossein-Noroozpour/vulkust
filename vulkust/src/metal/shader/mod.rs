@@ -8,6 +8,9 @@ use super::super::core::application::ApplicationTrait;
 use self::stage::Stage;
 
 pub trait ShaderTrait: Debug {
+    fn as_shader(&self) -> &Shader {
+        logf!("This object can not convert to Shader.");
+    }
 }
 
 #[derive(Debug)]
@@ -34,4 +37,7 @@ impl Shader {
 }
 
 impl ShaderTrait for Shader {
+    fn as_shader(&self) -> &Shader {
+        return self;
+    }
 }

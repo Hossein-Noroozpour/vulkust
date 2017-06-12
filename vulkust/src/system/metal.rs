@@ -335,6 +335,71 @@ unsafe impl objc::Encode for PixelFormat {
 }
 
 bitflags! {
+    pub struct VertexFormat: NSUInteger {
+        const VERTEX_FORMAT_INVALID = 0;
+        const VERTEX_FORMAT_UCHAR2 = 1;
+        const VERTEX_FORMAT_UCHAR3 = 2;
+        const VERTEX_FORMAT_UCHAR4 = 3;
+        const VERTEX_FORMAT_CHAR2 = 4;
+        const VERTEX_FORMAT_CHAR3 = 5;
+        const VERTEX_FORMAT_CHAR4 = 6;
+        const VERTEX_FORMAT_UCHAR2_NORMALIZED = 7;
+        const VERTEX_FORMAT_UCHAR3_NORMALIZED = 8;
+        const VERTEX_FORMAT_UCHAR4_NORMALIZED = 9;
+        const VERTEX_FORMAT_CHAR2_NORMALIZED = 10;
+        const VERTEX_FORMAT_CHAR3_NORMALIZED = 11;
+        const VERTEX_FORMAT_CHAR4_NORMALIZED = 12;
+        const VERTEX_FORMAT_USHORT2 = 13;
+        const VERTEX_FORMAT_USHORT3 = 14;
+        const VERTEX_FORMAT_USHORT4 = 15;
+        const VERTEX_FORMAT_SHORT2 = 16;
+        const VERTEX_FORMAT_SHORT3 = 17;
+        const VERTEX_FORMAT_SHORT4 = 18;
+        const VERTEX_FORMAT_USHORT2_NORMALIZED = 19;
+        const VERTEX_FORMAT_USHORT3_NORMALIZED = 20;
+        const VERTEX_FORMAT_USHORT4_NORMALIZED = 21;
+        const VERTEX_FORMAT_SHORT2_NORMALIZED = 22;
+        const VERTEX_FORMAT_SHORT3_NORMALIZED = 23;
+        const VERTEX_FORMAT_SHORT4_NORMALIZED = 24;
+        const VERTEX_FORMAT_HALF2 = 25;
+        const VERTEX_FORMAT_HALF3 = 26;
+        const VERTEX_FORMAT_HALF4 = 27;
+        const VERTEX_FORMAT_FLOAT = 28;
+        const VERTEX_FORMAT_FLOAT2 = 29;
+        const VERTEX_FORMAT_FLOAT3 = 30;
+        const VERTEX_FORMAT_FLOAT4 = 31;
+        const VERTEX_FORMAT_INT = 32;
+        const VERTEX_FORMAT_INT2 = 33;
+        const VERTEX_FORMAT_INT3 = 34;
+        const VERTEX_FORMAT_INT4 = 35;
+        const VERTEX_FORMAT_UINT = 36;
+        const VERTEX_FORMAT_UINT2 = 37;
+        const VERTEX_FORMAT_UINT3 = 38;
+        const VERTEX_FORMAT_UINT4 = 39;
+        const VERTEX_FORMAT_INT1010102_NORMALIZED = 40;
+        const VERTEX_FORMAT_UINT1010102_NORMALIZED = 41;
+    }
+}
+
+unsafe impl objc::Encode for VertexFormat {
+    fn encode() -> objc::Encoding { NSUInteger::encode() }
+}
+
+bitflags! {
+    pub struct VertexStepFunction: NSUInteger {
+        const VERTEX_STEP_FUNCTION_CONSTANT                = 0;
+        const VERTEX_STEP_FUNCTION_PER_VERTEX              = 1;
+        const VERTEX_STEP_FUNCTION_PER_INSTANCE            = 2;
+        const VERTEX_STEP_FUNCTION_PER_PATCH               = 3;
+        const VERTEX_STEP_FUNCTION_PER_PATCH_CONTROL_POINT = 4;
+    }
+}
+
+unsafe impl objc::Encode for VertexStepFunction {
+    fn encode() -> objc::Encoding { NSUInteger::encode() }
+}
+
+bitflags! {
     pub struct NsWindowStyleMask: NSUInteger {
         const NS_BORDERLESS_WINDOW_MASK                 = 0;
         const NS_TITLED_WINDOW_MASK                     = 1 << 0;
