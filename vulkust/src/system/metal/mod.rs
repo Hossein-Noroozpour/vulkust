@@ -1,9 +1,11 @@
+pub mod kit;
+
 use std;
 use std::os::raw::{c_void, c_char};
 use std::ffi::CStr;
 use std::mem::transmute;
 use super::super::objc;
-pub use super::super::objc::runtime::{Object, Class, YES};
+pub use super::super::objc::runtime::{Object, Class, YES, NO};
 use super::super::objc::declare::{ClassDecl};
 
 // types ------------------------------------------------------------------------------------------
@@ -222,6 +224,21 @@ impl std::fmt::Display for NSError {
 // }
 
 // enums ------------------------------------------------------------------------------------------
+
+bitflags! {
+    pub struct GeometryType: NSUInteger {
+        const GEOMETRY_TYPE_POINTS           = 0;
+        const GEOMETRY_TYPE_LINES            = 1;
+        const GEOMETRY_TYPE_TRIANGLES        = 2;
+        const GEOMETRY_TYPE_TRIANGLE_STRIPS  = 3;
+        const GEOMETRY_TYPE_QUADS            = 4;
+        const GEOMETRY_TYPE_VARIABLE_TOPOLOG = 5;
+    }
+}
+
+unsafe impl objc::Encode for GeometryType {
+    fn encode() -> objc::Encoding { NSUInteger::encode() }
+}
 
 bitflags! {
     pub struct CompareFunction: NSUInteger {
@@ -543,11 +560,6 @@ unsafe impl objc::Encode for NsStringEncoding {
 #[link(name = "Metal", kind = "framework")]
 extern "C" {
     fn MTLCreateSystemDefaultDevice() -> Id;
-}
-
-#[link(name = "MetalKit", kind = "framework")]
-extern "C" {
-    // pub fn MTKMetalVertexFormatFromModelIO() -> *mut Object;
 }
 
 #[link(name = "Foundation", kind = "framework")]

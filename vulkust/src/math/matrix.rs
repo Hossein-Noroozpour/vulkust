@@ -1,18 +1,18 @@
 use std::ops::{
     Mul,
 };
-use super::number::Float;
+use super::number::Number;
 use super::vector::{
     Vec3,
 };
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Mat4x4<E> where E: Float {
+pub struct Mat4x4<E> where E: Number {
     pub data: [[E; 4]; 4],
 }
 
-impl<E> Mat4x4<E> where E: Float {
+impl<E> Mat4x4<E> where E: Number {
     pub fn new() -> Mat4x4<E> {
         Mat4x4 {
             data: [
@@ -72,7 +72,7 @@ impl<E> Mat4x4<E> where E: Float {
     }
 }
 
-impl<E> Mul<Vec3<E>> for Mat4x4<E> where E: Float {
+impl<E> Mul<Vec3<E>> for Mat4x4<E> where E: Number {
     type Output = Vec3<E>;
     fn mul(self, o: Vec3<E>) -> Vec3<E> {
         Vec3 {
@@ -83,7 +83,7 @@ impl<E> Mul<Vec3<E>> for Mat4x4<E> where E: Float {
     }
 }
 
-impl<E> Mul<Mat4x4<E>> for Mat4x4<E> where E: Float {
+impl<E> Mul<Mat4x4<E>> for Mat4x4<E> where E: Number {
     type Output = Mat4x4<E>;
     fn mul(self, o: Mat4x4<E>) -> Mat4x4<E> {
         let mut m = Mat4x4::new();
@@ -101,6 +101,6 @@ impl<E> Mul<Mat4x4<E>> for Mat4x4<E> where E: Float {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Mat3x3<E> where E: Float {
+pub struct Mat3x3<E> where E: Number {
     pub data: [[E; 3]; 3],
 }

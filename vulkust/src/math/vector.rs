@@ -9,7 +9,9 @@ use std::ops::{
     MulAssign,
     DivAssign,
 };
-use super::number::Float;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+use super::super::objc;
+use super::number::Number;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Axis {
@@ -21,16 +23,26 @@ pub enum Axis {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Vec4<T> where T: Float {
+pub struct Vec4<T> where T: Number {
     pub x: T,
     pub y: T,
     pub z: T,
     pub w: T,
 }
 
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+unsafe impl<T> objc::Encode for Vec4<T> where T: Number {
+    fn encode() -> objc::Encoding {
+        let encoding = format!(
+            "{{?={}{}{}{}}}", T::objc_encode(),
+            T::objc_encode(), T::objc_encode(), T::objc_encode());
+        unsafe { objc::Encoding::from_str(&encoding) }
+    }
+}
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Vec3<T> where T: Float {
+pub struct Vec3<T> where T: Number {
     pub x: T,
     pub y: T,
     pub z: T,
@@ -40,9 +52,9 @@ macro_rules! as_expr { ($e:expr) => {$e} }
 
 macro_rules! op3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec3<T> where T: Float {
-            type Output = Vec3<T>;
-            fn $func(self, other: Vec3<T>) -> Vec3<T> {
+        impl<T> $tra for Vec3<T> where T: Number {
+            type Output = Self;
+            fn $func(self, other: Vec3<T>) -> Self {
                 Vec3 {
                     x: as_expr!(self.x $opt other.x),
                     y: as_expr!(self.y $opt other.y),
@@ -55,9 +67,9 @@ macro_rules! op3 {
 
 macro_rules! sop3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec3<T> where T: Float {
-            type Output = Vec3<T>;
-            fn $func(self, other: T) -> Vec3<T> {
+        impl<T> $tra<T> for Vec3<T> where T: Number {
+            type Output = Self;
+            fn $func(self, other: T) -> Self {
                 Vec3 {
                     x: as_expr!(self.x $opt other),
                     y: as_expr!(self.y $opt other),
@@ -70,7 +82,7 @@ macro_rules! sop3 {
 
 macro_rules! opasg3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec3<T> where T: Float {
+        impl<T> $tra for Vec3<T> where T: Number {
             fn $func(&mut self, other: Vec3<T>) {
                 as_expr!(self.x $opt other.x);
                 as_expr!(self.y $opt other.y);
@@ -82,7 +94,7 @@ macro_rules! opasg3 {
 
 macro_rules! sopasg3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec3<T> where T: Float {
+        impl<T> $tra<T> for Vec3<T> where T: Number {
             fn $func(&mut self, other: T) {
                 as_expr!(self.x $opt other);
                 as_expr!(self.y $opt other);
@@ -112,9 +124,9 @@ sopasg3!(sub_assign, SubAssign, -=);
 sopasg3!(mul_assign, MulAssign, *=);
 sopasg3!(div_assign, DivAssign, /=);
 
-impl<E> Neg for Vec3<E> where E: Float {
-    type Output = Vec3<E>;
-    fn neg(self) -> Vec3<E> {
+impl<E> Neg for Vec3<E> where E: Number + Neg<Output = E> {
+    type Output = Self;
+    fn neg(self) -> Self {
         Vec3 {
             x: -self.x,
             y: -self.y,
@@ -123,8 +135,8 @@ impl<E> Neg for Vec3<E> where E: Float {
     }
 }
 
-impl<T> Vec3<T> where T: Float {
-    pub fn new(e: T) -> Vec3<T> {
+impl<T> Vec3<T> where T: Number {
+    pub fn new(e: T) -> Self {
         Vec3 {
             x: e,
             y: e,
@@ -136,7 +148,7 @@ impl<T> Vec3<T> where T: Float {
         self.x * o.x + self.y * o.y + self.z * o.z
     }
 
-    pub fn cross(&self, o: &Vec3<T>) -> Vec3<T> {
+    pub fn cross(&self, o: &Vec3<T>) -> Self {
         Vec3 {
             x: self.y * o.z - self.z * o.y,
             y: self.z * o.x - self.x * o.z,
@@ -163,7 +175,7 @@ impl<T> Vec3<T> where T: Float {
         self.z /= len;
     }
 
-    pub fn normalized(&self) -> Vec3<T> {
+    pub fn normalized(&self) -> Self {
         let len = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
         Vec3 {
             x: self.x / len,
@@ -173,16 +185,25 @@ impl<T> Vec3<T> where T: Float {
     }
 }
 
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+unsafe impl<T> objc::Encode for Vec3<T> where T: Number {
+    fn encode() -> objc::Encoding {
+        let encoding = format!(
+            "{{?={}{}{}}}", T::objc_encode(), T::objc_encode(), T::objc_encode());
+        unsafe { objc::Encoding::from_str(&encoding) }
+    }
+}
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Vec2<T> where T: Float {
+pub struct Vec2<T> where T: Number {
     pub x: T,
     pub y: T,
 }
 
 macro_rules! op2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec2<T> where T: Float {
+        impl<T> $tra for Vec2<T> where T: Number {
             type Output = Vec2<T>;
             fn $func(self, other: Vec2<T>) -> Vec2<T> {
                 Vec2 {
@@ -196,7 +217,7 @@ macro_rules! op2 {
 
 macro_rules! sop2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec2<T> where T: Float {
+        impl<T> $tra<T> for Vec2<T> where T: Number {
             type Output = Vec2<T>;
             fn $func(self, other: T) -> Vec2<T> {
                 Vec2 {
@@ -210,7 +231,7 @@ macro_rules! sop2 {
 
 macro_rules! opasg2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec2<T> where T: Float {
+        impl<T> $tra for Vec2<T> where T: Number {
             fn $func(&mut self, other: Vec2<T>) {
                 as_expr!(self.x $opt other.x);
                 as_expr!(self.y $opt other.y);
@@ -221,7 +242,7 @@ macro_rules! opasg2 {
 
 macro_rules! sopasg2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec2<T> where T: Float {
+        impl<T> $tra<T> for Vec2<T> where T: Number {
             fn $func(&mut self, other: T) {
                 as_expr!(self.x $opt other);
                 as_expr!(self.y $opt other);
@@ -250,7 +271,7 @@ sopasg2!(sub_assign, SubAssign, -=);
 sopasg2!(mul_assign, MulAssign, *=);
 sopasg2!(div_assign, DivAssign, /=);
 
-impl<E> Neg for Vec2<E> where E: Float {
+impl<E> Neg for Vec2<E> where E: Number + Neg<Output = E> {
     type Output = Vec2<E>;
     fn neg(self) -> Vec2<E> {
         Vec2 {
@@ -260,7 +281,7 @@ impl<E> Neg for Vec2<E> where E: Float {
     }
 }
 
-impl<T> Vec2<T> where T: Float {
+impl<T> Vec2<T> where T: Number {
     pub fn new(e: T) -> Vec2<T> {
         Vec2 {
             x: e,
@@ -305,5 +326,14 @@ impl<T> Vec2<T> where T: Float {
             x: self.x / len,
             y: self.y / len,
         }
+    }
+}
+
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+unsafe impl<T> objc::Encode for Vec2<T> where T: Number {
+    fn encode() -> objc::Encoding {
+        let encoding = format!(
+            "{{?={}{}}}", T::objc_encode(), T::objc_encode());
+        unsafe { objc::Encoding::from_str(&encoding) }
     }
 }

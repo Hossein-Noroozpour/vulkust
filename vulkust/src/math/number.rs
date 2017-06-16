@@ -3,7 +3,6 @@ use std::ops::{
     Sub,
     Mul,
     Div,
-    Neg,
     AddAssign,
     SubAssign,
     MulAssign,
@@ -25,12 +24,11 @@ pub fn max<T>(a: T, b: T) -> T where T: PartialOrd + Copy + Clone {
     return b;
 }
 
-pub trait Float:
+pub trait Number:
         Add<Output = Self> +
         Sub<Output = Self> +
         Mul<Output = Self> +
         Div<Output = Self> +
-        Neg<Output = Self> +
         AddAssign +
         SubAssign +
         MulAssign +
@@ -43,40 +41,33 @@ pub trait Float:
     fn sqrt(&self) -> Self;
     fn abs(&self) -> Self;
     fn to(&self) -> f64;
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    fn objc_encode() -> &'static str;
 }
 
-impl Float for f64 {
-    fn new(f: f64) -> Self {
-        f
-    }
-
-    fn sqrt(&self) -> Self {
-        f64::sqrt(*self)
-    }
-
-    fn abs(&self) -> Self {
-        f64::abs(*self)
-    }
-
-    fn to(&self) -> f64 {
-        *self
-    }
+impl Number for f64 {
+    fn new(f: f64) -> Self { f }
+    fn sqrt(&self) -> Self { f64::sqrt(*self) }
+    fn abs(&self) -> Self { f64::abs(*self) }
+    fn to(&self) -> f64 { *self }
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    fn objc_encode() -> &'static str { "f" }
 }
 
-impl Float for f32 {
-    fn new(f: f64) -> Self {
-        f as f32
-    }
+impl Number for f32 {
+    fn new(f: f64) -> Self { f as f32 }
+    fn sqrt(&self) -> Self { f32::sqrt(*self) }
+    fn abs(&self) -> Self { f32::abs(*self) }
+    fn to(&self) -> f64 { *self as f64 }
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    fn objc_encode() -> &'static str { "d" }
+}
 
-    fn sqrt(&self) -> Self {
-        f32::sqrt(*self)
-    }
-
-    fn abs(&self) -> Self {
-        f32::abs(*self)
-    }
-
-    fn to(&self) -> f64 {
-        *self as f64
-    }
+impl Number for u32 {
+    fn new(f: f64) -> Self { f as u32 }
+    fn sqrt(&self) -> Self { f64::sqrt(*self as f64) as u32 }
+    fn abs(&self) -> Self { *self }
+    fn to(&self) -> f64 { *self as f64 }
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    fn objc_encode() -> &'static str { "I" }
 }

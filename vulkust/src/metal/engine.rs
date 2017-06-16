@@ -8,12 +8,14 @@ use super::super::math::vector::Vec3;
 use super::super::system::os::OsApplication;
 use super::super::render::engine::EngineTrait;
 use super::super::system::metal as mtl;
+use super::super::system::metal::kit as mtk;
 
 pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub core_app: *mut CoreApp,
     pub os_app: *mut OsApplication<CoreApp>,
     pub depth_state: mtl::Id,
     pub command_queue: mtl::Id,
+    pub metal_vertex_descriptor: mtl::Id,
 }
 
 pub const MAX_BUFFERS_COUNT: mtl::NSUInteger = 3;
@@ -44,6 +46,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             os_app: null_mut(),
             depth_state: null_mut(),
             command_queue: null_mut(),
+            metal_vertex_descriptor: null_mut(),
         }
     }
 
@@ -57,6 +60,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
 
     fn initialize(&mut self) {
         self.load_metal();
+        self.load_assets();
     }
 
     fn update(&mut self) {
@@ -176,5 +180,63 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         self.depth_state = unsafe { msg_send![
             device, newDepthStencilStateWithDescriptor:depth_state_desc] };
         self.command_queue = unsafe { msg_send![device, newCommandQueue] };
+        self.metal_vertex_descriptor = vertex_descriptor;
+    }
+
+    fn load_assets(&mut self) {
+        let device = unsafe { (*self.os_app).metal_device };
+        let mut error = mtl::NSError::null();
+        let metal_allocator: mtl::Id = unsafe { msg_send![
+            mtl::alloc("MTKMeshBufferAllocator"), initWithDevice:device] };
+        let dimension = Vec3::new(4.0f32);
+        let segments = Vec3::new(2u32);
+        let geometry_type = mtl::GEOMETRY_TYPE_TRIANGLES;
+        let inward_normals = mtl::NO;
+        let class = mtl::get_class("MDLMesh");
+        let mdl_mesh: mtl::Id = unsafe { msg_send![
+            class, newBoxWithDimensions:0u32 segments:0u32 geometryType:0u32 inwardNormals:0u32
+            allocator:0u32] };
+        let modle_vertex_descriptor =
+            mtk::model_io_vertex_descriptor_from_metal(self.metal_vertex_descriptor);
+
+        // // Indicate how each Metal vertex descriptor attribute maps to each ModelIO attribute
+        // mdlVertexDescriptor.attributes[kVertexAttributePosition].name  = MDLVertexAttributePosition;
+        // mdlVertexDescriptor.attributes[kVertexAttributeTexcoord].name  = MDLVertexAttributeTextureCoordinate;
+        // mdlVertexDescriptor.attributes[kVertexAttributeNormal].name    = MDLVertexAttributeNormal;
+        //
+        // // Perform the format/relayout of mesh vertices by setting the new vertex descriptor in our
+        // //   Model IO mesh
+        // mdlMesh.vertexDescriptor = mdlVertexDescriptor;
+        //
+        // // Crewte a MetalKit mesh (and submeshes) backed by Metal buffers
+        // _mesh = [[MTKMesh alloc] initWithMesh:mdlMesh
+        //                                device:_device
+        //                                 error:&error];
+        //
+        // if(!_mesh || error)
+        // {
+        //     NSLog(@"Error creating MetalKit mesh %@", error.localizedDescription);
+        // }
+        //
+        // // Use MetalKit's to load textures from our asset catalog (Assets.xcassets)
+        // MTKTextureLoader* textureLoader = [[MTKTextureLoader alloc] initWithDevice:_device];
+        //
+        // // Load our textures with shader read using private storage
+        // NSDictionary *textureLoaderOptions =
+        // @{
+        //   MTKTextureLoaderOptionTextureUsage       : @(MTLTextureUsageShaderRead),
+        //   MTKTextureLoaderOptionTextureStorageMode : @(MTLStorageModePrivate)
+        //   };
+        //
+        // _colorMap = [textureLoader newTextureWithName:@"ColorMap"
+        //                                      scaleFactor:1.0
+        //                                           bundle:nil
+        //                                          options:textureLoaderOptions
+        //                                            error:&error];
+        //
+        // if(!_colorMap || error)
+        // {
+        //     NSLog(@"Error creating texture %@", error.localizedDescription);
+        // }
     }
 }
