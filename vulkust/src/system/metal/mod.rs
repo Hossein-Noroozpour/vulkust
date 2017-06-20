@@ -1,10 +1,11 @@
 pub mod kit;
+pub mod util;
 
 use std;
 use std::os::raw::{c_void, c_char};
 use std::ffi::CStr;
 use std::mem::transmute;
-use super::super::objc;
+pub use super::super::objc;
 pub use super::super::objc::runtime::{Object, Class, YES, NO};
 use super::super::objc::declare::{ClassDecl};
 

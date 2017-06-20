@@ -1,5 +1,4 @@
 #![allow(resolve_trait_on_defaulted_unit)]
-
 use std::ptr::null_mut;
 use std::mem::size_of;
 use super::super::core::application::ApplicationTrait;
@@ -9,6 +8,7 @@ use super::super::system::os::OsApplication;
 use super::super::render::engine::EngineTrait;
 use super::super::system::metal as mtl;
 use super::super::system::metal::kit as mtk;
+use super::super::objc::__send_message;
 
 pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub core_app: *mut CoreApp,
@@ -188,16 +188,25 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         let mut error = mtl::NSError::null();
         let metal_allocator: mtl::Id = unsafe { msg_send![
             mtl::alloc("MTKMeshBufferAllocator"), initWithDevice:device] };
-        let dimension = Vec3::new(4.0f32);
-        let segments = Vec3::new(2u32);
+        #[repr(simd)]
+        struct Fv3 (f32, f32, f32);
+        #[repr(simd)]
+        struct Uv3 (u32, u32, u32);
+        let dimension = Fv3(4.0f32, 4.0f32, 4.0f32);
+        let segments = Uv3(2, 2, 2);
         let geometry_type = mtl::GEOMETRY_TYPE_TRIANGLES;
         let inward_normals = mtl::NO;
         let class = mtl::get_class("MDLMesh");
-        let mdl_mesh: mtl::Id = unsafe { msg_send![
-            class, newBoxWithDimensions:0u32 segments:0u32 geometryType:0u32 inwardNormals:0u32
-            allocator:0u32] };
-        let modle_vertex_descriptor =
-            mtk::model_io_vertex_descriptor_from_metal(self.metal_vertex_descriptor);
+        let sel = sel!(newBoxWithDimensions:segments:geometryType:inwardNormals:allocator:);
+        let mdl_mesh: mtl::Id = mtl::util::send_unverified(class, sel, (
+            dimension, segments, geometry_type, inward_normals, metal_allocator
+        ));
+        // let mdl_mesh: mtl::Id = unsafe { msg_send![
+        //     class, newBoxWithDimensions:dimension segments:segments geometryType:geometry_type
+        //     inwardNormals:inward_normals allocator:metal_allocator] };
+
+        // let modle_vertex_descriptor =
+        //     mtk::model_io_vertex_descriptor_from_metal(self.metal_vertex_descriptor);
 
         // // Indicate how each Metal vertex descriptor attribute maps to each ModelIO attribute
         // mdlVertexDescriptor.attributes[kVertexAttributePosition].name  = MDLVertexAttributePosition;

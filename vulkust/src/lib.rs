@@ -1,3 +1,5 @@
+#![feature(repr_simd)]
+
 #[macro_use]
 extern crate objc;
 #[macro_use]

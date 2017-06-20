@@ -189,7 +189,7 @@ impl<T> Vec3<T> where T: Number {
 unsafe impl<T> objc::Encode for Vec3<T> where T: Number {
     fn encode() -> objc::Encoding {
         let encoding = format!(
-            "{{?={}{}{}}}", T::objc_encode(), T::objc_encode(), T::objc_encode());
+            "![3{}]", T::objc_encode());
         unsafe { objc::Encoding::from_str(&encoding) }
     }
 }
