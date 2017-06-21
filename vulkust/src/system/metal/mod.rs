@@ -650,7 +650,7 @@ impl NsAutoReleasePool {
 impl Drop for NsAutoReleasePool {
     fn drop(&mut self) {
         unsafe {
-            msg_send![self.pool, drain];
+            let _: () = msg_send![self.pool, drain];
         }
     }
 }

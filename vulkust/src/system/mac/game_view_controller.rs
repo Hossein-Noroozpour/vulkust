@@ -24,7 +24,7 @@ extern fn metal_view_did_load(_this: &mut Object, _cmd: Sel) {
 extern fn mtl_view(this: &mut Object, _cmd: Sel, view: mtl::Id, _size: mtl::NSSize) {
     let bounds: mtl::NSRect = unsafe { msg_send![view, bounds] };
     let renderer: &mtl::Id = unsafe { this.get_ivar(RENDERER_VAR_NAME) };
-    unsafe { msg_send![*renderer, drawRectResized:bounds.size] };
+    unsafe { let _: () = msg_send![*renderer, drawRectResized:bounds.size]; }
 }
 
 // Called whenever the view needs to render
@@ -54,7 +54,7 @@ extern fn get_color_pixel_format(this: &mut Object, _cmd: Sel) -> mtl::NSUIntege
 // - (void) setColorPixelFormat: (MTLPixelFormat) pixelFormat
 extern fn set_color_pixel_format(this: &mut Object, _cmd: Sel, frmt: mtl::NSUInteger) {
     let view: mtl::Id = unsafe { msg_send![this, view] };
-    unsafe { msg_send![view, setColorPixelFormat:frmt] };
+    unsafe { let _: () = msg_send![view, setColorPixelFormat:frmt]; }
 }
 
 // - (MTLPixelFormat) depthStencilPixelFormat
@@ -66,7 +66,7 @@ extern fn get_depth_stencil_pixel_format(this: &mut Object, _cmd: Sel) -> mtl::N
 // - (void) setDepthStencilPixelFormat: (MTLPixelFormat) pixelFormat
 extern fn set_depth_stencil_pixel_format(this: &mut Object, _cmd: Sel, frmt: mtl::NSUInteger) {
     let view: mtl::Id = unsafe { msg_send![this, view] };
-    unsafe { msg_send![view, setDepthStencilPixelFormat:frmt] };
+    unsafe { let _: () = msg_send![view, setDepthStencilPixelFormat:frmt]; }
 }
 
 // - (NSUInteger) sampleCount
@@ -78,7 +78,7 @@ extern fn get_sample_count(this: &mut Object, _cmd: Sel) -> mtl::NSUInteger {
 // - (void) setSampleCount:(NSUInteger) sampleCount
 extern fn set_sample_count(this: &mut Object, _cmd: Sel, sample_count: mtl::NSUInteger) {
     let view: mtl::Id = unsafe { msg_send![this, view] };
-    unsafe { msg_send![view, setSampleCount:sample_count] };
+    unsafe { let _: () = msg_send![view, setSampleCount:sample_count]; }
 }
 
 // - (id<MTLDrawable>) currentDrawable

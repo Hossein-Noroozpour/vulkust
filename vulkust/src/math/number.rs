@@ -3,6 +3,7 @@ use std::ops::{
     Sub,
     Mul,
     Div,
+    Neg,
     AddAssign,
     SubAssign,
     MulAssign,
@@ -71,3 +72,9 @@ impl Number for u32 {
     #[cfg(any(target_os = "macos", target_os = "ios"))]
     fn objc_encode() -> &'static str { "I" }
 }
+
+pub trait Float: Number + Neg<Output = Self> {}
+
+impl Float for f32 {}
+
+impl Float for f64 {}

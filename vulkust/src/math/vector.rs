@@ -13,6 +13,26 @@ use std::ops::{
 use super::super::objc;
 use super::number::Number;
 
+#[repr(simd)]
+pub struct SVec4D (pub f64, pub f64, pub f64, pub f64);
+#[repr(simd)]
+pub struct SVec3D (pub f64, pub f64, pub f64);
+#[repr(simd)]
+pub struct SVec2D (pub f64, pub f64);
+#[repr(simd)]
+pub struct SVec4F (pub f32, pub f32, pub f32, pub f32);
+#[repr(simd)]
+pub struct SVec3F (pub f32, pub f32, pub f32);
+#[repr(simd)]
+pub struct SVec2F (pub f32, pub f32);
+#[repr(simd)]
+pub struct SVec4U32 (pub u32, pub u32, pub u32, pub u32);
+#[repr(simd)]
+pub struct SVec3U32 (pub u32, pub u32, pub u32);
+#[repr(simd)]
+pub struct SVec2U32 (pub u32, pub u32);
+
+#[repr(usize)]
 #[derive(Debug, Clone, Copy)]
 pub enum Axis {
     X,

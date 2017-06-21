@@ -1,14 +1,12 @@
-#![allow(resolve_trait_on_defaulted_unit)]
 use std::ptr::null_mut;
 use std::mem::size_of;
 use super::super::core::application::ApplicationTrait;
 use super::super::math::matrix::{Mat4x4, Mat3x3};
-use super::super::math::vector::Vec3;
+use super::super::math::vector::{Vec3, SVec3F, SVec3U32};
 use super::super::system::os::OsApplication;
 use super::super::render::engine::EngineTrait;
 use super::super::system::metal as mtl;
 use super::super::system::metal::kit as mtk;
-use super::super::objc::__send_message;
 
 pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub core_app: *mut CoreApp,
@@ -83,53 +81,53 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
             msg_send![device, newBufferWithLength:uniform_buffer_size
                 options:mtl::RESOURCE_STORAGE_MODE_SHARED] };
         let label = mtl::NSString::new("UniformBuffer");
-        unsafe { msg_send![dynamic_uniform_buffer, setLabel:label.s]; }
+        unsafe { let _: () = msg_send![dynamic_uniform_buffer, setLabel:label.s]; }
         let vertex_descriptor = mtl::get_instance("MTLVertexDescriptor");
         let attributes: mtl::Id = unsafe { msg_send![vertex_descriptor, attributes] };
         let attribute: mtl::Id = unsafe { msg_send![
             attributes, objectAtIndexedSubscript:VERTEX_ATTRIBUTE_POSITION] };
         unsafe {
-            msg_send![attribute, setFormat:mtl::VERTEX_FORMAT_FLOAT3];
-            msg_send![attribute, setOffset:0 as mtl::NSUInteger];
-            msg_send![attribute, setBufferIndex:BUFFER_INDEX_MESH_POSITIONS];
-            msg_send![attributes,
+            let _: () = msg_send![attribute, setFormat:mtl::VERTEX_FORMAT_FLOAT3];
+            let _: () = msg_send![attribute, setOffset:0 as mtl::NSUInteger];
+            let _: () = msg_send![attribute, setBufferIndex:BUFFER_INDEX_MESH_POSITIONS];
+            let _: () = msg_send![attributes,
                 setObject:attribute atIndexedSubscript:VERTEX_ATTRIBUTE_POSITION];
         }
         let attribute: mtl::Id = unsafe { msg_send![
             attributes, objectAtIndexedSubscript:VERTEX_ATTRIBUTE_TEXCOORD] };
         unsafe {
-            msg_send![attribute, setFormat:mtl::VERTEX_FORMAT_FLOAT2];
-            msg_send![attribute, setOffset:0 as mtl::NSUInteger];
-            msg_send![attribute, setBufferIndex:BUFFER_INDEX_MESH_GENERICS];
-            msg_send![attributes,
+            let _: () = msg_send![attribute, setFormat:mtl::VERTEX_FORMAT_FLOAT2];
+            let _: () = msg_send![attribute, setOffset:0 as mtl::NSUInteger];
+            let _: () = msg_send![attribute, setBufferIndex:BUFFER_INDEX_MESH_GENERICS];
+            let _: () = msg_send![attributes,
                 setObject:attribute atIndexedSubscript:VERTEX_ATTRIBUTE_TEXCOORD];
         }
         let attribute: mtl::Id = unsafe { msg_send![
             attributes, objectAtIndexedSubscript:VERTEX_ATTRIBUTE_NORMAL] };
         unsafe {
-            msg_send![attribute, setFormat:mtl::VERTEX_FORMAT_HALF4];
-            msg_send![attribute, setOffset:8 as mtl::NSUInteger];
-            msg_send![attribute, setBufferIndex:BUFFER_INDEX_MESH_GENERICS];
-            msg_send![attributes,
+            let _: () = msg_send![attribute, setFormat:mtl::VERTEX_FORMAT_HALF4];
+            let _: () = msg_send![attribute, setOffset:8 as mtl::NSUInteger];
+            let _: () = msg_send![attribute, setBufferIndex:BUFFER_INDEX_MESH_GENERICS];
+            let _: () = msg_send![attributes,
                 setObject:attribute atIndexedSubscript:VERTEX_ATTRIBUTE_NORMAL];
         }
         let layouts: mtl::Id = unsafe { msg_send![vertex_descriptor, layouts] };
         let layout: mtl::Id = unsafe { msg_send![
             layouts, objectAtIndexedSubscript:BUFFER_INDEX_MESH_POSITIONS] };
         unsafe {
-            msg_send![layout, setStride:12 as mtl::NSUInteger];
-            msg_send![layout, setStepRate:1 as mtl::NSUInteger];
-            msg_send![layout, setStepFunction:mtl::VERTEX_STEP_FUNCTION_PER_VERTEX];
-            msg_send![layouts,
+            let _: () = msg_send![layout, setStride:12 as mtl::NSUInteger];
+            let _: () = msg_send![layout, setStepRate:1 as mtl::NSUInteger];
+            let _: () = msg_send![layout, setStepFunction:mtl::VERTEX_STEP_FUNCTION_PER_VERTEX];
+            let _: () = msg_send![layouts,
                 setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_POSITIONS];
         }
         let layout: mtl::Id = unsafe { msg_send![
             layouts, objectAtIndexedSubscript:BUFFER_INDEX_MESH_GENERICS] };
         unsafe {
-            msg_send![layout, setStride:16 as mtl::NSUInteger];
-            msg_send![layout, setStepRate:1 as mtl::NSUInteger];
-            msg_send![layout, setStepFunction:mtl::VERTEX_STEP_FUNCTION_PER_VERTEX];
-            msg_send![layouts,
+            let _: () = msg_send![layout, setStride:16 as mtl::NSUInteger];
+            let _: () = msg_send![layout, setStepRate:1 as mtl::NSUInteger];
+            let _: () = msg_send![layout, setStepFunction:mtl::VERTEX_STEP_FUNCTION_PER_VERTEX];
+            let _: () = msg_send![layouts,
                 setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_GENERICS];
         }
         let render_destination = unsafe { (*self.os_app).game_view_controller };
@@ -137,31 +135,31 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         let depth_stencil_format = mtl::PIXEL_FORMAT_DEPTH32_FLOAT_STENCIL8;
         let color_format = mtl::PIXEL_FORMAT_BGRA8_UNORM_SRGB;
         unsafe {
-            msg_send![render_destination, setDepthStencilPixelFormat:depth_stencil_format];
-            msg_send![render_destination, setColorPixelFormat:color_format];
-            msg_send![render_destination, setSampleCount:sample_count];
+            let _: () = msg_send![render_destination, setDepthStencilPixelFormat:depth_stencil_format];
+            let _: () = msg_send![render_destination, setColorPixelFormat:color_format];
+            let _: () = msg_send![render_destination, setSampleCount:sample_count];
         }
         let pipeline_state_descriptor = mtl::get_instance("MTLRenderPipelineDescriptor");
         let label = mtl::NSString::new("MyPipeline");
         unsafe {
-            msg_send![pipeline_state_descriptor, setLabel:label.s];
-            msg_send![pipeline_state_descriptor, setSampleCount:sample_count];
-            msg_send![pipeline_state_descriptor,
+            let _: () = msg_send![pipeline_state_descriptor, setLabel:label.s];
+            let _: () = msg_send![pipeline_state_descriptor, setSampleCount:sample_count];
+            let _: () = msg_send![pipeline_state_descriptor,
                 setVertexFunction:shader.as_shader().vertex.function];
-            msg_send![pipeline_state_descriptor,
+            let _: () = msg_send![pipeline_state_descriptor,
                 setFragmentFunction:shader.as_shader().fragment.function];
-            msg_send![pipeline_state_descriptor, setVertexDescriptor:vertex_descriptor];
+            let _: () = msg_send![pipeline_state_descriptor, setVertexDescriptor:vertex_descriptor];
             let color_attachments: mtl::Id = msg_send![
                 pipeline_state_descriptor, colorAttachments];
             let color_attachment: mtl::Id = msg_send![
                 color_attachments, objectAtIndexedSubscript:0 as mtl::NSUInteger];
-            msg_send![color_attachment, setPixelFormat:color_format];
-            msg_send![
+            let _: () = msg_send![color_attachment, setPixelFormat:color_format];
+            let _: () = msg_send![
                 color_attachments, setObject:color_attachment
                 atIndexedSubscript:0 as mtl::NSUInteger];
-            msg_send![pipeline_state_descriptor,
+            let _: () = msg_send![pipeline_state_descriptor,
                 setDepthAttachmentPixelFormat:depth_stencil_format];
-            msg_send![pipeline_state_descriptor,
+            let _: () = msg_send![pipeline_state_descriptor,
                 setStencilAttachmentPixelFormat:depth_stencil_format];
         }
         let mut error = mtl::NSError::null();
@@ -174,8 +172,8 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         }
         let depth_state_desc = mtl::get_instance("MTLDepthStencilDescriptor");
         unsafe {
-            msg_send![depth_state_desc, setDepthCompareFunction:mtl::COMPARE_FUNCTION_LESS];
-            msg_send![depth_state_desc, setDepthWriteEnabled:mtl::YES];
+            let _: () = msg_send![depth_state_desc, setDepthCompareFunction:mtl::COMPARE_FUNCTION_LESS];
+            let _: () = msg_send![depth_state_desc, setDepthWriteEnabled:mtl::YES];
         }
         self.depth_state = unsafe { msg_send![
             device, newDepthStencilStateWithDescriptor:depth_state_desc] };
@@ -187,26 +185,19 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         let device = unsafe { (*self.os_app).metal_device };
         let mut error = mtl::NSError::null();
         let metal_allocator: mtl::Id = unsafe { msg_send![
-            mtl::alloc("MTKMeshBufferAllocator"), initWithDevice:device] };
-        #[repr(simd)]
-        struct Fv3 (f32, f32, f32);
-        #[repr(simd)]
-        struct Uv3 (u32, u32, u32);
-        let dimension = Fv3(4.0f32, 4.0f32, 4.0f32);
-        let segments = Uv3(2, 2, 2);
+            mtl::alloc("MTKMeshBufferAllocator"), initWithDevice:device] 
+        };
+        let dimension = SVec3F(4.0, 4.0, 4.0);
+        let segments = SVec3U32(2, 2, 2);
         let geometry_type = mtl::GEOMETRY_TYPE_TRIANGLES;
         let inward_normals = mtl::NO;
         let class = mtl::get_class("MDLMesh");
-        let sel = sel!(newBoxWithDimensions:segments:geometryType:inwardNormals:allocator:);
-        let mdl_mesh: mtl::Id = mtl::util::send_unverified(class, sel, (
-            dimension, segments, geometry_type, inward_normals, metal_allocator
-        ));
-        // let mdl_mesh: mtl::Id = unsafe { msg_send![
-        //     class, newBoxWithDimensions:dimension segments:segments geometryType:geometry_type
-        //     inwardNormals:inward_normals allocator:metal_allocator] };
-
-        // let modle_vertex_descriptor =
-        //     mtk::model_io_vertex_descriptor_from_metal(self.metal_vertex_descriptor);
+        let mdl_mesh: mtl::Id = mtl::util::send_unverified(class,
+            sel!(newBoxWithDimensions:segments:geometryType:inwardNormals:allocator:), 
+            (dimension, segments, geometry_type, inward_normals, metal_allocator)
+        );
+        let modle_vertex_descriptor =
+            mtk::model_io_vertex_descriptor_from_metal(self.metal_vertex_descriptor);
 
         // // Indicate how each Metal vertex descriptor attribute maps to each ModelIO attribute
         // mdlVertexDescriptor.attributes[kVertexAttributePosition].name  = MDLVertexAttributePosition;

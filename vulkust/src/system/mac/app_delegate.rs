@@ -25,8 +25,9 @@ extern fn initialize<CoreApp>(this: &mut Object, _cmd: Sel) where CoreApp: Appli
     let backing = mtl::NS_BACKING_STORE_BUFFERED;
     let window: mtl::Id = unsafe { msg_send![mtl::alloc("NSWindow"),
         initWithContentRect:frame styleMask:style_mask backing:backing defer:YES] };
+    logi!("window is: {:?}", window);
     unsafe { (*this).set_ivar("window", window); }
-    unsafe { msg_send![window, center]; }
+    unsafe { let _: () = msg_send![window, center]; }
     let device = mtl::create_system_default_device();
     unsafe { (*app).metal_device = device; }
     let game_view = mtl::get_instance(gvc::CLASS_NAME);
@@ -40,20 +41,21 @@ extern fn initialize<CoreApp>(this: &mut Object, _cmd: Sel) where CoreApp: Appli
     let pixel_format = mtl::PIXEL_FORMAT_BGRA8_UNORM;
     let depth_stencil_format = mtl::PIXEL_FORMAT_DEPTH32_FLOAT;
     unsafe {
-        msg_send![metal_view, setClearColor:clear_color];
-        msg_send![metal_view, setColorPixelFormat:pixel_format];
-        msg_send![metal_view, setDepthStencilPixelFormat:depth_stencil_format];
-        msg_send![game_view, setView:metal_view];
-        msg_send![window, setContentView:metal_view];
-        msg_send![window, setContentViewController:game_view];
-        msg_send![game_view, viewDidLoad];
+        let _: () = msg_send![metal_view, setClearColor:clear_color];
+        let _: () = msg_send![metal_view, setColorPixelFormat:pixel_format];
+        let _: () = msg_send![metal_view, setDepthStencilPixelFormat:depth_stencil_format];
+        let _: () = msg_send![game_view, setView:metal_view];
+        let _: () = msg_send![window, setContentView:metal_view];
+        let _: () = msg_send![window, setContentViewController:game_view];
+        let _: () = msg_send![game_view, viewDidLoad];
     }
     logi!("Reached.");
 }
 
 extern fn application_will_finish_launching(this: &Object, _cmd: Sel, _n: mtl::Id) {
     let window: mtl::Id = unsafe { *this.get_ivar("window") };
-    unsafe { msg_send![window, makeKeyAndOrderFront:this]; }
+    logi!("window is: {:?}", window);
+    let _: () = unsafe { msg_send![window, makeKeyAndOrderFront:this] };
 }
 
 extern fn application_did_finish_launching(_this: &Object, _cmd: Sel, _n: mtl::Id) {

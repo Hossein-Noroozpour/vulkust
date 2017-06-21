@@ -6,6 +6,22 @@ use super::vector::{
     Vec3,
 };
 
+#[repr(simd)]
+pub struct SMat4x4D (
+    f64,f64,f64,f64,
+    f64,f64,f64,f64,
+    f64,f64,f64,f64,
+    f64,f64,f64,f64, 
+);
+
+#[repr(simd)]
+pub struct SMat4x4F (
+    f32,f32,f32,f32,
+    f32,f32,f32,f32,
+    f32,f32,f32,f32,
+    f32,f32,f32,f32, 
+);
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct Mat4x4<E> where E: Number {

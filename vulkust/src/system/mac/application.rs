@@ -50,8 +50,8 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
         self.ns_application = ns_application;
         self.app_delegate = mtl::get_instance(app_delegate::CLASS_NAME);
         unsafe { (*self.app_delegate).set_ivar(app_delegate::APP_VAR_NAME, app); }
-        unsafe { msg_send![self.app_delegate, initialize]};
-        unsafe { msg_send![ns_application, setDelegate:self.app_delegate] };
+        unsafe { let _: () = msg_send![self.app_delegate, initialize];}
+        unsafe { let _: () = msg_send![ns_application, setDelegate:self.app_delegate]; }
         logi!("Reached.");
 
 
@@ -103,7 +103,7 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
         self.render_engine = r;
     }
     fn execute(&mut self) -> bool {
-        unsafe { msg_send![self.ns_application, run] };
+        unsafe { let _: () = msg_send![self.ns_application, run]; }
         true
     }
 }
