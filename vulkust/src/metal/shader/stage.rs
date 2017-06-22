@@ -1,7 +1,7 @@
 use std::ptr::null_mut;
 use std::mem::transmute;
 use super::super::super::system::metal as mtl;
-use super::super::super::system::dispatch;
+use super::super::super::system::metal::dispatch;
 
 #[derive(Debug)]
 pub struct Stage {

@@ -17,3 +17,7 @@ assets/
 *.spv
 .DS_Store
 data.gx3d
+.vscode
+/.vscode
+.vscode/
+/.vscode/

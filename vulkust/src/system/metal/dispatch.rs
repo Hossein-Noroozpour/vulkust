@@ -2,7 +2,7 @@
 #![allow(non_camel_case_types)]
 
 use std::os::raw::{c_char, c_long, c_ulong, c_void};
-use super::super::objc::runtime::Object;
+use super::objc::runtime::Object;
 
 type size_t = usize;
 

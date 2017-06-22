@@ -7,6 +7,7 @@ use super::super::system::os::OsApplication;
 use super::super::render::engine::EngineTrait;
 use super::super::system::metal as mtl;
 use super::super::system::metal::kit as mtk;
+use super::super::system::metal::model_io as mdl;
 
 pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub core_app: *mut CoreApp,
@@ -135,7 +136,8 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         let depth_stencil_format = mtl::PIXEL_FORMAT_DEPTH32_FLOAT_STENCIL8;
         let color_format = mtl::PIXEL_FORMAT_BGRA8_UNORM_SRGB;
         unsafe {
-            let _: () = msg_send![render_destination, setDepthStencilPixelFormat:depth_stencil_format];
+            let _: () = msg_send![render_destination,
+                setDepthStencilPixelFormat:depth_stencil_format];
             let _: () = msg_send![render_destination, setColorPixelFormat:color_format];
             let _: () = msg_send![render_destination, setSampleCount:sample_count];
         }
@@ -148,7 +150,8 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
                 setVertexFunction:shader.as_shader().vertex.function];
             let _: () = msg_send![pipeline_state_descriptor,
                 setFragmentFunction:shader.as_shader().fragment.function];
-            let _: () = msg_send![pipeline_state_descriptor, setVertexDescriptor:vertex_descriptor];
+            let _: () = msg_send![pipeline_state_descriptor,
+                setVertexDescriptor:vertex_descriptor];
             let color_attachments: mtl::Id = msg_send![
                 pipeline_state_descriptor, colorAttachments];
             let color_attachment: mtl::Id = msg_send![
@@ -172,7 +175,8 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         }
         let depth_state_desc = mtl::get_instance("MTLDepthStencilDescriptor");
         unsafe {
-            let _: () = msg_send![depth_state_desc, setDepthCompareFunction:mtl::COMPARE_FUNCTION_LESS];
+            let _: () = msg_send![depth_state_desc,
+                setDepthCompareFunction:mtl::COMPARE_FUNCTION_LESS];
             let _: () = msg_send![depth_state_desc, setDepthWriteEnabled:mtl::YES];
         }
         self.depth_state = unsafe { msg_send![
@@ -185,7 +189,7 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         let device = unsafe { (*self.os_app).metal_device };
         let mut error = mtl::NSError::null();
         let metal_allocator: mtl::Id = unsafe { msg_send![
-            mtl::alloc("MTKMeshBufferAllocator"), initWithDevice:device] 
+            mtl::alloc("MTKMeshBufferAllocator"), initWithDevice:device]
         };
         let dimension = SVec3F(4.0, 4.0, 4.0);
         let segments = SVec3U32(2, 2, 2);
@@ -193,33 +197,32 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         let inward_normals = mtl::NO;
         let class = mtl::get_class("MDLMesh");
         let mdl_mesh: mtl::Id = mtl::util::send_unverified(class,
-            sel!(newBoxWithDimensions:segments:geometryType:inwardNormals:allocator:), 
+            sel!(newBoxWithDimensions:segments:geometryType:inwardNormals:allocator:),
             (dimension, segments, geometry_type, inward_normals, metal_allocator)
         );
         let modle_vertex_descriptor =
             mtk::model_io_vertex_descriptor_from_metal(self.metal_vertex_descriptor);
-
-        // // Indicate how each Metal vertex descriptor attribute maps to each ModelIO attribute
-        // mdlVertexDescriptor.attributes[kVertexAttributePosition].name  = MDLVertexAttributePosition;
-        // mdlVertexDescriptor.attributes[kVertexAttributeTexcoord].name  = MDLVertexAttributeTextureCoordinate;
-        // mdlVertexDescriptor.attributes[kVertexAttributeNormal].name    = MDLVertexAttributeNormal;
-        //
-        // // Perform the format/relayout of mesh vertices by setting the new vertex descriptor in our
-        // //   Model IO mesh
-        // mdlMesh.vertexDescriptor = mdlVertexDescriptor;
-        //
-        // // Crewte a MetalKit mesh (and submeshes) backed by Metal buffers
-        // _mesh = [[MTKMesh alloc] initWithMesh:mdlMesh
-        //                                device:_device
-        //                                 error:&error];
-        //
-        // if(!_mesh || error)
-        // {
-        //     NSLog(@"Error creating MetalKit mesh %@", error.localizedDescription);
-        // }
-        //
-        // // Use MetalKit's to load textures from our asset catalog (Assets.xcassets)
-        // MTKTextureLoader* textureLoader = [[MTKTextureLoader alloc] initWithDevice:_device];
+        let attributes: mtl::Id = unsafe { msg_send![modle_vertex_descriptor, attributes] };
+        let set = |attributes: mtl::Id, index: mtl::NSUInteger, att: mtl::Id| {
+            let attribute: mtl::Id = unsafe { msg_send![
+                attributes, objectAtIndexedSubscript:index] };
+            let _: () = unsafe { msg_send![attribute, setName:att] };
+            let _: () = unsafe { msg_send![attributes, setObject:attribute
+                atIndexedSubscript:index] };
+        };
+        set(attributes, VERTEX_ATTRIBUTE_POSITION, unsafe { mdl::MDLVertexAttributePosition });
+        set(attributes, VERTEX_ATTRIBUTE_TEXCOORD, unsafe {
+            mdl::MDLVertexAttributeTextureCoordinate });
+        set(attributes, VERTEX_ATTRIBUTE_NORMAL, unsafe { mdl::MDLVertexAttributeNormal });
+        unsafe { let _: () = msg_send![mdl_mesh, setVertexDescriptor:modle_vertex_descriptor]; }
+        let mtk_mesh: mtl::Id = unsafe { msg_send![mtl::alloc("MTKMesh"),
+            initWithMesh:mdl_mesh device:device error:error.as_ptr()] };
+        if mtk_mesh == null_mut() || error.is_error() {
+            logf!("Creating MetalKit mesh failed with error {}", error);
+        }
+        let texture_loader: mtl::Id = unsafe {
+            msg_send![mtl::alloc("MTKTextureLoader"), initWithDevice:device]
+        };
         //
         // // Load our textures with shader read using private storage
         // NSDictionary *textureLoaderOptions =

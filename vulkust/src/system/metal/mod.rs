@@ -1,4 +1,6 @@
+pub mod dispatch;
 pub mod kit;
+pub mod model_io;
 pub mod util;
 
 use std;
@@ -124,7 +126,6 @@ impl NSRect {
     }
 }
 
-// TODO: I don't like auto release pool try to remove it, and you must right the drop
 pub struct NSString {
     pub s: Id,
 }
@@ -197,6 +198,9 @@ impl NSError {
         IdPtr {
             id: &mut self.err,
         }
+    }
+    pub fn is_error(&self) -> bool {
+        self.err != 0 as Id
     }
 }
 
