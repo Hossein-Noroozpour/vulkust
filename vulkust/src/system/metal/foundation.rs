@@ -1,4 +1,5 @@
 use std::mem::transmute;
+use std::os::raw::c_void;
 use super::{objc, NSUInteger, NSString, Id, IdPtr, get_class};
 
 pub struct NSDictionaryBuilder {
@@ -76,6 +77,33 @@ impl NSNumber {
         NSNumber {
             id: unsafe {
                 msg_send![get_class(NSNUMBER_CLASS_NAME), numberWithUnsignedInteger:v]
+            }
+        }
+    }
+}
+
+#[repr(C)]
+pub struct NSData {
+    pub id: Id,
+}
+
+unsafe impl objc::Encode for NSData {
+    fn encode() -> objc::Encoding { 
+        unsafe { 
+            objc::Encoding::from_str("@") 
+        } 
+    }
+}
+
+pub const NSDATA_CLASS_NAME: &'static str = "NSData";
+
+impl NSData {
+    pub fn new<T>(data: *const T, len: usize) -> Self {
+        let data: *const c_void = unsafe { transmute(data) };
+        let len = len as NSUInteger;
+        NSData {
+            id: unsafe {
+                msg_send![get_class(NSDATA_CLASS_NAME), dataWithBytes:data length:len]
             }
         }
     }

@@ -8,7 +8,7 @@ use super::super::render::engine::EngineTrait;
 use super::super::system::metal as mtl;
 use super::super::system::metal::kit as mtk;
 use super::super::system::metal::model_io as mdl;
-use super::super::system::metal::foundation as fnd;
+// use super::super::system::metal::foundation as fnd;
 
 pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub core_app: *mut CoreApp,
@@ -16,6 +16,7 @@ pub struct Engine<CoreApp> where CoreApp: ApplicationTrait {
     pub depth_state: mtl::Id,
     pub command_queue: mtl::Id,
     pub metal_vertex_descriptor: mtl::Id,
+    pub texture_loader: mtl::Id,
 }
 
 pub const MAX_BUFFERS_COUNT: mtl::NSUInteger = 3;
@@ -47,6 +48,7 @@ impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp> where CoreApp: Applicatio
             depth_state: null_mut(),
             command_queue: null_mut(),
             metal_vertex_descriptor: null_mut(),
+            texture_loader: null_mut(),
         }
     }
 
@@ -221,33 +223,9 @@ impl<CoreApp> Engine<CoreApp> where CoreApp: ApplicationTrait {
         if mtk_mesh == null_mut() || error.is_error() {
             logf!("Creating MetalKit mesh failed with error {}", error);
         }
-        let texture_loader: mtl::Id = unsafe {
+        self.texture_loader = unsafe {
             msg_send![mtl::alloc("MTKTextureLoader"), initWithDevice:device]
         };
-        let texture_loader_option_texture_usage = 
-            fnd::NSNumber::new_uint(mtl::TEXTURE_USAGE_SHADER_READ.bits());
-        let texture_loader_option_texture_storage_mode = 
-            fnd::NSNumber::new_uint(mtl::STORAGE_MODE_PRIVATE.bits());
-        let texture_loader_options = fnd::NSDictionaryBuilder::new()
-            .add(unsafe { mtk::MTKTextureLoaderOptionTextureUsage }, 
-                texture_loader_option_texture_usage.id)
-            .add(unsafe { mtk::MTKTextureLoaderOptionTextureStorageMode },
-                texture_loader_option_texture_storage_mode.id)
-            .build();
-        let mut error = mtl::NSError::null();
-        let color_map: mtl::Id = unsafe { 
-            msg_send![
-                texture_loader, 
-                newTextureWithName:mtl::NSString::new("ColorMap")
-                scaleFactor:1.0 as mtl::CGFloat
-                bundle:mtl::NIL
-                options:texture_loader_options
-                error:error.as_ptr()
-            ]
-        };
-        
-        if color_map == null_mut() || error.is_error() {
-            logf!("Creating texture failed with error: {}", error);
-        }
+        unsafe {(*self.os_app).asset_manager.get_texture(1, self.os_app);}
     }
 }
