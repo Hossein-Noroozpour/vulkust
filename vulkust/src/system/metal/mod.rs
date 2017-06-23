@@ -2,6 +2,7 @@ pub mod dispatch;
 pub mod kit;
 pub mod model_io;
 pub mod util;
+pub mod foundation;
 
 use std;
 use std::os::raw::{c_void, c_char};
@@ -31,6 +32,7 @@ pub type Id = *mut Object;
 
 // const ------------------------------------------------------------------------------------------
 
+pub const NIL: Id = 0 as Id;
 pub const NS_AUTO_RELEASE_POOL: &str = "NSAutoreleasePool";
 pub const RESOURCE_CPU_CACHE_MODE_SHIFT: NSUInteger = 0;
 pub const RESOURCE_CPU_CACHE_MODE_MASK: NSUInteger = 0xF << RESOURCE_CPU_CACHE_MODE_SHIFT;
@@ -126,6 +128,8 @@ impl NSRect {
     }
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct NSString {
     pub s: Id,
 }
@@ -149,6 +153,9 @@ impl NSString {
 
 impl std::fmt::Display for NSString {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        if self.s == 0 as Id {
+            return write!(f, "");
+        }
         let ptr: *const c_char  = unsafe { msg_send![
             self.s, cStringUsingEncoding:NS_UTF8_STRING_ENCODING] };
         let string = unsafe { CStr::from_ptr(ptr) }.to_string_lossy().into_owned();
@@ -162,7 +169,9 @@ impl std::fmt::Debug for NSString {
     }
 }
 
-
+unsafe impl objc::Encode for NSString {
+    fn encode() -> objc::Encoding { unsafe { objc::Encoding::from_str("@") } }
+}
 
 #[repr(C)]
 pub struct IdPtr {
@@ -229,6 +238,20 @@ impl std::fmt::Display for NSError {
 // }
 
 // enums ------------------------------------------------------------------------------------------
+
+bitflags! {
+    pub struct TextureUsage: NSUInteger {
+        const TEXTURE_USAGE_UNKNOWN           = 0x0000;
+        const TEXTURE_USAGE_SHADER_READ       = 0x0001;
+        const TEXTURE_USAGE_SHADER_WRITE      = 0x0002;
+        const TEXTURE_USAGE_RENDER_TARGET     = 0x0004;
+        const TEXTURE_USAGE_PIXEL_FORMAT_VIEW = 0x0010;
+    }
+}
+
+unsafe impl objc::Encode for TextureUsage {
+    fn encode() -> objc::Encoding { NSUInteger::encode() }
+}
 
 bitflags! {
     pub struct GeometryType: NSUInteger {

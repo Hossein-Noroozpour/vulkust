@@ -1,7 +1,9 @@
-use super::Id;
+use super::{Id, NSString};
 
 #[link(name = "MetalKit", kind = "framework")]
 extern "C" {
+    pub static MTKTextureLoaderOptionTextureUsage: NSString;
+    pub static MTKTextureLoaderOptionTextureStorageMode: NSString;
     fn MTKModelIOVertexDescriptorFromMetal(vertex_descriptor: Id) -> Id;
 }
 
