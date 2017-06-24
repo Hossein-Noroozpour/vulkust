@@ -1,5 +1,6 @@
 #![feature(repr_simd)]
 
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 #[macro_use]
 pub extern crate objc;
 #[macro_use]
