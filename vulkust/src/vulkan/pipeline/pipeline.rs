@@ -6,6 +6,8 @@ use std::io::Read;
 use std::mem::transmute;
 use super::super::super::system::vulkan as vk;
 use super::super::device::logical::Logical as LogicalDevice;
+use super::super::system::os::OsApplication;
+use super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::render_pass::RenderPass;
 use super::layout::Layout;
 use super::cache::Cache;
@@ -18,7 +20,9 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
-    pub fn new(layout: Arc<Layout>, render_pass: Arc<RenderPass>, pipeline_cache: Arc<Cache>) -> Self {
+    pub fn new(layout: Arc<Layout>, render_pass: Arc<RenderPass>,
+            pipeline_cache: Arc<Cache>, os_app: *mut OsApplication<CoreApp>) -> Self
+            where CoreApp: CoreAppTrait {
 		let mut pipeline_create_info = vk::VkGraphicsPipelineCreateInfo::default();
 		pipeline_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -89,6 +93,7 @@ impl Pipeline {
 		vertex_input_state.vertexAttributeDescriptionCount = 2;
 		vertex_input_state.pVertexAttributeDescriptions = vertex_attribute.as_ptr();
         let stage_name = CString::new("main").unwrap();
+        ////////     TODO
 		let mut shader_stages = [vk::VkPipelineShaderStageCreateInfo::default(); 2];
 		shader_stages[0].sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -138,18 +143,4 @@ impl Drop for Pipeline {
             vk::vkDestroyPipeline(self.layout.logical_device.vk_data, self.vk_data, null());
         }
     }
-}
-
-fn load_shader(s: &str, logical_device: &Arc<LogicalDevice>) -> vk::VkShaderModule {
-    let mut shader_file = File::open(s).unwrap();
-    let mut file_buffer = Vec::new();
-    let shader_size = shader_file.read_to_end(&mut file_buffer).unwrap();
-    let mut module_create_info = vk::VkShaderModuleCreateInfo::default();
-    module_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    module_create_info.codeSize = shader_size;
-    module_create_info.pCode = unsafe {transmute(file_buffer.as_ptr())};
-    let mut shader_module = 0 as vk::VkShaderModule;
-    vulkan_check!(vk::vkCreateShaderModule(
-        logical_device.vk_data, &module_create_info, null(), &mut shader_module));
-    return shader_module;
 }
