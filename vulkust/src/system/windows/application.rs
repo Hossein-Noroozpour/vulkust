@@ -106,8 +106,8 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
             dwex_style = winapi::winuser::WS_EX_APPWINDOW | winapi::winuser::WS_EX_WINDOWEDGE;
             dw_style = winapi::winuser::WS_OVERLAPPEDWINDOW | winapi::winuser::WS_CLIPSIBLINGS |
                        winapi::winuser::WS_CLIPCHILDREN;
-            window_rect.right = default_window_width!();
-            window_rect.bottom = default_window_height!();
+            window_rect.right = 1000;
+            window_rect.bottom = 700;
         }
         unsafe { user32::AdjustWindowRectEx(
             &mut window_rect, dw_style, winapi::minwindef::FALSE, dwex_style); }
@@ -135,12 +135,17 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
         unsafe { user32::UpdateWindow(this.h_window); }
         this
     }
+
     fn set_core_app(&mut self, c: *mut CoreApp) {
         self.core_app = c;
     }
+
     fn set_rnd_eng(&mut self, r: *mut RenderEngine<CoreApp>) {
         self.render_engine = r;
     }
+
+    fn initialize(&mut self) -> bool { true }
+
     fn execute(&mut self) -> bool {
         loop {
             let mut msg: winapi::winuser::MSG = unsafe { zeroed() };

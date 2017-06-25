@@ -1,4 +1,5 @@
 #![allow(dead_code, non_camel_case_types, non_upper_case_globals, non_snake_case)]
+
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
@@ -4069,6 +4070,7 @@ use super::linux::xcb::{
 };
 #[cfg(target_os = "linux")]
 pub type VkXcbSurfaceCreateFlagsKHR = VkFlags;
+
 #[cfg(target_os = "linux")]
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -4091,23 +4093,17 @@ impl Default for VkXcbSurfaceCreateInfoKHR {
 pub type VkWin32SurfaceCreateFlagsKHR = VkFlags;
 
 #[cfg(target_os = "windows")]
-use winapi::minwindef::HINSTANCE;
-#[cfg(not(target_os = "windows"))]
-type HINSTANCE = c_int;
-#[cfg(target_os = "windows")]
-use winapi::windef::HWND;
-#[cfg(not(target_os = "windows"))]
-type HWND = c_int;
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct VkWin32SurfaceCreateInfoKHR {
     pub sType: VkStructureType,
     pub pNext: *const c_void,
     pub flags: VkWin32SurfaceCreateFlagsKHR,
-    pub hinstance: HINSTANCE,
-    pub hwnd: HWND,
+    pub hinstance: winapi::minwindef::HINSTANCE,
+    pub hwnd: winapi::windef::HWND,
 }
+
+#[cfg(target_os = "windows")]
 impl Default for VkWin32SurfaceCreateInfoKHR {
     fn default() -> Self {
         unsafe {
@@ -4603,9 +4599,9 @@ extern "C" {
         pAllocator: *const VkAllocationCallbacks, pSurface: *mut VkSurfaceKHR) -> VkResult;
     #[cfg(target_os = "windows")]
     pub fn vkCreateWin32SurfaceKHR(
-        instance: vk::VkInstance, pCreateInfo: *const VkWin32SurfaceCreateInfoKHR,
-        pAllocator: *const vk::VkAllocationCallbacks,
-        pSurface: *mut vk::VkSurfaceKHR) -> vk::VkResult;
+        instance: VkInstance, pCreateInfo: *const VkWin32SurfaceCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks,
+        pSurface: *mut VkSurfaceKHR) -> VkResult;
 }
 
 pub fn vkMakeVersion(major: u32, minor: u32, patch: u32) -> u32 {

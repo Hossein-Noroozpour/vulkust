@@ -7,7 +7,6 @@ use super::super::super::system::os::OsApplication;
 use super::super::application::ApplicationTrait;
 use std::sync::{Arc};
 
-#[derive(Debug)]
 pub struct Manager {
 	pub file: File,
 	pub shader_manager: ShaderManager,

@@ -1,17 +1,14 @@
 #[cfg(target_os = "windows")]
 extern crate winapi;
+
 use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;
 use super::super::system::vulkan as vk;
 use super::super::system::os::OsApplication;
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
-#[cfg(target_os = "windows")]
-use super::super::system::windows::vulkan::{
-    VkWin32SurfaceCreateInfoKHR,
-    vkCreateWin32SurfaceKHR,
-};
 use super::instance::Instance;
+
 pub struct Surface {
     pub instance: Arc<Instance>,
     pub vk_data: vk::VkSurfaceKHR,
@@ -56,16 +53,15 @@ impl Surface {
         }
     }
     #[cfg(target_os = "windows")]
-    pub fn new(
-            instance: Arc<Instance>, hinstance: HINSTANCE, hwnd: HWND) -> Self {
-        use self::winapi::minwindef::HINSTANCE;
-        use self::winapi::windef::HWND;
+    pub fn new<CoreApp>(
+            instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
+            where CoreApp: CoreAppTrait  {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
-        let mut create_info = VkWin32SurfaceCreateInfoKHR::default();
+        let mut create_info = vk::VkWin32SurfaceCreateInfoKHR::default();
         create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        create_info.hinstance = hinstance;
-        create_info.hwnd = hwnd;
-        vulkan_check!(vkCreateWin32SurfaceKHR(
+        create_info.hinstance = unsafe { (*os_app).h_instance };
+        create_info.hwnd = unsafe { (*os_app).h_window };
+        vulkan_check!(vk::vkCreateWin32SurfaceKHR(
                 instance.vk_data, &create_info, null(), &mut vk_data));
         logi!("vk surface {:?}", vk_data);
         Surface {
