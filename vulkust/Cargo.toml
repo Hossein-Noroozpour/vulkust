@@ -4,12 +4,16 @@ version = "0.1.0"
 authors = ["Hossein Noroozpour (Thany Hulixer) <hossein.noroozpour@gmail.com>"]
 description = "Vulakn based game engine"
 license = "GPL-1.0"
+build = "build.rs"
 
 [features]
 no-log = []
 no-vulkan-debug = []
 no-intensive-debug = []
 fullscreen = []
+use-directx12 = []
+use-vulkan = []
+use-metal = []
 
 [dependencies]
 libc = "*"

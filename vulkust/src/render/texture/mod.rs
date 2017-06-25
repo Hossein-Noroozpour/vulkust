@@ -4,9 +4,9 @@ use std::fmt::Debug;
 use super::super::system::file::File;
 use super::super::system::os::OsApplication;
 use super::super::core::application::ApplicationTrait;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
+#[cfg(metal)]
 use super::super::metal::texture::Texture2D as PlatformTexture2D;
-#[cfg(any(target_os = "windows"))]
+#[cfg(vulkan)]
 use super::super::vulkan::texture::Texture2D as PlatformTexture2D;
 
 pub trait TextureTrait: Debug {

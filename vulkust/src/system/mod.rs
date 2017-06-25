@@ -8,8 +8,8 @@ pub mod mac;
 pub mod windows;
 pub mod application;
 pub mod file;
-#[cfg(target_os = "macos")]
+#[cfg(metal)]
 pub mod metal;
 pub mod os;
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(vulkan)]
 pub mod vulkan;

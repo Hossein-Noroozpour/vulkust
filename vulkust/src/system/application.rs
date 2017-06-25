@@ -29,6 +29,7 @@ impl<CoreApp> Application<CoreApp> where CoreApp: ApplicationTrait {
         saved_state: *mut libc::c_void,
         saved_state_size: libc::size_t) {
         use super::android::application::Args;
+        use std::mem::transmute;
         let args = Args {
             activity: activity,
             saved_state: saved_state,
