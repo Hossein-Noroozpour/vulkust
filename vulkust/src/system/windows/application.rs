@@ -3,15 +3,18 @@ extern crate kernel32;
 extern crate user32;
 extern crate gdi32;
 use super::super::super::core::application::ApplicationTrait;
+use super::super::super::core::asset::manager::Manager as AssetManager;
 use super::super::super::render::engine::{RenderEngine,EngineTrait};
 use super::super::super::util::string::string_to_cwstring;
 use super::super::os::{OsApplication, ApplicationTrait as OsApplicationTrait};
+use super::super::file::File;
 
 use std::ptr::{null, null_mut};
 use std::mem::{zeroed, size_of, transmute};
 use std::os::raw::c_void;
 
 pub struct Application<CoreApp> where CoreApp: ApplicationTrait {
+    pub asset_manager: AssetManager,
     pub h_instance: winapi::minwindef::HINSTANCE,
     pub h_window: winapi::windef::HWND,
     pub core_app: *mut CoreApp,
@@ -45,7 +48,9 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
 {
     fn new(args: *const c_void) -> Self {
         let application_name = string_to_cwstring("Gearoenix Nu-Frag Game Engine");
+        let file = File::new(&"data.gx3d".to_string());
         let mut this = Application {
+            asset_manager: AssetManager::new(file),
             h_instance: unsafe { kernel32::GetModuleHandleA(null()) },
             h_window: null_mut(),
             core_app: null_mut(),
@@ -144,7 +149,10 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
         self.render_engine = r;
     }
 
-    fn initialize(&mut self) -> bool { true }
+    fn initialize(&mut self) -> bool {
+        self.asset_manager.initialize();
+        true
+    }
 
     fn execute(&mut self) -> bool {
         loop {
