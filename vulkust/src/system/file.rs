@@ -1,11 +1,16 @@
 use std::fs::File as StdFile;
 use std::io::{BufReader, Read, Seek, SeekFrom, Result};
 use std::mem::{transmute, size_of};
+#[cfg(target_os = "android")]
+use super::android::asset as aas;
 
 #[derive(Debug)]
 pub struct File {
     pub endian_compatible: bool,
+    #[cfg(not(target_os = "android"))]
     pub reader: BufReader<StdFile>,
+    #[cfg(target_os = "android")]
+    pub asset: *mut aas::AAsset,
 }
 
 impl File {
@@ -27,12 +32,13 @@ impl File {
         }
     }
 
+    #[cfg(not(target_os = "android"))]
     pub fn new(file_name: &String) -> Self {
         match StdFile::open(file_name) {
             Ok(f) => {
                 let mut s = File {
                     endian_compatible: true,
-                    reader: BufReader::new(f)
+                    reader: BufReader::new(f),
                 };
                 s.check_endian();
                 s
@@ -41,6 +47,26 @@ impl File {
                 logf!("Error {:?} in file reading.", e);
             }
         }
+    }
+
+    #[cfg(target_os = "android")]
+    pub fn new(file_name: &String, asset_manager: *mut aas::AAssetManager) -> Self {
+        use std::ffi::CString;
+        use std::ptr::null_mut;
+        // let file_name: String = file_name.clone();
+        let cstr_name = CString::new(file_name.clone().into_bytes()).unwrap();
+        let asset = unsafe {
+            aas::AAssetManager_open(asset_manager, cstr_name.as_ptr(), aas::O_RDONLY.bits())
+        };
+        if asset == null_mut() {
+            logf!("File {} not found!", file_name);
+        }
+        let mut file = File {
+            endian_compatible: true,
+            asset: asset,
+        };
+        file.check_endian();
+        return file;
     }
 
     pub fn read_typed_bytes(&mut self, des: *mut u8, count: usize) {
@@ -70,14 +96,18 @@ impl File {
         let mut read_count = 0;
         while read_count < count {
             let tmp_count = match self.read(&mut b[read_count..count]) {
-                Ok(c) => { c },
-                Err(_) => { logf!("Error in reading stream."); },
+                Ok(c) => c,
+                Err(_) => {
+                    logf!("Error in reading stream.");
+                }
             };
             read_count += tmp_count;
             if tmp_count == 0 {
                 logf!(
                     "Expected bytes count is {} but the read bytes count is {}.",
-                    count, read_count);
+                    count,
+                    read_count
+                );
             }
         }
         return b;
@@ -91,21 +121,43 @@ impl File {
         return false;
     }
 
-    pub fn read_type<T>(&mut self) -> T where T: Default {
+    pub fn read_type<T>(&mut self) -> T
+    where
+        T: Default,
+    {
         let mut r = T::default();
-        self.read_typed_bytes(unsafe {transmute(&mut r)}, size_of::<T>());
+        self.read_typed_bytes(unsafe { transmute(&mut r) }, size_of::<T>());
         r
     }
 }
 
 impl Read for File {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
-        self.reader.read(buf)
+        #[cfg(not(target_os = "android"))] return self.reader.read(buf);
+        #[cfg(target_os = "android")]
+        return Ok(unsafe {
+            aas::AAsset_read(self.asset, transmute(buf.as_mut_ptr()), buf.len()) as usize
+        });
     }
 }
 
 impl Seek for File {
     fn seek(&mut self, pos: SeekFrom) -> Result<u64> {
-        self.reader.seek(pos)
+        #[cfg(not(target_os = "android"))] return self.reader.seek(pos);
+        #[cfg(target_os = "android")]
+        {
+            use std::os::raw::c_int;
+            return Ok(match pos {
+                SeekFrom::Start(pos) => unsafe {
+                    aas::AAsset_seek(self.asset, pos as isize, aas::SEEK_SET.bits()) as u64
+                },
+                SeekFrom::End(pos) => unsafe {
+                    aas::AAsset_seek(self.asset, pos as isize, aas::SEEK_END.bits()) as u64
+                },
+                SeekFrom::Current(pos) => unsafe {
+                    aas::AAsset_seek(self.asset, pos as isize, aas::SEEK_CUR.bits()) as u64
+                },
+            });
+        }
     }
 }
