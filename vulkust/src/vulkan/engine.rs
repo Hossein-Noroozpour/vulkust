@@ -196,7 +196,6 @@ where
         ];
         let uniform = Arc::new(Uniform::new(
             logical_device.clone(),
-            graphic_cmd_pool.clone(),
             uniform_data.len() as u32 * 4,
         ));
         uniform.update(unsafe { transmute(uniform_data.as_ptr()) });

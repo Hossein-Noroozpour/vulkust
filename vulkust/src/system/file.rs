@@ -1,5 +1,8 @@
+#[cfg(not(target_os = "android"))]
 use std::fs::File as StdFile;
-use std::io::{BufReader, Read, Seek, SeekFrom, Result};
+use std::io::{Read, Seek, SeekFrom, Result};
+#[cfg(not(target_os = "android"))]
+use std::io::BufReader;
 use std::mem::{transmute, size_of};
 #[cfg(target_os = "android")]
 use super::android::asset as aas;
@@ -146,7 +149,6 @@ impl Seek for File {
         #[cfg(not(target_os = "android"))] return self.reader.seek(pos);
         #[cfg(target_os = "android")]
         {
-            use std::os::raw::c_int;
             return Ok(match pos {
                 SeekFrom::Start(pos) => unsafe {
                     aas::AAsset_seek(self.asset, pos as isize, aas::SEEK_SET.bits()) as u64

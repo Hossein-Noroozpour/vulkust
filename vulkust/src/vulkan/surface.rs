@@ -16,11 +16,11 @@ pub struct Surface {
 
 impl Surface {
     #[cfg(target_os = "android")]
-    pub fn new<CoreApp>(
-            instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
-            where CoreApp: CoreAppTrait  {
+    pub fn new<CoreApp>(instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
+    where
+        CoreApp: CoreAppTrait,
+    {
         loge!("Reached {:?}", os_app);
-        use super::super::system::android::window::ANativeWindow;
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let mut create_info = vk::VkAndroidSurfaceCreateInfoKHR::default();
         create_info.structure_type =
@@ -28,7 +28,11 @@ impl Surface {
         create_info.window = unsafe { (*os_app).window };
         loge!("{:?}.{:?}", os_app, create_info.window);
         vulkan_check!(vk::vkCreateAndroidSurfaceKHR(
-                instance.vk_data, &create_info, null(), &mut vk_data));
+            instance.vk_data,
+            &create_info,
+            null(),
+            &mut vk_data,
+        ));
         loge!("Reached");
         Surface {
             instance: instance,
@@ -36,16 +40,21 @@ impl Surface {
         }
     }
     #[cfg(target_os = "linux")]
-    pub fn new<CoreApp>(
-            instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
-            where CoreApp: CoreAppTrait  {
+    pub fn new<CoreApp>(instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
+    where
+        CoreApp: CoreAppTrait,
+    {
         let mut vk_surface = 0 as vk::VkSurfaceKHR;
         let mut create_info = vk::VkXcbSurfaceCreateInfoKHR::default();
         create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
         create_info.window = unsafe { (*os_app).window };
         create_info.connection = unsafe { (*os_app).connection };
         vulkan_check!(vk::vkCreateXcbSurfaceKHR(
-                instance.vk_data, &create_info, null(), &mut vk_surface));
+            instance.vk_data,
+            &create_info,
+            null(),
+            &mut vk_surface,
+        ));
         logi!("vk surface {:?}", vk_surface);
         Surface {
             instance: instance,
@@ -53,16 +62,21 @@ impl Surface {
         }
     }
     #[cfg(target_os = "windows")]
-    pub fn new<CoreApp>(
-            instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
-            where CoreApp: CoreAppTrait  {
+    pub fn new<CoreApp>(instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
+    where
+        CoreApp: CoreAppTrait,
+    {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let mut create_info = vk::VkWin32SurfaceCreateInfoKHR::default();
         create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         create_info.hinstance = unsafe { (*os_app).h_instance };
         create_info.hwnd = unsafe { (*os_app).h_window };
         vulkan_check!(vk::vkCreateWin32SurfaceKHR(
-                instance.vk_data, &create_info, null(), &mut vk_data));
+            instance.vk_data,
+            &create_info,
+            null(),
+            &mut vk_data,
+        ));
         logi!("vk surface {:?}", vk_data);
         Surface {
             instance: instance,

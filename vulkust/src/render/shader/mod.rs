@@ -1,7 +1,6 @@
 pub mod manager;
 pub mod stage;
 
-use std::fmt::Debug;
 use super::super::system::file::File;
 use super::super::system::os::OsApplication;
 use super::super::core::application::ApplicationTrait;
@@ -20,7 +19,9 @@ pub struct Shader {
 
 impl Shader {
     pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-            where CoreApp: ApplicationTrait {
+    where
+        CoreApp: ApplicationTrait,
+    {
         let size: u64 = file.read_type();
         logi!("shader size is: {}", size);
         let vertex = file.read_bytes(size as usize);

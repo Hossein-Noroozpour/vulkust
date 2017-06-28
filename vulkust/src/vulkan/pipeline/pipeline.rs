@@ -1,13 +1,9 @@
 use std::sync::Arc;
 use std::ffi::CString;
 use std::ptr::null;
-use std::fs::File;
-use std::io::Read;
-use std::mem::transmute;
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::system::os::OsApplication;
 use super::super::super::system::vulkan as vk;
-use super::super::device::logical::Logical as LogicalDevice;
 use super::super::render_pass::RenderPass;
 use super::layout::Layout;
 use super::cache::Cache;

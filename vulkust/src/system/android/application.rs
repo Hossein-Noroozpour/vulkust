@@ -2,13 +2,12 @@ extern crate libc;
 use std;
 use std::mem::transmute;
 use std::ptr::null_mut;
-use std::mem::forget;
 use self::libc::{c_void, size_t};
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::core::asset::manager::Manager as AssetManager;
 use super::super::super::render::engine::{RenderEngine, EngineTrait as RenderEngineTrait};
 use super::super::file::File;
-use super::super::os::{OsApplication, ApplicationTrait as OsApplicationTrait};
+use super::super::os::ApplicationTrait as OsApplicationTrait;
 use super::activity::ANativeActivity;
 use super::glue;
 use super::glue::{AppCmd, AndroidApp, AndroidPollSource};
@@ -41,10 +40,8 @@ where
         let args: *mut Args = unsafe { transmute(args) };
         let args = unsafe { (*args).clone() };
         let activity = args.activity;
-        let saved_state = args.saved_state;
-        let saved_state_size = args.saved_state_size;
         logi!("Creating: {:?}", activity);
-        let mut app = Application {
+        let app = Application {
             asset_manager: AssetManager::new(File::new(
                 &"data.gx3d".to_string(),
                 unsafe { (*activity).assetManager },

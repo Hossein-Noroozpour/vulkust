@@ -1,4 +1,3 @@
-use std::ptr::null_mut;
 use std::mem::transmute;
 use std::sync::Arc;
 use std::ptr::null;
