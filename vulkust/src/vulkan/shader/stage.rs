@@ -17,7 +17,13 @@ impl Stage {
     where
         CoreApp: ApplicationTrait,
     {
-        let logical_device = unsafe { (*(*os_app).render_engine).logical_device.clone().unwrap() };
+        let logical_device = unsafe {
+            (*(*os_app).render_engine)
+                .logical_device
+                .as_ref()
+                .unwrap()
+                .clone()
+        };
         let mut module_create_info = vk::VkShaderModuleCreateInfo::default();
         module_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         module_create_info.codeSize = data.len();

@@ -101,6 +101,7 @@ where
         let surface = Arc::new(Surface::new(instance.clone(), self.os_app));
         let physical_device = Arc::new(PhysicalDevice::new(surface.clone()));
         let logical_device = Arc::new(LogicalDevice::new(physical_device.clone()));
+        self.logical_device = Some(logical_device.clone()); // Beacause of shader stage
         let swapchain = Arc::new(Swapchain::new(logical_device.clone()));
         let depth_stencil = Arc::new(ImageView::new_depth_stencil(logical_device.clone()));
         let render_pass = Arc::new(RenderPass::new(swapchain.clone()));
@@ -218,7 +219,6 @@ where
         self.instance = Some(instance);
         self.surface = Some(surface);
         self.physical_device = Some(physical_device);
-        self.logical_device = Some(logical_device);
         self.swapchain = Some(swapchain);
         self.depth_stencil_image_view = Some(depth_stencil);
         self.render_pass = Some(render_pass);
