@@ -163,6 +163,7 @@ impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
                     user32::TranslateMessage(&msg);
     			    user32::DispatchMessageW(&msg);
                 }
+                unsafe { (*self.render_engine).update(); }
                 if msg.message == winapi::winuser::WM_QUIT {
                     return true;
                 }
