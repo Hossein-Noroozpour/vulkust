@@ -291,7 +291,6 @@ where
 
     fn terminate(&mut self) {
         self.logical_device.as_ref().unwrap().wait_idle();
-
         self.wait_fences.clear();
         self.render_complete_semaphore = None;
         self.present_complete_semaphore = None;

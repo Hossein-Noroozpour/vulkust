@@ -1,9 +1,5 @@
-use std::os::raw::{
-    c_char,
-};
-use super::asset::{
-    AAssetManager,
-};
+use std::os::raw::c_char;
+use super::asset::AAssetManager;
 
 pub enum AConfiguration {}
 
@@ -125,7 +121,7 @@ pub enum Id {
 }
 
 #[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
-extern {
+extern "C" {
     pub fn AConfiguration_new() -> *mut AConfiguration;
     pub fn AConfiguration_delete(config: *mut AConfiguration);
     pub fn AConfiguration_fromAssetManager(out: *mut AConfiguration, am: *mut AAssetManager);
@@ -164,23 +160,25 @@ extern {
     pub fn AConfiguration_setUiModeNight(config: *mut AConfiguration, ui_mode_night: i32);
     pub fn AConfiguration_diff(config1: *mut AConfiguration, config2: *mut AConfiguration) -> i32;
     pub fn AConfiguration_match(base: *mut AConfiguration, requested: *mut AConfiguration) -> i32;
-    pub fn AConfiguration_isBetterThan(base: *mut AConfiguration, test: *mut AConfiguration, requested: *mut AConfiguration) -> i32;
+    pub fn AConfiguration_isBetterThan(
+        base: *mut AConfiguration,
+        test: *mut AConfiguration,
+        requested: *mut AConfiguration,
+    ) -> i32;
 }
 
-#[cfg(debug_assertions)]
-use std::fmt::{
-    Debug,
-    Result,
-    Formatter,
-};
+use std::fmt::{Debug, Result, Formatter};
 
-#[cfg(debug_assertions)]
 impl Debug for AConfiguration {
     fn fmt(&self, f: &mut Formatter) -> Result {
         let mut lang = [0 as c_char; 2];
         let mut country = [0 as c_char; 2];
-        unsafe { AConfiguration_getLanguage(self, lang.as_mut_ptr()); }
-        unsafe { AConfiguration_getCountry(self, country.as_mut_ptr()); }
+        unsafe {
+            AConfiguration_getLanguage(self, lang.as_mut_ptr());
+        }
+        unsafe {
+            AConfiguration_getCountry(self, country.as_mut_ptr());
+        }
         write!(
             f, "\nAConfiguration {{\n    mcc : {:?}\n    mnc : {:?}\n    lang : {}{}\
             \n    cnt : {}{}\n    orientation : {:?}\n    touch : {:?}\n    dens : {:?}\

@@ -121,6 +121,11 @@ where
                         ((*source).process)(android_app, source);
                     }
                 }
+                if self.window_initialized {
+                    unsafe {
+                        (*self.render_engine).update();
+                    }
+                }
             }
         }
         loge!("Unexpected flow.");
