@@ -132,18 +132,6 @@ impl Pipeline {
             null(),
             &mut vk_data,
         ));
-        unsafe {
-            vk::vkDestroyShaderModule(
-                pipeline_cache.logical_device.vk_data,
-                shader_stages[0].module,
-                null(),
-            );
-            vk::vkDestroyShaderModule(
-                pipeline_cache.logical_device.vk_data,
-                shader_stages[1].module,
-                null(),
-            );
-        }
         Pipeline {
             layout: layout,
             render_pass: render_pass,
