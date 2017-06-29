@@ -28,9 +28,9 @@ where
     pub command_queue: mtl::Id,
     pub metal_vertex_descriptor: mtl::Id,
     pub texture_loader: mtl::Id,
-    pub uniform_buffer_index: u8,
+    pub uniform_buffer_index: mtl::NSUInteger,
     pub uniform_buffer_size: mtl::NSUInteger,
-    pub uniform_buffer_offset: u32,
+    pub uniform_buffer_offset: mtl::NSUInteger,
     pub uniform_buffer_address: *mut c_void,
     pub dynamic_uniform_buffer: mtl::Id,
     pub projection_matrix: Mat4x4<f32>,
@@ -329,9 +329,9 @@ where
     }
 
     fn update_dynamic_buffer_state(&mut self) {
-        self.uniform_buffer_index = (self.uniform_buffer_index + 1) % (MAX_BUFFERS_COUNT as u8);
-        self.uniform_buffer_offset = self.uniform_buffer_size as u32 *
-            self.uniform_buffer_index as u32;
+        self.uniform_buffer_index = (self.uniform_buffer_index + 1) % MAX_BUFFERS_COUNT;
+        self.uniform_buffer_offset = self.uniform_buffer_size as mtl::NSUInteger *
+            self.uniform_buffer_index as mtl::NSUInteger;
         self.uniform_buffer_address = unsafe { msg_send![self.dynamic_uniform_buffer, contents] };
         let tmp_add: *mut u8 = unsafe { transmute(self.uniform_buffer_address) };
         self.uniform_buffer_address =
@@ -367,7 +367,6 @@ where
     }
 
     pub fn render(&mut self) {
-        logi!("vcvcvcvcvcvcvc");
         self.in_flight_semaphore.lock().unwrap().acquire();
         let command_buffer: mtl::Id = unsafe { msg_send![self.command_queue, commandBuffer] };
         unsafe { let _: () =  msg_send![command_buffer, setLabel:mtl::NSString::new("MyCommand")]; }
@@ -439,9 +438,9 @@ where
             for submesh_index in 0..submeshes_count {
                 let submesh: mtl::Id = unsafe { msg_send![
                     submeshes, objectAtIndexedSubscript:submesh_index] };
-                let primitive_type: mtl::Id = unsafe { msg_send![submesh, primitiveType] };
-                let index_count: mtl::Id = unsafe { msg_send![submesh, indexCount] };
-                let index_type: mtl::Id = unsafe { msg_send![submesh, indexType] };
+                let primitive_type: mtl::NSUInteger = unsafe { msg_send![submesh, primitiveType] };
+                let index_count: mtl::NSUInteger = unsafe { msg_send![submesh, indexCount] };
+                let index_type: mtl::NSUInteger = unsafe { msg_send![submesh, indexType] };
                 let index_buffer: mtl::Id = unsafe { msg_send![submesh, indexBuffer] };
                 let buffer: mtl::Id = unsafe { msg_send![index_buffer, buffer] };
                 let offset: mtl::NSUInteger = unsafe { msg_send![index_buffer, offset] };

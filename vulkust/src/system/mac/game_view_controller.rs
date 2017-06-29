@@ -6,7 +6,6 @@ use super::super::metal as mtl;
 use super::application::Application as App;
 
 pub const DEVICE_VAR_NAME: &str = "mtl_device";
-pub const RENDERER_VAR_NAME: &str = "mtl_renderer";
 pub const APP_VAR_NAME: &str = "vukust_os_app";
 pub const CLASS_NAME: &str = "GameViewController";
 pub const SUPER_CLASS_NAME: &str = "NSViewController";
@@ -17,20 +16,22 @@ extern "C" fn metal_view_did_load<CoreApp>(this: &mut Object, _cmd: Sel) where
     let this: mtl::Id = this;
     let view: mtl::Id = unsafe { msg_send![this, view] };
     let _: () = unsafe { msg_send![view, setDelegate:this] };
-    let app: &App<CoreApp> = unsafe { transmute((*this).get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
-    let _: () = unsafe { msg_send![view, setDevice:app.metal_device] };
+    let app: *mut App<CoreApp> = unsafe { transmute(
+        *(*this).get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
+    let _: () = unsafe { msg_send![view, setDevice:(*app).metal_device] };
     let bounds: mtl::NSRect = unsafe { msg_send![view, bounds] };
-    unsafe { (*app.render_engine).draw_rect_resized(&bounds.size); }
+    unsafe { (*(*app).render_engine).draw_rect_resized(&bounds.size); }
 }
 
 // Called whenever view changes orientation or layout is changed
 // - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
-extern "C" fn mtl_view(this: &mut Object, _cmd: Sel, view: mtl::Id, _size: mtl::NSSize) {
+extern "C" fn mtl_view<CoreApp>(this: &mut Object, _cmd: Sel, view: mtl::Id, _size: mtl::NSSize) 
+where
+    CoreApp: ApplicationTrait, {
     let bounds: mtl::NSRect = unsafe { msg_send![view, bounds] };
-    let renderer: &mtl::Id = unsafe { this.get_ivar(RENDERER_VAR_NAME) };
-    unsafe {
-        let _: () = msg_send![*renderer, drawRectResized:bounds.size];
-    }
+    let app: *mut App<CoreApp> = unsafe { transmute(
+        *(*this).get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
+    unsafe { (*(*app).render_engine).draw_rect_resized(&bounds.size); }
 }
 
 // Called whenever the view needs to render
@@ -39,8 +40,8 @@ extern "C" fn draw_in_mtk_view<CoreApp>(this: &mut Object, _cmd: Sel, _view: mtl
 where
     CoreApp: ApplicationTrait,
 {
-    let app: &App<CoreApp> = unsafe { transmute(this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
-    let renderer: &mut RenderEngine<CoreApp> = unsafe { transmute(app.render_engine) };
+    let app: &mut App<CoreApp> = unsafe { transmute(*this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
+    let renderer: &mut RenderEngine<CoreApp> = unsafe { transmute(app.render_engine) };  
     renderer.render();
 }
 
@@ -107,7 +108,6 @@ where
 {
     let mut self_class = mtl::dec_class_s(CLASS_NAME, SUPER_CLASS_NAME);
     self_class.add_ivar::<mtl::Id>(DEVICE_VAR_NAME);
-    self_class.add_ivar::<mtl::Id>(RENDERER_VAR_NAME);
     self_class.add_ivar::<mtl::NSUInteger>(APP_VAR_NAME);
 
     unsafe {
@@ -117,7 +117,7 @@ where
         );
         self_class.add_method(
             sel!(mtkView:v:),
-            mtl_view as extern "C" fn(&mut Object, Sel, mtl::Id, mtl::NSSize),
+            mtl_view::<CoreApp> as extern "C" fn(&mut Object, Sel, mtl::Id, mtl::NSSize),
         );
         self_class.add_method(
             sel!(drawInMTKView:),

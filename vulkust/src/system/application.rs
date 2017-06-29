@@ -49,6 +49,7 @@ where
         unsafe { (*render_engine).set_os_app(os_app) };
         unsafe { (*render_engine).set_core_app(core_app) };
         unsafe { (*os_app).initialize() };
+        //logi!("{:?}     {:?}", os_app, render_engine);
         Application {
             os_app: os_app,
             render_engine: render_engine,

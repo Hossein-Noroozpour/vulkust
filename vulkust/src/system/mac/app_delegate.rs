@@ -44,6 +44,8 @@ where
         (*app).game_view_controller = game_view;
     }
     mtl::set_ivar(game_view, gvc::DEVICE_VAR_NAME, device);
+    let int_app: mtl::NSUInteger = unsafe { transmute(app) };
+    mtl::set_ivar(game_view, gvc::APP_VAR_NAME, int_app);
     let metal_view: mtl::Id =
         unsafe { msg_send![mtl::alloc("MTKView"), initWithFrame:frame device:device] };
     unsafe {
@@ -73,9 +75,9 @@ extern "C" fn application_will_finish_launching(this: &Object, _cmd: Sel, _n: mt
 extern "C" fn application_did_finish_launching<CoreApp>(this: &Object, _cmd: Sel, _n: mtl::Id) 
 where
     CoreApp: ApplicationTrait {
-    let app: &mut App<CoreApp> =
+    let app: *mut App<CoreApp> =
         unsafe { transmute(*this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
-    unsafe { let _: () = msg_send![app.game_view_controller, metalViewDidLoad]; }
+    unsafe { let _: () = msg_send![(*app).game_view_controller, metalViewDidLoad]; }
 }
 
 extern "C" fn application_will_terminate(_this: &Object, _cmd: Sel, _n: mtl::Id) {
