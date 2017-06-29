@@ -45,16 +45,24 @@ impl Physical {
     fn enumerate_devices(vk_instance: vk::VkInstance) -> Vec<vk::VkPhysicalDevice> {
         let mut gpu_count = 0u32;
         vulkan_check!(vk::vkEnumeratePhysicalDevices(
-            vk_instance, &mut gpu_count as *mut u32, null_mut()));
+            vk_instance,
+            &mut gpu_count as *mut u32,
+            null_mut()
+        ));
         logi!("Number of devices is: {}", gpu_count);
         let mut devices = vec![0 as vk::VkPhysicalDevice; gpu_count as usize];
         vulkan_check!(vk::vkEnumeratePhysicalDevices(
-            vk_instance, &mut gpu_count, devices.as_mut_ptr()));
+            vk_instance,
+            &mut gpu_count,
+            devices.as_mut_ptr()
+        ));
         devices
     }
-    fn choose_best_device(devices: &Vec<vk::VkPhysicalDevice>, surface: &Arc<Surface>)
-        -> (vk::VkPhysicalDevice, ScoreIndices) {
-        let mut highest_score =  ScoreIndices {
+    fn choose_best_device(
+        devices: &Vec<vk::VkPhysicalDevice>,
+        surface: &Arc<Surface>,
+    ) -> (vk::VkPhysicalDevice, ScoreIndices) {
+        let mut highest_score = ScoreIndices {
             score: -1,
             graphics_queue_node_index: u32::max_value(),
             transfer_queue_node_index: u32::max_value(),
@@ -75,11 +83,16 @@ impl Physical {
         if highest_score.score < 0 {
             logf!("No appropriate device have been found!");
         }
-        logi!("The chosen device is: {:?} and its score-indices is: {:?}", device, highest_score);
+        logi!(
+            "The chosen device is: {:?} and its score-indices is: {:?}",
+            device,
+            highest_score
+        );
         return (device, highest_score);
     }
     fn get_device_queue_family_properties(
-        device: vk::VkPhysicalDevice) -> Vec<vk::VkQueueFamilyProperties> {
+        device: vk::VkPhysicalDevice,
+    ) -> Vec<vk::VkQueueFamilyProperties> {
         let mut count = 0u32;
         unsafe {
             vk::vkGetPhysicalDeviceQueueFamilyProperties(device, &mut count, null_mut());
@@ -90,7 +103,10 @@ impl Physical {
         let mut queue_props = vec![vk::VkQueueFamilyProperties::default(); count as usize];
         unsafe {
             vk::vkGetPhysicalDeviceQueueFamilyProperties(
-                device, &mut count, queue_props.as_mut_ptr());
+                device,
+                &mut count,
+                queue_props.as_mut_ptr(),
+            );
         }
         queue_props
     }
@@ -129,12 +145,13 @@ impl Physical {
         }
         for i in 0..queue_family_properties.len() {
             if ((queue_family_properties[i].queueFlags as u32) &
-                (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
+                    (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
                 ((queue_family_properties[i].queueFlags as u32) &
-                    (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0 &&
+                     (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0 &&
                 ((queue_family_properties[i].queueFlags as u32) &
-                    (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0 &&
-                supports_present[i] {
+                     (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0 &&
+                supports_present[i]
+            {
                 score_indices.score = 100;
                 score_indices.graphics_queue_node_index = i as u32;
                 score_indices.transfer_queue_node_index = i as u32;
@@ -143,15 +160,18 @@ impl Physical {
                 return score_indices;
             }
             if ((queue_family_properties[i].queueFlags as u32) &
-                (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 {
+                    (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0
+            {
                 score_indices.graphics_queue_node_index = i as u32;
             }
             if ((queue_family_properties[i].queueFlags as u32) &
-                (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0 {
+                    (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0
+            {
                 score_indices.transfer_queue_node_index = i as u32;
             }
             if ((queue_family_properties[i].queueFlags as u32) &
-                (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0 {
+                    (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0
+            {
                 score_indices.compute_queue_node_index = i as u32;
             }
             if supports_present[i] {
@@ -160,10 +180,11 @@ impl Physical {
         }
         for i in 0..queue_family_properties.len() {
             if ((queue_family_properties[i].queueFlags as u32) &
-                (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
+                    (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
                 ((queue_family_properties[i].queueFlags as u32) &
-                    (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0 &&
-                supports_present[i] {
+                     (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0 &&
+                supports_present[i]
+            {
                 if score_indices.compute_queue_node_index != u32::max_value() {
                     score_indices.score = 90;
                 } else {
@@ -177,8 +198,9 @@ impl Physical {
         }
         for i in 0..queue_family_properties.len() {
             if ((queue_family_properties[i].queueFlags as u32) &
-                (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
-                supports_present[i] {
+                    (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
+                supports_present[i]
+            {
                 if score_indices.compute_queue_node_index != u32::max_value() {
                     if score_indices.transfer_queue_node_index != u32::max_value() {
                         score_indices.score = 80;
@@ -210,12 +232,12 @@ impl Physical {
         for format in depth_formats {
             let mut format_props = vk::VkFormatProperties::default();
             unsafe {
-                vk::vkGetPhysicalDeviceFormatProperties(
-                    self.vk_data, format, &mut format_props);
+                vk::vkGetPhysicalDeviceFormatProperties(self.vk_data, format, &mut format_props);
             }
             if format_props.optimalTilingFeatures as u32 &
-                vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
-                != 0 {
+                vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT as
+                    u32 != 0
+            {
                 return format;
             }
         }
@@ -228,37 +250,52 @@ impl Physical {
             transmute(self.surface.instance.get_function(
                 "vkGetPhysicalDeviceSurfaceCapabilitiesKHR"))
         };
-        logi!("gpu: {:?}, surface: {:?}", self.vk_data, self.surface.vk_data);
+        logi!(
+            "gpu: {:?}, surface: {:?}",
+            self.vk_data,
+            self.surface.vk_data
+        );
         vulkan_check!((vk_get_physical_device_surface_capabilities_khr)(
-            self.vk_data, self.surface.vk_data, &mut caps));
+            self.vk_data,
+            self.surface.vk_data,
+            &mut caps
+        ));
         return caps;
     }
     pub fn get_surface_formats(&self) -> Vec<vk::VkSurfaceFormatKHR> {
         let mut count = 0u32;
         vulkan_check!(vk::vkGetPhysicalDeviceSurfaceFormatsKHR(
-            self.vk_data, self.surface.vk_data, &mut count, null_mut()));
+            self.vk_data,
+            self.surface.vk_data,
+            &mut count,
+            null_mut()
+        ));
         let mut result = vec![vk::VkSurfaceFormatKHR::default(); count as usize];
         vulkan_check!(vk::vkGetPhysicalDeviceSurfaceFormatsKHR(
-            self.vk_data, self.surface.vk_data, &mut count, result.as_mut_ptr()));
+            self.vk_data,
+            self.surface.vk_data,
+            &mut count,
+            result.as_mut_ptr()
+        ));
         result
     }
     pub fn get_memory_type_index(&self, type_bits: u32, properties: u32) -> u32 {
-		// Iterate over all memory types available for the device used in this example
+        // Iterate over all memory types available for the device used in this example
         let mut type_bits = type_bits;
-		for i in 0..self.memory_properties.memoryTypeCount {
-			if (type_bits & 1) == 1 {
-				if (self.memory_properties.memoryTypes[i as usize].propertyFlags as u32)
-                        & properties == properties {
-					return i;
-				}
-			}
-			type_bits >>= 1;
-		}
-		logf!("Could not find the requsted memory type.");
-	}
+        for i in 0..self.memory_properties.memoryTypeCount {
+            if (type_bits & 1) == 1 {
+                if (self.memory_properties.memoryTypes[i as usize].propertyFlags as u32) &
+                    properties == properties
+                {
+                    return i;
+                }
+            }
+            type_bits >>= 1;
+        }
+        logf!("Could not find the requsted memory type.");
+    }
 }
 
 impl Drop for Physical {
-    fn drop(&mut self) {
-    }
+    fn drop(&mut self) {}
 }

@@ -15,7 +15,11 @@ impl Fence {
         fence_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         let mut vk_data = 0 as vk::VkFence;
         vulkan_check!(vk::vkCreateFence(
-            logical_device.vk_data, &fence_create_info, null(), &mut vk_data));
+            logical_device.vk_data,
+            &fence_create_info,
+            null(),
+            &mut vk_data
+        ));
         Fence {
             logical_device: logical_device,
             vk_data: vk_data,
@@ -27,7 +31,11 @@ impl Fence {
         fence_create_info.flags = vk::VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT as u32;
         let mut vk_data = 0 as vk::VkFence;
         vulkan_check!(vk::vkCreateFence(
-            logical_device.vk_data, &fence_create_info, null(), &mut vk_data));
+            logical_device.vk_data,
+            &fence_create_info,
+            null(),
+            &mut vk_data
+        ));
         Fence {
             logical_device: logical_device,
             vk_data: vk_data,
@@ -35,7 +43,12 @@ impl Fence {
     }
     pub fn wait(&self) {
         vulkan_check!(vk::vkWaitForFences(
-            self.logical_device.vk_data, 1, &self.vk_data, 1u32, 100000000000));
+            self.logical_device.vk_data,
+            1,
+            &self.vk_data,
+            1u32,
+            100000000000
+        ));
     }
 }
 

@@ -1,14 +1,9 @@
 use super::super::system::vulkan as vk;
 use super::synchronizer::semaphore::Semaphore;
 use super::device::logical::Logical as LogicalDevice;
-use std::ptr::{
-    null,
-    null_mut,
-};
+use std::ptr::{null, null_mut};
 use super::image::view::View as ImageView;
-use std::sync::{
-    Arc,
-};
+use std::sync::Arc;
 
 pub struct Swapchain {
     pub logical_device: Arc<LogicalDevice>,
@@ -44,11 +39,15 @@ impl Swapchain {
         let mut format_props = vk::VkFormatProperties::default();
         unsafe {
             vk::vkGetPhysicalDeviceFormatProperties(
-                logical_device.physical_device.vk_data, best_surface_format.format,
-                &mut format_props);
+                logical_device.physical_device.vk_data,
+                best_surface_format.format,
+                &mut format_props,
+            );
         };
         if ((format_props.optimalTilingFeatures as u32) &
-            (vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_BLIT_DST_BIT as u32)) != 0  {
+                (vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_BLIT_DST_BIT as u32)) !=
+            0
+        {
             image_usage |= vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT as u32;
         }
         let mut swapchain_create_info = vk::VkSwapchainCreateInfoKHR::default();
@@ -94,17 +93,32 @@ impl Swapchain {
         }
         let mut vk_data = 0 as vk::VkSwapchainKHR;
         vulkan_check!(vk::vkCreateSwapchainKHR(
-            logical_device.vk_data, &swapchain_create_info, null(), &mut vk_data));
+            logical_device.vk_data,
+            &swapchain_create_info,
+            null(),
+            &mut vk_data
+        ));
         let mut count = 0u32;
         vulkan_check!(vk::vkGetSwapchainImagesKHR(
-            logical_device.vk_data, vk_data, &mut count, null_mut()));
+            logical_device.vk_data,
+            vk_data,
+            &mut count,
+            null_mut()
+        ));
         let mut images = vec![0 as vk::VkImage; count as usize];
         vulkan_check!(vk::vkGetSwapchainImagesKHR(
-            logical_device.vk_data, vk_data, &mut count, images.as_mut_ptr()));
+            logical_device.vk_data,
+            vk_data,
+            &mut count,
+            images.as_mut_ptr()
+        ));
         let mut views = Vec::new();
         for i in 0..(count as usize) {
             views.push(Arc::new(ImageView::new_with_vk_image(
-                logical_device.clone(), images[i], best_surface_format.format)));
+                logical_device.clone(),
+                images[i],
+                best_surface_format.format,
+            )));
         }
         Swapchain {
             logical_device: logical_device,
@@ -116,8 +130,13 @@ impl Swapchain {
     pub fn get_next_image_index(&self, sem: &Semaphore) -> u32 {
         let mut image_index = 0u32;
         vulkan_check!(vk::vkAcquireNextImageKHR(
-            self.logical_device.vk_data, self.vk_data, u64::max_value(), sem.vk_data,
-            0 as vk::VkFence, &mut image_index));
+            self.logical_device.vk_data,
+            self.vk_data,
+            u64::max_value(),
+            sem.vk_data,
+            0 as vk::VkFence,
+            &mut image_index
+        ));
         return image_index;
     }
 }
@@ -126,8 +145,7 @@ impl Drop for Swapchain {
     fn drop(&mut self) {
         self.image_views.clear();
         unsafe {
-            vk::vkDestroySwapchainKHR(
-                self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroySwapchainKHR(self.logical_device.vk_data, self.vk_data, null());
         }
     }
 }

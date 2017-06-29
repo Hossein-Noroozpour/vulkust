@@ -30,7 +30,9 @@ pub struct __fsid_t {
     pub __val: [::std::os::raw::c_int; 2usize],
 }
 impl ::std::default::Default for __fsid_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type __clock_t = ::std::os::raw::c_long;
 pub type __rlim_t = ::std::os::raw::c_ulong;
@@ -106,7 +108,9 @@ pub struct __sigset_t {
     pub __val: [::std::os::raw::c_ulong; 16usize],
 }
 impl ::std::default::Default for __sigset_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type sigset_t = __sigset_t;
 #[repr(C)]
@@ -117,7 +121,9 @@ pub struct timespec {
     pub tv_nsec: __syscall_slong_t,
 }
 impl ::std::default::Default for timespec {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -127,7 +133,9 @@ pub struct timeval {
     pub tv_usec: __suseconds_t,
 }
 impl ::std::default::Default for timeval {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type suseconds_t = __suseconds_t;
 pub type __fd_mask = ::std::os::raw::c_long;
@@ -138,7 +146,9 @@ pub struct fd_set {
     pub __fds_bits: [__fd_mask; 16usize],
 }
 impl ::std::default::Default for fd_set {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type fd_mask = __fd_mask;
 pub type blksize_t = __blksize_t;
@@ -152,8 +162,7 @@ pub struct pthread_attr_t {
     pub _bindgen_data_: [u64; 7usize],
 }
 impl pthread_attr_t {
-    pub unsafe fn __size(&mut self)
-     -> *mut [::std::os::raw::c_char; 56usize] {
+    pub unsafe fn __size(&mut self) -> *mut [::std::os::raw::c_char; 56usize] {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
@@ -163,10 +172,14 @@ impl pthread_attr_t {
     }
 }
 impl ::std::clone::Clone for pthread_attr_t {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 impl ::std::default::Default for pthread_attr_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -176,7 +189,9 @@ pub struct __pthread_internal_list {
     pub __next: *mut __pthread_internal_list,
 }
 impl ::std::default::Default for __pthread_internal_list {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type __pthread_list_t = __pthread_internal_list;
 #[repr(C)]
@@ -189,8 +204,7 @@ impl pthread_mutex_t {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
-    pub unsafe fn __size(&mut self)
-     -> *mut [::std::os::raw::c_char; 40usize] {
+    pub unsafe fn __size(&mut self) -> *mut [::std::os::raw::c_char; 40usize] {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
@@ -200,10 +214,14 @@ impl pthread_mutex_t {
     }
 }
 impl ::std::clone::Clone for pthread_mutex_t {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 impl ::std::default::Default for pthread_mutex_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -219,7 +237,9 @@ pub struct __pthread_mutex_s {
     pub __list: __pthread_list_t,
 }
 impl ::std::default::Default for __pthread_mutex_s {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -238,7 +258,9 @@ impl pthread_mutexattr_t {
     }
 }
 impl ::std::default::Default for pthread_mutexattr_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy)]
@@ -250,8 +272,7 @@ impl pthread_cond_t {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
-    pub unsafe fn __size(&mut self)
-     -> *mut [::std::os::raw::c_char; 48usize] {
+    pub unsafe fn __size(&mut self) -> *mut [::std::os::raw::c_char; 48usize] {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
@@ -261,10 +282,14 @@ impl pthread_cond_t {
     }
 }
 impl ::std::clone::Clone for pthread_cond_t {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 impl ::std::default::Default for pthread_cond_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -280,7 +305,9 @@ pub struct Struct_Unnamed1 {
     pub __broadcast_seq: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for Struct_Unnamed1 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -299,7 +326,9 @@ impl pthread_condattr_t {
     }
 }
 impl ::std::default::Default for pthread_condattr_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type pthread_key_t = ::std::os::raw::c_uint;
 pub type pthread_once_t = ::std::os::raw::c_int;
@@ -313,8 +342,7 @@ impl pthread_rwlock_t {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
-    pub unsafe fn __size(&mut self)
-     -> *mut [::std::os::raw::c_char; 56usize] {
+    pub unsafe fn __size(&mut self) -> *mut [::std::os::raw::c_char; 56usize] {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
@@ -324,10 +352,14 @@ impl pthread_rwlock_t {
     }
 }
 impl ::std::clone::Clone for pthread_rwlock_t {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 impl ::std::default::Default for pthread_rwlock_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -347,7 +379,9 @@ pub struct Struct_Unnamed2 {
     pub __flags: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for Struct_Unnamed2 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -366,7 +400,9 @@ impl pthread_rwlockattr_t {
     }
 }
 impl ::std::default::Default for pthread_rwlockattr_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type pthread_spinlock_t = ::std::os::raw::c_int;
 #[repr(C)]
@@ -376,8 +412,7 @@ pub struct pthread_barrier_t {
     pub _bindgen_data_: [u64; 4usize],
 }
 impl pthread_barrier_t {
-    pub unsafe fn __size(&mut self)
-     -> *mut [::std::os::raw::c_char; 32usize] {
+    pub unsafe fn __size(&mut self) -> *mut [::std::os::raw::c_char; 32usize] {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
@@ -387,7 +422,9 @@ impl pthread_barrier_t {
     }
 }
 impl ::std::default::Default for pthread_barrier_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -406,7 +443,9 @@ impl pthread_barrierattr_t {
     }
 }
 impl ::std::default::Default for pthread_barrierattr_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type uint8_t = u8;
 pub type uint16_t = u16;
@@ -440,7 +479,9 @@ pub struct iovec {
     pub iov_len: size_t,
 }
 impl ::std::default::Default for iovec {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -449,7 +490,9 @@ pub struct sched_param {
     pub __sched_priority: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for sched_param {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -458,7 +501,9 @@ pub struct __sched_param {
     pub __sched_priority: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for __sched_param {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type __cpu_mask = ::std::os::raw::c_ulong;
 #[repr(C)]
@@ -468,7 +513,9 @@ pub struct cpu_set_t {
     pub __bits: [__cpu_mask; 16usize],
 }
 impl ::std::default::Default for cpu_set_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -487,7 +534,9 @@ pub struct tm {
     pub tm_zone: *const ::std::os::raw::c_char,
 }
 impl ::std::default::Default for tm {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -497,7 +546,9 @@ pub struct itimerspec {
     pub it_value: timespec,
 }
 impl ::std::default::Default for itimerspec {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub enum sigevent { }
 pub enum __locale_data { }
@@ -512,7 +563,9 @@ pub struct __locale_struct {
     pub __names: [*const ::std::os::raw::c_char; 13usize],
 }
 impl ::std::default::Default for __locale_struct {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type __locale_t = *mut __locale_struct;
 pub type locale_t = __locale_t;
@@ -524,14 +577,10 @@ pub enum Enum_Unnamed3 {
     PTHREAD_CREATE_JOINABLE = 0,
     PTHREAD_CREATE_DETACHED = 1,
 }
-pub const PTHREAD_MUTEX_NORMAL: Enum_Unnamed4 =
-    Enum_Unnamed4::PTHREAD_MUTEX_TIMED_NP;
-pub const PTHREAD_MUTEX_RECURSIVE: Enum_Unnamed4 =
-    Enum_Unnamed4::PTHREAD_MUTEX_RECURSIVE_NP;
-pub const PTHREAD_MUTEX_ERRORCHECK: Enum_Unnamed4 =
-    Enum_Unnamed4::PTHREAD_MUTEX_ERRORCHECK_NP;
-pub const PTHREAD_MUTEX_DEFAULT: Enum_Unnamed4 =
-    Enum_Unnamed4::PTHREAD_MUTEX_TIMED_NP;
+pub const PTHREAD_MUTEX_NORMAL: Enum_Unnamed4 = Enum_Unnamed4::PTHREAD_MUTEX_TIMED_NP;
+pub const PTHREAD_MUTEX_RECURSIVE: Enum_Unnamed4 = Enum_Unnamed4::PTHREAD_MUTEX_RECURSIVE_NP;
+pub const PTHREAD_MUTEX_ERRORCHECK: Enum_Unnamed4 = Enum_Unnamed4::PTHREAD_MUTEX_ERRORCHECK_NP;
+pub const PTHREAD_MUTEX_DEFAULT: Enum_Unnamed4 = Enum_Unnamed4::PTHREAD_MUTEX_TIMED_NP;
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -541,10 +590,8 @@ pub enum Enum_Unnamed4 {
     PTHREAD_MUTEX_ERRORCHECK_NP = 2,
     PTHREAD_MUTEX_ADAPTIVE_NP = 3,
 }
-pub const PTHREAD_MUTEX_STALLED_NP: Enum_Unnamed5 =
-    Enum_Unnamed5::PTHREAD_MUTEX_STALLED;
-pub const PTHREAD_MUTEX_ROBUST_NP: Enum_Unnamed5 =
-    Enum_Unnamed5::PTHREAD_MUTEX_ROBUST;
+pub const PTHREAD_MUTEX_STALLED_NP: Enum_Unnamed5 = Enum_Unnamed5::PTHREAD_MUTEX_STALLED;
+pub const PTHREAD_MUTEX_ROBUST_NP: Enum_Unnamed5 = Enum_Unnamed5::PTHREAD_MUTEX_ROBUST;
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -560,8 +607,7 @@ pub enum Enum_Unnamed6 {
     PTHREAD_PRIO_INHERIT = 1,
     PTHREAD_PRIO_PROTECT = 2,
 }
-pub const PTHREAD_RWLOCK_DEFAULT_NP: Enum_Unnamed7 =
-    Enum_Unnamed7::PTHREAD_RWLOCK_PREFER_READER_NP;
+pub const PTHREAD_RWLOCK_DEFAULT_NP: Enum_Unnamed7 = Enum_Unnamed7::PTHREAD_RWLOCK_PREFER_READER_NP;
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -595,14 +641,15 @@ pub enum Enum_Unnamed10 {
 #[derive(Copy, Clone)]
 #[derive(Debug)]
 pub struct _pthread_cleanup_buffer {
-    pub __routine: ::std::option::Option<unsafe extern "C" fn(arg1:
-                                                                  *mut ::std::os::raw::c_void)>,
+    pub __routine: ::std::option::Option<unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void)>,
     pub __arg: *mut ::std::os::raw::c_void,
     pub __canceltype: ::std::os::raw::c_int,
     pub __prev: *mut _pthread_cleanup_buffer,
 }
 impl ::std::default::Default for _pthread_cleanup_buffer {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -626,7 +673,9 @@ pub struct __pthread_unwind_buf_t {
     pub __pad: [*mut ::std::os::raw::c_void; 4usize],
 }
 impl ::std::default::Default for __pthread_unwind_buf_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -636,20 +685,24 @@ pub struct Struct_Unnamed13 {
     pub __mask_was_saved: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for Struct_Unnamed13 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
 pub struct __pthread_cleanup_frame {
-    pub __cancel_routine: ::std::option::Option<unsafe extern "C" fn(arg1:
-                                                                         *mut ::std::os::raw::c_void)>,
+    pub __cancel_routine:
+        ::std::option::Option<unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void)>,
     pub __cancel_arg: *mut ::std::os::raw::c_void,
     pub __do_it: ::std::os::raw::c_int,
     pub __cancel_type: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for __pthread_cleanup_frame {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub enum __jmp_buf_tag { }
 pub enum xcb_connection_t { }
@@ -662,7 +715,9 @@ pub struct xcb_generic_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_generic_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -674,7 +729,9 @@ pub struct xcb_generic_reply_t {
     pub length: uint32_t,
 }
 impl ::std::default::Default for xcb_generic_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -687,7 +744,9 @@ pub struct xcb_generic_event_t {
     pub full_sequence: uint32_t,
 }
 impl ::std::default::Default for xcb_generic_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -703,7 +762,9 @@ pub struct xcb_ge_event_t {
     pub full_sequence: uint32_t,
 }
 impl ::std::default::Default for xcb_ge_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -720,7 +781,9 @@ pub struct xcb_generic_error_t {
     pub full_sequence: uint32_t,
 }
 impl ::std::default::Default for xcb_generic_error_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -729,7 +792,9 @@ pub struct xcb_void_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_void_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -739,7 +804,9 @@ pub struct xcb_char2b_t {
     pub byte2: uint8_t,
 }
 impl ::std::default::Default for xcb_char2b_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -750,7 +817,9 @@ pub struct xcb_char2b_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_char2b_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_window_t = uint32_t;
 #[repr(C)]
@@ -762,7 +831,9 @@ pub struct xcb_window_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_window_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_pixmap_t = uint32_t;
 #[repr(C)]
@@ -774,7 +845,9 @@ pub struct xcb_pixmap_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_pixmap_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_cursor_t = uint32_t;
 #[repr(C)]
@@ -786,7 +859,9 @@ pub struct xcb_cursor_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_cursor_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_font_t = uint32_t;
 #[repr(C)]
@@ -798,7 +873,9 @@ pub struct xcb_font_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_font_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_gcontext_t = uint32_t;
 #[repr(C)]
@@ -810,7 +887,9 @@ pub struct xcb_gcontext_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_gcontext_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_colormap_t = uint32_t;
 #[repr(C)]
@@ -822,7 +901,9 @@ pub struct xcb_colormap_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_colormap_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_atom_t = uint32_t;
 #[repr(C)]
@@ -834,7 +915,9 @@ pub struct xcb_atom_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_atom_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_drawable_t = uint32_t;
 #[repr(C)]
@@ -846,7 +929,9 @@ pub struct xcb_drawable_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_drawable_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_fontable_t = uint32_t;
 #[repr(C)]
@@ -858,7 +943,9 @@ pub struct xcb_fontable_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_fontable_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_visualid_t = uint32_t;
 #[repr(C)]
@@ -870,7 +957,9 @@ pub struct xcb_visualid_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_visualid_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_timestamp_t = uint32_t;
 #[repr(C)]
@@ -882,7 +971,9 @@ pub struct xcb_timestamp_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_timestamp_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_keysym_t = uint32_t;
 #[repr(C)]
@@ -894,7 +985,9 @@ pub struct xcb_keysym_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_keysym_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_keycode_t = uint8_t;
 #[repr(C)]
@@ -906,7 +999,9 @@ pub struct xcb_keycode_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_keycode_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_button_t = uint8_t;
 #[repr(C)]
@@ -918,7 +1013,9 @@ pub struct xcb_button_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_button_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -928,7 +1025,9 @@ pub struct xcb_point_t {
     pub y: int16_t,
 }
 impl ::std::default::Default for xcb_point_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -939,7 +1038,9 @@ pub struct xcb_point_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_point_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -951,7 +1052,9 @@ pub struct xcb_rectangle_t {
     pub height: uint16_t,
 }
 impl ::std::default::Default for xcb_rectangle_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -962,7 +1065,9 @@ pub struct xcb_rectangle_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_rectangle_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -976,7 +1081,9 @@ pub struct xcb_arc_t {
     pub angle2: int16_t,
 }
 impl ::std::default::Default for xcb_arc_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -987,7 +1094,9 @@ pub struct xcb_arc_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_arc_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -999,7 +1108,9 @@ pub struct xcb_format_t {
     pub pad0: [uint8_t; 5usize],
 }
 impl ::std::default::Default for xcb_format_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1010,7 +1121,9 @@ pub struct xcb_format_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_format_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -1037,7 +1150,9 @@ pub struct xcb_visualtype_t {
     pub pad0: [uint8_t; 4usize],
 }
 impl ::std::default::Default for xcb_visualtype_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1048,7 +1163,9 @@ pub struct xcb_visualtype_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_visualtype_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1060,7 +1177,9 @@ pub struct xcb_depth_t {
     pub pad1: [uint8_t; 4usize],
 }
 impl ::std::default::Default for xcb_depth_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1071,7 +1190,9 @@ pub struct xcb_depth_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_depth_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -1134,7 +1255,9 @@ pub struct xcb_screen_t {
     pub allowed_depths_len: uint8_t,
 }
 impl ::std::default::Default for xcb_screen_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1145,7 +1268,9 @@ pub struct xcb_screen_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_screen_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1160,7 +1285,9 @@ pub struct xcb_setup_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_setup_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1171,7 +1298,9 @@ pub struct xcb_setup_request_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_setup_request_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1184,7 +1313,9 @@ pub struct xcb_setup_failed_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_setup_failed_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1195,7 +1326,9 @@ pub struct xcb_setup_failed_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_setup_failed_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1206,7 +1339,9 @@ pub struct xcb_setup_authenticate_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_setup_authenticate_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1217,7 +1352,9 @@ pub struct xcb_setup_authenticate_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_setup_authenticate_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -1252,7 +1389,9 @@ pub struct xcb_setup_t {
     pub pad1: [uint8_t; 4usize],
 }
 impl ::std::default::Default for xcb_setup_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1263,7 +1402,9 @@ pub struct xcb_setup_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_setup_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -1300,7 +1441,9 @@ pub enum xcb_key_but_mask_t {
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_window_enum_t { XCB_WINDOW_NONE = 0, }
+pub enum xcb_window_enum_t {
+    XCB_WINDOW_NONE = 0,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1321,7 +1464,9 @@ pub struct xcb_key_press_event_t {
     pub pad0: uint8_t,
 }
 impl ::std::default::Default for xcb_key_press_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_key_release_event_t = xcb_key_press_event_t;
 #[derive(Copy, Clone)]
@@ -1355,13 +1500,18 @@ pub struct xcb_button_press_event_t {
     pub pad0: uint8_t,
 }
 impl ::std::default::Default for xcb_button_press_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_button_release_event_t = xcb_button_press_event_t;
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_motion_t { XCB_MOTION_NORMAL = 0, XCB_MOTION_HINT = 1, }
+pub enum xcb_motion_t {
+    XCB_MOTION_NORMAL = 0,
+    XCB_MOTION_HINT = 1,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1382,7 +1532,9 @@ pub struct xcb_motion_notify_event_t {
     pub pad0: uint8_t,
 }
 impl ::std::default::Default for xcb_motion_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -1426,7 +1578,9 @@ pub struct xcb_enter_notify_event_t {
     pub same_screen_focus: uint8_t,
 }
 impl ::std::default::Default for xcb_enter_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_leave_notify_event_t = xcb_enter_notify_event_t;
 #[repr(C)]
@@ -1441,7 +1595,9 @@ pub struct xcb_focus_in_event_t {
     pub pad0: [uint8_t; 3usize],
 }
 impl ::std::default::Default for xcb_focus_in_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_focus_out_event_t = xcb_focus_in_event_t;
 #[repr(C)]
@@ -1452,7 +1608,9 @@ pub struct xcb_keymap_notify_event_t {
     pub keys: [uint8_t; 31usize],
 }
 impl ::std::default::Default for xcb_keymap_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1470,7 +1628,9 @@ pub struct xcb_expose_event_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_expose_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1490,7 +1650,9 @@ pub struct xcb_graphics_exposure_event_t {
     pub pad1: [uint8_t; 3usize],
 }
 impl ::std::default::Default for xcb_graphics_exposure_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1505,7 +1667,9 @@ pub struct xcb_no_exposure_event_t {
     pub pad1: uint8_t,
 }
 impl ::std::default::Default for xcb_no_exposure_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -1527,7 +1691,9 @@ pub struct xcb_visibility_notify_event_t {
     pub pad1: [uint8_t; 3usize],
 }
 impl ::std::default::Default for xcb_visibility_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1547,7 +1713,9 @@ pub struct xcb_create_notify_event_t {
     pub pad1: uint8_t,
 }
 impl ::std::default::Default for xcb_create_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1560,7 +1728,9 @@ pub struct xcb_destroy_notify_event_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_destroy_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1575,7 +1745,9 @@ pub struct xcb_unmap_notify_event_t {
     pub pad1: [uint8_t; 3usize],
 }
 impl ::std::default::Default for xcb_unmap_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1590,7 +1762,9 @@ pub struct xcb_map_notify_event_t {
     pub pad1: [uint8_t; 3usize],
 }
 impl ::std::default::Default for xcb_map_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1603,7 +1777,9 @@ pub struct xcb_map_request_event_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_map_request_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1621,7 +1797,9 @@ pub struct xcb_reparent_notify_event_t {
     pub pad1: [uint8_t; 3usize],
 }
 impl ::std::default::Default for xcb_reparent_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1642,7 +1820,9 @@ pub struct xcb_configure_notify_event_t {
     pub pad1: uint8_t,
 }
 impl ::std::default::Default for xcb_configure_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1662,7 +1842,9 @@ pub struct xcb_configure_request_event_t {
     pub value_mask: uint16_t,
 }
 impl ::std::default::Default for xcb_configure_request_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1677,7 +1859,9 @@ pub struct xcb_gravity_notify_event_t {
     pub y: int16_t,
 }
 impl ::std::default::Default for xcb_gravity_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1691,12 +1875,17 @@ pub struct xcb_resize_request_event_t {
     pub height: uint16_t,
 }
 impl ::std::default::Default for xcb_resize_request_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_place_t { XCB_PLACE_ON_TOP = 0, XCB_PLACE_ON_BOTTOM = 1, }
+pub enum xcb_place_t {
+    XCB_PLACE_ON_TOP = 0,
+    XCB_PLACE_ON_BOTTOM = 1,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1711,7 +1900,9 @@ pub struct xcb_circulate_notify_event_t {
     pub pad2: [uint8_t; 3usize],
 }
 impl ::std::default::Default for xcb_circulate_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_circulate_request_event_t = xcb_circulate_notify_event_t;
 #[derive(Copy, Clone)]
@@ -1735,7 +1926,9 @@ pub struct xcb_property_notify_event_t {
     pub pad1: [uint8_t; 3usize],
 }
 impl ::std::default::Default for xcb_property_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1749,12 +1942,16 @@ pub struct xcb_selection_clear_event_t {
     pub selection: xcb_atom_t,
 }
 impl ::std::default::Default for xcb_selection_clear_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_time_t { XCB_TIME_CURRENT_TIME = 0, }
+pub enum xcb_time_t {
+    XCB_TIME_CURRENT_TIME = 0,
+}
 pub const XCB_ATOM_ANY: xcb_atom_enum_t = xcb_atom_enum_t::XCB_ATOM_NONE;
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -1845,7 +2042,9 @@ pub struct xcb_selection_request_event_t {
     pub property: xcb_atom_t,
 }
 impl ::std::default::Default for xcb_selection_request_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1861,7 +2060,9 @@ pub struct xcb_selection_notify_event_t {
     pub property: xcb_atom_t,
 }
 impl ::std::default::Default for xcb_selection_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -1873,7 +2074,9 @@ pub enum xcb_colormap_state_t {
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_colormap_enum_t { XCB_COLORMAP_NONE = 0, }
+pub enum xcb_colormap_enum_t {
+    XCB_COLORMAP_NONE = 0,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -1888,7 +2091,9 @@ pub struct xcb_colormap_notify_event_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_colormap_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1911,7 +2116,9 @@ impl xcb_client_message_data_t {
     }
 }
 impl ::std::default::Default for xcb_client_message_data_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1922,7 +2129,9 @@ pub struct xcb_client_message_data_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_client_message_data_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1936,7 +2145,9 @@ pub struct xcb_client_message_event_t {
     pub data: xcb_client_message_data_t,
 }
 impl ::std::default::Default for xcb_client_message_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -1959,7 +2170,9 @@ pub struct xcb_mapping_notify_event_t {
     pub pad1: uint8_t,
 }
 impl ::std::default::Default for xcb_mapping_notify_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1974,7 +2187,9 @@ pub struct xcb_ge_generic_event_t {
     pub full_sequence: uint32_t,
 }
 impl ::std::default::Default for xcb_ge_generic_event_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1989,7 +2204,9 @@ pub struct xcb_request_error_t {
     pub pad0: uint8_t,
 }
 impl ::std::default::Default for xcb_request_error_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2004,7 +2221,9 @@ pub struct xcb_value_error_t {
     pub pad0: uint8_t,
 }
 impl ::std::default::Default for xcb_value_error_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type xcb_window_error_t = xcb_value_error_t;
 pub type xcb_pixmap_error_t = xcb_value_error_t;
@@ -2056,8 +2275,7 @@ pub enum xcb_back_pixmap_t {
     XCB_BACK_PIXMAP_NONE = 0,
     XCB_BACK_PIXMAP_PARENT_RELATIVE = 1,
 }
-pub const XCB_GRAVITY_WIN_UNMAP: xcb_gravity_t =
-    xcb_gravity_t::XCB_GRAVITY_BIT_FORGET;
+pub const XCB_GRAVITY_WIN_UNMAP: xcb_gravity_t = xcb_gravity_t::XCB_GRAVITY_BIT_FORGET;
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -2093,7 +2311,9 @@ pub struct xcb_create_window_request_t {
     pub value_mask: uint32_t,
 }
 impl ::std::default::Default for xcb_create_window_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2106,7 +2326,9 @@ pub struct xcb_change_window_attributes_request_t {
     pub value_mask: uint32_t,
 }
 impl ::std::default::Default for xcb_change_window_attributes_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -2123,7 +2345,9 @@ pub struct xcb_get_window_attributes_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_window_attributes_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2135,7 +2359,9 @@ pub struct xcb_get_window_attributes_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_get_window_attributes_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2162,7 +2388,9 @@ pub struct xcb_get_window_attributes_reply_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_get_window_attributes_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2174,7 +2402,9 @@ pub struct xcb_destroy_window_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_destroy_window_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2186,12 +2416,17 @@ pub struct xcb_destroy_subwindows_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_destroy_subwindows_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_set_mode_t { XCB_SET_MODE_INSERT = 0, XCB_SET_MODE_DELETE = 1, }
+pub enum xcb_set_mode_t {
+    XCB_SET_MODE_INSERT = 0,
+    XCB_SET_MODE_DELETE = 1,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -2202,7 +2437,9 @@ pub struct xcb_change_save_set_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_change_save_set_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2217,7 +2454,9 @@ pub struct xcb_reparent_window_request_t {
     pub y: int16_t,
 }
 impl ::std::default::Default for xcb_reparent_window_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2229,7 +2468,9 @@ pub struct xcb_map_window_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_map_window_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2241,7 +2482,9 @@ pub struct xcb_map_subwindows_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_map_subwindows_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2253,7 +2496,9 @@ pub struct xcb_unmap_window_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_unmap_window_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2265,7 +2510,9 @@ pub struct xcb_unmap_subwindows_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_unmap_subwindows_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -2301,7 +2548,9 @@ pub struct xcb_configure_window_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_configure_window_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -2320,7 +2569,9 @@ pub struct xcb_circulate_window_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_circulate_window_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2329,7 +2580,9 @@ pub struct xcb_get_geometry_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_geometry_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2341,7 +2594,9 @@ pub struct xcb_get_geometry_request_t {
     pub drawable: xcb_drawable_t,
 }
 impl ::std::default::Default for xcb_get_geometry_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2360,7 +2615,9 @@ pub struct xcb_get_geometry_reply_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_get_geometry_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2369,7 +2626,9 @@ pub struct xcb_query_tree_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_query_tree_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2381,7 +2640,9 @@ pub struct xcb_query_tree_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_query_tree_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2397,7 +2658,9 @@ pub struct xcb_query_tree_reply_t {
     pub pad1: [uint8_t; 14usize],
 }
 impl ::std::default::Default for xcb_query_tree_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2406,7 +2669,9 @@ pub struct xcb_intern_atom_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_intern_atom_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2419,7 +2684,9 @@ pub struct xcb_intern_atom_request_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_intern_atom_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2432,7 +2699,9 @@ pub struct xcb_intern_atom_reply_t {
     pub atom: xcb_atom_t,
 }
 impl ::std::default::Default for xcb_intern_atom_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2441,7 +2710,9 @@ pub struct xcb_get_atom_name_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_atom_name_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2453,7 +2724,9 @@ pub struct xcb_get_atom_name_request_t {
     pub atom: xcb_atom_t,
 }
 impl ::std::default::Default for xcb_get_atom_name_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2467,7 +2740,9 @@ pub struct xcb_get_atom_name_reply_t {
     pub pad1: [uint8_t; 22usize],
 }
 impl ::std::default::Default for xcb_get_atom_name_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -2492,7 +2767,9 @@ pub struct xcb_change_property_request_t {
     pub data_len: uint32_t,
 }
 impl ::std::default::Default for xcb_change_property_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2505,12 +2782,16 @@ pub struct xcb_delete_property_request_t {
     pub property: xcb_atom_t,
 }
 impl ::std::default::Default for xcb_delete_property_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_get_property_type_t { XCB_GET_PROPERTY_TYPE_ANY = 0, }
+pub enum xcb_get_property_type_t {
+    XCB_GET_PROPERTY_TYPE_ANY = 0,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -2518,7 +2799,9 @@ pub struct xcb_get_property_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_property_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2534,7 +2817,9 @@ pub struct xcb_get_property_request_t {
     pub long_length: uint32_t,
 }
 impl ::std::default::Default for xcb_get_property_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2550,7 +2835,9 @@ pub struct xcb_get_property_reply_t {
     pub pad0: [uint8_t; 12usize],
 }
 impl ::std::default::Default for xcb_get_property_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2559,7 +2846,9 @@ pub struct xcb_list_properties_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_list_properties_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2571,7 +2860,9 @@ pub struct xcb_list_properties_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_list_properties_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2585,7 +2876,9 @@ pub struct xcb_list_properties_reply_t {
     pub pad1: [uint8_t; 22usize],
 }
 impl ::std::default::Default for xcb_list_properties_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2599,7 +2892,9 @@ pub struct xcb_set_selection_owner_request_t {
     pub time: xcb_timestamp_t,
 }
 impl ::std::default::Default for xcb_set_selection_owner_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2608,7 +2903,9 @@ pub struct xcb_get_selection_owner_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_selection_owner_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2620,7 +2917,9 @@ pub struct xcb_get_selection_owner_request_t {
     pub selection: xcb_atom_t,
 }
 impl ::std::default::Default for xcb_get_selection_owner_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2633,7 +2932,9 @@ pub struct xcb_get_selection_owner_reply_t {
     pub owner: xcb_window_t,
 }
 impl ::std::default::Default for xcb_get_selection_owner_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2649,7 +2950,9 @@ pub struct xcb_convert_selection_request_t {
     pub time: xcb_timestamp_t,
 }
 impl ::std::default::Default for xcb_convert_selection_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -2670,12 +2973,17 @@ pub struct xcb_send_event_request_t {
     pub event: [::std::os::raw::c_char; 32usize],
 }
 impl ::std::default::Default for xcb_send_event_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_grab_mode_t { XCB_GRAB_MODE_SYNC = 0, XCB_GRAB_MODE_ASYNC = 1, }
+pub enum xcb_grab_mode_t {
+    XCB_GRAB_MODE_SYNC = 0,
+    XCB_GRAB_MODE_ASYNC = 1,
+}
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -2689,7 +2997,9 @@ pub enum xcb_grab_status_t {
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_cursor_enum_t { XCB_CURSOR_NONE = 0, }
+pub enum xcb_cursor_enum_t {
+    XCB_CURSOR_NONE = 0,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -2697,7 +3007,9 @@ pub struct xcb_grab_pointer_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_grab_pointer_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2715,7 +3027,9 @@ pub struct xcb_grab_pointer_request_t {
     pub time: xcb_timestamp_t,
 }
 impl ::std::default::Default for xcb_grab_pointer_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2727,7 +3041,9 @@ pub struct xcb_grab_pointer_reply_t {
     pub length: uint32_t,
 }
 impl ::std::default::Default for xcb_grab_pointer_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2739,7 +3055,9 @@ pub struct xcb_ungrab_pointer_request_t {
     pub time: xcb_timestamp_t,
 }
 impl ::std::default::Default for xcb_ungrab_pointer_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -2770,7 +3088,9 @@ pub struct xcb_grab_button_request_t {
     pub modifiers: uint16_t,
 }
 impl ::std::default::Default for xcb_grab_button_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2784,7 +3104,9 @@ pub struct xcb_ungrab_button_request_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_ungrab_button_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2799,7 +3121,9 @@ pub struct xcb_change_active_pointer_grab_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_change_active_pointer_grab_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2808,7 +3132,9 @@ pub struct xcb_grab_keyboard_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_grab_keyboard_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2824,7 +3150,9 @@ pub struct xcb_grab_keyboard_request_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_grab_keyboard_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2836,7 +3164,9 @@ pub struct xcb_grab_keyboard_reply_t {
     pub length: uint32_t,
 }
 impl ::std::default::Default for xcb_grab_keyboard_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2848,12 +3178,16 @@ pub struct xcb_ungrab_keyboard_request_t {
     pub time: xcb_timestamp_t,
 }
 impl ::std::default::Default for xcb_ungrab_keyboard_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_grab_t { XCB_GRAB_ANY = 0, }
+pub enum xcb_grab_t {
+    XCB_GRAB_ANY = 0,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -2869,7 +3203,9 @@ pub struct xcb_grab_key_request_t {
     pub pad0: [uint8_t; 3usize],
 }
 impl ::std::default::Default for xcb_grab_key_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2883,7 +3219,9 @@ pub struct xcb_ungrab_key_request_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_ungrab_key_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -2908,7 +3246,9 @@ pub struct xcb_allow_events_request_t {
     pub time: xcb_timestamp_t,
 }
 impl ::std::default::Default for xcb_allow_events_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2919,7 +3259,9 @@ pub struct xcb_grab_server_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_grab_server_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2930,7 +3272,9 @@ pub struct xcb_ungrab_server_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_ungrab_server_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2939,7 +3283,9 @@ pub struct xcb_query_pointer_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_query_pointer_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2951,7 +3297,9 @@ pub struct xcb_query_pointer_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_query_pointer_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2971,7 +3319,9 @@ pub struct xcb_query_pointer_reply_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_query_pointer_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2982,7 +3332,9 @@ pub struct xcb_timecoord_t {
     pub y: int16_t,
 }
 impl ::std::default::Default for xcb_timecoord_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2993,7 +3345,9 @@ pub struct xcb_timecoord_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_timecoord_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3002,7 +3356,9 @@ pub struct xcb_get_motion_events_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_motion_events_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3016,7 +3372,9 @@ pub struct xcb_get_motion_events_request_t {
     pub stop: xcb_timestamp_t,
 }
 impl ::std::default::Default for xcb_get_motion_events_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3030,7 +3388,9 @@ pub struct xcb_get_motion_events_reply_t {
     pub pad1: [uint8_t; 20usize],
 }
 impl ::std::default::Default for xcb_get_motion_events_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3039,7 +3399,9 @@ pub struct xcb_translate_coordinates_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_translate_coordinates_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3054,7 +3416,9 @@ pub struct xcb_translate_coordinates_request_t {
     pub src_y: int16_t,
 }
 impl ::std::default::Default for xcb_translate_coordinates_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3069,7 +3433,9 @@ pub struct xcb_translate_coordinates_reply_t {
     pub dst_y: int16_t,
 }
 impl ::std::default::Default for xcb_translate_coordinates_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3088,7 +3454,9 @@ pub struct xcb_warp_pointer_request_t {
     pub dst_y: int16_t,
 }
 impl ::std::default::Default for xcb_warp_pointer_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -3110,7 +3478,9 @@ pub struct xcb_set_input_focus_request_t {
     pub time: xcb_timestamp_t,
 }
 impl ::std::default::Default for xcb_set_input_focus_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3119,7 +3489,9 @@ pub struct xcb_get_input_focus_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_input_focus_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3130,7 +3502,9 @@ pub struct xcb_get_input_focus_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_get_input_focus_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3143,7 +3517,9 @@ pub struct xcb_get_input_focus_reply_t {
     pub focus: xcb_window_t,
 }
 impl ::std::default::Default for xcb_get_input_focus_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3152,7 +3528,9 @@ pub struct xcb_query_keymap_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_query_keymap_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3163,7 +3541,9 @@ pub struct xcb_query_keymap_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_query_keymap_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3176,7 +3556,9 @@ pub struct xcb_query_keymap_reply_t {
     pub keys: [uint8_t; 32usize],
 }
 impl ::std::default::Default for xcb_query_keymap_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3190,7 +3572,9 @@ pub struct xcb_open_font_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_open_font_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3202,7 +3586,9 @@ pub struct xcb_close_font_request_t {
     pub font: xcb_font_t,
 }
 impl ::std::default::Default for xcb_close_font_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -3219,7 +3605,9 @@ pub struct xcb_fontprop_t {
     pub value: uint32_t,
 }
 impl ::std::default::Default for xcb_fontprop_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3230,7 +3618,9 @@ pub struct xcb_fontprop_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_fontprop_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3244,7 +3634,9 @@ pub struct xcb_charinfo_t {
     pub attributes: uint16_t,
 }
 impl ::std::default::Default for xcb_charinfo_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3255,7 +3647,9 @@ pub struct xcb_charinfo_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_charinfo_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3264,7 +3658,9 @@ pub struct xcb_query_font_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_query_font_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3276,7 +3672,9 @@ pub struct xcb_query_font_request_t {
     pub font: xcb_fontable_t,
 }
 impl ::std::default::Default for xcb_query_font_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3303,7 +3701,9 @@ pub struct xcb_query_font_reply_t {
     pub char_infos_len: uint32_t,
 }
 impl ::std::default::Default for xcb_query_font_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3312,7 +3712,9 @@ pub struct xcb_query_text_extents_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_query_text_extents_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3324,7 +3726,9 @@ pub struct xcb_query_text_extents_request_t {
     pub font: xcb_fontable_t,
 }
 impl ::std::default::Default for xcb_query_text_extents_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3343,7 +3747,9 @@ pub struct xcb_query_text_extents_reply_t {
     pub overall_right: int32_t,
 }
 impl ::std::default::Default for xcb_query_text_extents_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3352,7 +3758,9 @@ pub struct xcb_str_t {
     pub name_len: uint8_t,
 }
 impl ::std::default::Default for xcb_str_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3363,7 +3771,9 @@ pub struct xcb_str_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_str_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3372,7 +3782,9 @@ pub struct xcb_list_fonts_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_list_fonts_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3385,7 +3797,9 @@ pub struct xcb_list_fonts_request_t {
     pub pattern_len: uint16_t,
 }
 impl ::std::default::Default for xcb_list_fonts_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3399,7 +3813,9 @@ pub struct xcb_list_fonts_reply_t {
     pub pad1: [uint8_t; 22usize],
 }
 impl ::std::default::Default for xcb_list_fonts_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3408,7 +3824,9 @@ pub struct xcb_list_fonts_with_info_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_list_fonts_with_info_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3421,7 +3839,9 @@ pub struct xcb_list_fonts_with_info_request_t {
     pub pattern_len: uint16_t,
 }
 impl ::std::default::Default for xcb_list_fonts_with_info_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3448,7 +3868,9 @@ pub struct xcb_list_fonts_with_info_reply_t {
     pub replies_hint: uint32_t,
 }
 impl ::std::default::Default for xcb_list_fonts_with_info_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3461,7 +3883,9 @@ pub struct xcb_set_font_path_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_set_font_path_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3470,7 +3894,9 @@ pub struct xcb_get_font_path_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_font_path_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3481,7 +3907,9 @@ pub struct xcb_get_font_path_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_get_font_path_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3495,7 +3923,9 @@ pub struct xcb_get_font_path_reply_t {
     pub pad1: [uint8_t; 22usize],
 }
 impl ::std::default::Default for xcb_get_font_path_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3510,7 +3940,9 @@ pub struct xcb_create_pixmap_request_t {
     pub height: uint16_t,
 }
 impl ::std::default::Default for xcb_create_pixmap_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3522,7 +3954,9 @@ pub struct xcb_free_pixmap_request_t {
     pub pixmap: xcb_pixmap_t,
 }
 impl ::std::default::Default for xcb_free_pixmap_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -3640,7 +4074,9 @@ pub struct xcb_create_gc_request_t {
     pub value_mask: uint32_t,
 }
 impl ::std::default::Default for xcb_create_gc_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3653,7 +4089,9 @@ pub struct xcb_change_gc_request_t {
     pub value_mask: uint32_t,
 }
 impl ::std::default::Default for xcb_change_gc_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3667,7 +4105,9 @@ pub struct xcb_copy_gc_request_t {
     pub value_mask: uint32_t,
 }
 impl ::std::default::Default for xcb_copy_gc_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3681,7 +4121,9 @@ pub struct xcb_set_dashes_request_t {
     pub dashes_len: uint16_t,
 }
 impl ::std::default::Default for xcb_set_dashes_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -3704,7 +4146,9 @@ pub struct xcb_set_clip_rectangles_request_t {
     pub clip_y_origin: int16_t,
 }
 impl ::std::default::Default for xcb_set_clip_rectangles_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3716,7 +4160,9 @@ pub struct xcb_free_gc_request_t {
     pub gc: xcb_gcontext_t,
 }
 impl ::std::default::Default for xcb_free_gc_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3732,7 +4178,9 @@ pub struct xcb_clear_area_request_t {
     pub height: uint16_t,
 }
 impl ::std::default::Default for xcb_clear_area_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3752,7 +4200,9 @@ pub struct xcb_copy_area_request_t {
     pub height: uint16_t,
 }
 impl ::std::default::Default for xcb_copy_area_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3773,7 +4223,9 @@ pub struct xcb_copy_plane_request_t {
     pub bit_plane: uint32_t,
 }
 impl ::std::default::Default for xcb_copy_plane_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -3793,7 +4245,9 @@ pub struct xcb_poly_point_request_t {
     pub gc: xcb_gcontext_t,
 }
 impl ::std::default::Default for xcb_poly_point_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3806,7 +4260,9 @@ pub struct xcb_poly_line_request_t {
     pub gc: xcb_gcontext_t,
 }
 impl ::std::default::Default for xcb_poly_line_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3818,7 +4274,9 @@ pub struct xcb_segment_t {
     pub y2: int16_t,
 }
 impl ::std::default::Default for xcb_segment_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3829,7 +4287,9 @@ pub struct xcb_segment_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_segment_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3842,7 +4302,9 @@ pub struct xcb_poly_segment_request_t {
     pub gc: xcb_gcontext_t,
 }
 impl ::std::default::Default for xcb_poly_segment_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3855,7 +4317,9 @@ pub struct xcb_poly_rectangle_request_t {
     pub gc: xcb_gcontext_t,
 }
 impl ::std::default::Default for xcb_poly_rectangle_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3868,7 +4332,9 @@ pub struct xcb_poly_arc_request_t {
     pub gc: xcb_gcontext_t,
 }
 impl ::std::default::Default for xcb_poly_arc_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -3892,7 +4358,9 @@ pub struct xcb_fill_poly_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_fill_poly_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3905,7 +4373,9 @@ pub struct xcb_poly_fill_rectangle_request_t {
     pub gc: xcb_gcontext_t,
 }
 impl ::std::default::Default for xcb_poly_fill_rectangle_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3918,7 +4388,9 @@ pub struct xcb_poly_fill_arc_request_t {
     pub gc: xcb_gcontext_t,
 }
 impl ::std::default::Default for xcb_poly_fill_arc_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -3946,7 +4418,9 @@ pub struct xcb_put_image_request_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_put_image_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3955,7 +4429,9 @@ pub struct xcb_get_image_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_image_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3972,7 +4448,9 @@ pub struct xcb_get_image_request_t {
     pub plane_mask: uint32_t,
 }
 impl ::std::default::Default for xcb_get_image_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3986,7 +4464,9 @@ pub struct xcb_get_image_reply_t {
     pub pad0: [uint8_t; 20usize],
 }
 impl ::std::default::Default for xcb_get_image_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4001,7 +4481,9 @@ pub struct xcb_poly_text_8_request_t {
     pub y: int16_t,
 }
 impl ::std::default::Default for xcb_poly_text_8_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4016,7 +4498,9 @@ pub struct xcb_poly_text_16_request_t {
     pub y: int16_t,
 }
 impl ::std::default::Default for xcb_poly_text_16_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4031,7 +4515,9 @@ pub struct xcb_image_text_8_request_t {
     pub y: int16_t,
 }
 impl ::std::default::Default for xcb_image_text_8_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4046,7 +4532,9 @@ pub struct xcb_image_text_16_request_t {
     pub y: int16_t,
 }
 impl ::std::default::Default for xcb_image_text_16_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -4067,7 +4555,9 @@ pub struct xcb_create_colormap_request_t {
     pub visual: xcb_visualid_t,
 }
 impl ::std::default::Default for xcb_create_colormap_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4079,7 +4569,9 @@ pub struct xcb_free_colormap_request_t {
     pub cmap: xcb_colormap_t,
 }
 impl ::std::default::Default for xcb_free_colormap_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4092,7 +4584,9 @@ pub struct xcb_copy_colormap_and_free_request_t {
     pub src_cmap: xcb_colormap_t,
 }
 impl ::std::default::Default for xcb_copy_colormap_and_free_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4104,7 +4598,9 @@ pub struct xcb_install_colormap_request_t {
     pub cmap: xcb_colormap_t,
 }
 impl ::std::default::Default for xcb_install_colormap_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4116,7 +4612,9 @@ pub struct xcb_uninstall_colormap_request_t {
     pub cmap: xcb_colormap_t,
 }
 impl ::std::default::Default for xcb_uninstall_colormap_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4125,7 +4623,9 @@ pub struct xcb_list_installed_colormaps_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_list_installed_colormaps_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4137,7 +4637,9 @@ pub struct xcb_list_installed_colormaps_request_t {
     pub window: xcb_window_t,
 }
 impl ::std::default::Default for xcb_list_installed_colormaps_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4151,7 +4653,9 @@ pub struct xcb_list_installed_colormaps_reply_t {
     pub pad1: [uint8_t; 22usize],
 }
 impl ::std::default::Default for xcb_list_installed_colormaps_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4160,7 +4664,9 @@ pub struct xcb_alloc_color_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_alloc_color_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4176,7 +4682,9 @@ pub struct xcb_alloc_color_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_alloc_color_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4193,7 +4701,9 @@ pub struct xcb_alloc_color_reply_t {
     pub pixel: uint32_t,
 }
 impl ::std::default::Default for xcb_alloc_color_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4202,7 +4712,9 @@ pub struct xcb_alloc_named_color_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_alloc_named_color_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4216,7 +4728,9 @@ pub struct xcb_alloc_named_color_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_alloc_named_color_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4235,7 +4749,9 @@ pub struct xcb_alloc_named_color_reply_t {
     pub visual_blue: uint16_t,
 }
 impl ::std::default::Default for xcb_alloc_named_color_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4244,7 +4760,9 @@ pub struct xcb_alloc_color_cells_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_alloc_color_cells_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4258,7 +4776,9 @@ pub struct xcb_alloc_color_cells_request_t {
     pub planes: uint16_t,
 }
 impl ::std::default::Default for xcb_alloc_color_cells_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4273,7 +4793,9 @@ pub struct xcb_alloc_color_cells_reply_t {
     pub pad1: [uint8_t; 20usize],
 }
 impl ::std::default::Default for xcb_alloc_color_cells_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4282,7 +4804,9 @@ pub struct xcb_alloc_color_planes_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_alloc_color_planes_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4298,7 +4822,9 @@ pub struct xcb_alloc_color_planes_request_t {
     pub blues: uint16_t,
 }
 impl ::std::default::Default for xcb_alloc_color_planes_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4316,7 +4842,9 @@ pub struct xcb_alloc_color_planes_reply_t {
     pub pad2: [uint8_t; 8usize],
 }
 impl ::std::default::Default for xcb_alloc_color_planes_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4329,7 +4857,9 @@ pub struct xcb_free_colors_request_t {
     pub plane_mask: uint32_t,
 }
 impl ::std::default::Default for xcb_free_colors_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -4351,7 +4881,9 @@ pub struct xcb_coloritem_t {
     pub pad0: uint8_t,
 }
 impl ::std::default::Default for xcb_coloritem_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4362,7 +4894,9 @@ pub struct xcb_coloritem_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_coloritem_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4374,7 +4908,9 @@ pub struct xcb_store_colors_request_t {
     pub cmap: xcb_colormap_t,
 }
 impl ::std::default::Default for xcb_store_colors_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4389,7 +4925,9 @@ pub struct xcb_store_named_color_request_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_store_named_color_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4401,7 +4939,9 @@ pub struct xcb_rgb_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_rgb_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4412,7 +4952,9 @@ pub struct xcb_rgb_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_rgb_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4421,7 +4963,9 @@ pub struct xcb_query_colors_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_query_colors_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4433,7 +4977,9 @@ pub struct xcb_query_colors_request_t {
     pub cmap: xcb_colormap_t,
 }
 impl ::std::default::Default for xcb_query_colors_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4447,7 +4993,9 @@ pub struct xcb_query_colors_reply_t {
     pub pad1: [uint8_t; 22usize],
 }
 impl ::std::default::Default for xcb_query_colors_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4456,7 +5004,9 @@ pub struct xcb_lookup_color_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_lookup_color_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4470,7 +5020,9 @@ pub struct xcb_lookup_color_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_lookup_color_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4488,12 +5040,16 @@ pub struct xcb_lookup_color_reply_t {
     pub visual_blue: uint16_t,
 }
 impl ::std::default::Default for xcb_lookup_color_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_pixmap_enum_t { XCB_PIXMAP_NONE = 0, }
+pub enum xcb_pixmap_enum_t {
+    XCB_PIXMAP_NONE = 0,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -4514,12 +5070,16 @@ pub struct xcb_create_cursor_request_t {
     pub y: uint16_t,
 }
 impl ::std::default::Default for xcb_create_cursor_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_font_enum_t { XCB_FONT_NONE = 0, }
+pub enum xcb_font_enum_t {
+    XCB_FONT_NONE = 0,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -4540,7 +5100,9 @@ pub struct xcb_create_glyph_cursor_request_t {
     pub back_blue: uint16_t,
 }
 impl ::std::default::Default for xcb_create_glyph_cursor_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4552,7 +5114,9 @@ pub struct xcb_free_cursor_request_t {
     pub cursor: xcb_cursor_t,
 }
 impl ::std::default::Default for xcb_free_cursor_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4570,7 +5134,9 @@ pub struct xcb_recolor_cursor_request_t {
     pub back_blue: uint16_t,
 }
 impl ::std::default::Default for xcb_recolor_cursor_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -4587,7 +5153,9 @@ pub struct xcb_query_best_size_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_query_best_size_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4601,7 +5169,9 @@ pub struct xcb_query_best_size_request_t {
     pub height: uint16_t,
 }
 impl ::std::default::Default for xcb_query_best_size_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4615,7 +5185,9 @@ pub struct xcb_query_best_size_reply_t {
     pub height: uint16_t,
 }
 impl ::std::default::Default for xcb_query_best_size_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4624,7 +5196,9 @@ pub struct xcb_query_extension_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_query_extension_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4637,7 +5211,9 @@ pub struct xcb_query_extension_request_t {
     pub pad1: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_query_extension_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4653,7 +5229,9 @@ pub struct xcb_query_extension_reply_t {
     pub first_error: uint8_t,
 }
 impl ::std::default::Default for xcb_query_extension_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4662,7 +5240,9 @@ pub struct xcb_list_extensions_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_list_extensions_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4673,7 +5253,9 @@ pub struct xcb_list_extensions_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_list_extensions_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4686,7 +5268,9 @@ pub struct xcb_list_extensions_reply_t {
     pub pad0: [uint8_t; 24usize],
 }
 impl ::std::default::Default for xcb_list_extensions_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4700,7 +5284,9 @@ pub struct xcb_change_keyboard_mapping_request_t {
     pub pad0: [uint8_t; 2usize],
 }
 impl ::std::default::Default for xcb_change_keyboard_mapping_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4709,7 +5295,9 @@ pub struct xcb_get_keyboard_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_keyboard_mapping_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4722,7 +5310,9 @@ pub struct xcb_get_keyboard_mapping_request_t {
     pub count: uint8_t,
 }
 impl ::std::default::Default for xcb_get_keyboard_mapping_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4735,7 +5325,9 @@ pub struct xcb_get_keyboard_mapping_reply_t {
     pub pad0: [uint8_t; 24usize],
 }
 impl ::std::default::Default for xcb_get_keyboard_mapping_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -4753,7 +5345,10 @@ pub enum xcb_kb_t {
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_led_mode_t { XCB_LED_MODE_OFF = 0, XCB_LED_MODE_ON = 1, }
+pub enum xcb_led_mode_t {
+    XCB_LED_MODE_OFF = 0,
+    XCB_LED_MODE_ON = 1,
+}
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
@@ -4772,7 +5367,9 @@ pub struct xcb_change_keyboard_control_request_t {
     pub value_mask: uint32_t,
 }
 impl ::std::default::Default for xcb_change_keyboard_control_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4781,7 +5378,9 @@ pub struct xcb_get_keyboard_control_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_keyboard_control_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4792,7 +5391,9 @@ pub struct xcb_get_keyboard_control_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_get_keyboard_control_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4811,7 +5412,9 @@ pub struct xcb_get_keyboard_control_reply_t {
     pub auto_repeats: [uint8_t; 32usize],
 }
 impl ::std::default::Default for xcb_get_keyboard_control_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4822,7 +5425,9 @@ pub struct xcb_bell_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_bell_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4838,7 +5443,9 @@ pub struct xcb_change_pointer_control_request_t {
     pub do_threshold: uint8_t,
 }
 impl ::std::default::Default for xcb_change_pointer_control_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4847,7 +5454,9 @@ pub struct xcb_get_pointer_control_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_pointer_control_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4858,7 +5467,9 @@ pub struct xcb_get_pointer_control_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_get_pointer_control_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4874,7 +5485,9 @@ pub struct xcb_get_pointer_control_reply_t {
     pub pad1: [uint8_t; 18usize],
 }
 impl ::std::default::Default for xcb_get_pointer_control_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -4905,7 +5518,9 @@ pub struct xcb_set_screen_saver_request_t {
     pub allow_exposures: uint8_t,
 }
 impl ::std::default::Default for xcb_set_screen_saver_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4914,7 +5529,9 @@ pub struct xcb_get_screen_saver_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_screen_saver_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4925,7 +5542,9 @@ pub struct xcb_get_screen_saver_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_get_screen_saver_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4942,7 +5561,9 @@ pub struct xcb_get_screen_saver_reply_t {
     pub pad1: [uint8_t; 18usize],
 }
 impl ::std::default::Default for xcb_get_screen_saver_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -4973,7 +5594,9 @@ pub struct xcb_change_hosts_request_t {
     pub address_len: uint16_t,
 }
 impl ::std::default::Default for xcb_change_hosts_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4984,7 +5607,9 @@ pub struct xcb_host_t {
     pub address_len: uint16_t,
 }
 impl ::std::default::Default for xcb_host_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4995,7 +5620,9 @@ pub struct xcb_host_iterator_t {
     pub index: ::std::os::raw::c_int,
 }
 impl ::std::default::Default for xcb_host_iterator_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5004,7 +5631,9 @@ pub struct xcb_list_hosts_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_list_hosts_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5015,7 +5644,9 @@ pub struct xcb_list_hosts_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_list_hosts_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5029,7 +5660,9 @@ pub struct xcb_list_hosts_reply_t {
     pub pad0: [uint8_t; 22usize],
 }
 impl ::std::default::Default for xcb_list_hosts_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -5047,7 +5680,9 @@ pub struct xcb_set_access_control_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_set_access_control_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -5066,12 +5701,16 @@ pub struct xcb_set_close_down_mode_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_set_close_down_mode_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
-pub enum xcb_kill_t { XCB_KILL_ALL_TEMPORARY = 0, }
+pub enum xcb_kill_t {
+    XCB_KILL_ALL_TEMPORARY = 0,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[derive(Debug)]
@@ -5082,7 +5721,9 @@ pub struct xcb_kill_client_request_t {
     pub resource: uint32_t,
 }
 impl ::std::default::Default for xcb_kill_client_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5096,7 +5737,9 @@ pub struct xcb_rotate_properties_request_t {
     pub delta: int16_t,
 }
 impl ::std::default::Default for xcb_rotate_properties_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -5114,7 +5757,9 @@ pub struct xcb_force_screen_saver_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_force_screen_saver_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -5131,7 +5776,9 @@ pub struct xcb_set_pointer_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_set_pointer_mapping_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5142,7 +5789,9 @@ pub struct xcb_set_pointer_mapping_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_set_pointer_mapping_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5154,7 +5803,9 @@ pub struct xcb_set_pointer_mapping_reply_t {
     pub length: uint32_t,
 }
 impl ::std::default::Default for xcb_set_pointer_mapping_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5163,7 +5814,9 @@ pub struct xcb_get_pointer_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_pointer_mapping_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5174,7 +5827,9 @@ pub struct xcb_get_pointer_mapping_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_get_pointer_mapping_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5187,7 +5842,9 @@ pub struct xcb_get_pointer_mapping_reply_t {
     pub pad0: [uint8_t; 24usize],
 }
 impl ::std::default::Default for xcb_get_pointer_mapping_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -5209,7 +5866,9 @@ pub struct xcb_set_modifier_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_set_modifier_mapping_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5220,7 +5879,9 @@ pub struct xcb_set_modifier_mapping_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_set_modifier_mapping_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5232,7 +5893,9 @@ pub struct xcb_set_modifier_mapping_reply_t {
     pub length: uint32_t,
 }
 impl ::std::default::Default for xcb_set_modifier_mapping_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5241,7 +5904,9 @@ pub struct xcb_get_modifier_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
 impl ::std::default::Default for xcb_get_modifier_mapping_cookie_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5252,7 +5917,9 @@ pub struct xcb_get_modifier_mapping_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_get_modifier_mapping_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5265,7 +5932,9 @@ pub struct xcb_get_modifier_mapping_reply_t {
     pub pad0: [uint8_t; 24usize],
 }
 impl ::std::default::Default for xcb_get_modifier_mapping_reply_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5276,7 +5945,9 @@ pub struct xcb_no_operation_request_t {
     pub length: uint16_t,
 }
 impl ::std::default::Default for xcb_no_operation_request_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5288,7 +5959,9 @@ pub struct xcb_auth_info_t {
     pub data: *mut ::std::os::raw::c_char,
 }
 impl ::std::default::Default for xcb_auth_info_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub enum xcb_special_event { }
 pub type xcb_special_event_t = xcb_special_event;
@@ -5301,393 +5974,443 @@ extern "C" {
     pub static mut daylight: ::std::os::raw::c_int;
     pub static mut timezone: ::std::os::raw::c_long;
 }
-#[link(name = "xcb", kind= "dylib")]
+#[link(name = "xcb", kind = "dylib")]
 extern "C" {
-    pub fn select(__nfds: ::std::os::raw::c_int, __readfds: *mut fd_set,
-                  __writefds: *mut fd_set, __exceptfds: *mut fd_set,
-                  __timeout: *mut timeval) -> ::std::os::raw::c_int;
-    pub fn pselect(__nfds: ::std::os::raw::c_int, __readfds: *mut fd_set,
-                   __writefds: *mut fd_set, __exceptfds: *mut fd_set,
-                   __timeout: *const timespec, __sigmask: *const __sigset_t)
-     -> ::std::os::raw::c_int;
-    pub fn gnu_dev_major(__dev: ::std::os::raw::c_ulonglong)
-     -> ::std::os::raw::c_uint;
-    pub fn gnu_dev_minor(__dev: ::std::os::raw::c_ulonglong)
-     -> ::std::os::raw::c_uint;
-    pub fn gnu_dev_makedev(__major: ::std::os::raw::c_uint,
-                           __minor: ::std::os::raw::c_uint)
-     -> ::std::os::raw::c_ulonglong;
-    pub fn readv(__fd: ::std::os::raw::c_int, __iovec: *const iovec,
-                 __count: ::std::os::raw::c_int) -> ssize_t;
-    pub fn writev(__fd: ::std::os::raw::c_int, __iovec: *const iovec,
-                  __count: ::std::os::raw::c_int) -> ssize_t;
-    pub fn preadv(__fd: ::std::os::raw::c_int, __iovec: *const iovec,
-                  __count: ::std::os::raw::c_int, __offset: __off_t)
-     -> ssize_t;
-    pub fn pwritev(__fd: ::std::os::raw::c_int, __iovec: *const iovec,
-                   __count: ::std::os::raw::c_int, __offset: __off_t)
-     -> ssize_t;
-    pub fn __sched_cpucount(__setsize: size_t, __setp: *const cpu_set_t)
-     -> ::std::os::raw::c_int;
+    pub fn select(
+        __nfds: ::std::os::raw::c_int,
+        __readfds: *mut fd_set,
+        __writefds: *mut fd_set,
+        __exceptfds: *mut fd_set,
+        __timeout: *mut timeval,
+    ) -> ::std::os::raw::c_int;
+    pub fn pselect(
+        __nfds: ::std::os::raw::c_int,
+        __readfds: *mut fd_set,
+        __writefds: *mut fd_set,
+        __exceptfds: *mut fd_set,
+        __timeout: *const timespec,
+        __sigmask: *const __sigset_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn gnu_dev_major(__dev: ::std::os::raw::c_ulonglong) -> ::std::os::raw::c_uint;
+    pub fn gnu_dev_minor(__dev: ::std::os::raw::c_ulonglong) -> ::std::os::raw::c_uint;
+    pub fn gnu_dev_makedev(
+        __major: ::std::os::raw::c_uint,
+        __minor: ::std::os::raw::c_uint,
+    ) -> ::std::os::raw::c_ulonglong;
+    pub fn readv(
+        __fd: ::std::os::raw::c_int,
+        __iovec: *const iovec,
+        __count: ::std::os::raw::c_int,
+    ) -> ssize_t;
+    pub fn writev(
+        __fd: ::std::os::raw::c_int,
+        __iovec: *const iovec,
+        __count: ::std::os::raw::c_int,
+    ) -> ssize_t;
+    pub fn preadv(
+        __fd: ::std::os::raw::c_int,
+        __iovec: *const iovec,
+        __count: ::std::os::raw::c_int,
+        __offset: __off_t,
+    ) -> ssize_t;
+    pub fn pwritev(
+        __fd: ::std::os::raw::c_int,
+        __iovec: *const iovec,
+        __count: ::std::os::raw::c_int,
+        __offset: __off_t,
+    ) -> ssize_t;
+    pub fn __sched_cpucount(__setsize: size_t, __setp: *const cpu_set_t) -> ::std::os::raw::c_int;
     pub fn __sched_cpualloc(__count: size_t) -> *mut cpu_set_t;
     pub fn __sched_cpufree(__set: *mut cpu_set_t);
-    pub fn sched_setparam(__pid: __pid_t, __param: *const sched_param)
-     -> ::std::os::raw::c_int;
-    pub fn sched_getparam(__pid: __pid_t, __param: *mut sched_param)
-     -> ::std::os::raw::c_int;
-    pub fn sched_setscheduler(__pid: __pid_t, __policy: ::std::os::raw::c_int,
-                              __param: *const sched_param)
-     -> ::std::os::raw::c_int;
+    pub fn sched_setparam(__pid: __pid_t, __param: *const sched_param) -> ::std::os::raw::c_int;
+    pub fn sched_getparam(__pid: __pid_t, __param: *mut sched_param) -> ::std::os::raw::c_int;
+    pub fn sched_setscheduler(
+        __pid: __pid_t,
+        __policy: ::std::os::raw::c_int,
+        __param: *const sched_param,
+    ) -> ::std::os::raw::c_int;
     pub fn sched_getscheduler(__pid: __pid_t) -> ::std::os::raw::c_int;
     pub fn sched_yield() -> ::std::os::raw::c_int;
-    pub fn sched_get_priority_max(__algorithm: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn sched_get_priority_min(__algorithm: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn sched_rr_get_interval(__pid: __pid_t, __t: *mut timespec)
-     -> ::std::os::raw::c_int;
+    pub fn sched_get_priority_max(__algorithm: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn sched_get_priority_min(__algorithm: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn sched_rr_get_interval(__pid: __pid_t, __t: *mut timespec) -> ::std::os::raw::c_int;
     pub fn clock() -> clock_t;
     pub fn time(__timer: *mut time_t) -> time_t;
     pub fn difftime(__time1: time_t, __time0: time_t) -> f64;
     pub fn mktime(__tp: *mut tm) -> time_t;
-    pub fn strftime(__s: *mut ::std::os::raw::c_char, __maxsize: size_t,
-                    __format: *const ::std::os::raw::c_char, __tp: *const tm)
-     -> size_t;
-    pub fn strftime_l(__s: *mut ::std::os::raw::c_char, __maxsize: size_t,
-                      __format: *const ::std::os::raw::c_char,
-                      __tp: *const tm, __loc: __locale_t) -> size_t;
+    pub fn strftime(
+        __s: *mut ::std::os::raw::c_char,
+        __maxsize: size_t,
+        __format: *const ::std::os::raw::c_char,
+        __tp: *const tm,
+    ) -> size_t;
+    pub fn strftime_l(
+        __s: *mut ::std::os::raw::c_char,
+        __maxsize: size_t,
+        __format: *const ::std::os::raw::c_char,
+        __tp: *const tm,
+        __loc: __locale_t,
+    ) -> size_t;
     pub fn gmtime(__timer: *const time_t) -> *mut tm;
     pub fn localtime(__timer: *const time_t) -> *mut tm;
     pub fn gmtime_r(__timer: *const time_t, __tp: *mut tm) -> *mut tm;
     pub fn localtime_r(__timer: *const time_t, __tp: *mut tm) -> *mut tm;
     pub fn asctime(__tp: *const tm) -> *mut ::std::os::raw::c_char;
     pub fn ctime(__timer: *const time_t) -> *mut ::std::os::raw::c_char;
-    pub fn asctime_r(__tp: *const tm, __buf: *mut ::std::os::raw::c_char)
-     -> *mut ::std::os::raw::c_char;
-    pub fn ctime_r(__timer: *const time_t, __buf: *mut ::std::os::raw::c_char)
-     -> *mut ::std::os::raw::c_char;
+    pub fn asctime_r(
+        __tp: *const tm,
+        __buf: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+    pub fn ctime_r(
+        __timer: *const time_t,
+        __buf: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
     pub fn tzset();
     pub fn stime(__when: *const time_t) -> ::std::os::raw::c_int;
     pub fn timegm(__tp: *mut tm) -> time_t;
     pub fn timelocal(__tp: *mut tm) -> time_t;
     pub fn dysize(__year: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
-    pub fn nanosleep(__requested_time: *const timespec,
-                     __remaining: *mut timespec) -> ::std::os::raw::c_int;
-    pub fn clock_getres(__clock_id: clockid_t, __res: *mut timespec)
-     -> ::std::os::raw::c_int;
-    pub fn clock_gettime(__clock_id: clockid_t, __tp: *mut timespec)
-     -> ::std::os::raw::c_int;
-    pub fn clock_settime(__clock_id: clockid_t, __tp: *const timespec)
-     -> ::std::os::raw::c_int;
-    pub fn clock_nanosleep(__clock_id: clockid_t,
-                           __flags: ::std::os::raw::c_int,
-                           __req: *const timespec, __rem: *mut timespec)
-     -> ::std::os::raw::c_int;
-    pub fn clock_getcpuclockid(__pid: pid_t, __clock_id: *mut clockid_t)
-     -> ::std::os::raw::c_int;
-    pub fn timer_create(__clock_id: clockid_t, __evp: *mut sigevent,
-                        __timerid: *mut timer_t) -> ::std::os::raw::c_int;
+    pub fn nanosleep(
+        __requested_time: *const timespec,
+        __remaining: *mut timespec,
+    ) -> ::std::os::raw::c_int;
+    pub fn clock_getres(__clock_id: clockid_t, __res: *mut timespec) -> ::std::os::raw::c_int;
+    pub fn clock_gettime(__clock_id: clockid_t, __tp: *mut timespec) -> ::std::os::raw::c_int;
+    pub fn clock_settime(__clock_id: clockid_t, __tp: *const timespec) -> ::std::os::raw::c_int;
+    pub fn clock_nanosleep(
+        __clock_id: clockid_t,
+        __flags: ::std::os::raw::c_int,
+        __req: *const timespec,
+        __rem: *mut timespec,
+    ) -> ::std::os::raw::c_int;
+    pub fn clock_getcpuclockid(__pid: pid_t, __clock_id: *mut clockid_t) -> ::std::os::raw::c_int;
+    pub fn timer_create(
+        __clock_id: clockid_t,
+        __evp: *mut sigevent,
+        __timerid: *mut timer_t,
+    ) -> ::std::os::raw::c_int;
     pub fn timer_delete(__timerid: timer_t) -> ::std::os::raw::c_int;
-    pub fn timer_settime(__timerid: timer_t, __flags: ::std::os::raw::c_int,
-                         __value: *const itimerspec,
-                         __ovalue: *mut itimerspec) -> ::std::os::raw::c_int;
-    pub fn timer_gettime(__timerid: timer_t, __value: *mut itimerspec)
-     -> ::std::os::raw::c_int;
+    pub fn timer_settime(
+        __timerid: timer_t,
+        __flags: ::std::os::raw::c_int,
+        __value: *const itimerspec,
+        __ovalue: *mut itimerspec,
+    ) -> ::std::os::raw::c_int;
+    pub fn timer_gettime(__timerid: timer_t, __value: *mut itimerspec) -> ::std::os::raw::c_int;
     pub fn timer_getoverrun(__timerid: timer_t) -> ::std::os::raw::c_int;
-    pub fn timespec_get(__ts: *mut timespec, __base: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_create(__newthread: *mut pthread_t,
-                          __attr: *const pthread_attr_t,
-                          __start_routine:
-                              ::std::option::Option<unsafe extern "C" fn(arg1:
-                                                                             *mut ::std::os::raw::c_void)
-                                                        ->
-                                                            *mut ::std::os::raw::c_void>,
-                          __arg: *mut ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
+    pub fn timespec_get(
+        __ts: *mut timespec,
+        __base: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_create(
+        __newthread: *mut pthread_t,
+        __attr: *const pthread_attr_t,
+        __start_routine: ::std::option::Option<
+            unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void)
+                -> *mut ::std::os::raw::c_void,
+        >,
+        __arg: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
     pub fn pthread_exit(__retval: *mut ::std::os::raw::c_void);
-    pub fn pthread_join(__th: pthread_t,
-                        __thread_return: *mut *mut ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
+    pub fn pthread_join(
+        __th: pthread_t,
+        __thread_return: *mut *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
     pub fn pthread_detach(__th: pthread_t) -> ::std::os::raw::c_int;
     pub fn pthread_self() -> pthread_t;
-    pub fn pthread_equal(__thread1: pthread_t, __thread2: pthread_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_init(__attr: *mut pthread_attr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_destroy(__attr: *mut pthread_attr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_getdetachstate(__attr: *const pthread_attr_t,
-                                       __detachstate:
-                                           *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_setdetachstate(__attr: *mut pthread_attr_t,
-                                       __detachstate: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_getguardsize(__attr: *const pthread_attr_t,
-                                     __guardsize: *mut size_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_setguardsize(__attr: *mut pthread_attr_t,
-                                     __guardsize: size_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_getschedparam(__attr: *const pthread_attr_t,
-                                      __param: *mut sched_param)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_setschedparam(__attr: *mut pthread_attr_t,
-                                      __param: *const sched_param)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_getschedpolicy(__attr: *const pthread_attr_t,
-                                       __policy: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_setschedpolicy(__attr: *mut pthread_attr_t,
-                                       __policy: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_getinheritsched(__attr: *const pthread_attr_t,
-                                        __inherit: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_setinheritsched(__attr: *mut pthread_attr_t,
-                                        __inherit: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_getscope(__attr: *const pthread_attr_t,
-                                 __scope: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_setscope(__attr: *mut pthread_attr_t,
-                                 __scope: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_getstackaddr(__attr: *const pthread_attr_t,
-                                     __stackaddr:
-                                         *mut *mut ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_setstackaddr(__attr: *mut pthread_attr_t,
-                                     __stackaddr: *mut ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_getstacksize(__attr: *const pthread_attr_t,
-                                     __stacksize: *mut size_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_setstacksize(__attr: *mut pthread_attr_t,
-                                     __stacksize: size_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_getstack(__attr: *const pthread_attr_t,
-                                 __stackaddr:
-                                     *mut *mut ::std::os::raw::c_void,
-                                 __stacksize: *mut size_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_attr_setstack(__attr: *mut pthread_attr_t,
-                                 __stackaddr: *mut ::std::os::raw::c_void,
-                                 __stacksize: size_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_setschedparam(__target_thread: pthread_t,
-                                 __policy: ::std::os::raw::c_int,
-                                 __param: *const sched_param)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_getschedparam(__target_thread: pthread_t,
-                                 __policy: *mut ::std::os::raw::c_int,
-                                 __param: *mut sched_param)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_setschedprio(__target_thread: pthread_t,
-                                __prio: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_once(__once_control: *mut pthread_once_t,
-                        __init_routine:
-                            ::std::option::Option<extern "C" fn()>)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_setcancelstate(__state: ::std::os::raw::c_int,
-                                  __oldstate: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_setcanceltype(__type: ::std::os::raw::c_int,
-                                 __oldtype: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
+    pub fn pthread_equal(__thread1: pthread_t, __thread2: pthread_t) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_init(__attr: *mut pthread_attr_t) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_destroy(__attr: *mut pthread_attr_t) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_getdetachstate(
+        __attr: *const pthread_attr_t,
+        __detachstate: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_setdetachstate(
+        __attr: *mut pthread_attr_t,
+        __detachstate: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_getguardsize(
+        __attr: *const pthread_attr_t,
+        __guardsize: *mut size_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_setguardsize(
+        __attr: *mut pthread_attr_t,
+        __guardsize: size_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_getschedparam(
+        __attr: *const pthread_attr_t,
+        __param: *mut sched_param,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_setschedparam(
+        __attr: *mut pthread_attr_t,
+        __param: *const sched_param,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_getschedpolicy(
+        __attr: *const pthread_attr_t,
+        __policy: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_setschedpolicy(
+        __attr: *mut pthread_attr_t,
+        __policy: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_getinheritsched(
+        __attr: *const pthread_attr_t,
+        __inherit: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_setinheritsched(
+        __attr: *mut pthread_attr_t,
+        __inherit: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_getscope(
+        __attr: *const pthread_attr_t,
+        __scope: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_setscope(
+        __attr: *mut pthread_attr_t,
+        __scope: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_getstackaddr(
+        __attr: *const pthread_attr_t,
+        __stackaddr: *mut *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_setstackaddr(
+        __attr: *mut pthread_attr_t,
+        __stackaddr: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_getstacksize(
+        __attr: *const pthread_attr_t,
+        __stacksize: *mut size_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_setstacksize(
+        __attr: *mut pthread_attr_t,
+        __stacksize: size_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_getstack(
+        __attr: *const pthread_attr_t,
+        __stackaddr: *mut *mut ::std::os::raw::c_void,
+        __stacksize: *mut size_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_attr_setstack(
+        __attr: *mut pthread_attr_t,
+        __stackaddr: *mut ::std::os::raw::c_void,
+        __stacksize: size_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_setschedparam(
+        __target_thread: pthread_t,
+        __policy: ::std::os::raw::c_int,
+        __param: *const sched_param,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_getschedparam(
+        __target_thread: pthread_t,
+        __policy: *mut ::std::os::raw::c_int,
+        __param: *mut sched_param,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_setschedprio(
+        __target_thread: pthread_t,
+        __prio: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_once(
+        __once_control: *mut pthread_once_t,
+        __init_routine: ::std::option::Option<extern "C" fn()>,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_setcancelstate(
+        __state: ::std::os::raw::c_int,
+        __oldstate: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_setcanceltype(
+        __type: ::std::os::raw::c_int,
+        __oldtype: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
     pub fn pthread_cancel(__th: pthread_t) -> ::std::os::raw::c_int;
     pub fn pthread_testcancel();
     pub fn __pthread_register_cancel(__buf: *mut __pthread_unwind_buf_t);
     pub fn __pthread_unregister_cancel(__buf: *mut __pthread_unwind_buf_t);
     pub fn __pthread_unwind_next(__buf: *mut __pthread_unwind_buf_t);
-    pub fn __sigsetjmp(__env: *mut __jmp_buf_tag,
-                       __savemask: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutex_init(__mutex: *mut pthread_mutex_t,
-                              __mutexattr: *const pthread_mutexattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutex_destroy(__mutex: *mut pthread_mutex_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutex_trylock(__mutex: *mut pthread_mutex_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutex_lock(__mutex: *mut pthread_mutex_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutex_timedlock(__mutex: *mut pthread_mutex_t,
-                                   __abstime: *const timespec)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutex_unlock(__mutex: *mut pthread_mutex_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutex_getprioceiling(__mutex: *const pthread_mutex_t,
-                                        __prioceiling:
-                                            *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutex_setprioceiling(__mutex: *mut pthread_mutex_t,
-                                        __prioceiling: ::std::os::raw::c_int,
-                                        __old_ceiling:
-                                            *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutex_consistent(__mutex: *mut pthread_mutex_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_init(__attr: *mut pthread_mutexattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_destroy(__attr: *mut pthread_mutexattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_getpshared(__attr: *const pthread_mutexattr_t,
-                                        __pshared: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_setpshared(__attr: *mut pthread_mutexattr_t,
-                                        __pshared: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_gettype(__attr: *const pthread_mutexattr_t,
-                                     __kind: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_settype(__attr: *mut pthread_mutexattr_t,
-                                     __kind: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_getprotocol(__attr: *const pthread_mutexattr_t,
-                                         __protocol:
-                                             *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_setprotocol(__attr: *mut pthread_mutexattr_t,
-                                         __protocol: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_getprioceiling(__attr:
-                                                *const pthread_mutexattr_t,
-                                            __prioceiling:
-                                                *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_setprioceiling(__attr: *mut pthread_mutexattr_t,
-                                            __prioceiling:
-                                                ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_getrobust(__attr: *const pthread_mutexattr_t,
-                                       __robustness:
-                                           *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_mutexattr_setrobust(__attr: *mut pthread_mutexattr_t,
-                                       __robustness: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlock_init(__rwlock: *mut pthread_rwlock_t,
-                               __attr: *const pthread_rwlockattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlock_destroy(__rwlock: *mut pthread_rwlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlock_rdlock(__rwlock: *mut pthread_rwlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlock_tryrdlock(__rwlock: *mut pthread_rwlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlock_timedrdlock(__rwlock: *mut pthread_rwlock_t,
-                                      __abstime: *const timespec)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlock_wrlock(__rwlock: *mut pthread_rwlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlock_trywrlock(__rwlock: *mut pthread_rwlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlock_timedwrlock(__rwlock: *mut pthread_rwlock_t,
-                                      __abstime: *const timespec)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlock_unlock(__rwlock: *mut pthread_rwlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlockattr_init(__attr: *mut pthread_rwlockattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlockattr_destroy(__attr: *mut pthread_rwlockattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlockattr_getpshared(__attr: *const pthread_rwlockattr_t,
-                                         __pshared:
-                                             *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlockattr_setpshared(__attr: *mut pthread_rwlockattr_t,
-                                         __pshared: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlockattr_getkind_np(__attr: *const pthread_rwlockattr_t,
-                                         __pref: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_rwlockattr_setkind_np(__attr: *mut pthread_rwlockattr_t,
-                                         __pref: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_cond_init(__cond: *mut pthread_cond_t,
-                             __cond_attr: *const pthread_condattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_cond_destroy(__cond: *mut pthread_cond_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_cond_signal(__cond: *mut pthread_cond_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_cond_broadcast(__cond: *mut pthread_cond_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_cond_wait(__cond: *mut pthread_cond_t,
-                             __mutex: *mut pthread_mutex_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_cond_timedwait(__cond: *mut pthread_cond_t,
-                                  __mutex: *mut pthread_mutex_t,
-                                  __abstime: *const timespec)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_condattr_init(__attr: *mut pthread_condattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_condattr_destroy(__attr: *mut pthread_condattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_condattr_getpshared(__attr: *const pthread_condattr_t,
-                                       __pshared: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_condattr_setpshared(__attr: *mut pthread_condattr_t,
-                                       __pshared: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_condattr_getclock(__attr: *const pthread_condattr_t,
-                                     __clock_id: *mut __clockid_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_condattr_setclock(__attr: *mut pthread_condattr_t,
-                                     __clock_id: __clockid_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_spin_init(__lock: *mut pthread_spinlock_t,
-                             __pshared: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_spin_destroy(__lock: *mut pthread_spinlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_spin_lock(__lock: *mut pthread_spinlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_spin_trylock(__lock: *mut pthread_spinlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_spin_unlock(__lock: *mut pthread_spinlock_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_barrier_init(__barrier: *mut pthread_barrier_t,
-                                __attr: *const pthread_barrierattr_t,
-                                __count: ::std::os::raw::c_uint)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_barrier_destroy(__barrier: *mut pthread_barrier_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_barrier_wait(__barrier: *mut pthread_barrier_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_barrierattr_init(__attr: *mut pthread_barrierattr_t)
-     -> ::std::os::raw::c_int;
+    pub fn __sigsetjmp(
+        __env: *mut __jmp_buf_tag,
+        __savemask: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutex_init(
+        __mutex: *mut pthread_mutex_t,
+        __mutexattr: *const pthread_mutexattr_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutex_destroy(__mutex: *mut pthread_mutex_t) -> ::std::os::raw::c_int;
+    pub fn pthread_mutex_trylock(__mutex: *mut pthread_mutex_t) -> ::std::os::raw::c_int;
+    pub fn pthread_mutex_lock(__mutex: *mut pthread_mutex_t) -> ::std::os::raw::c_int;
+    pub fn pthread_mutex_timedlock(
+        __mutex: *mut pthread_mutex_t,
+        __abstime: *const timespec,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutex_unlock(__mutex: *mut pthread_mutex_t) -> ::std::os::raw::c_int;
+    pub fn pthread_mutex_getprioceiling(
+        __mutex: *const pthread_mutex_t,
+        __prioceiling: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutex_setprioceiling(
+        __mutex: *mut pthread_mutex_t,
+        __prioceiling: ::std::os::raw::c_int,
+        __old_ceiling: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutex_consistent(__mutex: *mut pthread_mutex_t) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_init(__attr: *mut pthread_mutexattr_t) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_destroy(__attr: *mut pthread_mutexattr_t) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_getpshared(
+        __attr: *const pthread_mutexattr_t,
+        __pshared: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_setpshared(
+        __attr: *mut pthread_mutexattr_t,
+        __pshared: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_gettype(
+        __attr: *const pthread_mutexattr_t,
+        __kind: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_settype(
+        __attr: *mut pthread_mutexattr_t,
+        __kind: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_getprotocol(
+        __attr: *const pthread_mutexattr_t,
+        __protocol: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_setprotocol(
+        __attr: *mut pthread_mutexattr_t,
+        __protocol: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_getprioceiling(
+        __attr: *const pthread_mutexattr_t,
+        __prioceiling: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_setprioceiling(
+        __attr: *mut pthread_mutexattr_t,
+        __prioceiling: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_getrobust(
+        __attr: *const pthread_mutexattr_t,
+        __robustness: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_mutexattr_setrobust(
+        __attr: *mut pthread_mutexattr_t,
+        __robustness: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlock_init(
+        __rwlock: *mut pthread_rwlock_t,
+        __attr: *const pthread_rwlockattr_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlock_destroy(__rwlock: *mut pthread_rwlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlock_rdlock(__rwlock: *mut pthread_rwlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlock_tryrdlock(__rwlock: *mut pthread_rwlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlock_timedrdlock(
+        __rwlock: *mut pthread_rwlock_t,
+        __abstime: *const timespec,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlock_wrlock(__rwlock: *mut pthread_rwlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlock_trywrlock(__rwlock: *mut pthread_rwlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlock_timedwrlock(
+        __rwlock: *mut pthread_rwlock_t,
+        __abstime: *const timespec,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlock_unlock(__rwlock: *mut pthread_rwlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlockattr_init(__attr: *mut pthread_rwlockattr_t) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlockattr_destroy(__attr: *mut pthread_rwlockattr_t) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlockattr_getpshared(
+        __attr: *const pthread_rwlockattr_t,
+        __pshared: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlockattr_setpshared(
+        __attr: *mut pthread_rwlockattr_t,
+        __pshared: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlockattr_getkind_np(
+        __attr: *const pthread_rwlockattr_t,
+        __pref: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_rwlockattr_setkind_np(
+        __attr: *mut pthread_rwlockattr_t,
+        __pref: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_cond_init(
+        __cond: *mut pthread_cond_t,
+        __cond_attr: *const pthread_condattr_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_cond_destroy(__cond: *mut pthread_cond_t) -> ::std::os::raw::c_int;
+    pub fn pthread_cond_signal(__cond: *mut pthread_cond_t) -> ::std::os::raw::c_int;
+    pub fn pthread_cond_broadcast(__cond: *mut pthread_cond_t) -> ::std::os::raw::c_int;
+    pub fn pthread_cond_wait(
+        __cond: *mut pthread_cond_t,
+        __mutex: *mut pthread_mutex_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_cond_timedwait(
+        __cond: *mut pthread_cond_t,
+        __mutex: *mut pthread_mutex_t,
+        __abstime: *const timespec,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_condattr_init(__attr: *mut pthread_condattr_t) -> ::std::os::raw::c_int;
+    pub fn pthread_condattr_destroy(__attr: *mut pthread_condattr_t) -> ::std::os::raw::c_int;
+    pub fn pthread_condattr_getpshared(
+        __attr: *const pthread_condattr_t,
+        __pshared: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_condattr_setpshared(
+        __attr: *mut pthread_condattr_t,
+        __pshared: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_condattr_getclock(
+        __attr: *const pthread_condattr_t,
+        __clock_id: *mut __clockid_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_condattr_setclock(
+        __attr: *mut pthread_condattr_t,
+        __clock_id: __clockid_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_spin_init(
+        __lock: *mut pthread_spinlock_t,
+        __pshared: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_spin_destroy(__lock: *mut pthread_spinlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_spin_lock(__lock: *mut pthread_spinlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_spin_trylock(__lock: *mut pthread_spinlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_spin_unlock(__lock: *mut pthread_spinlock_t) -> ::std::os::raw::c_int;
+    pub fn pthread_barrier_init(
+        __barrier: *mut pthread_barrier_t,
+        __attr: *const pthread_barrierattr_t,
+        __count: ::std::os::raw::c_uint,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_barrier_destroy(__barrier: *mut pthread_barrier_t) -> ::std::os::raw::c_int;
+    pub fn pthread_barrier_wait(__barrier: *mut pthread_barrier_t) -> ::std::os::raw::c_int;
+    pub fn pthread_barrierattr_init(__attr: *mut pthread_barrierattr_t) -> ::std::os::raw::c_int;
     pub fn pthread_barrierattr_destroy(__attr: *mut pthread_barrierattr_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_barrierattr_getpshared(__attr:
-                                              *const pthread_barrierattr_t,
-                                          __pshared:
-                                              *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_barrierattr_setpshared(__attr: *mut pthread_barrierattr_t,
-                                          __pshared: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_key_create(__key: *mut pthread_key_t,
-                              __destr_function:
-                                  ::std::option::Option<unsafe extern "C" fn(arg1:
-                                                                                 *mut ::std::os::raw::c_void)>)
-     -> ::std::os::raw::c_int;
+        -> ::std::os::raw::c_int;
+    pub fn pthread_barrierattr_getpshared(
+        __attr: *const pthread_barrierattr_t,
+        __pshared: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_barrierattr_setpshared(
+        __attr: *mut pthread_barrierattr_t,
+        __pshared: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_key_create(
+        __key: *mut pthread_key_t,
+        __destr_function: ::std::option::Option<
+            unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void),
+        >,
+    ) -> ::std::os::raw::c_int;
     pub fn pthread_key_delete(__key: pthread_key_t) -> ::std::os::raw::c_int;
-    pub fn pthread_getspecific(__key: pthread_key_t)
-     -> *mut ::std::os::raw::c_void;
-    pub fn pthread_setspecific(__key: pthread_key_t,
-                               __pointer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_getcpuclockid(__thread_id: pthread_t,
-                                 __clock_id: *mut __clockid_t)
-     -> ::std::os::raw::c_int;
-    pub fn pthread_atfork(__prepare: ::std::option::Option<extern "C" fn()>,
-                          __parent: ::std::option::Option<extern "C" fn()>,
-                          __child: ::std::option::Option<extern "C" fn()>)
-     -> ::std::os::raw::c_int;
+    pub fn pthread_getspecific(__key: pthread_key_t) -> *mut ::std::os::raw::c_void;
+    pub fn pthread_setspecific(
+        __key: pthread_key_t,
+        __pointer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_getcpuclockid(
+        __thread_id: pthread_t,
+        __clock_id: *mut __clockid_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn pthread_atfork(
+        __prepare: ::std::option::Option<extern "C" fn()>,
+        __parent: ::std::option::Option<extern "C" fn()>,
+        __child: ::std::option::Option<extern "C" fn()>,
+    ) -> ::std::os::raw::c_int;
     pub fn xcb_char2b_next(i: *mut xcb_char2b_iterator_t);
     pub fn xcb_char2b_end(i: xcb_char2b_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_window_next(i: *mut xcb_window_iterator_t);
@@ -5699,1653 +6422,2100 @@ extern "C" {
     pub fn xcb_font_next(i: *mut xcb_font_iterator_t);
     pub fn xcb_font_end(i: xcb_font_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_gcontext_next(i: *mut xcb_gcontext_iterator_t);
-    pub fn xcb_gcontext_end(i: xcb_gcontext_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_gcontext_end(i: xcb_gcontext_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_colormap_next(i: *mut xcb_colormap_iterator_t);
-    pub fn xcb_colormap_end(i: xcb_colormap_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_colormap_end(i: xcb_colormap_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_atom_next(i: *mut xcb_atom_iterator_t);
     pub fn xcb_atom_end(i: xcb_atom_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_drawable_next(i: *mut xcb_drawable_iterator_t);
-    pub fn xcb_drawable_end(i: xcb_drawable_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_drawable_end(i: xcb_drawable_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_fontable_next(i: *mut xcb_fontable_iterator_t);
-    pub fn xcb_fontable_end(i: xcb_fontable_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_fontable_end(i: xcb_fontable_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_visualid_next(i: *mut xcb_visualid_iterator_t);
-    pub fn xcb_visualid_end(i: xcb_visualid_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_visualid_end(i: xcb_visualid_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_timestamp_next(i: *mut xcb_timestamp_iterator_t);
-    pub fn xcb_timestamp_end(i: xcb_timestamp_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_timestamp_end(i: xcb_timestamp_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_keysym_next(i: *mut xcb_keysym_iterator_t);
     pub fn xcb_keysym_end(i: xcb_keysym_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_keycode_next(i: *mut xcb_keycode_iterator_t);
-    pub fn xcb_keycode_end(i: xcb_keycode_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_keycode_end(i: xcb_keycode_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_button_next(i: *mut xcb_button_iterator_t);
     pub fn xcb_button_end(i: xcb_button_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_point_next(i: *mut xcb_point_iterator_t);
     pub fn xcb_point_end(i: xcb_point_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_rectangle_next(i: *mut xcb_rectangle_iterator_t);
-    pub fn xcb_rectangle_end(i: xcb_rectangle_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_rectangle_end(i: xcb_rectangle_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_arc_next(i: *mut xcb_arc_iterator_t);
     pub fn xcb_arc_end(i: xcb_arc_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_format_next(i: *mut xcb_format_iterator_t);
     pub fn xcb_format_end(i: xcb_format_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_visualtype_next(i: *mut xcb_visualtype_iterator_t);
-    pub fn xcb_visualtype_end(i: xcb_visualtype_iterator_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_depth_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
+    pub fn xcb_visualtype_end(i: xcb_visualtype_iterator_t) -> xcb_generic_iterator_t;
+    pub fn xcb_depth_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
     pub fn xcb_depth_visuals(R: *const xcb_depth_t) -> *mut xcb_visualtype_t;
-    pub fn xcb_depth_visuals_length(R: *const xcb_depth_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_depth_visuals_iterator(R: *const xcb_depth_t)
-     -> xcb_visualtype_iterator_t;
+    pub fn xcb_depth_visuals_length(R: *const xcb_depth_t) -> ::std::os::raw::c_int;
+    pub fn xcb_depth_visuals_iterator(R: *const xcb_depth_t) -> xcb_visualtype_iterator_t;
     pub fn xcb_depth_next(i: *mut xcb_depth_iterator_t);
     pub fn xcb_depth_end(i: xcb_depth_iterator_t) -> xcb_generic_iterator_t;
-    pub fn xcb_screen_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_screen_allowed_depths_length(R: *const xcb_screen_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_screen_allowed_depths_iterator(R: *const xcb_screen_t)
-     -> xcb_depth_iterator_t;
+    pub fn xcb_screen_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_screen_allowed_depths_length(R: *const xcb_screen_t) -> ::std::os::raw::c_int;
+    pub fn xcb_screen_allowed_depths_iterator(R: *const xcb_screen_t) -> xcb_depth_iterator_t;
     pub fn xcb_screen_next(i: *mut xcb_screen_iterator_t);
     pub fn xcb_screen_end(i: xcb_screen_iterator_t) -> xcb_generic_iterator_t;
-    pub fn xcb_setup_request_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_request_authorization_protocol_name(R:
-                                                             *const xcb_setup_request_t)
-     -> *mut ::std::os::raw::c_char;
-    pub fn xcb_setup_request_authorization_protocol_name_length(R:
-                                                                    *const xcb_setup_request_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_request_authorization_protocol_name_end(R:
-                                                                 *const xcb_setup_request_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_setup_request_authorization_protocol_data(R:
-                                                             *const xcb_setup_request_t)
-     -> *mut ::std::os::raw::c_char;
-    pub fn xcb_setup_request_authorization_protocol_data_length(R:
-                                                                    *const xcb_setup_request_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_request_authorization_protocol_data_end(R:
-                                                                 *const xcb_setup_request_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_setup_request_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_request_authorization_protocol_name(
+        R: *const xcb_setup_request_t,
+    ) -> *mut ::std::os::raw::c_char;
+    pub fn xcb_setup_request_authorization_protocol_name_length(
+        R: *const xcb_setup_request_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_request_authorization_protocol_name_end(
+        R: *const xcb_setup_request_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_setup_request_authorization_protocol_data(
+        R: *const xcb_setup_request_t,
+    ) -> *mut ::std::os::raw::c_char;
+    pub fn xcb_setup_request_authorization_protocol_data_length(
+        R: *const xcb_setup_request_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_request_authorization_protocol_data_end(
+        R: *const xcb_setup_request_t,
+    ) -> xcb_generic_iterator_t;
     pub fn xcb_setup_request_next(i: *mut xcb_setup_request_iterator_t);
-    pub fn xcb_setup_request_end(i: xcb_setup_request_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_setup_request_end(i: xcb_setup_request_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_setup_failed_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_failed_reason(R: *const xcb_setup_failed_t)
-     -> *mut ::std::os::raw::c_char;
-    pub fn xcb_setup_failed_reason_length(R: *const xcb_setup_failed_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_failed_reason_end(R: *const xcb_setup_failed_t)
-     -> xcb_generic_iterator_t;
+        -> ::std::os::raw::c_int;
+    pub fn xcb_setup_failed_reason(R: *const xcb_setup_failed_t) -> *mut ::std::os::raw::c_char;
+    pub fn xcb_setup_failed_reason_length(R: *const xcb_setup_failed_t) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_failed_reason_end(R: *const xcb_setup_failed_t) -> xcb_generic_iterator_t;
     pub fn xcb_setup_failed_next(i: *mut xcb_setup_failed_iterator_t);
-    pub fn xcb_setup_failed_end(i: xcb_setup_failed_iterator_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_setup_authenticate_sizeof(_buffer:
-                                             *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_authenticate_reason(R: *const xcb_setup_authenticate_t)
-     -> *mut ::std::os::raw::c_char;
-    pub fn xcb_setup_authenticate_reason_length(R:
-                                                    *const xcb_setup_authenticate_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_authenticate_reason_end(R:
-                                                 *const xcb_setup_authenticate_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_setup_authenticate_next(i:
-                                           *mut xcb_setup_authenticate_iterator_t);
-    pub fn xcb_setup_authenticate_end(i: xcb_setup_authenticate_iterator_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_setup_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_vendor(R: *const xcb_setup_t)
-     -> *mut ::std::os::raw::c_char;
-    pub fn xcb_setup_vendor_length(R: *const xcb_setup_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_vendor_end(R: *const xcb_setup_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_setup_pixmap_formats(R: *const xcb_setup_t)
-     -> *mut xcb_format_t;
-    pub fn xcb_setup_pixmap_formats_length(R: *const xcb_setup_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_pixmap_formats_iterator(R: *const xcb_setup_t)
-     -> xcb_format_iterator_t;
-    pub fn xcb_setup_roots_length(R: *const xcb_setup_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_setup_roots_iterator(R: *const xcb_setup_t)
-     -> xcb_screen_iterator_t;
+    pub fn xcb_setup_failed_end(i: xcb_setup_failed_iterator_t) -> xcb_generic_iterator_t;
+    pub fn xcb_setup_authenticate_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_authenticate_reason(
+        R: *const xcb_setup_authenticate_t,
+    ) -> *mut ::std::os::raw::c_char;
+    pub fn xcb_setup_authenticate_reason_length(
+        R: *const xcb_setup_authenticate_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_authenticate_reason_end(
+        R: *const xcb_setup_authenticate_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_setup_authenticate_next(i: *mut xcb_setup_authenticate_iterator_t);
+    pub fn xcb_setup_authenticate_end(
+        i: xcb_setup_authenticate_iterator_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_setup_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_vendor(R: *const xcb_setup_t) -> *mut ::std::os::raw::c_char;
+    pub fn xcb_setup_vendor_length(R: *const xcb_setup_t) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_vendor_end(R: *const xcb_setup_t) -> xcb_generic_iterator_t;
+    pub fn xcb_setup_pixmap_formats(R: *const xcb_setup_t) -> *mut xcb_format_t;
+    pub fn xcb_setup_pixmap_formats_length(R: *const xcb_setup_t) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_pixmap_formats_iterator(R: *const xcb_setup_t) -> xcb_format_iterator_t;
+    pub fn xcb_setup_roots_length(R: *const xcb_setup_t) -> ::std::os::raw::c_int;
+    pub fn xcb_setup_roots_iterator(R: *const xcb_setup_t) -> xcb_screen_iterator_t;
     pub fn xcb_setup_next(i: *mut xcb_setup_iterator_t);
     pub fn xcb_setup_end(i: xcb_setup_iterator_t) -> xcb_generic_iterator_t;
-    pub fn xcb_client_message_data_next(i:
-                                            *mut xcb_client_message_data_iterator_t);
-    pub fn xcb_client_message_data_end(i: xcb_client_message_data_iterator_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_create_window_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_create_window_checked(c: *mut xcb_connection_t, depth: uint8_t,
-                                     wid: xcb_window_t, parent: xcb_window_t,
-                                     x: int16_t, y: int16_t, width: uint16_t,
-                                     height: uint16_t, border_width: uint16_t,
-                                     _class: uint16_t, visual: xcb_visualid_t,
-                                     value_mask: uint32_t,
-                                     value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_create_window(c: *mut xcb_connection_t, depth: uint8_t,
-                             wid: xcb_window_t, parent: xcb_window_t,
-                             x: int16_t, y: int16_t, width: uint16_t,
-                             height: uint16_t, border_width: uint16_t,
-                             _class: uint16_t, visual: xcb_visualid_t,
-                             value_mask: uint32_t,
-                             value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_window_attributes_sizeof(_buffer:
-                                                   *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_change_window_attributes_checked(c: *mut xcb_connection_t,
-                                                window: xcb_window_t,
-                                                value_mask: uint32_t,
-                                                value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_window_attributes(c: *mut xcb_connection_t,
-                                        window: xcb_window_t,
-                                        value_mask: uint32_t,
-                                        value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_get_window_attributes(c: *mut xcb_connection_t,
-                                     window: xcb_window_t)
-     -> xcb_get_window_attributes_cookie_t;
-    pub fn xcb_get_window_attributes_unchecked(c: *mut xcb_connection_t,
-                                               window: xcb_window_t)
-     -> xcb_get_window_attributes_cookie_t;
-    pub fn xcb_get_window_attributes_reply(c: *mut xcb_connection_t,
-                                           cookie:
-                                               xcb_get_window_attributes_cookie_t,
-                                           e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_window_attributes_reply_t;
-    pub fn xcb_destroy_window_checked(c: *mut xcb_connection_t,
-                                      window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_destroy_window(c: *mut xcb_connection_t, window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_destroy_subwindows_checked(c: *mut xcb_connection_t,
-                                          window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_destroy_subwindows(c: *mut xcb_connection_t,
-                                  window: xcb_window_t) -> xcb_void_cookie_t;
-    pub fn xcb_change_save_set_checked(c: *mut xcb_connection_t,
-                                       mode: uint8_t, window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_save_set(c: *mut xcb_connection_t, mode: uint8_t,
-                               window: xcb_window_t) -> xcb_void_cookie_t;
-    pub fn xcb_reparent_window_checked(c: *mut xcb_connection_t,
-                                       window: xcb_window_t,
-                                       parent: xcb_window_t, x: int16_t,
-                                       y: int16_t) -> xcb_void_cookie_t;
-    pub fn xcb_reparent_window(c: *mut xcb_connection_t, window: xcb_window_t,
-                               parent: xcb_window_t, x: int16_t, y: int16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_map_window_checked(c: *mut xcb_connection_t,
-                                  window: xcb_window_t) -> xcb_void_cookie_t;
-    pub fn xcb_map_window(c: *mut xcb_connection_t, window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_map_subwindows_checked(c: *mut xcb_connection_t,
-                                      window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_map_subwindows(c: *mut xcb_connection_t, window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_unmap_window_checked(c: *mut xcb_connection_t,
-                                    window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_unmap_window(c: *mut xcb_connection_t, window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_unmap_subwindows_checked(c: *mut xcb_connection_t,
-                                        window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_unmap_subwindows(c: *mut xcb_connection_t,
-                                window: xcb_window_t) -> xcb_void_cookie_t;
-    pub fn xcb_configure_window_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_configure_window_checked(c: *mut xcb_connection_t,
-                                        window: xcb_window_t,
-                                        value_mask: uint16_t,
-                                        value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_configure_window(c: *mut xcb_connection_t,
-                                window: xcb_window_t, value_mask: uint16_t,
-                                value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_circulate_window_checked(c: *mut xcb_connection_t,
-                                        direction: uint8_t,
-                                        window: xcb_window_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_circulate_window(c: *mut xcb_connection_t, direction: uint8_t,
-                                window: xcb_window_t) -> xcb_void_cookie_t;
-    pub fn xcb_get_geometry(c: *mut xcb_connection_t,
-                            drawable: xcb_drawable_t)
-     -> xcb_get_geometry_cookie_t;
-    pub fn xcb_get_geometry_unchecked(c: *mut xcb_connection_t,
-                                      drawable: xcb_drawable_t)
-     -> xcb_get_geometry_cookie_t;
-    pub fn xcb_get_geometry_reply(c: *mut xcb_connection_t,
-                                  cookie: xcb_get_geometry_cookie_t,
-                                  e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_geometry_reply_t;
-    pub fn xcb_query_tree_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_query_tree(c: *mut xcb_connection_t, window: xcb_window_t)
-     -> xcb_query_tree_cookie_t;
-    pub fn xcb_query_tree_unchecked(c: *mut xcb_connection_t,
-                                    window: xcb_window_t)
-     -> xcb_query_tree_cookie_t;
-    pub fn xcb_query_tree_children(R: *const xcb_query_tree_reply_t)
-     -> *mut xcb_window_t;
-    pub fn xcb_query_tree_children_length(R: *const xcb_query_tree_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_query_tree_children_end(R: *const xcb_query_tree_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_query_tree_reply(c: *mut xcb_connection_t,
-                                cookie: xcb_query_tree_cookie_t,
-                                e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_query_tree_reply_t;
-    pub fn xcb_intern_atom_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
+    pub fn xcb_client_message_data_next(i: *mut xcb_client_message_data_iterator_t);
+    pub fn xcb_client_message_data_end(
+        i: xcb_client_message_data_iterator_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_create_window_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_create_window_checked(
+        c: *mut xcb_connection_t,
+        depth: uint8_t,
+        wid: xcb_window_t,
+        parent: xcb_window_t,
+        x: int16_t,
+        y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+        border_width: uint16_t,
+        _class: uint16_t,
+        visual: xcb_visualid_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_create_window(
+        c: *mut xcb_connection_t,
+        depth: uint8_t,
+        wid: xcb_window_t,
+        parent: xcb_window_t,
+        x: int16_t,
+        y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+        border_width: uint16_t,
+        _class: uint16_t,
+        visual: xcb_visualid_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_window_attributes_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_change_window_attributes_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_window_attributes(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_window_attributes(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_get_window_attributes_cookie_t;
+    pub fn xcb_get_window_attributes_unchecked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_get_window_attributes_cookie_t;
+    pub fn xcb_get_window_attributes_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_window_attributes_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_window_attributes_reply_t;
+    pub fn xcb_destroy_window_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_destroy_window(c: *mut xcb_connection_t, window: xcb_window_t) -> xcb_void_cookie_t;
+    pub fn xcb_destroy_subwindows_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_destroy_subwindows(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_save_set_checked(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_save_set(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_reparent_window_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        parent: xcb_window_t,
+        x: int16_t,
+        y: int16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_reparent_window(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        parent: xcb_window_t,
+        x: int16_t,
+        y: int16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_map_window_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_map_window(c: *mut xcb_connection_t, window: xcb_window_t) -> xcb_void_cookie_t;
+    pub fn xcb_map_subwindows_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_map_subwindows(c: *mut xcb_connection_t, window: xcb_window_t) -> xcb_void_cookie_t;
+    pub fn xcb_unmap_window_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_unmap_window(c: *mut xcb_connection_t, window: xcb_window_t) -> xcb_void_cookie_t;
+    pub fn xcb_unmap_subwindows_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_unmap_subwindows(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_configure_window_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_configure_window_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        value_mask: uint16_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_configure_window(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        value_mask: uint16_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_circulate_window_checked(
+        c: *mut xcb_connection_t,
+        direction: uint8_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_circulate_window(
+        c: *mut xcb_connection_t,
+        direction: uint8_t,
+        window: xcb_window_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_geometry(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+    ) -> xcb_get_geometry_cookie_t;
+    pub fn xcb_get_geometry_unchecked(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+    ) -> xcb_get_geometry_cookie_t;
+    pub fn xcb_get_geometry_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_geometry_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_geometry_reply_t;
+    pub fn xcb_query_tree_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_query_tree(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_query_tree_cookie_t;
+    pub fn xcb_query_tree_unchecked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_query_tree_cookie_t;
+    pub fn xcb_query_tree_children(R: *const xcb_query_tree_reply_t) -> *mut xcb_window_t;
+    pub fn xcb_query_tree_children_length(
+        R: *const xcb_query_tree_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_query_tree_children_end(R: *const xcb_query_tree_reply_t) -> xcb_generic_iterator_t;
+    pub fn xcb_query_tree_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_query_tree_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_query_tree_reply_t;
+    pub fn xcb_intern_atom_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
     pub fn xcb_intern_atom(
-        c: *mut xcb_connection_t, only_if_exists: uint8_t, name_len: uint16_t,
-        name: *const ::std::os::raw::c_char) -> xcb_intern_atom_cookie_t;
-    pub fn xcb_intern_atom_unchecked(c: *mut xcb_connection_t,
-                                     only_if_exists: uint8_t,
-                                     name_len: uint16_t,
-                                     name: *const ::std::os::raw::c_char)
-     -> xcb_intern_atom_cookie_t;
+        c: *mut xcb_connection_t,
+        only_if_exists: uint8_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_intern_atom_cookie_t;
+    pub fn xcb_intern_atom_unchecked(
+        c: *mut xcb_connection_t,
+        only_if_exists: uint8_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_intern_atom_cookie_t;
     pub fn xcb_intern_atom_reply(
-        c: *mut xcb_connection_t, cookie: xcb_intern_atom_cookie_t,
-        e: *mut *mut xcb_generic_error_t) -> *mut xcb_intern_atom_reply_t;
-    pub fn xcb_get_atom_name_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_atom_name(c: *mut xcb_connection_t, atom: xcb_atom_t)
-     -> xcb_get_atom_name_cookie_t;
-    pub fn xcb_get_atom_name_unchecked(c: *mut xcb_connection_t,
-                                       atom: xcb_atom_t)
-     -> xcb_get_atom_name_cookie_t;
-    pub fn xcb_get_atom_name_name(R: *const xcb_get_atom_name_reply_t)
-     -> *mut ::std::os::raw::c_char;
-    pub fn xcb_get_atom_name_name_length(R: *const xcb_get_atom_name_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_atom_name_name_end(R: *const xcb_get_atom_name_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_get_atom_name_reply(c: *mut xcb_connection_t,
-                                   cookie: xcb_get_atom_name_cookie_t,
-                                   e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_atom_name_reply_t;
-    pub fn xcb_change_property_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_change_property_checked(c: *mut xcb_connection_t,
-                                       mode: uint8_t, window: xcb_window_t,
-                                       property: xcb_atom_t,
-                                       type_: xcb_atom_t, format: uint8_t,
-                                       data_len: uint32_t,
-                                       data: *const ::std::os::raw::c_void)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_property(c: *mut xcb_connection_t, mode: uint8_t,
-                               window: xcb_window_t, property: xcb_atom_t,
-                               type_: xcb_atom_t, format: uint8_t,
-                               data_len: uint32_t,
-                               data: *const ::std::os::raw::c_void)
-     -> xcb_void_cookie_t;
-    pub fn xcb_delete_property_checked(c: *mut xcb_connection_t,
-                                       window: xcb_window_t,
-                                       property: xcb_atom_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_delete_property(c: *mut xcb_connection_t, window: xcb_window_t,
-                               property: xcb_atom_t) -> xcb_void_cookie_t;
+        c: *mut xcb_connection_t,
+        cookie: xcb_intern_atom_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_intern_atom_reply_t;
+    pub fn xcb_get_atom_name_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_atom_name(
+        c: *mut xcb_connection_t,
+        atom: xcb_atom_t,
+    ) -> xcb_get_atom_name_cookie_t;
+    pub fn xcb_get_atom_name_unchecked(
+        c: *mut xcb_connection_t,
+        atom: xcb_atom_t,
+    ) -> xcb_get_atom_name_cookie_t;
+    pub fn xcb_get_atom_name_name(
+        R: *const xcb_get_atom_name_reply_t,
+    ) -> *mut ::std::os::raw::c_char;
+    pub fn xcb_get_atom_name_name_length(
+        R: *const xcb_get_atom_name_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_atom_name_name_end(
+        R: *const xcb_get_atom_name_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_get_atom_name_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_atom_name_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_atom_name_reply_t;
+    pub fn xcb_change_property_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_change_property_checked(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+        window: xcb_window_t,
+        property: xcb_atom_t,
+        type_: xcb_atom_t,
+        format: uint8_t,
+        data_len: uint32_t,
+        data: *const ::std::os::raw::c_void,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_property(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+        window: xcb_window_t,
+        property: xcb_atom_t,
+        type_: xcb_atom_t,
+        format: uint8_t,
+        data_len: uint32_t,
+        data: *const ::std::os::raw::c_void,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_delete_property_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        property: xcb_atom_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_delete_property(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        property: xcb_atom_t,
+    ) -> xcb_void_cookie_t;
     pub fn xcb_get_property_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_property(c: *mut xcb_connection_t, _delete: uint8_t,
-                            window: xcb_window_t, property: xcb_atom_t,
-                            type_: xcb_atom_t, long_offset: uint32_t,
-                            long_length: uint32_t)
-     -> xcb_get_property_cookie_t;
-    pub fn xcb_get_property_unchecked(c: *mut xcb_connection_t,
-                                      _delete: uint8_t, window: xcb_window_t,
-                                      property: xcb_atom_t, type_: xcb_atom_t,
-                                      long_offset: uint32_t,
-                                      long_length: uint32_t)
-     -> xcb_get_property_cookie_t;
-    pub fn xcb_get_property_value(R: *const xcb_get_property_reply_t)
-     -> *mut ::std::os::raw::c_void;
-    pub fn xcb_get_property_value_length(R: *const xcb_get_property_reply_t)
-     -> ::std::os::raw::c_int;
+        -> ::std::os::raw::c_int;
+    pub fn xcb_get_property(
+        c: *mut xcb_connection_t,
+        _delete: uint8_t,
+        window: xcb_window_t,
+        property: xcb_atom_t,
+        type_: xcb_atom_t,
+        long_offset: uint32_t,
+        long_length: uint32_t,
+    ) -> xcb_get_property_cookie_t;
+    pub fn xcb_get_property_unchecked(
+        c: *mut xcb_connection_t,
+        _delete: uint8_t,
+        window: xcb_window_t,
+        property: xcb_atom_t,
+        type_: xcb_atom_t,
+        long_offset: uint32_t,
+        long_length: uint32_t,
+    ) -> xcb_get_property_cookie_t;
+    pub fn xcb_get_property_value(
+        R: *const xcb_get_property_reply_t,
+    ) -> *mut ::std::os::raw::c_void;
+    pub fn xcb_get_property_value_length(
+        R: *const xcb_get_property_reply_t,
+    ) -> ::std::os::raw::c_int;
     pub fn xcb_get_property_value_end(R: *const xcb_get_property_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_get_property_reply(c: *mut xcb_connection_t,
-                                  cookie: xcb_get_property_cookie_t,
-                                  e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_property_reply_t;
-    pub fn xcb_list_properties_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_properties(c: *mut xcb_connection_t, window: xcb_window_t)
-     -> xcb_list_properties_cookie_t;
-    pub fn xcb_list_properties_unchecked(c: *mut xcb_connection_t,
-                                         window: xcb_window_t)
-     -> xcb_list_properties_cookie_t;
-    pub fn xcb_list_properties_atoms(R: *const xcb_list_properties_reply_t)
-     -> *mut xcb_atom_t;
-    pub fn xcb_list_properties_atoms_length(R:
-                                                *const xcb_list_properties_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_properties_atoms_end(R:
-                                             *const xcb_list_properties_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_list_properties_reply(c: *mut xcb_connection_t,
-                                     cookie: xcb_list_properties_cookie_t,
-                                     e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_list_properties_reply_t;
-    pub fn xcb_set_selection_owner_checked(c: *mut xcb_connection_t,
-                                           owner: xcb_window_t,
-                                           selection: xcb_atom_t,
-                                           time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_selection_owner(c: *mut xcb_connection_t,
-                                   owner: xcb_window_t, selection: xcb_atom_t,
-                                   time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_get_selection_owner(c: *mut xcb_connection_t,
-                                   selection: xcb_atom_t)
-     -> xcb_get_selection_owner_cookie_t;
-    pub fn xcb_get_selection_owner_unchecked(c: *mut xcb_connection_t,
-                                             selection: xcb_atom_t)
-     -> xcb_get_selection_owner_cookie_t;
-    pub fn xcb_get_selection_owner_reply(c: *mut xcb_connection_t,
-                                         cookie:
-                                             xcb_get_selection_owner_cookie_t,
-                                         e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_selection_owner_reply_t;
-    pub fn xcb_convert_selection_checked(c: *mut xcb_connection_t,
-                                         requestor: xcb_window_t,
-                                         selection: xcb_atom_t,
-                                         target: xcb_atom_t,
-                                         property: xcb_atom_t,
-                                         time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_convert_selection(c: *mut xcb_connection_t,
-                                 requestor: xcb_window_t,
-                                 selection: xcb_atom_t, target: xcb_atom_t,
-                                 property: xcb_atom_t, time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_send_event_checked(c: *mut xcb_connection_t,
-                                  propagate: uint8_t,
-                                  destination: xcb_window_t,
-                                  event_mask: uint32_t,
-                                  event: *const ::std::os::raw::c_char)
-     -> xcb_void_cookie_t;
-    pub fn xcb_send_event(c: *mut xcb_connection_t, propagate: uint8_t,
-                          destination: xcb_window_t, event_mask: uint32_t,
-                          event: *const ::std::os::raw::c_char)
-     -> xcb_void_cookie_t;
-    pub fn xcb_grab_pointer(c: *mut xcb_connection_t, owner_events: uint8_t,
-                            grab_window: xcb_window_t, event_mask: uint16_t,
-                            pointer_mode: uint8_t, keyboard_mode: uint8_t,
-                            confine_to: xcb_window_t, cursor: xcb_cursor_t,
-                            time: xcb_timestamp_t)
-     -> xcb_grab_pointer_cookie_t;
-    pub fn xcb_grab_pointer_unchecked(c: *mut xcb_connection_t,
-                                      owner_events: uint8_t,
-                                      grab_window: xcb_window_t,
-                                      event_mask: uint16_t,
-                                      pointer_mode: uint8_t,
-                                      keyboard_mode: uint8_t,
-                                      confine_to: xcb_window_t,
-                                      cursor: xcb_cursor_t,
-                                      time: xcb_timestamp_t)
-     -> xcb_grab_pointer_cookie_t;
-    pub fn xcb_grab_pointer_reply(c: *mut xcb_connection_t,
-                                  cookie: xcb_grab_pointer_cookie_t,
-                                  e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_grab_pointer_reply_t;
-    pub fn xcb_ungrab_pointer_checked(c: *mut xcb_connection_t,
-                                      time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
+        -> xcb_generic_iterator_t;
+    pub fn xcb_get_property_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_property_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_property_reply_t;
+    pub fn xcb_list_properties_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_list_properties(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_list_properties_cookie_t;
+    pub fn xcb_list_properties_unchecked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_list_properties_cookie_t;
+    pub fn xcb_list_properties_atoms(R: *const xcb_list_properties_reply_t) -> *mut xcb_atom_t;
+    pub fn xcb_list_properties_atoms_length(
+        R: *const xcb_list_properties_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_list_properties_atoms_end(
+        R: *const xcb_list_properties_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_list_properties_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_list_properties_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_list_properties_reply_t;
+    pub fn xcb_set_selection_owner_checked(
+        c: *mut xcb_connection_t,
+        owner: xcb_window_t,
+        selection: xcb_atom_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_selection_owner(
+        c: *mut xcb_connection_t,
+        owner: xcb_window_t,
+        selection: xcb_atom_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_selection_owner(
+        c: *mut xcb_connection_t,
+        selection: xcb_atom_t,
+    ) -> xcb_get_selection_owner_cookie_t;
+    pub fn xcb_get_selection_owner_unchecked(
+        c: *mut xcb_connection_t,
+        selection: xcb_atom_t,
+    ) -> xcb_get_selection_owner_cookie_t;
+    pub fn xcb_get_selection_owner_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_selection_owner_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_selection_owner_reply_t;
+    pub fn xcb_convert_selection_checked(
+        c: *mut xcb_connection_t,
+        requestor: xcb_window_t,
+        selection: xcb_atom_t,
+        target: xcb_atom_t,
+        property: xcb_atom_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_convert_selection(
+        c: *mut xcb_connection_t,
+        requestor: xcb_window_t,
+        selection: xcb_atom_t,
+        target: xcb_atom_t,
+        property: xcb_atom_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_send_event_checked(
+        c: *mut xcb_connection_t,
+        propagate: uint8_t,
+        destination: xcb_window_t,
+        event_mask: uint32_t,
+        event: *const ::std::os::raw::c_char,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_send_event(
+        c: *mut xcb_connection_t,
+        propagate: uint8_t,
+        destination: xcb_window_t,
+        event_mask: uint32_t,
+        event: *const ::std::os::raw::c_char,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_grab_pointer(
+        c: *mut xcb_connection_t,
+        owner_events: uint8_t,
+        grab_window: xcb_window_t,
+        event_mask: uint16_t,
+        pointer_mode: uint8_t,
+        keyboard_mode: uint8_t,
+        confine_to: xcb_window_t,
+        cursor: xcb_cursor_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_grab_pointer_cookie_t;
+    pub fn xcb_grab_pointer_unchecked(
+        c: *mut xcb_connection_t,
+        owner_events: uint8_t,
+        grab_window: xcb_window_t,
+        event_mask: uint16_t,
+        pointer_mode: uint8_t,
+        keyboard_mode: uint8_t,
+        confine_to: xcb_window_t,
+        cursor: xcb_cursor_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_grab_pointer_cookie_t;
+    pub fn xcb_grab_pointer_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_grab_pointer_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_grab_pointer_reply_t;
+    pub fn xcb_ungrab_pointer_checked(
+        c: *mut xcb_connection_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
     pub fn xcb_ungrab_pointer(c: *mut xcb_connection_t, time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_grab_button_checked(c: *mut xcb_connection_t,
-                                   owner_events: uint8_t,
-                                   grab_window: xcb_window_t,
-                                   event_mask: uint16_t,
-                                   pointer_mode: uint8_t,
-                                   keyboard_mode: uint8_t,
-                                   confine_to: xcb_window_t,
-                                   cursor: xcb_cursor_t, button: uint8_t,
-                                   modifiers: uint16_t) -> xcb_void_cookie_t;
-    pub fn xcb_grab_button(c: *mut xcb_connection_t, owner_events: uint8_t,
-                           grab_window: xcb_window_t, event_mask: uint16_t,
-                           pointer_mode: uint8_t, keyboard_mode: uint8_t,
-                           confine_to: xcb_window_t, cursor: xcb_cursor_t,
-                           button: uint8_t, modifiers: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_ungrab_button_checked(c: *mut xcb_connection_t,
-                                     button: uint8_t,
-                                     grab_window: xcb_window_t,
-                                     modifiers: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_ungrab_button(c: *mut xcb_connection_t, button: uint8_t,
-                             grab_window: xcb_window_t, modifiers: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_active_pointer_grab_checked(c: *mut xcb_connection_t,
-                                                  cursor: xcb_cursor_t,
-                                                  time: xcb_timestamp_t,
-                                                  event_mask: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_active_pointer_grab(c: *mut xcb_connection_t,
-                                          cursor: xcb_cursor_t,
-                                          time: xcb_timestamp_t,
-                                          event_mask: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_grab_keyboard(c: *mut xcb_connection_t, owner_events: uint8_t,
-                             grab_window: xcb_window_t, time: xcb_timestamp_t,
-                             pointer_mode: uint8_t, keyboard_mode: uint8_t)
-     -> xcb_grab_keyboard_cookie_t;
-    pub fn xcb_grab_keyboard_unchecked(c: *mut xcb_connection_t,
-                                       owner_events: uint8_t,
-                                       grab_window: xcb_window_t,
-                                       time: xcb_timestamp_t,
-                                       pointer_mode: uint8_t,
-                                       keyboard_mode: uint8_t)
-     -> xcb_grab_keyboard_cookie_t;
-    pub fn xcb_grab_keyboard_reply(c: *mut xcb_connection_t,
-                                   cookie: xcb_grab_keyboard_cookie_t,
-                                   e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_grab_keyboard_reply_t;
-    pub fn xcb_ungrab_keyboard_checked(c: *mut xcb_connection_t,
-                                       time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_ungrab_keyboard(c: *mut xcb_connection_t,
-                               time: xcb_timestamp_t) -> xcb_void_cookie_t;
-    pub fn xcb_grab_key_checked(c: *mut xcb_connection_t,
-                                owner_events: uint8_t,
-                                grab_window: xcb_window_t,
-                                modifiers: uint16_t, key: xcb_keycode_t,
-                                pointer_mode: uint8_t, keyboard_mode: uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_grab_key(c: *mut xcb_connection_t, owner_events: uint8_t,
-                        grab_window: xcb_window_t, modifiers: uint16_t,
-                        key: xcb_keycode_t, pointer_mode: uint8_t,
-                        keyboard_mode: uint8_t) -> xcb_void_cookie_t;
-    pub fn xcb_ungrab_key_checked(c: *mut xcb_connection_t,
-                                  key: xcb_keycode_t,
-                                  grab_window: xcb_window_t,
-                                  modifiers: uint16_t) -> xcb_void_cookie_t;
-    pub fn xcb_ungrab_key(c: *mut xcb_connection_t, key: xcb_keycode_t,
-                          grab_window: xcb_window_t, modifiers: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_allow_events_checked(c: *mut xcb_connection_t, mode: uint8_t,
-                                    time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_allow_events(c: *mut xcb_connection_t, mode: uint8_t,
-                            time: xcb_timestamp_t) -> xcb_void_cookie_t;
-    pub fn xcb_grab_server_checked(c: *mut xcb_connection_t)
-     -> xcb_void_cookie_t;
+        -> xcb_void_cookie_t;
+    pub fn xcb_grab_button_checked(
+        c: *mut xcb_connection_t,
+        owner_events: uint8_t,
+        grab_window: xcb_window_t,
+        event_mask: uint16_t,
+        pointer_mode: uint8_t,
+        keyboard_mode: uint8_t,
+        confine_to: xcb_window_t,
+        cursor: xcb_cursor_t,
+        button: uint8_t,
+        modifiers: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_grab_button(
+        c: *mut xcb_connection_t,
+        owner_events: uint8_t,
+        grab_window: xcb_window_t,
+        event_mask: uint16_t,
+        pointer_mode: uint8_t,
+        keyboard_mode: uint8_t,
+        confine_to: xcb_window_t,
+        cursor: xcb_cursor_t,
+        button: uint8_t,
+        modifiers: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_ungrab_button_checked(
+        c: *mut xcb_connection_t,
+        button: uint8_t,
+        grab_window: xcb_window_t,
+        modifiers: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_ungrab_button(
+        c: *mut xcb_connection_t,
+        button: uint8_t,
+        grab_window: xcb_window_t,
+        modifiers: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_active_pointer_grab_checked(
+        c: *mut xcb_connection_t,
+        cursor: xcb_cursor_t,
+        time: xcb_timestamp_t,
+        event_mask: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_active_pointer_grab(
+        c: *mut xcb_connection_t,
+        cursor: xcb_cursor_t,
+        time: xcb_timestamp_t,
+        event_mask: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_grab_keyboard(
+        c: *mut xcb_connection_t,
+        owner_events: uint8_t,
+        grab_window: xcb_window_t,
+        time: xcb_timestamp_t,
+        pointer_mode: uint8_t,
+        keyboard_mode: uint8_t,
+    ) -> xcb_grab_keyboard_cookie_t;
+    pub fn xcb_grab_keyboard_unchecked(
+        c: *mut xcb_connection_t,
+        owner_events: uint8_t,
+        grab_window: xcb_window_t,
+        time: xcb_timestamp_t,
+        pointer_mode: uint8_t,
+        keyboard_mode: uint8_t,
+    ) -> xcb_grab_keyboard_cookie_t;
+    pub fn xcb_grab_keyboard_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_grab_keyboard_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_grab_keyboard_reply_t;
+    pub fn xcb_ungrab_keyboard_checked(
+        c: *mut xcb_connection_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_ungrab_keyboard(
+        c: *mut xcb_connection_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_grab_key_checked(
+        c: *mut xcb_connection_t,
+        owner_events: uint8_t,
+        grab_window: xcb_window_t,
+        modifiers: uint16_t,
+        key: xcb_keycode_t,
+        pointer_mode: uint8_t,
+        keyboard_mode: uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_grab_key(
+        c: *mut xcb_connection_t,
+        owner_events: uint8_t,
+        grab_window: xcb_window_t,
+        modifiers: uint16_t,
+        key: xcb_keycode_t,
+        pointer_mode: uint8_t,
+        keyboard_mode: uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_ungrab_key_checked(
+        c: *mut xcb_connection_t,
+        key: xcb_keycode_t,
+        grab_window: xcb_window_t,
+        modifiers: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_ungrab_key(
+        c: *mut xcb_connection_t,
+        key: xcb_keycode_t,
+        grab_window: xcb_window_t,
+        modifiers: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_allow_events_checked(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_allow_events(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_grab_server_checked(c: *mut xcb_connection_t) -> xcb_void_cookie_t;
     pub fn xcb_grab_server(c: *mut xcb_connection_t) -> xcb_void_cookie_t;
-    pub fn xcb_ungrab_server_checked(c: *mut xcb_connection_t)
-     -> xcb_void_cookie_t;
+    pub fn xcb_ungrab_server_checked(c: *mut xcb_connection_t) -> xcb_void_cookie_t;
     pub fn xcb_ungrab_server(c: *mut xcb_connection_t) -> xcb_void_cookie_t;
-    pub fn xcb_query_pointer(c: *mut xcb_connection_t, window: xcb_window_t)
-     -> xcb_query_pointer_cookie_t;
-    pub fn xcb_query_pointer_unchecked(c: *mut xcb_connection_t,
-                                       window: xcb_window_t)
-     -> xcb_query_pointer_cookie_t;
-    pub fn xcb_query_pointer_reply(c: *mut xcb_connection_t,
-                                   cookie: xcb_query_pointer_cookie_t,
-                                   e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_query_pointer_reply_t;
+    pub fn xcb_query_pointer(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_query_pointer_cookie_t;
+    pub fn xcb_query_pointer_unchecked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_query_pointer_cookie_t;
+    pub fn xcb_query_pointer_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_query_pointer_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_query_pointer_reply_t;
     pub fn xcb_timecoord_next(i: *mut xcb_timecoord_iterator_t);
-    pub fn xcb_timecoord_end(i: xcb_timecoord_iterator_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_get_motion_events_sizeof(_buffer:
-                                            *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_motion_events(c: *mut xcb_connection_t,
-                                 window: xcb_window_t, start: xcb_timestamp_t,
-                                 stop: xcb_timestamp_t)
-     -> xcb_get_motion_events_cookie_t;
-    pub fn xcb_get_motion_events_unchecked(c: *mut xcb_connection_t,
-                                           window: xcb_window_t,
-                                           start: xcb_timestamp_t,
-                                           stop: xcb_timestamp_t)
-     -> xcb_get_motion_events_cookie_t;
-    pub fn xcb_get_motion_events_events(R:
-                                            *const xcb_get_motion_events_reply_t)
-     -> *mut xcb_timecoord_t;
-    pub fn xcb_get_motion_events_events_length(R:
-                                                   *const xcb_get_motion_events_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_motion_events_events_iterator(R:
-                                                     *const xcb_get_motion_events_reply_t)
-     -> xcb_timecoord_iterator_t;
-    pub fn xcb_get_motion_events_reply(c: *mut xcb_connection_t,
-                                       cookie: xcb_get_motion_events_cookie_t,
-                                       e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_motion_events_reply_t;
-    pub fn xcb_translate_coordinates(c: *mut xcb_connection_t,
-                                     src_window: xcb_window_t,
-                                     dst_window: xcb_window_t, src_x: int16_t,
-                                     src_y: int16_t)
-     -> xcb_translate_coordinates_cookie_t;
-    pub fn xcb_translate_coordinates_unchecked(c: *mut xcb_connection_t,
-                                               src_window: xcb_window_t,
-                                               dst_window: xcb_window_t,
-                                               src_x: int16_t, src_y: int16_t)
-     -> xcb_translate_coordinates_cookie_t;
-    pub fn xcb_translate_coordinates_reply(c: *mut xcb_connection_t,
-                                           cookie:
-                                               xcb_translate_coordinates_cookie_t,
-                                           e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_translate_coordinates_reply_t;
-    pub fn xcb_warp_pointer_checked(c: *mut xcb_connection_t,
-                                    src_window: xcb_window_t,
-                                    dst_window: xcb_window_t, src_x: int16_t,
-                                    src_y: int16_t, src_width: uint16_t,
-                                    src_height: uint16_t, dst_x: int16_t,
-                                    dst_y: int16_t) -> xcb_void_cookie_t;
-    pub fn xcb_warp_pointer(c: *mut xcb_connection_t,
-                            src_window: xcb_window_t,
-                            dst_window: xcb_window_t, src_x: int16_t,
-                            src_y: int16_t, src_width: uint16_t,
-                            src_height: uint16_t, dst_x: int16_t,
-                            dst_y: int16_t) -> xcb_void_cookie_t;
-    pub fn xcb_set_input_focus_checked(c: *mut xcb_connection_t,
-                                       revert_to: uint8_t,
-                                       focus: xcb_window_t,
-                                       time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_input_focus(c: *mut xcb_connection_t, revert_to: uint8_t,
-                               focus: xcb_window_t, time: xcb_timestamp_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_get_input_focus(c: *mut xcb_connection_t)
-     -> xcb_get_input_focus_cookie_t;
-    pub fn xcb_get_input_focus_unchecked(c: *mut xcb_connection_t)
-     -> xcb_get_input_focus_cookie_t;
-    pub fn xcb_get_input_focus_reply(c: *mut xcb_connection_t,
-                                     cookie: xcb_get_input_focus_cookie_t,
-                                     e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_input_focus_reply_t;
-    pub fn xcb_query_keymap(c: *mut xcb_connection_t)
-     -> xcb_query_keymap_cookie_t;
-    pub fn xcb_query_keymap_unchecked(c: *mut xcb_connection_t)
-     -> xcb_query_keymap_cookie_t;
-    pub fn xcb_query_keymap_reply(c: *mut xcb_connection_t,
-                                  cookie: xcb_query_keymap_cookie_t,
-                                  e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_query_keymap_reply_t;
-    pub fn xcb_open_font_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_open_font_checked(c: *mut xcb_connection_t, fid: xcb_font_t,
-                                 name_len: uint16_t,
-                                 name: *const ::std::os::raw::c_char)
-     -> xcb_void_cookie_t;
-    pub fn xcb_open_font(c: *mut xcb_connection_t, fid: xcb_font_t,
-                         name_len: uint16_t,
-                         name: *const ::std::os::raw::c_char)
-     -> xcb_void_cookie_t;
-    pub fn xcb_close_font_checked(c: *mut xcb_connection_t, font: xcb_font_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_close_font(c: *mut xcb_connection_t, font: xcb_font_t)
-     -> xcb_void_cookie_t;
+    pub fn xcb_timecoord_end(i: xcb_timecoord_iterator_t) -> xcb_generic_iterator_t;
+    pub fn xcb_get_motion_events_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_motion_events(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        start: xcb_timestamp_t,
+        stop: xcb_timestamp_t,
+    ) -> xcb_get_motion_events_cookie_t;
+    pub fn xcb_get_motion_events_unchecked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        start: xcb_timestamp_t,
+        stop: xcb_timestamp_t,
+    ) -> xcb_get_motion_events_cookie_t;
+    pub fn xcb_get_motion_events_events(
+        R: *const xcb_get_motion_events_reply_t,
+    ) -> *mut xcb_timecoord_t;
+    pub fn xcb_get_motion_events_events_length(
+        R: *const xcb_get_motion_events_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_motion_events_events_iterator(
+        R: *const xcb_get_motion_events_reply_t,
+    ) -> xcb_timecoord_iterator_t;
+    pub fn xcb_get_motion_events_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_motion_events_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_motion_events_reply_t;
+    pub fn xcb_translate_coordinates(
+        c: *mut xcb_connection_t,
+        src_window: xcb_window_t,
+        dst_window: xcb_window_t,
+        src_x: int16_t,
+        src_y: int16_t,
+    ) -> xcb_translate_coordinates_cookie_t;
+    pub fn xcb_translate_coordinates_unchecked(
+        c: *mut xcb_connection_t,
+        src_window: xcb_window_t,
+        dst_window: xcb_window_t,
+        src_x: int16_t,
+        src_y: int16_t,
+    ) -> xcb_translate_coordinates_cookie_t;
+    pub fn xcb_translate_coordinates_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_translate_coordinates_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_translate_coordinates_reply_t;
+    pub fn xcb_warp_pointer_checked(
+        c: *mut xcb_connection_t,
+        src_window: xcb_window_t,
+        dst_window: xcb_window_t,
+        src_x: int16_t,
+        src_y: int16_t,
+        src_width: uint16_t,
+        src_height: uint16_t,
+        dst_x: int16_t,
+        dst_y: int16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_warp_pointer(
+        c: *mut xcb_connection_t,
+        src_window: xcb_window_t,
+        dst_window: xcb_window_t,
+        src_x: int16_t,
+        src_y: int16_t,
+        src_width: uint16_t,
+        src_height: uint16_t,
+        dst_x: int16_t,
+        dst_y: int16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_input_focus_checked(
+        c: *mut xcb_connection_t,
+        revert_to: uint8_t,
+        focus: xcb_window_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_input_focus(
+        c: *mut xcb_connection_t,
+        revert_to: uint8_t,
+        focus: xcb_window_t,
+        time: xcb_timestamp_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_input_focus(c: *mut xcb_connection_t) -> xcb_get_input_focus_cookie_t;
+    pub fn xcb_get_input_focus_unchecked(c: *mut xcb_connection_t) -> xcb_get_input_focus_cookie_t;
+    pub fn xcb_get_input_focus_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_input_focus_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_input_focus_reply_t;
+    pub fn xcb_query_keymap(c: *mut xcb_connection_t) -> xcb_query_keymap_cookie_t;
+    pub fn xcb_query_keymap_unchecked(c: *mut xcb_connection_t) -> xcb_query_keymap_cookie_t;
+    pub fn xcb_query_keymap_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_query_keymap_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_query_keymap_reply_t;
+    pub fn xcb_open_font_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_open_font_checked(
+        c: *mut xcb_connection_t,
+        fid: xcb_font_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_open_font(
+        c: *mut xcb_connection_t,
+        fid: xcb_font_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_close_font_checked(c: *mut xcb_connection_t, font: xcb_font_t) -> xcb_void_cookie_t;
+    pub fn xcb_close_font(c: *mut xcb_connection_t, font: xcb_font_t) -> xcb_void_cookie_t;
     pub fn xcb_fontprop_next(i: *mut xcb_fontprop_iterator_t);
-    pub fn xcb_fontprop_end(i: xcb_fontprop_iterator_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_fontprop_end(i: xcb_fontprop_iterator_t) -> xcb_generic_iterator_t;
     pub fn xcb_charinfo_next(i: *mut xcb_charinfo_iterator_t);
-    pub fn xcb_charinfo_end(i: xcb_charinfo_iterator_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_query_font_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_query_font(c: *mut xcb_connection_t, font: xcb_fontable_t)
-     -> xcb_query_font_cookie_t;
-    pub fn xcb_query_font_unchecked(c: *mut xcb_connection_t,
-                                    font: xcb_fontable_t)
-     -> xcb_query_font_cookie_t;
-    pub fn xcb_query_font_properties(R: *const xcb_query_font_reply_t)
-     -> *mut xcb_fontprop_t;
-    pub fn xcb_query_font_properties_length(R: *const xcb_query_font_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_query_font_properties_iterator(R:
-                                                  *const xcb_query_font_reply_t)
-     -> xcb_fontprop_iterator_t;
-    pub fn xcb_query_font_char_infos(R: *const xcb_query_font_reply_t)
-     -> *mut xcb_charinfo_t;
-    pub fn xcb_query_font_char_infos_length(R: *const xcb_query_font_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_query_font_char_infos_iterator(R:
-                                                  *const xcb_query_font_reply_t)
-     -> xcb_charinfo_iterator_t;
-    pub fn xcb_query_font_reply(c: *mut xcb_connection_t,
-                                cookie: xcb_query_font_cookie_t,
-                                e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_query_font_reply_t;
-    pub fn xcb_query_text_extents_sizeof(_buffer:
-                                             *const ::std::os::raw::c_void,
-                                         string_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_query_text_extents(c: *mut xcb_connection_t,
-                                  font: xcb_fontable_t, string_len: uint32_t,
-                                  string: *const xcb_char2b_t)
-     -> xcb_query_text_extents_cookie_t;
-    pub fn xcb_query_text_extents_unchecked(c: *mut xcb_connection_t,
-                                            font: xcb_fontable_t,
-                                            string_len: uint32_t,
-                                            string: *const xcb_char2b_t)
-     -> xcb_query_text_extents_cookie_t;
-    pub fn xcb_query_text_extents_reply(c: *mut xcb_connection_t,
-                                        cookie:
-                                            xcb_query_text_extents_cookie_t,
-                                        e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_query_text_extents_reply_t;
-    pub fn xcb_str_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
+    pub fn xcb_charinfo_end(i: xcb_charinfo_iterator_t) -> xcb_generic_iterator_t;
+    pub fn xcb_query_font_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_query_font(
+        c: *mut xcb_connection_t,
+        font: xcb_fontable_t,
+    ) -> xcb_query_font_cookie_t;
+    pub fn xcb_query_font_unchecked(
+        c: *mut xcb_connection_t,
+        font: xcb_fontable_t,
+    ) -> xcb_query_font_cookie_t;
+    pub fn xcb_query_font_properties(R: *const xcb_query_font_reply_t) -> *mut xcb_fontprop_t;
+    pub fn xcb_query_font_properties_length(
+        R: *const xcb_query_font_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_query_font_properties_iterator(
+        R: *const xcb_query_font_reply_t,
+    ) -> xcb_fontprop_iterator_t;
+    pub fn xcb_query_font_char_infos(R: *const xcb_query_font_reply_t) -> *mut xcb_charinfo_t;
+    pub fn xcb_query_font_char_infos_length(
+        R: *const xcb_query_font_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_query_font_char_infos_iterator(
+        R: *const xcb_query_font_reply_t,
+    ) -> xcb_charinfo_iterator_t;
+    pub fn xcb_query_font_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_query_font_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_query_font_reply_t;
+    pub fn xcb_query_text_extents_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        string_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_query_text_extents(
+        c: *mut xcb_connection_t,
+        font: xcb_fontable_t,
+        string_len: uint32_t,
+        string: *const xcb_char2b_t,
+    ) -> xcb_query_text_extents_cookie_t;
+    pub fn xcb_query_text_extents_unchecked(
+        c: *mut xcb_connection_t,
+        font: xcb_fontable_t,
+        string_len: uint32_t,
+        string: *const xcb_char2b_t,
+    ) -> xcb_query_text_extents_cookie_t;
+    pub fn xcb_query_text_extents_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_query_text_extents_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_query_text_extents_reply_t;
+    pub fn xcb_str_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
     pub fn xcb_str_name(R: *const xcb_str_t) -> *mut ::std::os::raw::c_char;
     pub fn xcb_str_name_length(R: *const xcb_str_t) -> ::std::os::raw::c_int;
     pub fn xcb_str_name_end(R: *const xcb_str_t) -> xcb_generic_iterator_t;
     pub fn xcb_str_next(i: *mut xcb_str_iterator_t);
     pub fn xcb_str_end(i: xcb_str_iterator_t) -> xcb_generic_iterator_t;
-    pub fn xcb_list_fonts_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_fonts(c: *mut xcb_connection_t, max_names: uint16_t,
-                          pattern_len: uint16_t,
-                          pattern: *const ::std::os::raw::c_char)
-     -> xcb_list_fonts_cookie_t;
-    pub fn xcb_list_fonts_unchecked(c: *mut xcb_connection_t,
-                                    max_names: uint16_t,
-                                    pattern_len: uint16_t,
-                                    pattern: *const ::std::os::raw::c_char)
-     -> xcb_list_fonts_cookie_t;
-    pub fn xcb_list_fonts_names_length(R: *const xcb_list_fonts_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_fonts_names_iterator(R: *const xcb_list_fonts_reply_t)
-     -> xcb_str_iterator_t;
-    pub fn xcb_list_fonts_reply(c: *mut xcb_connection_t,
-                                cookie: xcb_list_fonts_cookie_t,
-                                e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_list_fonts_reply_t;
-    pub fn xcb_list_fonts_with_info_sizeof(_buffer:
-                                               *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_fonts_with_info(c: *mut xcb_connection_t,
-                                    max_names: uint16_t,
-                                    pattern_len: uint16_t,
-                                    pattern: *const ::std::os::raw::c_char)
-     -> xcb_list_fonts_with_info_cookie_t;
-    pub fn xcb_list_fonts_with_info_unchecked(c: *mut xcb_connection_t,
-                                              max_names: uint16_t,
-                                              pattern_len: uint16_t,
-                                              pattern:
-                                                  *const ::std::os::raw::c_char)
-     -> xcb_list_fonts_with_info_cookie_t;
-    pub fn xcb_list_fonts_with_info_properties(R:
-                                                   *const xcb_list_fonts_with_info_reply_t)
-     -> *mut xcb_fontprop_t;
-    pub fn xcb_list_fonts_with_info_properties_length(R:
-                                                          *const xcb_list_fonts_with_info_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_fonts_with_info_properties_iterator(R:
-                                                            *const xcb_list_fonts_with_info_reply_t)
-     -> xcb_fontprop_iterator_t;
-    pub fn xcb_list_fonts_with_info_name(R:
-                                             *const xcb_list_fonts_with_info_reply_t)
-     -> *mut ::std::os::raw::c_char;
-    pub fn xcb_list_fonts_with_info_name_length(R:
-                                                    *const xcb_list_fonts_with_info_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_fonts_with_info_name_end(R:
-                                                 *const xcb_list_fonts_with_info_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_list_fonts_with_info_reply(c: *mut xcb_connection_t,
-                                          cookie:
-                                              xcb_list_fonts_with_info_cookie_t,
-                                          e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_list_fonts_with_info_reply_t;
-    pub fn xcb_set_font_path_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_set_font_path_checked(c: *mut xcb_connection_t,
-                                     font_qty: uint16_t,
-                                     font: *const xcb_str_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_font_path(c: *mut xcb_connection_t, font_qty: uint16_t,
-                             font: *const xcb_str_t) -> xcb_void_cookie_t;
-    pub fn xcb_get_font_path_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_font_path(c: *mut xcb_connection_t)
-     -> xcb_get_font_path_cookie_t;
-    pub fn xcb_get_font_path_unchecked(c: *mut xcb_connection_t)
-     -> xcb_get_font_path_cookie_t;
-    pub fn xcb_get_font_path_path_length(R: *const xcb_get_font_path_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_font_path_path_iterator(R:
-                                               *const xcb_get_font_path_reply_t)
-     -> xcb_str_iterator_t;
-    pub fn xcb_get_font_path_reply(c: *mut xcb_connection_t,
-                                   cookie: xcb_get_font_path_cookie_t,
-                                   e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_font_path_reply_t;
-    pub fn xcb_create_pixmap_checked(c: *mut xcb_connection_t, depth: uint8_t,
-                                     pid: xcb_pixmap_t,
-                                     drawable: xcb_drawable_t,
-                                     width: uint16_t, height: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_create_pixmap(c: *mut xcb_connection_t, depth: uint8_t,
-                             pid: xcb_pixmap_t, drawable: xcb_drawable_t,
-                             width: uint16_t, height: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_free_pixmap_checked(c: *mut xcb_connection_t,
-                                   pixmap: xcb_pixmap_t) -> xcb_void_cookie_t;
-    pub fn xcb_free_pixmap(c: *mut xcb_connection_t, pixmap: xcb_pixmap_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_create_gc_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_create_gc_checked(c: *mut xcb_connection_t,
-                                 cid: xcb_gcontext_t,
-                                 drawable: xcb_drawable_t,
-                                 value_mask: uint32_t,
-                                 value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_create_gc(c: *mut xcb_connection_t, cid: xcb_gcontext_t,
-                         drawable: xcb_drawable_t, value_mask: uint32_t,
-                         value_list: *const uint32_t) -> xcb_void_cookie_t;
-    pub fn xcb_change_gc_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_change_gc_checked(c: *mut xcb_connection_t, gc: xcb_gcontext_t,
-                                 value_mask: uint32_t,
-                                 value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_gc(c: *mut xcb_connection_t, gc: xcb_gcontext_t,
-                         value_mask: uint32_t, value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_copy_gc_checked(c: *mut xcb_connection_t,
-                               src_gc: xcb_gcontext_t, dst_gc: xcb_gcontext_t,
-                               value_mask: uint32_t) -> xcb_void_cookie_t;
-    pub fn xcb_copy_gc(c: *mut xcb_connection_t, src_gc: xcb_gcontext_t,
-                       dst_gc: xcb_gcontext_t, value_mask: uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_dashes_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_set_dashes_checked(c: *mut xcb_connection_t,
-                                  gc: xcb_gcontext_t, dash_offset: uint16_t,
-                                  dashes_len: uint16_t,
-                                  dashes: *const uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_dashes(c: *mut xcb_connection_t, gc: xcb_gcontext_t,
-                          dash_offset: uint16_t, dashes_len: uint16_t,
-                          dashes: *const uint8_t) -> xcb_void_cookie_t;
-    pub fn xcb_set_clip_rectangles_sizeof(_buffer:
-                                              *const ::std::os::raw::c_void,
-                                          rectangles_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_set_clip_rectangles_checked(c: *mut xcb_connection_t,
-                                           ordering: uint8_t,
-                                           gc: xcb_gcontext_t,
-                                           clip_x_origin: int16_t,
-                                           clip_y_origin: int16_t,
-                                           rectangles_len: uint32_t,
-                                           rectangles: *const xcb_rectangle_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_clip_rectangles(c: *mut xcb_connection_t,
-                                   ordering: uint8_t, gc: xcb_gcontext_t,
-                                   clip_x_origin: int16_t,
-                                   clip_y_origin: int16_t,
-                                   rectangles_len: uint32_t,
-                                   rectangles: *const xcb_rectangle_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_free_gc_checked(c: *mut xcb_connection_t, gc: xcb_gcontext_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_free_gc(c: *mut xcb_connection_t, gc: xcb_gcontext_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_clear_area_checked(c: *mut xcb_connection_t,
-                                  exposures: uint8_t, window: xcb_window_t,
-                                  x: int16_t, y: int16_t, width: uint16_t,
-                                  height: uint16_t) -> xcb_void_cookie_t;
-    pub fn xcb_clear_area(c: *mut xcb_connection_t, exposures: uint8_t,
-                          window: xcb_window_t, x: int16_t, y: int16_t,
-                          width: uint16_t, height: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_copy_area_checked(c: *mut xcb_connection_t,
-                                 src_drawable: xcb_drawable_t,
-                                 dst_drawable: xcb_drawable_t,
-                                 gc: xcb_gcontext_t, src_x: int16_t,
-                                 src_y: int16_t, dst_x: int16_t,
-                                 dst_y: int16_t, width: uint16_t,
-                                 height: uint16_t) -> xcb_void_cookie_t;
-    pub fn xcb_copy_area(c: *mut xcb_connection_t,
-                         src_drawable: xcb_drawable_t,
-                         dst_drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                         src_x: int16_t, src_y: int16_t, dst_x: int16_t,
-                         dst_y: int16_t, width: uint16_t, height: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_copy_plane_checked(c: *mut xcb_connection_t,
-                                  src_drawable: xcb_drawable_t,
-                                  dst_drawable: xcb_drawable_t,
-                                  gc: xcb_gcontext_t, src_x: int16_t,
-                                  src_y: int16_t, dst_x: int16_t,
-                                  dst_y: int16_t, width: uint16_t,
-                                  height: uint16_t, bit_plane: uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_copy_plane(c: *mut xcb_connection_t,
-                          src_drawable: xcb_drawable_t,
-                          dst_drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                          src_x: int16_t, src_y: int16_t, dst_x: int16_t,
-                          dst_y: int16_t, width: uint16_t, height: uint16_t,
-                          bit_plane: uint32_t) -> xcb_void_cookie_t;
-    pub fn xcb_poly_point_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                 points_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_poly_point_checked(c: *mut xcb_connection_t,
-                                  coordinate_mode: uint8_t,
-                                  drawable: xcb_drawable_t,
-                                  gc: xcb_gcontext_t, points_len: uint32_t,
-                                  points: *const xcb_point_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_point(c: *mut xcb_connection_t, coordinate_mode: uint8_t,
-                          drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                          points_len: uint32_t, points: *const xcb_point_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_line_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                points_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_poly_line_checked(c: *mut xcb_connection_t,
-                                 coordinate_mode: uint8_t,
-                                 drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                                 points_len: uint32_t,
-                                 points: *const xcb_point_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_line(c: *mut xcb_connection_t, coordinate_mode: uint8_t,
-                         drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                         points_len: uint32_t, points: *const xcb_point_t)
-     -> xcb_void_cookie_t;
+    pub fn xcb_list_fonts_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_list_fonts(
+        c: *mut xcb_connection_t,
+        max_names: uint16_t,
+        pattern_len: uint16_t,
+        pattern: *const ::std::os::raw::c_char,
+    ) -> xcb_list_fonts_cookie_t;
+    pub fn xcb_list_fonts_unchecked(
+        c: *mut xcb_connection_t,
+        max_names: uint16_t,
+        pattern_len: uint16_t,
+        pattern: *const ::std::os::raw::c_char,
+    ) -> xcb_list_fonts_cookie_t;
+    pub fn xcb_list_fonts_names_length(R: *const xcb_list_fonts_reply_t) -> ::std::os::raw::c_int;
+    pub fn xcb_list_fonts_names_iterator(R: *const xcb_list_fonts_reply_t) -> xcb_str_iterator_t;
+    pub fn xcb_list_fonts_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_list_fonts_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_list_fonts_reply_t;
+    pub fn xcb_list_fonts_with_info_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_list_fonts_with_info(
+        c: *mut xcb_connection_t,
+        max_names: uint16_t,
+        pattern_len: uint16_t,
+        pattern: *const ::std::os::raw::c_char,
+    ) -> xcb_list_fonts_with_info_cookie_t;
+    pub fn xcb_list_fonts_with_info_unchecked(
+        c: *mut xcb_connection_t,
+        max_names: uint16_t,
+        pattern_len: uint16_t,
+        pattern: *const ::std::os::raw::c_char,
+    ) -> xcb_list_fonts_with_info_cookie_t;
+    pub fn xcb_list_fonts_with_info_properties(
+        R: *const xcb_list_fonts_with_info_reply_t,
+    ) -> *mut xcb_fontprop_t;
+    pub fn xcb_list_fonts_with_info_properties_length(
+        R: *const xcb_list_fonts_with_info_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_list_fonts_with_info_properties_iterator(
+        R: *const xcb_list_fonts_with_info_reply_t,
+    ) -> xcb_fontprop_iterator_t;
+    pub fn xcb_list_fonts_with_info_name(
+        R: *const xcb_list_fonts_with_info_reply_t,
+    ) -> *mut ::std::os::raw::c_char;
+    pub fn xcb_list_fonts_with_info_name_length(
+        R: *const xcb_list_fonts_with_info_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_list_fonts_with_info_name_end(
+        R: *const xcb_list_fonts_with_info_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_list_fonts_with_info_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_list_fonts_with_info_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_list_fonts_with_info_reply_t;
+    pub fn xcb_set_font_path_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_set_font_path_checked(
+        c: *mut xcb_connection_t,
+        font_qty: uint16_t,
+        font: *const xcb_str_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_font_path(
+        c: *mut xcb_connection_t,
+        font_qty: uint16_t,
+        font: *const xcb_str_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_font_path_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_font_path(c: *mut xcb_connection_t) -> xcb_get_font_path_cookie_t;
+    pub fn xcb_get_font_path_unchecked(c: *mut xcb_connection_t) -> xcb_get_font_path_cookie_t;
+    pub fn xcb_get_font_path_path_length(
+        R: *const xcb_get_font_path_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_font_path_path_iterator(
+        R: *const xcb_get_font_path_reply_t,
+    ) -> xcb_str_iterator_t;
+    pub fn xcb_get_font_path_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_font_path_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_font_path_reply_t;
+    pub fn xcb_create_pixmap_checked(
+        c: *mut xcb_connection_t,
+        depth: uint8_t,
+        pid: xcb_pixmap_t,
+        drawable: xcb_drawable_t,
+        width: uint16_t,
+        height: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_create_pixmap(
+        c: *mut xcb_connection_t,
+        depth: uint8_t,
+        pid: xcb_pixmap_t,
+        drawable: xcb_drawable_t,
+        width: uint16_t,
+        height: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_free_pixmap_checked(
+        c: *mut xcb_connection_t,
+        pixmap: xcb_pixmap_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_free_pixmap(c: *mut xcb_connection_t, pixmap: xcb_pixmap_t) -> xcb_void_cookie_t;
+    pub fn xcb_create_gc_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_create_gc_checked(
+        c: *mut xcb_connection_t,
+        cid: xcb_gcontext_t,
+        drawable: xcb_drawable_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_create_gc(
+        c: *mut xcb_connection_t,
+        cid: xcb_gcontext_t,
+        drawable: xcb_drawable_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_gc_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_change_gc_checked(
+        c: *mut xcb_connection_t,
+        gc: xcb_gcontext_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_gc(
+        c: *mut xcb_connection_t,
+        gc: xcb_gcontext_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_copy_gc_checked(
+        c: *mut xcb_connection_t,
+        src_gc: xcb_gcontext_t,
+        dst_gc: xcb_gcontext_t,
+        value_mask: uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_copy_gc(
+        c: *mut xcb_connection_t,
+        src_gc: xcb_gcontext_t,
+        dst_gc: xcb_gcontext_t,
+        value_mask: uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_dashes_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_set_dashes_checked(
+        c: *mut xcb_connection_t,
+        gc: xcb_gcontext_t,
+        dash_offset: uint16_t,
+        dashes_len: uint16_t,
+        dashes: *const uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_dashes(
+        c: *mut xcb_connection_t,
+        gc: xcb_gcontext_t,
+        dash_offset: uint16_t,
+        dashes_len: uint16_t,
+        dashes: *const uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_clip_rectangles_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        rectangles_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_set_clip_rectangles_checked(
+        c: *mut xcb_connection_t,
+        ordering: uint8_t,
+        gc: xcb_gcontext_t,
+        clip_x_origin: int16_t,
+        clip_y_origin: int16_t,
+        rectangles_len: uint32_t,
+        rectangles: *const xcb_rectangle_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_clip_rectangles(
+        c: *mut xcb_connection_t,
+        ordering: uint8_t,
+        gc: xcb_gcontext_t,
+        clip_x_origin: int16_t,
+        clip_y_origin: int16_t,
+        rectangles_len: uint32_t,
+        rectangles: *const xcb_rectangle_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_free_gc_checked(c: *mut xcb_connection_t, gc: xcb_gcontext_t) -> xcb_void_cookie_t;
+    pub fn xcb_free_gc(c: *mut xcb_connection_t, gc: xcb_gcontext_t) -> xcb_void_cookie_t;
+    pub fn xcb_clear_area_checked(
+        c: *mut xcb_connection_t,
+        exposures: uint8_t,
+        window: xcb_window_t,
+        x: int16_t,
+        y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_clear_area(
+        c: *mut xcb_connection_t,
+        exposures: uint8_t,
+        window: xcb_window_t,
+        x: int16_t,
+        y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_copy_area_checked(
+        c: *mut xcb_connection_t,
+        src_drawable: xcb_drawable_t,
+        dst_drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        src_x: int16_t,
+        src_y: int16_t,
+        dst_x: int16_t,
+        dst_y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_copy_area(
+        c: *mut xcb_connection_t,
+        src_drawable: xcb_drawable_t,
+        dst_drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        src_x: int16_t,
+        src_y: int16_t,
+        dst_x: int16_t,
+        dst_y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_copy_plane_checked(
+        c: *mut xcb_connection_t,
+        src_drawable: xcb_drawable_t,
+        dst_drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        src_x: int16_t,
+        src_y: int16_t,
+        dst_x: int16_t,
+        dst_y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+        bit_plane: uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_copy_plane(
+        c: *mut xcb_connection_t,
+        src_drawable: xcb_drawable_t,
+        dst_drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        src_x: int16_t,
+        src_y: int16_t,
+        dst_x: int16_t,
+        dst_y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+        bit_plane: uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_point_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        points_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_poly_point_checked(
+        c: *mut xcb_connection_t,
+        coordinate_mode: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        points_len: uint32_t,
+        points: *const xcb_point_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_point(
+        c: *mut xcb_connection_t,
+        coordinate_mode: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        points_len: uint32_t,
+        points: *const xcb_point_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_line_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        points_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_poly_line_checked(
+        c: *mut xcb_connection_t,
+        coordinate_mode: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        points_len: uint32_t,
+        points: *const xcb_point_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_line(
+        c: *mut xcb_connection_t,
+        coordinate_mode: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        points_len: uint32_t,
+        points: *const xcb_point_t,
+    ) -> xcb_void_cookie_t;
     pub fn xcb_segment_next(i: *mut xcb_segment_iterator_t);
-    pub fn xcb_segment_end(i: xcb_segment_iterator_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_poly_segment_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                   segments_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_poly_segment_checked(c: *mut xcb_connection_t,
-                                    drawable: xcb_drawable_t,
-                                    gc: xcb_gcontext_t,
-                                    segments_len: uint32_t,
-                                    segments: *const xcb_segment_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_segment(c: *mut xcb_connection_t,
-                            drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                            segments_len: uint32_t,
-                            segments: *const xcb_segment_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_rectangle_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                     rectangles_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_poly_rectangle_checked(c: *mut xcb_connection_t,
-                                      drawable: xcb_drawable_t,
-                                      gc: xcb_gcontext_t,
-                                      rectangles_len: uint32_t,
-                                      rectangles: *const xcb_rectangle_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_rectangle(c: *mut xcb_connection_t,
-                              drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                              rectangles_len: uint32_t,
-                              rectangles: *const xcb_rectangle_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_arc_sizeof(_buffer: *const ::std::os::raw::c_void,
-                               arcs_len: uint32_t) -> ::std::os::raw::c_int;
-    pub fn xcb_poly_arc_checked(c: *mut xcb_connection_t,
-                                drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                                arcs_len: uint32_t, arcs: *const xcb_arc_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_arc(c: *mut xcb_connection_t, drawable: xcb_drawable_t,
-                        gc: xcb_gcontext_t, arcs_len: uint32_t,
-                        arcs: *const xcb_arc_t) -> xcb_void_cookie_t;
-    pub fn xcb_fill_poly_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                points_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_fill_poly_checked(c: *mut xcb_connection_t,
-                                 drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                                 shape: uint8_t, coordinate_mode: uint8_t,
-                                 points_len: uint32_t,
-                                 points: *const xcb_point_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_fill_poly(c: *mut xcb_connection_t, drawable: xcb_drawable_t,
-                         gc: xcb_gcontext_t, shape: uint8_t,
-                         coordinate_mode: uint8_t, points_len: uint32_t,
-                         points: *const xcb_point_t) -> xcb_void_cookie_t;
-    pub fn xcb_poly_fill_rectangle_sizeof(_buffer:
-                                              *const ::std::os::raw::c_void,
-                                          rectangles_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_poly_fill_rectangle_checked(c: *mut xcb_connection_t,
-                                           drawable: xcb_drawable_t,
-                                           gc: xcb_gcontext_t,
-                                           rectangles_len: uint32_t,
-                                           rectangles: *const xcb_rectangle_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_fill_rectangle(c: *mut xcb_connection_t,
-                                   drawable: xcb_drawable_t,
-                                   gc: xcb_gcontext_t,
-                                   rectangles_len: uint32_t,
-                                   rectangles: *const xcb_rectangle_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_fill_arc_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                    arcs_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_poly_fill_arc_checked(c: *mut xcb_connection_t,
-                                     drawable: xcb_drawable_t,
-                                     gc: xcb_gcontext_t, arcs_len: uint32_t,
-                                     arcs: *const xcb_arc_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_fill_arc(c: *mut xcb_connection_t,
-                             drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                             arcs_len: uint32_t, arcs: *const xcb_arc_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_put_image_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                data_len: uint32_t) -> ::std::os::raw::c_int;
-    pub fn xcb_put_image_checked(c: *mut xcb_connection_t, format: uint8_t,
-                                 drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                                 width: uint16_t, height: uint16_t,
-                                 dst_x: int16_t, dst_y: int16_t,
-                                 left_pad: uint8_t, depth: uint8_t,
-                                 data_len: uint32_t, data: *const uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_put_image(c: *mut xcb_connection_t, format: uint8_t,
-                         drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                         width: uint16_t, height: uint16_t, dst_x: int16_t,
-                         dst_y: int16_t, left_pad: uint8_t, depth: uint8_t,
-                         data_len: uint32_t, data: *const uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_get_image_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_image(c: *mut xcb_connection_t, format: uint8_t,
-                         drawable: xcb_drawable_t, x: int16_t, y: int16_t,
-                         width: uint16_t, height: uint16_t,
-                         plane_mask: uint32_t) -> xcb_get_image_cookie_t;
-    pub fn xcb_get_image_unchecked(c: *mut xcb_connection_t, format: uint8_t,
-                                   drawable: xcb_drawable_t, x: int16_t,
-                                   y: int16_t, width: uint16_t,
-                                   height: uint16_t, plane_mask: uint32_t)
-     -> xcb_get_image_cookie_t;
-    pub fn xcb_get_image_data(R: *const xcb_get_image_reply_t)
-     -> *mut uint8_t;
-    pub fn xcb_get_image_data_length(R: *const xcb_get_image_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_image_data_end(R: *const xcb_get_image_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_get_image_reply(c: *mut xcb_connection_t,
-                               cookie: xcb_get_image_cookie_t,
-                               e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_image_reply_t;
-    pub fn xcb_poly_text_8_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                  items_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_poly_text_8_checked(c: *mut xcb_connection_t,
-                                   drawable: xcb_drawable_t,
-                                   gc: xcb_gcontext_t, x: int16_t, y: int16_t,
-                                   items_len: uint32_t, items: *const uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_text_8(c: *mut xcb_connection_t, drawable: xcb_drawable_t,
-                           gc: xcb_gcontext_t, x: int16_t, y: int16_t,
-                           items_len: uint32_t, items: *const uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_text_16_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                   items_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_poly_text_16_checked(c: *mut xcb_connection_t,
-                                    drawable: xcb_drawable_t,
-                                    gc: xcb_gcontext_t, x: int16_t,
-                                    y: int16_t, items_len: uint32_t,
-                                    items: *const uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_poly_text_16(c: *mut xcb_connection_t,
-                            drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                            x: int16_t, y: int16_t, items_len: uint32_t,
-                            items: *const uint8_t) -> xcb_void_cookie_t;
+    pub fn xcb_segment_end(i: xcb_segment_iterator_t) -> xcb_generic_iterator_t;
+    pub fn xcb_poly_segment_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        segments_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_poly_segment_checked(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        segments_len: uint32_t,
+        segments: *const xcb_segment_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_segment(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        segments_len: uint32_t,
+        segments: *const xcb_segment_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_rectangle_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        rectangles_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_poly_rectangle_checked(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        rectangles_len: uint32_t,
+        rectangles: *const xcb_rectangle_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_rectangle(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        rectangles_len: uint32_t,
+        rectangles: *const xcb_rectangle_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_arc_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        arcs_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_poly_arc_checked(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        arcs_len: uint32_t,
+        arcs: *const xcb_arc_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_arc(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        arcs_len: uint32_t,
+        arcs: *const xcb_arc_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_fill_poly_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        points_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_fill_poly_checked(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        shape: uint8_t,
+        coordinate_mode: uint8_t,
+        points_len: uint32_t,
+        points: *const xcb_point_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_fill_poly(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        shape: uint8_t,
+        coordinate_mode: uint8_t,
+        points_len: uint32_t,
+        points: *const xcb_point_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_fill_rectangle_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        rectangles_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_poly_fill_rectangle_checked(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        rectangles_len: uint32_t,
+        rectangles: *const xcb_rectangle_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_fill_rectangle(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        rectangles_len: uint32_t,
+        rectangles: *const xcb_rectangle_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_fill_arc_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        arcs_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_poly_fill_arc_checked(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        arcs_len: uint32_t,
+        arcs: *const xcb_arc_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_fill_arc(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        arcs_len: uint32_t,
+        arcs: *const xcb_arc_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_put_image_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        data_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_put_image_checked(
+        c: *mut xcb_connection_t,
+        format: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        width: uint16_t,
+        height: uint16_t,
+        dst_x: int16_t,
+        dst_y: int16_t,
+        left_pad: uint8_t,
+        depth: uint8_t,
+        data_len: uint32_t,
+        data: *const uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_put_image(
+        c: *mut xcb_connection_t,
+        format: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        width: uint16_t,
+        height: uint16_t,
+        dst_x: int16_t,
+        dst_y: int16_t,
+        left_pad: uint8_t,
+        depth: uint8_t,
+        data_len: uint32_t,
+        data: *const uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_image_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_get_image(
+        c: *mut xcb_connection_t,
+        format: uint8_t,
+        drawable: xcb_drawable_t,
+        x: int16_t,
+        y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+        plane_mask: uint32_t,
+    ) -> xcb_get_image_cookie_t;
+    pub fn xcb_get_image_unchecked(
+        c: *mut xcb_connection_t,
+        format: uint8_t,
+        drawable: xcb_drawable_t,
+        x: int16_t,
+        y: int16_t,
+        width: uint16_t,
+        height: uint16_t,
+        plane_mask: uint32_t,
+    ) -> xcb_get_image_cookie_t;
+    pub fn xcb_get_image_data(R: *const xcb_get_image_reply_t) -> *mut uint8_t;
+    pub fn xcb_get_image_data_length(R: *const xcb_get_image_reply_t) -> ::std::os::raw::c_int;
+    pub fn xcb_get_image_data_end(R: *const xcb_get_image_reply_t) -> xcb_generic_iterator_t;
+    pub fn xcb_get_image_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_image_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_image_reply_t;
+    pub fn xcb_poly_text_8_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        items_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_poly_text_8_checked(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        x: int16_t,
+        y: int16_t,
+        items_len: uint32_t,
+        items: *const uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_text_8(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        x: int16_t,
+        y: int16_t,
+        items_len: uint32_t,
+        items: *const uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_text_16_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        items_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_poly_text_16_checked(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        x: int16_t,
+        y: int16_t,
+        items_len: uint32_t,
+        items: *const uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_poly_text_16(
+        c: *mut xcb_connection_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        x: int16_t,
+        y: int16_t,
+        items_len: uint32_t,
+        items: *const uint8_t,
+    ) -> xcb_void_cookie_t;
     pub fn xcb_image_text_8_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_image_text_8_checked(c: *mut xcb_connection_t,
-                                    string_len: uint8_t,
-                                    drawable: xcb_drawable_t,
-                                    gc: xcb_gcontext_t, x: int16_t,
-                                    y: int16_t,
-                                    string: *const ::std::os::raw::c_char)
-     -> xcb_void_cookie_t;
-    pub fn xcb_image_text_8(c: *mut xcb_connection_t, string_len: uint8_t,
-                            drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                            x: int16_t, y: int16_t,
-                            string: *const ::std::os::raw::c_char)
-     -> xcb_void_cookie_t;
-    pub fn xcb_image_text_16_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_image_text_16_checked(c: *mut xcb_connection_t,
-                                     string_len: uint8_t,
-                                     drawable: xcb_drawable_t,
-                                     gc: xcb_gcontext_t, x: int16_t,
-                                     y: int16_t, string: *const xcb_char2b_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_image_text_16(c: *mut xcb_connection_t, string_len: uint8_t,
-                             drawable: xcb_drawable_t, gc: xcb_gcontext_t,
-                             x: int16_t, y: int16_t,
-                             string: *const xcb_char2b_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_create_colormap_checked(c: *mut xcb_connection_t,
-                                       alloc: uint8_t, mid: xcb_colormap_t,
-                                       window: xcb_window_t,
-                                       visual: xcb_visualid_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_create_colormap(c: *mut xcb_connection_t, alloc: uint8_t,
-                               mid: xcb_colormap_t, window: xcb_window_t,
-                               visual: xcb_visualid_t) -> xcb_void_cookie_t;
-    pub fn xcb_free_colormap_checked(c: *mut xcb_connection_t,
-                                     cmap: xcb_colormap_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_free_colormap(c: *mut xcb_connection_t, cmap: xcb_colormap_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_copy_colormap_and_free_checked(c: *mut xcb_connection_t,
-                                              mid: xcb_colormap_t,
-                                              src_cmap: xcb_colormap_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_copy_colormap_and_free(c: *mut xcb_connection_t,
-                                      mid: xcb_colormap_t,
-                                      src_cmap: xcb_colormap_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_install_colormap_checked(c: *mut xcb_connection_t,
-                                        cmap: xcb_colormap_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_install_colormap(c: *mut xcb_connection_t,
-                                cmap: xcb_colormap_t) -> xcb_void_cookie_t;
-    pub fn xcb_uninstall_colormap_checked(c: *mut xcb_connection_t,
-                                          cmap: xcb_colormap_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_uninstall_colormap(c: *mut xcb_connection_t,
-                                  cmap: xcb_colormap_t) -> xcb_void_cookie_t;
-    pub fn xcb_list_installed_colormaps_sizeof(_buffer:
-                                                   *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_installed_colormaps(c: *mut xcb_connection_t,
-                                        window: xcb_window_t)
-     -> xcb_list_installed_colormaps_cookie_t;
-    pub fn xcb_list_installed_colormaps_unchecked(c: *mut xcb_connection_t,
-                                                  window: xcb_window_t)
-     -> xcb_list_installed_colormaps_cookie_t;
-    pub fn xcb_list_installed_colormaps_cmaps(R:
-                                                  *const xcb_list_installed_colormaps_reply_t)
-     -> *mut xcb_colormap_t;
-    pub fn xcb_list_installed_colormaps_cmaps_length(R:
-                                                         *const xcb_list_installed_colormaps_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_installed_colormaps_cmaps_end(R:
-                                                      *const xcb_list_installed_colormaps_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_list_installed_colormaps_reply(c: *mut xcb_connection_t,
-                                              cookie:
-                                                  xcb_list_installed_colormaps_cookie_t,
-                                              e:
-                                                  *mut *mut xcb_generic_error_t)
-     -> *mut xcb_list_installed_colormaps_reply_t;
-    pub fn xcb_alloc_color(c: *mut xcb_connection_t, cmap: xcb_colormap_t,
-                           red: uint16_t, green: uint16_t, blue: uint16_t)
-     -> xcb_alloc_color_cookie_t;
-    pub fn xcb_alloc_color_unchecked(c: *mut xcb_connection_t,
-                                     cmap: xcb_colormap_t, red: uint16_t,
-                                     green: uint16_t, blue: uint16_t)
-     -> xcb_alloc_color_cookie_t;
-    pub fn xcb_alloc_color_reply(c: *mut xcb_connection_t,
-                                 cookie: xcb_alloc_color_cookie_t,
-                                 e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_alloc_color_reply_t;
-    pub fn xcb_alloc_named_color_sizeof(_buffer:
-                                            *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_alloc_named_color(c: *mut xcb_connection_t,
-                                 cmap: xcb_colormap_t, name_len: uint16_t,
-                                 name: *const ::std::os::raw::c_char)
-     -> xcb_alloc_named_color_cookie_t;
-    pub fn xcb_alloc_named_color_unchecked(c: *mut xcb_connection_t,
-                                           cmap: xcb_colormap_t,
-                                           name_len: uint16_t,
-                                           name:
-                                               *const ::std::os::raw::c_char)
-     -> xcb_alloc_named_color_cookie_t;
-    pub fn xcb_alloc_named_color_reply(c: *mut xcb_connection_t,
-                                       cookie: xcb_alloc_named_color_cookie_t,
-                                       e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_alloc_named_color_reply_t;
-    pub fn xcb_alloc_color_cells_sizeof(_buffer:
-                                            *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_alloc_color_cells(c: *mut xcb_connection_t,
-                                 contiguous: uint8_t, cmap: xcb_colormap_t,
-                                 colors: uint16_t, planes: uint16_t)
-     -> xcb_alloc_color_cells_cookie_t;
-    pub fn xcb_alloc_color_cells_unchecked(c: *mut xcb_connection_t,
-                                           contiguous: uint8_t,
-                                           cmap: xcb_colormap_t,
-                                           colors: uint16_t, planes: uint16_t)
-     -> xcb_alloc_color_cells_cookie_t;
-    pub fn xcb_alloc_color_cells_pixels(R:
-                                            *const xcb_alloc_color_cells_reply_t)
-     -> *mut uint32_t;
-    pub fn xcb_alloc_color_cells_pixels_length(R:
-                                                   *const xcb_alloc_color_cells_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_alloc_color_cells_pixels_end(R:
-                                                *const xcb_alloc_color_cells_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_alloc_color_cells_masks(R:
-                                           *const xcb_alloc_color_cells_reply_t)
-     -> *mut uint32_t;
-    pub fn xcb_alloc_color_cells_masks_length(R:
-                                                  *const xcb_alloc_color_cells_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_alloc_color_cells_masks_end(R:
-                                               *const xcb_alloc_color_cells_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_alloc_color_cells_reply(c: *mut xcb_connection_t,
-                                       cookie: xcb_alloc_color_cells_cookie_t,
-                                       e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_alloc_color_cells_reply_t;
-    pub fn xcb_alloc_color_planes_sizeof(_buffer:
-                                             *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_alloc_color_planes(c: *mut xcb_connection_t,
-                                  contiguous: uint8_t, cmap: xcb_colormap_t,
-                                  colors: uint16_t, reds: uint16_t,
-                                  greens: uint16_t, blues: uint16_t)
-     -> xcb_alloc_color_planes_cookie_t;
-    pub fn xcb_alloc_color_planes_unchecked(c: *mut xcb_connection_t,
-                                            contiguous: uint8_t,
-                                            cmap: xcb_colormap_t,
-                                            colors: uint16_t, reds: uint16_t,
-                                            greens: uint16_t, blues: uint16_t)
-     -> xcb_alloc_color_planes_cookie_t;
-    pub fn xcb_alloc_color_planes_pixels(R:
-                                             *const xcb_alloc_color_planes_reply_t)
-     -> *mut uint32_t;
-    pub fn xcb_alloc_color_planes_pixels_length(R:
-                                                    *const xcb_alloc_color_planes_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_alloc_color_planes_pixels_end(R:
-                                                 *const xcb_alloc_color_planes_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_alloc_color_planes_reply(c: *mut xcb_connection_t,
-                                        cookie:
-                                            xcb_alloc_color_planes_cookie_t,
-                                        e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_alloc_color_planes_reply_t;
-    pub fn xcb_free_colors_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                  pixels_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_free_colors_checked(c: *mut xcb_connection_t,
-                                   cmap: xcb_colormap_t, plane_mask: uint32_t,
-                                   pixels_len: uint32_t,
-                                   pixels: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_free_colors(c: *mut xcb_connection_t, cmap: xcb_colormap_t,
-                           plane_mask: uint32_t, pixels_len: uint32_t,
-                           pixels: *const uint32_t) -> xcb_void_cookie_t;
+        -> ::std::os::raw::c_int;
+    pub fn xcb_image_text_8_checked(
+        c: *mut xcb_connection_t,
+        string_len: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        x: int16_t,
+        y: int16_t,
+        string: *const ::std::os::raw::c_char,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_image_text_8(
+        c: *mut xcb_connection_t,
+        string_len: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        x: int16_t,
+        y: int16_t,
+        string: *const ::std::os::raw::c_char,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_image_text_16_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_image_text_16_checked(
+        c: *mut xcb_connection_t,
+        string_len: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        x: int16_t,
+        y: int16_t,
+        string: *const xcb_char2b_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_image_text_16(
+        c: *mut xcb_connection_t,
+        string_len: uint8_t,
+        drawable: xcb_drawable_t,
+        gc: xcb_gcontext_t,
+        x: int16_t,
+        y: int16_t,
+        string: *const xcb_char2b_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_create_colormap_checked(
+        c: *mut xcb_connection_t,
+        alloc: uint8_t,
+        mid: xcb_colormap_t,
+        window: xcb_window_t,
+        visual: xcb_visualid_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_create_colormap(
+        c: *mut xcb_connection_t,
+        alloc: uint8_t,
+        mid: xcb_colormap_t,
+        window: xcb_window_t,
+        visual: xcb_visualid_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_free_colormap_checked(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_free_colormap(c: *mut xcb_connection_t, cmap: xcb_colormap_t) -> xcb_void_cookie_t;
+    pub fn xcb_copy_colormap_and_free_checked(
+        c: *mut xcb_connection_t,
+        mid: xcb_colormap_t,
+        src_cmap: xcb_colormap_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_copy_colormap_and_free(
+        c: *mut xcb_connection_t,
+        mid: xcb_colormap_t,
+        src_cmap: xcb_colormap_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_install_colormap_checked(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_install_colormap(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_uninstall_colormap_checked(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_uninstall_colormap(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_list_installed_colormaps_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_list_installed_colormaps(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_list_installed_colormaps_cookie_t;
+    pub fn xcb_list_installed_colormaps_unchecked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+    ) -> xcb_list_installed_colormaps_cookie_t;
+    pub fn xcb_list_installed_colormaps_cmaps(
+        R: *const xcb_list_installed_colormaps_reply_t,
+    ) -> *mut xcb_colormap_t;
+    pub fn xcb_list_installed_colormaps_cmaps_length(
+        R: *const xcb_list_installed_colormaps_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_list_installed_colormaps_cmaps_end(
+        R: *const xcb_list_installed_colormaps_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_list_installed_colormaps_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_list_installed_colormaps_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_list_installed_colormaps_reply_t;
+    pub fn xcb_alloc_color(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        red: uint16_t,
+        green: uint16_t,
+        blue: uint16_t,
+    ) -> xcb_alloc_color_cookie_t;
+    pub fn xcb_alloc_color_unchecked(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        red: uint16_t,
+        green: uint16_t,
+        blue: uint16_t,
+    ) -> xcb_alloc_color_cookie_t;
+    pub fn xcb_alloc_color_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_alloc_color_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_alloc_color_reply_t;
+    pub fn xcb_alloc_named_color_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_alloc_named_color(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_alloc_named_color_cookie_t;
+    pub fn xcb_alloc_named_color_unchecked(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_alloc_named_color_cookie_t;
+    pub fn xcb_alloc_named_color_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_alloc_named_color_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_alloc_named_color_reply_t;
+    pub fn xcb_alloc_color_cells_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_alloc_color_cells(
+        c: *mut xcb_connection_t,
+        contiguous: uint8_t,
+        cmap: xcb_colormap_t,
+        colors: uint16_t,
+        planes: uint16_t,
+    ) -> xcb_alloc_color_cells_cookie_t;
+    pub fn xcb_alloc_color_cells_unchecked(
+        c: *mut xcb_connection_t,
+        contiguous: uint8_t,
+        cmap: xcb_colormap_t,
+        colors: uint16_t,
+        planes: uint16_t,
+    ) -> xcb_alloc_color_cells_cookie_t;
+    pub fn xcb_alloc_color_cells_pixels(R: *const xcb_alloc_color_cells_reply_t) -> *mut uint32_t;
+    pub fn xcb_alloc_color_cells_pixels_length(
+        R: *const xcb_alloc_color_cells_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_alloc_color_cells_pixels_end(
+        R: *const xcb_alloc_color_cells_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_alloc_color_cells_masks(R: *const xcb_alloc_color_cells_reply_t) -> *mut uint32_t;
+    pub fn xcb_alloc_color_cells_masks_length(
+        R: *const xcb_alloc_color_cells_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_alloc_color_cells_masks_end(
+        R: *const xcb_alloc_color_cells_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_alloc_color_cells_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_alloc_color_cells_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_alloc_color_cells_reply_t;
+    pub fn xcb_alloc_color_planes_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_alloc_color_planes(
+        c: *mut xcb_connection_t,
+        contiguous: uint8_t,
+        cmap: xcb_colormap_t,
+        colors: uint16_t,
+        reds: uint16_t,
+        greens: uint16_t,
+        blues: uint16_t,
+    ) -> xcb_alloc_color_planes_cookie_t;
+    pub fn xcb_alloc_color_planes_unchecked(
+        c: *mut xcb_connection_t,
+        contiguous: uint8_t,
+        cmap: xcb_colormap_t,
+        colors: uint16_t,
+        reds: uint16_t,
+        greens: uint16_t,
+        blues: uint16_t,
+    ) -> xcb_alloc_color_planes_cookie_t;
+    pub fn xcb_alloc_color_planes_pixels(R: *const xcb_alloc_color_planes_reply_t)
+        -> *mut uint32_t;
+    pub fn xcb_alloc_color_planes_pixels_length(
+        R: *const xcb_alloc_color_planes_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_alloc_color_planes_pixels_end(
+        R: *const xcb_alloc_color_planes_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_alloc_color_planes_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_alloc_color_planes_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_alloc_color_planes_reply_t;
+    pub fn xcb_free_colors_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        pixels_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_free_colors_checked(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        plane_mask: uint32_t,
+        pixels_len: uint32_t,
+        pixels: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_free_colors(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        plane_mask: uint32_t,
+        pixels_len: uint32_t,
+        pixels: *const uint32_t,
+    ) -> xcb_void_cookie_t;
     pub fn xcb_coloritem_next(i: *mut xcb_coloritem_iterator_t);
-    pub fn xcb_coloritem_end(i: xcb_coloritem_iterator_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_store_colors_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                   items_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_store_colors_checked(c: *mut xcb_connection_t,
-                                    cmap: xcb_colormap_t, items_len: uint32_t,
-                                    items: *const xcb_coloritem_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_store_colors(c: *mut xcb_connection_t, cmap: xcb_colormap_t,
-                            items_len: uint32_t,
-                            items: *const xcb_coloritem_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_store_named_color_sizeof(_buffer:
-                                            *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_store_named_color_checked(c: *mut xcb_connection_t,
-                                         flags: uint8_t, cmap: xcb_colormap_t,
-                                         pixel: uint32_t, name_len: uint16_t,
-                                         name: *const ::std::os::raw::c_char)
-     -> xcb_void_cookie_t;
-    pub fn xcb_store_named_color(c: *mut xcb_connection_t, flags: uint8_t,
-                                 cmap: xcb_colormap_t, pixel: uint32_t,
-                                 name_len: uint16_t,
-                                 name: *const ::std::os::raw::c_char)
-     -> xcb_void_cookie_t;
+    pub fn xcb_coloritem_end(i: xcb_coloritem_iterator_t) -> xcb_generic_iterator_t;
+    pub fn xcb_store_colors_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        items_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_store_colors_checked(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        items_len: uint32_t,
+        items: *const xcb_coloritem_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_store_colors(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        items_len: uint32_t,
+        items: *const xcb_coloritem_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_store_named_color_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_store_named_color_checked(
+        c: *mut xcb_connection_t,
+        flags: uint8_t,
+        cmap: xcb_colormap_t,
+        pixel: uint32_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_store_named_color(
+        c: *mut xcb_connection_t,
+        flags: uint8_t,
+        cmap: xcb_colormap_t,
+        pixel: uint32_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_void_cookie_t;
     pub fn xcb_rgb_next(i: *mut xcb_rgb_iterator_t);
     pub fn xcb_rgb_end(i: xcb_rgb_iterator_t) -> xcb_generic_iterator_t;
-    pub fn xcb_query_colors_sizeof(_buffer: *const ::std::os::raw::c_void,
-                                   pixels_len: uint32_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_query_colors(c: *mut xcb_connection_t, cmap: xcb_colormap_t,
-                            pixels_len: uint32_t, pixels: *const uint32_t)
-     -> xcb_query_colors_cookie_t;
-    pub fn xcb_query_colors_unchecked(c: *mut xcb_connection_t,
-                                      cmap: xcb_colormap_t,
-                                      pixels_len: uint32_t,
-                                      pixels: *const uint32_t)
-     -> xcb_query_colors_cookie_t;
-    pub fn xcb_query_colors_colors(R: *const xcb_query_colors_reply_t)
-     -> *mut xcb_rgb_t;
-    pub fn xcb_query_colors_colors_length(R: *const xcb_query_colors_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_query_colors_colors_iterator(R:
-                                                *const xcb_query_colors_reply_t)
-     -> xcb_rgb_iterator_t;
-    pub fn xcb_query_colors_reply(c: *mut xcb_connection_t,
-                                  cookie: xcb_query_colors_cookie_t,
-                                  e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_query_colors_reply_t;
+    pub fn xcb_query_colors_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+        pixels_len: uint32_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_query_colors(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        pixels_len: uint32_t,
+        pixels: *const uint32_t,
+    ) -> xcb_query_colors_cookie_t;
+    pub fn xcb_query_colors_unchecked(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        pixels_len: uint32_t,
+        pixels: *const uint32_t,
+    ) -> xcb_query_colors_cookie_t;
+    pub fn xcb_query_colors_colors(R: *const xcb_query_colors_reply_t) -> *mut xcb_rgb_t;
+    pub fn xcb_query_colors_colors_length(
+        R: *const xcb_query_colors_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_query_colors_colors_iterator(
+        R: *const xcb_query_colors_reply_t,
+    ) -> xcb_rgb_iterator_t;
+    pub fn xcb_query_colors_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_query_colors_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_query_colors_reply_t;
     pub fn xcb_lookup_color_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_lookup_color(c: *mut xcb_connection_t, cmap: xcb_colormap_t,
-                            name_len: uint16_t,
-                            name: *const ::std::os::raw::c_char)
-     -> xcb_lookup_color_cookie_t;
-    pub fn xcb_lookup_color_unchecked(c: *mut xcb_connection_t,
-                                      cmap: xcb_colormap_t,
-                                      name_len: uint16_t,
-                                      name: *const ::std::os::raw::c_char)
-     -> xcb_lookup_color_cookie_t;
-    pub fn xcb_lookup_color_reply(c: *mut xcb_connection_t,
-                                  cookie: xcb_lookup_color_cookie_t,
-                                  e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_lookup_color_reply_t;
-    pub fn xcb_create_cursor_checked(c: *mut xcb_connection_t,
-                                     cid: xcb_cursor_t, source: xcb_pixmap_t,
-                                     mask: xcb_pixmap_t, fore_red: uint16_t,
-                                     fore_green: uint16_t,
-                                     fore_blue: uint16_t, back_red: uint16_t,
-                                     back_green: uint16_t,
-                                     back_blue: uint16_t, x: uint16_t,
-                                     y: uint16_t) -> xcb_void_cookie_t;
-    pub fn xcb_create_cursor(c: *mut xcb_connection_t, cid: xcb_cursor_t,
-                             source: xcb_pixmap_t, mask: xcb_pixmap_t,
-                             fore_red: uint16_t, fore_green: uint16_t,
-                             fore_blue: uint16_t, back_red: uint16_t,
-                             back_green: uint16_t, back_blue: uint16_t,
-                             x: uint16_t, y: uint16_t) -> xcb_void_cookie_t;
-    pub fn xcb_create_glyph_cursor_checked(c: *mut xcb_connection_t,
-                                           cid: xcb_cursor_t,
-                                           source_font: xcb_font_t,
-                                           mask_font: xcb_font_t,
-                                           source_char: uint16_t,
-                                           mask_char: uint16_t,
-                                           fore_red: uint16_t,
-                                           fore_green: uint16_t,
-                                           fore_blue: uint16_t,
-                                           back_red: uint16_t,
-                                           back_green: uint16_t,
-                                           back_blue: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_create_glyph_cursor(c: *mut xcb_connection_t,
-                                   cid: xcb_cursor_t, source_font: xcb_font_t,
-                                   mask_font: xcb_font_t,
-                                   source_char: uint16_t, mask_char: uint16_t,
-                                   fore_red: uint16_t, fore_green: uint16_t,
-                                   fore_blue: uint16_t, back_red: uint16_t,
-                                   back_green: uint16_t, back_blue: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_free_cursor_checked(c: *mut xcb_connection_t,
-                                   cursor: xcb_cursor_t) -> xcb_void_cookie_t;
-    pub fn xcb_free_cursor(c: *mut xcb_connection_t, cursor: xcb_cursor_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_recolor_cursor_checked(c: *mut xcb_connection_t,
-                                      cursor: xcb_cursor_t,
-                                      fore_red: uint16_t,
-                                      fore_green: uint16_t,
-                                      fore_blue: uint16_t, back_red: uint16_t,
-                                      back_green: uint16_t,
-                                      back_blue: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_recolor_cursor(c: *mut xcb_connection_t, cursor: xcb_cursor_t,
-                              fore_red: uint16_t, fore_green: uint16_t,
-                              fore_blue: uint16_t, back_red: uint16_t,
-                              back_green: uint16_t, back_blue: uint16_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_query_best_size(c: *mut xcb_connection_t, _class: uint8_t,
-                               drawable: xcb_drawable_t, width: uint16_t,
-                               height: uint16_t)
-     -> xcb_query_best_size_cookie_t;
-    pub fn xcb_query_best_size_unchecked(c: *mut xcb_connection_t,
-                                         _class: uint8_t,
-                                         drawable: xcb_drawable_t,
-                                         width: uint16_t, height: uint16_t)
-     -> xcb_query_best_size_cookie_t;
-    pub fn xcb_query_best_size_reply(c: *mut xcb_connection_t,
-                                     cookie: xcb_query_best_size_cookie_t,
-                                     e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_query_best_size_reply_t;
-    pub fn xcb_query_extension_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_query_extension(c: *mut xcb_connection_t, name_len: uint16_t,
-                               name: *const ::std::os::raw::c_char)
-     -> xcb_query_extension_cookie_t;
-    pub fn xcb_query_extension_unchecked(c: *mut xcb_connection_t,
-                                         name_len: uint16_t,
-                                         name: *const ::std::os::raw::c_char)
-     -> xcb_query_extension_cookie_t;
-    pub fn xcb_query_extension_reply(c: *mut xcb_connection_t,
-                                     cookie: xcb_query_extension_cookie_t,
-                                     e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_query_extension_reply_t;
-    pub fn xcb_list_extensions_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_extensions(c: *mut xcb_connection_t)
-     -> xcb_list_extensions_cookie_t;
-    pub fn xcb_list_extensions_unchecked(c: *mut xcb_connection_t)
-     -> xcb_list_extensions_cookie_t;
-    pub fn xcb_list_extensions_names_length(R:
-                                                *const xcb_list_extensions_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_extensions_names_iterator(R:
-                                                  *const xcb_list_extensions_reply_t)
-     -> xcb_str_iterator_t;
-    pub fn xcb_list_extensions_reply(c: *mut xcb_connection_t,
-                                     cookie: xcb_list_extensions_cookie_t,
-                                     e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_list_extensions_reply_t;
-    pub fn xcb_change_keyboard_mapping_sizeof(_buffer:
-                                                  *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_change_keyboard_mapping_checked(c: *mut xcb_connection_t,
-                                               keycode_count: uint8_t,
-                                               first_keycode: xcb_keycode_t,
-                                               keysyms_per_keycode: uint8_t,
-                                               keysyms: *const xcb_keysym_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_keyboard_mapping(c: *mut xcb_connection_t,
-                                       keycode_count: uint8_t,
-                                       first_keycode: xcb_keycode_t,
-                                       keysyms_per_keycode: uint8_t,
-                                       keysyms: *const xcb_keysym_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_get_keyboard_mapping_sizeof(_buffer:
-                                               *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_keyboard_mapping(c: *mut xcb_connection_t,
-                                    first_keycode: xcb_keycode_t,
-                                    count: uint8_t)
-     -> xcb_get_keyboard_mapping_cookie_t;
-    pub fn xcb_get_keyboard_mapping_unchecked(c: *mut xcb_connection_t,
-                                              first_keycode: xcb_keycode_t,
-                                              count: uint8_t)
-     -> xcb_get_keyboard_mapping_cookie_t;
-    pub fn xcb_get_keyboard_mapping_keysyms(R:
-                                                *const xcb_get_keyboard_mapping_reply_t)
-     -> *mut xcb_keysym_t;
-    pub fn xcb_get_keyboard_mapping_keysyms_length(R:
-                                                       *const xcb_get_keyboard_mapping_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_keyboard_mapping_keysyms_end(R:
-                                                    *const xcb_get_keyboard_mapping_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_get_keyboard_mapping_reply(c: *mut xcb_connection_t,
-                                          cookie:
-                                              xcb_get_keyboard_mapping_cookie_t,
-                                          e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_keyboard_mapping_reply_t;
-    pub fn xcb_change_keyboard_control_sizeof(_buffer:
-                                                  *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_change_keyboard_control_checked(c: *mut xcb_connection_t,
-                                               value_mask: uint32_t,
-                                               value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_keyboard_control(c: *mut xcb_connection_t,
-                                       value_mask: uint32_t,
-                                       value_list: *const uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_get_keyboard_control(c: *mut xcb_connection_t)
-     -> xcb_get_keyboard_control_cookie_t;
-    pub fn xcb_get_keyboard_control_unchecked(c: *mut xcb_connection_t)
-     -> xcb_get_keyboard_control_cookie_t;
-    pub fn xcb_get_keyboard_control_reply(c: *mut xcb_connection_t,
-                                          cookie:
-                                              xcb_get_keyboard_control_cookie_t,
-                                          e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_keyboard_control_reply_t;
-    pub fn xcb_bell_checked(c: *mut xcb_connection_t, percent: int8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_bell(c: *mut xcb_connection_t, percent: int8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_pointer_control_checked(c: *mut xcb_connection_t,
-                                              acceleration_numerator: int16_t,
-                                              acceleration_denominator:
-                                                  int16_t, threshold: int16_t,
-                                              do_acceleration: uint8_t,
-                                              do_threshold: uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_pointer_control(c: *mut xcb_connection_t,
-                                      acceleration_numerator: int16_t,
-                                      acceleration_denominator: int16_t,
-                                      threshold: int16_t,
-                                      do_acceleration: uint8_t,
-                                      do_threshold: uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_get_pointer_control(c: *mut xcb_connection_t)
-     -> xcb_get_pointer_control_cookie_t;
-    pub fn xcb_get_pointer_control_unchecked(c: *mut xcb_connection_t)
-     -> xcb_get_pointer_control_cookie_t;
-    pub fn xcb_get_pointer_control_reply(c: *mut xcb_connection_t,
-                                         cookie:
-                                             xcb_get_pointer_control_cookie_t,
-                                         e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_pointer_control_reply_t;
-    pub fn xcb_set_screen_saver_checked(c: *mut xcb_connection_t,
-                                        timeout: int16_t, interval: int16_t,
-                                        prefer_blanking: uint8_t,
-                                        allow_exposures: uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_screen_saver(c: *mut xcb_connection_t, timeout: int16_t,
-                                interval: int16_t, prefer_blanking: uint8_t,
-                                allow_exposures: uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_get_screen_saver(c: *mut xcb_connection_t)
-     -> xcb_get_screen_saver_cookie_t;
-    pub fn xcb_get_screen_saver_unchecked(c: *mut xcb_connection_t)
-     -> xcb_get_screen_saver_cookie_t;
-    pub fn xcb_get_screen_saver_reply(c: *mut xcb_connection_t,
-                                      cookie: xcb_get_screen_saver_cookie_t,
-                                      e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_screen_saver_reply_t;
+        -> ::std::os::raw::c_int;
+    pub fn xcb_lookup_color(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_lookup_color_cookie_t;
+    pub fn xcb_lookup_color_unchecked(
+        c: *mut xcb_connection_t,
+        cmap: xcb_colormap_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_lookup_color_cookie_t;
+    pub fn xcb_lookup_color_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_lookup_color_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_lookup_color_reply_t;
+    pub fn xcb_create_cursor_checked(
+        c: *mut xcb_connection_t,
+        cid: xcb_cursor_t,
+        source: xcb_pixmap_t,
+        mask: xcb_pixmap_t,
+        fore_red: uint16_t,
+        fore_green: uint16_t,
+        fore_blue: uint16_t,
+        back_red: uint16_t,
+        back_green: uint16_t,
+        back_blue: uint16_t,
+        x: uint16_t,
+        y: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_create_cursor(
+        c: *mut xcb_connection_t,
+        cid: xcb_cursor_t,
+        source: xcb_pixmap_t,
+        mask: xcb_pixmap_t,
+        fore_red: uint16_t,
+        fore_green: uint16_t,
+        fore_blue: uint16_t,
+        back_red: uint16_t,
+        back_green: uint16_t,
+        back_blue: uint16_t,
+        x: uint16_t,
+        y: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_create_glyph_cursor_checked(
+        c: *mut xcb_connection_t,
+        cid: xcb_cursor_t,
+        source_font: xcb_font_t,
+        mask_font: xcb_font_t,
+        source_char: uint16_t,
+        mask_char: uint16_t,
+        fore_red: uint16_t,
+        fore_green: uint16_t,
+        fore_blue: uint16_t,
+        back_red: uint16_t,
+        back_green: uint16_t,
+        back_blue: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_create_glyph_cursor(
+        c: *mut xcb_connection_t,
+        cid: xcb_cursor_t,
+        source_font: xcb_font_t,
+        mask_font: xcb_font_t,
+        source_char: uint16_t,
+        mask_char: uint16_t,
+        fore_red: uint16_t,
+        fore_green: uint16_t,
+        fore_blue: uint16_t,
+        back_red: uint16_t,
+        back_green: uint16_t,
+        back_blue: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_free_cursor_checked(
+        c: *mut xcb_connection_t,
+        cursor: xcb_cursor_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_free_cursor(c: *mut xcb_connection_t, cursor: xcb_cursor_t) -> xcb_void_cookie_t;
+    pub fn xcb_recolor_cursor_checked(
+        c: *mut xcb_connection_t,
+        cursor: xcb_cursor_t,
+        fore_red: uint16_t,
+        fore_green: uint16_t,
+        fore_blue: uint16_t,
+        back_red: uint16_t,
+        back_green: uint16_t,
+        back_blue: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_recolor_cursor(
+        c: *mut xcb_connection_t,
+        cursor: xcb_cursor_t,
+        fore_red: uint16_t,
+        fore_green: uint16_t,
+        fore_blue: uint16_t,
+        back_red: uint16_t,
+        back_green: uint16_t,
+        back_blue: uint16_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_query_best_size(
+        c: *mut xcb_connection_t,
+        _class: uint8_t,
+        drawable: xcb_drawable_t,
+        width: uint16_t,
+        height: uint16_t,
+    ) -> xcb_query_best_size_cookie_t;
+    pub fn xcb_query_best_size_unchecked(
+        c: *mut xcb_connection_t,
+        _class: uint8_t,
+        drawable: xcb_drawable_t,
+        width: uint16_t,
+        height: uint16_t,
+    ) -> xcb_query_best_size_cookie_t;
+    pub fn xcb_query_best_size_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_query_best_size_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_query_best_size_reply_t;
+    pub fn xcb_query_extension_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_query_extension(
+        c: *mut xcb_connection_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_query_extension_cookie_t;
+    pub fn xcb_query_extension_unchecked(
+        c: *mut xcb_connection_t,
+        name_len: uint16_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> xcb_query_extension_cookie_t;
+    pub fn xcb_query_extension_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_query_extension_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_query_extension_reply_t;
+    pub fn xcb_list_extensions_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_list_extensions(c: *mut xcb_connection_t) -> xcb_list_extensions_cookie_t;
+    pub fn xcb_list_extensions_unchecked(c: *mut xcb_connection_t) -> xcb_list_extensions_cookie_t;
+    pub fn xcb_list_extensions_names_length(
+        R: *const xcb_list_extensions_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_list_extensions_names_iterator(
+        R: *const xcb_list_extensions_reply_t,
+    ) -> xcb_str_iterator_t;
+    pub fn xcb_list_extensions_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_list_extensions_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_list_extensions_reply_t;
+    pub fn xcb_change_keyboard_mapping_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_change_keyboard_mapping_checked(
+        c: *mut xcb_connection_t,
+        keycode_count: uint8_t,
+        first_keycode: xcb_keycode_t,
+        keysyms_per_keycode: uint8_t,
+        keysyms: *const xcb_keysym_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_keyboard_mapping(
+        c: *mut xcb_connection_t,
+        keycode_count: uint8_t,
+        first_keycode: xcb_keycode_t,
+        keysyms_per_keycode: uint8_t,
+        keysyms: *const xcb_keysym_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_keyboard_mapping_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_keyboard_mapping(
+        c: *mut xcb_connection_t,
+        first_keycode: xcb_keycode_t,
+        count: uint8_t,
+    ) -> xcb_get_keyboard_mapping_cookie_t;
+    pub fn xcb_get_keyboard_mapping_unchecked(
+        c: *mut xcb_connection_t,
+        first_keycode: xcb_keycode_t,
+        count: uint8_t,
+    ) -> xcb_get_keyboard_mapping_cookie_t;
+    pub fn xcb_get_keyboard_mapping_keysyms(
+        R: *const xcb_get_keyboard_mapping_reply_t,
+    ) -> *mut xcb_keysym_t;
+    pub fn xcb_get_keyboard_mapping_keysyms_length(
+        R: *const xcb_get_keyboard_mapping_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_keyboard_mapping_keysyms_end(
+        R: *const xcb_get_keyboard_mapping_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_get_keyboard_mapping_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_keyboard_mapping_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_keyboard_mapping_reply_t;
+    pub fn xcb_change_keyboard_control_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_change_keyboard_control_checked(
+        c: *mut xcb_connection_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_keyboard_control(
+        c: *mut xcb_connection_t,
+        value_mask: uint32_t,
+        value_list: *const uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_keyboard_control(c: *mut xcb_connection_t) -> xcb_get_keyboard_control_cookie_t;
+    pub fn xcb_get_keyboard_control_unchecked(
+        c: *mut xcb_connection_t,
+    ) -> xcb_get_keyboard_control_cookie_t;
+    pub fn xcb_get_keyboard_control_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_keyboard_control_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_keyboard_control_reply_t;
+    pub fn xcb_bell_checked(c: *mut xcb_connection_t, percent: int8_t) -> xcb_void_cookie_t;
+    pub fn xcb_bell(c: *mut xcb_connection_t, percent: int8_t) -> xcb_void_cookie_t;
+    pub fn xcb_change_pointer_control_checked(
+        c: *mut xcb_connection_t,
+        acceleration_numerator: int16_t,
+        acceleration_denominator: int16_t,
+        threshold: int16_t,
+        do_acceleration: uint8_t,
+        do_threshold: uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_pointer_control(
+        c: *mut xcb_connection_t,
+        acceleration_numerator: int16_t,
+        acceleration_denominator: int16_t,
+        threshold: int16_t,
+        do_acceleration: uint8_t,
+        do_threshold: uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_pointer_control(c: *mut xcb_connection_t) -> xcb_get_pointer_control_cookie_t;
+    pub fn xcb_get_pointer_control_unchecked(
+        c: *mut xcb_connection_t,
+    ) -> xcb_get_pointer_control_cookie_t;
+    pub fn xcb_get_pointer_control_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_pointer_control_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_pointer_control_reply_t;
+    pub fn xcb_set_screen_saver_checked(
+        c: *mut xcb_connection_t,
+        timeout: int16_t,
+        interval: int16_t,
+        prefer_blanking: uint8_t,
+        allow_exposures: uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_screen_saver(
+        c: *mut xcb_connection_t,
+        timeout: int16_t,
+        interval: int16_t,
+        prefer_blanking: uint8_t,
+        allow_exposures: uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_get_screen_saver(c: *mut xcb_connection_t) -> xcb_get_screen_saver_cookie_t;
+    pub fn xcb_get_screen_saver_unchecked(
+        c: *mut xcb_connection_t,
+    ) -> xcb_get_screen_saver_cookie_t;
+    pub fn xcb_get_screen_saver_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_screen_saver_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_screen_saver_reply_t;
     pub fn xcb_change_hosts_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_change_hosts_checked(c: *mut xcb_connection_t, mode: uint8_t,
-                                    family: uint8_t, address_len: uint16_t,
-                                    address: *const uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_change_hosts(c: *mut xcb_connection_t, mode: uint8_t,
-                            family: uint8_t, address_len: uint16_t,
-                            address: *const uint8_t) -> xcb_void_cookie_t;
-    pub fn xcb_host_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
+        -> ::std::os::raw::c_int;
+    pub fn xcb_change_hosts_checked(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+        family: uint8_t,
+        address_len: uint16_t,
+        address: *const uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_change_hosts(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+        family: uint8_t,
+        address_len: uint16_t,
+        address: *const uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_host_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
     pub fn xcb_host_address(R: *const xcb_host_t) -> *mut uint8_t;
-    pub fn xcb_host_address_length(R: *const xcb_host_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_host_address_end(R: *const xcb_host_t)
-     -> xcb_generic_iterator_t;
+    pub fn xcb_host_address_length(R: *const xcb_host_t) -> ::std::os::raw::c_int;
+    pub fn xcb_host_address_end(R: *const xcb_host_t) -> xcb_generic_iterator_t;
     pub fn xcb_host_next(i: *mut xcb_host_iterator_t);
     pub fn xcb_host_end(i: xcb_host_iterator_t) -> xcb_generic_iterator_t;
-    pub fn xcb_list_hosts_sizeof(_buffer: *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_hosts(c: *mut xcb_connection_t)
-     -> xcb_list_hosts_cookie_t;
-    pub fn xcb_list_hosts_unchecked(c: *mut xcb_connection_t)
-     -> xcb_list_hosts_cookie_t;
-    pub fn xcb_list_hosts_hosts_length(R: *const xcb_list_hosts_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_list_hosts_hosts_iterator(R: *const xcb_list_hosts_reply_t)
-     -> xcb_host_iterator_t;
-    pub fn xcb_list_hosts_reply(c: *mut xcb_connection_t,
-                                cookie: xcb_list_hosts_cookie_t,
-                                e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_list_hosts_reply_t;
-    pub fn xcb_set_access_control_checked(c: *mut xcb_connection_t,
-                                          mode: uint8_t) -> xcb_void_cookie_t;
-    pub fn xcb_set_access_control(c: *mut xcb_connection_t, mode: uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_close_down_mode_checked(c: *mut xcb_connection_t,
-                                           mode: uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_close_down_mode(c: *mut xcb_connection_t, mode: uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_kill_client_checked(c: *mut xcb_connection_t,
-                                   resource: uint32_t) -> xcb_void_cookie_t;
-    pub fn xcb_kill_client(c: *mut xcb_connection_t, resource: uint32_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_rotate_properties_sizeof(_buffer:
-                                            *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_rotate_properties_checked(c: *mut xcb_connection_t,
-                                         window: xcb_window_t,
-                                         atoms_len: uint16_t, delta: int16_t,
-                                         atoms: *const xcb_atom_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_rotate_properties(c: *mut xcb_connection_t,
-                                 window: xcb_window_t, atoms_len: uint16_t,
-                                 delta: int16_t, atoms: *const xcb_atom_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_force_screen_saver_checked(c: *mut xcb_connection_t,
-                                          mode: uint8_t) -> xcb_void_cookie_t;
-    pub fn xcb_force_screen_saver(c: *mut xcb_connection_t, mode: uint8_t)
-     -> xcb_void_cookie_t;
-    pub fn xcb_set_pointer_mapping_sizeof(_buffer:
-                                              *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_set_pointer_mapping(c: *mut xcb_connection_t, map_len: uint8_t,
-                                   map: *const uint8_t)
-     -> xcb_set_pointer_mapping_cookie_t;
-    pub fn xcb_set_pointer_mapping_unchecked(c: *mut xcb_connection_t,
-                                             map_len: uint8_t,
-                                             map: *const uint8_t)
-     -> xcb_set_pointer_mapping_cookie_t;
-    pub fn xcb_set_pointer_mapping_reply(c: *mut xcb_connection_t,
-                                         cookie:
-                                             xcb_set_pointer_mapping_cookie_t,
-                                         e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_set_pointer_mapping_reply_t;
-    pub fn xcb_get_pointer_mapping_sizeof(_buffer:
-                                              *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_pointer_mapping(c: *mut xcb_connection_t)
-     -> xcb_get_pointer_mapping_cookie_t;
-    pub fn xcb_get_pointer_mapping_unchecked(c: *mut xcb_connection_t)
-     -> xcb_get_pointer_mapping_cookie_t;
-    pub fn xcb_get_pointer_mapping_map(R:
-                                           *const xcb_get_pointer_mapping_reply_t)
-     -> *mut uint8_t;
-    pub fn xcb_get_pointer_mapping_map_length(R:
-                                                  *const xcb_get_pointer_mapping_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_pointer_mapping_map_end(R:
-                                               *const xcb_get_pointer_mapping_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_get_pointer_mapping_reply(c: *mut xcb_connection_t,
-                                         cookie:
-                                             xcb_get_pointer_mapping_cookie_t,
-                                         e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_pointer_mapping_reply_t;
-    pub fn xcb_set_modifier_mapping_sizeof(_buffer:
-                                               *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_set_modifier_mapping(c: *mut xcb_connection_t,
-                                    keycodes_per_modifier: uint8_t,
-                                    keycodes: *const xcb_keycode_t)
-     -> xcb_set_modifier_mapping_cookie_t;
-    pub fn xcb_set_modifier_mapping_unchecked(c: *mut xcb_connection_t,
-                                              keycodes_per_modifier: uint8_t,
-                                              keycodes: *const xcb_keycode_t)
-     -> xcb_set_modifier_mapping_cookie_t;
-    pub fn xcb_set_modifier_mapping_reply(c: *mut xcb_connection_t,
-                                          cookie:
-                                              xcb_set_modifier_mapping_cookie_t,
-                                          e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_set_modifier_mapping_reply_t;
-    pub fn xcb_get_modifier_mapping_sizeof(_buffer:
-                                               *const ::std::os::raw::c_void)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_modifier_mapping(c: *mut xcb_connection_t)
-     -> xcb_get_modifier_mapping_cookie_t;
-    pub fn xcb_get_modifier_mapping_unchecked(c: *mut xcb_connection_t)
-     -> xcb_get_modifier_mapping_cookie_t;
-    pub fn xcb_get_modifier_mapping_keycodes(R:
-                                                 *const xcb_get_modifier_mapping_reply_t)
-     -> *mut xcb_keycode_t;
-    pub fn xcb_get_modifier_mapping_keycodes_length(R:
-                                                        *const xcb_get_modifier_mapping_reply_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_get_modifier_mapping_keycodes_end(R:
-                                                     *const xcb_get_modifier_mapping_reply_t)
-     -> xcb_generic_iterator_t;
-    pub fn xcb_get_modifier_mapping_reply(c: *mut xcb_connection_t,
-                                          cookie:
-                                              xcb_get_modifier_mapping_cookie_t,
-                                          e: *mut *mut xcb_generic_error_t)
-     -> *mut xcb_get_modifier_mapping_reply_t;
-    pub fn xcb_no_operation_checked(c: *mut xcb_connection_t)
-     -> xcb_void_cookie_t;
+    pub fn xcb_list_hosts_sizeof(_buffer: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+    pub fn xcb_list_hosts(c: *mut xcb_connection_t) -> xcb_list_hosts_cookie_t;
+    pub fn xcb_list_hosts_unchecked(c: *mut xcb_connection_t) -> xcb_list_hosts_cookie_t;
+    pub fn xcb_list_hosts_hosts_length(R: *const xcb_list_hosts_reply_t) -> ::std::os::raw::c_int;
+    pub fn xcb_list_hosts_hosts_iterator(R: *const xcb_list_hosts_reply_t) -> xcb_host_iterator_t;
+    pub fn xcb_list_hosts_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_list_hosts_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_list_hosts_reply_t;
+    pub fn xcb_set_access_control_checked(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_access_control(c: *mut xcb_connection_t, mode: uint8_t) -> xcb_void_cookie_t;
+    pub fn xcb_set_close_down_mode_checked(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_set_close_down_mode(c: *mut xcb_connection_t, mode: uint8_t) -> xcb_void_cookie_t;
+    pub fn xcb_kill_client_checked(
+        c: *mut xcb_connection_t,
+        resource: uint32_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_kill_client(c: *mut xcb_connection_t, resource: uint32_t) -> xcb_void_cookie_t;
+    pub fn xcb_rotate_properties_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_rotate_properties_checked(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        atoms_len: uint16_t,
+        delta: int16_t,
+        atoms: *const xcb_atom_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_rotate_properties(
+        c: *mut xcb_connection_t,
+        window: xcb_window_t,
+        atoms_len: uint16_t,
+        delta: int16_t,
+        atoms: *const xcb_atom_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_force_screen_saver_checked(
+        c: *mut xcb_connection_t,
+        mode: uint8_t,
+    ) -> xcb_void_cookie_t;
+    pub fn xcb_force_screen_saver(c: *mut xcb_connection_t, mode: uint8_t) -> xcb_void_cookie_t;
+    pub fn xcb_set_pointer_mapping_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_set_pointer_mapping(
+        c: *mut xcb_connection_t,
+        map_len: uint8_t,
+        map: *const uint8_t,
+    ) -> xcb_set_pointer_mapping_cookie_t;
+    pub fn xcb_set_pointer_mapping_unchecked(
+        c: *mut xcb_connection_t,
+        map_len: uint8_t,
+        map: *const uint8_t,
+    ) -> xcb_set_pointer_mapping_cookie_t;
+    pub fn xcb_set_pointer_mapping_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_set_pointer_mapping_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_set_pointer_mapping_reply_t;
+    pub fn xcb_get_pointer_mapping_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_pointer_mapping(c: *mut xcb_connection_t) -> xcb_get_pointer_mapping_cookie_t;
+    pub fn xcb_get_pointer_mapping_unchecked(
+        c: *mut xcb_connection_t,
+    ) -> xcb_get_pointer_mapping_cookie_t;
+    pub fn xcb_get_pointer_mapping_map(R: *const xcb_get_pointer_mapping_reply_t) -> *mut uint8_t;
+    pub fn xcb_get_pointer_mapping_map_length(
+        R: *const xcb_get_pointer_mapping_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_pointer_mapping_map_end(
+        R: *const xcb_get_pointer_mapping_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_get_pointer_mapping_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_pointer_mapping_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_pointer_mapping_reply_t;
+    pub fn xcb_set_modifier_mapping_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_set_modifier_mapping(
+        c: *mut xcb_connection_t,
+        keycodes_per_modifier: uint8_t,
+        keycodes: *const xcb_keycode_t,
+    ) -> xcb_set_modifier_mapping_cookie_t;
+    pub fn xcb_set_modifier_mapping_unchecked(
+        c: *mut xcb_connection_t,
+        keycodes_per_modifier: uint8_t,
+        keycodes: *const xcb_keycode_t,
+    ) -> xcb_set_modifier_mapping_cookie_t;
+    pub fn xcb_set_modifier_mapping_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_set_modifier_mapping_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_set_modifier_mapping_reply_t;
+    pub fn xcb_get_modifier_mapping_sizeof(
+        _buffer: *const ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_modifier_mapping(c: *mut xcb_connection_t) -> xcb_get_modifier_mapping_cookie_t;
+    pub fn xcb_get_modifier_mapping_unchecked(
+        c: *mut xcb_connection_t,
+    ) -> xcb_get_modifier_mapping_cookie_t;
+    pub fn xcb_get_modifier_mapping_keycodes(
+        R: *const xcb_get_modifier_mapping_reply_t,
+    ) -> *mut xcb_keycode_t;
+    pub fn xcb_get_modifier_mapping_keycodes_length(
+        R: *const xcb_get_modifier_mapping_reply_t,
+    ) -> ::std::os::raw::c_int;
+    pub fn xcb_get_modifier_mapping_keycodes_end(
+        R: *const xcb_get_modifier_mapping_reply_t,
+    ) -> xcb_generic_iterator_t;
+    pub fn xcb_get_modifier_mapping_reply(
+        c: *mut xcb_connection_t,
+        cookie: xcb_get_modifier_mapping_cookie_t,
+        e: *mut *mut xcb_generic_error_t,
+    ) -> *mut xcb_get_modifier_mapping_reply_t;
+    pub fn xcb_no_operation_checked(c: *mut xcb_connection_t) -> xcb_void_cookie_t;
     pub fn xcb_no_operation(c: *mut xcb_connection_t) -> xcb_void_cookie_t;
     pub fn xcb_flush(c: *mut xcb_connection_t) -> ::std::os::raw::c_int;
-    pub fn xcb_get_maximum_request_length(c: *mut xcb_connection_t)
-     -> uint32_t;
+    pub fn xcb_get_maximum_request_length(c: *mut xcb_connection_t) -> uint32_t;
     pub fn xcb_prefetch_maximum_request_length(c: *mut xcb_connection_t);
-    pub fn xcb_wait_for_event(c: *mut xcb_connection_t)
-     -> *mut xcb_generic_event_t;
-    pub fn xcb_poll_for_event(c: *mut xcb_connection_t)
-     -> *mut xcb_generic_event_t;
-    pub fn xcb_poll_for_queued_event(c: *mut xcb_connection_t)
-     -> *mut xcb_generic_event_t;
-    pub fn xcb_poll_for_special_event(c: *mut xcb_connection_t,
-                                      se: *mut xcb_special_event_t)
-     -> *mut xcb_generic_event_t;
-    pub fn xcb_wait_for_special_event(c: *mut xcb_connection_t,
-                                      se: *mut xcb_special_event_t)
-     -> *mut xcb_generic_event_t;
-    pub fn xcb_register_for_special_xge(c: *mut xcb_connection_t,
-                                        ext: *mut xcb_extension_t,
-                                        eid: uint32_t, stamp: *mut uint32_t)
-     -> *mut xcb_special_event_t;
-    pub fn xcb_unregister_for_special_event(c: *mut xcb_connection_t,
-                                            se: *mut xcb_special_event_t);
-    pub fn xcb_request_check(c: *mut xcb_connection_t,
-                             cookie: xcb_void_cookie_t)
-     -> *mut xcb_generic_error_t;
-    pub fn xcb_discard_reply(c: *mut xcb_connection_t,
-                             sequence: ::std::os::raw::c_uint);
+    pub fn xcb_wait_for_event(c: *mut xcb_connection_t) -> *mut xcb_generic_event_t;
+    pub fn xcb_poll_for_event(c: *mut xcb_connection_t) -> *mut xcb_generic_event_t;
+    pub fn xcb_poll_for_queued_event(c: *mut xcb_connection_t) -> *mut xcb_generic_event_t;
+    pub fn xcb_poll_for_special_event(
+        c: *mut xcb_connection_t,
+        se: *mut xcb_special_event_t,
+    ) -> *mut xcb_generic_event_t;
+    pub fn xcb_wait_for_special_event(
+        c: *mut xcb_connection_t,
+        se: *mut xcb_special_event_t,
+    ) -> *mut xcb_generic_event_t;
+    pub fn xcb_register_for_special_xge(
+        c: *mut xcb_connection_t,
+        ext: *mut xcb_extension_t,
+        eid: uint32_t,
+        stamp: *mut uint32_t,
+    ) -> *mut xcb_special_event_t;
+    pub fn xcb_unregister_for_special_event(c: *mut xcb_connection_t, se: *mut xcb_special_event_t);
+    pub fn xcb_request_check(
+        c: *mut xcb_connection_t,
+        cookie: xcb_void_cookie_t,
+    ) -> *mut xcb_generic_error_t;
+    pub fn xcb_discard_reply(c: *mut xcb_connection_t, sequence: ::std::os::raw::c_uint);
     pub fn xcb_discard_reply64(c: *mut xcb_connection_t, sequence: uint64_t);
-    pub fn xcb_get_extension_data(c: *mut xcb_connection_t,
-                                  ext: *mut xcb_extension_t)
-     -> *const xcb_query_extension_reply_t;
-    pub fn xcb_prefetch_extension_data(c: *mut xcb_connection_t,
-                                       ext: *mut xcb_extension_t);
+    pub fn xcb_get_extension_data(
+        c: *mut xcb_connection_t,
+        ext: *mut xcb_extension_t,
+    ) -> *const xcb_query_extension_reply_t;
+    pub fn xcb_prefetch_extension_data(c: *mut xcb_connection_t, ext: *mut xcb_extension_t);
     pub fn xcb_get_setup(c: *mut xcb_connection_t) -> *const xcb_setup_t;
-    pub fn xcb_get_file_descriptor(c: *mut xcb_connection_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_connection_has_error(c: *mut xcb_connection_t)
-     -> ::std::os::raw::c_int;
-    pub fn xcb_connect_to_fd(fd: ::std::os::raw::c_int,
-                             auth_info: *mut xcb_auth_info_t)
-     -> *mut xcb_connection_t;
+    pub fn xcb_get_file_descriptor(c: *mut xcb_connection_t) -> ::std::os::raw::c_int;
+    pub fn xcb_connection_has_error(c: *mut xcb_connection_t) -> ::std::os::raw::c_int;
+    pub fn xcb_connect_to_fd(
+        fd: ::std::os::raw::c_int,
+        auth_info: *mut xcb_auth_info_t,
+    ) -> *mut xcb_connection_t;
     pub fn xcb_disconnect(c: *mut xcb_connection_t);
-    pub fn xcb_parse_display(name: *const ::std::os::raw::c_char,
-                             host: *mut *mut ::std::os::raw::c_char,
-                             display: *mut ::std::os::raw::c_int,
-                             screen: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
+    pub fn xcb_parse_display(
+        name: *const ::std::os::raw::c_char,
+        host: *mut *mut ::std::os::raw::c_char,
+        display: *mut ::std::os::raw::c_int,
+        screen: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
     pub fn xcb_connect(
         displayname: *const ::std::os::raw::c_char,
-        screenp: *mut ::std::os::raw::c_int) -> *mut xcb_connection_t;
-    pub fn xcb_connect_to_display_with_auth_info(display:
-                                                     *const ::std::os::raw::c_char,
-                                                 auth: *mut xcb_auth_info_t,
-                                                 screen:
-                                                     *mut ::std::os::raw::c_int)
-     -> *mut xcb_connection_t;
+        screenp: *mut ::std::os::raw::c_int,
+    ) -> *mut xcb_connection_t;
+    pub fn xcb_connect_to_display_with_auth_info(
+        display: *const ::std::os::raw::c_char,
+        auth: *mut xcb_auth_info_t,
+        screen: *mut ::std::os::raw::c_int,
+    ) -> *mut xcb_connection_t;
     pub fn xcb_generate_id(c: *mut xcb_connection_t) -> uint32_t;
 }

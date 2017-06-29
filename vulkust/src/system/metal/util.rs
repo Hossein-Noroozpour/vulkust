@@ -4,11 +4,11 @@ use super::Id;
 use super::objc::runtime::{Sel, Class, Object};
 use super::objc::MessageArguments;
 
-type Imp = unsafe extern fn();
+type Imp = unsafe extern "C" fn();
 
 #[cfg(all(any(target_os = "macos", target_os = "ios"), target_arch = "x86_64"))]
 fn msg_send_fn<R>(obj: Id, _: Sel) -> (Imp, Id) {
-    extern {
+    extern "C" {
         fn objc_msgSend();
         fn objc_msgSend_stret();
     }
@@ -23,7 +23,7 @@ fn msg_send_fn<R>(obj: Id, _: Sel) -> (Imp, Id) {
 
 #[cfg(all(any(target_os = "macos", target_os = "ios"), target_arch = "aarch64"))]
 fn msg_send_fn<R>(obj: Id, _: Sel) -> (Imp, Id) {
-    extern {
+    extern "C" {
         fn objc_msgSend();
     }
     (objc_msgSend, obj)
@@ -31,15 +31,14 @@ fn msg_send_fn<R>(obj: Id, _: Sel) -> (Imp, Id) {
 
 #[cfg(all(any(target_os = "macos", target_os = "ios"), target_arch = "arm"))]
 fn msg_send_fn<R: Any>(obj: Id, _: Sel) -> (Imp, Id) {
-    extern {
+    extern "C" {
         fn objc_msgSend();
         fn objc_msgSend_stret();
     }
     let type_id = TypeId::of::<R>();
-    let msg_fn = if mem::size_of::<R>() <= 4 ||
-            type_id == TypeId::of::<i64>() ||
-            type_id == TypeId::of::<u64>() ||
-            type_id == TypeId::of::<f64>() {
+    let msg_fn = if mem::size_of::<R>() <= 4 || type_id == TypeId::of::<i64>() ||
+        type_id == TypeId::of::<u64>() || type_id == TypeId::of::<f64>()
+    {
         objc_msgSend
     } else {
         objc_msgSend_stret
@@ -53,12 +52,11 @@ impl Receiver for Object {}
 impl Receiver for Class {}
 
 pub fn send_unverified<T, A, R>(obj: *const T, sel: Sel, args: A) -> R
-        where T: Receiver, A: MessageArguments, R: Any {
-    let (msg_send_fn, receiver) = msg_send_fn::<R>(
-        unsafe {
-            mem::transmute(obj)
-        }, sel);
-    unsafe { 
-        A::invoke(msg_send_fn, receiver, sel, args)
-    }
+where
+    T: Receiver,
+    A: MessageArguments,
+    R: Any,
+{
+    let (msg_send_fn, receiver) = msg_send_fn::<R>(unsafe { mem::transmute(obj) }, sel);
+    unsafe { A::invoke(msg_send_fn, receiver, sel, args) }
 }

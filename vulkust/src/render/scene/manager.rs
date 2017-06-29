@@ -1,3 +1,1 @@
-pub struct Manager {
-    
-}
+pub struct Manager {}

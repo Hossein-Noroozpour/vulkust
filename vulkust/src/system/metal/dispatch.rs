@@ -8,7 +8,7 @@ type size_t = usize;
 
 pub enum dispatch_object_s { }
 pub type dispatch_block_t = *mut c_void;
-pub type dispatch_function_t = extern fn(*mut c_void);
+pub type dispatch_function_t = extern "C" fn(*mut c_void);
 pub type dispatch_semaphore_t = *mut dispatch_object_s;
 pub type dispatch_group_t = *mut dispatch_object_s;
 pub type dispatch_object_t = *mut dispatch_object_s;
@@ -27,35 +27,70 @@ pub type dispatch_data_t = *mut Object;
 pub type dispatch_queue_attr_t = *const dispatch_object_s;
 
 #[link(name = "System", kind = "dylib")]
-extern {
+extern "C" {
     static _dispatch_main_q: dispatch_object_s;
     static _dispatch_queue_attr_concurrent: dispatch_object_s;
 
     pub fn dispatch_get_global_queue(identifier: c_long, flags: c_ulong) -> dispatch_queue_t;
-    pub fn dispatch_queue_create(label: *const c_char, attr: dispatch_queue_attr_t) -> dispatch_queue_t;
+    pub fn dispatch_queue_create(
+        label: *const c_char,
+        attr: dispatch_queue_attr_t,
+    ) -> dispatch_queue_t;
     // dispatch_queue_attr_t dispatch_queue_attr_make_with_qos_class ( dispatch_queue_attr_t attr, dispatch_qos_class_t qos_class, int relative_priority );
     pub fn dispatch_queue_get_label(queue: dispatch_queue_t) -> *const c_char;
     pub fn dispatch_set_target_queue(object: dispatch_object_t, queue: dispatch_queue_t);
     pub fn dispatch_main();
 
     // void dispatch_async ( dispatch_queue_t queue, dispatch_block_t block );
-    pub fn dispatch_async_f(queue: dispatch_queue_t, context: *mut c_void, work: dispatch_function_t);
+    pub fn dispatch_async_f(
+        queue: dispatch_queue_t,
+        context: *mut c_void,
+        work: dispatch_function_t,
+    );
     // void dispatch_sync ( dispatch_queue_t queue, dispatch_block_t block );
-    pub fn dispatch_sync_f(queue: dispatch_queue_t, context: *mut c_void, work: dispatch_function_t);
+    pub fn dispatch_sync_f(
+        queue: dispatch_queue_t,
+        context: *mut c_void,
+        work: dispatch_function_t,
+    );
     // void dispatch_after ( dispatch_time_t when, dispatch_queue_t queue, dispatch_block_t block );
-    pub fn dispatch_after_f(when: dispatch_time_t, queue: dispatch_queue_t, context: *mut c_void, work: dispatch_function_t);
+    pub fn dispatch_after_f(
+        when: dispatch_time_t,
+        queue: dispatch_queue_t,
+        context: *mut c_void,
+        work: dispatch_function_t,
+    );
     // void dispatch_apply ( size_t iterations, dispatch_queue_t queue, void (^block)(size_t) );
-    pub fn dispatch_apply_f(iterations: usize, queue: dispatch_queue_t, context: *mut c_void, work: extern fn(*mut c_void, usize));
+    pub fn dispatch_apply_f(
+        iterations: usize,
+        queue: dispatch_queue_t,
+        context: *mut c_void,
+        work: extern "C" fn(*mut c_void, usize),
+    );
     // void dispatch_once ( dispatch_once_t *predicate, dispatch_block_t block );
-    pub fn dispatch_once_f(predicate: *mut dispatch_once_t, context: *mut c_void, function: dispatch_function_t);
+    pub fn dispatch_once_f(
+        predicate: *mut dispatch_once_t,
+        context: *mut c_void,
+        function: dispatch_function_t,
+    );
 
     // void dispatch_group_async ( dispatch_group_t group, dispatch_queue_t queue, dispatch_block_t block );
-    pub fn dispatch_group_async_f(group: dispatch_group_t, queue: dispatch_queue_t, context: *mut c_void, work: dispatch_function_t);
+    pub fn dispatch_group_async_f(
+        group: dispatch_group_t,
+        queue: dispatch_queue_t,
+        context: *mut c_void,
+        work: dispatch_function_t,
+    );
     pub fn dispatch_group_create() -> dispatch_group_t;
     pub fn dispatch_group_enter(group: dispatch_group_t);
     pub fn dispatch_group_leave(group: dispatch_group_t);
     // void dispatch_group_notify ( dispatch_group_t group, dispatch_queue_t queue, dispatch_block_t block );
-    pub fn dispatch_group_notify_f(group: dispatch_group_t, queue: dispatch_queue_t, context: *mut c_void, work: dispatch_function_t);
+    pub fn dispatch_group_notify_f(
+        group: dispatch_group_t,
+        queue: dispatch_queue_t,
+        context: *mut c_void,
+        work: dispatch_function_t,
+    );
     pub fn dispatch_group_wait(group: dispatch_group_t, timeout: dispatch_time_t) -> c_long;
 
     pub fn dispatch_get_context(object: dispatch_object_t) -> *mut c_void;
@@ -68,12 +103,21 @@ extern {
 
     pub fn dispatch_semaphore_create(value: c_long) -> dispatch_semaphore_t;
     pub fn dispatch_semaphore_signal(dsema: dispatch_semaphore_t) -> c_long;
-    pub fn dispatch_semaphore_wait(dsema: dispatch_semaphore_t, timeout: dispatch_time_t) -> c_long;
+    pub fn dispatch_semaphore_wait(dsema: dispatch_semaphore_t, timeout: dispatch_time_t)
+        -> c_long;
 
     // void dispatch_barrier_async ( dispatch_queue_t queue, dispatch_block_t block );
-    pub fn dispatch_barrier_async_f(queue: dispatch_queue_t, context: *mut c_void, work: dispatch_function_t);
+    pub fn dispatch_barrier_async_f(
+        queue: dispatch_queue_t,
+        context: *mut c_void,
+        work: dispatch_function_t,
+    );
     // void dispatch_barrier_sync ( dispatch_queue_t queue, dispatch_block_t block );
-    pub fn dispatch_barrier_sync_f(queue: dispatch_queue_t, context: *mut c_void, work: dispatch_function_t);
+    pub fn dispatch_barrier_sync_f(
+        queue: dispatch_queue_t,
+        context: *mut c_void,
+        work: dispatch_function_t,
+    );
 
     // void dispatch_source_cancel ( dispatch_source_t source );
     // dispatch_source_t dispatch_source_create ( dispatch_source_type_t type, uintptr_t handle, unsigned long mask, dispatch_queue_t queue );
@@ -106,8 +150,11 @@ extern {
     // dispatch_fd_t dispatch_io_get_descriptor ( dispatch_io_t channel );
 
     pub fn dispatch_data_create(
-        buffer: *const c_void, size: size_t, queue: dispatch_queue_t,
-        destructor: dispatch_block_t) -> dispatch_data_t;
+        buffer: *const c_void,
+        size: size_t,
+        queue: dispatch_queue_t,
+        destructor: dispatch_block_t,
+    ) -> dispatch_data_t;
     // size_t dispatch_data_get_size ( dispatch_data_t data );
     // dispatch_data_t dispatch_data_create_map ( dispatch_data_t data, const void **buffer_ptr, size_t *size_ptr );
     // dispatch_data_t dispatch_data_create_concat ( dispatch_data_t data1, dispatch_data_t data2 );
@@ -116,19 +163,19 @@ extern {
     // dispatch_data_t dispatch_data_copy_region ( dispatch_data_t data, size_t location, size_t *offset_ptr );
 
     pub fn dispatch_time(when: dispatch_time_t, delta: i64) -> dispatch_time_t;
-    // dispatch_time_t dispatch_walltime( const struct timespec *when, int64_t delta);
+// dispatch_time_t dispatch_walltime( const struct timespec *when, int64_t delta);
 
-    // void dispatch_queue_set_specific ( dispatch_queue_t queue, const void *key, void *context, dispatch_function_t destructor );
-    // void * dispatch_queue_get_specific ( dispatch_queue_t queue, const void *key );
-    // void * dispatch_get_specific ( const void *key );
+// void dispatch_queue_set_specific ( dispatch_queue_t queue, const void *key, void *context, dispatch_function_t destructor );
+// void * dispatch_queue_get_specific ( dispatch_queue_t queue, const void *key );
+// void * dispatch_get_specific ( const void *key );
 
-    // dispatch_block_t dispatch_block_create(dispatch_block_flags_t flags, dispatch_block_t block);
-    // dispatch_block_t dispatch_block_create_with_qos_class(dispatch_block_flags_t flags, dispatch_qos_class_t qos_class, int relative_priority, dispatch_block_t block);
-    // void dispatch_block_perform(dispatch_block_flags_t flags, dispatch_block_t block);
-    // long dispatch_block_wait(dispatch_block_t block, dispatch_time_t timeout);
-    // dispatch_block_notify(dispatch_block_t block, dispatch_queue_t queue, dispatch_block_t notification_block);
-    // void dispatch_block_cancel(dispatch_block_t block);
-    // long dispatch_block_testcancel(dispatch_block_t block);
+// dispatch_block_t dispatch_block_create(dispatch_block_flags_t flags, dispatch_block_t block);
+// dispatch_block_t dispatch_block_create_with_qos_class(dispatch_block_flags_t flags, dispatch_qos_class_t qos_class, int relative_priority, dispatch_block_t block);
+// void dispatch_block_perform(dispatch_block_flags_t flags, dispatch_block_t block);
+// long dispatch_block_wait(dispatch_block_t block, dispatch_time_t timeout);
+// dispatch_block_notify(dispatch_block_t block, dispatch_queue_t queue, dispatch_block_t notification_block);
+// void dispatch_block_cancel(dispatch_block_t block);
+// long dispatch_block_testcancel(dispatch_block_t block);
 }
 
 pub fn dispatch_get_main_queue() -> dispatch_queue_t {
@@ -136,14 +183,15 @@ pub fn dispatch_get_main_queue() -> dispatch_queue_t {
 }
 
 pub const DISPATCH_QUEUE_SERIAL: dispatch_queue_attr_t = 0 as dispatch_queue_attr_t;
-pub static DISPATCH_QUEUE_CONCURRENT: &'static dispatch_object_s = unsafe { &_dispatch_queue_attr_concurrent };
+pub static DISPATCH_QUEUE_CONCURRENT: &'static dispatch_object_s =
+    unsafe { &_dispatch_queue_attr_concurrent };
 
-pub const DISPATCH_QUEUE_PRIORITY_HIGH: c_long              = 2;
-pub const DISPATCH_QUEUE_PRIORITY_DEFAULT: c_long           = 0;
-pub const DISPATCH_QUEUE_PRIORITY_LOW: c_long               = -2;
-pub const DISPATCH_QUEUE_PRIORITY_BACKGROUND: c_long        = -1 << 15;
+pub const DISPATCH_QUEUE_PRIORITY_HIGH: c_long = 2;
+pub const DISPATCH_QUEUE_PRIORITY_DEFAULT: c_long = 0;
+pub const DISPATCH_QUEUE_PRIORITY_LOW: c_long = -2;
+pub const DISPATCH_QUEUE_PRIORITY_BACKGROUND: c_long = -1 << 15;
 
-pub const DISPATCH_DATA_DESTRUCTOR_DEFAULT:dispatch_block_t = 0 as dispatch_block_t;
+pub const DISPATCH_DATA_DESTRUCTOR_DEFAULT: dispatch_block_t = 0 as dispatch_block_t;
 
-pub const DISPATCH_TIME_NOW: dispatch_time_t                = 0;
-pub const DISPATCH_TIME_FOREVER: dispatch_time_t            = !0;
+pub const DISPATCH_TIME_NOW: dispatch_time_t = 0;
+pub const DISPATCH_TIME_FOREVER: dispatch_time_t = !0;

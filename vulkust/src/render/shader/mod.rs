@@ -23,10 +23,10 @@ impl Shader {
         CoreApp: ApplicationTrait,
     {
         let size: u64 = file.read_type();
-        logi!("shader size is: {}", size);
+        // logi!("shader size is: {}", size);
         let vertex = file.read_bytes(size as usize);
         let size: u64 = file.read_type();
-        logi!("shader size is: {}", size);
+        // logi!("shader size is: {}", size);
         let fragment = file.read_bytes(size as usize);
         Shader {
             vertex: Stage::new(vertex, os_app),

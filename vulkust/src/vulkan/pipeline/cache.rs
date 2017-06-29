@@ -16,7 +16,11 @@ impl Cache {
         pipeline_cache_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
         vulkan_check!(vk::vkCreatePipelineCache(
-            logical_device.vk_data, &pipeline_cache_create_info, null(), &mut vk_data));
+            logical_device.vk_data,
+            &pipeline_cache_create_info,
+            null(),
+            &mut vk_data
+        ));
         Cache {
             logical_device: logical_device,
             vk_data: vk_data,

@@ -10,7 +10,7 @@ use std::ffi::CStr;
 use std::mem::transmute;
 pub use super::super::objc;
 pub use super::super::objc::runtime::{Object, Class, YES, NO};
-use super::super::objc::declare::{ClassDecl};
+use super::super::objc::declare::ClassDecl;
 
 // types ------------------------------------------------------------------------------------------
 
@@ -39,8 +39,8 @@ pub const RESOURCE_CPU_CACHE_MODE_MASK: NSUInteger = 0xF << RESOURCE_CPU_CACHE_M
 pub const RESOURCE_STORAGE_MODE_SHIFT: NSUInteger = 4;
 pub const RESOURCE_STORAGE_MODE_MASK: NSUInteger = 0xF << RESOURCE_STORAGE_MODE_SHIFT;
 pub const RESOURCE_HAZARD_TRACKING_MODE_SHIFT: NSUInteger = 8;
-pub const RESOURCE_HAZARD_TRACKING_MODE_MASK: NSUInteger =
-    0x1 << RESOURCE_HAZARD_TRACKING_MODE_SHIFT;
+pub const RESOURCE_HAZARD_TRACKING_MODE_MASK: NSUInteger = 0x1 <<
+    RESOURCE_HAZARD_TRACKING_MODE_SHIFT;
 
 // structs ----------------------------------------------------------------------------------------
 
@@ -54,7 +54,9 @@ pub struct ClearColor {
 }
 
 unsafe impl objc::Encode for ClearColor {
-    fn encode() -> objc::Encoding { unsafe { objc::Encoding::from_str("{?=dddd}") } }
+    fn encode() -> objc::Encoding {
+        unsafe { objc::Encoding::from_str("{?=dddd}") }
+    }
 }
 
 impl ClearColor {
@@ -78,7 +80,10 @@ pub struct NSSize {
 unsafe impl objc::Encode for NSSize {
     fn encode() -> objc::Encoding {
         let encoding = format!(
-            "{{CGSize={}{}}}", CGFloat::encode().as_str(), CGFloat::encode().as_str());
+            "{{CGSize={}{}}}",
+            CGFloat::encode().as_str(),
+            CGFloat::encode().as_str()
+        );
         unsafe { objc::Encoding::from_str(&encoding) }
     }
 }
@@ -93,7 +98,10 @@ pub struct NSPoint {
 unsafe impl objc::Encode for NSPoint {
     fn encode() -> objc::Encoding {
         let encoding = format!(
-            "{{CGPoint={}{}}}", CGFloat::encode().as_str(), CGFloat::encode().as_str());
+            "{{CGPoint={}{}}}",
+            CGFloat::encode().as_str(),
+            CGFloat::encode().as_str()
+        );
         unsafe { objc::Encoding::from_str(&encoding) }
     }
 }
@@ -108,7 +116,10 @@ pub struct NSRect {
 unsafe impl objc::Encode for NSRect {
     fn encode() -> objc::Encoding {
         let encoding = format!(
-            "{{CGRect={}{}}}", NSPoint::encode().as_str(), NSSize::encode().as_str());
+            "{{CGRect={}{}}}",
+            NSPoint::encode().as_str(),
+            NSSize::encode().as_str()
+        );
         unsafe { objc::Encoding::from_str(&encoding) }
     }
 }
@@ -116,10 +127,7 @@ unsafe impl objc::Encode for NSRect {
 impl NSRect {
     pub fn new(x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat) -> Self {
         NSRect {
-            origin: NSPoint {
-                x: x,
-                y: y,
-            },
+            origin: NSPoint { x: x, y: y },
             size: NSSize {
                 width: w,
                 height: h,
@@ -145,9 +153,7 @@ impl NSString {
                 length:string.len()
                 encoding:NS_UTF8_STRING_ENCODING]
         };
-        NSString {
-            s: s
-        }
+        NSString { s: s }
     }
 }
 
@@ -156,9 +162,11 @@ impl std::fmt::Display for NSString {
         if self.s == 0 as Id {
             return write!(f, "");
         }
-        let ptr: *const c_char  = unsafe { msg_send![
-            self.s, cStringUsingEncoding:NS_UTF8_STRING_ENCODING] };
-        let string = unsafe { CStr::from_ptr(ptr) }.to_string_lossy().into_owned();
+        let ptr: *const c_char =
+            unsafe { msg_send![self.s, cStringUsingEncoding: NS_UTF8_STRING_ENCODING] };
+        let string = unsafe { CStr::from_ptr(ptr) }
+            .to_string_lossy()
+            .into_owned();
         write!(f, "NSString({})", string)
     }
 }
@@ -170,7 +178,9 @@ impl std::fmt::Debug for NSString {
 }
 
 unsafe impl objc::Encode for NSString {
-    fn encode() -> objc::Encoding { unsafe { objc::Encoding::from_str("@") } }
+    fn encode() -> objc::Encoding {
+        unsafe { objc::Encoding::from_str("@") }
+    }
 }
 
 #[repr(C)]
@@ -179,7 +189,9 @@ pub struct IdPtr {
 }
 
 unsafe impl objc::Encode for IdPtr {
-    fn encode() -> objc::Encoding { unsafe { objc::Encoding::from_str("^@") } }
+    fn encode() -> objc::Encoding {
+        unsafe { objc::Encoding::from_str("^@") }
+    }
 }
 
 #[repr(C)]
@@ -189,9 +201,7 @@ pub struct NSError {
 
 impl NSError {
     pub fn null() -> Self {
-        NSError {
-            err: 0 as Id,
-        }
+        NSError { err: 0 as Id }
     }
     pub fn to_string(&self) -> String {
         let des = NSString { s: unsafe { msg_send![self.err, localizedDescription] } };
@@ -204,9 +214,7 @@ impl NSError {
             &format!("localizedFailureReason({}))", res)
     }
     pub fn as_ptr(&mut self) -> IdPtr {
-        IdPtr {
-            id: &mut self.err,
-        }
+        IdPtr { id: &mut self.err }
     }
     pub fn is_error(&self) -> bool {
         self.err != 0 as Id
@@ -214,7 +222,9 @@ impl NSError {
 }
 
 unsafe impl objc::Encode for NSError {
-    fn encode() -> objc::Encoding { unsafe { objc::Encoding::from_str("@") } }
+    fn encode() -> objc::Encoding {
+        unsafe { objc::Encoding::from_str("@") }
+    }
 }
 
 impl std::fmt::Debug for NSError {
@@ -240,6 +250,33 @@ impl std::fmt::Display for NSError {
 // enums ------------------------------------------------------------------------------------------
 
 bitflags! {
+    pub struct CullMode: NSUInteger {
+        const CULL_MODE_NONE  = 0;
+        const CULL_MODE_FRONT = 1;
+        const CULL_MODE_BACK  = 2;
+    }
+}
+
+unsafe impl objc::Encode for CullMode {
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
+}
+
+bitflags! {
+    pub struct Winding: NSUInteger {
+        const WINDING_CLOCKWISE         = 0;
+        const WINDING_COUNTER_CLOCKWISE = 1;
+    }
+}
+
+unsafe impl objc::Encode for Winding {
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
+}
+
+bitflags! {
     pub struct TextureUsage: NSUInteger {
         const TEXTURE_USAGE_UNKNOWN           = 0x0000;
         const TEXTURE_USAGE_SHADER_READ       = 0x0001;
@@ -250,7 +287,9 @@ bitflags! {
 }
 
 unsafe impl objc::Encode for TextureUsage {
-    fn encode() -> objc::Encoding { NSUInteger::encode() }
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
 }
 
 bitflags! {
@@ -265,7 +304,9 @@ bitflags! {
 }
 
 unsafe impl objc::Encode for GeometryType {
-    fn encode() -> objc::Encoding { NSUInteger::encode() }
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
 }
 
 bitflags! {
@@ -282,7 +323,9 @@ bitflags! {
 }
 
 unsafe impl objc::Encode for CompareFunction {
-    fn encode() -> objc::Encoding { NSUInteger::encode() }
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
 }
 
 bitflags! {
@@ -324,7 +367,9 @@ bitflags! {
 }
 
 unsafe impl objc::Encode for ResourceOptions {
-    fn encode() -> objc::Encoding { NSUInteger::encode() }
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
 }
 
 bitflags! {
@@ -457,7 +502,9 @@ bitflags! {
 }
 
 unsafe impl objc::Encode for PixelFormat {
-    fn encode() -> objc::Encoding { NSUInteger::encode() }
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
 }
 
 bitflags! {
@@ -508,7 +555,9 @@ bitflags! {
 }
 
 unsafe impl objc::Encode for VertexFormat {
-    fn encode() -> objc::Encoding { NSUInteger::encode() }
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
 }
 
 bitflags! {
@@ -522,7 +571,9 @@ bitflags! {
 }
 
 unsafe impl objc::Encode for VertexStepFunction {
-    fn encode() -> objc::Encoding { NSUInteger::encode() }
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
 }
 
 bitflags! {
@@ -548,7 +599,9 @@ bitflags! {
 }
 
 unsafe impl objc::Encode for NsBackingStoreType {
-    fn encode() -> objc::Encoding { NSUInteger::encode() }
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
 }
 
 bitflags! {
@@ -580,7 +633,9 @@ bitflags! {
 }
 
 unsafe impl objc::Encode for NsStringEncoding {
-    fn encode() -> objc::Encoding { NSUInteger::encode() }
+    fn encode() -> objc::Encoding {
+        NSUInteger::encode()
+    }
 }
 
 // external linkages ------------------------------------------------------------------------------
@@ -591,12 +646,12 @@ extern "C" {
 }
 
 #[link(name = "Foundation", kind = "framework")]
-extern {
+extern "C" {
     // pub static NSDefaultRunLoopMode: mtl::Id;
 }
 
 #[link(name = "AppKit", kind = "framework")]
-extern {
+extern "C" {
     // pub static NSImageHintCTM: Id;
 }
 
@@ -605,15 +660,19 @@ extern {
 
 pub fn get_class(s: &str) -> &Class {
     match Class::get(s) {
-        Some(c) => { c },
-        None => { logf!("Class: {:?} does not exist.", s); },
+        Some(c) => c,
+        None => {
+            logf!("Class: {:?} does not exist.", s);
+        }
     }
 }
 
 pub fn get_instance(s: &str) -> Id {
     let c = match Class::get(s) {
-        Some(c) => { c },
-        None => { logf!("Class: {:?} does not exist.", s); },
+        Some(c) => c,
+        None => {
+            logf!("Class: {:?} does not exist.", s);
+        }
     };
     let r: Id = unsafe { msg_send![c, alloc] };
     let r: Id = unsafe { msg_send![r, init] };
@@ -622,55 +681,60 @@ pub fn get_instance(s: &str) -> Id {
 
 pub fn dec_class(s: &str, c: &Class) -> ClassDecl {
     match ClassDecl::new(s, c) {
-        Some(c) => { c },
+        Some(c) => c,
         None => {
             logf!("Can not create class {} with super class {:?}.", s, c);
-        },
+        }
     }
 }
 
 pub fn dec_class_s(s: &str, c: &str) -> ClassDecl {
     let c = match Class::get(c) {
-        Some(c) => { c },
-        None => { logf!("Class: {} does not exist.", c); },
+        Some(c) => c,
+        None => {
+            logf!("Class: {} does not exist.", c);
+        }
     };
     match ClassDecl::new(s, c) {
-        Some(c) => { c },
+        Some(c) => c,
         None => {
             logf!("Can not create class {} with super class {:?}.", s, c);
-        },
+        }
     }
 }
 
-pub fn set_ivar<T>(id: Id, name: &str, value: T) where T: objc::Encode {
-    unsafe { (*id).set_ivar(name, value); }
+pub fn set_ivar<T>(id: Id, name: &str, value: T)
+where
+    T: objc::Encode,
+{
+    unsafe {
+        (*id).set_ivar(name, value);
+    }
 }
 
 pub fn alloc(s: &str) -> Id {
     let c = match Class::get(s) {
-        Some(c) => { c },
-        None => { logf!("Class: {:?} does not exist.", s); },
+        Some(c) => c,
+        None => {
+            logf!("Class: {:?} does not exist.", s);
+        }
     };
     unsafe { msg_send![c, alloc] }
 }
 
 pub fn create_system_default_device() -> Id {
-    unsafe {
-        MTLCreateSystemDefaultDevice()
-    }
+    unsafe { MTLCreateSystemDefaultDevice() }
 }
 
 // struct -----------------------------------------------------------------------------------------
 
 pub struct NsAutoReleasePool {
-    pool: Id
+    pool: Id,
 }
 
 impl NsAutoReleasePool {
     pub fn new() -> Self {
-        NsAutoReleasePool {
-            pool: get_instance(NS_AUTO_RELEASE_POOL),
-        }
+        NsAutoReleasePool { pool: get_instance(NS_AUTO_RELEASE_POOL) }
     }
 }
 

@@ -25,25 +25,30 @@ impl Manager {
         for _ in 0..count {
             let id: u64 = file.read_type();
             let offset: u64 = file.read_type();
-            logi!("Texture with id: {} and offset {} loaded.", id, offset);
+            // logi!("Texture with id: {} and offset {} loaded.", id, offset);
             self.offsets.insert(id, offset);
         }
     }
 
     pub fn get<CoreApp>(
-        &mut self, id: u64,
-        file: &mut File, os_app: *mut OsApplication<CoreApp>)-> Arc<TextureTrait>
-            where CoreApp: ApplicationTrait {
+        &mut self,
+        id: u64,
+        file: &mut File,
+        os_app: *mut OsApplication<CoreApp>,
+    ) -> Arc<TextureTrait>
+    where
+        CoreApp: ApplicationTrait,
+    {
         match self.cached.get(&id) {
             Some(res) => {
                 match res.upgrade() {
                     Some(res) => {
                         return res;
-                    },
-                    None => {},
+                    }
+                    None => {}
                 }
-            },
-            None => {},
+            }
+            None => {}
         }
         match self.offsets.get(&id) {
             Some(offset) => {
@@ -52,17 +57,21 @@ impl Manager {
                         if o < *offset {
                             logf!("Seeked offset does not match!");
                         }
-                    },
+                    }
                     _ => {
                         logf!("Can not seek to the requested offset.");
-                    },
+                    }
                 };
-            },
-            None => { logf!("Requested texture {} does not exist.", id); },
+            }
+            None => {
+                logf!("Requested texture {} does not exist.", id);
+            }
         };
         let texture = match id {
-            1 => { Texture2D::new(file, os_app) },
-            _ => { logf!("Requsted texture Id: {} not found.", id); },
+            1 => Texture2D::new(file, os_app),
+            _ => {
+                logf!("Requsted texture Id: {} not found.", id);
+            }
         };
         let texture: Arc<TextureTrait> = Arc::new(texture);
         self.cached.insert(id, Arc::downgrade(&texture));

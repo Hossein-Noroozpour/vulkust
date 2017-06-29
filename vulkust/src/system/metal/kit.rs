@@ -8,7 +8,5 @@ extern "C" {
 }
 
 pub fn model_io_vertex_descriptor_from_metal(vertex_descriptor: Id) -> Id {
-    unsafe {
-        MTKModelIOVertexDescriptorFromMetal(vertex_descriptor)
-    }
+    unsafe { MTKModelIOVertexDescriptorFromMetal(vertex_descriptor) }
 }

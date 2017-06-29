@@ -1,9 +1,7 @@
 use super::super::super::system::vulkan as vk;
 use super::super::device::logical::Logical as LogicalDevice;
 use std::default::Default;
-use std::sync::{
-    Arc,
-};
+use std::sync::Arc;
 use std::ptr::null;
 
 pub struct Pool {
@@ -21,7 +19,11 @@ impl Pool {
             vk::VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT as u32;
         let mut vk_data = 0 as vk::VkCommandPool;
         vulkan_check!(vk::vkCreateCommandPool(
-            logical_device.vk_data, &vk_cmd_pool_info, null(), &mut vk_data));
+            logical_device.vk_data,
+            &vk_cmd_pool_info,
+            null(),
+            &mut vk_data
+        ));
         Pool {
             logical_device: logical_device,
             vk_data: vk_data,

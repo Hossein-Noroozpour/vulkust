@@ -1,27 +1,11 @@
 #![allow(non_camel_case_types, non_upper_case_globals, non_snake_case)]
 extern crate libc;
-use self::libc::{
-    c_void,
-    c_char,
-    c_int,
-};
-use super::jni::{
-    JavaVM,
-    JNIEnv,
-    jobject,
-};
-use super::asset::{
-    AAssetManager,
-};
-use super::rect::{
-    ARect,
-};
-use super::input::{
-    AInputQueue,
-};
-use super::window::{
-    ANativeWindow,
-};
+use self::libc::{c_void, c_char, c_int};
+use super::jni::{JavaVM, JNIEnv, jobject};
+use super::asset::AAssetManager;
+use super::rect::ARect;
+use super::input::AInputQueue;
+use super::window::ANativeWindow;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -38,12 +22,24 @@ pub struct ANativeActivity {
     pub obbPath: *const c_char,
 }
 
-type activity_receiver = unsafe extern fn(activity: *mut ANativeActivity);
-type activity_size_receiver = unsafe extern fn(activity: *mut ANativeActivity, size: *mut usize) -> *mut c_void;
-type activity_int_receiver = unsafe extern fn(activity: *mut ANativeActivity, hasFocus: c_int);
-type activity_window_receiver = unsafe extern fn(activity: *mut ANativeActivity, window: *mut ANativeWindow);
-type activity_input_receiver = unsafe extern fn(activity: *mut ANativeActivity, queue: *mut AInputQueue);
-type activity_rect_receiver = unsafe extern fn(activity: *mut ANativeActivity, rect: *const ARect);
+type activity_receiver = unsafe extern "C" fn(activity: *mut ANativeActivity);
+type activity_size_receiver = unsafe extern "C" fn(
+    activity: *mut ANativeActivity,
+    size: *mut usize,
+) -> *mut c_void;
+type activity_int_receiver = unsafe extern "C" fn(activity: *mut ANativeActivity, hasFocus: c_int);
+type activity_window_receiver = unsafe extern "C" fn(
+    activity: *mut ANativeActivity,
+    window: *mut ANativeWindow,
+);
+type activity_input_receiver = unsafe extern "C" fn(
+    activity: *mut ANativeActivity,
+    queue: *mut AInputQueue,
+);
+type activity_rect_receiver = unsafe extern "C" fn(
+    activity: *mut ANativeActivity,
+    rect: *const ARect,
+);
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -67,10 +63,14 @@ pub struct ANativeActivityCallbacks {
 }
 
 #[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
-extern {
+extern "C" {
     pub fn ANativeActivity_finish(activity: *mut ANativeActivity);
     pub fn ANativeActivity_setWindowFormat(activity: *mut ANativeActivity, format: i32);
-    pub fn ANativeActivity_setWindowFlags(activity: *mut ANativeActivity, addFlags: u32, removeFlags: u32);
+    pub fn ANativeActivity_setWindowFlags(
+        activity: *mut ANativeActivity,
+        addFlags: u32,
+        removeFlags: u32,
+    );
     pub fn ANativeActivity_showSoftInput(activity: *mut ANativeActivity, flags: u32);
     pub fn ANativeActivity_hideSoftInput(activity: *mut ANativeActivity, flags: u32);
 }

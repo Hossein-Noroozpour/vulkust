@@ -14,23 +14,31 @@ impl Layout {
         let mut descriptor_set_layout = 0 as vk::VkDescriptorSetLayout;
         let mut vk_data = 0 as vk::VkPipelineLayout;
         let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
-		layout_binding.descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		layout_binding.descriptorCount = 1;
-		layout_binding.stageFlags = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32;
-		let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
-		descriptor_layout.sType =
+        layout_binding.descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        layout_binding.descriptorCount = 1;
+        layout_binding.stageFlags = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32;
+        let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
+        descriptor_layout.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		descriptor_layout.bindingCount = 1;
-		descriptor_layout.pBindings = &layout_binding;
+        descriptor_layout.bindingCount = 1;
+        descriptor_layout.pBindings = &layout_binding;
         vulkan_check!(vk::vkCreateDescriptorSetLayout(
-            logical_device.vk_data, &descriptor_layout, null(), &mut descriptor_set_layout));
-		let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
-		pipeline_layout_create_info.sType =
+            logical_device.vk_data,
+            &descriptor_layout,
+            null(),
+            &mut descriptor_set_layout
+        ));
+        let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
+        pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipeline_layout_create_info.setLayoutCount = 1;
-		pipeline_layout_create_info.pSetLayouts = &descriptor_set_layout;
+        pipeline_layout_create_info.setLayoutCount = 1;
+        pipeline_layout_create_info.pSetLayouts = &descriptor_set_layout;
         vulkan_check!(vk::vkCreatePipelineLayout(
-            logical_device.vk_data, &pipeline_layout_create_info, null(), &mut vk_data));
+            logical_device.vk_data,
+            &pipeline_layout_create_info,
+            null(),
+            &mut vk_data
+        ));
         Layout {
             logical_device: logical_device,
             descriptor_set_layout: descriptor_set_layout,
@@ -41,10 +49,12 @@ impl Layout {
 impl Drop for Layout {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyPipelineLayout(
-                self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyPipelineLayout(self.logical_device.vk_data, self.vk_data, null());
             vk::vkDestroyDescriptorSetLayout(
-                self.logical_device.vk_data, self.descriptor_set_layout, null());
+                self.logical_device.vk_data,
+                self.descriptor_set_layout,
+                null(),
+            );
         }
     }
 }

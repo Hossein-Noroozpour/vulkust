@@ -20,7 +20,10 @@ impl Buffer {
         cmd_buf_allocate_info.commandBufferCount = 1;
         let mut vk_data = 0 as vk::VkCommandBuffer;
         vulkan_check!(vk::vkAllocateCommandBuffers(
-            pool.logical_device.vk_data, &cmd_buf_allocate_info, &mut vk_data));
+            pool.logical_device.vk_data,
+            &cmd_buf_allocate_info,
+            &mut vk_data
+        ));
         let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
         cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         vulkan_check!(vk::vkBeginCommandBuffer(vk_data, &cmd_buf_info));
@@ -32,8 +35,10 @@ impl Buffer {
     pub fn begin_render_pass_with_info(&self, render_pass_begin_info: vk::VkRenderPassBeginInfo) {
         unsafe {
             vk::vkCmdBeginRenderPass(
-                self.vk_data, &render_pass_begin_info,
-                vk::VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+                self.vk_data,
+                &render_pass_begin_info,
+                vk::VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE,
+            );
         }
     }
     pub fn set_viewport(&self, viewport: vk::VkViewport) {
@@ -54,7 +59,11 @@ impl Buffer {
         submit_info.commandBufferCount = 1;
         submit_info.pCommandBuffers = &self.vk_data;
         vulkan_check!(vk::vkQueueSubmit(
-            self.pool.logical_device.vk_graphic_queue, 1, &submit_info, fence.vk_data));
+            self.pool.logical_device.vk_graphic_queue,
+            1,
+            &submit_info,
+            fence.vk_data
+        ));
         fence.wait();
     }
 }
@@ -63,7 +72,11 @@ impl Drop for Buffer {
     fn drop(&mut self) {
         unsafe {
             vk::vkFreeCommandBuffers(
-                self.pool.logical_device.vk_data, self.pool.vk_data, 1, &mut self.vk_data);
+                self.pool.logical_device.vk_data,
+                self.pool.vk_data,
+                1,
+                &mut self.vk_data,
+            );
         }
     }
 }

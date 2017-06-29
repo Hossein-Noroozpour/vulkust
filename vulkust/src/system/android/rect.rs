@@ -12,8 +12,6 @@ pub struct ARect {
 
 impl Default for ARect {
     fn default() -> Self {
-        unsafe {
-            zeroed()
-        }
+        unsafe { zeroed() }
     }
 }

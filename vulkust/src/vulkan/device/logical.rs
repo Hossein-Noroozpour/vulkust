@@ -4,10 +4,7 @@ use std::default::Default;
 use std::collections::HashSet;
 use super::super::super::system::vulkan as vk;
 use super::physical::Physical;
-use super::super::super::util::string::{
-    strings_to_cstrings,
-    cstrings_to_ptrs,
-};
+use super::super::super::util::string::{strings_to_cstrings, cstrings_to_ptrs};
 
 pub struct Logical {
     pub physical_device: Arc<Physical>,
@@ -47,11 +44,19 @@ impl Logical {
         device_create_info.ppEnabledExtensionNames = device_extensions.as_ptr();
         let mut vk_data = 0 as vk::VkDevice;
         vulkan_check!(vk::vkCreateDevice(
-            physical_device.vk_data, &device_create_info, null(), &mut vk_data));
+            physical_device.vk_data,
+            &device_create_info,
+            null(),
+            &mut vk_data
+        ));
         let mut vk_graphic_queue = 0 as vk::VkQueue;
         unsafe {
             vk::vkGetDeviceQueue(
-                vk_data, physical_device.graphics_queue_node_index, 0, &mut vk_graphic_queue);
+                vk_data,
+                physical_device.graphics_queue_node_index,
+                0,
+                &mut vk_graphic_queue,
+            );
         }
         Logical {
             physical_device: physical_device,

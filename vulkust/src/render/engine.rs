@@ -10,7 +10,10 @@ use super::super::system::os::OsApplication;
 
 pub type RenderEngine<CoreApp> = Engine<CoreApp>;
 
-pub trait EngineTrait<CoreApp> where CoreApp: ApplicationTrait {
+pub trait EngineTrait<CoreApp>
+where
+    CoreApp: ApplicationTrait,
+{
     fn new() -> Self;
     fn set_core_app(&mut self, c: *mut CoreApp);
     fn set_os_app(&mut self, o: *mut OsApplication<CoreApp>);

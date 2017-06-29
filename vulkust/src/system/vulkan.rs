@@ -3,22 +3,9 @@
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
-use std::os::raw::{
-    c_int,
-    c_char,
-    c_long,
-    c_uint,
-    c_void,
-    c_ulong,
-    c_short,
-    c_uchar,
-    c_ushort,
-    c_longlong,
-};
-use std::mem::{
-    zeroed,
-    transmute,
-};
+use std::os::raw::{c_int, c_char, c_long, c_uint, c_void, c_ulong, c_short, c_uchar, c_ushort,
+                   c_longlong};
+use std::mem::{zeroed, transmute};
 use std::default::Default;
 
 pub type ptrdiff_t = isize;
@@ -33,7 +20,9 @@ pub struct max_align_t {
 }
 
 impl Default for max_align_t {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 pub type int8_t = i8;
@@ -169,14 +158,11 @@ pub enum VkCommandPool_T {}
 
 pub type VkCommandPool = *mut VkCommandPool_T;
 
-pub const VK_PIPELINE_CACHE_HEADER_VERSION_BEGIN_RANGE:
-VkPipelineCacheHeaderVersion =
+pub const VK_PIPELINE_CACHE_HEADER_VERSION_BEGIN_RANGE: VkPipelineCacheHeaderVersion =
     VkPipelineCacheHeaderVersion::VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
-pub const VK_PIPELINE_CACHE_HEADER_VERSION_END_RANGE:
-VkPipelineCacheHeaderVersion =
+pub const VK_PIPELINE_CACHE_HEADER_VERSION_END_RANGE: VkPipelineCacheHeaderVersion =
     VkPipelineCacheHeaderVersion::VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
-pub const VK_PIPELINE_CACHE_HEADER_VERSION_RANGE_SIZE:
-VkPipelineCacheHeaderVersion =
+pub const VK_PIPELINE_CACHE_HEADER_VERSION_RANGE_SIZE: VkPipelineCacheHeaderVersion =
     VkPipelineCacheHeaderVersion::VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
 
 #[derive(Copy, Clone, Debug)]
@@ -186,8 +172,7 @@ pub enum VkPipelineCacheHeaderVersion {
     VK_PIPELINE_CACHE_HEADER_VERSION_MAX_ENUM = 2147483647,
 }
 
-pub const VK_RESULT_BEGIN_RANGE: VkResult =
-    VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED;
+pub const VK_RESULT_BEGIN_RANGE: VkResult = VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED;
 pub const VK_RESULT_END_RANGE: VkResult = VkResult::VK_INCOMPLETE;
 
 #[derive(Copy, Clone, Debug)]
@@ -325,8 +310,7 @@ pub enum VkInternalAllocationType {
 }
 
 pub const VK_FORMAT_BEGIN_RANGE: VkFormat = VkFormat::VK_FORMAT_UNDEFINED;
-pub const VK_FORMAT_END_RANGE: VkFormat =
-    VkFormat::VK_FORMAT_ASTC_12x12_SRGB_BLOCK;
+pub const VK_FORMAT_END_RANGE: VkFormat = VkFormat::VK_FORMAT_ASTC_12x12_SRGB_BLOCK;
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
@@ -520,10 +504,8 @@ pub enum VkFormat {
     VK_FORMAT_MAX_ENUM = 2147483647,
 }
 
-pub const VK_IMAGE_TYPE_BEGIN_RANGE: VkImageType =
-    VkImageType::VK_IMAGE_TYPE_1D;
-pub const VK_IMAGE_TYPE_END_RANGE: VkImageType =
-    VkImageType::VK_IMAGE_TYPE_3D;
+pub const VK_IMAGE_TYPE_BEGIN_RANGE: VkImageType = VkImageType::VK_IMAGE_TYPE_1D;
+pub const VK_IMAGE_TYPE_END_RANGE: VkImageType = VkImageType::VK_IMAGE_TYPE_3D;
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
@@ -535,10 +517,8 @@ pub enum VkImageType {
     VK_IMAGE_TYPE_MAX_ENUM = 2147483647,
 }
 
-pub const VK_IMAGE_TILING_BEGIN_RANGE: VkImageTiling =
-    VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
-pub const VK_IMAGE_TILING_END_RANGE: VkImageTiling =
-    VkImageTiling::VK_IMAGE_TILING_LINEAR;
+pub const VK_IMAGE_TILING_BEGIN_RANGE: VkImageTiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
+pub const VK_IMAGE_TILING_END_RANGE: VkImageTiling = VkImageTiling::VK_IMAGE_TILING_LINEAR;
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
@@ -566,10 +546,8 @@ pub enum VkPhysicalDeviceType {
     VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM = 2147483647,
 }
 
-pub const VK_QUERY_TYPE_BEGIN_RANGE: VkQueryType =
-    VkQueryType::VK_QUERY_TYPE_OCCLUSION;
-pub const VK_QUERY_TYPE_END_RANGE: VkQueryType =
-    VkQueryType::VK_QUERY_TYPE_TIMESTAMP;
+pub const VK_QUERY_TYPE_BEGIN_RANGE: VkQueryType = VkQueryType::VK_QUERY_TYPE_OCCLUSION;
+pub const VK_QUERY_TYPE_END_RANGE: VkQueryType = VkQueryType::VK_QUERY_TYPE_TIMESTAMP;
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
@@ -581,10 +559,8 @@ pub enum VkQueryType {
     VK_QUERY_TYPE_MAX_ENUM = 2147483647,
 }
 
-pub const VK_SHARING_MODE_BEGIN_RANGE: VkSharingMode =
-    VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
-pub const VK_SHARING_MODE_END_RANGE: VkSharingMode =
-    VkSharingMode::VK_SHARING_MODE_CONCURRENT;
+pub const VK_SHARING_MODE_BEGIN_RANGE: VkSharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+pub const VK_SHARING_MODE_END_RANGE: VkSharingMode = VkSharingMode::VK_SHARING_MODE_CONCURRENT;
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
@@ -595,10 +571,8 @@ pub enum VkSharingMode {
     VK_SHARING_MODE_MAX_ENUM = 2147483647,
 }
 
-pub const VK_IMAGE_LAYOUT_BEGIN_RANGE: VkImageLayout =
-    VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-pub const VK_IMAGE_LAYOUT_END_RANGE: VkImageLayout =
-    VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED;
+pub const VK_IMAGE_LAYOUT_BEGIN_RANGE: VkImageLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+pub const VK_IMAGE_LAYOUT_END_RANGE: VkImageLayout = VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED;
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
@@ -617,8 +591,7 @@ pub enum VkImageLayout {
     VK_IMAGE_LAYOUT_MAX_ENUM = 2147483647,
 }
 
-pub const VK_IMAGE_VIEW_TYPE_BEGIN_RANGE: VkImageViewType =
-    VkImageViewType::VK_IMAGE_VIEW_TYPE_1D;
+pub const VK_IMAGE_VIEW_TYPE_BEGIN_RANGE: VkImageViewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_1D;
 pub const VK_IMAGE_VIEW_TYPE_END_RANGE: VkImageViewType =
     VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
 
@@ -692,10 +665,8 @@ pub enum VkPrimitiveTopology {
     VK_PRIMITIVE_TOPOLOGY_MAX_ENUM = 2147483647,
 }
 
-pub const VK_POLYGON_MODE_BEGIN_RANGE: VkPolygonMode =
-    VkPolygonMode::VK_POLYGON_MODE_FILL;
-pub const VK_POLYGON_MODE_END_RANGE: VkPolygonMode =
-    VkPolygonMode::VK_POLYGON_MODE_POINT;
+pub const VK_POLYGON_MODE_BEGIN_RANGE: VkPolygonMode = VkPolygonMode::VK_POLYGON_MODE_FILL;
+pub const VK_POLYGON_MODE_END_RANGE: VkPolygonMode = VkPolygonMode::VK_POLYGON_MODE_POINT;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(u32)]
@@ -707,10 +678,8 @@ pub enum VkPolygonMode {
     VK_POLYGON_MODE_MAX_ENUM = 2147483647,
 }
 
-pub const VK_FRONT_FACE_BEGIN_RANGE: VkFrontFace =
-    VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE;
-pub const VK_FRONT_FACE_END_RANGE: VkFrontFace =
-    VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
+pub const VK_FRONT_FACE_BEGIN_RANGE: VkFrontFace = VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE;
+pub const VK_FRONT_FACE_END_RANGE: VkFrontFace = VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(u32)]
@@ -721,10 +690,8 @@ pub enum VkFrontFace {
     VK_FRONT_FACE_MAX_ENUM = 2147483647,
 }
 
-pub const VK_COMPARE_OP_BEGIN_RANGE: VkCompareOp =
-    VkCompareOp::VK_COMPARE_OP_NEVER;
-pub const VK_COMPARE_OP_END_RANGE: VkCompareOp =
-    VkCompareOp::VK_COMPARE_OP_ALWAYS;
+pub const VK_COMPARE_OP_BEGIN_RANGE: VkCompareOp = VkCompareOp::VK_COMPARE_OP_NEVER;
+pub const VK_COMPARE_OP_END_RANGE: VkCompareOp = VkCompareOp::VK_COMPARE_OP_ALWAYS;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(u32)]
@@ -741,10 +708,8 @@ pub enum VkCompareOp {
     VK_COMPARE_OP_MAX_ENUM = 2147483647,
 }
 
-pub const VK_STENCIL_OP_BEGIN_RANGE: VkStencilOp =
-    VkStencilOp::VK_STENCIL_OP_KEEP;
-pub const VK_STENCIL_OP_END_RANGE: VkStencilOp =
-    VkStencilOp::VK_STENCIL_OP_DECREMENT_AND_WRAP;
+pub const VK_STENCIL_OP_BEGIN_RANGE: VkStencilOp = VkStencilOp::VK_STENCIL_OP_KEEP;
+pub const VK_STENCIL_OP_END_RANGE: VkStencilOp = VkStencilOp::VK_STENCIL_OP_DECREMENT_AND_WRAP;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(u32)]
@@ -787,8 +752,7 @@ pub enum VkLogicOp {
     VK_LOGIC_OP_MAX_ENUM = 2147483647,
 }
 
-pub const VK_BLEND_FACTOR_BEGIN_RANGE: VkBlendFactor =
-    VkBlendFactor::VK_BLEND_FACTOR_ZERO;
+pub const VK_BLEND_FACTOR_BEGIN_RANGE: VkBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;
 pub const VK_BLEND_FACTOR_END_RANGE: VkBlendFactor =
     VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA;
 
@@ -833,8 +797,7 @@ pub enum VkBlendOp {
     VK_BLEND_OP_MAX_ENUM = 2147483647,
 }
 
-pub const VK_DYNAMIC_STATE_BEGIN_RANGE: VkDynamicState =
-    VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT;
+pub const VK_DYNAMIC_STATE_BEGIN_RANGE: VkDynamicState = VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT;
 pub const VK_DYNAMIC_STATE_END_RANGE: VkDynamicState =
     VkDynamicState::VK_DYNAMIC_STATE_STENCIL_REFERENCE;
 
@@ -997,10 +960,8 @@ pub enum VkCommandBufferLevel {
     VK_COMMAND_BUFFER_LEVEL_MAX_ENUM = 2147483647,
 }
 
-pub const VK_INDEX_TYPE_BEGIN_RANGE: VkIndexType =
-    VkIndexType::VK_INDEX_TYPE_UINT16;
-pub const VK_INDEX_TYPE_END_RANGE: VkIndexType =
-    VkIndexType::VK_INDEX_TYPE_UINT32;
+pub const VK_INDEX_TYPE_BEGIN_RANGE: VkIndexType = VkIndexType::VK_INDEX_TYPE_UINT16;
+pub const VK_INDEX_TYPE_END_RANGE: VkIndexType = VkIndexType::VK_INDEX_TYPE_UINT32;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(u32)]
@@ -1211,8 +1172,7 @@ pub enum VkQueryPipelineStatisticFlagBits {
     VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT = 64,
     VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT = 128,
     VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT = 256,
-    VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT
-    = 512,
+    VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT = 512,
     VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT = 1024,
     VK_QUERY_PIPELINE_STATISTIC_FLAG_BITS_MAX_ENUM = 2147483647,
 }
@@ -1444,19 +1404,34 @@ pub enum VkStencilFaceFlagBits {
 
 pub type VkStencilFaceFlags = VkFlags;
 pub type PFN_vkAllocationFunction = unsafe extern "C" fn(
-    pUserData: *mut c_void, size: size_t, alignment: size_t,
-    allocationScope: VkSystemAllocationScope) -> *mut c_void;
-pub type PFN_vkReallocationFunction = unsafe extern "C" fn(
-    pUserData: *mut c_void, pOriginal: *mut c_void, size: size_t, alignment: size_t,
-    allocationScope: VkSystemAllocationScope) -> *mut c_void;
-pub type PFN_vkFreeFunction = unsafe extern "C" fn(
-    pUserData: *mut c_void, pMemory: *mut c_void);
-pub type PFN_vkInternalAllocationNotification = unsafe extern "C" fn(
-    pUserData: *mut c_void, size: size_t, allocationType: VkInternalAllocationType,
-    allocationScope: VkSystemAllocationScope);
-pub type PFN_vkInternalFreeNotification = unsafe extern "C" fn(
-    pUserData: *mut c_void, size: size_t, allocationType: VkInternalAllocationType,
-    allocationScope: VkSystemAllocationScope);
+    pUserData: *mut c_void,
+    size: size_t,
+    alignment: size_t,
+    allocationScope: VkSystemAllocationScope,
+) -> *mut c_void;
+pub type PFN_vkReallocationFunction =
+    unsafe extern "C" fn(
+        pUserData: *mut c_void,
+        pOriginal: *mut c_void,
+        size: size_t,
+        alignment: size_t,
+        allocationScope: VkSystemAllocationScope,
+    ) -> *mut c_void;
+pub type PFN_vkFreeFunction = unsafe extern "C" fn(pUserData: *mut c_void, pMemory: *mut c_void);
+pub type PFN_vkInternalAllocationNotification =
+    unsafe extern "C" fn(
+        pUserData: *mut c_void,
+        size: size_t,
+        allocationType: VkInternalAllocationType,
+        allocationScope: VkSystemAllocationScope,
+    );
+pub type PFN_vkInternalFreeNotification =
+    unsafe extern "C" fn(
+        pUserData: *mut c_void,
+        size: size_t,
+        allocationType: VkInternalAllocationType,
+        allocationScope: VkSystemAllocationScope,
+    );
 pub type PFN_vkVoidFunction = unsafe extern "C" fn();
 
 #[repr(C)]
@@ -1472,7 +1447,9 @@ pub struct VkApplicationInfo {
 }
 
 impl Default for VkApplicationInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1489,7 +1466,9 @@ pub struct VkInstanceCreateInfo {
 }
 
 impl Default for VkInstanceCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1504,7 +1483,9 @@ pub struct VkAllocationCallbacks {
 }
 
 impl Default for VkAllocationCallbacks {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1568,7 +1549,9 @@ pub struct VkPhysicalDeviceFeatures {
 }
 
 impl Default for VkPhysicalDeviceFeatures {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1580,7 +1563,9 @@ pub struct VkFormatProperties {
 }
 
 impl Default for VkFormatProperties {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1592,7 +1577,9 @@ pub struct VkExtent3D {
 }
 
 impl Default for VkExtent3D {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1606,7 +1593,9 @@ pub struct VkImageFormatProperties {
 }
 
 impl Default for VkImageFormatProperties {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1721,7 +1710,9 @@ pub struct VkPhysicalDeviceLimits {
 }
 
 impl Default for VkPhysicalDeviceLimits {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1735,7 +1726,9 @@ pub struct VkPhysicalDeviceSparseProperties {
 }
 
 impl Default for VkPhysicalDeviceSparseProperties {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1753,11 +1746,15 @@ pub struct VkPhysicalDeviceProperties {
 }
 
 impl Clone for VkPhysicalDeviceProperties {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl Default for VkPhysicalDeviceProperties {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1770,7 +1767,9 @@ pub struct VkQueueFamilyProperties {
 }
 
 impl Default for VkQueueFamilyProperties {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1781,7 +1780,9 @@ pub struct VkMemoryType {
 }
 
 impl Default for VkMemoryType {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1793,7 +1794,9 @@ pub struct VkMemoryHeap {
 }
 
 impl Default for VkMemoryHeap {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1806,7 +1809,9 @@ pub struct VkPhysicalDeviceMemoryProperties {
 }
 
 impl Default for VkPhysicalDeviceMemoryProperties {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1821,7 +1826,9 @@ pub struct VkDeviceQueueCreateInfo {
 }
 
 impl Default for VkDeviceQueueCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1840,7 +1847,9 @@ pub struct VkDeviceCreateInfo {
 }
 
 impl Default for VkDeviceCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1851,11 +1860,15 @@ pub struct VkExtensionProperties {
 }
 
 impl Clone for VkExtensionProperties {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl Default for VkExtensionProperties {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1868,11 +1881,15 @@ pub struct VkLayerProperties {
 }
 
 impl Clone for VkLayerProperties {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl Default for VkLayerProperties {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1890,7 +1907,9 @@ pub struct VkSubmitInfo {
 }
 
 impl Default for VkSubmitInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1904,7 +1923,9 @@ pub struct VkMemoryAllocateInfo {
 }
 
 impl Default for VkMemoryAllocateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1918,7 +1939,9 @@ pub struct VkMappedMemoryRange {
 }
 
 impl Default for VkMappedMemoryRange {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1931,7 +1954,9 @@ pub struct VkMemoryRequirements {
 }
 
 impl Default for VkMemoryRequirements {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1943,7 +1968,9 @@ pub struct VkSparseImageFormatProperties {
 }
 
 impl Default for VkSparseImageFormatProperties {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1957,7 +1984,9 @@ pub struct VkSparseImageMemoryRequirements {
 }
 
 impl Default for VkSparseImageMemoryRequirements {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1972,7 +2001,9 @@ pub struct VkSparseMemoryBind {
 }
 
 impl Default for VkSparseMemoryBind {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1984,7 +2015,9 @@ pub struct VkSparseBufferMemoryBindInfo {
 }
 
 impl Default for VkSparseBufferMemoryBindInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -1996,7 +2029,9 @@ pub struct VkSparseImageOpaqueMemoryBindInfo {
 }
 
 impl Default for VkSparseImageOpaqueMemoryBindInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2008,7 +2043,9 @@ pub struct VkImageSubresource {
 }
 
 impl Default for VkImageSubresource {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2020,7 +2057,9 @@ pub struct VkOffset3D {
 }
 
 impl Default for VkOffset3D {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2036,7 +2075,9 @@ pub struct VkSparseImageMemoryBind {
 }
 
 impl Default for VkSparseImageMemoryBind {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2048,7 +2089,9 @@ pub struct VkSparseImageMemoryBindInfo {
 }
 
 impl Default for VkSparseImageMemoryBindInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2069,7 +2112,9 @@ pub struct VkBindSparseInfo {
 }
 
 impl Default for VkBindSparseInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2082,7 +2127,9 @@ pub struct VkFenceCreateInfo {
 }
 
 impl Default for VkFenceCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2095,7 +2142,9 @@ pub struct VkSemaphoreCreateInfo {
 }
 
 impl Default for VkSemaphoreCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2108,7 +2157,9 @@ pub struct VkEventCreateInfo {
 }
 
 impl Default for VkEventCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2123,7 +2174,9 @@ pub struct VkQueryPoolCreateInfo {
 }
 
 impl Default for VkQueryPoolCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2140,7 +2193,9 @@ pub struct VkBufferCreateInfo {
 }
 
 impl Default for VkBufferCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2156,7 +2211,9 @@ pub struct VkBufferViewCreateInfo {
 }
 
 impl Default for VkBufferViewCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2181,7 +2238,9 @@ pub struct VkImageCreateInfo {
 }
 
 impl Default for VkImageCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2195,7 +2254,9 @@ pub struct VkSubresourceLayout {
 }
 
 impl Default for VkSubresourceLayout {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2208,7 +2269,9 @@ pub struct VkComponentMapping {
 }
 
 impl Default for VkComponentMapping {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2222,7 +2285,9 @@ pub struct VkImageSubresourceRange {
 }
 
 impl Default for VkImageSubresourceRange {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2240,7 +2305,9 @@ pub struct VkImageViewCreateInfo {
 }
 
 impl Default for VkImageViewCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2254,7 +2321,9 @@ pub struct VkShaderModuleCreateInfo {
 }
 
 impl Default for VkShaderModuleCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2268,7 +2337,9 @@ pub struct VkPipelineCacheCreateInfo {
 }
 
 impl Default for VkPipelineCacheCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2280,7 +2351,9 @@ pub struct VkSpecializationMapEntry {
 }
 
 impl Default for VkSpecializationMapEntry {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2293,7 +2366,9 @@ pub struct VkSpecializationInfo {
 }
 
 impl Default for VkSpecializationInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2309,7 +2384,9 @@ pub struct VkPipelineShaderStageCreateInfo {
 }
 
 impl Default for VkPipelineShaderStageCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2321,7 +2398,9 @@ pub struct VkVertexInputBindingDescription {
 }
 
 impl Default for VkVertexInputBindingDescription {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2334,7 +2413,9 @@ pub struct VkVertexInputAttributeDescription {
 }
 
 impl Default for VkVertexInputAttributeDescription {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2350,7 +2431,9 @@ pub struct VkPipelineVertexInputStateCreateInfo {
 }
 
 impl Default for VkPipelineVertexInputStateCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2365,7 +2448,9 @@ pub struct VkPipelineInputAssemblyStateCreateInfo {
 }
 
 impl Default for VkPipelineInputAssemblyStateCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2378,7 +2463,9 @@ pub struct VkPipelineTessellationStateCreateInfo {
 }
 
 impl Default for VkPipelineTessellationStateCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2393,7 +2480,9 @@ pub struct VkViewport {
 }
 
 impl Default for VkViewport {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2404,7 +2493,9 @@ pub struct VkOffset2D {
 }
 
 impl Default for VkOffset2D {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2415,7 +2506,9 @@ pub struct VkExtent2D {
 }
 
 impl Default for VkExtent2D {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2426,7 +2519,9 @@ pub struct VkRect2D {
 }
 
 impl Default for VkRect2D {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2442,7 +2537,9 @@ pub struct VkPipelineViewportStateCreateInfo {
 }
 
 impl Default for VkPipelineViewportStateCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2465,7 +2562,9 @@ pub struct VkPipelineRasterizationStateCreateInfo {
 }
 
 impl Default for VkPipelineRasterizationStateCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2483,7 +2582,9 @@ pub struct VkPipelineMultisampleStateCreateInfo {
 }
 
 impl Default for VkPipelineMultisampleStateCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2499,7 +2600,9 @@ pub struct VkStencilOpState {
 }
 
 impl Default for VkStencilOpState {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2520,7 +2623,9 @@ pub struct VkPipelineDepthStencilStateCreateInfo {
 }
 
 impl Default for VkPipelineDepthStencilStateCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2537,7 +2642,9 @@ pub struct VkPipelineColorBlendAttachmentState {
 }
 
 impl Default for VkPipelineColorBlendAttachmentState {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2554,7 +2661,9 @@ pub struct VkPipelineColorBlendStateCreateInfo {
 }
 
 impl Default for VkPipelineColorBlendStateCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2568,7 +2677,9 @@ pub struct VkPipelineDynamicStateCreateInfo {
 }
 
 impl Default for VkPipelineDynamicStateCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2597,7 +2708,9 @@ pub struct VkGraphicsPipelineCreateInfo {
 }
 
 impl Default for VkGraphicsPipelineCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2614,7 +2727,9 @@ pub struct VkComputePipelineCreateInfo {
 }
 
 impl Default for VkComputePipelineCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2626,7 +2741,9 @@ pub struct VkPushConstantRange {
 }
 
 impl Default for VkPushConstantRange {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2642,7 +2759,9 @@ pub struct VkPipelineLayoutCreateInfo {
 }
 
 impl Default for VkPipelineLayoutCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2669,7 +2788,9 @@ pub struct VkSamplerCreateInfo {
 }
 
 impl Default for VkSamplerCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2683,7 +2804,9 @@ pub struct VkDescriptorSetLayoutBinding {
 }
 
 impl Default for VkDescriptorSetLayoutBinding {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2697,7 +2820,9 @@ pub struct VkDescriptorSetLayoutCreateInfo {
 }
 
 impl Default for VkDescriptorSetLayoutCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2708,7 +2833,9 @@ pub struct VkDescriptorPoolSize {
 }
 
 impl Default for VkDescriptorPoolSize {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2723,7 +2850,9 @@ pub struct VkDescriptorPoolCreateInfo {
 }
 
 impl Default for VkDescriptorPoolCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2737,7 +2866,9 @@ pub struct VkDescriptorSetAllocateInfo {
 }
 
 impl Default for VkDescriptorSetAllocateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2750,7 +2881,9 @@ pub struct VkDescriptorImageInfo {
 }
 
 impl Default for VkDescriptorImageInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2762,7 +2895,9 @@ pub struct VkDescriptorBufferInfo {
 }
 
 impl Default for VkDescriptorBufferInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2781,7 +2916,9 @@ pub struct VkWriteDescriptorSet {
 }
 
 impl Default for VkWriteDescriptorSet {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2800,7 +2937,9 @@ pub struct VkCopyDescriptorSet {
 }
 
 impl Default for VkCopyDescriptorSet {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2819,7 +2958,9 @@ pub struct VkFramebufferCreateInfo {
 }
 
 impl Default for VkFramebufferCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2837,7 +2978,9 @@ pub struct VkAttachmentDescription {
 }
 
 impl Default for VkAttachmentDescription {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2848,7 +2991,9 @@ pub struct VkAttachmentReference {
 }
 
 impl Default for VkAttachmentReference {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2867,7 +3012,9 @@ pub struct VkSubpassDescription {
 }
 
 impl Default for VkSubpassDescription {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2883,7 +3030,9 @@ pub struct VkSubpassDependency {
 }
 
 impl Default for VkSubpassDependency {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2901,7 +3050,9 @@ pub struct VkRenderPassCreateInfo {
 }
 
 impl Default for VkRenderPassCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2914,7 +3065,9 @@ pub struct VkCommandPoolCreateInfo {
 }
 
 impl Default for VkCommandPoolCreateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2928,7 +3081,9 @@ pub struct VkCommandBufferAllocateInfo {
 }
 
 impl Default for VkCommandBufferAllocateInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2946,7 +3101,9 @@ pub struct VkCommandBufferInheritanceInfo {
 }
 
 impl Default for VkCommandBufferInheritanceInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2959,7 +3116,9 @@ pub struct VkCommandBufferBeginInfo {
 }
 
 impl Default for VkCommandBufferBeginInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2971,7 +3130,9 @@ pub struct VkBufferCopy {
 }
 
 impl Default for VkBufferCopy {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2984,7 +3145,9 @@ pub struct VkImageSubresourceLayers {
 }
 
 impl Default for VkImageSubresourceLayers {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -2998,7 +3161,9 @@ pub struct VkImageCopy {
 }
 
 impl Default for VkImageCopy {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3011,7 +3176,9 @@ pub struct VkImageBlit {
 }
 
 impl Default for VkImageBlit {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3026,7 +3193,9 @@ pub struct VkBufferImageCopy {
 }
 
 impl Default for VkBufferImageCopy {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3051,7 +3220,9 @@ impl VkClearColorValue {
 }
 
 impl Default for VkClearColorValue {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3062,7 +3233,9 @@ pub struct VkClearDepthStencilValue {
 }
 
 impl Default for VkClearDepthStencilValue {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3083,7 +3256,9 @@ impl VkClearValue {
 }
 
 impl Default for VkClearValue {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3095,7 +3270,9 @@ pub struct VkClearAttachment {
 }
 
 impl Default for VkClearAttachment {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3107,7 +3284,9 @@ pub struct VkClearRect {
 }
 
 impl Default for VkClearRect {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3121,7 +3300,9 @@ pub struct VkImageResolve {
 }
 
 impl Default for VkImageResolve {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3134,7 +3315,9 @@ pub struct VkMemoryBarrier {
 }
 
 impl Default for VkMemoryBarrier {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3152,7 +3335,9 @@ pub struct VkBufferMemoryBarrier {
 }
 
 impl Default for VkBufferMemoryBarrier {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3172,7 +3357,9 @@ pub struct VkImageMemoryBarrier {
 }
 
 impl Default for VkImageMemoryBarrier {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3188,7 +3375,9 @@ pub struct VkRenderPassBeginInfo {
 }
 
 impl Default for VkRenderPassBeginInfo {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3200,7 +3389,9 @@ pub struct VkDispatchIndirectCommand {
 }
 
 impl Default for VkDispatchIndirectCommand {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3214,7 +3405,9 @@ pub struct VkDrawIndexedIndirectCommand {
 }
 
 impl Default for VkDrawIndexedIndirectCommand {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3227,371 +3420,823 @@ pub struct VkDrawIndirectCommand {
 }
 
 impl Default for VkDrawIndirectCommand {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 pub type PFN_vkCreateInstance = unsafe extern "C" fn(
-    pCreateInfo: *const VkInstanceCreateInfo, pAllocator: *const VkAllocationCallbacks,
-    pInstance: *mut VkInstance) -> VkResult;
+    pCreateInfo: *const VkInstanceCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pInstance: *mut VkInstance,
+) -> VkResult;
 pub type PFN_vkDestroyInstance = unsafe extern "C" fn(
-    instance: VkInstance, pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkEnumeratePhysicalDevices = unsafe extern "C" fn(
-    instance: VkInstance, pPhysicalDeviceCount: *mut uint32_t,
-    pPhysicalDevices: *mut VkPhysicalDevice) -> VkResult;
-pub type PFN_vkGetPhysicalDeviceFeatures = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, pFeatures: *mut VkPhysicalDeviceFeatures);
-pub type PFN_vkGetPhysicalDeviceFormatProperties = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, format: VkFormat, pFormatProperties: *mut VkFormatProperties);
-pub type PFN_vkGetPhysicalDeviceImageFormatProperties = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, format: VkFormat, type_: VkImageType, tiling: VkImageTiling,
-    usage: VkImageUsageFlags, flags: VkImageCreateFlags,
-    pImageFormatProperties: *mut VkImageFormatProperties) -> VkResult;
-pub type PFN_vkGetPhysicalDeviceProperties = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, pProperties: *mut VkPhysicalDeviceProperties);
-pub type PFN_vkGetPhysicalDeviceQueueFamilyProperties = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, pQueueFamilyPropertyCount: *mut uint32_t,
-    pQueueFamilyProperties: *mut VkQueueFamilyProperties);
-pub type PFN_vkGetPhysicalDeviceMemoryProperties = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, pMemoryProperties: *mut VkPhysicalDeviceMemoryProperties);
+    instance: VkInstance,
+    pAllocator: *const VkAllocationCallbacks,
+);
+pub type PFN_vkEnumeratePhysicalDevices =
+    unsafe extern "C" fn(
+        instance: VkInstance,
+        pPhysicalDeviceCount: *mut uint32_t,
+        pPhysicalDevices: *mut VkPhysicalDevice,
+    ) -> VkResult;
+pub type PFN_vkGetPhysicalDeviceFeatures =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        pFeatures: *mut VkPhysicalDeviceFeatures,
+    );
+pub type PFN_vkGetPhysicalDeviceFormatProperties =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        format: VkFormat,
+        pFormatProperties: *mut VkFormatProperties,
+    );
+pub type PFN_vkGetPhysicalDeviceImageFormatProperties =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        format: VkFormat,
+        type_: VkImageType,
+        tiling: VkImageTiling,
+        usage: VkImageUsageFlags,
+        flags: VkImageCreateFlags,
+        pImageFormatProperties: *mut VkImageFormatProperties,
+    ) -> VkResult;
+pub type PFN_vkGetPhysicalDeviceProperties =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        pProperties: *mut VkPhysicalDeviceProperties,
+    );
+pub type PFN_vkGetPhysicalDeviceQueueFamilyProperties =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        pQueueFamilyPropertyCount: *mut uint32_t,
+        pQueueFamilyProperties: *mut VkQueueFamilyProperties,
+    );
+pub type PFN_vkGetPhysicalDeviceMemoryProperties =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        pMemoryProperties: *mut VkPhysicalDeviceMemoryProperties,
+    );
 pub type PFN_vkGetInstanceProcAddr = unsafe extern "C" fn(
-    instance: VkInstance, pName: *const c_char) -> PFN_vkVoidFunction;
-pub type PFN_vkGetDeviceProcAddr = unsafe extern "C" fn(
-    device: VkDevice, pName: *const c_char) -> PFN_vkVoidFunction;
+    instance: VkInstance,
+    pName: *const c_char,
+)
+    -> PFN_vkVoidFunction;
+pub type PFN_vkGetDeviceProcAddr = unsafe extern "C" fn(device: VkDevice, pName: *const c_char)
+    -> PFN_vkVoidFunction;
 pub type PFN_vkCreateDevice = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, pCreateInfo: *const VkDeviceCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pDevice: *mut VkDevice) -> VkResult;
+    physicalDevice: VkPhysicalDevice,
+    pCreateInfo: *const VkDeviceCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pDevice: *mut VkDevice,
+) -> VkResult;
 pub type PFN_vkDestroyDevice = unsafe extern "C" fn(
-    device: VkDevice, pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkEnumerateInstanceExtensionProperties = unsafe extern "C" fn(
-    pLayerName: *const c_char, pPropertyCount: *mut uint32_t,
-    pProperties: *mut VkExtensionProperties) -> VkResult;
-pub type PFN_vkEnumerateDeviceExtensionProperties = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, pLayerName: *const c_char,
-    pPropertyCount: *mut uint32_t, pProperties: *mut VkExtensionProperties) -> VkResult;
-pub type PFN_vkEnumerateInstanceLayerProperties = unsafe extern "C" fn(
-    pPropertyCount: *mut uint32_t, pProperties: *mut VkLayerProperties) -> VkResult;
-pub type PFN_vkEnumerateDeviceLayerProperties = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
-    pProperties: *mut VkLayerProperties) -> VkResult;
+    device: VkDevice,
+    pAllocator: *const VkAllocationCallbacks,
+);
+pub type PFN_vkEnumerateInstanceExtensionProperties =
+    unsafe extern "C" fn(
+        pLayerName: *const c_char,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkExtensionProperties,
+    ) -> VkResult;
+pub type PFN_vkEnumerateDeviceExtensionProperties =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        pLayerName: *const c_char,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkExtensionProperties,
+    ) -> VkResult;
+pub type PFN_vkEnumerateInstanceLayerProperties =
+    unsafe extern "C" fn(pPropertyCount: *mut uint32_t, pProperties: *mut VkLayerProperties)
+        -> VkResult;
+pub type PFN_vkEnumerateDeviceLayerProperties =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkLayerProperties,
+    ) -> VkResult;
 pub type PFN_vkGetDeviceQueue = unsafe extern "C" fn(
-    device: VkDevice, queueFamilyIndex: uint32_t, queueIndex: uint32_t, pQueue: *mut VkQueue);
+    device: VkDevice,
+    queueFamilyIndex: uint32_t,
+    queueIndex: uint32_t,
+    pQueue: *mut VkQueue,
+);
 pub type PFN_vkQueueSubmit = unsafe extern "C" fn(
-    queue: VkQueue, submitCount: uint32_t, pSubmits: *const VkSubmitInfo,
-    fence: VkFence) -> VkResult;
+    queue: VkQueue,
+    submitCount: uint32_t,
+    pSubmits: *const VkSubmitInfo,
+    fence: VkFence,
+) -> VkResult;
 pub type PFN_vkQueueWaitIdle = extern "C" fn(queue: VkQueue) -> VkResult;
 pub type PFN_vkDeviceWaitIdle = extern "C" fn(device: VkDevice) -> VkResult;
 pub type PFN_vkAllocateMemory = unsafe extern "C" fn(
-    device: VkDevice, pAllocateInfo: *const VkMemoryAllocateInfo,
-    pAllocator: *const VkAllocationCallbacks, pMemory: *mut VkDeviceMemory) -> VkResult;
+    device: VkDevice,
+    pAllocateInfo: *const VkMemoryAllocateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pMemory: *mut VkDeviceMemory,
+) -> VkResult;
 pub type PFN_vkFreeMemory = unsafe extern "C" fn(
-    device: VkDevice, memory: VkDeviceMemory, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    memory: VkDeviceMemory,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkMapMemory = unsafe extern "C" fn(
-    device: VkDevice, memory: VkDeviceMemory, offset: VkDeviceSize, size: VkDeviceSize,
-    flags: VkMemoryMapFlags, ppData: *mut *mut c_void) -> VkResult;
+    device: VkDevice,
+    memory: VkDeviceMemory,
+    offset: VkDeviceSize,
+    size: VkDeviceSize,
+    flags: VkMemoryMapFlags,
+    ppData: *mut *mut c_void,
+) -> VkResult;
 pub type PFN_vkUnmapMemory = extern "C" fn(device: VkDevice, memory: VkDeviceMemory);
-pub type PFN_vkFlushMappedMemoryRanges = unsafe extern "C" fn(
-    device: VkDevice, memoryRangeCount: uint32_t,
-    pMemoryRanges: *const VkMappedMemoryRange) -> VkResult;
-pub type PFN_vkInvalidateMappedMemoryRanges = unsafe extern "C" fn(
-    device: VkDevice, memoryRangeCount: uint32_t,
-    pMemoryRanges: *const VkMappedMemoryRange) -> VkResult;
-pub type PFN_vkGetDeviceMemoryCommitment = unsafe extern "C" fn(
-    device: VkDevice, memory: VkDeviceMemory, pCommittedMemoryInBytes: *mut VkDeviceSize);
+pub type PFN_vkFlushMappedMemoryRanges =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        memoryRangeCount: uint32_t,
+        pMemoryRanges: *const VkMappedMemoryRange,
+    ) -> VkResult;
+pub type PFN_vkInvalidateMappedMemoryRanges =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        memoryRangeCount: uint32_t,
+        pMemoryRanges: *const VkMappedMemoryRange,
+    ) -> VkResult;
+pub type PFN_vkGetDeviceMemoryCommitment =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        memory: VkDeviceMemory,
+        pCommittedMemoryInBytes: *mut VkDeviceSize,
+    );
 pub type PFN_vkBindBufferMemory = extern "C" fn(
-    device: VkDevice, buffer: VkBuffer, memory: VkDeviceMemory,
-    memoryOffset: VkDeviceSize) -> VkResult;
+    device: VkDevice,
+    buffer: VkBuffer,
+    memory: VkDeviceMemory,
+    memoryOffset: VkDeviceSize,
+) -> VkResult;
 pub type PFN_vkBindImageMemory = extern "C" fn(
-    device: VkDevice, image: VkImage, memory: VkDeviceMemory,
-    memoryOffset: VkDeviceSize) -> VkResult;
-pub type PFN_vkGetBufferMemoryRequirements = unsafe extern "C" fn(
-    device: VkDevice, buffer: VkBuffer, pMemoryRequirements: *mut VkMemoryRequirements);
-pub type PFN_vkGetImageMemoryRequirements = unsafe extern "C" fn(
-    device: VkDevice, image: VkImage, pMemoryRequirements: *mut VkMemoryRequirements);
-pub type PFN_vkGetImageSparseMemoryRequirements = unsafe extern "C" fn(
-    device: VkDevice, image: VkImage, pSparseMemoryRequirementCount: *mut uint32_t,
-    pSparseMemoryRequirements: *mut VkSparseImageMemoryRequirements);
-pub type PFN_vkGetPhysicalDeviceSparseImageFormatProperties = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, format: VkFormat, type_: VkImageType,
-    samples: VkSampleCountFlagBits, usage: VkImageUsageFlags, tiling: VkImageTiling,
-    pPropertyCount: *mut uint32_t, pProperties: *mut VkSparseImageFormatProperties);
+    device: VkDevice,
+    image: VkImage,
+    memory: VkDeviceMemory,
+    memoryOffset: VkDeviceSize,
+) -> VkResult;
+pub type PFN_vkGetBufferMemoryRequirements =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        buffer: VkBuffer,
+        pMemoryRequirements: *mut VkMemoryRequirements,
+    );
+pub type PFN_vkGetImageMemoryRequirements =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        image: VkImage,
+        pMemoryRequirements: *mut VkMemoryRequirements,
+    );
+pub type PFN_vkGetImageSparseMemoryRequirements =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        image: VkImage,
+        pSparseMemoryRequirementCount: *mut uint32_t,
+        pSparseMemoryRequirements: *mut VkSparseImageMemoryRequirements,
+    );
+pub type PFN_vkGetPhysicalDeviceSparseImageFormatProperties =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        format: VkFormat,
+        type_: VkImageType,
+        samples: VkSampleCountFlagBits,
+        usage: VkImageUsageFlags,
+        tiling: VkImageTiling,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkSparseImageFormatProperties,
+    );
 pub type PFN_vkQueueBindSparse = unsafe extern "C" fn(
-    queue: VkQueue, bindInfoCount: uint32_t, pBindInfo: *const VkBindSparseInfo,
-    fence: VkFence) -> VkResult;
+    queue: VkQueue,
+    bindInfoCount: uint32_t,
+    pBindInfo: *const VkBindSparseInfo,
+    fence: VkFence,
+) -> VkResult;
 pub type PFN_vkCreateFence = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkFenceCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pFence: *mut VkFence) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkFenceCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pFence: *mut VkFence,
+) -> VkResult;
 pub type PFN_vkDestroyFence = unsafe extern "C" fn(
-    device: VkDevice, fence: VkFence, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    fence: VkFence,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkResetFences = unsafe extern "C" fn(
-    device: VkDevice, fenceCount: uint32_t, pFences: *const VkFence) -> VkResult;
-pub type PFN_vkGetFenceStatus = extern "C" fn(device: VkDevice, fence: VkFence) -> VkResult;
+    device: VkDevice,
+    fenceCount: uint32_t,
+    pFences: *const VkFence,
+) -> VkResult;
+pub type PFN_vkGetFenceStatus = extern "C" fn(device: VkDevice, fence: VkFence)
+    -> VkResult;
 pub type PFN_vkWaitForFences = unsafe extern "C" fn(
-    device: VkDevice, fenceCount: uint32_t, pFences: *const VkFence, waitAll: VkBool32,
-    timeout: uint64_t) -> VkResult;
+    device: VkDevice,
+    fenceCount: uint32_t,
+    pFences: *const VkFence,
+    waitAll: VkBool32,
+    timeout: uint64_t,
+) -> VkResult;
 pub type PFN_vkCreateSemaphore = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkSemaphoreCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pSemaphore: *mut VkSemaphore) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkSemaphoreCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pSemaphore: *mut VkSemaphore,
+) -> VkResult;
 pub type PFN_vkDestroySemaphore = unsafe extern "C" fn(
-    device: VkDevice, semaphore: VkSemaphore, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    semaphore: VkSemaphore,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkCreateEvent = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkEventCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pEvent: *mut VkEvent) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkEventCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pEvent: *mut VkEvent,
+) -> VkResult;
 pub type PFN_vkDestroyEvent = unsafe extern "C" fn(
-    device: VkDevice, event: VkEvent, pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkGetEventStatus = extern "C" fn(device: VkDevice, event: VkEvent) -> VkResult;
+    device: VkDevice,
+    event: VkEvent,
+    pAllocator: *const VkAllocationCallbacks,
+);
+pub type PFN_vkGetEventStatus = extern "C" fn(device: VkDevice, event: VkEvent)
+    -> VkResult;
 pub type PFN_vkSetEvent = extern "C" fn(device: VkDevice, event: VkEvent) -> VkResult;
 pub type PFN_vkResetEvent = extern "C" fn(device: VkDevice, event: VkEvent) -> VkResult;
 pub type PFN_vkCreateQueryPool = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkQueryPoolCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pQueryPool: *mut VkQueryPool) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkQueryPoolCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pQueryPool: *mut VkQueryPool,
+) -> VkResult;
 pub type PFN_vkDestroyQueryPool = unsafe extern "C" fn(
-    device: VkDevice, queryPool: VkQueryPool, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    queryPool: VkQueryPool,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkGetQueryPoolResults = unsafe extern "C" fn(
-    device: VkDevice, queryPool: VkQueryPool, firstQuery: uint32_t, queryCount: uint32_t,
-    dataSize: size_t, pData: *mut c_void, stride: VkDeviceSize,
-    flags: VkQueryResultFlags) -> VkResult;
+    device: VkDevice,
+    queryPool: VkQueryPool,
+    firstQuery: uint32_t,
+    queryCount: uint32_t,
+    dataSize: size_t,
+    pData: *mut c_void,
+    stride: VkDeviceSize,
+    flags: VkQueryResultFlags,
+) -> VkResult;
 pub type PFN_vkCreateBuffer = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkBufferCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pBuffer: *mut VkBuffer) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkBufferCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pBuffer: *mut VkBuffer,
+) -> VkResult;
 pub type PFN_vkDestroyBuffer = unsafe extern "C" fn(
-    device: VkDevice, buffer: VkBuffer, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    buffer: VkBuffer,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkCreateBufferView = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkBufferViewCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pView: *mut VkBufferView) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkBufferViewCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pView: *mut VkBufferView,
+) -> VkResult;
 pub type PFN_vkDestroyBufferView = unsafe extern "C" fn(
-    device: VkDevice, bufferView: VkBufferView, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    bufferView: VkBufferView,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkCreateImage = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkImageCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pImage: *mut VkImage) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkImageCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pImage: *mut VkImage,
+) -> VkResult;
 pub type PFN_vkDestroyImage = unsafe extern "C" fn(
-    device: VkDevice, image: VkImage, pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkGetImageSubresourceLayout = unsafe extern "C" fn(
-    device: VkDevice, image: VkImage, pSubresource: *const VkImageSubresource,
-    pLayout: *mut VkSubresourceLayout);
+    device: VkDevice,
+    image: VkImage,
+    pAllocator: *const VkAllocationCallbacks,
+);
+pub type PFN_vkGetImageSubresourceLayout =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        image: VkImage,
+        pSubresource: *const VkImageSubresource,
+        pLayout: *mut VkSubresourceLayout,
+    );
 pub type PFN_vkCreateImageView = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkImageViewCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pView: *mut VkImageView) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkImageViewCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pView: *mut VkImageView,
+) -> VkResult;
 pub type PFN_vkDestroyImageView = unsafe extern "C" fn(
-    device: VkDevice, imageView: VkImageView, pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkCreateShaderModule = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkShaderModuleCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pShaderModule: *mut VkShaderModule) -> VkResult;
+    device: VkDevice,
+    imageView: VkImageView,
+    pAllocator: *const VkAllocationCallbacks,
+);
+pub type PFN_vkCreateShaderModule =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pCreateInfo: *const VkShaderModuleCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pShaderModule: *mut VkShaderModule,
+    ) -> VkResult;
 pub type PFN_vkDestroyShaderModule = unsafe extern "C" fn(
-    device: VkDevice, shaderModule: VkShaderModule, pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkCreatePipelineCache = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkPipelineCacheCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pPipelineCache: *mut VkPipelineCache) -> VkResult;
-pub type PFN_vkDestroyPipelineCache = unsafe extern "C" fn(
-    device: VkDevice, pipelineCache: VkPipelineCache, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    shaderModule: VkShaderModule,
+    pAllocator: *const VkAllocationCallbacks,
+);
+pub type PFN_vkCreatePipelineCache =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pCreateInfo: *const VkPipelineCacheCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pPipelineCache: *mut VkPipelineCache,
+    ) -> VkResult;
+pub type PFN_vkDestroyPipelineCache =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pipelineCache: VkPipelineCache,
+        pAllocator: *const VkAllocationCallbacks,
+    );
 pub type PFN_vkGetPipelineCacheData = unsafe extern "C" fn(
-    device: VkDevice, pipelineCache: VkPipelineCache, pDataSize: *mut size_t,
-    pData: *mut c_void) -> VkResult;
+    device: VkDevice,
+    pipelineCache: VkPipelineCache,
+    pDataSize: *mut size_t,
+    pData: *mut c_void,
+) -> VkResult;
 pub type PFN_vkMergePipelineCaches = unsafe extern "C" fn(
-    device: VkDevice, dstCache: VkPipelineCache, srcCacheCount: uint32_t,
-    pSrcCaches: *const VkPipelineCache) -> VkResult;
-pub type PFN_vkCreateGraphicsPipelines = unsafe extern "C" fn(
-    device: VkDevice, pipelineCache: VkPipelineCache, createInfoCount: uint32_t,
-    pCreateInfos: *const VkGraphicsPipelineCreateInfo, pAllocator: *const VkAllocationCallbacks,
-    pPipelines: *mut VkPipeline) -> VkResult;
-pub type PFN_vkCreateComputePipelines = unsafe extern "C" fn(
-    device: VkDevice, pipelineCache: VkPipelineCache, createInfoCount: uint32_t,
-    pCreateInfos: *const VkComputePipelineCreateInfo, pAllocator: *const VkAllocationCallbacks,
-    pPipelines: *mut VkPipeline) -> VkResult;
+    device: VkDevice,
+    dstCache: VkPipelineCache,
+    srcCacheCount: uint32_t,
+    pSrcCaches: *const VkPipelineCache,
+) -> VkResult;
+pub type PFN_vkCreateGraphicsPipelines =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pipelineCache: VkPipelineCache,
+        createInfoCount: uint32_t,
+        pCreateInfos: *const VkGraphicsPipelineCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pPipelines: *mut VkPipeline,
+    ) -> VkResult;
+pub type PFN_vkCreateComputePipelines =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pipelineCache: VkPipelineCache,
+        createInfoCount: uint32_t,
+        pCreateInfos: *const VkComputePipelineCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pPipelines: *mut VkPipeline,
+    ) -> VkResult;
 pub type PFN_vkDestroyPipeline = unsafe extern "C" fn(
-    device: VkDevice, pipeline: VkPipeline, pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkCreatePipelineLayout = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkPipelineLayoutCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pPipelineLayout: *mut VkPipelineLayout) -> VkResult;
-pub type PFN_vkDestroyPipelineLayout = unsafe extern "C" fn(
-    device: VkDevice, pipelineLayout: VkPipelineLayout, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    pipeline: VkPipeline,
+    pAllocator: *const VkAllocationCallbacks,
+);
+pub type PFN_vkCreatePipelineLayout =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pCreateInfo: *const VkPipelineLayoutCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pPipelineLayout: *mut VkPipelineLayout,
+    ) -> VkResult;
+pub type PFN_vkDestroyPipelineLayout =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pipelineLayout: VkPipelineLayout,
+        pAllocator: *const VkAllocationCallbacks,
+    );
 pub type PFN_vkCreateSampler = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkSamplerCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pSampler: *mut VkSampler) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkSamplerCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pSampler: *mut VkSampler,
+) -> VkResult;
 pub type PFN_vkDestroySampler = unsafe extern "C" fn(
-    device: VkDevice, sampler: VkSampler, pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkCreateDescriptorSetLayout = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkDescriptorSetLayoutCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pSetLayout: *mut VkDescriptorSetLayout) -> VkResult;
-pub type PFN_vkDestroyDescriptorSetLayout = unsafe extern "C" fn(
-    device: VkDevice, descriptorSetLayout: VkDescriptorSetLayout,
-    pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkCreateDescriptorPool = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkDescriptorPoolCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pDescriptorPool: *mut VkDescriptorPool) -> VkResult;
-pub type PFN_vkDestroyDescriptorPool = unsafe extern "C" fn(
-    device: VkDevice, descriptorPool: VkDescriptorPool, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    sampler: VkSampler,
+    pAllocator: *const VkAllocationCallbacks,
+);
+pub type PFN_vkCreateDescriptorSetLayout =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pCreateInfo: *const VkDescriptorSetLayoutCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pSetLayout: *mut VkDescriptorSetLayout,
+    ) -> VkResult;
+pub type PFN_vkDestroyDescriptorSetLayout =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        descriptorSetLayout: VkDescriptorSetLayout,
+        pAllocator: *const VkAllocationCallbacks,
+    );
+pub type PFN_vkCreateDescriptorPool =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pCreateInfo: *const VkDescriptorPoolCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pDescriptorPool: *mut VkDescriptorPool,
+    ) -> VkResult;
+pub type PFN_vkDestroyDescriptorPool =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        descriptorPool: VkDescriptorPool,
+        pAllocator: *const VkAllocationCallbacks,
+    );
 pub type PFN_vkResetDescriptorPool = extern "C" fn(
-    device: VkDevice, descriptorPool: VkDescriptorPool,
-    flags: VkDescriptorPoolResetFlags) -> VkResult;
-pub type PFN_vkAllocateDescriptorSets = unsafe extern "C" fn(
-    device: VkDevice, pAllocateInfo: *const VkDescriptorSetAllocateInfo,
-    pDescriptorSets: *mut VkDescriptorSet) -> VkResult;
+    device: VkDevice,
+    descriptorPool: VkDescriptorPool,
+    flags: VkDescriptorPoolResetFlags,
+) -> VkResult;
+pub type PFN_vkAllocateDescriptorSets =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pAllocateInfo: *const VkDescriptorSetAllocateInfo,
+        pDescriptorSets: *mut VkDescriptorSet,
+    ) -> VkResult;
 pub type PFN_vkFreeDescriptorSets = unsafe extern "C" fn(
-    device: VkDevice, descriptorPool: VkDescriptorPool, descriptorSetCount: uint32_t,
-    pDescriptorSets: *const VkDescriptorSet) -> VkResult;
-pub type PFN_vkUpdateDescriptorSets = unsafe extern "C" fn(
-    device: VkDevice, descriptorWriteCount: uint32_t,
-    pDescriptorWrites: *const VkWriteDescriptorSet, descriptorCopyCount: uint32_t,
-    pDescriptorCopies: *const VkCopyDescriptorSet);
-pub type PFN_vkCreateFramebuffer = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkFramebufferCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pFramebuffer: *mut VkFramebuffer) -> VkResult;
+    device: VkDevice,
+    descriptorPool: VkDescriptorPool,
+    descriptorSetCount: uint32_t,
+    pDescriptorSets: *const VkDescriptorSet,
+) -> VkResult;
+pub type PFN_vkUpdateDescriptorSets =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        descriptorWriteCount: uint32_t,
+        pDescriptorWrites: *const VkWriteDescriptorSet,
+        descriptorCopyCount: uint32_t,
+        pDescriptorCopies: *const VkCopyDescriptorSet,
+    );
+pub type PFN_vkCreateFramebuffer =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pCreateInfo: *const VkFramebufferCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pFramebuffer: *mut VkFramebuffer,
+    ) -> VkResult;
 pub type PFN_vkDestroyFramebuffer = unsafe extern "C" fn(
-    device: VkDevice, framebuffer: VkFramebuffer, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    framebuffer: VkFramebuffer,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkCreateRenderPass = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkRenderPassCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pRenderPass: *mut VkRenderPass) -> VkResult;
+    device: VkDevice,
+    pCreateInfo: *const VkRenderPassCreateInfo,
+    pAllocator: *const VkAllocationCallbacks,
+    pRenderPass: *mut VkRenderPass,
+) -> VkResult;
 pub type PFN_vkDestroyRenderPass = unsafe extern "C" fn(
-    device: VkDevice, renderPass: VkRenderPass, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    renderPass: VkRenderPass,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkGetRenderAreaGranularity = unsafe extern "C" fn(
-    device: VkDevice, renderPass: VkRenderPass, pGranularity: *mut VkExtent2D);
-pub type PFN_vkCreateCommandPool = unsafe extern "C" fn(
-    device: VkDevice, pCreateInfo: *const VkCommandPoolCreateInfo,
-    pAllocator: *const VkAllocationCallbacks, pCommandPool: *mut VkCommandPool) -> VkResult;
+    device: VkDevice,
+    renderPass: VkRenderPass,
+    pGranularity: *mut VkExtent2D,
+);
+pub type PFN_vkCreateCommandPool =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pCreateInfo: *const VkCommandPoolCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pCommandPool: *mut VkCommandPool,
+    ) -> VkResult;
 pub type PFN_vkDestroyCommandPool = unsafe extern "C" fn(
-    device: VkDevice, commandPool: VkCommandPool, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    commandPool: VkCommandPool,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkResetCommandPool = extern "C" fn(
-    device: VkDevice, commandPool: VkCommandPool, flags: VkCommandPoolResetFlags) -> VkResult;
-pub type PFN_vkAllocateCommandBuffers = unsafe extern "C" fn(
-    device: VkDevice, pAllocateInfo: *const VkCommandBufferAllocateInfo,
-    pCommandBuffers: *mut VkCommandBuffer) -> VkResult;
+    device: VkDevice,
+    commandPool: VkCommandPool,
+    flags: VkCommandPoolResetFlags,
+) -> VkResult;
+pub type PFN_vkAllocateCommandBuffers =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pAllocateInfo: *const VkCommandBufferAllocateInfo,
+        pCommandBuffers: *mut VkCommandBuffer,
+    ) -> VkResult;
 pub type PFN_vkFreeCommandBuffers = unsafe extern "C" fn(
-    device: VkDevice, commandPool: VkCommandPool, commandBufferCount: uint32_t,
-    pCommandBuffers: *const VkCommandBuffer);
-pub type PFN_vkBeginCommandBuffer = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, pBeginInfo: *const VkCommandBufferBeginInfo) -> VkResult;
-pub type PFN_vkEndCommandBuffer = extern "C" fn(commandBuffer: VkCommandBuffer) -> VkResult;
+    device: VkDevice,
+    commandPool: VkCommandPool,
+    commandBufferCount: uint32_t,
+    pCommandBuffers: *const VkCommandBuffer,
+);
+pub type PFN_vkBeginCommandBuffer =
+    unsafe extern "C" fn(
+        commandBuffer: VkCommandBuffer,
+        pBeginInfo: *const VkCommandBufferBeginInfo,
+    ) -> VkResult;
+pub type PFN_vkEndCommandBuffer = extern "C" fn(commandBuffer: VkCommandBuffer)
+    -> VkResult;
 pub type PFN_vkResetCommandBuffer = extern "C" fn(
-    commandBuffer: VkCommandBuffer, flags: VkCommandBufferResetFlags) -> VkResult;
+    commandBuffer: VkCommandBuffer,
+    flags: VkCommandBufferResetFlags,
+) -> VkResult;
 pub type PFN_vkCmdBindPipeline = extern "C" fn(
-    commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, pipeline: VkPipeline);
+    commandBuffer: VkCommandBuffer,
+    pipelineBindPoint: VkPipelineBindPoint,
+    pipeline: VkPipeline,
+);
 pub type PFN_vkCmdSetViewport = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, firstViewport: uint32_t, viewportCount: uint32_t,
-    pViewports: *const VkViewport);
+    commandBuffer: VkCommandBuffer,
+    firstViewport: uint32_t,
+    viewportCount: uint32_t,
+    pViewports: *const VkViewport,
+);
 pub type PFN_vkCmdSetScissor = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, firstScissor: uint32_t, scissorCount: uint32_t,
-    pScissors: *const VkRect2D);
+    commandBuffer: VkCommandBuffer,
+    firstScissor: uint32_t,
+    scissorCount: uint32_t,
+    pScissors: *const VkRect2D,
+);
 pub type PFN_vkCmdSetLineWidth = extern "C" fn(commandBuffer: VkCommandBuffer, lineWidth: f32);
 pub type PFN_vkCmdSetDepthBias = extern "C" fn(
-    commandBuffer: VkCommandBuffer, depthBiasConstantFactor: f32, depthBiasClamp: f32,
-    depthBiasSlopeFactor: f32);
+    commandBuffer: VkCommandBuffer,
+    depthBiasConstantFactor: f32,
+    depthBiasClamp: f32,
+    depthBiasSlopeFactor: f32,
+);
 pub type PFN_vkCmdSetBlendConstants = extern "C" fn(
-    commandBuffer: VkCommandBuffer, blendConstants: *mut f32);
+    commandBuffer: VkCommandBuffer,
+    blendConstants: *mut f32,
+);
 pub type PFN_vkCmdSetDepthBounds = extern "C" fn(
-    commandBuffer: VkCommandBuffer, minDepthBounds: f32, maxDepthBounds: f32);
+    commandBuffer: VkCommandBuffer,
+    minDepthBounds: f32,
+    maxDepthBounds: f32,
+);
 pub type PFN_vkCmdSetStencilCompareMask = extern "C" fn(
-    commandBuffer: VkCommandBuffer, faceMask: VkStencilFaceFlags, compareMask: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    faceMask: VkStencilFaceFlags,
+    compareMask: uint32_t,
+);
 pub type PFN_vkCmdSetStencilWriteMask = extern "C" fn(
-    commandBuffer: VkCommandBuffer, faceMask: VkStencilFaceFlags, writeMask: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    faceMask: VkStencilFaceFlags,
+    writeMask: uint32_t,
+);
 pub type PFN_vkCmdSetStencilReference = extern "C" fn(
-    commandBuffer: VkCommandBuffer, faceMask: VkStencilFaceFlags, reference: uint32_t);
-pub type PFN_vkCmdBindDescriptorSets = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint,
-    layout: VkPipelineLayout, firstSet: uint32_t, descriptorSetCount: uint32_t,
-    pDescriptorSets: *const VkDescriptorSet, dynamicOffsetCount: uint32_t,
-    pDynamicOffsets: *const uint32_t);
+    commandBuffer: VkCommandBuffer,
+    faceMask: VkStencilFaceFlags,
+    reference: uint32_t,
+);
+pub type PFN_vkCmdBindDescriptorSets =
+    unsafe extern "C" fn(
+        commandBuffer: VkCommandBuffer,
+        pipelineBindPoint: VkPipelineBindPoint,
+        layout: VkPipelineLayout,
+        firstSet: uint32_t,
+        descriptorSetCount: uint32_t,
+        pDescriptorSets: *const VkDescriptorSet,
+        dynamicOffsetCount: uint32_t,
+        pDynamicOffsets: *const uint32_t,
+    );
 pub type PFN_vkCmdBindIndexBuffer = extern "C" fn(
-    commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType);
+    commandBuffer: VkCommandBuffer,
+    buffer: VkBuffer,
+    offset: VkDeviceSize,
+    indexType: VkIndexType,
+);
 pub type PFN_vkCmdBindVertexBuffers = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, firstBinding: uint32_t, bindingCount: uint32_t,
-    pBuffers: *const VkBuffer, pOffsets: *const VkDeviceSize);
+    commandBuffer: VkCommandBuffer,
+    firstBinding: uint32_t,
+    bindingCount: uint32_t,
+    pBuffers: *const VkBuffer,
+    pOffsets: *const VkDeviceSize,
+);
 pub type PFN_vkCmdDraw = extern "C" fn(
-    commandBuffer: VkCommandBuffer, vertexCount: uint32_t, instanceCount: uint32_t,
-    firstVertex: uint32_t, firstInstance: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    vertexCount: uint32_t,
+    instanceCount: uint32_t,
+    firstVertex: uint32_t,
+    firstInstance: uint32_t,
+);
 pub type PFN_vkCmdDrawIndexed = extern "C" fn(
-    commandBuffer: VkCommandBuffer, indexCount: uint32_t, instanceCount: uint32_t,
-    firstIndex: uint32_t, vertexOffset: int32_t, firstInstance: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    indexCount: uint32_t,
+    instanceCount: uint32_t,
+    firstIndex: uint32_t,
+    vertexOffset: int32_t,
+    firstInstance: uint32_t,
+);
 pub type PFN_vkCmdDrawIndirect = extern "C" fn(
-    commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, drawCount: uint32_t,
-    stride: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    buffer: VkBuffer,
+    offset: VkDeviceSize,
+    drawCount: uint32_t,
+    stride: uint32_t,
+);
 pub type PFN_vkCmdDrawIndexedIndirect = extern "C" fn(
-    commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, drawCount: uint32_t,
-    stride: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    buffer: VkBuffer,
+    offset: VkDeviceSize,
+    drawCount: uint32_t,
+    stride: uint32_t,
+);
 pub type PFN_vkCmdDispatch = extern "C" fn(
-    commandBuffer: VkCommandBuffer, x: uint32_t, y: uint32_t, z: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    x: uint32_t,
+    y: uint32_t,
+    z: uint32_t,
+);
 pub type PFN_vkCmdDispatchIndirect = extern "C" fn(
-    commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize);
+    commandBuffer: VkCommandBuffer,
+    buffer: VkBuffer,
+    offset: VkDeviceSize,
+);
 pub type PFN_vkCmdCopyBuffer = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, srcBuffer: VkBuffer, dstBuffer: VkBuffer, regionCount: uint32_t,
-    pRegions: *const VkBufferCopy);
+    commandBuffer: VkCommandBuffer,
+    srcBuffer: VkBuffer,
+    dstBuffer: VkBuffer,
+    regionCount: uint32_t,
+    pRegions: *const VkBufferCopy,
+);
 pub type PFN_vkCmdCopyImage = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, srcImage: VkImage, srcImageLayout: VkImageLayout,
-    dstImage: VkImage, dstImageLayout: VkImageLayout, regionCount: uint32_t,
-    pRegions: *const VkImageCopy);
+    commandBuffer: VkCommandBuffer,
+    srcImage: VkImage,
+    srcImageLayout: VkImageLayout,
+    dstImage: VkImage,
+    dstImageLayout: VkImageLayout,
+    regionCount: uint32_t,
+    pRegions: *const VkImageCopy,
+);
 pub type PFN_vkCmdBlitImage = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, srcImage: VkImage, srcImageLayout: VkImageLayout,
-    dstImage: VkImage, dstImageLayout: VkImageLayout, regionCount: uint32_t,
-    pRegions: *const VkImageBlit, filter: VkFilter);
+    commandBuffer: VkCommandBuffer,
+    srcImage: VkImage,
+    srcImageLayout: VkImageLayout,
+    dstImage: VkImage,
+    dstImageLayout: VkImageLayout,
+    regionCount: uint32_t,
+    pRegions: *const VkImageBlit,
+    filter: VkFilter,
+);
 pub type PFN_vkCmdCopyBufferToImage = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, srcBuffer: VkBuffer, dstImage: VkImage,
-    dstImageLayout: VkImageLayout, regionCount: uint32_t, pRegions: *const VkBufferImageCopy);
+    commandBuffer: VkCommandBuffer,
+    srcBuffer: VkBuffer,
+    dstImage: VkImage,
+    dstImageLayout: VkImageLayout,
+    regionCount: uint32_t,
+    pRegions: *const VkBufferImageCopy,
+);
 pub type PFN_vkCmdCopyImageToBuffer = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, srcImage: VkImage, srcImageLayout: VkImageLayout,
-    dstBuffer: VkBuffer, regionCount: uint32_t, pRegions: *const VkBufferImageCopy);
+    commandBuffer: VkCommandBuffer,
+    srcImage: VkImage,
+    srcImageLayout: VkImageLayout,
+    dstBuffer: VkBuffer,
+    regionCount: uint32_t,
+    pRegions: *const VkBufferImageCopy,
+);
 pub type PFN_vkCmdUpdateBuffer = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, dstBuffer: VkBuffer, dstOffset: VkDeviceSize,
-    dataSize: VkDeviceSize, pData: *const uint32_t);
+    commandBuffer: VkCommandBuffer,
+    dstBuffer: VkBuffer,
+    dstOffset: VkDeviceSize,
+    dataSize: VkDeviceSize,
+    pData: *const uint32_t,
+);
 pub type PFN_vkCmdFillBuffer = extern "C" fn(
-    commandBuffer: VkCommandBuffer, dstBuffer: VkBuffer, dstOffset: VkDeviceSize,
-    size: VkDeviceSize, data: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    dstBuffer: VkBuffer,
+    dstOffset: VkDeviceSize,
+    size: VkDeviceSize,
+    data: uint32_t,
+);
 pub type PFN_vkCmdClearColorImage = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, image: VkImage, imageLayout: VkImageLayout,
-    pColor: *const VkClearColorValue, rangeCount: uint32_t,
-    pRanges: *const VkImageSubresourceRange);
-pub type PFN_vkCmdClearDepthStencilImage = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, image: VkImage, imageLayout: VkImageLayout,
-    pDepthStencil: *const VkClearDepthStencilValue, rangeCount: uint32_t,
-    pRanges: *const VkImageSubresourceRange);
+    commandBuffer: VkCommandBuffer,
+    image: VkImage,
+    imageLayout: VkImageLayout,
+    pColor: *const VkClearColorValue,
+    rangeCount: uint32_t,
+    pRanges: *const VkImageSubresourceRange,
+);
+pub type PFN_vkCmdClearDepthStencilImage =
+    unsafe extern "C" fn(
+        commandBuffer: VkCommandBuffer,
+        image: VkImage,
+        imageLayout: VkImageLayout,
+        pDepthStencil: *const VkClearDepthStencilValue,
+        rangeCount: uint32_t,
+        pRanges: *const VkImageSubresourceRange,
+    );
 pub type PFN_vkCmdClearAttachments = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, attachmentCount: uint32_t,
-    pAttachments: *const VkClearAttachment, rectCount: uint32_t, pRects: *const VkClearRect);
+    commandBuffer: VkCommandBuffer,
+    attachmentCount: uint32_t,
+    pAttachments: *const VkClearAttachment,
+    rectCount: uint32_t,
+    pRects: *const VkClearRect,
+);
 pub type PFN_vkCmdResolveImage = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, srcImage: VkImage, srcImageLayout: VkImageLayout,
-    dstImage: VkImage, dstImageLayout: VkImageLayout, regionCount: uint32_t,
-    pRegions: *const VkImageResolve);
+    commandBuffer: VkCommandBuffer,
+    srcImage: VkImage,
+    srcImageLayout: VkImageLayout,
+    dstImage: VkImage,
+    dstImageLayout: VkImageLayout,
+    regionCount: uint32_t,
+    pRegions: *const VkImageResolve,
+);
 pub type PFN_vkCmdSetEvent = extern "C" fn(
-    commandBuffer: VkCommandBuffer, event: VkEvent, stageMask: VkPipelineStageFlags);
+    commandBuffer: VkCommandBuffer,
+    event: VkEvent,
+    stageMask: VkPipelineStageFlags,
+);
 pub type PFN_vkCmdResetEvent = extern "C" fn(
-    commandBuffer: VkCommandBuffer, event: VkEvent, stageMask: VkPipelineStageFlags);
-pub type PFN_vkCmdWaitEvents = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, eventCount: uint32_t, pEvents: *const VkEvent,
-    srcStageMask: VkPipelineStageFlags, dstStageMask: VkPipelineStageFlags,
-    memoryBarrierCount: uint32_t, pMemoryBarriers: *const VkMemoryBarrier,
-    bufferMemoryBarrierCount: uint32_t, pBufferMemoryBarriers: *const VkBufferMemoryBarrier,
-    imageMemoryBarrierCount: uint32_t, pImageMemoryBarriers: *const VkImageMemoryBarrier);
-pub type PFN_vkCmdPipelineBarrier = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, srcStageMask: VkPipelineStageFlags,
-    dstStageMask: VkPipelineStageFlags, dependencyFlags: VkDependencyFlags,
-    memoryBarrierCount: uint32_t, pMemoryBarriers: *const VkMemoryBarrier,
-    bufferMemoryBarrierCount: uint32_t, pBufferMemoryBarriers: *const VkBufferMemoryBarrier,
-    imageMemoryBarrierCount: uint32_t, pImageMemoryBarriers: *const VkImageMemoryBarrier);
+    commandBuffer: VkCommandBuffer,
+    event: VkEvent,
+    stageMask: VkPipelineStageFlags,
+);
+pub type PFN_vkCmdWaitEvents =
+    unsafe extern "C" fn(
+        commandBuffer: VkCommandBuffer,
+        eventCount: uint32_t,
+        pEvents: *const VkEvent,
+        srcStageMask: VkPipelineStageFlags,
+        dstStageMask: VkPipelineStageFlags,
+        memoryBarrierCount: uint32_t,
+        pMemoryBarriers: *const VkMemoryBarrier,
+        bufferMemoryBarrierCount: uint32_t,
+        pBufferMemoryBarriers: *const VkBufferMemoryBarrier,
+        imageMemoryBarrierCount: uint32_t,
+        pImageMemoryBarriers: *const VkImageMemoryBarrier,
+    );
+pub type PFN_vkCmdPipelineBarrier =
+    unsafe extern "C" fn(
+        commandBuffer: VkCommandBuffer,
+        srcStageMask: VkPipelineStageFlags,
+        dstStageMask: VkPipelineStageFlags,
+        dependencyFlags: VkDependencyFlags,
+        memoryBarrierCount: uint32_t,
+        pMemoryBarriers: *const VkMemoryBarrier,
+        bufferMemoryBarrierCount: uint32_t,
+        pBufferMemoryBarriers: *const VkBufferMemoryBarrier,
+        imageMemoryBarrierCount: uint32_t,
+        pImageMemoryBarriers: *const VkImageMemoryBarrier,
+    );
 pub type PFN_vkCmdBeginQuery = extern "C" fn(
-    commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, query: uint32_t,
-    flags: VkQueryControlFlags);
+    commandBuffer: VkCommandBuffer,
+    queryPool: VkQueryPool,
+    query: uint32_t,
+    flags: VkQueryControlFlags,
+);
 pub type PFN_vkCmdEndQuery = extern "C" fn(
-    commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, query: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    queryPool: VkQueryPool,
+    query: uint32_t,
+);
 pub type PFN_vkCmdResetQueryPool = extern "C" fn(
-    commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, firstQuery: uint32_t,
-    queryCount: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    queryPool: VkQueryPool,
+    firstQuery: uint32_t,
+    queryCount: uint32_t,
+);
 pub type PFN_vkCmdWriteTimestamp = extern "C" fn(
-    commandBuffer: VkCommandBuffer, pipelineStage: VkPipelineStageFlagBits,
-    queryPool: VkQueryPool, query: uint32_t);
+    commandBuffer: VkCommandBuffer,
+    pipelineStage: VkPipelineStageFlagBits,
+    queryPool: VkQueryPool,
+    query: uint32_t,
+);
 pub type PFN_vkCmdCopyQueryPoolResults = extern "C" fn(
-    commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, firstQuery: uint32_t,
-    queryCount: uint32_t, dstBuffer: VkBuffer, dstOffset: VkDeviceSize, stride: VkDeviceSize,
-    flags: VkQueryResultFlags);
+    commandBuffer: VkCommandBuffer,
+    queryPool: VkQueryPool,
+    firstQuery: uint32_t,
+    queryCount: uint32_t,
+    dstBuffer: VkBuffer,
+    dstOffset: VkDeviceSize,
+    stride: VkDeviceSize,
+    flags: VkQueryResultFlags,
+);
 pub type PFN_vkCmdPushConstants = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, layout: VkPipelineLayout, stageFlags: VkShaderStageFlags,
-    offset: uint32_t, size: uint32_t, pValues: *const c_void);
-pub type PFN_vkCmdBeginRenderPass = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, pRenderPassBegin: *const VkRenderPassBeginInfo,
-    contents: VkSubpassContents);
+    commandBuffer: VkCommandBuffer,
+    layout: VkPipelineLayout,
+    stageFlags: VkShaderStageFlags,
+    offset: uint32_t,
+    size: uint32_t,
+    pValues: *const c_void,
+);
+pub type PFN_vkCmdBeginRenderPass =
+    unsafe extern "C" fn(
+        commandBuffer: VkCommandBuffer,
+        pRenderPassBegin: *const VkRenderPassBeginInfo,
+        contents: VkSubpassContents,
+    );
 pub type PFN_vkCmdNextSubpass = extern "C" fn(
-    commandBuffer: VkCommandBuffer, contents: VkSubpassContents);
+    commandBuffer: VkCommandBuffer,
+    contents: VkSubpassContents,
+);
 pub type PFN_vkCmdEndRenderPass = extern "C" fn(commandBuffer: VkCommandBuffer);
 pub type PFN_vkCmdExecuteCommands = unsafe extern "C" fn(
-    commandBuffer: VkCommandBuffer, commandBufferCount: uint32_t,
-    pCommandBuffers: *const VkCommandBuffer);
+    commandBuffer: VkCommandBuffer,
+    commandBufferCount: uint32_t,
+    pCommandBuffers: *const VkCommandBuffer,
+);
 
 pub enum VkSurfaceKHR_T {}
 
@@ -3671,7 +4316,9 @@ pub struct VkSurfaceCapabilitiesKHR {
 }
 
 impl Default for VkSurfaceCapabilitiesKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3682,28 +4329,43 @@ pub struct VkSurfaceFormatKHR {
 }
 
 impl Default for VkSurfaceFormatKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 pub type PFN_vkDestroySurfaceKHR = unsafe extern "C" fn(
-    instance: VkInstance, surface: VkSurfaceKHR, pAllocator: *const VkAllocationCallbacks);
-pub type PFN_vkGetPhysicalDeviceSurfaceSupportKHR = unsafe extern fn(
-    physicalDevice: VkPhysicalDevice,
-    queueFamilyIndex: uint32_t,
+    instance: VkInstance,
     surface: VkSurfaceKHR,
-    pSupported: *mut VkBool32) -> VkResult;
-pub type PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice,
-    surface: VkSurfaceKHR,
-    pSurfaceCapabilities: *mut VkSurfaceCapabilitiesKHR) -> VkResult;
-pub type PFN_vkGetPhysicalDeviceSurfaceFormatsKHR = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice,
-    surface: VkSurfaceKHR,
-    pSurfaceFormatCount: *mut uint32_t,
-    pSurfaceFormats: *mut VkSurfaceFormatKHR) -> VkResult;
-pub type PFN_vkGetPhysicalDeviceSurfacePresentModesKHR = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR, pPresentModeCount: *mut uint32_t,
-    pPresentModes: *mut VkPresentModeKHR) -> VkResult;
+    pAllocator: *const VkAllocationCallbacks,
+);
+pub type PFN_vkGetPhysicalDeviceSurfaceSupportKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        queueFamilyIndex: uint32_t,
+        surface: VkSurfaceKHR,
+        pSupported: *mut VkBool32,
+    ) -> VkResult;
+pub type PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        surface: VkSurfaceKHR,
+        pSurfaceCapabilities: *mut VkSurfaceCapabilitiesKHR,
+    ) -> VkResult;
+pub type PFN_vkGetPhysicalDeviceSurfaceFormatsKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        surface: VkSurfaceKHR,
+        pSurfaceFormatCount: *mut uint32_t,
+        pSurfaceFormats: *mut VkSurfaceFormatKHR,
+    ) -> VkResult;
+pub type PFN_vkGetPhysicalDeviceSurfacePresentModesKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        surface: VkSurfaceKHR,
+        pPresentModeCount: *mut uint32_t,
+        pPresentModes: *mut VkPresentModeKHR,
+    ) -> VkResult;
 
 pub enum VkSwapchainKHR_T {}
 
@@ -3734,7 +4396,9 @@ pub struct VkSwapchainCreateInfoKHR {
 }
 
 impl Default for VkSwapchainCreateInfoKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3751,24 +4415,41 @@ pub struct VkPresentInfoKHR {
 }
 
 impl Default for VkPresentInfoKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
-pub type PFN_vkCreateSwapchainKHR = unsafe extern "C" fn(
-    device: VkDevice,
-    pCreateInfo: *const VkSwapchainCreateInfoKHR,
-    pAllocator: *const VkAllocationCallbacks,
-    pSwapchain: *mut VkSwapchainKHR) -> VkResult;
+pub type PFN_vkCreateSwapchainKHR =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        pCreateInfo: *const VkSwapchainCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks,
+        pSwapchain: *mut VkSwapchainKHR,
+    ) -> VkResult;
 pub type PFN_vkDestroySwapchainKHR = unsafe extern "C" fn(
-    device: VkDevice, swapchain: VkSwapchainKHR, pAllocator: *const VkAllocationCallbacks);
+    device: VkDevice,
+    swapchain: VkSwapchainKHR,
+    pAllocator: *const VkAllocationCallbacks,
+);
 pub type PFN_vkGetSwapchainImagesKHR = unsafe extern "C" fn(
-    device: VkDevice, swapchain: VkSwapchainKHR, pSwapchainImageCount: *mut uint32_t,
-    pSwapchainImages: *mut VkImage) -> VkResult;
+    device: VkDevice,
+    swapchain: VkSwapchainKHR,
+    pSwapchainImageCount: *mut uint32_t,
+    pSwapchainImages: *mut VkImage,
+) -> VkResult;
 pub type PFN_vkAcquireNextImageKHR = unsafe extern "C" fn(
-    device: VkDevice, swapchain: VkSwapchainKHR, timeout: uint64_t, semaphore: VkSemaphore,
-    fence: VkFence, pImageIndex: *mut uint32_t) -> VkResult;
+    device: VkDevice,
+    swapchain: VkSwapchainKHR,
+    timeout: uint64_t,
+    semaphore: VkSemaphore,
+    fence: VkFence,
+    pImageIndex: *mut uint32_t,
+) -> VkResult;
 pub type PFN_vkQueuePresentKHR = unsafe extern "C" fn(
-    queue: VkQueue, pPresentInfo: *const VkPresentInfoKHR) -> VkResult;
+    queue: VkQueue,
+    pPresentInfo: *const VkPresentInfoKHR,
+) -> VkResult;
 
 pub enum VkDisplayKHR_T {}
 
@@ -3806,7 +4487,9 @@ pub struct VkDisplayPropertiesKHR {
 }
 
 impl Default for VkDisplayPropertiesKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3817,7 +4500,9 @@ pub struct VkDisplayModeParametersKHR {
 }
 
 impl Default for VkDisplayModeParametersKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3829,7 +4514,9 @@ pub struct VkDisplayModePropertiesKHR {
 }
 
 impl Default for VkDisplayModePropertiesKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3842,7 +4529,9 @@ pub struct VkDisplayModeCreateInfoKHR {
 }
 
 impl Default for VkDisplayModeCreateInfoKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3860,7 +4549,9 @@ pub struct VkDisplayPlaneCapabilitiesKHR {
 }
 
 impl Default for VkDisplayPlaneCapabilitiesKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3872,7 +4563,9 @@ pub struct VkDisplayPlanePropertiesKHR {
 }
 
 impl Default for VkDisplayPlanePropertiesKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -3892,31 +4585,59 @@ pub struct VkDisplaySurfaceCreateInfoKHR {
 }
 
 impl Default for VkDisplaySurfaceCreateInfoKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
-pub type PFN_vkGetPhysicalDeviceDisplayPropertiesKHR = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
-    pProperties: *mut VkDisplayPropertiesKHR) -> VkResult;
-pub type PFN_vkGetPhysicalDeviceDisplayPlanePropertiesKHR = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
-    pProperties: *mut VkDisplayPlanePropertiesKHR) -> VkResult;
-pub type PFN_vkGetDisplayPlaneSupportedDisplaysKHR = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, planeIndex: uint32_t, pDisplayCount: *mut uint32_t,
-    pDisplays: *mut VkDisplayKHR) -> VkResult;
-pub type PFN_vkGetDisplayModePropertiesKHR = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, display: VkDisplayKHR, pPropertyCount: *mut uint32_t,
-    pProperties: *mut VkDisplayModePropertiesKHR) -> VkResult;
-pub type PFN_vkCreateDisplayModeKHR = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, display: VkDisplayKHR,
-    pCreateInfo: *const VkDisplayModeCreateInfoKHR,
-    pAllocator: *const VkAllocationCallbacks, pMode: *mut VkDisplayModeKHR) -> VkResult;
-pub type PFN_vkGetDisplayPlaneCapabilitiesKHR = unsafe extern "C" fn(
-    physicalDevice: VkPhysicalDevice, mode: VkDisplayModeKHR, planeIndex: uint32_t,
-    pCapabilities: *mut VkDisplayPlaneCapabilitiesKHR) -> VkResult;
-pub type PFN_vkCreateDisplayPlaneSurfaceKHR = unsafe extern "C" fn(
-    instance: VkInstance, pCreateInfo: *const VkDisplaySurfaceCreateInfoKHR,
-    pAllocator: *const VkAllocationCallbacks, pSurface: *mut VkSurfaceKHR) -> VkResult;
+pub type PFN_vkGetPhysicalDeviceDisplayPropertiesKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkDisplayPropertiesKHR,
+    ) -> VkResult;
+pub type PFN_vkGetPhysicalDeviceDisplayPlanePropertiesKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkDisplayPlanePropertiesKHR,
+    ) -> VkResult;
+pub type PFN_vkGetDisplayPlaneSupportedDisplaysKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        planeIndex: uint32_t,
+        pDisplayCount: *mut uint32_t,
+        pDisplays: *mut VkDisplayKHR,
+    ) -> VkResult;
+pub type PFN_vkGetDisplayModePropertiesKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        display: VkDisplayKHR,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkDisplayModePropertiesKHR,
+    ) -> VkResult;
+pub type PFN_vkCreateDisplayModeKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        display: VkDisplayKHR,
+        pCreateInfo: *const VkDisplayModeCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks,
+        pMode: *mut VkDisplayModeKHR,
+    ) -> VkResult;
+pub type PFN_vkGetDisplayPlaneCapabilitiesKHR =
+    unsafe extern "C" fn(
+        physicalDevice: VkPhysicalDevice,
+        mode: VkDisplayModeKHR,
+        planeIndex: uint32_t,
+        pCapabilities: *mut VkDisplayPlaneCapabilitiesKHR,
+    ) -> VkResult;
+pub type PFN_vkCreateDisplayPlaneSurfaceKHR =
+    unsafe extern "C" fn(
+        instance: VkInstance,
+        pCreateInfo: *const VkDisplaySurfaceCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks,
+        pSurface: *mut VkSurfaceKHR,
+    ) -> VkResult;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -3930,19 +4651,28 @@ pub struct VkDisplayPresentInfoKHR {
 }
 
 impl Default for VkDisplayPresentInfoKHR {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
-pub type PFN_vkCreateSharedSwapchainsKHR = unsafe extern "C" fn(
-    device: VkDevice, swapchainCount: uint32_t, pCreateInfos: *const VkSwapchainCreateInfoKHR,
-    pAllocator: *const VkAllocationCallbacks, pSwapchains: *mut VkSwapchainKHR) -> VkResult;
+pub type PFN_vkCreateSharedSwapchainsKHR =
+    unsafe extern "C" fn(
+        device: VkDevice,
+        swapchainCount: uint32_t,
+        pCreateInfos: *const VkSwapchainCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks,
+        pSwapchains: *mut VkSwapchainKHR,
+    ) -> VkResult;
 
 pub enum VkDebugReportCallbackEXT_T {}
 
 pub type VkDebugReportCallbackEXT = *mut VkDebugReportCallbackEXT_T;
 
-pub const VK_DEBUG_REPORT_OBJECT_TYPE_BEGIN_RANGE_EXT: VkDebugReportObjectTypeEXT = VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT;
-pub const VK_DEBUG_REPORT_OBJECT_TYPE_END_RANGE_EXT: VkDebugReportObjectTypeEXT = VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT;
+pub const VK_DEBUG_REPORT_OBJECT_TYPE_BEGIN_RANGE_EXT: VkDebugReportObjectTypeEXT =
+    VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT;
+pub const VK_DEBUG_REPORT_OBJECT_TYPE_END_RANGE_EXT: VkDebugReportObjectTypeEXT =
+    VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT;
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
@@ -3980,8 +4710,10 @@ pub enum VkDebugReportObjectTypeEXT {
     VK_DEBUG_REPORT_OBJECT_TYPE_MAX_ENUM_EXT = 2147483647,
 }
 
-pub const VK_DEBUG_REPORT_ERROR_BEGIN_RANGE_EXT: VkDebugReportErrorEXT = VkDebugReportErrorEXT::VK_DEBUG_REPORT_ERROR_NONE_EXT;
-pub const VK_DEBUG_REPORT_ERROR_END_RANGE_EXT: VkDebugReportErrorEXT = VkDebugReportErrorEXT::VK_DEBUG_REPORT_ERROR_CALLBACK_REF_EXT;
+pub const VK_DEBUG_REPORT_ERROR_BEGIN_RANGE_EXT: VkDebugReportErrorEXT =
+    VkDebugReportErrorEXT::VK_DEBUG_REPORT_ERROR_NONE_EXT;
+pub const VK_DEBUG_REPORT_ERROR_END_RANGE_EXT: VkDebugReportErrorEXT =
+    VkDebugReportErrorEXT::VK_DEBUG_REPORT_ERROR_CALLBACK_REF_EXT;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(u32)]
@@ -4004,10 +4736,17 @@ pub enum VkDebugReportFlagBitsEXT {
 }
 
 pub type VkDebugReportFlagsEXT = VkFlags;
-pub type PFN_vkDebugReportCallbackEXT = unsafe extern "C" fn(
-    flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT, object: uint64_t,
-    location: size_t, messageCode: int32_t, pLayerPrefix: *const c_char,
-    pMessage: *const c_char, pUserData: *mut c_void) -> VkBool32;
+pub type PFN_vkDebugReportCallbackEXT =
+    unsafe extern "C" fn(
+        flags: VkDebugReportFlagsEXT,
+        objectType: VkDebugReportObjectTypeEXT,
+        object: uint64_t,
+        location: size_t,
+        messageCode: int32_t,
+        pLayerPrefix: *const c_char,
+        pMessage: *const c_char,
+        pUserData: *mut c_void,
+    ) -> VkBool32;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -4020,21 +4759,36 @@ pub struct VkDebugReportCallbackCreateInfoEXT {
 }
 
 impl Default for VkDebugReportCallbackCreateInfoEXT {
-    fn default() -> Self { unsafe { zeroed() } }
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
 }
 
-pub type PFN_vkCreateDebugReportCallbackEXT = unsafe extern "C" fn(
-    instance: VkInstance, pCreateInfo: *const VkDebugReportCallbackCreateInfoEXT,
-    pAllocator: *const VkAllocationCallbacks, pCallback: *mut VkDebugReportCallbackEXT) -> VkResult;
+pub type PFN_vkCreateDebugReportCallbackEXT =
+    unsafe extern "C" fn(
+        instance: VkInstance,
+        pCreateInfo: *const VkDebugReportCallbackCreateInfoEXT,
+        pAllocator: *const VkAllocationCallbacks,
+        pCallback: *mut VkDebugReportCallbackEXT,
+    ) -> VkResult;
 
-pub type PFN_vkDestroyDebugReportCallbackEXT = unsafe extern "C" fn(
-    instance: VkInstance, callback: VkDebugReportCallbackEXT,
-    pAllocator: *const VkAllocationCallbacks);
+pub type PFN_vkDestroyDebugReportCallbackEXT =
+    unsafe extern "C" fn(
+        instance: VkInstance,
+        callback: VkDebugReportCallbackEXT,
+        pAllocator: *const VkAllocationCallbacks,
+    );
 
 pub type PFN_vkDebugReportMessageEXT = unsafe extern "C" fn(
-    instance: VkInstance, flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT,
-    object: uint64_t, location: size_t, messageCode: int32_t,
-    pLayerPrefix: *const c_char, pMessage: *const c_char);
+    instance: VkInstance,
+    flags: VkDebugReportFlagsEXT,
+    objectType: VkDebugReportObjectTypeEXT,
+    object: uint64_t,
+    location: size_t,
+    messageCode: int32_t,
+    pLayerPrefix: *const c_char,
+    pMessage: *const c_char,
+);
 
 #[cfg(target_os = "android")]
 use super::android::window::ANativeWindow;
@@ -4053,21 +4807,20 @@ pub struct VkAndroidSurfaceCreateInfoKHR {
 #[cfg(target_os = "android")]
 impl Default for VkAndroidSurfaceCreateInfoKHR {
     fn default() -> Self {
-        unsafe {
-            zeroed()
-        }
+        unsafe { zeroed() }
     }
 }
 #[cfg(target_os = "android")]
-pub type PFN_VkCreateAndroidSurfaceKhr = unsafe extern "C" fn(
-    instance: VkInstance, p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
-    p_allocator: *const VkAllocationCallbacks, p_surface: *mut VkSurfaceKHR) -> VkResult;
+pub type PFN_VkCreateAndroidSurfaceKhr =
+    unsafe extern "C" fn(
+        instance: VkInstance,
+        p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
+        p_allocator: *const VkAllocationCallbacks,
+        p_surface: *mut VkSurfaceKHR,
+    ) -> VkResult;
 
 #[cfg(target_os = "linux")]
-use super::linux::xcb::{
-    xcb_window_t,
-    xcb_connection_t,
-};
+use super::linux::xcb::{xcb_window_t, xcb_connection_t};
 #[cfg(target_os = "linux")]
 pub type VkXcbSurfaceCreateFlagsKHR = VkFlags;
 
@@ -4084,9 +4837,7 @@ pub struct VkXcbSurfaceCreateInfoKHR {
 #[cfg(target_os = "linux")]
 impl Default for VkXcbSurfaceCreateInfoKHR {
     fn default() -> Self {
-        unsafe {
-            zeroed()
-        }
+        unsafe { zeroed() }
     }
 }
 
@@ -4106,9 +4857,7 @@ pub struct VkWin32SurfaceCreateInfoKHR {
 #[cfg(target_os = "windows")]
 impl Default for VkWin32SurfaceCreateInfoKHR {
     fn default() -> Self {
-        unsafe {
-            zeroed()
-        }
+        unsafe { zeroed() }
     }
 }
 
@@ -4117,491 +4866,893 @@ impl Default for VkWin32SurfaceCreateInfoKHR {
 #[cfg_attr(target_os = "android", link(name = "vulkan", kind = "dylib"))]
 extern "C" {
     pub fn vkCreateInstance(
-        pCreateInfo: *const VkInstanceCreateInfo, pAllocator: *const VkAllocationCallbacks,
-        pInstance: *mut VkInstance) -> VkResult;
-    pub fn vkDestroyInstance(
-        instance: VkInstance, pAllocator: *const VkAllocationCallbacks);
+        pCreateInfo: *const VkInstanceCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pInstance: *mut VkInstance,
+    ) -> VkResult;
+    pub fn vkDestroyInstance(instance: VkInstance, pAllocator: *const VkAllocationCallbacks);
     pub fn vkEnumeratePhysicalDevices(
-        instance: VkInstance, pPhysicalDeviceCount: *mut uint32_t,
-        pPhysicalDevices: *mut VkPhysicalDevice) -> VkResult;
+        instance: VkInstance,
+        pPhysicalDeviceCount: *mut uint32_t,
+        pPhysicalDevices: *mut VkPhysicalDevice,
+    ) -> VkResult;
     pub fn vkGetPhysicalDeviceFeatures(
-        physicalDevice: VkPhysicalDevice, pFeatures: *mut VkPhysicalDeviceFeatures);
+        physicalDevice: VkPhysicalDevice,
+        pFeatures: *mut VkPhysicalDeviceFeatures,
+    );
     pub fn vkGetPhysicalDeviceFormatProperties(
-        physicalDevice: VkPhysicalDevice, format: VkFormat,
-        pFormatProperties: *mut VkFormatProperties);
+        physicalDevice: VkPhysicalDevice,
+        format: VkFormat,
+        pFormatProperties: *mut VkFormatProperties,
+    );
     pub fn vkGetPhysicalDeviceImageFormatProperties(
-        physicalDevice: VkPhysicalDevice, format: VkFormat, type_: VkImageType,
-        tiling: VkImageTiling, usage: VkImageUsageFlags, flags: VkImageCreateFlags,
-        pImageFormatProperties: *mut VkImageFormatProperties) -> VkResult;
+        physicalDevice: VkPhysicalDevice,
+        format: VkFormat,
+        type_: VkImageType,
+        tiling: VkImageTiling,
+        usage: VkImageUsageFlags,
+        flags: VkImageCreateFlags,
+        pImageFormatProperties: *mut VkImageFormatProperties,
+    ) -> VkResult;
     pub fn vkGetPhysicalDeviceProperties(
-        physicalDevice: VkPhysicalDevice, pProperties: *mut VkPhysicalDeviceProperties);
+        physicalDevice: VkPhysicalDevice,
+        pProperties: *mut VkPhysicalDeviceProperties,
+    );
     pub fn vkGetPhysicalDeviceQueueFamilyProperties(
-        physicalDevice: VkPhysicalDevice, pQueueFamilyPropertyCount: *mut uint32_t,
-        pQueueFamilyProperties: *mut VkQueueFamilyProperties);
+        physicalDevice: VkPhysicalDevice,
+        pQueueFamilyPropertyCount: *mut uint32_t,
+        pQueueFamilyProperties: *mut VkQueueFamilyProperties,
+    );
     pub fn vkGetPhysicalDeviceMemoryProperties(
-        physicalDevice: VkPhysicalDevice, pMemoryProperties: *mut VkPhysicalDeviceMemoryProperties);
-    pub fn vkGetInstanceProcAddr(
-        instance: VkInstance, pName: *const c_char) -> PFN_vkVoidFunction;
-    pub fn vkGetDeviceProcAddr(
-        device: VkDevice, pName: *const c_char) -> PFN_vkVoidFunction;
+        physicalDevice: VkPhysicalDevice,
+        pMemoryProperties: *mut VkPhysicalDeviceMemoryProperties,
+    );
+    pub fn vkGetInstanceProcAddr(instance: VkInstance, pName: *const c_char) -> PFN_vkVoidFunction;
+    pub fn vkGetDeviceProcAddr(device: VkDevice, pName: *const c_char) -> PFN_vkVoidFunction;
     pub fn vkCreateDevice(
-        physicalDevice: VkPhysicalDevice, pCreateInfo: *const VkDeviceCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pDevice: *mut VkDevice) -> VkResult;
+        physicalDevice: VkPhysicalDevice,
+        pCreateInfo: *const VkDeviceCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pDevice: *mut VkDevice,
+    ) -> VkResult;
     pub fn vkDestroyDevice(device: VkDevice, pAllocator: *const VkAllocationCallbacks);
     pub fn vkEnumerateInstanceExtensionProperties(
-        pLayerName: *const c_char, pPropertyCount: *mut uint32_t,
-        pProperties: *mut VkExtensionProperties) -> VkResult;
+        pLayerName: *const c_char,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkExtensionProperties,
+    ) -> VkResult;
     pub fn vkEnumerateDeviceExtensionProperties(
-        physicalDevice: VkPhysicalDevice, pLayerName: *const c_char,
-        pPropertyCount: *mut uint32_t, pProperties: *mut VkExtensionProperties) -> VkResult;
+        physicalDevice: VkPhysicalDevice,
+        pLayerName: *const c_char,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkExtensionProperties,
+    ) -> VkResult;
     pub fn vkEnumerateInstanceLayerProperties(
-        pPropertyCount: *mut uint32_t, pProperties: *mut VkLayerProperties) -> VkResult;
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkLayerProperties,
+    ) -> VkResult;
     pub fn vkEnumerateDeviceLayerProperties(
-        physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
-        pProperties: *mut VkLayerProperties) -> VkResult;
+        physicalDevice: VkPhysicalDevice,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkLayerProperties,
+    ) -> VkResult;
     pub fn vkGetDeviceQueue(
-        device: VkDevice, queueFamilyIndex: uint32_t, queueIndex: uint32_t, pQueue: *mut VkQueue);
+        device: VkDevice,
+        queueFamilyIndex: uint32_t,
+        queueIndex: uint32_t,
+        pQueue: *mut VkQueue,
+    );
     pub fn vkQueueSubmit(
-        queue: VkQueue, submitCount: uint32_t, pSubmits: *const VkSubmitInfo,
-        fence: VkFence) -> VkResult;
+        queue: VkQueue,
+        submitCount: uint32_t,
+        pSubmits: *const VkSubmitInfo,
+        fence: VkFence,
+    ) -> VkResult;
     pub fn vkQueueWaitIdle(queue: VkQueue) -> VkResult;
     pub fn vkDeviceWaitIdle(device: VkDevice) -> VkResult;
     pub fn vkAllocateMemory(
-        device: VkDevice, pAllocateInfo: *const VkMemoryAllocateInfo,
-        pAllocator: *const VkAllocationCallbacks, pMemory: *mut VkDeviceMemory) -> VkResult;
+        device: VkDevice,
+        pAllocateInfo: *const VkMemoryAllocateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pMemory: *mut VkDeviceMemory,
+    ) -> VkResult;
     pub fn vkFreeMemory(
-        device: VkDevice, memory: VkDeviceMemory, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        memory: VkDeviceMemory,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkMapMemory(
-        device: VkDevice, memory: VkDeviceMemory, offset: VkDeviceSize, size: VkDeviceSize,
-        flags: VkMemoryMapFlags, ppData: *mut *mut c_void) -> VkResult;
+        device: VkDevice,
+        memory: VkDeviceMemory,
+        offset: VkDeviceSize,
+        size: VkDeviceSize,
+        flags: VkMemoryMapFlags,
+        ppData: *mut *mut c_void,
+    ) -> VkResult;
     pub fn vkUnmapMemory(device: VkDevice, memory: VkDeviceMemory);
     pub fn vkFlushMappedMemoryRanges(
-        device: VkDevice, memoryRangeCount: uint32_t,
-        pMemoryRanges: *const VkMappedMemoryRange) -> VkResult;
+        device: VkDevice,
+        memoryRangeCount: uint32_t,
+        pMemoryRanges: *const VkMappedMemoryRange,
+    ) -> VkResult;
     pub fn vkInvalidateMappedMemoryRanges(
-        device: VkDevice, memoryRangeCount: uint32_t,
-        pMemoryRanges: *const VkMappedMemoryRange) -> VkResult;
+        device: VkDevice,
+        memoryRangeCount: uint32_t,
+        pMemoryRanges: *const VkMappedMemoryRange,
+    ) -> VkResult;
     pub fn vkGetDeviceMemoryCommitment(
-        device: VkDevice, memory: VkDeviceMemory, pCommittedMemoryInBytes: *mut VkDeviceSize);
+        device: VkDevice,
+        memory: VkDeviceMemory,
+        pCommittedMemoryInBytes: *mut VkDeviceSize,
+    );
     pub fn vkBindBufferMemory(
-        device: VkDevice, buffer: VkBuffer, memory: VkDeviceMemory,
-        memoryOffset: VkDeviceSize) -> VkResult;
+        device: VkDevice,
+        buffer: VkBuffer,
+        memory: VkDeviceMemory,
+        memoryOffset: VkDeviceSize,
+    ) -> VkResult;
     pub fn vkBindImageMemory(
-        device: VkDevice, image: VkImage, memory: VkDeviceMemory,
-        memoryOffset: VkDeviceSize) -> VkResult;
+        device: VkDevice,
+        image: VkImage,
+        memory: VkDeviceMemory,
+        memoryOffset: VkDeviceSize,
+    ) -> VkResult;
     pub fn vkGetBufferMemoryRequirements(
-        device: VkDevice, buffer: VkBuffer, pMemoryRequirements: *mut VkMemoryRequirements);
+        device: VkDevice,
+        buffer: VkBuffer,
+        pMemoryRequirements: *mut VkMemoryRequirements,
+    );
     pub fn vkGetImageMemoryRequirements(
-        device: VkDevice, image: VkImage, pMemoryRequirements: *mut VkMemoryRequirements);
+        device: VkDevice,
+        image: VkImage,
+        pMemoryRequirements: *mut VkMemoryRequirements,
+    );
     pub fn vkGetImageSparseMemoryRequirements(
-        device: VkDevice, image: VkImage, pSparseMemoryRequirementCount: *mut uint32_t,
-        pSparseMemoryRequirements: *mut VkSparseImageMemoryRequirements);
+        device: VkDevice,
+        image: VkImage,
+        pSparseMemoryRequirementCount: *mut uint32_t,
+        pSparseMemoryRequirements: *mut VkSparseImageMemoryRequirements,
+    );
     pub fn vkGetPhysicalDeviceSparseImageFormatProperties(
-        physicalDevice: VkPhysicalDevice, format: VkFormat, type_: VkImageType,
-        samples: VkSampleCountFlagBits, usage: VkImageUsageFlags, tiling: VkImageTiling,
-        pPropertyCount: *mut uint32_t, pProperties: *mut VkSparseImageFormatProperties);
+        physicalDevice: VkPhysicalDevice,
+        format: VkFormat,
+        type_: VkImageType,
+        samples: VkSampleCountFlagBits,
+        usage: VkImageUsageFlags,
+        tiling: VkImageTiling,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkSparseImageFormatProperties,
+    );
     pub fn vkQueueBindSparse(
-        queue: VkQueue, bindInfoCount: uint32_t, pBindInfo: *const VkBindSparseInfo,
-        fence: VkFence) -> VkResult;
+        queue: VkQueue,
+        bindInfoCount: uint32_t,
+        pBindInfo: *const VkBindSparseInfo,
+        fence: VkFence,
+    ) -> VkResult;
     pub fn vkCreateFence(
-        device: VkDevice, pCreateInfo: *const VkFenceCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pFence: *mut VkFence) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkFenceCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pFence: *mut VkFence,
+    ) -> VkResult;
     pub fn vkDestroyFence(
-        device: VkDevice, fence: VkFence, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        fence: VkFence,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkResetFences(
-        device: VkDevice, fenceCount: uint32_t, pFences: *const VkFence) -> VkResult;
+        device: VkDevice,
+        fenceCount: uint32_t,
+        pFences: *const VkFence,
+    ) -> VkResult;
     pub fn vkGetFenceStatus(device: VkDevice, fence: VkFence) -> VkResult;
     pub fn vkWaitForFences(
-        device: VkDevice, fenceCount: uint32_t, pFences: *const VkFence, waitAll: VkBool32,
-        timeout: uint64_t) -> VkResult;
+        device: VkDevice,
+        fenceCount: uint32_t,
+        pFences: *const VkFence,
+        waitAll: VkBool32,
+        timeout: uint64_t,
+    ) -> VkResult;
     pub fn vkCreateSemaphore(
-        device: VkDevice, pCreateInfo: *const VkSemaphoreCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pSemaphore: *mut VkSemaphore) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkSemaphoreCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pSemaphore: *mut VkSemaphore,
+    ) -> VkResult;
     pub fn vkDestroySemaphore(
-        device: VkDevice, semaphore: VkSemaphore, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        semaphore: VkSemaphore,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkCreateEvent(
-        device: VkDevice, pCreateInfo: *const VkEventCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pEvent: *mut VkEvent) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkEventCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pEvent: *mut VkEvent,
+    ) -> VkResult;
     pub fn vkDestroyEvent(
-        device: VkDevice, event: VkEvent, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        event: VkEvent,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkGetEventStatus(device: VkDevice, event: VkEvent) -> VkResult;
     pub fn vkSetEvent(device: VkDevice, event: VkEvent) -> VkResult;
     pub fn vkResetEvent(device: VkDevice, event: VkEvent) -> VkResult;
     pub fn vkCreateQueryPool(
-        device: VkDevice, pCreateInfo: *const VkQueryPoolCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pQueryPool: *mut VkQueryPool) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkQueryPoolCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pQueryPool: *mut VkQueryPool,
+    ) -> VkResult;
     pub fn vkDestroyQueryPool(
-        device: VkDevice, queryPool: VkQueryPool, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        queryPool: VkQueryPool,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkGetQueryPoolResults(
-        device: VkDevice, queryPool: VkQueryPool, firstQuery: uint32_t, queryCount: uint32_t,
-        dataSize: size_t, pData: *mut c_void, stride: VkDeviceSize,
-        flags: VkQueryResultFlags) -> VkResult;
+        device: VkDevice,
+        queryPool: VkQueryPool,
+        firstQuery: uint32_t,
+        queryCount: uint32_t,
+        dataSize: size_t,
+        pData: *mut c_void,
+        stride: VkDeviceSize,
+        flags: VkQueryResultFlags,
+    ) -> VkResult;
     pub fn vkCreateBuffer(
-        device: VkDevice, pCreateInfo: *const VkBufferCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pBuffer: *mut VkBuffer) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkBufferCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pBuffer: *mut VkBuffer,
+    ) -> VkResult;
     pub fn vkDestroyBuffer(
-        device: VkDevice, buffer: VkBuffer, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        buffer: VkBuffer,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkCreateBufferView(
-        device: VkDevice, pCreateInfo: *const VkBufferViewCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pView: *mut VkBufferView) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkBufferViewCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pView: *mut VkBufferView,
+    ) -> VkResult;
     pub fn vkDestroyBufferView(
-        device: VkDevice, bufferView: VkBufferView, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        bufferView: VkBufferView,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkCreateImage(
-        device: VkDevice, pCreateInfo: *const VkImageCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pImage: *mut VkImage) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkImageCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pImage: *mut VkImage,
+    ) -> VkResult;
     pub fn vkDestroyImage(
-        device: VkDevice, image: VkImage, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        image: VkImage,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkGetImageSubresourceLayout(
-        device: VkDevice, image: VkImage, pSubresource: *const VkImageSubresource,
-        pLayout: *mut VkSubresourceLayout);
+        device: VkDevice,
+        image: VkImage,
+        pSubresource: *const VkImageSubresource,
+        pLayout: *mut VkSubresourceLayout,
+    );
     pub fn vkCreateImageView(
-        device: VkDevice, pCreateInfo: *const VkImageViewCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pView: *mut VkImageView) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkImageViewCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pView: *mut VkImageView,
+    ) -> VkResult;
     pub fn vkDestroyImageView(
-        device: VkDevice, imageView: VkImageView, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        imageView: VkImageView,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkCreateShaderModule(
-        device: VkDevice, pCreateInfo: *const VkShaderModuleCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pShaderModule: *mut VkShaderModule) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkShaderModuleCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pShaderModule: *mut VkShaderModule,
+    ) -> VkResult;
     pub fn vkDestroyShaderModule(
-        device: VkDevice, shaderModule: VkShaderModule, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        shaderModule: VkShaderModule,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkCreatePipelineCache(
-        device: VkDevice, pCreateInfo: *const VkPipelineCacheCreateInfo,
+        device: VkDevice,
+        pCreateInfo: *const VkPipelineCacheCreateInfo,
         pAllocator: *const VkAllocationCallbacks,
-        pPipelineCache: *mut VkPipelineCache) -> VkResult;
+        pPipelineCache: *mut VkPipelineCache,
+    ) -> VkResult;
     pub fn vkDestroyPipelineCache(
-        device: VkDevice, pipelineCache: VkPipelineCache,
-        pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        pipelineCache: VkPipelineCache,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkGetPipelineCacheData(
-        device: VkDevice, pipelineCache: VkPipelineCache, pDataSize: *mut size_t,
-        pData: *mut c_void) -> VkResult;
+        device: VkDevice,
+        pipelineCache: VkPipelineCache,
+        pDataSize: *mut size_t,
+        pData: *mut c_void,
+    ) -> VkResult;
     pub fn vkMergePipelineCaches(
-        device: VkDevice, dstCache: VkPipelineCache, srcCacheCount: uint32_t,
-        pSrcCaches: *const VkPipelineCache) -> VkResult;
+        device: VkDevice,
+        dstCache: VkPipelineCache,
+        srcCacheCount: uint32_t,
+        pSrcCaches: *const VkPipelineCache,
+    ) -> VkResult;
     pub fn vkCreateGraphicsPipelines(
-        device: VkDevice, pipelineCache: VkPipelineCache, createInfoCount: uint32_t,
+        device: VkDevice,
+        pipelineCache: VkPipelineCache,
+        createInfoCount: uint32_t,
         pCreateInfos: *const VkGraphicsPipelineCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pPipelines: *mut VkPipeline) -> VkResult;
+        pAllocator: *const VkAllocationCallbacks,
+        pPipelines: *mut VkPipeline,
+    ) -> VkResult;
     pub fn vkCreateComputePipelines(
-        device: VkDevice, pipelineCache: VkPipelineCache, createInfoCount: uint32_t,
-        pCreateInfos: *const VkComputePipelineCreateInfo, pAllocator: *const VkAllocationCallbacks,
-        pPipelines: *mut VkPipeline) -> VkResult;
+        device: VkDevice,
+        pipelineCache: VkPipelineCache,
+        createInfoCount: uint32_t,
+        pCreateInfos: *const VkComputePipelineCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pPipelines: *mut VkPipeline,
+    ) -> VkResult;
     pub fn vkDestroyPipeline(
-        device: VkDevice, pipeline: VkPipeline, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        pipeline: VkPipeline,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkCreatePipelineLayout(
-        device: VkDevice, pCreateInfo: *const VkPipelineLayoutCreateInfo,
+        device: VkDevice,
+        pCreateInfo: *const VkPipelineLayoutCreateInfo,
         pAllocator: *const VkAllocationCallbacks,
-        pPipelineLayout: *mut VkPipelineLayout) -> VkResult;
+        pPipelineLayout: *mut VkPipelineLayout,
+    ) -> VkResult;
     pub fn vkDestroyPipelineLayout(
-        device: VkDevice, pipelineLayout: VkPipelineLayout,
-        pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        pipelineLayout: VkPipelineLayout,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkCreateSampler(
-        device: VkDevice, pCreateInfo: *const VkSamplerCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pSampler: *mut VkSampler) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkSamplerCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pSampler: *mut VkSampler,
+    ) -> VkResult;
     pub fn vkDestroySampler(
-        device: VkDevice, sampler: VkSampler, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        sampler: VkSampler,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkCreateDescriptorSetLayout(
-        device: VkDevice, pCreateInfo: *const VkDescriptorSetLayoutCreateInfo,
+        device: VkDevice,
+        pCreateInfo: *const VkDescriptorSetLayoutCreateInfo,
         pAllocator: *const VkAllocationCallbacks,
-        pSetLayout: *mut VkDescriptorSetLayout) -> VkResult;
+        pSetLayout: *mut VkDescriptorSetLayout,
+    ) -> VkResult;
     pub fn vkDestroyDescriptorSetLayout(
-        device: VkDevice, descriptorSetLayout: VkDescriptorSetLayout,
-        pAllocator: *const VkAllocationCallbacks);
-    pub fn vkCreateDescriptorPool(
-        device: VkDevice, pCreateInfo: *const VkDescriptorPoolCreateInfo,
+        device: VkDevice,
+        descriptorSetLayout: VkDescriptorSetLayout,
         pAllocator: *const VkAllocationCallbacks,
-        pDescriptorPool: *mut VkDescriptorPool) -> VkResult;
+    );
+    pub fn vkCreateDescriptorPool(
+        device: VkDevice,
+        pCreateInfo: *const VkDescriptorPoolCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pDescriptorPool: *mut VkDescriptorPool,
+    ) -> VkResult;
     pub fn vkDestroyDescriptorPool(
-        device: VkDevice, descriptorPool: VkDescriptorPool,
-        pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        descriptorPool: VkDescriptorPool,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkResetDescriptorPool(
-        device: VkDevice, descriptorPool: VkDescriptorPool,
-        flags: VkDescriptorPoolResetFlags) -> VkResult;
+        device: VkDevice,
+        descriptorPool: VkDescriptorPool,
+        flags: VkDescriptorPoolResetFlags,
+    ) -> VkResult;
     pub fn vkAllocateDescriptorSets(
-        device: VkDevice, pAllocateInfo: *const VkDescriptorSetAllocateInfo,
-        pDescriptorSets: *mut VkDescriptorSet) -> VkResult;
+        device: VkDevice,
+        pAllocateInfo: *const VkDescriptorSetAllocateInfo,
+        pDescriptorSets: *mut VkDescriptorSet,
+    ) -> VkResult;
     pub fn vkFreeDescriptorSets(
-        device: VkDevice, descriptorPool: VkDescriptorPool, descriptorSetCount: uint32_t,
-        pDescriptorSets: *const VkDescriptorSet) -> VkResult;
+        device: VkDevice,
+        descriptorPool: VkDescriptorPool,
+        descriptorSetCount: uint32_t,
+        pDescriptorSets: *const VkDescriptorSet,
+    ) -> VkResult;
     pub fn vkUpdateDescriptorSets(
-        device: VkDevice, descriptorWriteCount: uint32_t,
-        pDescriptorWrites: *const VkWriteDescriptorSet, descriptorCopyCount: uint32_t,
-        pDescriptorCopies: *const VkCopyDescriptorSet);
+        device: VkDevice,
+        descriptorWriteCount: uint32_t,
+        pDescriptorWrites: *const VkWriteDescriptorSet,
+        descriptorCopyCount: uint32_t,
+        pDescriptorCopies: *const VkCopyDescriptorSet,
+    );
     pub fn vkCreateFramebuffer(
-        device: VkDevice, pCreateInfo: *const VkFramebufferCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pFramebuffer: *mut VkFramebuffer) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkFramebufferCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pFramebuffer: *mut VkFramebuffer,
+    ) -> VkResult;
     pub fn vkDestroyFramebuffer(
-        device: VkDevice, framebuffer: VkFramebuffer, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        framebuffer: VkFramebuffer,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkCreateRenderPass(
-        device: VkDevice, pCreateInfo: *const VkRenderPassCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pRenderPass: *mut VkRenderPass) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkRenderPassCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pRenderPass: *mut VkRenderPass,
+    ) -> VkResult;
     pub fn vkDestroyRenderPass(
-        device: VkDevice, renderPass: VkRenderPass, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        renderPass: VkRenderPass,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkGetRenderAreaGranularity(
-        device: VkDevice, renderPass: VkRenderPass, pGranularity: *mut VkExtent2D);
+        device: VkDevice,
+        renderPass: VkRenderPass,
+        pGranularity: *mut VkExtent2D,
+    );
     pub fn vkCreateCommandPool(
-        device: VkDevice, pCreateInfo: *const VkCommandPoolCreateInfo,
-        pAllocator: *const VkAllocationCallbacks, pCommandPool: *mut VkCommandPool) -> VkResult;
+        device: VkDevice,
+        pCreateInfo: *const VkCommandPoolCreateInfo,
+        pAllocator: *const VkAllocationCallbacks,
+        pCommandPool: *mut VkCommandPool,
+    ) -> VkResult;
     pub fn vkDestroyCommandPool(
-        device: VkDevice, commandPool: VkCommandPool, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        commandPool: VkCommandPool,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkResetCommandPool(
-        device: VkDevice, commandPool: VkCommandPool, flags: VkCommandPoolResetFlags) -> VkResult;
+        device: VkDevice,
+        commandPool: VkCommandPool,
+        flags: VkCommandPoolResetFlags,
+    ) -> VkResult;
     pub fn vkAllocateCommandBuffers(
-        device: VkDevice, pAllocateInfo: *const VkCommandBufferAllocateInfo,
-        pCommandBuffers: *mut VkCommandBuffer) -> VkResult;
+        device: VkDevice,
+        pAllocateInfo: *const VkCommandBufferAllocateInfo,
+        pCommandBuffers: *mut VkCommandBuffer,
+    ) -> VkResult;
     pub fn vkFreeCommandBuffers(
-        device: VkDevice, commandPool: VkCommandPool,
+        device: VkDevice,
+        commandPool: VkCommandPool,
         commandBufferCount: uint32_t,
-        pCommandBuffers: *const VkCommandBuffer);
+        pCommandBuffers: *const VkCommandBuffer,
+    );
     pub fn vkBeginCommandBuffer(
-        commandBuffer: VkCommandBuffer, pBeginInfo: *const VkCommandBufferBeginInfo) -> VkResult;
+        commandBuffer: VkCommandBuffer,
+        pBeginInfo: *const VkCommandBufferBeginInfo,
+    ) -> VkResult;
     pub fn vkEndCommandBuffer(commandBuffer: VkCommandBuffer) -> VkResult;
-    pub fn vkResetCommandBuffer(commandBuffer: VkCommandBuffer,
-                                flags: VkCommandBufferResetFlags) -> VkResult;
-    pub fn vkCmdBindPipeline(commandBuffer: VkCommandBuffer,
-                             pipelineBindPoint: VkPipelineBindPoint,
-                             pipeline: VkPipeline);
-    pub fn vkCmdSetViewport(commandBuffer: VkCommandBuffer,
-                            firstViewport: uint32_t, viewportCount: uint32_t,
-                            pViewports: *const VkViewport);
-    pub fn vkCmdSetScissor(commandBuffer: VkCommandBuffer,
-                           firstScissor: uint32_t, scissorCount: uint32_t,
-                           pScissors: *const VkRect2D);
+    pub fn vkResetCommandBuffer(
+        commandBuffer: VkCommandBuffer,
+        flags: VkCommandBufferResetFlags,
+    ) -> VkResult;
+    pub fn vkCmdBindPipeline(
+        commandBuffer: VkCommandBuffer,
+        pipelineBindPoint: VkPipelineBindPoint,
+        pipeline: VkPipeline,
+    );
+    pub fn vkCmdSetViewport(
+        commandBuffer: VkCommandBuffer,
+        firstViewport: uint32_t,
+        viewportCount: uint32_t,
+        pViewports: *const VkViewport,
+    );
+    pub fn vkCmdSetScissor(
+        commandBuffer: VkCommandBuffer,
+        firstScissor: uint32_t,
+        scissorCount: uint32_t,
+        pScissors: *const VkRect2D,
+    );
     pub fn vkCmdSetLineWidth(commandBuffer: VkCommandBuffer, lineWidth: f32);
-    pub fn vkCmdSetDepthBias(commandBuffer: VkCommandBuffer,
-                             depthBiasConstantFactor: f32,
-                             depthBiasClamp: f32, depthBiasSlopeFactor: f32);
-    pub fn vkCmdSetBlendConstants(commandBuffer: VkCommandBuffer,
-                                  blendConstants: *mut f32);
-    pub fn vkCmdSetDepthBounds(commandBuffer: VkCommandBuffer,
-                               minDepthBounds: f32, maxDepthBounds: f32);
-    pub fn vkCmdSetStencilCompareMask(commandBuffer: VkCommandBuffer,
-                                      faceMask: VkStencilFaceFlags,
-                                      compareMask: uint32_t);
-    pub fn vkCmdSetStencilWriteMask(commandBuffer: VkCommandBuffer,
-                                    faceMask: VkStencilFaceFlags,
-                                    writeMask: uint32_t);
-    pub fn vkCmdSetStencilReference(commandBuffer: VkCommandBuffer,
-                                    faceMask: VkStencilFaceFlags,
-                                    reference: uint32_t);
-    pub fn vkCmdBindDescriptorSets(commandBuffer: VkCommandBuffer,
-                                   pipelineBindPoint: VkPipelineBindPoint,
-                                   layout: VkPipelineLayout,
-                                   firstSet: uint32_t,
-                                   descriptorSetCount: uint32_t,
-                                   pDescriptorSets: *const VkDescriptorSet,
-                                   dynamicOffsetCount: uint32_t,
-                                   pDynamicOffsets: *const uint32_t);
-    pub fn vkCmdBindIndexBuffer(commandBuffer: VkCommandBuffer,
-                                buffer: VkBuffer, offset: VkDeviceSize,
-                                indexType: VkIndexType);
-    pub fn vkCmdBindVertexBuffers(commandBuffer: VkCommandBuffer,
-                                  firstBinding: uint32_t,
-                                  bindingCount: uint32_t,
-                                  pBuffers: *const VkBuffer,
-                                  pOffsets: *const VkDeviceSize);
-    pub fn vkCmdDraw(commandBuffer: VkCommandBuffer, vertexCount: uint32_t,
-                     instanceCount: uint32_t, firstVertex: uint32_t,
-                     firstInstance: uint32_t);
-    pub fn vkCmdDrawIndexed(commandBuffer: VkCommandBuffer,
-                            indexCount: uint32_t, instanceCount: uint32_t,
-                            firstIndex: uint32_t, vertexOffset: int32_t,
-                            firstInstance: uint32_t);
-    pub fn vkCmdDrawIndirect(commandBuffer: VkCommandBuffer, buffer: VkBuffer,
-                             offset: VkDeviceSize, drawCount: uint32_t,
-                             stride: uint32_t);
-    pub fn vkCmdDrawIndexedIndirect(commandBuffer: VkCommandBuffer,
-                                    buffer: VkBuffer, offset: VkDeviceSize,
-                                    drawCount: uint32_t, stride: uint32_t);
-    pub fn vkCmdDispatch(commandBuffer: VkCommandBuffer, x: uint32_t,
-                         y: uint32_t, z: uint32_t);
-    pub fn vkCmdDispatchIndirect(commandBuffer: VkCommandBuffer,
-                                 buffer: VkBuffer, offset: VkDeviceSize);
-    pub fn vkCmdCopyBuffer(commandBuffer: VkCommandBuffer,
-                           srcBuffer: VkBuffer, dstBuffer: VkBuffer,
-                           regionCount: uint32_t,
-                           pRegions: *const VkBufferCopy);
-    pub fn vkCmdCopyImage(commandBuffer: VkCommandBuffer, srcImage: VkImage,
-                          srcImageLayout: VkImageLayout, dstImage: VkImage,
-                          dstImageLayout: VkImageLayout,
-                          regionCount: uint32_t,
-                          pRegions: *const VkImageCopy);
-    pub fn vkCmdBlitImage(commandBuffer: VkCommandBuffer, srcImage: VkImage,
-                          srcImageLayout: VkImageLayout, dstImage: VkImage,
-                          dstImageLayout: VkImageLayout,
-                          regionCount: uint32_t, pRegions: *const VkImageBlit,
-                          filter: VkFilter);
-    pub fn vkCmdCopyBufferToImage(commandBuffer: VkCommandBuffer,
-                                  srcBuffer: VkBuffer, dstImage: VkImage,
-                                  dstImageLayout: VkImageLayout,
-                                  regionCount: uint32_t,
-                                  pRegions: *const VkBufferImageCopy);
-    pub fn vkCmdCopyImageToBuffer(commandBuffer: VkCommandBuffer,
-                                  srcImage: VkImage,
-                                  srcImageLayout: VkImageLayout,
-                                  dstBuffer: VkBuffer, regionCount: uint32_t,
-                                  pRegions: *const VkBufferImageCopy);
-    pub fn vkCmdUpdateBuffer(commandBuffer: VkCommandBuffer,
-                             dstBuffer: VkBuffer, dstOffset: VkDeviceSize,
-                             dataSize: VkDeviceSize, pData: *const uint32_t);
-    pub fn vkCmdFillBuffer(commandBuffer: VkCommandBuffer,
-                           dstBuffer: VkBuffer, dstOffset: VkDeviceSize,
-                           size: VkDeviceSize, data: uint32_t);
-    pub fn vkCmdClearColorImage(commandBuffer: VkCommandBuffer,
-                                image: VkImage, imageLayout: VkImageLayout,
-                                pColor: *const VkClearColorValue,
-                                rangeCount: uint32_t,
-                                pRanges: *const VkImageSubresourceRange);
-    pub fn vkCmdClearDepthStencilImage(commandBuffer: VkCommandBuffer,
-                                       image: VkImage,
-                                       imageLayout: VkImageLayout,
-                                       pDepthStencil:
-                                       *const VkClearDepthStencilValue,
-                                       rangeCount: uint32_t,
-                                       pRanges:
-                                       *const VkImageSubresourceRange);
-    pub fn vkCmdClearAttachments(commandBuffer: VkCommandBuffer,
-                                 attachmentCount: uint32_t,
-                                 pAttachments: *const VkClearAttachment,
-                                 rectCount: uint32_t,
-                                 pRects: *const VkClearRect);
-    pub fn vkCmdResolveImage(commandBuffer: VkCommandBuffer,
-                             srcImage: VkImage, srcImageLayout: VkImageLayout,
-                             dstImage: VkImage, dstImageLayout: VkImageLayout,
-                             regionCount: uint32_t,
-                             pRegions: *const VkImageResolve);
-    pub fn vkCmdSetEvent(commandBuffer: VkCommandBuffer, event: VkEvent,
-                         stageMask: VkPipelineStageFlags);
-    pub fn vkCmdResetEvent(commandBuffer: VkCommandBuffer, event: VkEvent,
-                           stageMask: VkPipelineStageFlags);
-    pub fn vkCmdWaitEvents(commandBuffer: VkCommandBuffer,
-                           eventCount: uint32_t, pEvents: *const VkEvent,
-                           srcStageMask: VkPipelineStageFlags,
-                           dstStageMask: VkPipelineStageFlags,
-                           memoryBarrierCount: uint32_t,
-                           pMemoryBarriers: *const VkMemoryBarrier,
-                           bufferMemoryBarrierCount: uint32_t,
-                           pBufferMemoryBarriers:
-                           *const VkBufferMemoryBarrier,
-                           imageMemoryBarrierCount: uint32_t,
-                           pImageMemoryBarriers: *const VkImageMemoryBarrier);
+    pub fn vkCmdSetDepthBias(
+        commandBuffer: VkCommandBuffer,
+        depthBiasConstantFactor: f32,
+        depthBiasClamp: f32,
+        depthBiasSlopeFactor: f32,
+    );
+    pub fn vkCmdSetBlendConstants(commandBuffer: VkCommandBuffer, blendConstants: *mut f32);
+    pub fn vkCmdSetDepthBounds(
+        commandBuffer: VkCommandBuffer,
+        minDepthBounds: f32,
+        maxDepthBounds: f32,
+    );
+    pub fn vkCmdSetStencilCompareMask(
+        commandBuffer: VkCommandBuffer,
+        faceMask: VkStencilFaceFlags,
+        compareMask: uint32_t,
+    );
+    pub fn vkCmdSetStencilWriteMask(
+        commandBuffer: VkCommandBuffer,
+        faceMask: VkStencilFaceFlags,
+        writeMask: uint32_t,
+    );
+    pub fn vkCmdSetStencilReference(
+        commandBuffer: VkCommandBuffer,
+        faceMask: VkStencilFaceFlags,
+        reference: uint32_t,
+    );
+    pub fn vkCmdBindDescriptorSets(
+        commandBuffer: VkCommandBuffer,
+        pipelineBindPoint: VkPipelineBindPoint,
+        layout: VkPipelineLayout,
+        firstSet: uint32_t,
+        descriptorSetCount: uint32_t,
+        pDescriptorSets: *const VkDescriptorSet,
+        dynamicOffsetCount: uint32_t,
+        pDynamicOffsets: *const uint32_t,
+    );
+    pub fn vkCmdBindIndexBuffer(
+        commandBuffer: VkCommandBuffer,
+        buffer: VkBuffer,
+        offset: VkDeviceSize,
+        indexType: VkIndexType,
+    );
+    pub fn vkCmdBindVertexBuffers(
+        commandBuffer: VkCommandBuffer,
+        firstBinding: uint32_t,
+        bindingCount: uint32_t,
+        pBuffers: *const VkBuffer,
+        pOffsets: *const VkDeviceSize,
+    );
+    pub fn vkCmdDraw(
+        commandBuffer: VkCommandBuffer,
+        vertexCount: uint32_t,
+        instanceCount: uint32_t,
+        firstVertex: uint32_t,
+        firstInstance: uint32_t,
+    );
+    pub fn vkCmdDrawIndexed(
+        commandBuffer: VkCommandBuffer,
+        indexCount: uint32_t,
+        instanceCount: uint32_t,
+        firstIndex: uint32_t,
+        vertexOffset: int32_t,
+        firstInstance: uint32_t,
+    );
+    pub fn vkCmdDrawIndirect(
+        commandBuffer: VkCommandBuffer,
+        buffer: VkBuffer,
+        offset: VkDeviceSize,
+        drawCount: uint32_t,
+        stride: uint32_t,
+    );
+    pub fn vkCmdDrawIndexedIndirect(
+        commandBuffer: VkCommandBuffer,
+        buffer: VkBuffer,
+        offset: VkDeviceSize,
+        drawCount: uint32_t,
+        stride: uint32_t,
+    );
+    pub fn vkCmdDispatch(commandBuffer: VkCommandBuffer, x: uint32_t, y: uint32_t, z: uint32_t);
+    pub fn vkCmdDispatchIndirect(
+        commandBuffer: VkCommandBuffer,
+        buffer: VkBuffer,
+        offset: VkDeviceSize,
+    );
+    pub fn vkCmdCopyBuffer(
+        commandBuffer: VkCommandBuffer,
+        srcBuffer: VkBuffer,
+        dstBuffer: VkBuffer,
+        regionCount: uint32_t,
+        pRegions: *const VkBufferCopy,
+    );
+    pub fn vkCmdCopyImage(
+        commandBuffer: VkCommandBuffer,
+        srcImage: VkImage,
+        srcImageLayout: VkImageLayout,
+        dstImage: VkImage,
+        dstImageLayout: VkImageLayout,
+        regionCount: uint32_t,
+        pRegions: *const VkImageCopy,
+    );
+    pub fn vkCmdBlitImage(
+        commandBuffer: VkCommandBuffer,
+        srcImage: VkImage,
+        srcImageLayout: VkImageLayout,
+        dstImage: VkImage,
+        dstImageLayout: VkImageLayout,
+        regionCount: uint32_t,
+        pRegions: *const VkImageBlit,
+        filter: VkFilter,
+    );
+    pub fn vkCmdCopyBufferToImage(
+        commandBuffer: VkCommandBuffer,
+        srcBuffer: VkBuffer,
+        dstImage: VkImage,
+        dstImageLayout: VkImageLayout,
+        regionCount: uint32_t,
+        pRegions: *const VkBufferImageCopy,
+    );
+    pub fn vkCmdCopyImageToBuffer(
+        commandBuffer: VkCommandBuffer,
+        srcImage: VkImage,
+        srcImageLayout: VkImageLayout,
+        dstBuffer: VkBuffer,
+        regionCount: uint32_t,
+        pRegions: *const VkBufferImageCopy,
+    );
+    pub fn vkCmdUpdateBuffer(
+        commandBuffer: VkCommandBuffer,
+        dstBuffer: VkBuffer,
+        dstOffset: VkDeviceSize,
+        dataSize: VkDeviceSize,
+        pData: *const uint32_t,
+    );
+    pub fn vkCmdFillBuffer(
+        commandBuffer: VkCommandBuffer,
+        dstBuffer: VkBuffer,
+        dstOffset: VkDeviceSize,
+        size: VkDeviceSize,
+        data: uint32_t,
+    );
+    pub fn vkCmdClearColorImage(
+        commandBuffer: VkCommandBuffer,
+        image: VkImage,
+        imageLayout: VkImageLayout,
+        pColor: *const VkClearColorValue,
+        rangeCount: uint32_t,
+        pRanges: *const VkImageSubresourceRange,
+    );
+    pub fn vkCmdClearDepthStencilImage(
+        commandBuffer: VkCommandBuffer,
+        image: VkImage,
+        imageLayout: VkImageLayout,
+        pDepthStencil: *const VkClearDepthStencilValue,
+        rangeCount: uint32_t,
+        pRanges: *const VkImageSubresourceRange,
+    );
+    pub fn vkCmdClearAttachments(
+        commandBuffer: VkCommandBuffer,
+        attachmentCount: uint32_t,
+        pAttachments: *const VkClearAttachment,
+        rectCount: uint32_t,
+        pRects: *const VkClearRect,
+    );
+    pub fn vkCmdResolveImage(
+        commandBuffer: VkCommandBuffer,
+        srcImage: VkImage,
+        srcImageLayout: VkImageLayout,
+        dstImage: VkImage,
+        dstImageLayout: VkImageLayout,
+        regionCount: uint32_t,
+        pRegions: *const VkImageResolve,
+    );
+    pub fn vkCmdSetEvent(
+        commandBuffer: VkCommandBuffer,
+        event: VkEvent,
+        stageMask: VkPipelineStageFlags,
+    );
+    pub fn vkCmdResetEvent(
+        commandBuffer: VkCommandBuffer,
+        event: VkEvent,
+        stageMask: VkPipelineStageFlags,
+    );
+    pub fn vkCmdWaitEvents(
+        commandBuffer: VkCommandBuffer,
+        eventCount: uint32_t,
+        pEvents: *const VkEvent,
+        srcStageMask: VkPipelineStageFlags,
+        dstStageMask: VkPipelineStageFlags,
+        memoryBarrierCount: uint32_t,
+        pMemoryBarriers: *const VkMemoryBarrier,
+        bufferMemoryBarrierCount: uint32_t,
+        pBufferMemoryBarriers: *const VkBufferMemoryBarrier,
+        imageMemoryBarrierCount: uint32_t,
+        pImageMemoryBarriers: *const VkImageMemoryBarrier,
+    );
     pub fn vkCmdPipelineBarrier(
-        commandBuffer: VkCommandBuffer, srcStageMask: VkPipelineStageFlags,
-        dstStageMask: VkPipelineStageFlags, dependencyFlags: VkDependencyFlags,
-        memoryBarrierCount: uint32_t, pMemoryBarriers: *const VkMemoryBarrier,
-        bufferMemoryBarrierCount: uint32_t, pBufferMemoryBarriers: *const VkBufferMemoryBarrier,
-        imageMemoryBarrierCount: uint32_t, pImageMemoryBarriers: *const VkImageMemoryBarrier);
+        commandBuffer: VkCommandBuffer,
+        srcStageMask: VkPipelineStageFlags,
+        dstStageMask: VkPipelineStageFlags,
+        dependencyFlags: VkDependencyFlags,
+        memoryBarrierCount: uint32_t,
+        pMemoryBarriers: *const VkMemoryBarrier,
+        bufferMemoryBarrierCount: uint32_t,
+        pBufferMemoryBarriers: *const VkBufferMemoryBarrier,
+        imageMemoryBarrierCount: uint32_t,
+        pImageMemoryBarriers: *const VkImageMemoryBarrier,
+    );
     pub fn vkCmdBeginQuery(
-        commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, query: uint32_t,
-        flags: VkQueryControlFlags);
-    pub fn vkCmdEndQuery(
-        commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, query: uint32_t);
+        commandBuffer: VkCommandBuffer,
+        queryPool: VkQueryPool,
+        query: uint32_t,
+        flags: VkQueryControlFlags,
+    );
+    pub fn vkCmdEndQuery(commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, query: uint32_t);
     pub fn vkCmdResetQueryPool(
-        commandBuffer: VkCommandBuffer, queryPool: VkQueryPool,
-        firstQuery: uint32_t, queryCount: uint32_t);
+        commandBuffer: VkCommandBuffer,
+        queryPool: VkQueryPool,
+        firstQuery: uint32_t,
+        queryCount: uint32_t,
+    );
     pub fn vkCmdWriteTimestamp(
-        commandBuffer: VkCommandBuffer, pipelineStage: VkPipelineStageFlagBits,
-        queryPool: VkQueryPool, query: uint32_t);
+        commandBuffer: VkCommandBuffer,
+        pipelineStage: VkPipelineStageFlagBits,
+        queryPool: VkQueryPool,
+        query: uint32_t,
+    );
     pub fn vkCmdCopyQueryPoolResults(
-        commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, firstQuery: uint32_t,
-        queryCount: uint32_t, dstBuffer: VkBuffer, dstOffset: VkDeviceSize, stride: VkDeviceSize,
-        flags: VkQueryResultFlags);
+        commandBuffer: VkCommandBuffer,
+        queryPool: VkQueryPool,
+        firstQuery: uint32_t,
+        queryCount: uint32_t,
+        dstBuffer: VkBuffer,
+        dstOffset: VkDeviceSize,
+        stride: VkDeviceSize,
+        flags: VkQueryResultFlags,
+    );
     pub fn vkCmdPushConstants(
-        commandBuffer: VkCommandBuffer, layout: VkPipelineLayout, stageFlags: VkShaderStageFlags,
-        offset: uint32_t, size: uint32_t, pValues: *const c_void);
+        commandBuffer: VkCommandBuffer,
+        layout: VkPipelineLayout,
+        stageFlags: VkShaderStageFlags,
+        offset: uint32_t,
+        size: uint32_t,
+        pValues: *const c_void,
+    );
     pub fn vkCmdBeginRenderPass(
-        commandBuffer: VkCommandBuffer, pRenderPassBegin: *const VkRenderPassBeginInfo,
-        contents: VkSubpassContents);
-    pub fn vkCmdNextSubpass(
-        commandBuffer: VkCommandBuffer, contents: VkSubpassContents);
+        commandBuffer: VkCommandBuffer,
+        pRenderPassBegin: *const VkRenderPassBeginInfo,
+        contents: VkSubpassContents,
+    );
+    pub fn vkCmdNextSubpass(commandBuffer: VkCommandBuffer, contents: VkSubpassContents);
     pub fn vkCmdEndRenderPass(commandBuffer: VkCommandBuffer);
     pub fn vkCmdExecuteCommands(
-        commandBuffer: VkCommandBuffer, commandBufferCount: uint32_t,
-        pCommandBuffers: *const VkCommandBuffer);
+        commandBuffer: VkCommandBuffer,
+        commandBufferCount: uint32_t,
+        pCommandBuffers: *const VkCommandBuffer,
+    );
     pub fn vkDestroySurfaceKHR(
-        instance: VkInstance, surface: VkSurfaceKHR, pAllocator: *const VkAllocationCallbacks);
+        instance: VkInstance,
+        surface: VkSurfaceKHR,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkGetPhysicalDeviceSurfaceSupportKHR(
         physicalDevice: VkPhysicalDevice,
         queueFamilyIndex: uint32_t,
         surface: VkSurfaceKHR,
-        pSupported: *mut VkBool32) -> VkResult;
+        pSupported: *mut VkBool32,
+    ) -> VkResult;
     pub fn vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
         physicalDevice: VkPhysicalDevice,
         surface: VkSurfaceKHR,
-        pSurfaceCapabilities: *mut VkSurfaceCapabilitiesKHR) -> VkResult;
+        pSurfaceCapabilities: *mut VkSurfaceCapabilitiesKHR,
+    ) -> VkResult;
     pub fn vkGetPhysicalDeviceSurfaceFormatsKHR(
-        physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR,
-        pSurfaceFormatCount: *mut uint32_t, pSurfaceFormats: *mut VkSurfaceFormatKHR) -> VkResult;
+        physicalDevice: VkPhysicalDevice,
+        surface: VkSurfaceKHR,
+        pSurfaceFormatCount: *mut uint32_t,
+        pSurfaceFormats: *mut VkSurfaceFormatKHR,
+    ) -> VkResult;
     pub fn vkGetPhysicalDeviceSurfacePresentModesKHR(
         physicalDevice: VkPhysicalDevice,
         surface: VkSurfaceKHR,
         pPresentModeCount: *mut uint32_t,
-        pPresentModes: *mut VkPresentModeKHR) -> VkResult;
+        pPresentModes: *mut VkPresentModeKHR,
+    ) -> VkResult;
     pub fn vkCreateSwapchainKHR(
         device: VkDevice,
         pCreateInfo: *const VkSwapchainCreateInfoKHR,
         pAllocator: *const VkAllocationCallbacks,
-        pSwapchain: *mut VkSwapchainKHR) -> VkResult;
+        pSwapchain: *mut VkSwapchainKHR,
+    ) -> VkResult;
     pub fn vkDestroySwapchainKHR(
-        device: VkDevice, swapchain: VkSwapchainKHR, pAllocator: *const VkAllocationCallbacks);
+        device: VkDevice,
+        swapchain: VkSwapchainKHR,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkGetSwapchainImagesKHR(
         device: VkDevice,
         swapchain: VkSwapchainKHR,
         pSwapchainImageCount: *mut uint32_t,
-        pSwapchainImages: *mut VkImage) -> VkResult;
+        pSwapchainImages: *mut VkImage,
+    ) -> VkResult;
     pub fn vkAcquireNextImageKHR(
-        device: VkDevice, swapchain: VkSwapchainKHR, timeout: uint64_t, semaphore: VkSemaphore,
-        fence: VkFence, pImageIndex: *mut uint32_t) -> VkResult;
-    pub fn vkQueuePresentKHR(
-        queue: VkQueue, pPresentInfo: *const VkPresentInfoKHR) -> VkResult;
+        device: VkDevice,
+        swapchain: VkSwapchainKHR,
+        timeout: uint64_t,
+        semaphore: VkSemaphore,
+        fence: VkFence,
+        pImageIndex: *mut uint32_t,
+    ) -> VkResult;
+    pub fn vkQueuePresentKHR(queue: VkQueue, pPresentInfo: *const VkPresentInfoKHR) -> VkResult;
     pub fn vkGetPhysicalDeviceDisplayPropertiesKHR(
-        physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
-        pProperties: *mut VkDisplayPropertiesKHR) -> VkResult;
+        physicalDevice: VkPhysicalDevice,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkDisplayPropertiesKHR,
+    ) -> VkResult;
     pub fn vkGetPhysicalDeviceDisplayPlanePropertiesKHR(
-        physicalDevice: VkPhysicalDevice, pPropertyCount: *mut uint32_t,
-        pProperties: *mut VkDisplayPlanePropertiesKHR) -> VkResult;
+        physicalDevice: VkPhysicalDevice,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkDisplayPlanePropertiesKHR,
+    ) -> VkResult;
     pub fn vkGetDisplayPlaneSupportedDisplaysKHR(
-        physicalDevice: VkPhysicalDevice, planeIndex: uint32_t, pDisplayCount: *mut uint32_t,
-        pDisplays: *mut VkDisplayKHR) -> VkResult;
+        physicalDevice: VkPhysicalDevice,
+        planeIndex: uint32_t,
+        pDisplayCount: *mut uint32_t,
+        pDisplays: *mut VkDisplayKHR,
+    ) -> VkResult;
     pub fn vkGetDisplayModePropertiesKHR(
-        physicalDevice: VkPhysicalDevice, display: VkDisplayKHR, pPropertyCount: *mut uint32_t,
-        pProperties: *mut VkDisplayModePropertiesKHR) -> VkResult;
+        physicalDevice: VkPhysicalDevice,
+        display: VkDisplayKHR,
+        pPropertyCount: *mut uint32_t,
+        pProperties: *mut VkDisplayModePropertiesKHR,
+    ) -> VkResult;
     pub fn vkCreateDisplayModeKHR(
-        physicalDevice: VkPhysicalDevice, display: VkDisplayKHR,
-        pCreateInfo: *const VkDisplayModeCreateInfoKHR, pAllocator: *const VkAllocationCallbacks,
-        pMode: *mut VkDisplayModeKHR) -> VkResult;
-    pub fn vkGetDisplayPlaneCapabilitiesKHR(
-        physicalDevice: VkPhysicalDevice, mode: VkDisplayModeKHR, planeIndex: uint32_t,
-        pCapabilities: *mut VkDisplayPlaneCapabilitiesKHR) -> VkResult;
-    pub fn vkCreateDisplayPlaneSurfaceKHR(
-        instance: VkInstance, pCreateInfo: *const VkDisplaySurfaceCreateInfoKHR,
-        pAllocator: *const VkAllocationCallbacks, pSurface: *mut VkSurfaceKHR) -> VkResult;
-    pub fn vkCreateSharedSwapchainsKHR(
-        device: VkDevice, swapchainCount: uint32_t, pCreateInfos: *const VkSwapchainCreateInfoKHR,
-        pAllocator: *const VkAllocationCallbacks, pSwapchains: *mut VkSwapchainKHR) -> VkResult;
-    pub fn vkCreateDebugReportCallbackEXT(
-        instance: VkInstance, pCreateInfo: *const VkDebugReportCallbackCreateInfoEXT,
+        physicalDevice: VkPhysicalDevice,
+        display: VkDisplayKHR,
+        pCreateInfo: *const VkDisplayModeCreateInfoKHR,
         pAllocator: *const VkAllocationCallbacks,
-        pCallback: *mut VkDebugReportCallbackEXT) -> VkResult;
+        pMode: *mut VkDisplayModeKHR,
+    ) -> VkResult;
+    pub fn vkGetDisplayPlaneCapabilitiesKHR(
+        physicalDevice: VkPhysicalDevice,
+        mode: VkDisplayModeKHR,
+        planeIndex: uint32_t,
+        pCapabilities: *mut VkDisplayPlaneCapabilitiesKHR,
+    ) -> VkResult;
+    pub fn vkCreateDisplayPlaneSurfaceKHR(
+        instance: VkInstance,
+        pCreateInfo: *const VkDisplaySurfaceCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks,
+        pSurface: *mut VkSurfaceKHR,
+    ) -> VkResult;
+    pub fn vkCreateSharedSwapchainsKHR(
+        device: VkDevice,
+        swapchainCount: uint32_t,
+        pCreateInfos: *const VkSwapchainCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks,
+        pSwapchains: *mut VkSwapchainKHR,
+    ) -> VkResult;
+    pub fn vkCreateDebugReportCallbackEXT(
+        instance: VkInstance,
+        pCreateInfo: *const VkDebugReportCallbackCreateInfoEXT,
+        pAllocator: *const VkAllocationCallbacks,
+        pCallback: *mut VkDebugReportCallbackEXT,
+    ) -> VkResult;
     pub fn vkDestroyDebugReportCallbackEXT(
-        instance: VkInstance, callback: VkDebugReportCallbackEXT,
-        pAllocator: *const VkAllocationCallbacks);
+        instance: VkInstance,
+        callback: VkDebugReportCallbackEXT,
+        pAllocator: *const VkAllocationCallbacks,
+    );
     pub fn vkDebugReportMessageEXT(
-        instance: VkInstance, flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT,
-        object: uint64_t, location: size_t, messageCode: int32_t,
-        pLayerPrefix: *const c_char, pMessage: *const c_char);
+        instance: VkInstance,
+        flags: VkDebugReportFlagsEXT,
+        objectType: VkDebugReportObjectTypeEXT,
+        object: uint64_t,
+        location: size_t,
+        messageCode: int32_t,
+        pLayerPrefix: *const c_char,
+        pMessage: *const c_char,
+    );
     #[cfg(target_os = "android")]
     pub fn vkCreateAndroidSurfaceKHR(
-        instance: VkInstance, p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
-        p_allocator: *const VkAllocationCallbacks, p_surface: *mut VkSurfaceKHR) -> VkResult;
+        instance: VkInstance,
+        p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
+        p_allocator: *const VkAllocationCallbacks,
+        p_surface: *mut VkSurfaceKHR,
+    ) -> VkResult;
     #[cfg(target_os = "linux")]
     pub fn vkCreateXcbSurfaceKHR(
-        instance: VkInstance, pCreateInfo: *const VkXcbSurfaceCreateInfoKHR,
-        pAllocator: *const VkAllocationCallbacks, pSurface: *mut VkSurfaceKHR) -> VkResult;
+        instance: VkInstance,
+        pCreateInfo: *const VkXcbSurfaceCreateInfoKHR,
+        pAllocator: *const VkAllocationCallbacks,
+        pSurface: *mut VkSurfaceKHR,
+    ) -> VkResult;
     #[cfg(target_os = "windows")]
     pub fn vkCreateWin32SurfaceKHR(
-        instance: VkInstance, pCreateInfo: *const VkWin32SurfaceCreateInfoKHR,
+        instance: VkInstance,
+        pCreateInfo: *const VkWin32SurfaceCreateInfoKHR,
         pAllocator: *const VkAllocationCallbacks,
-        pSurface: *mut VkSurfaceKHR) -> VkResult;
+        pSurface: *mut VkSurfaceKHR,
+    ) -> VkResult;
 }
 
 pub fn vkMakeVersion(major: u32, minor: u32, patch: u32) -> u32 {

@@ -48,8 +48,7 @@ impl Uniform {
         alloc_info.memoryTypeIndex = logical_device.physical_device.get_memory_type_index(
             mem_reqs.memoryTypeBits,
             vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32 |
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as
-                    u32,
+                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32,
         );
         vulkan_check!(vk::vkAllocateMemory(
             logical_device.vk_data,

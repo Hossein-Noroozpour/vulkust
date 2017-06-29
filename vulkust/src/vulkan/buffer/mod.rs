@@ -58,8 +58,7 @@ impl Buffer {
         mem_alloc.memoryTypeIndex = logical_device.physical_device.get_memory_type_index(
             mem_reqs.memoryTypeBits,
             vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32 |
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as
-                    u32,
+                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32,
         );
         vulkan_check!(vk::vkAllocateMemory(
             logical_device.vk_data,
@@ -105,8 +104,7 @@ impl Buffer {
         mem_alloc.allocationSize = mem_reqs.size;
         mem_alloc.memoryTypeIndex = logical_device.physical_device.get_memory_type_index(
             mem_reqs.memoryTypeBits,
-            vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as
-                u32,
+            vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32,
         );
         let mut vertices_memory = 0 as vk::VkDeviceMemory;
         vulkan_check!(vk::vkAllocateMemory(
@@ -143,8 +141,7 @@ impl Buffer {
         mem_alloc.memoryTypeIndex = logical_device.physical_device.get_memory_type_index(
             mem_reqs.memoryTypeBits,
             vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32 |
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as
-                    u32,
+                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32,
         );
         vulkan_check!(vk::vkAllocateMemory(
             logical_device.vk_data,
@@ -192,8 +189,7 @@ impl Buffer {
         mem_alloc.allocationSize = mem_reqs.size;
         mem_alloc.memoryTypeIndex = logical_device.physical_device.get_memory_type_index(
             mem_reqs.memoryTypeBits,
-            vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as
-                u32,
+            vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32,
         );
         let mut indices_memory = 0 as vk::VkDeviceMemory;
         vulkan_check!(vk::vkAllocateMemory(

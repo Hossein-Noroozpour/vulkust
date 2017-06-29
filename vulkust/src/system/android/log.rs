@@ -1,8 +1,5 @@
 #[cfg(not(feature = "no-log"))]
-use std::os::raw::{
-    c_int,
-    c_char,
-};
+use std::os::raw::{c_int, c_char};
 
 #[cfg(not(feature = "no-log"))]
 #[repr(i32)]
@@ -11,16 +8,16 @@ pub enum Priority {
     Unknown = 0,
     Default = 1,
     Verbose = 2,
-    Debug   = 3,
-    Info    = 4,
-    Warn    = 5,
-    Error   = 6,
-    Fatal   = 7,
-    Silent  = 8,
+    Debug = 3,
+    Info = 4,
+    Warn = 5,
+    Error = 6,
+    Fatal = 7,
+    Silent = 8,
 }
 
 #[cfg(not(feature = "no-log"))]
-#[cfg_attr(target_os = "android", link(name = "log", kind= "dylib"))]
+#[cfg_attr(target_os = "android", link(name = "log", kind = "dylib"))]
 extern "C" {
     pub fn __android_log_write(priority: c_int, tag: *const c_char, text: *const c_char) -> c_int;
 }

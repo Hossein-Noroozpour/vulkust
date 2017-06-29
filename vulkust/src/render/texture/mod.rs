@@ -26,13 +26,13 @@ pub struct Texture2D {
 
 impl Texture2D {
     pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-            where CoreApp: ApplicationTrait {
+    where
+        CoreApp: ApplicationTrait,
+    {
         let size: u64 = file.read_type();
-        logi!("Texture2D size is: {}", size);
+        // logi!("Texture2D size is: {}", size);
         let data = file.read_bytes(size as usize);
-        Texture2D {
-            raw: PlatformTexture2D::new(data, os_app),
-        }
+        Texture2D { raw: PlatformTexture2D::new(data, os_app) }
     }
 }
 

@@ -6,7 +6,9 @@ pub trait ApplicationTrait: Sized {
     fn initialize(&mut self, o: *mut OsApplication<Self>, r: *mut RenderEngine<Self>) -> bool {
         logi!(
             "Application automatically initialized with os-app: {:?} and render-engine {:?}",
-            o, r);
+            o,
+            r
+        );
         return true;
     }
     fn update(&mut self) -> bool;

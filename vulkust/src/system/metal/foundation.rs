@@ -32,7 +32,7 @@ impl NSDictionaryBuilder {
         let keys_ptr: IdPtr = unsafe { transmute(self.keys.as_ptr()) };
         let count = self.keys.len() as NSUInteger;
         NSDictionary {
-            id: unsafe{
+            id: unsafe {
                 msg_send![
                     get_class("NSDictionary"), 
                     dictionaryWithObjects:values_ptr
@@ -50,10 +50,8 @@ pub struct NSDictionary {
 }
 
 unsafe impl objc::Encode for NSDictionary {
-    fn encode() -> objc::Encoding { 
-        unsafe { 
-            objc::Encoding::from_str("@") 
-        } 
+    fn encode() -> objc::Encoding {
+        unsafe { objc::Encoding::from_str("@") }
     }
 }
 
@@ -63,10 +61,8 @@ pub struct NSNumber {
 }
 
 unsafe impl objc::Encode for NSNumber {
-    fn encode() -> objc::Encoding { 
-        unsafe { 
-            objc::Encoding::from_str("@") 
-        } 
+    fn encode() -> objc::Encoding {
+        unsafe { objc::Encoding::from_str("@") }
     }
 }
 
@@ -75,9 +71,7 @@ const NSNUMBER_CLASS_NAME: &'static str = "NSNumber";
 impl NSNumber {
     pub fn new_uint(v: NSUInteger) -> Self {
         NSNumber {
-            id: unsafe {
-                msg_send![get_class(NSNUMBER_CLASS_NAME), numberWithUnsignedInteger:v]
-            }
+            id: unsafe { msg_send![get_class(NSNUMBER_CLASS_NAME), numberWithUnsignedInteger: v] },
         }
     }
 }
@@ -88,10 +82,8 @@ pub struct NSData {
 }
 
 unsafe impl objc::Encode for NSData {
-    fn encode() -> objc::Encoding { 
-        unsafe { 
-            objc::Encoding::from_str("@") 
-        } 
+    fn encode() -> objc::Encoding {
+        unsafe { objc::Encoding::from_str("@") }
     }
 }
 
@@ -102,12 +94,7 @@ impl NSData {
         let data: *const c_void = unsafe { transmute(data) };
         let len = len as NSUInteger;
         NSData {
-            id: unsafe {
-                msg_send![get_class(NSDATA_CLASS_NAME), dataWithBytes:data length:len]
-            }
+            id: unsafe { msg_send![get_class(NSDATA_CLASS_NAME), dataWithBytes:data length:len] },
         }
     }
 }
-
-
-

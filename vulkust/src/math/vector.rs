@@ -1,36 +1,26 @@
-use std::ops::{
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Neg,
-    AddAssign,
-    SubAssign,
-    MulAssign,
-    DivAssign,
-};
+use std::ops::{Add, Sub, Mul, Div, Neg, AddAssign, SubAssign, MulAssign, DivAssign};
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 use super::super::objc;
 use super::number::Number;
 
 #[repr(simd)]
-pub struct SVec4D (pub f64, pub f64, pub f64, pub f64);
+pub struct SVec4D(pub f64, pub f64, pub f64, pub f64);
 #[repr(simd)]
-pub struct SVec3D (pub f64, pub f64, pub f64);
+pub struct SVec3D(pub f64, pub f64, pub f64);
 #[repr(simd)]
-pub struct SVec2D (pub f64, pub f64);
+pub struct SVec2D(pub f64, pub f64);
 #[repr(simd)]
-pub struct SVec4F (pub f32, pub f32, pub f32, pub f32);
+pub struct SVec4F(pub f32, pub f32, pub f32, pub f32);
 #[repr(simd)]
-pub struct SVec3F (pub f32, pub f32, pub f32);
+pub struct SVec3F(pub f32, pub f32, pub f32);
 #[repr(simd)]
-pub struct SVec2F (pub f32, pub f32);
+pub struct SVec2F(pub f32, pub f32);
 #[repr(simd)]
-pub struct SVec4U32 (pub u32, pub u32, pub u32, pub u32);
+pub struct SVec4U32(pub u32, pub u32, pub u32, pub u32);
 #[repr(simd)]
-pub struct SVec3U32 (pub u32, pub u32, pub u32);
+pub struct SVec3U32(pub u32, pub u32, pub u32);
 #[repr(simd)]
-pub struct SVec2U32 (pub u32, pub u32);
+pub struct SVec2U32(pub u32, pub u32);
 
 #[repr(usize)]
 #[derive(Debug, Clone, Copy)]
@@ -43,7 +33,10 @@ pub enum Axis {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Vec4<T> where T: Number {
+pub struct Vec4<T>
+where
+    T: Number,
+{
     pub x: T,
     pub y: T,
     pub z: T,
@@ -51,18 +44,28 @@ pub struct Vec4<T> where T: Number {
 }
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
-unsafe impl<T> objc::Encode for Vec4<T> where T: Number {
+unsafe impl<T> objc::Encode for Vec4<T>
+where
+    T: Number,
+{
     fn encode() -> objc::Encoding {
         let encoding = format!(
-            "{{?={}{}{}{}}}", T::objc_encode(),
-            T::objc_encode(), T::objc_encode(), T::objc_encode());
+            "{{?={}{}{}{}}}",
+            T::objc_encode(),
+            T::objc_encode(),
+            T::objc_encode(),
+            T::objc_encode()
+        );
         unsafe { objc::Encoding::from_str(&encoding) }
     }
 }
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Vec3<T> where T: Number {
+pub struct Vec3<T>
+where
+    T: Number,
+{
     pub x: T,
     pub y: T,
     pub z: T,
@@ -144,7 +147,10 @@ sopasg3!(sub_assign, SubAssign, -=);
 sopasg3!(mul_assign, MulAssign, *=);
 sopasg3!(div_assign, DivAssign, /=);
 
-impl<E> Neg for Vec3<E> where E: Number + Neg<Output = E> {
+impl<E> Neg for Vec3<E>
+where
+    E: Number + Neg<Output = E>,
+{
     type Output = Self;
     fn neg(self) -> Self {
         Vec3 {
@@ -155,13 +161,12 @@ impl<E> Neg for Vec3<E> where E: Number + Neg<Output = E> {
     }
 }
 
-impl<T> Vec3<T> where T: Number {
+impl<T> Vec3<T>
+where
+    T: Number,
+{
     pub fn new(e: T) -> Self {
-        Vec3 {
-            x: e,
-            y: e,
-            z: e,
-        }
+        Vec3 { x: e, y: e, z: e }
     }
 
     pub fn dot(&self, o: &Vec3<T>) -> T {
@@ -172,7 +177,7 @@ impl<T> Vec3<T> where T: Number {
         Vec3 {
             x: self.y * o.z - self.z * o.y,
             y: self.z * o.x - self.x * o.z,
-            z: self.x * o.y - self.y * o.x
+            z: self.x * o.y - self.y * o.x,
         }
     }
 
@@ -200,23 +205,28 @@ impl<T> Vec3<T> where T: Number {
         Vec3 {
             x: self.x / len,
             y: self.y / len,
-            z: self.z / len
+            z: self.z / len,
         }
     }
 }
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
-unsafe impl<T> objc::Encode for Vec3<T> where T: Number {
+unsafe impl<T> objc::Encode for Vec3<T>
+where
+    T: Number,
+{
     fn encode() -> objc::Encoding {
-        let encoding = format!(
-            "![3{}]", T::objc_encode());
+        let encoding = format!("![3{}]", T::objc_encode());
         unsafe { objc::Encoding::from_str(&encoding) }
     }
 }
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Vec2<T> where T: Number {
+pub struct Vec2<T>
+where
+    T: Number,
+{
     pub x: T,
     pub y: T,
 }
@@ -291,7 +301,10 @@ sopasg2!(sub_assign, SubAssign, -=);
 sopasg2!(mul_assign, MulAssign, *=);
 sopasg2!(div_assign, DivAssign, /=);
 
-impl<E> Neg for Vec2<E> where E: Number + Neg<Output = E> {
+impl<E> Neg for Vec2<E>
+where
+    E: Number + Neg<Output = E>,
+{
     type Output = Vec2<E>;
     fn neg(self) -> Vec2<E> {
         Vec2 {
@@ -301,12 +314,12 @@ impl<E> Neg for Vec2<E> where E: Number + Neg<Output = E> {
     }
 }
 
-impl<T> Vec2<T> where T: Number {
+impl<T> Vec2<T>
+where
+    T: Number,
+{
     pub fn new(e: T) -> Vec2<T> {
-        Vec2 {
-            x: e,
-            y: e,
-        }
+        Vec2 { x: e, y: e }
     }
 
     pub fn dot(&self, o: &Vec2<T>) -> T {
@@ -350,10 +363,12 @@ impl<T> Vec2<T> where T: Number {
 }
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
-unsafe impl<T> objc::Encode for Vec2<T> where T: Number {
+unsafe impl<T> objc::Encode for Vec2<T>
+where
+    T: Number,
+{
     fn encode() -> objc::Encoding {
-        let encoding = format!(
-            "{{?={}{}}}", T::objc_encode(), T::objc_encode());
+        let encoding = format!("{{?={}{}}}", T::objc_encode(), T::objc_encode());
         unsafe { objc::Encoding::from_str(&encoding) }
     }
 }

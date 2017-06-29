@@ -1,12 +1,6 @@
-use std::os::raw::{
-    c_int,
-    c_void,
-};
+use std::os::raw::{c_int, c_void};
 
-use super::looper::{
-    ALooper,
-    ALooperCallbackFunc,
-};
+use super::looper::{ALooper, ALooperCallbackFunc};
 
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
@@ -138,7 +132,7 @@ pub enum AinputMotionRange {
 pub type AInputQueue = c_void;
 
 #[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
-extern {
+extern "C" {
     pub fn AInputEvent_getType(event: *const AInputEvent) -> i32;
     pub fn AInputEvent_getDeviceId(event: *const AInputEvent) -> i32;
     pub fn AInputEvent_getSource(event: *const AInputEvent) -> i32;
@@ -161,35 +155,104 @@ extern {
     pub fn AMotionEvent_getXPrecision(motion_event: *const AInputEvent) -> f32;
     pub fn AMotionEvent_getYPrecision(motion_event: *const AInputEvent) -> f32;
     pub fn AMotionEvent_getPointerCount(motion_event: *const AInputEvent) -> usize;
-    pub fn AMotionEvent_getPointerId(motion_event: *const AInputEvent, pointer_index: usize) -> i32;
+    pub fn AMotionEvent_getPointerId(motion_event: *const AInputEvent, pointer_index: usize)
+        -> i32;
     pub fn AMotionEvent_getRawX(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
     pub fn AMotionEvent_getRawY(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
     pub fn AMotionEvent_getX(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
     pub fn AMotionEvent_getY(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
     pub fn AMotionEvent_getPressure(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
     pub fn AMotionEvent_getSize(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
-    pub fn AMotionEvent_getTouchMajor(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
-    pub fn AMotionEvent_getTouchMinor(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
-    pub fn AMotionEvent_getToolMajor(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
-    pub fn AMotionEvent_getToolMinor(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
-    pub fn AMotionEvent_getOrientation(motion_event: *const AInputEvent, pointer_index: usize) -> f32;
+    pub fn AMotionEvent_getTouchMajor(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getTouchMinor(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getToolMajor(motion_event: *const AInputEvent, pointer_index: usize)
+        -> f32;
+    pub fn AMotionEvent_getToolMinor(motion_event: *const AInputEvent, pointer_index: usize)
+        -> f32;
+    pub fn AMotionEvent_getOrientation(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+    ) -> f32;
     pub fn AMotionEvent_getHistorySize(motion_event: *const AInputEvent) -> usize;
-    pub fn AMotionEvent_getHistoricalEventTime(motion_event: *const AInputEvent, history_index: usize) -> i64;
-    pub fn AMotionEvent_getHistoricalRawX(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalRawY(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalX(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalY(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalPressure(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalSize(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalTouchMajor(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalTouchMinor(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalToolMajor(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalToolMinor(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AMotionEvent_getHistoricalOrientation(motion_event: *const AInputEvent, pointer_index: usize, history_index: usize) -> f32;
-    pub fn AInputQueue_attachLooper(queue: *mut AInputQueue, looper: *mut ALooper, ident: c_int, callback: ALooperCallbackFunc, data: *mut c_void);
+    pub fn AMotionEvent_getHistoricalEventTime(
+        motion_event: *const AInputEvent,
+        history_index: usize,
+    ) -> i64;
+    pub fn AMotionEvent_getHistoricalRawX(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalRawY(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalX(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalY(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalPressure(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalSize(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalTouchMajor(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalTouchMinor(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalToolMajor(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalToolMinor(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AMotionEvent_getHistoricalOrientation(
+        motion_event: *const AInputEvent,
+        pointer_index: usize,
+        history_index: usize,
+    ) -> f32;
+    pub fn AInputQueue_attachLooper(
+        queue: *mut AInputQueue,
+        looper: *mut ALooper,
+        ident: c_int,
+        callback: ALooperCallbackFunc,
+        data: *mut c_void,
+    );
     pub fn AInputQueue_detachLooper(queue: *mut AInputQueue);
     pub fn AInputQueue_hasEvents(queue: *mut AInputQueue) -> i32;
     pub fn AInputQueue_getEvent(queue: *mut AInputQueue, out_event: *mut *mut AInputEvent) -> i32;
     pub fn AInputQueue_preDispatchEvent(queue: *mut AInputQueue, event: *mut AInputEvent) -> i32;
-    pub fn AInputQueue_finishEvent(queue: *mut AInputQueue, event: *mut AInputEvent, handled: c_int);
+    pub fn AInputQueue_finishEvent(
+        queue: *mut AInputQueue,
+        event: *mut AInputEvent,
+        handled: c_int,
+    );
 }

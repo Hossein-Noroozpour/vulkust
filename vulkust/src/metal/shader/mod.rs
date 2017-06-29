@@ -21,8 +21,9 @@ pub struct Shader {
 
 impl Shader {
     pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-            where CoreApp: ApplicationTrait {
-        let device = unsafe { (*os_app).metal_device };
+    where
+        CoreApp: ApplicationTrait,
+    {
         let size: u64 = file.read_type();
         logi!("shader size is: {}", size);
         let vertex = file.read_bytes(size as usize);
@@ -30,8 +31,8 @@ impl Shader {
         logi!("shader size is: {}", size);
         let fragment = file.read_bytes(size as usize);
         Shader {
-            vertex: Stage::new(vertex, device),
-            fragment: Stage::new(fragment, device),
+            vertex: Stage::new(vertex, os_app),
+            fragment: Stage::new(fragment, os_app),
         }
     }
 }

@@ -24,25 +24,30 @@ impl Manager {
         for _ in 0..count {
             let id: u64 = file.read_type();
             let offset: u64 = file.read_type();
-            logi!("Shader with id: {} and offset {} loaded.", id, offset);
+            // logi!("Shader with id: {} and offset {} loaded.", id, offset);
             self.offsets.insert(id, offset);
         }
     }
 
     pub fn get<CoreApp>(
-        &mut self, id: u64,
-        file: &mut File, os_app: *mut OsApplication<CoreApp>)-> Arc<ShaderTrait>
-            where CoreApp: ApplicationTrait {
+        &mut self,
+        id: u64,
+        file: &mut File,
+        os_app: *mut OsApplication<CoreApp>,
+    ) -> Arc<ShaderTrait>
+    where
+        CoreApp: ApplicationTrait,
+    {
         match self.cached.get(&id) {
             Some(res) => {
                 match res.upgrade() {
                     Some(res) => {
                         return res;
-                    },
-                    None => {},
+                    }
+                    None => {}
                 }
-            },
-            None => {},
+            }
+            None => {}
         }
         match self.offsets.get(&id) {
             Some(offset) => {
@@ -51,17 +56,21 @@ impl Manager {
                         if o < *offset {
                             logf!("Seeked offset does not match!");
                         }
-                    },
+                    }
                     _ => {
                         logf!("Can not seek to the requested offset.");
-                    },
+                    }
                 };
-            },
-            None => { logf!("Requested shader {} does not exist.", id); },
+            }
+            None => {
+                logf!("Requested shader {} does not exist.", id);
+            }
         };
         let shader = match id {
-            1 => { Shader::new(file, os_app) },
-            _ => { logf!("Requsted shader Id: {} not found.", id); },
+            1 => Shader::new(file, os_app),
+            _ => {
+                logf!("Requsted shader Id: {} not found.", id);
+            }
         };
         let shader: Arc<ShaderTrait> = Arc::new(shader);
         self.cached.insert(id, Arc::downgrade(&shader));

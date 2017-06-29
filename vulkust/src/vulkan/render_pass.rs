@@ -20,8 +20,10 @@ impl RenderPass {
             vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment_descriptions[0].initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
         attachment_descriptions[0].finalLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        attachment_descriptions[1].format =
-            swapchain.logical_device.physical_device.get_supported_depth_format();
+        attachment_descriptions[1].format = swapchain
+            .logical_device
+            .physical_device
+            .get_supported_depth_format();
         attachment_descriptions[1].samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         attachment_descriptions[1].loadOp = vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment_descriptions[1].storeOp =
@@ -53,22 +55,22 @@ impl RenderPass {
         dependencies[0].dstStageMask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
         dependencies[0].srcAccessMask = vk::VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT as u32;
-        dependencies[0].dstAccessMask =
-            vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as u32 |
-                vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
-        dependencies[0].dependencyFlags =
-            vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;
+        dependencies[0].dstAccessMask = vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as
+            u32 |
+            vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
+        dependencies[0].dependencyFlags = vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as
+            u32;
         dependencies[1].dstSubpass = vk::VK_SUBPASS_EXTERNAL;
         dependencies[1].srcStageMask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
         dependencies[1].dstStageMask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT as u32;
-        dependencies[1].srcAccessMask =
-            vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as u32 |
-                vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
+        dependencies[1].srcAccessMask = vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as
+            u32 |
+            vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
         dependencies[1].dstAccessMask = vk::VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT as u32;
-        dependencies[1].dependencyFlags =
-            vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;
+        dependencies[1].dependencyFlags = vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as
+            u32;
         let mut render_pass_create_info = vk::VkRenderPassCreateInfo::default();
         render_pass_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -80,7 +82,11 @@ impl RenderPass {
         render_pass_create_info.pDependencies = dependencies.as_ptr();
         let mut vk_data = 0 as vk::VkRenderPass;
         vulkan_check!(vk::vkCreateRenderPass(
-            swapchain.logical_device.vk_data, &render_pass_create_info, null(), &mut vk_data));
+            swapchain.logical_device.vk_data,
+            &render_pass_create_info,
+            null(),
+            &mut vk_data
+        ));
         RenderPass {
             swapchain: swapchain,
             vk_data: vk_data,

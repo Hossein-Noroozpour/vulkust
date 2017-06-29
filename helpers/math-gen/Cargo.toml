@@ -1,0 +1,6 @@
+[package]
+name = "math-gen"
+version = "0.1.0"
+authors = ["Hossein Noroozpour <Hossein.Noroozpour@gmail.com>"]
+
+[dependencies]
