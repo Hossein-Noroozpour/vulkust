@@ -1,6 +1,6 @@
 use std::mem::transmute;
 use super::super::super::objc::runtime::{Object, Sel};
-use super::super::super::render::engine::{RenderEngine};
+use super::super::super::render::engine::RenderEngine;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::metal as mtl;
 use super::application::Application as App;
@@ -11,27 +11,34 @@ pub const CLASS_NAME: &str = "GameViewController";
 pub const SUPER_CLASS_NAME: &str = "NSViewController";
 
 //- (void)metalViewDidLoad
-extern "C" fn metal_view_did_load<CoreApp>(this: &mut Object, _cmd: Sel) where
-    CoreApp: ApplicationTrait, {
+extern "C" fn metal_view_did_load<CoreApp>(this: &mut Object, _cmd: Sel)
+where
+    CoreApp: ApplicationTrait,
+{
     let this: mtl::Id = this;
     let view: mtl::Id = unsafe { msg_send![this, view] };
-    let _: () = unsafe { msg_send![view, setDelegate:this] };
-    let app: *mut App<CoreApp> = unsafe { transmute(
-        *(*this).get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
+    let _: () = unsafe { msg_send![view, setDelegate: this] };
+    let app: *mut App<CoreApp> =
+        unsafe { transmute(*(*this).get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
     let _: () = unsafe { msg_send![view, setDevice:(*app).metal_device] };
     let bounds: mtl::NSRect = unsafe { msg_send![view, bounds] };
-    unsafe { (*(*app).render_engine).draw_rect_resized(&bounds.size); }
+    unsafe {
+        (*(*app).render_engine).draw_rect_resized(&bounds.size);
+    }
 }
 
 // Called whenever view changes orientation or layout is changed
 // - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
-extern "C" fn mtl_view<CoreApp>(this: &mut Object, _cmd: Sel, view: mtl::Id, _size: mtl::NSSize) 
+extern "C" fn mtl_view<CoreApp>(this: &mut Object, _cmd: Sel, view: mtl::Id, _size: mtl::NSSize)
 where
-    CoreApp: ApplicationTrait, {
+    CoreApp: ApplicationTrait,
+{
     let bounds: mtl::NSRect = unsafe { msg_send![view, bounds] };
-    let app: *mut App<CoreApp> = unsafe { transmute(
-        *(*this).get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
-    unsafe { (*(*app).render_engine).draw_rect_resized(&bounds.size); }
+    let app: *mut App<CoreApp> =
+        unsafe { transmute(*(*this).get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
+    unsafe {
+        (*(*app).render_engine).draw_rect_resized(&bounds.size);
+    }
 }
 
 // Called whenever the view needs to render
@@ -40,8 +47,9 @@ extern "C" fn draw_in_mtk_view<CoreApp>(this: &mut Object, _cmd: Sel, _view: mtl
 where
     CoreApp: ApplicationTrait,
 {
-    let app: &mut App<CoreApp> = unsafe { transmute(*this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
-    let renderer: &mut RenderEngine<CoreApp> = unsafe { transmute(app.render_engine) };  
+    let app: &mut App<CoreApp> =
+        unsafe { transmute(*this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
+    let renderer: &mut RenderEngine<CoreApp> = unsafe { transmute(app.render_engine) };
     renderer.render();
 }
 

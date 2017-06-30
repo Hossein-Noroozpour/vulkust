@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use self::block::ConcreteBlock;
 use super::super::objc;
 use super::super::core::application::ApplicationTrait;
-use super::super::math::matrix::{Mat4x4, SMat3x3F, SMat4x4F};
+use super::super::math::matrix::{Mat4x4, SMat3x3F, SMat4x4F, Mat3x3};
 use super::super::math::vector::{Vec3, SVec3F, SVec3U32};
 use super::super::sync::semaphore::Semaphore;
 use super::super::system::os::OsApplication;
@@ -330,8 +330,8 @@ where
 
     fn update_dynamic_buffer_state(&mut self) {
         self.uniform_buffer_index = (self.uniform_buffer_index + 1) % MAX_BUFFERS_COUNT;
-        self.uniform_buffer_offset = self.uniform_buffer_size as mtl::NSUInteger *
-            self.uniform_buffer_index as mtl::NSUInteger;
+        self.uniform_buffer_offset = (self.uniform_buffer_size as mtl::NSUInteger *
+            self.uniform_buffer_index as mtl::NSUInteger) / MAX_BUFFERS_COUNT;
         self.uniform_buffer_address = unsafe { msg_send![self.dynamic_uniform_buffer, contents] };
         let tmp_add: *mut u8 = unsafe { transmute(self.uniform_buffer_address) };
         self.uniform_buffer_address =
@@ -348,35 +348,46 @@ where
         uniforms.directional_light_color = directional_light_color;
         uniforms.material_shininess = 30.0;
         let mut view_matrix = Mat4x4::new();
-        view_matrix.translate(0.0f32, 0.0, -8.0);
+        view_matrix.translate(0.0f32, 0.0, 8.0);
+        logi!("view_matrix {:?}", view_matrix);
+        logi!("projection_matrix {:?}", self.projection_matrix);
         uniforms.view_matrix = view_matrix.get_smat4x4f();
         uniforms.projection_matrix = self.projection_matrix.get_smat4x4f();
         let mut rotation_axis = Vec3::new(1f32);
         rotation_axis.z = 0.0;
         let model_matrix = Mat4x4::rotation(self.rotation, &rotation_axis);
+        let model_matrix = Mat4x4::new();
+        logi!("model_matrix {:?}", model_matrix);        
         let model_view_matrix = &view_matrix * &model_matrix;
+        logi!("model_view_matrix {:?}", model_view_matrix);                
         uniforms.model_view_matrix = model_view_matrix.get_smat4x4f();
-        let normal_matrix = model_view_matrix.get_mat3x3();
-        uniforms.normal_matrix = normal_matrix.inv().t().get_smat3x3f();
+        let normal_matrix = model_view_matrix.get_mat3x3().inv().t();
+        let mut normal_matrix = Mat3x3::new();
+        normal_matrix.data[0][0] = 1f32;
+        normal_matrix.data[1][2] = 1f32;
+        logi!("normal_matrix {:?}", normal_matrix);                        
+        uniforms.normal_matrix = normal_matrix.get_smat3x3f();
         self.rotation += 0.01;
     }
 
     pub fn draw_rect_resized(&mut self, size: &mtl::NSSize) {
         let aspect = size.width / size.height;
-        self.projection_matrix = Mat4x4::projection(65.0 / (PI / 180.0), aspect as f32, 0.1, 100.0);
+        self.projection_matrix = Mat4x4::projection(65.0 * (PI / 180.0), aspect as f32, 0.1, 100.0);
     }
 
     pub fn render(&mut self) {
         self.in_flight_semaphore.lock().unwrap().acquire();
         let command_buffer: mtl::Id = unsafe { msg_send![self.command_queue, commandBuffer] };
-        unsafe { let _: () =  msg_send![command_buffer, setLabel:mtl::NSString::new("MyCommand")]; }
+        unsafe {
+            let _: () = msg_send![command_buffer, setLabel:mtl::NSString::new("MyCommand")];
+        }
         let in_flight_semaphore = self.in_flight_semaphore.clone();
         let b = ConcreteBlock::new(move |_buffer: mtl::Id| {
             in_flight_semaphore.lock().unwrap().release();
         });
         #[repr(C)]
         struct EncoderTmp<T> {
-            pub b: *const T
+            pub b: *const T,
         }
         unsafe impl<T> objc::Encode for EncoderTmp<T> {
             fn encode() -> objc::Encoding {
@@ -384,17 +395,21 @@ where
             }
         }
         let b = b.copy();
-        let b = EncoderTmp {
-            b: &*b
-        };
-        unsafe { let _: () = msg_send![command_buffer, addCompletedHandler:b]; }
+        let b = EncoderTmp { b: &*b };
+        unsafe {
+            let _: () = msg_send![command_buffer, addCompletedHandler:b];
+        }
         self.update_dynamic_buffer_state();
         self.update_game_state();
-        let render_pass_descriptor: mtl::Id = unsafe { msg_send![
-            (*self.os_app).game_view_controller, currentRenderPassDescriptor] };
+        let render_pass_descriptor: mtl::Id = unsafe {
+            msg_send![
+            (*self.os_app).game_view_controller, currentRenderPassDescriptor]
+        };
         if render_pass_descriptor != null_mut() {
-            let render_encoder: mtl::Id = unsafe { msg_send![
-                command_buffer, renderCommandEncoderWithDescriptor:render_pass_descriptor] };
+            let render_encoder: mtl::Id = unsafe {
+                msg_send![
+                command_buffer, renderCommandEncoderWithDescriptor:render_pass_descriptor]
+            };
             unsafe {
                 let _: () = msg_send![
                     render_encoder, setLabel:mtl::NSString::new("MyRenderEncoder")];
@@ -407,6 +422,7 @@ where
                 let _: () = msg_send![
                     render_encoder, setVertexBuffer:self.dynamic_uniform_buffer 
                     offset:self.uniform_buffer_offset atIndex:BUFFER_INDEX_UNIFORMS];
+                logi!("reached");
                 let _: () = msg_send![
                     render_encoder, setFragmentBuffer:self.dynamic_uniform_buffer 
                     offset:self.uniform_buffer_offset atIndex:BUFFER_INDEX_UNIFORMS];
@@ -414,49 +430,66 @@ where
             let vertex_buffers: mtl::Id = unsafe { msg_send![self.mtk_mesh, vertexBuffers] };
             let buffer_index_count: mtl::NSUInteger = unsafe { msg_send![vertex_buffers, count] };
             for buffer_index in 0..buffer_index_count {
-                let vertex_buffer: mtl::Id = unsafe { msg_send![
-                    vertex_buffers, objectAtIndexedSubscript:buffer_index] };
+                let vertex_buffer: mtl::Id = unsafe {
+                    msg_send![
+                    vertex_buffers, objectAtIndexedSubscript:buffer_index]
+                };
+                logi!("reached");
                 let ns_null = mtl::get_class("NSNull");
                 let ns_null: mtl::Id = unsafe { msg_send![ns_null, null] };
                 if vertex_buffer != ns_null {
                     let buffer: mtl::Id = unsafe { msg_send![vertex_buffer, buffer] };
                     let offset: mtl::NSUInteger = unsafe { msg_send![vertex_buffer, offset] };
-                    unsafe { let _: () = msg_send![
+                    unsafe {
+                        let _: () = msg_send![
                         render_encoder, setVertexBuffer:buffer offset:offset atIndex:buffer_index];
                     }
                 }
             }
-            unsafe { let _: () = msg_send![
+            logi!("reached");
+            unsafe {
+                let _: () = msg_send![
                 render_encoder, 
                 setFragmentTexture:self.texture.as_ref().unwrap().as_texture2d().raw.color_map
-                atIndex:TEXTURE_INDEX_COLOR]; 
+                atIndex:TEXTURE_INDEX_COLOR];
             }
-            let submeshes: mtl::Id = unsafe {
-                msg_send![self.mtk_mesh, submeshes]
-            };
+            logi!("reached");            
+            let submeshes: mtl::Id = unsafe { msg_send![self.mtk_mesh, submeshes] };
             let submeshes_count: mtl::NSUInteger = unsafe { msg_send![submeshes, count] };
+            logi!("submeshes_count: {}", submeshes_count);
             for submesh_index in 0..submeshes_count {
-                let submesh: mtl::Id = unsafe { msg_send![
-                    submeshes, objectAtIndexedSubscript:submesh_index] };
+                let submesh: mtl::Id = unsafe {
+                    msg_send![
+                    submeshes, objectAtIndexedSubscript:submesh_index]
+                };
+                if submesh == null_mut() {
+                    logf!("Submesh is null");
+                }
+                logi!("reached");
                 let primitive_type: mtl::NSUInteger = unsafe { msg_send![submesh, primitiveType] };
                 let index_count: mtl::NSUInteger = unsafe { msg_send![submesh, indexCount] };
                 let index_type: mtl::NSUInteger = unsafe { msg_send![submesh, indexType] };
                 let index_buffer: mtl::Id = unsafe { msg_send![submesh, indexBuffer] };
                 let buffer: mtl::Id = unsafe { msg_send![index_buffer, buffer] };
                 let offset: mtl::NSUInteger = unsafe { msg_send![index_buffer, offset] };
-                unsafe { let _: () = msg_send![
+                logi!("reached");        
+                logi!("{}----{}----{}---{:?}---{}", primitive_type, index_count, index_type, buffer, offset);
+                unsafe {
+                    let _: () = msg_send![
                     render_encoder, drawIndexedPrimitives:primitive_type 
                     indexCount:index_count indexType:index_type
                     indexBuffer:buffer indexBufferOffset:offset];
                 }
             }
+            logi!("reached");
             unsafe {
                 let _: () = msg_send![render_encoder, popDebugGroup];
                 let _: () = msg_send![render_encoder, endEncoding];
             }
         }
-        let current_drawable: mtl::Id = unsafe { msg_send![
-            (*self.os_app).game_view_controller, currentDrawable] 
+        let current_drawable: mtl::Id = unsafe {
+            msg_send![
+            (*self.os_app).game_view_controller, currentDrawable]
         };
         unsafe {
             let _: () = msg_send![command_buffer, presentDrawable:current_drawable];

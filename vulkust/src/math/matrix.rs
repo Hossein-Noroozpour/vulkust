@@ -1,5 +1,5 @@
 use std::ops::Mul;
-use super::number::Number;
+use super::number::{Number, Float};
 use super::vector::Vec3;
 
 #[repr(simd)]
@@ -20,7 +20,7 @@ where
 
 impl<E> Mat4x4<E>
 where
-    E: Number,
+    E: Float,
 {
     pub fn new() -> Mat4x4<E> {
         Mat4x4 {
@@ -108,10 +108,10 @@ where
         let zs = far / (near - far);
         Mat4x4 {
             data: [
-                [xs, E::new(0.0), E::new(0.0), E::new(0.0)],
-                [E::new(0.0), ys, E::new(0.0), E::new(0.0)],
-                [E::new(0.0), E::new(0.0), zs, E::new(-1.0)],
-                [E::new(0.0), E::new(0.0), near * zs, E::new(0.0)],
+                [xs,          E::new(0.0), E::new(0.0), E::new(0.0)],
+                [E::new(0.0), ys,          E::new(0.0), E::new(0.0)],
+                [E::new(0.0), E::new(0.0), zs,          E::new(-1.0)],
+                [E::new(0.0), E::new(0.0), near * zs,   E::new(0.0)],
             ],
         }
     }
@@ -343,16 +343,16 @@ where
 
 impl<'a, 'b, E> Mul<&'b Mat4x4<E>> for &'a Mat4x4<E>
 where
-    E: Number,
+    E: Float,
 {
     type Output = Mat4x4<E>;
     fn mul(self, o: &'b Mat4x4<E>) -> Mat4x4<E> {
         let mut m = Mat4x4::new();
         for i in 0..4 {
             for j in 0..4 {
-                m.data[i][j] = E::new(0.0);
+                m.data[j][i] = E::new(0.0);
                 for k in 0..4 {
-                    m.data[i][j] += o.data[j][k] * self.data[k][i];
+                    m.data[j][i] += o.data[j][k] * self.data[k][i];
                 }
             }
         }
@@ -374,7 +374,7 @@ where
 
 impl<E> Mat3x3<E>
 where
-    E: Number,
+    E: Float,
 {
     pub fn new() -> Self {
         Mat3x3 { data: [[E::new(0.0); 3]; 3] }
@@ -395,17 +395,17 @@ where
             data: [
                 [
                     ((self.data[1][1] * self.data[2][2]) - (self.data[1][2] * self.data[2][1])) / d,
-                    ((self.data[1][0] * self.data[2][2]) - (self.data[1][2] * self.data[2][0])) / d,
+                    ((self.data[1][0] * self.data[2][2]) - (self.data[1][2] * self.data[2][0])) / -d,
                     ((self.data[1][0] * self.data[2][1]) - (self.data[1][1] * self.data[2][0])) / d,
                 ],
                 [
-                    ((self.data[0][1] * self.data[2][2]) - (self.data[0][2] * self.data[2][1])) / d,
+                    ((self.data[0][1] * self.data[2][2]) - (self.data[0][2] * self.data[2][1])) / -d,
                     ((self.data[0][0] * self.data[2][2]) - (self.data[0][2] * self.data[2][0])) / d,
-                    ((self.data[0][0] * self.data[2][1]) - (self.data[0][1] * self.data[2][0])) / d,
+                    ((self.data[0][0] * self.data[2][1]) - (self.data[0][1] * self.data[2][0])) / -d,
                 ],
                 [
                     ((self.data[0][1] * self.data[1][2]) - (self.data[0][2] * self.data[1][1])) / d,
-                    ((self.data[0][0] * self.data[1][2]) - (self.data[0][2] * self.data[1][0])) / d,
+                    ((self.data[0][0] * self.data[1][2]) - (self.data[0][2] * self.data[1][0])) / -d,
                     ((self.data[0][0] * self.data[1][1]) - (self.data[0][1] * self.data[1][0])) / d,
                 ],
             ],
@@ -415,9 +415,9 @@ where
     pub fn t(&self) -> Self {
         Mat3x3 {
             data: [
-                [self.data[0][0], self.data[1][0], self.data[2][0], ],
-                [self.data[0][1], self.data[1][1], self.data[2][1], ],
-                [self.data[0][2], self.data[1][2], self.data[2][2], ],
+                [self.data[0][0], self.data[1][0], self.data[2][0]],
+                [self.data[0][1], self.data[1][1], self.data[2][1]],
+                [self.data[0][2], self.data[1][2], self.data[2][2]],
             ],
         }
     }

@@ -73,6 +73,7 @@ where
     }
     fn execute(&mut self) -> bool {
         unsafe {
+            let _: () = msg_send![self.game_view_controller, metalViewDidLoad];
             let _: () = msg_send![self.ns_application, run];
         }
         true

@@ -20,7 +20,8 @@ impl Mat {
 	}
 
 	fn det2(&self, ident: usize) -> String {
-		format!("({} * {}) - ({} * {})", self.e[0][0], self.e[1][1], self.e[0][1], self.e[1][0])
+		format!("\n{}({} * {}) - ({} * {})", "\t".repeat(ident), self.e[0][0],
+			self.e[1][1], self.e[0][1], self.e[1][0])
 	}
 
 	pub fn det(&self, ident: usize) -> String {
@@ -48,13 +49,17 @@ impl Mat {
 		let mut s = String::new();
 
 		for i in 0..self.e.len() {
-			s = format!("{}\n{} {} ({} * ({}))", 
-				s, 
+			s = format!("{}\n{}{}({} * ({}))",
+				s,
 				"\t".repeat(ident),
 				if (i & 1) == 1 {
 					"-"
 				} else {
-					"+"
+					if i != 0 {
+						"+"
+					} else {
+						""
+					}
 				},
 				self.e[0][i], ms[i].det(ident + 1)
 			);
@@ -68,7 +73,7 @@ impl Mat {
 		};
 		for i in 0..self.e.len() {
 			if i != ri {
-				let mut r = Vec::new();	
+				let mut r = Vec::new();
 				for j in 0..self.e.len() {
 					if j != ci {
 						r.push(self.e[i][j].clone());
@@ -86,7 +91,13 @@ impl Mat {
 		for i in 0..self.e.len() {
 			s = format!("{}\t\t[\n", s);
 			for j in 0..self.e.len() {
-				s = format!("{}\t\t\t({}\n\t\t\t) / d,\n", s, self.minor(i, j).det(4));
+				s = format!("{}\t\t\t({}\n\t\t\t) / {}d,\n", s, self.minor(i, j).det(4),
+					if ((i + j) & 1) == 1 {
+						"-"
+					} else {
+						""
+					}
+				);
 			}
 			s = format!("{}\t\t],\n", s);
 		}
