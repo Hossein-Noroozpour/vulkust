@@ -19,7 +19,8 @@ where
     let main_screen: mtl::Id = unsafe { msg_send![mtl::get_class("NSScreen"), mainScreen] };
     let frame: mtl::NSRect = unsafe { msg_send![main_screen, frame] };
     let frame = mtl::NSRect::new(0.0, 0.0, frame.size.width / 2.0, frame.size.height / 2.0);
-    let style_mask = (mtl::NS_TITLED_WINDOW_MASK | mtl::NS_CLOSABLE_WINDOW_MASK |
+    let style_mask = (
+        mtl::NS_TITLED_WINDOW_MASK | mtl::NS_CLOSABLE_WINDOW_MASK |
                           mtl::NS_RESIZABLE_WINDOW_MASK |
                           mtl::NS_MINIATURIZABLE_WINDOW_MASK)
         .bits() as mtl::NSUInteger;
@@ -55,12 +56,12 @@ where
     let pixel_format = mtl::PIXEL_FORMAT_BGRA8_UNORM;
     let depth_stencil_format = mtl::PIXEL_FORMAT_DEPTH32_FLOAT;
     unsafe {
-        let _: () = msg_send![metal_view, setClearColor:clear_color];
-        let _: () = msg_send![metal_view, setColorPixelFormat:pixel_format];
-        let _: () = msg_send![metal_view, setDepthStencilPixelFormat:depth_stencil_format];
-        let _: () = msg_send![game_view, setView:metal_view];
-        let _: () = msg_send![window, setContentView:metal_view];
-        let _: () = msg_send![window, setContentViewController:game_view];
+        let _: () = msg_send![metal_view, setClearColor: clear_color];
+        let _: () = msg_send![metal_view, setColorPixelFormat: pixel_format];
+        let _: () = msg_send![metal_view, setDepthStencilPixelFormat: depth_stencil_format];
+        let _: () = msg_send![game_view, setView: metal_view];
+        let _: () = msg_send![window, setContentView: metal_view];
+        let _: () = msg_send![window, setContentViewController: game_view];
         let _: () = msg_send![game_view, viewDidLoad];
     }
 }
@@ -71,15 +72,7 @@ extern "C" fn application_will_finish_launching(this: &Object, _cmd: Sel, _n: mt
     let _: () = unsafe { msg_send![window, makeKeyAndOrderFront: this] };
 }
 
-extern "C" fn application_did_finish_launching<CoreApp>(this: &Object, _cmd: Sel, _n: mtl::Id)
-where
-    CoreApp: ApplicationTrait,
-{
-    // let app: *mut App<CoreApp> =
-    //     unsafe { transmute(*this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
-    // unsafe {
-    //     let _: () = msg_send![(*app).game_view_controller, metalViewDidLoad];
-    // }
+extern "C" fn application_did_finish_launching(_this: &Object, _cmd: Sel, _n: mtl::Id) {
 }
 
 extern "C" fn application_will_terminate(_this: &Object, _cmd: Sel, _n: mtl::Id) {
@@ -114,7 +107,7 @@ where
         );
         app_delegate_class.add_method(
             sel!(applicationDidFinishLaunching:),
-            application_did_finish_launching::<CoreApp> as extern "C" fn(&Object, Sel, mtl::Id),
+            application_did_finish_launching as extern "C" fn(&Object, Sel, mtl::Id),
         );
         app_delegate_class.add_method(
             sel!(applicationWillTerminate:),

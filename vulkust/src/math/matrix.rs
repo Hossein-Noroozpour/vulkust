@@ -6,7 +6,11 @@ use super::vector::Vec3;
 pub struct SMat4x4D(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64);
 
 #[repr(simd)]
-pub struct SMat4x4F(f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32);
+pub struct SMat4x4F(
+    pub f32, pub f32, pub f32, pub f32,
+    pub f32, pub f32, pub f32, pub f32,
+    pub f32, pub f32, pub f32, pub f32,
+    pub f32, pub f32, pub f32, pub f32);
 
 // column major matrix
 #[repr(C)]
@@ -108,10 +112,10 @@ where
         let zs = far / (near - far);
         Mat4x4 {
             data: [
-                [xs,          E::new(0.0), E::new(0.0), E::new(0.0)],
-                [E::new(0.0), ys,          E::new(0.0), E::new(0.0)],
-                [E::new(0.0), E::new(0.0), zs,          E::new(-1.0)],
-                [E::new(0.0), E::new(0.0), near * zs,   E::new(0.0)],
+                [xs, E::new(0.0), E::new(0.0), E::new(0.0)],
+                [E::new(0.0), ys, E::new(0.0), E::new(0.0)],
+                [E::new(0.0), E::new(0.0), zs, E::new(-1.0)],
+                [E::new(0.0), E::new(0.0), near * zs, E::new(0.0)],
             ],
         }
     }
@@ -361,7 +365,10 @@ where
 }
 
 #[repr(simd)]
-pub struct SMat3x3F(f32, f32, f32, f32, f32, f32, f32, f32, f32);
+pub struct SMat3x3F(
+    pub f32, pub f32, pub f32,
+    pub f32, pub f32, pub f32,
+    pub f32, pub f32, pub f32);
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]

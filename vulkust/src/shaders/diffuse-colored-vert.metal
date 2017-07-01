@@ -89,8 +89,8 @@ vertex ColorInOut main_func(Vertex in [[stage_in]],
     // Rotate our normals by the normal matrix
     half3x3 normalMatrix = half3x3(uniforms.normalMatrix);
     out.normal = normalize(normalMatrix * in.normal);
-    if(out.position[0] < 1.5) {
-        out.position = float4(1.0);
+    if(out.position[0] < 100.5) {
+        out.position = float4(in.position, 1.0);
     }
     return out;
 }
