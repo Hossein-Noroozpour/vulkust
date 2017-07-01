@@ -2,6 +2,8 @@ use std::ptr::{null_mut, null};
 use std::sync::Arc;
 use super::super::system::vulkan as vk;
 use super::super::render::engine::EngineTrait;
+use super::super::render::camera::Camera;
+use super::super::render::camera::perspective::Perspective;
 use super::super::core::application::ApplicationTrait;
 use super::super::system::os::OsApplication;
 use super::instance::Instance;
@@ -43,6 +45,7 @@ where
     pub framebuffers: Vec<Arc<Framebuffer>>,
     pub graphic_cmd_pool: Option<Arc<CmdPool>>,
     // for triangle
+    pub camera: Perspective<f32>,
     pub mesh_buff: Option<Arc<Buffer>>,
     pub uniform: Option<Arc<Uniform>>,
     pub pipeline_layout: Option<Arc<Layout>>,
@@ -73,6 +76,7 @@ where
             render_pass: None,
             framebuffers: Vec::new(),
             graphic_cmd_pool: None,
+            camera: Perspective::new(),
             mesh_buff: None,
             uniform: None,
             pipeline_layout: None,
@@ -242,10 +246,9 @@ where
     fn update(&mut self) {
         let vk_device = self.logical_device.as_ref().unwrap().vk_data;
         let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
-        let current_buffer = self.swapchain
-            .as_ref()
-            .unwrap()
-            .get_next_image_index(present_complete_semaphore) as usize;
+        let current_buffer = self.swapchain.as_ref().unwrap().get_next_image_index(
+            present_complete_semaphore,
+        ) as usize;
         vulkan_check!(vk::vkWaitForFences(
             vk_device,
             1,

@@ -1,4 +1,4 @@
-use std::ops::Mul;
+use std::ops::{Mul, MulAssign};
 use super::number::{Number, Float};
 use super::vector::Vec3;
 
@@ -26,7 +26,7 @@ impl<E> Mat4x4<E>
 where
     E: Float,
 {
-    pub fn new() -> Mat4x4<E> {
+    pub fn ident() -> Mat4x4<E> {
         Mat4x4 {
             data: [
                 [E::new(1.0), E::new(0.0), E::new(0.0), E::new(0.0)],
@@ -34,6 +34,12 @@ where
                 [E::new(0.0), E::new(0.0), E::new(1.0), E::new(0.0)],
                 [E::new(0.0), E::new(0.0), E::new(0.0), E::new(1.0)],
             ],
+        }
+    }
+
+    pub fn zero() -> Mat4x4<E> {
+        Mat4x4 {
+            data: [[E::new(0.0); 4]; 4],
         }
     }
 
@@ -79,10 +85,24 @@ where
         }
     }
 
-    pub fn translate(&mut self, x: E, y: E, z: E) {
-        self.data[3][0] += x;
-        self.data[3][1] += y;
-        self.data[3][2] += z;
+    pub fn translate(&mut self, v: &Vec3<E>) {
+        self.data[3][0] += v.x;
+        self.data[3][1] += v.y;
+        self.data[3][2] += v.z;
+    }
+
+    pub fn set_translation(&mut self, v: &Vec3<E>) {
+        self.data[3][0] = v.x;
+        self.data[3][1] = v.y;
+        self.data[3][2] = v.z;
+    }
+
+    pub fn update_rotation(&mut self, m: &Mat3x3<E>) {
+        for i in 0..3 {
+            for j in 0..3 {
+                self.data[i][j] = m.data[i][j];
+            }
+        }
     }
 
     pub fn get_smat4x4f(&self) -> SMat4x4F {
@@ -121,7 +141,7 @@ where
     }
 
     pub fn get_mat3x3(&self) -> Mat3x3<E> {
-        let mut mat = Mat3x3::new();
+        let mut mat = Mat3x3::zero();
         for i in 0..3 {
             for j in 0..3 {
                 mat.data[i][j] = self.data[i][j];
@@ -351,16 +371,32 @@ where
 {
     type Output = Mat4x4<E>;
     fn mul(self, o: &'b Mat4x4<E>) -> Mat4x4<E> {
-        let mut m = Mat4x4::new();
+        let mut m = Mat4x4::zero();
         for i in 0..4 {
             for j in 0..4 {
-                m.data[j][i] = E::new(0.0);
                 for k in 0..4 {
                     m.data[j][i] += o.data[j][k] * self.data[k][i];
                 }
             }
         }
         m
+    }
+}
+
+impl<'a, E> MulAssign<&'a Mat4x4<E>> for Mat4x4<E>
+where
+    E: Float,
+{
+    fn mul_assign(&mut self, o: &'a Mat4x4<E>) {
+        let mut data = [[E::new(0.0); 4]; 4];
+        for i in 0..4 {
+            for j in 0..4 {
+                for k in 0..4 {
+                    data[j][i] += o.data[j][k] * self.data[k][i];
+                }
+            }
+        }
+        self.data = data;
     }
 }
 
@@ -383,8 +419,16 @@ impl<E> Mat3x3<E>
 where
     E: Float,
 {
-    pub fn new() -> Self {
+    pub fn zero() -> Self {
         Mat3x3 { data: [[E::new(0.0); 3]; 3] }
+    }
+
+    pub fn ident() -> Self {
+        let mut data = [[E::new(0.0); 3]; 3];
+        for i in 0..3 {
+            data[i][i] = E::new(0.0);
+        }
+        Mat3x3 { data: data, }
     }
 
     pub fn det(&self) -> E {
@@ -441,5 +485,93 @@ where
             self.data[2][1].to_f32(),
             self.data[2][2].to_f32(),
         )
+    }
+
+    pub fn rotation(d: E, v: &Vec3<E>) -> Self {
+        let sinus: E = E::new(d.to().sin());
+        let cosinus: E = E::new(d.to().cos());
+        let oneminuscos = E::new(1.0) - cosinus;
+        let w = v;
+        let wx2 = w.x * w.x;
+        let wxy = w.x * w.y;
+        let wxz = w.x * w.z;
+        let wy2 = w.y * w.y;
+        let wyz = w.y * w.z;
+        let wz2 = w.z * w.z;
+        let wxyonemincos = wxy * oneminuscos;
+        let wxzonemincos = wxz * oneminuscos;
+        let wyzonemincos = wyz * oneminuscos;
+        let wxsin = w.x * sinus;
+        let wysin = w.y * sinus;
+        let wzsin = w.z * sinus;
+        Mat3x3 {
+            data: [
+                [
+                    cosinus + (wx2 * oneminuscos),
+                    wxyonemincos + wzsin,
+                    wxzonemincos - wysin,
+                ],
+                [
+                    wxyonemincos - wzsin,
+                    cosinus + (wy2 * oneminuscos),
+                    wxsin + wyzonemincos,
+                ],
+                [
+                    wysin + wxzonemincos,
+                    wyzonemincos - wxsin,
+                    cosinus + (wz2 * oneminuscos),
+                ],
+            ],
+        }
+    }
+}
+
+impl<'a, 'b, E> Mul<&'b Vec3<E>> for &'a Mat3x3<E>
+where
+    E: Number,
+{
+    type Output = Vec3<E>;
+    fn mul(self, o: &'b Vec3<E>) -> Vec3<E> {
+        Vec3 {
+            x: self.data[0][0] * o.x + self.data[1][0] * o.y + self.data[2][0] * o.z,
+            y: self.data[0][1] * o.x + self.data[1][1] * o.y + self.data[2][1] * o.z,
+            z: self.data[0][2] * o.x + self.data[1][2] * o.y + self.data[2][2] * o.z,
+        }
+    }
+}
+
+impl<'a, 'b, E> Mul<&'b Mat3x3<E>> for &'a Mat3x3<E>
+where
+    E: Float,
+{
+    type Output = Mat3x3<E>;
+    fn mul(self, o: &'b Mat3x3<E>) -> Mat3x3<E> {
+        let mut m = Mat3x3::zero();
+        for i in 0..3 {
+            for j in 0..3 {
+                for k in 0..3 {
+                    m.data[j][i] += o.data[j][k] * self.data[k][i];
+                }
+            }
+        }
+        m
+    }
+}
+
+impl<'a, E> MulAssign<&'a Mat3x3<E>> for Mat3x3<E>
+where
+    E: Float,
+{
+    fn mul_assign(&mut self, o: &'a Mat3x3<E>) {
+        let mut data = [[E::new(0.0);3];3];
+        for i in 0..3 {
+            for j in 0..3 {
+                let mut e = E::new(0.0);
+                for k in 0..3 {
+                    data[j][i] += o.data[j][k] * self.data[k][i];
+                }
+            }
+        }
+        self.data = data;
     }
 }

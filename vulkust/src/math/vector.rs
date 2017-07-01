@@ -75,9 +75,9 @@ macro_rules! as_expr { ($e:expr) => {$e} }
 
 macro_rules! op3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec3<T> where T: Number {
-            type Output = Self;
-            fn $func(self, other: Vec3<T>) -> Self {
+        impl<'a, 'b, T> $tra<&'b Vec3<T>> for &'a Vec3<T> where T: Number {
+            type Output = Vec3<T>;
+            fn $func(self, other: &'b Vec3<T>) -> Vec3<T> {
                 Vec3 {
                     x: as_expr!(self.x $opt other.x),
                     y: as_expr!(self.y $opt other.y),
@@ -90,9 +90,9 @@ macro_rules! op3 {
 
 macro_rules! sop3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec3<T> where T: Number {
-            type Output = Self;
-            fn $func(self, other: T) -> Self {
+        impl<'a, T> $tra<T> for &'a Vec3<T> where T: Number {
+            type Output = Vec3<T>;
+            fn $func(self, other: T) -> Vec3<T> {
                 Vec3 {
                     x: as_expr!(self.x $opt other),
                     y: as_expr!(self.y $opt other),
@@ -105,8 +105,8 @@ macro_rules! sop3 {
 
 macro_rules! opasg3 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec3<T> where T: Number {
-            fn $func(&mut self, other: Vec3<T>) {
+        impl<'a, T> $tra<&'a Vec3<T>> for Vec3<T> where T: Number {
+            fn $func(&mut self, other: &'a Vec3<T>) {
                 as_expr!(self.x $opt other.x);
                 as_expr!(self.y $opt other.y);
                 as_expr!(self.z $opt other.z);
@@ -147,12 +147,12 @@ sopasg3!(sub_assign, SubAssign, -=);
 sopasg3!(mul_assign, MulAssign, *=);
 sopasg3!(div_assign, DivAssign, /=);
 
-impl<E> Neg for Vec3<E>
+impl<'a, E> Neg for &'a Vec3<E>
 where
     E: Number + Neg<Output = E>,
 {
-    type Output = Self;
-    fn neg(self) -> Self {
+    type Output = Vec3<E>;
+    fn neg(self) -> Vec3<E> {
         Vec3 {
             x: -self.x,
             y: -self.y,
@@ -233,9 +233,9 @@ where
 
 macro_rules! op2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec2<T> where T: Number {
+        impl<'a, 'b, T> $tra<&'b Vec2<T>> for &'a Vec2<T> where T: Number {
             type Output = Vec2<T>;
-            fn $func(self, other: Vec2<T>) -> Vec2<T> {
+            fn $func(self, other: &'b Vec2<T>) -> Vec2<T> {
                 Vec2 {
                     x: as_expr!(self.x $opt other.x),
                     y: as_expr!(self.y $opt other.y),
@@ -247,7 +247,7 @@ macro_rules! op2 {
 
 macro_rules! sop2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra<T> for Vec2<T> where T: Number {
+        impl<'a, T> $tra<T> for &'a Vec2<T> where T: Number {
             type Output = Vec2<T>;
             fn $func(self, other: T) -> Vec2<T> {
                 Vec2 {
@@ -261,8 +261,8 @@ macro_rules! sop2 {
 
 macro_rules! opasg2 {
     ($func:ident, $tra:ident, $opt:tt) => (
-        impl<T> $tra for Vec2<T> where T: Number {
-            fn $func(&mut self, other: Vec2<T>) {
+        impl<'a, T> $tra<&'a Vec2<T>> for Vec2<T> where T: Number {
+            fn $func(&mut self, other: &'a Vec2<T>) {
                 as_expr!(self.x $opt other.x);
                 as_expr!(self.y $opt other.y);
             }
@@ -301,7 +301,7 @@ sopasg2!(sub_assign, SubAssign, -=);
 sopasg2!(mul_assign, MulAssign, *=);
 sopasg2!(div_assign, DivAssign, /=);
 
-impl<E> Neg for Vec2<E>
+impl<'a, E> Neg for &'a Vec2<E>
 where
     E: Number + Neg<Output = E>,
 {
