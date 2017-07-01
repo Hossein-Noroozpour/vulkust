@@ -16,8 +16,7 @@ impl Stage {
         CoreApp: ApplicationTrait,
     {
         let device = unsafe { (*os_app).metal_device };
-        let mut null_error: mtl::Id = null_mut();
-        let null_error = mtl::IdPtr { id: &mut null_error };
+        let mut error = mtl::NSError::null();
         let library: mtl::Id = unsafe {
             let queue = dispatch::dispatch_get_main_queue();
             let data_ptr: dispatch::dispatch_data_t = dispatch::dispatch_data_create(
@@ -26,8 +25,11 @@ impl Stage {
                 queue,
                 dispatch::DISPATCH_DATA_DESTRUCTOR_DEFAULT,
             );
-            msg_send![device, newLibraryWithData:data_ptr error:null_error]
+            msg_send![device, newLibraryWithData:data_ptr error:error.as_ptr()]
         };
+        if library == null_mut() || error.is_error() {
+            logf!("Creating metal library failed with error {}", error);
+        }
         let s = mtl::NSString::new("main_func");
         Stage { function: unsafe { msg_send![library, newFunctionWithName:s.s] } }
     }
