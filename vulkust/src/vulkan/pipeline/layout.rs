@@ -26,7 +26,7 @@ impl Layout {
             logical_device.vk_data,
             &descriptor_layout,
             null(),
-            &mut descriptor_set_layout
+            &mut descriptor_set_layout,
         ));
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
@@ -37,7 +37,7 @@ impl Layout {
             logical_device.vk_data,
             &pipeline_layout_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         Layout {
             logical_device: logical_device,

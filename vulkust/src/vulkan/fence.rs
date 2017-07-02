@@ -18,7 +18,7 @@ impl Fence {
             logical_device.vk_data,
             &fence_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         Fence {
             logical_device: logical_device,
@@ -34,7 +34,7 @@ impl Fence {
             logical_device.vk_data,
             &fence_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         Fence {
             logical_device: logical_device,
@@ -47,7 +47,7 @@ impl Fence {
             1,
             &self.vk_data,
             1u32,
-            100000000000
+            100000000000,
         ));
     }
 }

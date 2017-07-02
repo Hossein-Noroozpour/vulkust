@@ -22,7 +22,7 @@ impl Buffer {
         vulkan_check!(vk::vkAllocateCommandBuffers(
             pool.logical_device.vk_data,
             &cmd_buf_allocate_info,
-            &mut vk_data
+            &mut vk_data,
         ));
         let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
         cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -62,7 +62,7 @@ impl Buffer {
             self.pool.logical_device.vk_graphic_queue,
             1,
             &submit_info,
-            fence.vk_data
+            fence.vk_data,
         ));
         fence.wait();
     }

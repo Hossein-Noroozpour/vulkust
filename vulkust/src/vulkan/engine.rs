@@ -246,9 +246,10 @@ where
     fn update(&mut self) {
         let vk_device = self.logical_device.as_ref().unwrap().vk_data;
         let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
-        let current_buffer = self.swapchain.as_ref().unwrap().get_next_image_index(
-            present_complete_semaphore,
-        ) as usize;
+        let current_buffer = self.swapchain
+            .as_ref()
+            .unwrap()
+            .get_next_image_index(present_complete_semaphore) as usize;
         vulkan_check!(vk::vkWaitForFences(
             vk_device,
             1,

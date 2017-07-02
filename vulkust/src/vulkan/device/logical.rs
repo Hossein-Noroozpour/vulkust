@@ -47,7 +47,7 @@ impl Logical {
             physical_device.vk_data,
             &device_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         let mut vk_graphic_queue = 0 as vk::VkQueue;
         unsafe {

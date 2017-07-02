@@ -38,7 +38,7 @@ impl Framebuffer {
             color_buffer.image.logical_device.vk_data,
             &fb_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         Framebuffer {
             color_buffer: color_buffer,

@@ -47,14 +47,14 @@ impl Physical {
         vulkan_check!(vk::vkEnumeratePhysicalDevices(
             vk_instance,
             &mut gpu_count as *mut u32,
-            null_mut()
+            null_mut(),
         ));
         logi!("Number of devices is: {}", gpu_count);
         let mut devices = vec![0 as vk::VkPhysicalDevice; gpu_count as usize];
         vulkan_check!(vk::vkEnumeratePhysicalDevices(
             vk_instance,
             &mut gpu_count,
-            devices.as_mut_ptr()
+            devices.as_mut_ptr(),
         ));
         devices
     }
@@ -258,7 +258,7 @@ impl Physical {
         vulkan_check!((vk_get_physical_device_surface_capabilities_khr)(
             self.vk_data,
             self.surface.vk_data,
-            &mut caps
+            &mut caps,
         ));
         return caps;
     }
@@ -268,14 +268,14 @@ impl Physical {
             self.vk_data,
             self.surface.vk_data,
             &mut count,
-            null_mut()
+            null_mut(),
         ));
         let mut result = vec![vk::VkSurfaceFormatKHR::default(); count as usize];
         vulkan_check!(vk::vkGetPhysicalDeviceSurfaceFormatsKHR(
             self.vk_data,
             self.surface.vk_data,
             &mut count,
-            result.as_mut_ptr()
+            result.as_mut_ptr(),
         ));
         result
     }

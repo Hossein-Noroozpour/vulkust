@@ -85,7 +85,7 @@ impl RenderPass {
             swapchain.logical_device.vk_data,
             &render_pass_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         RenderPass {
             swapchain: swapchain,

@@ -46,7 +46,7 @@ impl View {
             logical_device.vk_data,
             &depth_stencil_view_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         View {
             image: image,
@@ -77,7 +77,7 @@ impl View {
             logical_device.vk_data,
             &view_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         View {
             image: Arc::new(image),

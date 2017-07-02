@@ -22,7 +22,7 @@ impl Pool {
             logical_device.vk_data,
             &vk_cmd_pool_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         Pool {
             logical_device: logical_device,

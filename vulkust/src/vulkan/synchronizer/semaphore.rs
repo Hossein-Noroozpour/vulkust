@@ -16,7 +16,7 @@ impl Semaphore {
             logical_device.vk_data,
             &semaphore_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         Semaphore {
             logical_device: logical_device,

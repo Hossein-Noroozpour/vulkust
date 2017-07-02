@@ -22,7 +22,7 @@ impl Image {
             logical_device.vk_data,
             info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         let mut mem_requirements = vk::VkMemoryRequirements::default();
         unsafe {
@@ -37,7 +37,7 @@ impl Image {
             logical_device.vk_data,
             vk_data,
             memory,
-            0
+            0,
         ));
         Image {
             logical_device: logical_device,

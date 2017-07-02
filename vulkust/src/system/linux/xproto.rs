@@ -2971,19 +2971,11 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct xcb_connection_t([u8; 0]);
-/**
- * @brief Generic iterator.
- *
- * A generic iterator structure.
- */
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_generic_iterator_t {
-    /**< Data of the current iterator */
     pub data: *mut ::std::os::raw::c_void,
-    /**< remaining elements */
     pub rem: ::std::os::raw::c_int,
-    /**< index of the current iterator */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -3034,21 +3026,12 @@ impl Clone for xcb_generic_iterator_t {
         *self
     }
 }
-/**
- * @brief Generic reply.
- *
- * A generic reply structure.
- */
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_generic_reply_t {
-    /**< Type of the response */
     pub response_type: u8,
-    /**< Padding */
     pub pad0: u8,
-    /**< Sequence number */
     pub sequence: u16,
-    /**< Length of the response */
     pub length: u32,
 }
 #[test]
@@ -3109,23 +3092,13 @@ impl Clone for xcb_generic_reply_t {
         *self
     }
 }
-/**
- * @brief Generic event.
- *
- * A generic event structure.
- */
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_generic_event_t {
-    /**< Type of the response */
     pub response_type: u8,
-    /**< Padding */
     pub pad0: u8,
-    /**< Sequence number */
     pub sequence: u16,
-    /**< Padding */
     pub pad: [u32; 7usize],
-    /**< full sequence */
     pub full_sequence: u32,
 }
 #[test]
@@ -3196,30 +3169,16 @@ impl Clone for xcb_generic_event_t {
         *self
     }
 }
-/**
- * @brief GE event
- *
- * An event as sent by the XGE extension. The length field specifies the
- * number of 4-byte blocks trailing the struct.
- *
- * @deprecated Since some fields in this struct have unfortunate names, it is
- * recommended to use xcb_ge_generic_event_t instead.
- */
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_ge_event_t {
-    /**< Type of the response */
     pub response_type: u8,
-    /**< Padding */
     pub pad0: u8,
-    /**< Sequence number */
     pub sequence: u16,
     pub length: u32,
     pub event_type: u16,
     pub pad1: u16,
-    /**< Padding */
     pub pad: [u32; 5usize],
-    /**< full sequence */
     pub full_sequence: u32,
 }
 #[test]
@@ -3320,30 +3279,17 @@ impl Clone for xcb_ge_event_t {
         *self
     }
 }
-/**
- * @brief Generic error.
- *
- * A generic error structure.
- */
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_generic_error_t {
-    /**< Type of the response */
     pub response_type: u8,
-    /**< Error code */
     pub error_code: u8,
-    /**< Sequence number */
     pub sequence: u16,
     pub resource_id: u32,
-    /** < Resource ID for requests with side effects only */
     pub minor_code: u16,
-    /** < Minor opcode of the failed request */
     pub major_code: u8,
-    /** < Major opcode of the failed request */
     pub pad0: u8,
-    /**< Padding */
     pub pad: [u32; 5usize],
-    /**< full sequence */
     pub full_sequence: u32,
 }
 #[test]
@@ -3454,15 +3400,9 @@ impl Clone for xcb_generic_error_t {
         *self
     }
 }
-/**
- * @brief Generic cookie.
- *
- * A generic cookie structure.
- */
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_void_cookie_t {
-    /**< Sequence number */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -3493,21 +3433,12 @@ impl Clone for xcb_void_cookie_t {
         *self
     }
 }
-/**
- * @brief Container for authorization information.
- *
- * A container for authorization information to be sent to the X server.
- */
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_auth_info_t {
-    /**< Length of the string name (as returned by strlen). */
     pub namelen: ::std::os::raw::c_int,
-    /**< String containing the authentication protocol name, such as "MIT-MAGIC-COOKIE-1" or "XDM-AUTHORIZATION-1". */
     pub name: *mut ::std::os::raw::c_char,
-    /**< Length of the data member. */
     pub datalen: ::std::os::raw::c_int,
-    /**< Data interpreted in a protocol-specific manner. */
     pub data: *mut ::std::os::raw::c_char,
 }
 #[test]
@@ -3763,27 +3694,16 @@ extern "C" {
      */
     pub fn xcb_discard_reply64(c: *mut xcb_connection_t, sequence: u64);
 }
-/**
- * @brief xcb_query_extension_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_extension_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub present: u8,
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub first_event: u8,
-    /**<  */
     pub first_error: u8,
 }
 #[test]
@@ -3920,51 +3840,28 @@ extern "C" {
      */
     pub fn xcb_prefetch_extension_data(c: *mut xcb_connection_t, ext: *mut xcb_extension_t);
 }
-/**
- * @brief xcb_setup_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_setup_t {
-    /**<  */
     pub status: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub protocol_major_version: u16,
-    /**<  */
     pub protocol_minor_version: u16,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub release_number: u32,
-    /**<  */
     pub resource_id_base: u32,
-    /**<  */
     pub resource_id_mask: u32,
-    /**<  */
     pub motion_buffer_size: u32,
-    /**<  */
     pub vendor_len: u16,
-    /**<  */
     pub maximum_request_length: u16,
-    /**<  */
     pub roots_len: u8,
-    /**<  */
     pub pixmap_formats_len: u8,
-    /**<  */
     pub image_byte_order: u8,
-    /**<  */
     pub bitmap_format_bit_order: u8,
-    /**<  */
     pub bitmap_format_scanline_unit: u8,
-    /**<  */
     pub bitmap_format_scanline_pad: u8,
-    /**<  */
     pub min_keycode: xcb_keycode_t,
-    /**<  */
     pub max_keycode: xcb_keycode_t,
-    /**<  */
     pub pad1: [u8; 4usize],
 }
 #[test]
@@ -4354,15 +4251,10 @@ extern "C" {
      */
     pub fn xcb_generate_id(c: *mut xcb_connection_t) -> u32;
 }
-/**
- * @brief xcb_char2b_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_char2b_t {
-    /**<  */
     pub byte1: u8,
-    /**<  */
     pub byte2: u8,
 }
 #[test]
@@ -4403,17 +4295,11 @@ impl Clone for xcb_char2b_t {
         *self
     }
 }
-/**
- * @brief xcb_char2b_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_char2b_iterator_t {
-    /**<  */
     pub data: *mut xcb_char2b_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -4465,17 +4351,11 @@ impl Clone for xcb_char2b_iterator_t {
     }
 }
 pub type xcb_window_t = u32;
-/**
- * @brief xcb_window_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_window_iterator_t {
-    /**<  */
     pub data: *mut xcb_window_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -4527,17 +4407,11 @@ impl Clone for xcb_window_iterator_t {
     }
 }
 pub type xcb_pixmap_t = u32;
-/**
- * @brief xcb_pixmap_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_pixmap_iterator_t {
-    /**<  */
     pub data: *mut xcb_pixmap_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -4589,17 +4463,11 @@ impl Clone for xcb_pixmap_iterator_t {
     }
 }
 pub type xcb_cursor_t = u32;
-/**
- * @brief xcb_cursor_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_cursor_iterator_t {
-    /**<  */
     pub data: *mut xcb_cursor_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -4651,17 +4519,11 @@ impl Clone for xcb_cursor_iterator_t {
     }
 }
 pub type xcb_font_t = u32;
-/**
- * @brief xcb_font_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_font_iterator_t {
-    /**<  */
     pub data: *mut xcb_font_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -4713,17 +4575,11 @@ impl Clone for xcb_font_iterator_t {
     }
 }
 pub type xcb_gcontext_t = u32;
-/**
- * @brief xcb_gcontext_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_gcontext_iterator_t {
-    /**<  */
     pub data: *mut xcb_gcontext_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -4775,17 +4631,11 @@ impl Clone for xcb_gcontext_iterator_t {
     }
 }
 pub type xcb_colormap_t = u32;
-/**
- * @brief xcb_colormap_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_colormap_iterator_t {
-    /**<  */
     pub data: *mut xcb_colormap_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -4837,17 +4687,11 @@ impl Clone for xcb_colormap_iterator_t {
     }
 }
 pub type xcb_atom_t = u32;
-/**
- * @brief xcb_atom_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_atom_iterator_t {
-    /**<  */
     pub data: *mut xcb_atom_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -4899,17 +4743,11 @@ impl Clone for xcb_atom_iterator_t {
     }
 }
 pub type xcb_drawable_t = u32;
-/**
- * @brief xcb_drawable_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_drawable_iterator_t {
-    /**<  */
     pub data: *mut xcb_drawable_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -4961,17 +4799,11 @@ impl Clone for xcb_drawable_iterator_t {
     }
 }
 pub type xcb_fontable_t = u32;
-/**
- * @brief xcb_fontable_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_fontable_iterator_t {
-    /**<  */
     pub data: *mut xcb_fontable_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5023,17 +4855,11 @@ impl Clone for xcb_fontable_iterator_t {
     }
 }
 pub type xcb_visualid_t = u32;
-/**
- * @brief xcb_visualid_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_visualid_iterator_t {
-    /**<  */
     pub data: *mut xcb_visualid_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5085,17 +4911,11 @@ impl Clone for xcb_visualid_iterator_t {
     }
 }
 pub type xcb_timestamp_t = u32;
-/**
- * @brief xcb_timestamp_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_timestamp_iterator_t {
-    /**<  */
     pub data: *mut xcb_timestamp_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5147,17 +4967,11 @@ impl Clone for xcb_timestamp_iterator_t {
     }
 }
 pub type xcb_keysym_t = u32;
-/**
- * @brief xcb_keysym_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_keysym_iterator_t {
-    /**<  */
     pub data: *mut xcb_keysym_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5209,17 +5023,11 @@ impl Clone for xcb_keysym_iterator_t {
     }
 }
 pub type xcb_keycode_t = u8;
-/**
- * @brief xcb_keycode_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_keycode_iterator_t {
-    /**<  */
     pub data: *mut xcb_keycode_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5271,17 +5079,11 @@ impl Clone for xcb_keycode_iterator_t {
     }
 }
 pub type xcb_button_t = u8;
-/**
- * @brief xcb_button_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_button_iterator_t {
-    /**<  */
     pub data: *mut xcb_button_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5332,15 +5134,10 @@ impl Clone for xcb_button_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_point_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_point_t {
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
 }
 #[test]
@@ -5381,17 +5178,11 @@ impl Clone for xcb_point_t {
         *self
     }
 }
-/**
- * @brief xcb_point_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_point_iterator_t {
-    /**<  */
     pub data: *mut xcb_point_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5442,19 +5233,12 @@ impl Clone for xcb_point_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_rectangle_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_rectangle_t {
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
 }
 #[test]
@@ -5515,17 +5299,11 @@ impl Clone for xcb_rectangle_t {
         *self
     }
 }
-/**
- * @brief xcb_rectangle_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_rectangle_iterator_t {
-    /**<  */
     pub data: *mut xcb_rectangle_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5576,23 +5354,14 @@ impl Clone for xcb_rectangle_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_arc_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_arc_t {
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub angle1: i16,
-    /**<  */
     pub angle2: i16,
 }
 #[test]
@@ -5673,17 +5442,11 @@ impl Clone for xcb_arc_t {
         *self
     }
 }
-/**
- * @brief xcb_arc_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_arc_iterator_t {
-    /**<  */
     pub data: *mut xcb_arc_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5734,19 +5497,12 @@ impl Clone for xcb_arc_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_format_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_format_t {
-    /**<  */
     pub depth: u8,
-    /**<  */
     pub bits_per_pixel: u8,
-    /**<  */
     pub scanline_pad: u8,
-    /**<  */
     pub pad0: [u8; 5usize],
 }
 #[test]
@@ -5807,17 +5563,11 @@ impl Clone for xcb_format_t {
         *self
     }
 }
-/**
- * @brief xcb_format_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_format_iterator_t {
-    /**<  */
     pub data: *mut xcb_format_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -5878,27 +5628,16 @@ pub enum xcb_visual_class_t {
     XCB_VISUAL_CLASS_TRUE_COLOR = 4,
     XCB_VISUAL_CLASS_DIRECT_COLOR = 5,
 }
-/**
- * @brief xcb_visualtype_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_visualtype_t {
-    /**<  */
     pub visual_id: xcb_visualid_t,
-    /**<  */
     pub _class: u8,
-    /**<  */
     pub bits_per_rgb_value: u8,
-    /**<  */
     pub colormap_entries: u16,
-    /**<  */
     pub red_mask: u32,
-    /**<  */
     pub green_mask: u32,
-    /**<  */
     pub blue_mask: u32,
-    /**<  */
     pub pad0: [u8; 4usize],
 }
 #[test]
@@ -5999,17 +5738,11 @@ impl Clone for xcb_visualtype_t {
         *self
     }
 }
-/**
- * @brief xcb_visualtype_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_visualtype_iterator_t {
-    /**<  */
     pub data: *mut xcb_visualtype_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -6060,19 +5793,12 @@ impl Clone for xcb_visualtype_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_depth_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_depth_t {
-    /**<  */
     pub depth: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub visuals_len: u16,
-    /**<  */
     pub pad1: [u8; 4usize],
 }
 #[test]
@@ -6133,17 +5859,11 @@ impl Clone for xcb_depth_t {
         *self
     }
 }
-/**
- * @brief xcb_depth_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_depth_iterator_t {
-    /**<  */
     pub data: *mut xcb_depth_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -6231,43 +5951,24 @@ pub enum xcb_backing_store_t {
     XCB_BACKING_STORE_WHEN_MAPPED = 1,
     XCB_BACKING_STORE_ALWAYS = 2,
 }
-/**
- * @brief xcb_screen_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_screen_t {
-    /**<  */
     pub root: xcb_window_t,
-    /**<  */
     pub default_colormap: xcb_colormap_t,
-    /**<  */
     pub white_pixel: u32,
-    /**<  */
     pub black_pixel: u32,
-    /**<  */
     pub current_input_masks: u32,
-    /**<  */
     pub width_in_pixels: u16,
-    /**<  */
     pub height_in_pixels: u16,
-    /**<  */
     pub width_in_millimeters: u16,
-    /**<  */
     pub height_in_millimeters: u16,
-    /**<  */
     pub min_installed_maps: u16,
-    /**<  */
     pub max_installed_maps: u16,
-    /**<  */
     pub root_visual: xcb_visualid_t,
-    /**<  */
     pub backing_stores: u8,
-    /**<  */
     pub save_unders: u8,
-    /**<  */
     pub root_depth: u8,
-    /**<  */
     pub allowed_depths_len: u8,
 }
 #[test]
@@ -6448,17 +6149,11 @@ impl Clone for xcb_screen_t {
         *self
     }
 }
-/**
- * @brief xcb_screen_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_screen_iterator_t {
-    /**<  */
     pub data: *mut xcb_screen_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -6509,25 +6204,15 @@ impl Clone for xcb_screen_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_setup_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_setup_request_t {
-    /**<  */
     pub byte_order: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub protocol_major_version: u16,
-    /**<  */
     pub protocol_minor_version: u16,
-    /**<  */
     pub authorization_protocol_name_len: u16,
-    /**<  */
     pub authorization_protocol_data_len: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -6628,17 +6313,11 @@ impl Clone for xcb_setup_request_t {
         *self
     }
 }
-/**
- * @brief xcb_setup_request_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_setup_request_iterator_t {
-    /**<  */
     pub data: *mut xcb_setup_request_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -6689,21 +6368,13 @@ impl Clone for xcb_setup_request_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_setup_failed_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_setup_failed_t {
-    /**<  */
     pub status: u8,
-    /**<  */
     pub reason_len: u8,
-    /**<  */
     pub protocol_major_version: u16,
-    /**<  */
     pub protocol_minor_version: u16,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -6774,17 +6445,11 @@ impl Clone for xcb_setup_failed_t {
         *self
     }
 }
-/**
- * @brief xcb_setup_failed_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_setup_failed_iterator_t {
-    /**<  */
     pub data: *mut xcb_setup_failed_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -6835,17 +6500,11 @@ impl Clone for xcb_setup_failed_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_setup_authenticate_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_setup_authenticate_t {
-    /**<  */
     pub status: u8,
-    /**<  */
     pub pad0: [u8; 5usize],
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -6896,17 +6555,11 @@ impl Clone for xcb_setup_authenticate_t {
         *self
     }
 }
-/**
- * @brief xcb_setup_authenticate_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_setup_authenticate_iterator_t {
-    /**<  */
     pub data: *mut xcb_setup_authenticate_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -6966,17 +6619,11 @@ pub enum xcb_image_order_t {
     XCB_IMAGE_ORDER_LSB_FIRST = 0,
     XCB_IMAGE_ORDER_MSB_FIRST = 1,
 }
-/**
- * @brief xcb_setup_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_setup_iterator_t {
-    /**<  */
     pub data: *mut xcb_setup_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -7062,39 +6709,22 @@ pub enum xcb_key_but_mask_t {
 pub enum xcb_window_enum_t {
     XCB_WINDOW_NONE = 0,
 }
-/**
- * @brief xcb_key_press_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_key_press_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub detail: xcb_keycode_t,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub root: xcb_window_t,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub child: xcb_window_t,
-    /**<  */
     pub root_x: i16,
-    /**<  */
     pub root_y: i16,
-    /**<  */
     pub event_x: i16,
-    /**<  */
     pub event_y: i16,
-    /**<  */
     pub state: u16,
-    /**<  */
     pub same_screen: u8,
-    /**<  */
     pub pad0: u8,
 }
 #[test]
@@ -7266,39 +6896,22 @@ pub enum xcb_button_mask_t {
     XCB_BUTTON_MASK_5 = 4096,
     XCB_BUTTON_MASK_ANY = 32768,
 }
-/**
- * @brief xcb_button_press_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_button_press_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub detail: xcb_button_t,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub root: xcb_window_t,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub child: xcb_window_t,
-    /**<  */
     pub root_x: i16,
-    /**<  */
     pub root_y: i16,
-    /**<  */
     pub event_x: i16,
-    /**<  */
     pub event_y: i16,
-    /**<  */
     pub state: u16,
-    /**<  */
     pub same_screen: u8,
-    /**<  */
     pub pad0: u8,
 }
 #[test]
@@ -7466,39 +7079,22 @@ pub enum xcb_motion_t {
     XCB_MOTION_NORMAL = 0,
     XCB_MOTION_HINT = 1,
 }
-/**
- * @brief xcb_motion_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_motion_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub detail: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub root: xcb_window_t,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub child: xcb_window_t,
-    /**<  */
     pub root_x: i16,
-    /**<  */
     pub root_y: i16,
-    /**<  */
     pub event_x: i16,
-    /**<  */
     pub event_y: i16,
-    /**<  */
     pub state: u16,
-    /**<  */
     pub same_screen: u8,
-    /**<  */
     pub pad0: u8,
 }
 #[test]
@@ -7679,39 +7275,22 @@ pub enum xcb_notify_mode_t {
     XCB_NOTIFY_MODE_UNGRAB = 2,
     XCB_NOTIFY_MODE_WHILE_GRABBED = 3,
 }
-/**
- * @brief xcb_enter_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_enter_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub detail: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub root: xcb_window_t,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub child: xcb_window_t,
-    /**<  */
     pub root_x: i16,
-    /**<  */
     pub root_y: i16,
-    /**<  */
     pub event_x: i16,
-    /**<  */
     pub event_y: i16,
-    /**<  */
     pub state: u16,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub same_screen_focus: u8,
 }
 #[test]
@@ -7875,23 +7454,14 @@ impl Clone for xcb_enter_notify_event_t {
     }
 }
 pub type xcb_leave_notify_event_t = xcb_enter_notify_event_t;
-/**
- * @brief xcb_focus_in_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_focus_in_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub detail: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub pad0: [u8; 3usize],
 }
 #[test]
@@ -7973,15 +7543,10 @@ impl Clone for xcb_focus_in_event_t {
     }
 }
 pub type xcb_focus_out_event_t = xcb_focus_in_event_t;
-/**
- * @brief xcb_keymap_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_keymap_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub keys: [u8; 31usize],
 }
 #[test]
@@ -8022,31 +7587,18 @@ impl Clone for xcb_keymap_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_expose_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_expose_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub x: u16,
-    /**<  */
     pub y: u16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub count: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -8167,35 +7719,20 @@ impl Clone for xcb_expose_event_t {
         *self
     }
 }
-/**
- * @brief xcb_graphics_exposure_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_graphics_exposure_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub x: u16,
-    /**<  */
     pub y: u16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub minor_opcode: u16,
-    /**<  */
     pub count: u16,
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad1: [u8; 3usize],
 }
 #[test]
@@ -8342,25 +7879,15 @@ impl Clone for xcb_graphics_exposure_event_t {
         *self
     }
 }
-/**
- * @brief xcb_no_exposure_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_no_exposure_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub minor_opcode: u16,
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad1: u8,
 }
 #[test]
@@ -8458,23 +7985,14 @@ pub enum xcb_visibility_t {
     XCB_VISIBILITY_PARTIALLY_OBSCURED = 1,
     XCB_VISIBILITY_FULLY_OBSCURED = 2,
 }
-/**
- * @brief xcb_visibility_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_visibility_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub state: u8,
-    /**<  */
     pub pad1: [u8; 3usize],
 }
 #[test]
@@ -8557,35 +8075,20 @@ impl Clone for xcb_visibility_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_create_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_create_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub parent: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub border_width: u16,
-    /**<  */
     pub override_redirect: u8,
-    /**<  */
     pub pad1: u8,
 }
 #[test]
@@ -8728,21 +8231,13 @@ impl Clone for xcb_create_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_destroy_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_destroy_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -8813,25 +8308,15 @@ impl Clone for xcb_destroy_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_unmap_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_unmap_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub from_configure: u8,
-    /**<  */
     pub pad1: [u8; 3usize],
 }
 #[test]
@@ -8922,25 +8407,15 @@ impl Clone for xcb_unmap_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_map_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_map_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub override_redirect: u8,
-    /**<  */
     pub pad1: [u8; 3usize],
 }
 #[test]
@@ -9031,21 +8506,13 @@ impl Clone for xcb_map_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_map_request_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_map_request_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub parent: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -9116,31 +8583,18 @@ impl Clone for xcb_map_request_event_t {
         *self
     }
 }
-/**
- * @brief xcb_reparent_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_reparent_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub parent: xcb_window_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub override_redirect: u8,
-    /**<  */
     pub pad1: [u8; 3usize],
 }
 #[test]
@@ -9263,37 +8717,21 @@ impl Clone for xcb_reparent_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_configure_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_configure_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub above_sibling: xcb_window_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub border_width: u16,
-    /**<  */
     pub override_redirect: u8,
-    /**<  */
     pub pad1: u8,
 }
 #[test]
@@ -9450,35 +8888,20 @@ impl Clone for xcb_configure_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_configure_request_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_configure_request_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub stack_mode: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub parent: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub sibling: xcb_window_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub border_width: u16,
-    /**<  */
     pub value_mask: u16,
 }
 #[test]
@@ -9623,25 +9046,15 @@ impl Clone for xcb_configure_request_event_t {
         *self
     }
 }
-/**
- * @brief xcb_gravity_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_gravity_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
 }
 #[test]
@@ -9732,23 +9145,14 @@ impl Clone for xcb_gravity_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_resize_request_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_resize_request_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
 }
 #[test]
@@ -9835,27 +9239,16 @@ pub enum xcb_place_t {
     XCB_PLACE_ON_TOP = 0,
     XCB_PLACE_ON_BOTTOM = 1,
 }
-/**
- * @brief xcb_circulate_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_circulate_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub event: xcb_window_t,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub pad1: [u8; 4usize],
-    /**<  */
     pub place: u8,
-    /**<  */
     pub pad2: [u8; 3usize],
 }
 #[test]
@@ -9965,27 +9358,16 @@ pub enum xcb_property_t {
     XCB_PROPERTY_NEW_VALUE = 0,
     XCB_PROPERTY_DELETE = 1,
 }
-/**
- * @brief xcb_property_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_property_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub atom: xcb_atom_t,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub state: u8,
-    /**<  */
     pub pad1: [u8; 3usize],
 }
 #[test]
@@ -10086,23 +9468,14 @@ impl Clone for xcb_property_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_selection_clear_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_selection_clear_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub owner: xcb_window_t,
-    /**<  */
     pub selection: xcb_atom_t,
 }
 #[test]
@@ -10262,29 +9635,17 @@ pub enum xcb_atom_enum_t {
     XCB_ATOM_WM_CLASS = 67,
     XCB_ATOM_WM_TRANSIENT_FOR = 68,
 }
-/**
- * @brief xcb_selection_request_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_selection_request_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub owner: xcb_window_t,
-    /**<  */
     pub requestor: xcb_window_t,
-    /**<  */
     pub selection: xcb_atom_t,
-    /**<  */
     pub target: xcb_atom_t,
-    /**<  */
     pub property: xcb_atom_t,
 }
 #[test]
@@ -10397,27 +9758,16 @@ impl Clone for xcb_selection_request_event_t {
         *self
     }
 }
-/**
- * @brief xcb_selection_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_selection_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub requestor: xcb_window_t,
-    /**<  */
     pub selection: xcb_atom_t,
-    /**<  */
     pub target: xcb_atom_t,
-    /**<  */
     pub property: xcb_atom_t,
 }
 #[test]
@@ -10531,27 +9881,16 @@ pub enum xcb_colormap_state_t {
 pub enum xcb_colormap_enum_t {
     XCB_COLORMAP_NONE = 0,
 }
-/**
- * @brief xcb_colormap_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_colormap_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub colormap: xcb_colormap_t,
-    /**<  */
     pub _new: u8,
-    /**<  */
     pub state: u8,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -10652,9 +9991,6 @@ impl Clone for xcb_colormap_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_client_message_data_t
- **/
 #[repr(C)]
 #[derive(Copy)]
 pub struct xcb_client_message_data_t {
@@ -10708,17 +10044,11 @@ impl Clone for xcb_client_message_data_t {
         *self
     }
 }
-/**
- * @brief xcb_client_message_data_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_client_message_data_iterator_t {
-    /**<  */
     pub data: *mut xcb_client_message_data_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -10772,23 +10102,14 @@ impl Clone for xcb_client_message_data_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_client_message_event_t
- **/
 #[repr(C)]
 #[derive(Copy)]
 pub struct xcb_client_message_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub format: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub type_: xcb_atom_t,
-    /**<  */
     pub data: xcb_client_message_data_t,
 }
 #[test]
@@ -10876,25 +10197,15 @@ pub enum xcb_mapping_t {
     XCB_MAPPING_KEYBOARD = 1,
     XCB_MAPPING_POINTER = 2,
 }
-/**
- * @brief xcb_mapping_notify_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_mapping_notify_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub request: u8,
-    /**<  */
     pub first_keycode: xcb_keycode_t,
-    /**<  */
     pub count: u8,
-    /**<  */
     pub pad1: u8,
 }
 #[test]
@@ -10985,25 +10296,15 @@ impl Clone for xcb_mapping_notify_event_t {
         *self
     }
 }
-/**
- * @brief xcb_ge_generic_event_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_ge_generic_event_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub extension: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub event_type: u16,
-    /**<  */
     pub pad0: [u8; 22usize],
-    /**<  */
     pub full_sequence: u32,
 }
 #[test]
@@ -11094,25 +10395,15 @@ impl Clone for xcb_ge_generic_event_t {
         *self
     }
 }
-/**
- * @brief xcb_request_error_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_request_error_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub error_code: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub bad_value: u32,
-    /**<  */
     pub minor_opcode: u16,
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
 }
 #[test]
@@ -11203,25 +10494,15 @@ impl Clone for xcb_request_error_t {
         *self
     }
 }
-/**
- * @brief xcb_value_error_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_value_error_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub error_code: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub bad_value: u32,
-    /**<  */
     pub minor_opcode: u16,
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
 }
 #[test]
@@ -11376,37 +10657,21 @@ pub enum xcb_gravity_t {
     XCB_GRAVITY_SOUTH_EAST = 9,
     XCB_GRAVITY_STATIC = 10,
 }
-/**
- * @brief xcb_create_window_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_create_window_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub depth: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub wid: xcb_window_t,
-    /**<  */
     pub parent: xcb_window_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub border_width: u16,
-    /**<  */
     pub _class: u16,
-    /**<  */
     pub visual: xcb_visualid_t,
-    /**<  */
     pub value_mask: u32,
 }
 #[test]
@@ -11557,21 +10822,13 @@ impl Clone for xcb_create_window_request_t {
         *self
     }
 }
-/**
- * @brief xcb_change_window_attributes_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_change_window_attributes_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub value_mask: u32,
 }
 #[test]
@@ -11666,13 +10923,9 @@ pub enum xcb_map_state_t {
     XCB_MAP_STATE_UNVIEWABLE = 1,
     XCB_MAP_STATE_VIEWABLE = 2,
 }
-/**
- * @brief xcb_get_window_attributes_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_window_attributes_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -11708,19 +10961,12 @@ impl Clone for xcb_get_window_attributes_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_window_attributes_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_window_attributes_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -11790,49 +11036,27 @@ impl Clone for xcb_get_window_attributes_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_window_attributes_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_window_attributes_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub backing_store: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub visual: xcb_visualid_t,
-    /**<  */
     pub _class: u16,
-    /**<  */
     pub bit_gravity: u8,
-    /**<  */
     pub win_gravity: u8,
-    /**<  */
     pub backing_planes: u32,
-    /**<  */
     pub backing_pixel: u32,
-    /**<  */
     pub save_under: u8,
-    /**<  */
     pub map_is_installed: u8,
-    /**<  */
     pub map_state: u8,
-    /**<  */
     pub override_redirect: u8,
-    /**<  */
     pub colormap: xcb_colormap_t,
-    /**<  */
     pub all_event_masks: u32,
-    /**<  */
     pub your_event_mask: u32,
-    /**<  */
     pub do_not_propagate_mask: u16,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -12079,19 +11303,12 @@ impl Clone for xcb_get_window_attributes_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_destroy_window_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_destroy_window_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -12152,19 +11369,12 @@ impl Clone for xcb_destroy_window_request_t {
         *self
     }
 }
-/**
- * @brief xcb_destroy_subwindows_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_destroy_subwindows_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -12236,19 +11446,12 @@ pub enum xcb_set_mode_t {
     XCB_SET_MODE_INSERT = 0,
     XCB_SET_MODE_DELETE = 1,
 }
-/**
- * @brief xcb_change_save_set_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_change_save_set_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -12311,25 +11514,15 @@ impl Clone for xcb_change_save_set_request_t {
         *self
     }
 }
-/**
- * @brief xcb_reparent_window_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_reparent_window_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub parent: xcb_window_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
 }
 #[test]
@@ -12422,19 +11615,12 @@ impl Clone for xcb_reparent_window_request_t {
         *self
     }
 }
-/**
- * @brief xcb_map_window_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_map_window_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -12495,19 +11681,12 @@ impl Clone for xcb_map_window_request_t {
         *self
     }
 }
-/**
- * @brief xcb_map_subwindows_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_map_subwindows_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -12568,19 +11747,12 @@ impl Clone for xcb_map_subwindows_request_t {
         *self
     }
 }
-/**
- * @brief xcb_unmap_window_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_unmap_window_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -12641,19 +11813,12 @@ impl Clone for xcb_unmap_window_request_t {
         *self
     }
 }
-/**
- * @brief xcb_unmap_subwindows_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_unmap_subwindows_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -12736,23 +11901,14 @@ pub enum xcb_stack_mode_t {
     XCB_STACK_MODE_BOTTOM_IF = 3,
     XCB_STACK_MODE_OPPOSITE = 4,
 }
-/**
- * @brief xcb_configure_window_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_configure_window_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub value_mask: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -12841,19 +11997,12 @@ pub enum xcb_circulate_t {
     XCB_CIRCULATE_RAISE_LOWEST = 0,
     XCB_CIRCULATE_LOWER_HIGHEST = 1,
 }
-/**
- * @brief xcb_circulate_window_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_circulate_window_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub direction: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -12916,13 +12065,9 @@ impl Clone for xcb_circulate_window_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_geometry_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_geometry_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -12953,19 +12098,12 @@ impl Clone for xcb_get_geometry_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_geometry_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_geometry_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
 }
 #[test]
@@ -13026,33 +12164,19 @@ impl Clone for xcb_get_geometry_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_geometry_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_geometry_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub depth: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub root: xcb_window_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub border_width: u16,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -13183,13 +12307,9 @@ impl Clone for xcb_get_geometry_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_query_tree_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_tree_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -13220,19 +12340,12 @@ impl Clone for xcb_query_tree_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_query_tree_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_tree_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -13293,27 +12406,16 @@ impl Clone for xcb_query_tree_request_t {
         *self
     }
 }
-/**
- * @brief xcb_query_tree_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_tree_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub root: xcb_window_t,
-    /**<  */
     pub parent: xcb_window_t,
-    /**<  */
     pub children_len: u16,
-    /**<  */
     pub pad1: [u8; 14usize],
 }
 #[test]
@@ -13414,13 +12516,9 @@ impl Clone for xcb_query_tree_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_intern_atom_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_intern_atom_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -13451,21 +12549,13 @@ impl Clone for xcb_intern_atom_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_intern_atom_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_intern_atom_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub only_if_exists: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub name_len: u16,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -13536,21 +12626,13 @@ impl Clone for xcb_intern_atom_request_t {
         *self
     }
 }
-/**
- * @brief xcb_intern_atom_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_intern_atom_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub atom: xcb_atom_t,
 }
 #[test]
@@ -13621,13 +12703,9 @@ impl Clone for xcb_intern_atom_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_get_atom_name_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_atom_name_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -13658,19 +12736,12 @@ impl Clone for xcb_get_atom_name_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_atom_name_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_atom_name_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub atom: xcb_atom_t,
 }
 #[test]
@@ -13731,23 +12802,14 @@ impl Clone for xcb_get_atom_name_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_atom_name_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_atom_name_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub name_len: u16,
-    /**<  */
     pub pad1: [u8; 22usize],
 }
 #[test]
@@ -13835,29 +12897,17 @@ pub enum xcb_prop_mode_t {
     XCB_PROP_MODE_PREPEND = 1,
     XCB_PROP_MODE_APPEND = 2,
 }
-/**
- * @brief xcb_change_property_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_change_property_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub property: xcb_atom_t,
-    /**<  */
     pub type_: xcb_atom_t,
-    /**<  */
     pub format: u8,
-    /**<  */
     pub pad0: [u8; 3usize],
-    /**<  */
     pub data_len: u32,
 }
 #[test]
@@ -13970,21 +13020,13 @@ impl Clone for xcb_change_property_request_t {
         *self
     }
 }
-/**
- * @brief xcb_delete_property_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_delete_property_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub property: xcb_atom_t,
 }
 #[test]
@@ -14062,13 +13104,9 @@ impl Clone for xcb_delete_property_request_t {
 pub enum xcb_get_property_type_t {
     XCB_GET_PROPERTY_TYPE_ANY = 0,
 }
-/**
- * @brief xcb_get_property_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_property_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -14099,27 +13137,16 @@ impl Clone for xcb_get_property_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_property_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_property_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub _delete: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub property: xcb_atom_t,
-    /**<  */
     pub type_: xcb_atom_t,
-    /**<  */
     pub long_offset: u32,
-    /**<  */
     pub long_length: u32,
 }
 #[test]
@@ -14220,27 +13247,16 @@ impl Clone for xcb_get_property_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_property_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_property_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub format: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub type_: xcb_atom_t,
-    /**<  */
     pub bytes_after: u32,
-    /**<  */
     pub value_len: u32,
-    /**<  */
     pub pad0: [u8; 12usize],
 }
 #[test]
@@ -14341,13 +13357,9 @@ impl Clone for xcb_get_property_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_list_properties_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_properties_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -14378,19 +13390,12 @@ impl Clone for xcb_list_properties_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_list_properties_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_properties_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -14453,23 +13458,14 @@ impl Clone for xcb_list_properties_request_t {
         *self
     }
 }
-/**
- * @brief xcb_list_properties_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_properties_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub atoms_len: u16,
-    /**<  */
     pub pad1: [u8; 22usize],
 }
 #[test]
@@ -14550,23 +13546,14 @@ impl Clone for xcb_list_properties_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_set_selection_owner_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_selection_owner_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub owner: xcb_window_t,
-    /**<  */
     pub selection: xcb_atom_t,
-    /**<  */
     pub time: xcb_timestamp_t,
 }
 #[test]
@@ -14654,13 +13641,9 @@ impl Clone for xcb_set_selection_owner_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_selection_owner_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_selection_owner_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -14694,19 +13677,12 @@ impl Clone for xcb_get_selection_owner_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_selection_owner_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_selection_owner_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub selection: xcb_atom_t,
 }
 #[test]
@@ -14774,21 +13750,13 @@ impl Clone for xcb_get_selection_owner_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_selection_owner_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_selection_owner_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub owner: xcb_window_t,
 }
 #[test]
@@ -14861,27 +13829,16 @@ impl Clone for xcb_get_selection_owner_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_convert_selection_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_convert_selection_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub requestor: xcb_window_t,
-    /**<  */
     pub selection: xcb_atom_t,
-    /**<  */
     pub target: xcb_atom_t,
-    /**<  */
     pub property: xcb_atom_t,
-    /**<  */
     pub time: xcb_timestamp_t,
 }
 #[test]
@@ -14990,23 +13947,14 @@ pub enum xcb_send_event_dest_t {
     XCB_SEND_EVENT_DEST_POINTER_WINDOW = 0,
     XCB_SEND_EVENT_DEST_ITEM_FOCUS = 1,
 }
-/**
- * @brief xcb_send_event_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_send_event_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub propagate: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub destination: xcb_window_t,
-    /**<  */
     pub event_mask: u32,
-    /**<  */
     pub event: [::std::os::raw::c_char; 32usize],
 }
 #[test]
@@ -15107,13 +14055,9 @@ pub enum xcb_grab_status_t {
 pub enum xcb_cursor_enum_t {
     XCB_CURSOR_NONE = 0,
 }
-/**
- * @brief xcb_grab_pointer_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_grab_pointer_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -15144,31 +14088,18 @@ impl Clone for xcb_grab_pointer_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_grab_pointer_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_grab_pointer_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub owner_events: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub grab_window: xcb_window_t,
-    /**<  */
     pub event_mask: u16,
-    /**<  */
     pub pointer_mode: u8,
-    /**<  */
     pub keyboard_mode: u8,
-    /**<  */
     pub confine_to: xcb_window_t,
-    /**<  */
     pub cursor: xcb_cursor_t,
-    /**<  */
     pub time: xcb_timestamp_t,
 }
 #[test]
@@ -15289,19 +14220,12 @@ impl Clone for xcb_grab_pointer_request_t {
         *self
     }
 }
-/**
- * @brief xcb_grab_pointer_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_grab_pointer_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub status: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
 }
 #[test]
@@ -15362,19 +14286,12 @@ impl Clone for xcb_grab_pointer_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_ungrab_pointer_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_ungrab_pointer_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
 }
 #[test]
@@ -15445,35 +14362,20 @@ pub enum xcb_button_index_t {
     XCB_BUTTON_INDEX_4 = 4,
     XCB_BUTTON_INDEX_5 = 5,
 }
-/**
- * @brief xcb_grab_button_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_grab_button_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub owner_events: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub grab_window: xcb_window_t,
-    /**<  */
     pub event_mask: u16,
-    /**<  */
     pub pointer_mode: u8,
-    /**<  */
     pub keyboard_mode: u8,
-    /**<  */
     pub confine_to: xcb_window_t,
-    /**<  */
     pub cursor: xcb_cursor_t,
-    /**<  */
     pub button: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub modifiers: u16,
 }
 #[test]
@@ -15614,23 +14516,14 @@ impl Clone for xcb_grab_button_request_t {
         *self
     }
 }
-/**
- * @brief xcb_ungrab_button_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_ungrab_button_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub button: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub grab_window: xcb_window_t,
-    /**<  */
     pub modifiers: u16,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -15711,25 +14604,15 @@ impl Clone for xcb_ungrab_button_request_t {
         *self
     }
 }
-/**
- * @brief xcb_change_active_pointer_grab_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_change_active_pointer_grab_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cursor: xcb_cursor_t,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub event_mask: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -15842,13 +14725,9 @@ impl Clone for xcb_change_active_pointer_grab_request_t {
         *self
     }
 }
-/**
- * @brief xcb_grab_keyboard_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_grab_keyboard_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -15879,27 +14758,16 @@ impl Clone for xcb_grab_keyboard_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_grab_keyboard_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_grab_keyboard_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub owner_events: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub grab_window: xcb_window_t,
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub pointer_mode: u8,
-    /**<  */
     pub keyboard_mode: u8,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -16000,19 +14868,12 @@ impl Clone for xcb_grab_keyboard_request_t {
         *self
     }
 }
-/**
- * @brief xcb_grab_keyboard_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_grab_keyboard_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub status: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
 }
 #[test]
@@ -16073,19 +14934,12 @@ impl Clone for xcb_grab_keyboard_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_ungrab_keyboard_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_ungrab_keyboard_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
 }
 #[test]
@@ -16153,29 +15007,17 @@ impl Clone for xcb_ungrab_keyboard_request_t {
 pub enum xcb_grab_t {
     XCB_GRAB_ANY = 0,
 }
-/**
- * @brief xcb_grab_key_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_grab_key_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub owner_events: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub grab_window: xcb_window_t,
-    /**<  */
     pub modifiers: u16,
-    /**<  */
     pub key: xcb_keycode_t,
-    /**<  */
     pub pointer_mode: u8,
-    /**<  */
     pub keyboard_mode: u8,
-    /**<  */
     pub pad0: [u8; 3usize],
 }
 #[test]
@@ -16286,23 +15128,14 @@ impl Clone for xcb_grab_key_request_t {
         *self
     }
 }
-/**
- * @brief xcb_ungrab_key_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_ungrab_key_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub key: xcb_keycode_t,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub grab_window: xcb_window_t,
-    /**<  */
     pub modifiers: u16,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -16395,19 +15228,12 @@ pub enum xcb_allow_t {
     XCB_ALLOW_ASYNC_BOTH = 6,
     XCB_ALLOW_SYNC_BOTH = 7,
 }
-/**
- * @brief xcb_allow_events_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_allow_events_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub time: xcb_timestamp_t,
 }
 #[test]
@@ -16468,17 +15294,11 @@ impl Clone for xcb_allow_events_request_t {
         *self
     }
 }
-/**
- * @brief xcb_grab_server_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_grab_server_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -16529,17 +15349,11 @@ impl Clone for xcb_grab_server_request_t {
         *self
     }
 }
-/**
- * @brief xcb_ungrab_server_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_ungrab_server_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -16590,13 +15404,9 @@ impl Clone for xcb_ungrab_server_request_t {
         *self
     }
 }
-/**
- * @brief xcb_query_pointer_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_pointer_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -16627,19 +15437,12 @@ impl Clone for xcb_query_pointer_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_query_pointer_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_pointer_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -16700,35 +15503,20 @@ impl Clone for xcb_query_pointer_request_t {
         *self
     }
 }
-/**
- * @brief xcb_query_pointer_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_pointer_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub same_screen: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub root: xcb_window_t,
-    /**<  */
     pub child: xcb_window_t,
-    /**<  */
     pub root_x: i16,
-    /**<  */
     pub root_y: i16,
-    /**<  */
     pub win_x: i16,
-    /**<  */
     pub win_y: i16,
-    /**<  */
     pub mask: u16,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -16869,17 +15657,11 @@ impl Clone for xcb_query_pointer_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_timecoord_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_timecoord_t {
-    /**<  */
     pub time: xcb_timestamp_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
 }
 #[test]
@@ -16930,17 +15712,11 @@ impl Clone for xcb_timecoord_t {
         *self
     }
 }
-/**
- * @brief xcb_timecoord_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_timecoord_iterator_t {
-    /**<  */
     pub data: *mut xcb_timecoord_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -16991,13 +15767,9 @@ impl Clone for xcb_timecoord_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_get_motion_events_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_motion_events_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -17028,23 +15800,14 @@ impl Clone for xcb_get_motion_events_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_motion_events_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_motion_events_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub start: xcb_timestamp_t,
-    /**<  */
     pub stop: xcb_timestamp_t,
 }
 #[test]
@@ -17127,23 +15890,14 @@ impl Clone for xcb_get_motion_events_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_motion_events_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_motion_events_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub events_len: u32,
-    /**<  */
     pub pad1: [u8; 20usize],
 }
 #[test]
@@ -17226,13 +15980,9 @@ impl Clone for xcb_get_motion_events_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_translate_coordinates_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_translate_coordinates_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -17268,25 +16018,15 @@ impl Clone for xcb_translate_coordinates_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_translate_coordinates_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_translate_coordinates_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub src_window: xcb_window_t,
-    /**<  */
     pub dst_window: xcb_window_t,
-    /**<  */
     pub src_x: i16,
-    /**<  */
     pub src_y: i16,
 }
 #[test]
@@ -17388,25 +16128,15 @@ impl Clone for xcb_translate_coordinates_request_t {
         *self
     }
 }
-/**
- * @brief xcb_translate_coordinates_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_translate_coordinates_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub same_screen: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub child: xcb_window_t,
-    /**<  */
     pub dst_x: i16,
-    /**<  */
     pub dst_y: i16,
 }
 #[test]
@@ -17506,33 +16236,19 @@ impl Clone for xcb_translate_coordinates_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_warp_pointer_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_warp_pointer_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub src_window: xcb_window_t,
-    /**<  */
     pub dst_window: xcb_window_t,
-    /**<  */
     pub src_x: i16,
-    /**<  */
     pub src_y: i16,
-    /**<  */
     pub src_width: u16,
-    /**<  */
     pub src_height: u16,
-    /**<  */
     pub dst_x: i16,
-    /**<  */
     pub dst_y: i16,
 }
 #[test]
@@ -17671,21 +16387,13 @@ pub enum xcb_input_focus_t {
     XCB_INPUT_FOCUS_PARENT = 2,
     XCB_INPUT_FOCUS_FOLLOW_KEYBOARD = 3,
 }
-/**
- * @brief xcb_set_input_focus_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_input_focus_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub revert_to: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub focus: xcb_window_t,
-    /**<  */
     pub time: xcb_timestamp_t,
 }
 #[test]
@@ -17758,13 +16466,9 @@ impl Clone for xcb_set_input_focus_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_input_focus_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_input_focus_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -17795,17 +16499,11 @@ impl Clone for xcb_get_input_focus_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_input_focus_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_input_focus_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -17858,21 +16556,13 @@ impl Clone for xcb_get_input_focus_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_input_focus_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_input_focus_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub revert_to: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub focus: xcb_window_t,
 }
 #[test]
@@ -17943,13 +16633,9 @@ impl Clone for xcb_get_input_focus_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_query_keymap_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_keymap_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -17980,17 +16666,11 @@ impl Clone for xcb_query_keymap_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_query_keymap_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_keymap_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -18041,21 +16721,13 @@ impl Clone for xcb_query_keymap_request_t {
         *self
     }
 }
-/**
- * @brief xcb_query_keymap_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_keymap_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub keys: [u8; 32usize],
 }
 #[test]
@@ -18126,23 +16798,14 @@ impl Clone for xcb_query_keymap_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_open_font_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_open_font_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub fid: xcb_font_t,
-    /**<  */
     pub name_len: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -18223,19 +16886,12 @@ impl Clone for xcb_open_font_request_t {
         *self
     }
 }
-/**
- * @brief xcb_close_font_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_close_font_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub font: xcb_font_t,
 }
 #[test]
@@ -18302,15 +16958,10 @@ pub enum xcb_font_draw_t {
     XCB_FONT_DRAW_LEFT_TO_RIGHT = 0,
     XCB_FONT_DRAW_RIGHT_TO_LEFT = 1,
 }
-/**
- * @brief xcb_fontprop_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_fontprop_t {
-    /**<  */
     pub name: xcb_atom_t,
-    /**<  */
     pub value: u32,
 }
 #[test]
@@ -18351,17 +17002,11 @@ impl Clone for xcb_fontprop_t {
         *self
     }
 }
-/**
- * @brief xcb_fontprop_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_fontprop_iterator_t {
-    /**<  */
     pub data: *mut xcb_fontprop_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -18412,23 +17057,14 @@ impl Clone for xcb_fontprop_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_charinfo_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_charinfo_t {
-    /**<  */
     pub left_side_bearing: i16,
-    /**<  */
     pub right_side_bearing: i16,
-    /**<  */
     pub character_width: i16,
-    /**<  */
     pub ascent: i16,
-    /**<  */
     pub descent: i16,
-    /**<  */
     pub attributes: u16,
 }
 #[test]
@@ -18509,17 +17145,11 @@ impl Clone for xcb_charinfo_t {
         *self
     }
 }
-/**
- * @brief xcb_charinfo_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_charinfo_iterator_t {
-    /**<  */
     pub data: *mut xcb_charinfo_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -18570,13 +17200,9 @@ impl Clone for xcb_charinfo_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_query_font_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_font_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -18607,19 +17233,12 @@ impl Clone for xcb_query_font_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_query_font_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_font_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub font: xcb_fontable_t,
 }
 #[test]
@@ -18680,49 +17299,27 @@ impl Clone for xcb_query_font_request_t {
         *self
     }
 }
-/**
- * @brief xcb_query_font_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_font_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub min_bounds: xcb_charinfo_t,
-    /**<  */
     pub pad1: [u8; 4usize],
-    /**<  */
     pub max_bounds: xcb_charinfo_t,
-    /**<  */
     pub pad2: [u8; 4usize],
-    /**<  */
     pub min_char_or_byte2: u16,
-    /**<  */
     pub max_char_or_byte2: u16,
-    /**<  */
     pub default_char: u16,
-    /**<  */
     pub properties_len: u16,
-    /**<  */
     pub draw_direction: u8,
-    /**<  */
     pub min_byte1: u8,
-    /**<  */
     pub max_byte1: u8,
-    /**<  */
     pub all_chars_exist: u8,
-    /**<  */
     pub font_ascent: i16,
-    /**<  */
     pub font_descent: i16,
-    /**<  */
     pub char_infos_len: u32,
 }
 #[test]
@@ -18933,13 +17530,9 @@ impl Clone for xcb_query_font_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_query_text_extents_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_text_extents_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -18970,19 +17563,12 @@ impl Clone for xcb_query_text_extents_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_query_text_extents_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_text_extents_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub odd_length: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub font: xcb_fontable_t,
 }
 #[test]
@@ -19050,33 +17636,19 @@ impl Clone for xcb_query_text_extents_request_t {
         *self
     }
 }
-/**
- * @brief xcb_query_text_extents_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_text_extents_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub draw_direction: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub font_ascent: i16,
-    /**<  */
     pub font_descent: i16,
-    /**<  */
     pub overall_ascent: i16,
-    /**<  */
     pub overall_descent: i16,
-    /**<  */
     pub overall_width: i32,
-    /**<  */
     pub overall_left: i32,
-    /**<  */
     pub overall_right: i32,
 }
 #[test]
@@ -19225,13 +17797,9 @@ impl Clone for xcb_query_text_extents_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_str_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_str_t {
-    /**<  */
     pub name_len: u8,
 }
 #[test]
@@ -19262,17 +17830,11 @@ impl Clone for xcb_str_t {
         *self
     }
 }
-/**
- * @brief xcb_str_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_str_iterator_t {
-    /**<  */
     pub data: *mut xcb_str_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -19323,13 +17885,9 @@ impl Clone for xcb_str_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_list_fonts_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_fonts_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -19360,21 +17918,13 @@ impl Clone for xcb_list_fonts_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_list_fonts_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_fonts_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub max_names: u16,
-    /**<  */
     pub pattern_len: u16,
 }
 #[test]
@@ -19445,23 +17995,14 @@ impl Clone for xcb_list_fonts_request_t {
         *self
     }
 }
-/**
- * @brief xcb_list_fonts_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_fonts_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub names_len: u16,
-    /**<  */
     pub pad1: [u8; 22usize],
 }
 #[test]
@@ -19542,13 +18083,9 @@ impl Clone for xcb_list_fonts_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_list_fonts_with_info_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_fonts_with_info_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -19584,21 +18121,13 @@ impl Clone for xcb_list_fonts_with_info_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_list_fonts_with_info_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_fonts_with_info_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub max_names: u16,
-    /**<  */
     pub pattern_len: u16,
 }
 #[test]
@@ -19678,49 +18207,27 @@ impl Clone for xcb_list_fonts_with_info_request_t {
         *self
     }
 }
-/**
- * @brief xcb_list_fonts_with_info_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_fonts_with_info_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub name_len: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub min_bounds: xcb_charinfo_t,
-    /**<  */
     pub pad0: [u8; 4usize],
-    /**<  */
     pub max_bounds: xcb_charinfo_t,
-    /**<  */
     pub pad1: [u8; 4usize],
-    /**<  */
     pub min_char_or_byte2: u16,
-    /**<  */
     pub max_char_or_byte2: u16,
-    /**<  */
     pub default_char: u16,
-    /**<  */
     pub properties_len: u16,
-    /**<  */
     pub draw_direction: u8,
-    /**<  */
     pub min_byte1: u8,
-    /**<  */
     pub max_byte1: u8,
-    /**<  */
     pub all_chars_exist: u8,
-    /**<  */
     pub font_ascent: i16,
-    /**<  */
     pub font_descent: i16,
-    /**<  */
     pub replies_hint: u32,
 }
 #[test]
@@ -19964,21 +18471,13 @@ impl Clone for xcb_list_fonts_with_info_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_set_font_path_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_font_path_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub font_qty: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -20049,13 +18548,9 @@ impl Clone for xcb_set_font_path_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_font_path_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_font_path_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -20086,17 +18581,11 @@ impl Clone for xcb_get_font_path_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_font_path_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_font_path_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -20147,23 +18636,14 @@ impl Clone for xcb_get_font_path_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_font_path_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_font_path_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub path_len: u16,
-    /**<  */
     pub pad1: [u8; 22usize],
 }
 #[test]
@@ -20244,25 +18724,15 @@ impl Clone for xcb_get_font_path_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_create_pixmap_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_create_pixmap_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub depth: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub pid: xcb_pixmap_t,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
 }
 #[test]
@@ -20353,19 +18823,12 @@ impl Clone for xcb_create_pixmap_request_t {
         *self
     }
 }
-/**
- * @brief xcb_free_pixmap_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_free_pixmap_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub pixmap: xcb_pixmap_t,
 }
 #[test]
@@ -20521,23 +18984,14 @@ pub enum xcb_arc_mode_t {
     XCB_ARC_MODE_CHORD = 0,
     XCB_ARC_MODE_PIE_SLICE = 1,
 }
-/**
- * @brief xcb_create_gc_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_create_gc_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cid: xcb_gcontext_t,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub value_mask: u32,
 }
 #[test]
@@ -20618,21 +19072,13 @@ impl Clone for xcb_create_gc_request_t {
         *self
     }
 }
-/**
- * @brief xcb_change_gc_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_change_gc_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub value_mask: u32,
 }
 #[test]
@@ -20703,23 +19149,14 @@ impl Clone for xcb_change_gc_request_t {
         *self
     }
 }
-/**
- * @brief xcb_copy_gc_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_copy_gc_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub src_gc: xcb_gcontext_t,
-    /**<  */
     pub dst_gc: xcb_gcontext_t,
-    /**<  */
     pub value_mask: u32,
 }
 #[test]
@@ -20800,23 +19237,14 @@ impl Clone for xcb_copy_gc_request_t {
         *self
     }
 }
-/**
- * @brief xcb_set_dashes_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_dashes_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub dash_offset: u16,
-    /**<  */
     pub dashes_len: u16,
 }
 #[test]
@@ -20905,23 +19333,14 @@ pub enum xcb_clip_ordering_t {
     XCB_CLIP_ORDERING_YX_SORTED = 2,
     XCB_CLIP_ORDERING_YX_BANDED = 3,
 }
-/**
- * @brief xcb_set_clip_rectangles_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_clip_rectangles_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub ordering: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub clip_x_origin: i16,
-    /**<  */
     pub clip_y_origin: i16,
 }
 #[test]
@@ -21013,19 +19432,12 @@ impl Clone for xcb_set_clip_rectangles_request_t {
         *self
     }
 }
-/**
- * @brief xcb_free_gc_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_free_gc_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub gc: xcb_gcontext_t,
 }
 #[test]
@@ -21086,27 +19498,16 @@ impl Clone for xcb_free_gc_request_t {
         *self
     }
 }
-/**
- * @brief xcb_clear_area_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_clear_area_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub exposures: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
 }
 #[test]
@@ -21207,35 +19608,20 @@ impl Clone for xcb_clear_area_request_t {
         *self
     }
 }
-/**
- * @brief xcb_copy_area_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_copy_area_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub src_drawable: xcb_drawable_t,
-    /**<  */
     pub dst_drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub src_x: i16,
-    /**<  */
     pub src_y: i16,
-    /**<  */
     pub dst_x: i16,
-    /**<  */
     pub dst_y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
 }
 #[test]
@@ -21376,37 +19762,21 @@ impl Clone for xcb_copy_area_request_t {
         *self
     }
 }
-/**
- * @brief xcb_copy_plane_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_copy_plane_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub src_drawable: xcb_drawable_t,
-    /**<  */
     pub dst_drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub src_x: i16,
-    /**<  */
     pub src_y: i16,
-    /**<  */
     pub dst_x: i16,
-    /**<  */
     pub dst_y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub bit_plane: u32,
 }
 #[test]
@@ -21563,21 +19933,13 @@ pub enum xcb_coord_mode_t {
     XCB_COORD_MODE_ORIGIN = 0,
     XCB_COORD_MODE_PREVIOUS = 1,
 }
-/**
- * @brief xcb_poly_point_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_poly_point_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub coordinate_mode: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
 }
 #[test]
@@ -21648,21 +20010,13 @@ impl Clone for xcb_poly_point_request_t {
         *self
     }
 }
-/**
- * @brief xcb_poly_line_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_poly_line_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub coordinate_mode: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
 }
 #[test]
@@ -21733,19 +20087,12 @@ impl Clone for xcb_poly_line_request_t {
         *self
     }
 }
-/**
- * @brief xcb_segment_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_segment_t {
-    /**<  */
     pub x1: i16,
-    /**<  */
     pub y1: i16,
-    /**<  */
     pub x2: i16,
-    /**<  */
     pub y2: i16,
 }
 #[test]
@@ -21806,17 +20153,11 @@ impl Clone for xcb_segment_t {
         *self
     }
 }
-/**
- * @brief xcb_segment_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_segment_iterator_t {
-    /**<  */
     pub data: *mut xcb_segment_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -21867,21 +20208,13 @@ impl Clone for xcb_segment_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_poly_segment_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_poly_segment_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
 }
 #[test]
@@ -21952,21 +20285,13 @@ impl Clone for xcb_poly_segment_request_t {
         *self
     }
 }
-/**
- * @brief xcb_poly_rectangle_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_poly_rectangle_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
 }
 #[test]
@@ -22037,21 +20362,13 @@ impl Clone for xcb_poly_rectangle_request_t {
         *self
     }
 }
-/**
- * @brief xcb_poly_arc_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_poly_arc_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
 }
 #[test]
@@ -22129,27 +20446,16 @@ pub enum xcb_poly_shape_t {
     XCB_POLY_SHAPE_NONCONVEX = 1,
     XCB_POLY_SHAPE_CONVEX = 2,
 }
-/**
- * @brief xcb_fill_poly_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_fill_poly_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub shape: u8,
-    /**<  */
     pub coordinate_mode: u8,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -22250,21 +20556,13 @@ impl Clone for xcb_fill_poly_request_t {
         *self
     }
 }
-/**
- * @brief xcb_poly_fill_rectangle_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_poly_fill_rectangle_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
 }
 #[test]
@@ -22342,21 +20640,13 @@ impl Clone for xcb_poly_fill_rectangle_request_t {
         *self
     }
 }
-/**
- * @brief xcb_poly_fill_arc_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_poly_fill_arc_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
 }
 #[test]
@@ -22434,35 +20724,20 @@ pub enum xcb_image_format_t {
     XCB_IMAGE_FORMAT_XY_PIXMAP = 1,
     XCB_IMAGE_FORMAT_Z_PIXMAP = 2,
 }
-/**
- * @brief xcb_put_image_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_put_image_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub format: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub dst_x: i16,
-    /**<  */
     pub dst_y: i16,
-    /**<  */
     pub left_pad: u8,
-    /**<  */
     pub depth: u8,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -22603,13 +20878,9 @@ impl Clone for xcb_put_image_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_image_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_image_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -22640,29 +20911,17 @@ impl Clone for xcb_get_image_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_image_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_image_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub format: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
-    /**<  */
     pub plane_mask: u32,
 }
 #[test]
@@ -22773,23 +21032,14 @@ impl Clone for xcb_get_image_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_image_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_image_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub depth: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub visual: xcb_visualid_t,
-    /**<  */
     pub pad0: [u8; 20usize],
 }
 #[test]
@@ -22870,25 +21120,15 @@ impl Clone for xcb_get_image_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_poly_text_8_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_poly_text_8_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
 }
 #[test]
@@ -22979,25 +21219,15 @@ impl Clone for xcb_poly_text_8_request_t {
         *self
     }
 }
-/**
- * @brief xcb_poly_text_16_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_poly_text_16_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
 }
 #[test]
@@ -23088,25 +21318,15 @@ impl Clone for xcb_poly_text_16_request_t {
         *self
     }
 }
-/**
- * @brief xcb_image_text_8_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_image_text_8_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub string_len: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
 }
 #[test]
@@ -23197,25 +21417,15 @@ impl Clone for xcb_image_text_8_request_t {
         *self
     }
 }
-/**
- * @brief xcb_image_text_16_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_image_text_16_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub string_len: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub gc: xcb_gcontext_t,
-    /**<  */
     pub x: i16,
-    /**<  */
     pub y: i16,
 }
 #[test]
@@ -23312,23 +21522,14 @@ pub enum xcb_colormap_alloc_t {
     XCB_COLORMAP_ALLOC_NONE = 0,
     XCB_COLORMAP_ALLOC_ALL = 1,
 }
-/**
- * @brief xcb_create_colormap_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_create_colormap_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub alloc: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub mid: xcb_colormap_t,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub visual: xcb_visualid_t,
 }
 #[test]
@@ -23411,19 +21612,12 @@ impl Clone for xcb_create_colormap_request_t {
         *self
     }
 }
-/**
- * @brief xcb_free_colormap_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_free_colormap_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
 }
 #[test]
@@ -23484,21 +21678,13 @@ impl Clone for xcb_free_colormap_request_t {
         *self
     }
 }
-/**
- * @brief xcb_copy_colormap_and_free_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_copy_colormap_and_free_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub mid: xcb_colormap_t,
-    /**<  */
     pub src_cmap: xcb_colormap_t,
 }
 #[test]
@@ -23581,19 +21767,12 @@ impl Clone for xcb_copy_colormap_and_free_request_t {
         *self
     }
 }
-/**
- * @brief xcb_install_colormap_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_install_colormap_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
 }
 #[test]
@@ -23656,19 +21835,12 @@ impl Clone for xcb_install_colormap_request_t {
         *self
     }
 }
-/**
- * @brief xcb_uninstall_colormap_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_uninstall_colormap_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
 }
 #[test]
@@ -23734,13 +21906,9 @@ impl Clone for xcb_uninstall_colormap_request_t {
         *self
     }
 }
-/**
- * @brief xcb_list_installed_colormaps_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_installed_colormaps_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -23779,19 +21947,12 @@ impl Clone for xcb_list_installed_colormaps_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_list_installed_colormaps_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_installed_colormaps_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
 }
 #[test]
@@ -23867,23 +22028,14 @@ impl Clone for xcb_list_installed_colormaps_request_t {
         *self
     }
 }
-/**
- * @brief xcb_list_installed_colormaps_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_installed_colormaps_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub cmaps_len: u16,
-    /**<  */
     pub pad1: [u8; 22usize],
 }
 #[test]
@@ -23979,13 +22131,9 @@ impl Clone for xcb_list_installed_colormaps_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_color_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_color_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -24016,27 +22164,16 @@ impl Clone for xcb_alloc_color_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_color_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_color_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
-    /**<  */
     pub red: u16,
-    /**<  */
     pub green: u16,
-    /**<  */
     pub blue: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -24137,29 +22274,17 @@ impl Clone for xcb_alloc_color_request_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_color_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_color_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub red: u16,
-    /**<  */
     pub green: u16,
-    /**<  */
     pub blue: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
-    /**<  */
     pub pixel: u32,
 }
 #[test]
@@ -24270,13 +22395,9 @@ impl Clone for xcb_alloc_color_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_named_color_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_named_color_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -24307,23 +22428,14 @@ impl Clone for xcb_alloc_named_color_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_named_color_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_named_color_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
-    /**<  */
     pub name_len: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -24406,33 +22518,19 @@ impl Clone for xcb_alloc_named_color_request_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_named_color_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_named_color_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub pixel: u32,
-    /**<  */
     pub exact_red: u16,
-    /**<  */
     pub exact_green: u16,
-    /**<  */
     pub exact_blue: u16,
-    /**<  */
     pub visual_red: u16,
-    /**<  */
     pub visual_green: u16,
-    /**<  */
     pub visual_blue: u16,
 }
 #[test]
@@ -24567,13 +22665,9 @@ impl Clone for xcb_alloc_named_color_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_color_cells_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_color_cells_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -24604,23 +22698,14 @@ impl Clone for xcb_alloc_color_cells_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_color_cells_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_color_cells_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub contiguous: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
-    /**<  */
     pub colors: u16,
-    /**<  */
     pub planes: u16,
 }
 #[test]
@@ -24705,25 +22790,15 @@ impl Clone for xcb_alloc_color_cells_request_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_color_cells_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_color_cells_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub pixels_len: u16,
-    /**<  */
     pub masks_len: u16,
-    /**<  */
     pub pad1: [u8; 20usize],
 }
 #[test]
@@ -24816,13 +22891,9 @@ impl Clone for xcb_alloc_color_cells_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_color_planes_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_color_planes_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -24853,27 +22924,16 @@ impl Clone for xcb_alloc_color_planes_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_color_planes_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_color_planes_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub contiguous: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
-    /**<  */
     pub colors: u16,
-    /**<  */
     pub reds: u16,
-    /**<  */
     pub greens: u16,
-    /**<  */
     pub blues: u16,
 }
 #[test]
@@ -24981,31 +23041,18 @@ impl Clone for xcb_alloc_color_planes_request_t {
         *self
     }
 }
-/**
- * @brief xcb_alloc_color_planes_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_alloc_color_planes_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub pixels_len: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
-    /**<  */
     pub red_mask: u32,
-    /**<  */
     pub green_mask: u32,
-    /**<  */
     pub blue_mask: u32,
-    /**<  */
     pub pad2: [u8; 8usize],
 }
 #[test]
@@ -25128,21 +23175,13 @@ impl Clone for xcb_alloc_color_planes_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_free_colors_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_free_colors_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
-    /**<  */
     pub plane_mask: u32,
 }
 #[test]
@@ -25220,23 +23259,14 @@ pub enum xcb_color_flag_t {
     XCB_COLOR_FLAG_GREEN = 2,
     XCB_COLOR_FLAG_BLUE = 4,
 }
-/**
- * @brief xcb_coloritem_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_coloritem_t {
-    /**<  */
     pub pixel: u32,
-    /**<  */
     pub red: u16,
-    /**<  */
     pub green: u16,
-    /**<  */
     pub blue: u16,
-    /**<  */
     pub flags: u8,
-    /**<  */
     pub pad0: u8,
 }
 #[test]
@@ -25317,17 +23347,11 @@ impl Clone for xcb_coloritem_t {
         *self
     }
 }
-/**
- * @brief xcb_coloritem_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_coloritem_iterator_t {
-    /**<  */
     pub data: *mut xcb_coloritem_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -25378,19 +23402,12 @@ impl Clone for xcb_coloritem_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_store_colors_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_store_colors_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
 }
 #[test]
@@ -25451,25 +23468,15 @@ impl Clone for xcb_store_colors_request_t {
         *self
     }
 }
-/**
- * @brief xcb_store_named_color_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_store_named_color_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub flags: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
-    /**<  */
     pub pixel: u32,
-    /**<  */
     pub name_len: u16,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -25562,19 +23569,12 @@ impl Clone for xcb_store_named_color_request_t {
         *self
     }
 }
-/**
- * @brief xcb_rgb_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_rgb_t {
-    /**<  */
     pub red: u16,
-    /**<  */
     pub green: u16,
-    /**<  */
     pub blue: u16,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -25635,17 +23635,11 @@ impl Clone for xcb_rgb_t {
         *self
     }
 }
-/**
- * @brief xcb_rgb_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_rgb_iterator_t {
-    /**<  */
     pub data: *mut xcb_rgb_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -25696,13 +23690,9 @@ impl Clone for xcb_rgb_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_query_colors_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_colors_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -25733,19 +23723,12 @@ impl Clone for xcb_query_colors_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_query_colors_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_colors_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
 }
 #[test]
@@ -25806,23 +23789,14 @@ impl Clone for xcb_query_colors_request_t {
         *self
     }
 }
-/**
- * @brief xcb_query_colors_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_colors_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub colors_len: u16,
-    /**<  */
     pub pad1: [u8; 22usize],
 }
 #[test]
@@ -25903,13 +23877,9 @@ impl Clone for xcb_query_colors_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_lookup_color_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_lookup_color_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -25940,23 +23910,14 @@ impl Clone for xcb_lookup_color_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_lookup_color_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_lookup_color_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cmap: xcb_colormap_t,
-    /**<  */
     pub name_len: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -26037,31 +23998,18 @@ impl Clone for xcb_lookup_color_request_t {
         *self
     }
 }
-/**
- * @brief xcb_lookup_color_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_lookup_color_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub exact_red: u16,
-    /**<  */
     pub exact_green: u16,
-    /**<  */
     pub exact_blue: u16,
-    /**<  */
     pub visual_red: u16,
-    /**<  */
     pub visual_green: u16,
-    /**<  */
     pub visual_blue: u16,
 }
 #[test]
@@ -26187,39 +24135,22 @@ impl Clone for xcb_lookup_color_reply_t {
 pub enum xcb_pixmap_enum_t {
     XCB_PIXMAP_NONE = 0,
 }
-/**
- * @brief xcb_create_cursor_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_create_cursor_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cid: xcb_cursor_t,
-    /**<  */
     pub source: xcb_pixmap_t,
-    /**<  */
     pub mask: xcb_pixmap_t,
-    /**<  */
     pub fore_red: u16,
-    /**<  */
     pub fore_green: u16,
-    /**<  */
     pub fore_blue: u16,
-    /**<  */
     pub back_red: u16,
-    /**<  */
     pub back_green: u16,
-    /**<  */
     pub back_blue: u16,
-    /**<  */
     pub x: u16,
-    /**<  */
     pub y: u16,
 }
 #[test]
@@ -26385,39 +24316,22 @@ impl Clone for xcb_create_cursor_request_t {
 pub enum xcb_font_enum_t {
     XCB_FONT_NONE = 0,
 }
-/**
- * @brief xcb_create_glyph_cursor_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_create_glyph_cursor_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cid: xcb_cursor_t,
-    /**<  */
     pub source_font: xcb_font_t,
-    /**<  */
     pub mask_font: xcb_font_t,
-    /**<  */
     pub source_char: u16,
-    /**<  */
     pub mask_char: u16,
-    /**<  */
     pub fore_red: u16,
-    /**<  */
     pub fore_green: u16,
-    /**<  */
     pub fore_blue: u16,
-    /**<  */
     pub back_red: u16,
-    /**<  */
     pub back_green: u16,
-    /**<  */
     pub back_blue: u16,
 }
 #[test]
@@ -26603,19 +24517,12 @@ impl Clone for xcb_create_glyph_cursor_request_t {
         *self
     }
 }
-/**
- * @brief xcb_free_cursor_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_free_cursor_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cursor: xcb_cursor_t,
 }
 #[test]
@@ -26676,31 +24583,18 @@ impl Clone for xcb_free_cursor_request_t {
         *self
     }
 }
-/**
- * @brief xcb_recolor_cursor_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_recolor_cursor_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub cursor: xcb_cursor_t,
-    /**<  */
     pub fore_red: u16,
-    /**<  */
     pub fore_green: u16,
-    /**<  */
     pub fore_blue: u16,
-    /**<  */
     pub back_red: u16,
-    /**<  */
     pub back_green: u16,
-    /**<  */
     pub back_blue: u16,
 }
 #[test]
@@ -26828,13 +24722,9 @@ pub enum xcb_query_shape_of_t {
     XCB_QUERY_SHAPE_OF_FASTEST_TILE = 1,
     XCB_QUERY_SHAPE_OF_FASTEST_STIPPLE = 2,
 }
-/**
- * @brief xcb_query_best_size_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_best_size_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -26865,23 +24755,14 @@ impl Clone for xcb_query_best_size_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_query_best_size_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_best_size_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub _class: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub drawable: xcb_drawable_t,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
 }
 #[test]
@@ -26964,23 +24845,14 @@ impl Clone for xcb_query_best_size_request_t {
         *self
     }
 }
-/**
- * @brief xcb_query_best_size_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_best_size_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub width: u16,
-    /**<  */
     pub height: u16,
 }
 #[test]
@@ -27061,13 +24933,9 @@ impl Clone for xcb_query_best_size_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_query_extension_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_extension_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -27098,21 +24966,13 @@ impl Clone for xcb_query_extension_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_query_extension_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_query_extension_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub name_len: u16,
-    /**<  */
     pub pad1: [u8; 2usize],
 }
 #[test]
@@ -27185,13 +25045,9 @@ impl Clone for xcb_query_extension_request_t {
         *self
     }
 }
-/**
- * @brief xcb_list_extensions_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_extensions_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -27222,17 +25078,11 @@ impl Clone for xcb_list_extensions_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_list_extensions_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_extensions_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -27285,21 +25135,13 @@ impl Clone for xcb_list_extensions_request_t {
         *self
     }
 }
-/**
- * @brief xcb_list_extensions_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_extensions_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub names_len: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub pad0: [u8; 24usize],
 }
 #[test]
@@ -27370,23 +25212,14 @@ impl Clone for xcb_list_extensions_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_change_keyboard_mapping_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_change_keyboard_mapping_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub keycode_count: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub first_keycode: xcb_keycode_t,
-    /**<  */
     pub keysyms_per_keycode: u8,
-    /**<  */
     pub pad0: [u8; 2usize],
 }
 #[test]
@@ -27489,13 +25322,9 @@ impl Clone for xcb_change_keyboard_mapping_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_keyboard_mapping_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_keyboard_mapping_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -27531,21 +25360,13 @@ impl Clone for xcb_get_keyboard_mapping_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_keyboard_mapping_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_keyboard_mapping_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub first_keycode: xcb_keycode_t,
-    /**<  */
     pub count: u8,
 }
 #[test]
@@ -27623,21 +25444,13 @@ impl Clone for xcb_get_keyboard_mapping_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_keyboard_mapping_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_keyboard_mapping_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub keysyms_per_keycode: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub pad0: [u8; 24usize],
 }
 #[test]
@@ -27741,19 +25554,12 @@ pub enum xcb_auto_repeat_mode_t {
     XCB_AUTO_REPEAT_MODE_ON = 1,
     XCB_AUTO_REPEAT_MODE_DEFAULT = 2,
 }
-/**
- * @brief xcb_change_keyboard_control_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_change_keyboard_control_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub value_mask: u32,
 }
 #[test]
@@ -27829,13 +25635,9 @@ impl Clone for xcb_change_keyboard_control_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_keyboard_control_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_keyboard_control_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -27871,17 +25673,11 @@ impl Clone for xcb_get_keyboard_control_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_keyboard_control_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_keyboard_control_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -27937,33 +25733,19 @@ impl Clone for xcb_get_keyboard_control_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_keyboard_control_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_keyboard_control_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub global_auto_repeat: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub led_mask: u32,
-    /**<  */
     pub key_click_percent: u8,
-    /**<  */
     pub bell_percent: u8,
-    /**<  */
     pub bell_pitch: u16,
-    /**<  */
     pub bell_duration: u16,
-    /**<  */
     pub pad0: [u8; 2usize],
-    /**<  */
     pub auto_repeats: [u8; 32usize],
 }
 #[test]
@@ -28113,17 +25895,11 @@ impl Clone for xcb_get_keyboard_control_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_bell_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_bell_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub percent: i8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -28174,27 +25950,16 @@ impl Clone for xcb_bell_request_t {
         *self
     }
 }
-/**
- * @brief xcb_change_pointer_control_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_change_pointer_control_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub acceleration_numerator: i16,
-    /**<  */
     pub acceleration_denominator: i16,
-    /**<  */
     pub threshold: i16,
-    /**<  */
     pub do_acceleration: u8,
-    /**<  */
     pub do_threshold: u8,
 }
 #[test]
@@ -28318,13 +26083,9 @@ impl Clone for xcb_change_pointer_control_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_pointer_control_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_pointer_control_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -28358,17 +26119,11 @@ impl Clone for xcb_get_pointer_control_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_pointer_control_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_pointer_control_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -28424,27 +26179,16 @@ impl Clone for xcb_get_pointer_control_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_pointer_control_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_pointer_control_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub acceleration_numerator: u16,
-    /**<  */
     pub acceleration_denominator: u16,
-    /**<  */
     pub threshold: u16,
-    /**<  */
     pub pad1: [u8; 18usize],
 }
 #[test]
@@ -28567,25 +26311,15 @@ pub enum xcb_exposures_t {
     XCB_EXPOSURES_ALLOWED = 1,
     XCB_EXPOSURES_DEFAULT = 2,
 }
-/**
- * @brief xcb_set_screen_saver_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_screen_saver_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub timeout: i16,
-    /**<  */
     pub interval: i16,
-    /**<  */
     pub prefer_blanking: u8,
-    /**<  */
     pub allow_exposures: u8,
 }
 #[test]
@@ -28682,13 +26416,9 @@ impl Clone for xcb_set_screen_saver_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_screen_saver_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_screen_saver_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -28719,17 +26449,11 @@ impl Clone for xcb_get_screen_saver_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_screen_saver_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_screen_saver_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -28782,29 +26506,17 @@ impl Clone for xcb_get_screen_saver_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_screen_saver_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_screen_saver_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub timeout: u16,
-    /**<  */
     pub interval: u16,
-    /**<  */
     pub prefer_blanking: u8,
-    /**<  */
     pub allow_exposures: u8,
-    /**<  */
     pub pad1: [u8; 18usize],
 }
 #[test]
@@ -28936,23 +26648,14 @@ pub enum xcb_family_t {
     XCB_FAMILY_SERVER_INTERPRETED = 5,
     XCB_FAMILY_INTERNET_6 = 6,
 }
-/**
- * @brief xcb_change_hosts_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_change_hosts_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub family: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub address_len: u16,
 }
 #[test]
@@ -29033,17 +26736,11 @@ impl Clone for xcb_change_hosts_request_t {
         *self
     }
 }
-/**
- * @brief xcb_host_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_host_t {
-    /**<  */
     pub family: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub address_len: u16,
 }
 #[test]
@@ -29094,17 +26791,11 @@ impl Clone for xcb_host_t {
         *self
     }
 }
-/**
- * @brief xcb_host_iterator_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_host_iterator_t {
-    /**<  */
     pub data: *mut xcb_host_t,
-    /**<  */
     pub rem: ::std::os::raw::c_int,
-    /**<  */
     pub index: ::std::os::raw::c_int,
 }
 #[test]
@@ -29155,13 +26846,9 @@ impl Clone for xcb_host_iterator_t {
         *self
     }
 }
-/**
- * @brief xcb_list_hosts_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_hosts_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -29192,17 +26879,11 @@ impl Clone for xcb_list_hosts_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_list_hosts_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_hosts_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -29253,23 +26934,14 @@ impl Clone for xcb_list_hosts_request_t {
         *self
     }
 }
-/**
- * @brief xcb_list_hosts_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_list_hosts_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub hosts_len: u16,
-    /**<  */
     pub pad0: [u8; 22usize],
 }
 #[test]
@@ -29356,17 +27028,11 @@ pub enum xcb_access_control_t {
     XCB_ACCESS_CONTROL_DISABLE = 0,
     XCB_ACCESS_CONTROL_ENABLE = 1,
 }
-/**
- * @brief xcb_set_access_control_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_access_control_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -29429,17 +27095,11 @@ pub enum xcb_close_down_t {
     XCB_CLOSE_DOWN_RETAIN_PERMANENT = 1,
     XCB_CLOSE_DOWN_RETAIN_TEMPORARY = 2,
 }
-/**
- * @brief xcb_set_close_down_mode_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_close_down_mode_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -29500,19 +27160,12 @@ impl Clone for xcb_set_close_down_mode_request_t {
 pub enum xcb_kill_t {
     XCB_KILL_ALL_TEMPORARY = 0,
 }
-/**
- * @brief xcb_kill_client_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_kill_client_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub resource: u32,
 }
 #[test]
@@ -29573,23 +27226,14 @@ impl Clone for xcb_kill_client_request_t {
         *self
     }
 }
-/**
- * @brief xcb_rotate_properties_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_rotate_properties_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
-    /**<  */
     pub window: xcb_window_t,
-    /**<  */
     pub atoms_len: u16,
-    /**<  */
     pub delta: i16,
 }
 #[test]
@@ -29678,17 +27322,11 @@ pub enum xcb_screen_saver_t {
     XCB_SCREEN_SAVER_RESET = 0,
     XCB_SCREEN_SAVER_ACTIVE = 1,
 }
-/**
- * @brief xcb_force_screen_saver_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_force_screen_saver_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub mode: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -29751,13 +27389,9 @@ pub enum xcb_mapping_status_t {
     XCB_MAPPING_STATUS_BUSY = 1,
     XCB_MAPPING_STATUS_FAILURE = 2,
 }
-/**
- * @brief xcb_set_pointer_mapping_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_pointer_mapping_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -29791,17 +27425,11 @@ impl Clone for xcb_set_pointer_mapping_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_set_pointer_mapping_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_pointer_mapping_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub map_len: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -29857,19 +27485,12 @@ impl Clone for xcb_set_pointer_mapping_request_t {
         *self
     }
 }
-/**
- * @brief xcb_set_pointer_mapping_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_pointer_mapping_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub status: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
 }
 #[test]
@@ -29932,13 +27553,9 @@ impl Clone for xcb_set_pointer_mapping_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_get_pointer_mapping_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_pointer_mapping_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -29972,17 +27589,11 @@ impl Clone for xcb_get_pointer_mapping_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_pointer_mapping_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_pointer_mapping_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -30038,21 +27649,13 @@ impl Clone for xcb_get_pointer_mapping_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_pointer_mapping_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_pointer_mapping_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub map_len: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub pad0: [u8; 24usize],
 }
 #[test]
@@ -30137,13 +27740,9 @@ pub enum xcb_map_index_t {
     XCB_MAP_INDEX_4 = 6,
     XCB_MAP_INDEX_5 = 7,
 }
-/**
- * @brief xcb_set_modifier_mapping_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_modifier_mapping_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -30179,17 +27778,11 @@ impl Clone for xcb_set_modifier_mapping_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_set_modifier_mapping_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_modifier_mapping_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub keycodes_per_modifier: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -30248,19 +27841,12 @@ impl Clone for xcb_set_modifier_mapping_request_t {
         *self
     }
 }
-/**
- * @brief xcb_set_modifier_mapping_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_set_modifier_mapping_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub status: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
 }
 #[test]
@@ -30326,13 +27912,9 @@ impl Clone for xcb_set_modifier_mapping_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_get_modifier_mapping_cookie_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_modifier_mapping_cookie_t {
-    /**<  */
     pub sequence: ::std::os::raw::c_uint,
 }
 #[test]
@@ -30368,17 +27950,11 @@ impl Clone for xcb_get_modifier_mapping_cookie_t {
         *self
     }
 }
-/**
- * @brief xcb_get_modifier_mapping_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_modifier_mapping_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]
@@ -30434,21 +28010,13 @@ impl Clone for xcb_get_modifier_mapping_request_t {
         *self
     }
 }
-/**
- * @brief xcb_get_modifier_mapping_reply_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_get_modifier_mapping_reply_t {
-    /**<  */
     pub response_type: u8,
-    /**<  */
     pub keycodes_per_modifier: u8,
-    /**<  */
     pub sequence: u16,
-    /**<  */
     pub length: u32,
-    /**<  */
     pub pad0: [u8; 24usize],
 }
 #[test]
@@ -30527,17 +28095,11 @@ impl Clone for xcb_get_modifier_mapping_reply_t {
         *self
     }
 }
-/**
- * @brief xcb_no_operation_request_t
- **/
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct xcb_no_operation_request_t {
-    /**<  */
     pub major_opcode: u8,
-    /**<  */
     pub pad0: u8,
-    /**<  */
     pub length: u16,
 }
 #[test]

@@ -96,21 +96,21 @@ impl Swapchain {
             logical_device.vk_data,
             &swapchain_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         let mut count = 0u32;
         vulkan_check!(vk::vkGetSwapchainImagesKHR(
             logical_device.vk_data,
             vk_data,
             &mut count,
-            null_mut()
+            null_mut(),
         ));
         let mut images = vec![0 as vk::VkImage; count as usize];
         vulkan_check!(vk::vkGetSwapchainImagesKHR(
             logical_device.vk_data,
             vk_data,
             &mut count,
-            images.as_mut_ptr()
+            images.as_mut_ptr(),
         ));
         let mut views = Vec::new();
         for i in 0..(count as usize) {
@@ -135,7 +135,7 @@ impl Swapchain {
             u64::max_value(),
             sem.vk_data,
             0 as vk::VkFence,
-            &mut image_index
+            &mut image_index,
         ));
         return image_index;
     }

@@ -115,7 +115,7 @@ impl Instance {
         vulkan_check!(vk::vkCreateInstance(
             &instance_create_info,
             null(),
-            &mut vk_instance
+            &mut vk_instance,
         ));
         let mut instance = Instance::default();
         instance.vk_data = vk_instance;
@@ -180,7 +180,7 @@ impl Instance {
             self.vk_data,
             &report_callback_create_info,
             null(),
-            &mut self.vk_debug_callback
+            &mut self.vk_debug_callback,
         ));
     }
 

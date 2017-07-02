@@ -133,7 +133,7 @@ where
         let attribute: mtl::Id = unsafe {
             msg_send![
                 attributes,
-                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_POSITION
+                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_POSITION,
             ]
         };
         unsafe {
@@ -146,7 +146,7 @@ where
         let attribute: mtl::Id = unsafe {
             msg_send![
                 attributes,
-                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_TEXCOORD
+                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_TEXCOORD,
             ]
         };
         unsafe {
@@ -159,7 +159,7 @@ where
         let attribute: mtl::Id = unsafe {
             msg_send![
                 attributes,
-                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_NORMAL
+                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_NORMAL,
             ]
         };
         unsafe {
@@ -173,7 +173,7 @@ where
         let layout: mtl::Id = unsafe {
             msg_send![
                 layouts,
-                objectAtIndexedSubscript: BUFFER_INDEX_MESH_POSITIONS
+                objectAtIndexedSubscript: BUFFER_INDEX_MESH_POSITIONS,
             ]
         };
         unsafe {
@@ -181,7 +181,7 @@ where
             let _: () = msg_send![layout, setStepRate:1 as mtl::NSUInteger];
             let _: () = msg_send![
                 layout,
-                setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX
+                setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX,
             ];
             let _: () = msg_send![layouts,
                 setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_POSITIONS];
@@ -189,7 +189,7 @@ where
         let layout: mtl::Id = unsafe {
             msg_send![
                 layouts,
-                objectAtIndexedSubscript: BUFFER_INDEX_MESH_GENERICS
+                objectAtIndexedSubscript: BUFFER_INDEX_MESH_GENERICS,
             ]
         };
         unsafe {
@@ -197,7 +197,7 @@ where
             let _: () = msg_send![layout, setStepRate:1 as mtl::NSUInteger];
             let _: () = msg_send![
                 layout,
-                setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX
+                setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX,
             ];
             let _: () = msg_send![layouts,
                 setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_GENERICS];
@@ -209,7 +209,7 @@ where
         unsafe {
             let _: () = msg_send![
                 render_destination,
-                setDepthStencilPixelFormat: depth_stencil_format
+                setDepthStencilPixelFormat: depth_stencil_format,
             ];
             let _: () = msg_send![render_destination, setColorPixelFormat: color_format];
             let _: () = msg_send![render_destination, setSampleCount: sample_count];
@@ -225,7 +225,7 @@ where
                 setFragmentFunction:shader.as_shader().fragment.function];
             let _: () = msg_send![
                 pipeline_state_descriptor,
-                setVertexDescriptor: vertex_descriptor
+                setVertexDescriptor: vertex_descriptor,
             ];
             let color_attachments: mtl::Id = msg_send![pipeline_state_descriptor, colorAttachments];
             let color_attachment: mtl::Id = msg_send![
@@ -236,11 +236,11 @@ where
                 atIndexedSubscript:0 as mtl::NSUInteger];
             let _: () = msg_send![
                 pipeline_state_descriptor,
-                setDepthAttachmentPixelFormat: depth_stencil_format
+                setDepthAttachmentPixelFormat: depth_stencil_format,
             ];
             let _: () = msg_send![
                 pipeline_state_descriptor,
-                setStencilAttachmentPixelFormat: depth_stencil_format
+                setStencilAttachmentPixelFormat: depth_stencil_format,
             ];
         }
         let mut error = mtl::NSError::null();
@@ -258,7 +258,7 @@ where
         unsafe {
             let _: () = msg_send![
                 depth_state_desc,
-                setDepthCompareFunction: mtl::COMPARE_FUNCTION_LESS
+                setDepthCompareFunction: mtl::COMPARE_FUNCTION_LESS,
             ];
             let _: () = msg_send![depth_state_desc, setDepthWriteEnabled: mtl::YES];
         }
@@ -363,10 +363,22 @@ where
         logi!("model_view_matrix {:?}", model_view_matrix);
         uniforms.model_view_matrix = model_view_matrix.get_smat4x4f();
         uniforms.model_view_matrix = SMat4x4F(
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, -8.0, 1.0
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            -8.0,
+            1.0,
         );
         let normal_matrix = model_view_matrix.get_mat3x3().inv().t();
         let mut normal_matrix = Mat3x3::new();
@@ -374,11 +386,7 @@ where
         normal_matrix.data[1][2] = 1f32;
         logi!("normal_matrix {:?}", normal_matrix);
         uniforms.normal_matrix = normal_matrix.get_smat3x3f();
-        uniforms.normal_matrix = SMat3x3F(
-           1.0, 0.0, 0.0,
-           0.0, 1.0, 0.0,
-           0.0, 0.0, 1.0
-       );
+        uniforms.normal_matrix = SMat3x3F(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
         self.rotation += 0.01;
     }
 

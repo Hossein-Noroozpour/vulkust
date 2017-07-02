@@ -26,7 +26,7 @@ impl Set {
         vulkan_check!(vk::vkAllocateDescriptorSets(
             pool.logical_device.vk_data,
             &alloc_info,
-            &mut vk_data
+            &mut vk_data,
         ));
         let mut write_descriptor_set = vk::VkWriteDescriptorSet::default();
         write_descriptor_set.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

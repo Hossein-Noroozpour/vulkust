@@ -19,8 +19,7 @@ where
     let main_screen: mtl::Id = unsafe { msg_send![mtl::get_class("NSScreen"), mainScreen] };
     let frame: mtl::NSRect = unsafe { msg_send![main_screen, frame] };
     let frame = mtl::NSRect::new(0.0, 0.0, frame.size.width / 2.0, frame.size.height / 2.0);
-    let style_mask = (
-        mtl::NS_TITLED_WINDOW_MASK | mtl::NS_CLOSABLE_WINDOW_MASK |
+    let style_mask = (mtl::NS_TITLED_WINDOW_MASK | mtl::NS_CLOSABLE_WINDOW_MASK |
                           mtl::NS_RESIZABLE_WINDOW_MASK |
                           mtl::NS_MINIATURIZABLE_WINDOW_MASK)
         .bits() as mtl::NSUInteger;
@@ -72,8 +71,7 @@ extern "C" fn application_will_finish_launching(this: &Object, _cmd: Sel, _n: mt
     let _: () = unsafe { msg_send![window, makeKeyAndOrderFront: this] };
 }
 
-extern "C" fn application_did_finish_launching(_this: &Object, _cmd: Sel, _n: mtl::Id) {
-}
+extern "C" fn application_did_finish_launching(_this: &Object, _cmd: Sel, _n: mtl::Id) {}
 
 extern "C" fn application_will_terminate(_this: &Object, _cmd: Sel, _n: mtl::Id) {
     // TODO: do your termination in here

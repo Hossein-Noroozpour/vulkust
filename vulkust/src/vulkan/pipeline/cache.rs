@@ -19,7 +19,7 @@ impl Cache {
             logical_device.vk_data,
             &pipeline_cache_create_info,
             null(),
-            &mut vk_data
+            &mut vk_data,
         ));
         Cache {
             logical_device: logical_device,

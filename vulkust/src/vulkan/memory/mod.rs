@@ -34,7 +34,7 @@ pub fn allocate_with_requirements(
         logical_device.vk_data,
         &mem_alloc,
         null(),
-        &mut memory
+        &mut memory,
     ));
     memory
 }

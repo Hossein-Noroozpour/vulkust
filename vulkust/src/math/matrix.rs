@@ -3,14 +3,44 @@ use super::number::{Number, Float};
 use super::vector::Vec3;
 
 #[repr(simd)]
-pub struct SMat4x4D(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64);
+pub struct SMat4x4D(
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64
+);
 
 #[repr(simd)]
 pub struct SMat4x4F(
-    pub f32, pub f32, pub f32, pub f32,
-    pub f32, pub f32, pub f32, pub f32,
-    pub f32, pub f32, pub f32, pub f32,
-    pub f32, pub f32, pub f32, pub f32);
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32
+);
 
 // column major matrix
 #[repr(C)]
@@ -38,9 +68,7 @@ where
     }
 
     pub fn zero() -> Mat4x4<E> {
-        Mat4x4 {
-            data: [[E::new(0.0); 4]; 4],
-        }
+        Mat4x4 { data: [[E::new(0.0); 4]; 4] }
     }
 
     pub fn rotation(d: E, v: &Vec3<E>) -> Mat4x4<E> {
@@ -402,9 +430,16 @@ where
 
 #[repr(simd)]
 pub struct SMat3x3F(
-    pub f32, pub f32, pub f32,
-    pub f32, pub f32, pub f32,
-    pub f32, pub f32, pub f32);
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32,
+    pub f32
+);
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -428,7 +463,7 @@ where
         for i in 0..3 {
             data[i][i] = E::new(0.0);
         }
-        Mat3x3 { data: data, }
+        Mat3x3 { data: data }
     }
 
     pub fn det(&self) -> E {
@@ -563,7 +598,7 @@ where
     E: Float,
 {
     fn mul_assign(&mut self, o: &'a Mat3x3<E>) {
-        let mut data = [[E::new(0.0);3];3];
+        let mut data = [[E::new(0.0); 3]; 3];
         for i in 0..3 {
             for j in 0..3 {
                 let mut e = E::new(0.0);
