@@ -140,14 +140,13 @@ impl Instance {
             let des = slice_to_string(&available_layers[i].description);
             logi!("Layer {} with des: {} found.", name, des);
         }
-        // TODO: in future change this to enumeration and arrangement
         layers_names.push("VK_LAYER_GOOGLE_threading".to_string());
         // layers_names.push("VK_LAYER_LUNARG_api_dump".to_string());
         layers_names.push("VK_LAYER_LUNARG_parameter_validation".to_string());
         layers_names.push("VK_LAYER_LUNARG_object_tracker".to_string());
         layers_names.push("VK_LAYER_LUNARG_core_validation".to_string());
-        //        layers_names.push("VK_LAYER_LUNARG_image".to_string());
-        layers_names.push("VK_LAYER_LUNARG_swapchain".to_string());
+        // layers_names.push("VK_LAYER_LUNARG_image".to_string());
+        // layers_names.push("VK_LAYER_LUNARG_swapchain".to_string());
         layers_names.push("VK_LAYER_GOOGLE_unique_objects".to_string());
         strings_to_cstrings(layers_names)
     }

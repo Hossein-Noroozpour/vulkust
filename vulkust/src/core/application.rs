@@ -1,5 +1,6 @@
 use super::super::render::engine::RenderEngine;
 use super::super::system::os::OsApplication;
+use super::event::Event;
 
 pub trait ApplicationTrait: Sized {
     fn new() -> Self;
@@ -10,6 +11,9 @@ pub trait ApplicationTrait: Sized {
             r
         );
         return true;
+    }
+    fn on_event(&mut self, e: Event) {
+        logi!("Unhandled event: {:?}", e);
     }
     fn update(&mut self) -> bool;
     fn terminate(&mut self);

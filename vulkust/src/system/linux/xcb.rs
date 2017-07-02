@@ -2099,21 +2099,7 @@ impl ::std::default::Default for xcb_colormap_notify_event_t {
 #[derive(Copy, Clone)]
 #[derive(Debug)]
 pub struct xcb_client_message_data_t {
-    pub _bindgen_data_: [u32; 5usize],
-}
-impl xcb_client_message_data_t {
-    pub unsafe fn data8(&mut self) -> *mut [uint8_t; 20usize] {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn data16(&mut self) -> *mut [uint16_t; 10usize] {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn data32(&mut self) -> *mut [uint32_t; 5usize] {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
+    pub data: [u32; 5usize],
 }
 impl ::std::default::Default for xcb_client_message_data_t {
     fn default() -> Self {
