@@ -3288,8 +3288,7 @@ impl ::std::default::Default for xcb_query_pointer_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_pointer_reply_t {
     pub response_type: uint8_t,
     pub same_screen: uint8_t,

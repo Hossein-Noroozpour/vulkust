@@ -90,4 +90,5 @@ pub enum Event {
     MouseMove { delta_x: f64, delta_y: f64 },
     Press { button: Button },
     Release { button: Button },
+    WindowSize { w: f64, h: f64 },
 }

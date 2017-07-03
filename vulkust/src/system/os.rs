@@ -22,4 +22,5 @@ where
     fn set_rnd_eng(&mut self, r: *mut RenderEngine<CoreApp>);
     fn initialize(&mut self) -> bool;
     fn execute(&mut self) -> bool;
+    fn get_mouse_position(&mut self) -> (f64, f64);
 }
