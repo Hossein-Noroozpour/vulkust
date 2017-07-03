@@ -58,6 +58,7 @@ where
         let _: () = msg_send![metal_view, setClearColor: clear_color];
         let _: () = msg_send![metal_view, setColorPixelFormat: pixel_format];
         let _: () = msg_send![metal_view, setDepthStencilPixelFormat: depth_stencil_format];
+        let _: () = msg_send![metal_view, setDelegate:game_view];
         let _: () = msg_send![game_view, setView: metal_view];
         let _: () = msg_send![window, setContentView: metal_view];
         let _: () = msg_send![window, setContentViewController: game_view];

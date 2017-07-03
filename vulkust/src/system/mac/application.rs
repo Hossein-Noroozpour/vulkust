@@ -59,9 +59,9 @@ where
         }
         unsafe {
             let _: () = msg_send![self.app_delegate, initialize];
-        }
-        unsafe {
-            let _: () = msg_send![ns_application, setDelegate:self.app_delegate];
+            let view: mtl::Id = msg_send![self.game_view_controller, view];
+            let _: () = msg_send![view, setDelegate:self.game_view_controller];
+            let _: () = msg_send![view, setDevice:self.metal_device];
         }
         true
     }
@@ -74,8 +74,12 @@ where
     fn execute(&mut self) -> bool {
         unsafe {
             let _: () = msg_send![self.game_view_controller, metalViewDidLoad];
+            let _: () = msg_send![self.ns_application, setDelegate:self.app_delegate];
             let _: () = msg_send![self.ns_application, run];
         }
         true
+    }
+    fn get_mouse_position(&mut self) -> (f64, f64) {
+        logf!("Unimplemented!");
     }
 }

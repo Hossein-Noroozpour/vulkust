@@ -8,10 +8,10 @@ pub trait Camera<E>
 where
     E: Float,
 {
-    fn travel(&mut self, d: &Vec3<E>) {
+    fn travel(&mut self, _d: &Vec3<E>) {
         logf!("Unimplemented");
     }
-    fn place(&mut self, l: &Vec3<E>) {
+    fn place(&mut self, _l: &Vec3<E>) {
         logf!("Unimplemented");
     }
     fn rotate_local_x(&mut self) {
@@ -23,7 +23,7 @@ where
     fn rotate_local_z(&mut self) {
         logf!("Unimplemented");
     }
-    fn rotate(&mut self, axis: &Vec3<E>) {
+    fn rotate(&mut self, _axis: &Vec3<E>) {
         logf!("Unimplemented");
     }
     fn side(&mut self) {
@@ -32,13 +32,13 @@ where
     fn forward(&mut self) {
         logf!("Unimplemented");
     }
-    fn set_viewport(&mut self, w: E, h: E) {
+    fn set_viewport(&mut self, _w: E, _h: E) {
         logf!("Unimplemented");
     }
-    fn set_fild_of_view(&mut self, f: E) {
+    fn set_fild_of_view(&mut self, _f: E) {
         logf!("Unimplemented");
     }
-    fn set_range(&mut self, s: E, e: E) {
+    fn set_range(&mut self, _s: E, _e: E) {
         logf!("Unimplemented");
     }
     fn get_view(&self) -> &Mat4x4<E> {
@@ -48,7 +48,6 @@ where
         logf!("Unimplemented");
     }
 }
-
 
 struct Basic<E>
 where

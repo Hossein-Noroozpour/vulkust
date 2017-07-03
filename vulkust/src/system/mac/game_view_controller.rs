@@ -17,10 +17,8 @@ where
 {
     let this: mtl::Id = this;
     let view: mtl::Id = unsafe { msg_send![this, view] };
-    let _: () = unsafe { msg_send![view, setDelegate: this] };
     let app: *mut App<CoreApp> =
         unsafe { transmute(*(*this).get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
-    let _: () = unsafe { msg_send![view, setDevice:(*app).metal_device] };
     let bounds: mtl::NSRect = unsafe { msg_send![view, bounds] };
     unsafe {
         (*(*app).render_engine).draw_rect_resized(&bounds.size);

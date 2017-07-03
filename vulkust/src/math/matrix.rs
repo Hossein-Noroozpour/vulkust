@@ -601,7 +601,6 @@ where
         let mut data = [[E::new(0.0); 3]; 3];
         for i in 0..3 {
             for j in 0..3 {
-                let mut e = E::new(0.0);
                 for k in 0..3 {
                     data[j][i] += o.data[j][k] * self.data[k][i];
                 }

@@ -1,7 +1,8 @@
 extern crate block;
+extern crate libc;
 
 use std::ptr::null_mut;
-use std::mem::{size_of, transmute};
+use std::mem::{size_of, transmute, zeroed};
 use std::os::raw::c_void;
 use std::f32::consts::PI;
 use std::sync::{Arc, Mutex};
@@ -74,7 +75,7 @@ where
             command_queue: null_mut(),
             metal_vertex_descriptor: null_mut(),
             texture_loader: null_mut(),
-            uniform_buffer_index: 0,
+            uniform_buffer_index: MAX_BUFFERS_COUNT,
             uniform_buffer_size: 0,
             uniform_buffer_offset: 0,
             uniform_buffer_address: null_mut(),
@@ -133,7 +134,7 @@ where
         let attribute: mtl::Id = unsafe {
             msg_send![
                 attributes,
-                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_POSITION,
+                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_POSITION
             ]
         };
         unsafe {
@@ -146,7 +147,7 @@ where
         let attribute: mtl::Id = unsafe {
             msg_send![
                 attributes,
-                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_TEXCOORD,
+                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_TEXCOORD
             ]
         };
         unsafe {
@@ -159,7 +160,7 @@ where
         let attribute: mtl::Id = unsafe {
             msg_send![
                 attributes,
-                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_NORMAL,
+                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_NORMAL
             ]
         };
         unsafe {
@@ -173,7 +174,7 @@ where
         let layout: mtl::Id = unsafe {
             msg_send![
                 layouts,
-                objectAtIndexedSubscript: BUFFER_INDEX_MESH_POSITIONS,
+                objectAtIndexedSubscript: BUFFER_INDEX_MESH_POSITIONS
             ]
         };
         unsafe {
@@ -181,7 +182,7 @@ where
             let _: () = msg_send![layout, setStepRate:1 as mtl::NSUInteger];
             let _: () = msg_send![
                 layout,
-                setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX,
+                setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX
             ];
             let _: () = msg_send![layouts,
                 setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_POSITIONS];
@@ -189,7 +190,7 @@ where
         let layout: mtl::Id = unsafe {
             msg_send![
                 layouts,
-                objectAtIndexedSubscript: BUFFER_INDEX_MESH_GENERICS,
+                objectAtIndexedSubscript: BUFFER_INDEX_MESH_GENERICS
             ]
         };
         unsafe {
@@ -197,7 +198,7 @@ where
             let _: () = msg_send![layout, setStepRate:1 as mtl::NSUInteger];
             let _: () = msg_send![
                 layout,
-                setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX,
+                setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX
             ];
             let _: () = msg_send![layouts,
                 setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_GENERICS];
@@ -209,7 +210,7 @@ where
         unsafe {
             let _: () = msg_send![
                 render_destination,
-                setDepthStencilPixelFormat: depth_stencil_format,
+                setDepthStencilPixelFormat: depth_stencil_format
             ];
             let _: () = msg_send![render_destination, setColorPixelFormat: color_format];
             let _: () = msg_send![render_destination, setSampleCount: sample_count];
@@ -225,7 +226,7 @@ where
                 setFragmentFunction:shader.as_shader().fragment.function];
             let _: () = msg_send![
                 pipeline_state_descriptor,
-                setVertexDescriptor: vertex_descriptor,
+                setVertexDescriptor: vertex_descriptor
             ];
             let color_attachments: mtl::Id = msg_send![pipeline_state_descriptor, colorAttachments];
             let color_attachment: mtl::Id = msg_send![
@@ -236,11 +237,11 @@ where
                 atIndexedSubscript:0 as mtl::NSUInteger];
             let _: () = msg_send![
                 pipeline_state_descriptor,
-                setDepthAttachmentPixelFormat: depth_stencil_format,
+                setDepthAttachmentPixelFormat: depth_stencil_format
             ];
             let _: () = msg_send![
                 pipeline_state_descriptor,
-                setStencilAttachmentPixelFormat: depth_stencil_format,
+                setStencilAttachmentPixelFormat: depth_stencil_format
             ];
         }
         let mut error = mtl::NSError::null();
@@ -258,7 +259,7 @@ where
         unsafe {
             let _: () = msg_send![
                 depth_state_desc,
-                setDepthCompareFunction: mtl::COMPARE_FUNCTION_LESS,
+                setDepthCompareFunction: mtl::COMPARE_FUNCTION_LESS
             ];
             let _: () = msg_send![depth_state_desc, setDepthWriteEnabled: mtl::YES];
         }
@@ -330,64 +331,86 @@ where
 
     fn update_dynamic_buffer_state(&mut self) {
         self.uniform_buffer_index = (self.uniform_buffer_index + 1) % MAX_BUFFERS_COUNT;
-        self.uniform_buffer_offset = (self.uniform_buffer_size as mtl::NSUInteger *
-                                          self.uniform_buffer_index as mtl::NSUInteger) /
+        self.uniform_buffer_offset = 
+            (self.uniform_buffer_size as mtl::NSUInteger *
+                self.uniform_buffer_index as mtl::NSUInteger) /
             MAX_BUFFERS_COUNT;
         self.uniform_buffer_address = unsafe { msg_send![self.dynamic_uniform_buffer, contents] };
-        let tmp_add: *mut u8 = unsafe { transmute(self.uniform_buffer_address) };
-        self.uniform_buffer_address =
-            unsafe { transmute(tmp_add.offset(self.uniform_buffer_offset as isize)) };
+        let tmp_add: mtl::NSUInteger = unsafe { transmute(self.uniform_buffer_address) };
+        self.uniform_buffer_address = unsafe { transmute(tmp_add + self.uniform_buffer_offset) };
     }
 
     fn update_game_state(&mut self) {
-        let uniforms: &mut Uniforms = unsafe { transmute(self.uniform_buffer_address) };
-        let ambient_light_color = SVec3F(0.02, 0.02, 0.02);
-        uniforms.ambient_light_color = ambient_light_color;
-        let directional_light_direction = SVec3F(0.0, 0.0, -1.0);
-        uniforms.directional_light_direction = directional_light_direction;
-        let directional_light_color = SVec3F(0.7, 0.7, 0.7);
-        uniforms.directional_light_color = directional_light_color;
+
+// #[repr(C)]
+// pub struct Uniforms {
+//     pub projection_matrix: SMat4x4F,
+//     pub view_matrix: SMat4x4F,
+//     pub material_shininess: f32,
+//     pub model_view_matrix: SMat4x4F,
+//     pub normal_matrix: SMat3x3F,
+//     pub ambient_light_color: SVec3F,
+//     pub directional_light_direction: SVec3F,
+//     pub directional_light_color: SVec3F,
+// }
+
+        let mut uniforms: Uniforms = unsafe { zeroed() };
+        uniforms.projection_matrix = Mat4x4::<f32>::ident().get_smat4x4f();
+        uniforms.view_matrix = Mat4x4::<f32>::ident().get_smat4x4f();
         uniforms.material_shininess = 30.0;
-        let mut view_matrix = Mat4x4::new();
-        view_matrix.translate(0.0f32, 0.0, -8.0);
-        logi!("view_matrix {:?}", view_matrix);
-        logi!("projection_matrix {:?}", self.projection_matrix);
-        uniforms.view_matrix = view_matrix.get_smat4x4f();
-        uniforms.projection_matrix = self.projection_matrix.get_smat4x4f();
-        let mut rotation_axis = Vec3::new(1f32);
-        rotation_axis.z = 0.0;
-        let model_matrix = Mat4x4::rotation(self.rotation, &rotation_axis);
-        let model_matrix = Mat4x4::new();
-        logi!("model_matrix {:?}", model_matrix);
-        let model_view_matrix = &view_matrix * &model_matrix;
-        logi!("model_view_matrix {:?}", model_view_matrix);
-        uniforms.model_view_matrix = model_view_matrix.get_smat4x4f();
-        uniforms.model_view_matrix = SMat4x4F(
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            -8.0,
-            1.0,
-        );
-        let normal_matrix = model_view_matrix.get_mat3x3().inv().t();
-        let mut normal_matrix = Mat3x3::new();
-        normal_matrix.data[0][0] = 1f32;
-        normal_matrix.data[1][2] = 1f32;
-        logi!("normal_matrix {:?}", normal_matrix);
-        uniforms.normal_matrix = normal_matrix.get_smat3x3f();
-        uniforms.normal_matrix = SMat3x3F(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+        uniforms.model_view_matrix = Mat4x4::<f32>::ident().get_smat4x4f();
+        uniforms.normal_matrix = Mat3x3::<f32>::ident().get_smat3x3f();
+        uniforms.ambient_light_color = SVec3F(0.02, 0.02, 0.02);
+        uniforms.directional_light_direction = SVec3F(0.0, 0.0, -1.0);
+        uniforms.directional_light_color = SVec3F(0.7, 0.7, 0.7);
+        // let mut view_matrix = Mat4x4::ident();
+        // view_matrix.translate(&Vec3 {
+        //         x: 0.0f32, 
+        //         y: 0.0, 
+        //         z: -8.0,
+        //     }
+        // );
+        // logi!("view_matrix {:?}", view_matrix);
+        // logi!("projection_matrix {:?}", self.projection_matrix);
+        // uniforms.view_matrix = view_matrix.get_smat4x4f();
+        // let mut rotation_axis = Vec3::new(1f32);
+        // rotation_axis.z = 0.0;
+        // // let model_matrix = Mat4x4::rotation(self.rotation, &rotation_axis);
+        // let model_matrix = Mat4x4::ident();
+        // logi!("model_matrix {:?}", model_matrix);
+        // let model_view_matrix = &view_matrix * &model_matrix;
+        // logi!("model_view_matrix {:?}", model_view_matrix);
+        // uniforms.model_view_matrix = model_view_matrix.get_smat4x4f();
+        // uniforms.model_view_matrix = SMat4x4F(
+        //     1.0,
+        //     0.0,
+        //     0.0,
+        //     0.0,
+        //     0.0,
+        //     1.0,
+        //     0.0,
+        //     0.0,
+        //     0.0,
+        //     0.0,
+        //     1.0,
+        //     0.0,
+        //     0.0,
+        //     0.0,
+        //     -8.0,
+        //     1.0,
+        // );
+        // // let normal_matrix = model_view_matrix.get_mat3x3().inv().t();
+        // let mut normal_matrix = Mat3x3::ident();
+        // // normal_matrix.data[0][0] = 1f32;
+        // normal_matrix.data[1][1] = 1f32;
+        // // logi!("normal_matrix {:?}", normal_matrix);
+        // uniforms.normal_matrix = normal_matrix.get_smat3x3f();
+        // // uniforms.normal_matrix = SMat3x3F(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
         self.rotation += 0.01;
+        let metal_uniforms: *mut Uniforms = unsafe { transmute(self.uniform_buffer_address) };
+        unsafe { 
+            libc::memcpy(transmute(metal_uniforms), transmute(&uniforms), size_of::<Uniforms>());
+        }
     }
 
     pub fn draw_rect_resized(&mut self, size: &mtl::NSSize) {
