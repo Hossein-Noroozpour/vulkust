@@ -47,6 +47,9 @@ where
     fn get_view_projection(&self) -> &Mat4x4<E> {
         logf!("Unimplemented");
     }
+    fn look_at(&mut self, eye: &Vec3<E>, at: &Vec3<E>, up: &Vec3<E>) {
+        logf!("Unimplemented");
+    }
 }
 
 struct Basic<E>
@@ -161,5 +164,21 @@ where
 
     fn get_view(&self) -> &Mat4x4<E> {
         &self.v
+    }
+
+    fn look_at(&mut self, eye: &Vec3<E>, at: &Vec3<E>, up: &Vec3<E>) {
+        self.lz = (at - eye).normalized();
+        self.lx = self.lz.cross(up).normalized();
+        self.ly = self.lx.cross(&self.lz);
+        self.pos = *eye;
+        self.v = Mat4x4 {
+            data: [
+                [self.lx.x,          self.ly.x,       -self.lz.x,        E::new(0.0)],
+                [self.lx.y,          self.ly.y,       -self.lz.y,        E::new(0.0)],
+                [self.lx.z,          self.ly.z,       -self.lz.z,        E::new(0.0)],
+                [-self.lx.dot(eye), -self.ly.dot(eye), self.lz.dot(eye), E::new(1.0)],
+            ],
+        };
+        self.r = self.v.get_mat3x3();
     }
 }

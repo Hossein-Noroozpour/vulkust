@@ -5,6 +5,11 @@ use std::ptr::{null, null_mut};
 use super::image::view::View as ImageView;
 use std::sync::Arc;
 
+pub enum NextImageResult {
+    NeedsRefresh,
+    Next(u32),
+}
+
 pub struct Swapchain {
     pub logical_device: Arc<LogicalDevice>,
     pub surface_format: vk::VkSurfaceFormatKHR,
@@ -127,17 +132,25 @@ impl Swapchain {
             vk_data: vk_data,
         }
     }
-    pub fn get_next_image_index(&self, sem: &Semaphore) -> u32 {
+    pub fn get_next_image_index(&self, sem: &Semaphore) -> NextImageResult {
         let mut image_index = 0u32;
-        vulkan_check!(vk::vkAcquireNextImageKHR(
+        let res = unsafe { vk::vkAcquireNextImageKHR(
             self.logical_device.vk_data,
             self.vk_data,
             u64::max_value(),
             sem.vk_data,
             0 as vk::VkFence,
             &mut image_index,
-        ));
-        return image_index;
+        ) };
+        match res {
+            vk::VkResult::VK_ERROR_OUT_OF_DATE_KHR | vk::VkResult::VK_SUBOPTIMAL_KHR => {
+                return NextImageResult::NeedsRefresh;
+            },
+            res @ _ => {
+                vulkan_check!(res);
+            },
+        }
+        return NextImageResult::Next(image_index);
     }
 }
 

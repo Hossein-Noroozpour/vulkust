@@ -170,7 +170,7 @@ where
     }
 
     pub fn dot(&self, o: &Vec3<T>) -> T {
-        self.x * o.x + self.y * o.y + self.z * o.z
+        (self.x * o.x) + (self.y * o.y) + (self.z * o.z)
     }
 
     pub fn cross(&self, o: &Vec3<T>) -> Self {
@@ -190,18 +190,18 @@ where
     }
 
     pub fn square_length(&self) -> T {
-        self.x * self.x + self.y * self.y + self.z * self.z
+        (self.x * self.x) + (self.y * self.y) + (self.z * self.z)
     }
 
     pub fn normalize(&mut self) {
-        let len = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
+        let len = ((self.x * self.x) + (self.y * self.y) + (self.z * self.z)).sqrt();
         self.x /= len;
         self.y /= len;
         self.z /= len;
     }
 
     pub fn normalized(&self) -> Self {
-        let len = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
+        let len = ((self.x * self.x) + (self.y * self.y) + (self.z * self.z)).sqrt();
         Vec3 {
             x: self.x / len,
             y: self.y / len,

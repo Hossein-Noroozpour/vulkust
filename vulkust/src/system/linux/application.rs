@@ -281,8 +281,10 @@ where
                             w: self.window_w as f64,
                             h: self.window_h as f64,
                         };
-                        logf!("Window event: {:?}", e);
-                        unsafe { (*self.core_app).on_event(e); }
+                        unsafe {
+                            (*self.render_engine).on_event(e); 
+                            (*self.core_app).on_event(e);
+                        }
     				}
         		}
             },

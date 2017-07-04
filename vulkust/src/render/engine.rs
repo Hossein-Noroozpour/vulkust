@@ -6,6 +6,7 @@ use super::super::metal::engine::Engine;
 use super::super::vulkan::engine::Engine;
 
 use super::super::core::application::ApplicationTrait;
+use super::super::core::event::Event;
 use super::super::system::os::OsApplication;
 
 pub type RenderEngine<CoreApp> = Engine<CoreApp>;
@@ -18,6 +19,7 @@ where
     fn set_core_app(&mut self, c: *mut CoreApp);
     fn set_os_app(&mut self, o: *mut OsApplication<CoreApp>);
     fn initialize(&mut self);
+    fn on_event(&mut self, e: Event);
     fn update(&mut self);
     fn terminate(&mut self);
 }

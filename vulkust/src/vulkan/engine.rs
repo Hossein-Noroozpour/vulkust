@@ -1,16 +1,19 @@
 use std::ptr::{null_mut, null};
 use std::sync::Arc;
+use std::mem::size_of;
 use super::super::system::vulkan as vk;
+use super::super::math::matrix::Mat4x4;
 use super::super::render::engine::EngineTrait;
 use super::super::render::camera::Camera;
 use super::super::render::camera::perspective::Perspective;
 use super::super::core::application::ApplicationTrait;
+use super::super::core::event::Event;
 use super::super::system::os::OsApplication;
 use super::instance::Instance;
 use super::surface::Surface;
 use super::device::physical::Physical as PhysicalDevice;
 use super::device::logical::Logical as LogicalDevice;
-use super::swapchain::Swapchain;
+use super::swapchain::{Swapchain, NextImageResult};
 use super::image::view::View as ImageView;
 use super::render_pass::RenderPass;
 use super::framebuffer::Framebuffer;
@@ -28,6 +31,12 @@ use super::synchronizer::semaphore::Semaphore;
 use super::fence::Fence;
 use std::mem::transmute;
 
+#[repr(C)]
+struct UniformData {
+    pub projection: Mat4x4<f32>,
+    pub view: Mat4x4<f32>,
+    pub model: Mat4x4<f32>,
+}
 
 pub struct Engine<CoreApp>
 where
@@ -35,7 +44,7 @@ where
 {
     pub core_app: *mut CoreApp,
     pub os_app: *mut OsApplication<CoreApp>,
-    pub instance: Option<Arc<Instance>>,
+    pub instance: Arc<Instance>,
     pub surface: Option<Arc<Surface>>,
     pub physical_device: Option<Arc<PhysicalDevice>>,
     pub logical_device: Option<Arc<LogicalDevice>>,
@@ -67,7 +76,7 @@ where
         Engine {
             core_app: null_mut(),
             os_app: null_mut(),
-            instance: None,
+            instance: Arc::new(Instance::new()),
             surface: None,
             physical_device: None,
             logical_device: None,
@@ -100,13 +109,14 @@ where
     }
 
     fn initialize(&mut self) {
-        let instance = Arc::new(Instance::new());
-        loge!("Reached");
-        let surface = Arc::new(Surface::new(instance.clone(), self.os_app));
+        let surface = Arc::new(Surface::new(self.instance.clone(), self.os_app));
+        self.surface = Some(surface.clone());
         let physical_device = Arc::new(PhysicalDevice::new(surface.clone()));
+        self.physical_device = Some(physical_device.clone());
         let logical_device = Arc::new(LogicalDevice::new(physical_device.clone()));
         self.logical_device = Some(logical_device.clone()); // Beacause of shader stage
         let swapchain = Arc::new(Swapchain::new(logical_device.clone()));
+        self.swapchain = Some(swapchain.clone());
         let depth_stencil = Arc::new(ImageView::new_depth_stencil(logical_device.clone()));
         let render_pass = Arc::new(RenderPass::new(swapchain.clone()));
         for v in swapchain.image_views.clone() {
@@ -146,63 +156,16 @@ where
             unsafe { transmute(indices.as_ptr()) },
             indices.len() as u32 * 4,
         ));
-        let uniform_data = [
-            1.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            1.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            1.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            1.0f32,
-
-            1.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            1.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            1.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            1.0f32,
-
-            1.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            1.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            1.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            0.0f32,
-            1.0f32,
-        ];
+        let uniform_data = UniformData {
+            projection: *self.camera.get_view_projection(),
+            view: Mat4x4::ident(),
+            model: Mat4x4::ident(),
+        };
         let uniform = Arc::new(Uniform::new(
             logical_device.clone(),
-            uniform_data.len() as u32 * 4,
+            size_of::<UniformData>() as u32,
         ));
-        uniform.update(unsafe { transmute(uniform_data.as_ptr()) });
+        uniform.update(unsafe { transmute(&uniform_data) });
         let pipeline_layout = Arc::new(Layout::new(logical_device.clone()));
         let pipeline_cache = Arc::new(PipelineCache::new(logical_device.clone()));
         let pipeline = Arc::new(Pipeline::new(
@@ -219,10 +182,6 @@ where
         ));
         let present_complete_semaphore = Semaphore::new(logical_device.clone());
         let render_complete_semaphore = Semaphore::new(logical_device.clone());
-        self.instance = Some(instance);
-        self.surface = Some(surface);
-        self.physical_device = Some(physical_device);
-        self.swapchain = Some(swapchain);
         self.depth_stencil_image_view = Some(depth_stencil);
         self.render_pass = Some(render_pass);
         self.graphic_cmd_pool = Some(graphic_cmd_pool);
@@ -243,13 +202,30 @@ where
         }
     }
 
+    fn on_event(&mut self, e: Event) {
+        match e {
+            Event::WindowSize { w, h } => {
+                self.window_resized(w, h);
+            },
+            _ => {},
+        }
+    }
+
     fn update(&mut self) {
         let vk_device = self.logical_device.as_ref().unwrap().vk_data;
         let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
-        let current_buffer = self.swapchain
+        let current_buffer = match self.swapchain
             .as_ref()
             .unwrap()
-            .get_next_image_index(present_complete_semaphore) as usize;
+            .get_next_image_index(present_complete_semaphore) {
+            NextImageResult::Next(c) => { c },
+            NextImageResult::NeedsRefresh => {
+                unsafe {
+                    (*(*self.os_app).render_engine).reinitialize();
+                }
+                return;
+            },
+        } as usize;
         vulkan_check!(vk::vkWaitForFences(
             vk_device,
             1,
@@ -294,27 +270,7 @@ where
     }
 
     fn terminate(&mut self) {
-        self.logical_device.as_ref().unwrap().wait_idle();
-        self.wait_fences.clear();
-        self.render_complete_semaphore = None;
-        self.present_complete_semaphore = None;
-        self.draw_commands.clear();
-        self.descriptor_set = None;
-        self.descriptor_pool = None;
-        self.pipeline = None;
-        self.pipeline_cache = None;
-        self.pipeline_layout = None;
-        self.uniform = None;
-        self.mesh_buff = None;
-        self.graphic_cmd_pool = None;
-        self.framebuffers.clear();
-        self.render_pass = None;
-        self.depth_stencil_image_view = None;
-        self.swapchain = None;
-        self.logical_device = None;
-        self.physical_device = None;
-        self.surface = None;
-        self.instance = None;
+        self.clean();
     }
 }
 
@@ -405,5 +361,38 @@ where
             draw_commands.push(draw_command);
         }
         self.draw_commands = draw_commands;
+    }
+
+    fn clean(&mut self) {
+        self.logical_device.as_ref().unwrap().wait_idle();
+        self.wait_fences.clear();
+        self.render_complete_semaphore = None;
+        self.present_complete_semaphore = None;
+        self.draw_commands.clear();
+        self.descriptor_set = None;
+        self.descriptor_pool = None;
+        self.pipeline = None;
+        self.pipeline_cache = None;
+        self.pipeline_layout = None;
+        self.uniform = None;
+        self.mesh_buff = None;
+        self.graphic_cmd_pool = None;
+        self.framebuffers.clear();
+        self.render_pass = None;
+        self.depth_stencil_image_view = None;
+        self.swapchain = None;
+        self.logical_device = None;
+        self.physical_device = None;
+        self.surface = None;
+    }
+
+    fn reinitialize(&mut self) {
+        self.clean();
+        self.initialize();
+    }
+
+    fn window_resized(&mut self, w: f64, h: f64) {
+        self.camera.set_viewport(w as f32, h as f32);
+        self.reinitialize();
     }
 }

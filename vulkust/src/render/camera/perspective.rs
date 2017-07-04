@@ -21,13 +21,25 @@ where
     E: Float,
 {
     pub fn new() -> Self {
-        let b = Basic::new();
-        let fov = E::new(1.3144);
+        let mut b = Basic::new();
+        b.look_at(
+            &Vec3 {
+                x: E::new(0.0),
+                y: E::new(0.0),
+                z: E::new(-5.0),
+            },
+            &Vec3::new(E::new(0.0)),
+            &Vec3 {
+                x: E::new(0.0),
+                y: E::new(1.0),
+                z: E::new(0.0),
+            });
+        let fov = E::new(1.0);
         let asp = E::new(1.7);
         let near = E::new(0.1);
-        let far = E::new(100.0);
+        let far = E::new(10.0);
         let p = Mat4x4::projection(fov, asp, near, far);
-        let vp = &p * b.get_view();
+        let vp =  &p * b.get_view();
         Perspective {
             b: b,
             fov: fov,
@@ -93,9 +105,13 @@ where
         self.vp = &self.p * self.b.get_view();
     }
     fn get_view(&self) -> &Mat4x4<E> {
-        logf!("Unimplemented");
+        self.b.get_view()
     }
     fn get_view_projection(&self) -> &Mat4x4<E> {
         &self.vp
+    }
+    fn look_at(&mut self, eye: &Vec3<E>, at: &Vec3<E>, up: &Vec3<E>) {
+        self.b.look_at(eye, at, up);
+        self.vp = &self.p * self.b.get_view();
     }
 }

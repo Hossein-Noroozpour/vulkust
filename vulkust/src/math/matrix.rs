@@ -155,15 +155,20 @@ where
     }
 
     pub fn projection(fovy: E, aspect: E, near: E, far: E) -> Self {
-        let ys = E::new(1.0) / (fovy * E::new(0.5)).tan();
-        let xs = ys / aspect;
-        let zs = far / (near - far);
+        let fovy = (fovy * E::new(0.5)).tan();
+        let ys = E::new(1.0) / fovy;
+		let xs = ys / aspect;
+        let near_far = near - far;
+        let zs = (far + near) / near_far;
+	    let ws = (E::new(2.0) * far * near) / near_far;
         Mat4x4 {
             data: [
-                [xs, E::new(0.0), E::new(0.0), E::new(0.0)],
-                [E::new(0.0), ys, E::new(0.0), E::new(0.0)],
-                [E::new(0.0), E::new(0.0), zs, E::new(-1.0)],
-                [E::new(0.0), E::new(0.0), near * zs, E::new(0.0)],
+                [xs,          E::new(0.0), E::new(0.0),  E::new(0.0)],
+                [E::new(0.0), ys,          E::new(0.0),  E::new(0.0)],
+                [E::new(0.0), E::new(0.0), zs,           E::new(-1.0)],
+                [E::new(0.0), E::new(0.0), ws,           E::new(0.0)],
+                // [E::new(0.0), E::new(0.0), zs,           ws],
+                // [E::new(0.0), E::new(0.0), E::new(-1.0), E::new(0.0)],
             ],
         }
     }
