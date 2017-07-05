@@ -1,0 +1,12 @@
+[package]
+name = "camera-controlling"
+version = "0.1.0"
+authors = ["Hossein Noroozpour <Hossein.Noroozpour@GMail.com>"]
+description = "A simple game demonsterating camera use"
+license = "GPL-1.0"
+
+[dependencies]
+vulkust = { path = "../../vulkust" }
+
+[profile.release]
+lto = true

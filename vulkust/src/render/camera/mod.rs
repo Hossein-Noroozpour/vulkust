@@ -74,7 +74,7 @@ where
     pub fn new() -> Self {
         Basic {
             speed: E::new(0.01),
-            rotation_speed: E::new(0.01),
+            rotation_speed: E::new(0.1),
             pos: Vec3 {
                 x: E::new(0.0),
                 y: E::new(0.0),

@@ -1,6 +1,7 @@
 #[cfg(target_os = "android")]
 extern crate libc;
 use std::os::raw::c_void as std_void;
+use std::mem::transmute;
 use super::super::core::application::ApplicationTrait;
 use super::super::render::engine::{RenderEngine, EngineTrait as RenderEngineTrait};
 use super::os::{OsApplication, ApplicationTrait as OsApplicationTrait};
@@ -16,7 +17,7 @@ where
 
 impl<CoreApp> Application<CoreApp>
 where
-    CoreApp: ApplicationTrait,
+    CoreApp: 'static + ApplicationTrait,
 {
     #[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
     pub fn new() -> Self {
@@ -60,7 +61,8 @@ where
     #[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
     pub fn run(&mut self) {
         unsafe { (*self.render_engine).initialize() };
-        unsafe { (*self.core_app).initialize(self.os_app, self.render_engine) };
+        unsafe { (*self.core_app).initialize(
+            transmute(self.os_app), transmute(self.render_engine)) };
         unsafe { (*self.os_app).execute() };
         unsafe { (*self.core_app).terminate() };
         unsafe { (*self.render_engine).terminate() };

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::mem::size_of;
 use super::super::system::vulkan as vk;
 use super::super::math::matrix::Mat4x4;
-use super::super::render::engine::EngineTrait;
+use super::super::render::engine::{EngineTrait, Basic as BasicEngine};
 use super::super::render::camera::Camera;
 use super::super::render::camera::perspective::Perspective;
 use super::super::core::application::ApplicationTrait;
@@ -53,8 +53,8 @@ where
     pub render_pass: Option<Arc<RenderPass>>,
     pub framebuffers: Vec<Arc<Framebuffer>>,
     pub graphic_cmd_pool: Option<Arc<CmdPool>>,
+    pub basic_engine: BasicEngine,
     // for triangle
-    pub camera: Perspective<f32>,
     pub mesh_buff: Option<Arc<Buffer>>,
     pub uniform: Option<Arc<Uniform>>,
     pub pipeline_layout: Option<Arc<Layout>>,
@@ -85,7 +85,7 @@ where
             render_pass: None,
             framebuffers: Vec::new(),
             graphic_cmd_pool: None,
-            camera: Perspective::new(),
+            basic_engine: BasicEngine::new(),
             mesh_buff: None,
             uniform: None,
             pipeline_layout: None,
@@ -157,7 +157,8 @@ where
             indices.len() as u32 * 4,
         ));
         let uniform_data = UniformData {
-            projection: *self.camera.get_view_projection(),
+            projection: *self.basic_engine.current_scene.get_mut_current_camera()
+                .get_view_projection(),
             view: Mat4x4::ident(),
             model: Mat4x4::ident(),
         };
@@ -226,6 +227,13 @@ where
                 return;
             },
         } as usize;
+        let uniform_data = UniformData {
+            projection: *self.basic_engine.current_scene.get_mut_current_camera()
+                .get_view_projection(),
+            view: Mat4x4::ident(),
+            model: Mat4x4::ident(),
+        };
+        self.uniform.as_ref().unwrap().update(unsafe { transmute(&uniform_data) });
         vulkan_check!(vk::vkWaitForFences(
             vk_device,
             1,
@@ -271,6 +279,14 @@ where
 
     fn terminate(&mut self) {
         self.clean();
+    }
+
+    fn get_basic(&self) -> &BasicEngine {
+        &self.basic_engine
+    }
+
+    fn get_mut_basic(&mut self) -> &mut BasicEngine {
+        &mut self.basic_engine
     }
 }
 
@@ -392,7 +408,7 @@ where
     }
 
     fn window_resized(&mut self, w: f64, h: f64) {
-        self.camera.set_viewport(w as f32, h as f32);
+        self.basic_engine.current_scene.get_mut_current_camera().set_viewport(w as f32, h as f32);
         self.reinitialize();
     }
 }
