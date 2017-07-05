@@ -125,12 +125,11 @@ where
     }
 
     fn rotate_local_y(&mut self) {
-        let r = Mat3x3::rotation(-self.rotation_speed, &self.ly);
+        let r = Mat4x4::rotation(-self.rotation_speed, &self.ly);
         let rr = Mat3x3::rotation(self.rotation_speed, &self.ly);
         self.lx = &rr * &self.lx;
         self.lz = &rr * &self.lz;
-        self.r *= &r;
-        self.v.update_rotation(&self.r);
+        self.v = &r * &self.v;
     }
 
     fn rotate_local_z(&mut self) {
