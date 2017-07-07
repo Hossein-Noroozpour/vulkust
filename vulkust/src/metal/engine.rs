@@ -9,12 +9,14 @@ use std::sync::{Arc, Mutex};
 use self::block::ConcreteBlock;
 use super::super::objc;
 use super::super::core::application::ApplicationTrait;
+use super::super::core::event::Event;
 use super::super::math::matrix::{Mat4x4, SMat3x3F, SMat4x4F, Mat3x3};
-use super::super::math::vector::{Vec3, SVec3F, SVec3U32};
+use super::super::math::vector::{/*Vec3, */SVec3F, SVec3U32};
 use super::super::sync::semaphore::Semaphore;
 use super::super::system::os::OsApplication;
 use super::super::render::engine::EngineTrait;
 use super::super::render::texture::TextureTrait;
+use super::super::render::engine::Basic as BasicEngine;
 use super::super::system::metal as mtl;
 use super::super::system::metal::kit as mtk;
 use super::super::system::metal::model_io as mdl;
@@ -107,6 +109,18 @@ where
     }
 
     fn terminate(&mut self) {}
+
+    fn on_event(&mut self, _e: Event) {
+        logf!("Unimplemented");
+    }
+
+    fn get_basic(&self) -> &BasicEngine {
+        logf!("Unimplemented");
+    }
+
+    fn get_mut_basic(&mut self) -> &mut BasicEngine {
+        logf!("Unimplemented");
+    }
 }
 
 impl<CoreApp> Engine<CoreApp>
