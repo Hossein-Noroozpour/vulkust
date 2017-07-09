@@ -114,4 +114,7 @@ where
         self.b.look_at(eye, at, up);
         self.vp = &self.p * self.b.get_view();
     }
+    fn set_rotation_speed(&mut self, speed: E) {
+        self.b.set_rotation_speed(speed);
+    }
 }

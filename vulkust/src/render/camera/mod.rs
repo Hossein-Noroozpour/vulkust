@@ -50,6 +50,9 @@ where
     fn look_at(&mut self, eye: &Vec3<E>, at: &Vec3<E>, up: &Vec3<E>) {
         logf!("Unimplemented");
     }
+    fn set_rotation_speed(&mut self, speed: E) {
+        logf!("Unimplemented");
+    }
 }
 
 struct Basic<E>
@@ -116,12 +119,11 @@ where
     }
 
     fn rotate_local_x(&mut self) {
-        let r = Mat3x3::rotation(-self.rotation_speed, &self.lx);
+        let r = Mat4x4::rotation(-self.rotation_speed, &self.lx);
         let rr = Mat3x3::rotation(self.rotation_speed, &self.lx);
         self.ly = &rr * &self.ly;
         self.lz = &rr * &self.lz;
-        self.r *= &r;
-        self.v.update_rotation(&self.r);
+        self.v = &r * &self.v;
     }
 
     fn rotate_local_y(&mut self) {
@@ -133,22 +135,20 @@ where
     }
 
     fn rotate_local_z(&mut self) {
-        let r = Mat3x3::rotation(-self.rotation_speed, &self.lz);
+        let r = Mat4x4::rotation(-self.rotation_speed, &self.lz);
         let rr = Mat3x3::rotation(self.rotation_speed, &self.lz);
         self.lx = &rr * &self.lx;
         self.ly = &rr * &self.ly;
-        self.r *= &r;
-        self.v.update_rotation(&self.r);
+        self.v = &r * &self.v;
     }
 
     fn rotate(&mut self, axis: &Vec3<E>) {
-        let r = Mat3x3::rotation(-self.rotation_speed, axis);
+        let r = Mat4x4::rotation(-self.rotation_speed, axis);
         let rr = Mat3x3::rotation(self.rotation_speed, axis);
         self.lx = &rr * &self.lx;
         self.ly = &rr * &self.ly;
         self.lz = &rr * &self.lz;
-        self.r *= &r;
-        self.v.update_rotation(&self.r);
+        self.v = &r * &self.v;
     }
 
     fn side(&mut self) {
@@ -179,5 +179,9 @@ where
             ],
         };
         self.r = self.v.get_mat3x3();
+    }
+
+    fn set_rotation_speed(&mut self, speed: E) {
+        self.rotation_speed = speed;
     }
 }
