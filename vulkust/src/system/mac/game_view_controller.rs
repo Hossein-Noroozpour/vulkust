@@ -124,7 +124,7 @@ where
             metal_view_did_load::<CoreApp> as extern "C" fn(&mut Object, Sel),
         );
         self_class.add_method(
-            sel!(mtkView:v:),
+            sel!(mtkView:drawableSizeWillChange:),
             mtl_view::<CoreApp> as extern "C" fn(&mut Object, Sel, mtl::Id, mtl::NSSize),
         );
         self_class.add_method(

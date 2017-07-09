@@ -55,14 +55,14 @@ pub const TEXTURE_INDEX_COLOR: mtl::NSUInteger = 0;
 
 #[repr(C)]
 pub struct Uniforms {
-    pub projection_matrix: SMat4x4F,
-    pub view_matrix: SMat4x4F,
-    pub material_shininess: f32,
-    pub model_view_matrix: SMat4x4F,
-    pub normal_matrix: SMat3x3F,
-    pub ambient_light_color: SVec3F,
-    pub directional_light_direction: SVec3F,
-    pub directional_light_color: SVec3F,
+    pub projection_matrix: [[f32; 4]; 4],
+    pub view_matrix: [[f32; 4]; 4],
+    pub material_shininess: [f32; 4],
+    pub model_view_matrix: [[f32; 4]; 4],
+    pub normal_matrix: [[f32; 4]; 3],
+    pub ambient_light_color: [f32; 4],
+    pub directional_light_direction: [f32; 4],
+    pub directional_light_color: [f32; 4],
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp>
@@ -367,19 +367,26 @@ where
 // }
 
         let mut uniforms: Uniforms = unsafe { zeroed() };
-        uniforms.projection_matrix = Mat4x4::projection(1f32, 1.7, 0.1, 100.0).get_smat4x4f();
-        let view = Mat4x4::translator(&Vec3 {
-            x: 0f32,
-            y: 0.0,
-            z: -8.0,
-        });
-        uniforms.view_matrix = view.get_smat4x4f();
-        uniforms.material_shininess = 30f32;
-        uniforms.model_view_matrix = view.get_smat4x4f();
-        uniforms.normal_matrix = Mat3x3::<f32>::ident().get_smat3x3f();
-        uniforms.ambient_light_color = SVec3F(0.02, 0.02, 0.02);
-        uniforms.directional_light_direction = SVec3F(0.0, 0.0, -1.0);
-        uniforms.directional_light_color = SVec3F(0.7, 0.7, 0.7);
+        uniforms.projection_matrix = Mat4x4::projection(1.0, 1.7, 0.1, 10.0).data;
+        uniforms.view_matrix = 
+            [
+                [1.000, 0.000,  0.000,  0.000],
+                [0.000, 1.000,  0.000,  0.000],
+                [0.000, 0.000,  1.000,  0.000],
+                [0.000, 0.000, -8.000,  1.000],
+            ];
+        uniforms.material_shininess = [30.0; 4];
+        uniforms.model_view_matrix =  
+            [
+                [1.000, 0.000,  0.000,  0.000],
+                [0.000, 1.000,  0.000,  0.000],
+                [0.000, 0.000,  1.000,  0.000],
+                [0.000, 0.000, -8.000,  1.000],
+            ];
+        uniforms.normal_matrix = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]];
+        uniforms.ambient_light_color = [0.02, 0.02, 0.02, 0.02];
+        uniforms.directional_light_direction = [0.0, 0.0, -1.0, 0.0];
+        uniforms.directional_light_color = [0.7, 0.7, 0.7, 0.7];
         // let mut view_matrix = Mat4x4::ident();
         // view_matrix.translate(&Vec3 {
         //         x: 0.0f32, 

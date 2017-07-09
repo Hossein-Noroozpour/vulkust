@@ -68,7 +68,7 @@ typedef struct
 } ColorInOut;
 
 // Vertex function
-vertex ColorInOut main_func(Vertex in [[stage_in]],
+vertex ColorInOut main_vertex_func(Vertex in [[stage_in]],
                                   constant Uniforms & uniforms [[ buffer(kBufferIndexUniforms) ]])
 {
     ColorInOut out;

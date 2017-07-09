@@ -11,7 +11,8 @@ pub struct Stage {
 }
 
 impl Stage {
-    pub fn new<CoreApp>(data: Vec<u8>, os_app: *mut OsApplication<CoreApp>) -> Self
+    pub fn new<CoreApp>(
+        data: Vec<u8>, os_app: *mut OsApplication<CoreApp>, stage_name: &str) -> Self
     where
         CoreApp: ApplicationTrait,
     {
@@ -30,7 +31,7 @@ impl Stage {
         if library == null_mut() || error.is_error() {
             logf!("Creating metal library failed with error {}", error);
         }
-        let s = mtl::NSString::new("main_func");
+        let s = mtl::NSString::new(&("main_".to_string() + stage_name + "_func"));
         Stage { function: unsafe { msg_send![library, newFunctionWithName:s.s] } }
     }
 }
