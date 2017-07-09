@@ -120,11 +120,7 @@ fragment float4 main_func(ColorInOut in [[stage_in]],
     // We compute the final color by multiplying the sample from our color maps by the fragment's
     // lighting value
     float3 color = float3(colorSample.xyz) * lightContributions;
-    if (length(color) < 3) {
-        color.x = 1.0;
-        color.y = 1.0;
-        color.z = 1.0;
-    }
+    
     // We use the color we just computed and the alpha channel of our
     // colorMap for this fragment's alpha value
     return float4(color, colorSample.w);

@@ -45,10 +45,12 @@ extern "C" fn draw_in_mtk_view<CoreApp>(this: &mut Object, _cmd: Sel, _view: mtl
 where
     CoreApp: ApplicationTrait,
 {
+    let release_pool = mtl::NsAutoReleasePool::new();
     let app: &mut App<CoreApp> =
         unsafe { transmute(*this.get_ivar::<mtl::NSUInteger>(APP_VAR_NAME)) };
     let renderer: &mut RenderEngine<CoreApp> = unsafe { transmute(app.render_engine) };
     renderer.render();
+    let _ = release_pool;
 }
 
 // Methods to get and set state of the our ultimate render destination (i.e. the drawable)

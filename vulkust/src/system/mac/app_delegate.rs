@@ -51,7 +51,7 @@ where
     unsafe {
         (*app).metal_view = metal_view;
     }
-    let clear_color = mtl::ClearColor::new(0.0, 0.0, 0.0, 1.0);
+    let clear_color = mtl::ClearColor::new(0.05, 0.05, 0.05, 1.0);
     let pixel_format = mtl::PIXEL_FORMAT_BGRA8_UNORM;
     let depth_stencil_format = mtl::PIXEL_FORMAT_DEPTH32_FLOAT;
     unsafe {

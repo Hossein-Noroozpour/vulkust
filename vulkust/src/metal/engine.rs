@@ -234,15 +234,12 @@ where
         let label = mtl::NSString::new("MyPipeline");
         unsafe {
             let _: () = msg_send![pipeline_state_descriptor, setLabel:label.s];
-            let _: () = msg_send![pipeline_state_descriptor, setSampleCount: sample_count];
+            let _: () = msg_send![pipeline_state_descriptor, setSampleCount:sample_count];
             let _: () = msg_send![pipeline_state_descriptor,
                 setVertexFunction:shader.as_shader().vertex.function];
             let _: () = msg_send![pipeline_state_descriptor,
                 setFragmentFunction:shader.as_shader().fragment.function];
-            let _: () = msg_send![
-                pipeline_state_descriptor,
-                setVertexDescriptor: vertex_descriptor
-            ];
+            let _: () = msg_send![pipeline_state_descriptor, setVertexDescriptor:vertex_descriptor];
             let color_attachments: mtl::Id = msg_send![pipeline_state_descriptor, colorAttachments];
             let color_attachment: mtl::Id = msg_send![
                 color_attachments, objectAtIndexedSubscript:0 as mtl::NSUInteger];
