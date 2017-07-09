@@ -119,6 +119,14 @@ where
         self.data[3][2] += v.z;
     }
 
+    pub fn translator(v: &Vec3<E>) -> Self {
+        let mut m = Mat4x4::ident();
+        m.data[3][0] = v.x;
+        m.data[3][1] = v.y;
+        m.data[3][2] = v.z;
+        return m;
+    }
+
     pub fn set_translation(&mut self, v: &Vec3<E>) {
         self.data[3][0] = v.x;
         self.data[3][1] = v.y;

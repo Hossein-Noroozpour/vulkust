@@ -47,7 +47,7 @@ where
     fn get_view_projection(&self) -> &Mat4x4<E> {
         logf!("Unimplemented");
     }
-    fn look_at(&mut self, eye: &Vec3<E>, at: &Vec3<E>, up: &Vec3<E>) {
+    fn look_at(&mut self, _eye: &Vec3<E>, _at: &Vec3<E>, _up: &Vec3<E>) {
         logf!("Unimplemented");
     }
     fn set_rotation_speed(&mut self, speed: E) {

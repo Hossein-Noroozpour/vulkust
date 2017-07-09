@@ -9,12 +9,14 @@ use std::sync::{Arc, Mutex};
 use self::block::ConcreteBlock;
 use super::super::objc;
 use super::super::core::application::ApplicationTrait;
+use super::super::core::event::Event;
 use super::super::math::matrix::{Mat4x4, SMat3x3F, SMat4x4F, Mat3x3};
 use super::super::math::vector::{Vec3, SVec3F, SVec3U32};
 use super::super::sync::semaphore::Semaphore;
 use super::super::system::os::OsApplication;
 use super::super::render::engine::EngineTrait;
 use super::super::render::texture::TextureTrait;
+use super::super::render::engine::Basic as BasicEngine;
 use super::super::system::metal as mtl;
 use super::super::system::metal::kit as mtk;
 use super::super::system::metal::model_io as mdl;
@@ -107,6 +109,18 @@ where
     }
 
     fn terminate(&mut self) {}
+
+    fn on_event(&mut self, _e: Event) {
+        logf!("Unimplemented");
+    }
+
+    fn get_basic(&self) -> &BasicEngine {
+        logf!("Unimplemented");
+    }
+
+    fn get_mut_basic(&mut self) -> &mut BasicEngine {
+        logf!("Unimplemented");
+    }
 }
 
 impl<CoreApp> Engine<CoreApp>
@@ -124,6 +138,7 @@ where
             msg_send![device, newBufferWithLength:uniform_buffer_size
                 options:mtl::RESOURCE_STORAGE_MODE_SHARED]
         };
+        logi!("{}", mtl::RESOURCE_STORAGE_MODE_SHARED.bits());
         self.dynamic_uniform_buffer = dynamic_uniform_buffer;
         let label = mtl::NSString::new("UniformBuffer");
         unsafe {
@@ -134,15 +149,15 @@ where
         let attribute: mtl::Id = unsafe {
             msg_send![
                 attributes,
-                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_POSITION
+                objectAtIndexedSubscript:VERTEX_ATTRIBUTE_POSITION
             ]
         };
         unsafe {
             let _: () = msg_send![attribute, setFormat: mtl::VERTEX_FORMAT_FLOAT3];
             let _: () = msg_send![attribute, setOffset:0 as mtl::NSUInteger];
             let _: () = msg_send![attribute, setBufferIndex: BUFFER_INDEX_MESH_POSITIONS];
-            let _: () = msg_send![attributes,
-                setObject:attribute atIndexedSubscript:VERTEX_ATTRIBUTE_POSITION];
+            // let _: () = msg_send![attributes,
+            //     setObject:attribute atIndexedSubscript:VERTEX_ATTRIBUTE_POSITION];
         }
         let attribute: mtl::Id = unsafe {
             msg_send![
@@ -154,8 +169,8 @@ where
             let _: () = msg_send![attribute, setFormat: mtl::VERTEX_FORMAT_FLOAT2];
             let _: () = msg_send![attribute, setOffset:0 as mtl::NSUInteger];
             let _: () = msg_send![attribute, setBufferIndex: BUFFER_INDEX_MESH_GENERICS];
-            let _: () = msg_send![attributes,
-                setObject:attribute atIndexedSubscript:VERTEX_ATTRIBUTE_TEXCOORD];
+            // let _: () = msg_send![attributes,
+            //     setObject:attribute atIndexedSubscript:VERTEX_ATTRIBUTE_TEXCOORD];
         }
         let attribute: mtl::Id = unsafe {
             msg_send![
@@ -167,8 +182,8 @@ where
             let _: () = msg_send![attribute, setFormat: mtl::VERTEX_FORMAT_HALF4];
             let _: () = msg_send![attribute, setOffset:8 as mtl::NSUInteger];
             let _: () = msg_send![attribute, setBufferIndex: BUFFER_INDEX_MESH_GENERICS];
-            let _: () = msg_send![attributes,
-                setObject:attribute atIndexedSubscript:VERTEX_ATTRIBUTE_NORMAL];
+            // let _: () = msg_send![attributes,
+            //     setObject:attribute atIndexedSubscript:VERTEX_ATTRIBUTE_NORMAL];
         }
         let layouts: mtl::Id = unsafe { msg_send![vertex_descriptor, layouts] };
         let layout: mtl::Id = unsafe {
@@ -184,8 +199,8 @@ where
                 layout,
                 setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX
             ];
-            let _: () = msg_send![layouts,
-                setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_POSITIONS];
+            // let _: () = msg_send![layouts,
+            //     setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_POSITIONS];
         }
         let layout: mtl::Id = unsafe {
             msg_send![
@@ -200,8 +215,8 @@ where
                 layout,
                 setStepFunction: mtl::VERTEX_STEP_FUNCTION_PER_VERTEX
             ];
-            let _: () = msg_send![layouts,
-                setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_GENERICS];
+            // let _: () = msg_send![layouts,
+            //     setObject:layout atIndexedSubscript:BUFFER_INDEX_MESH_GENERICS];
         }
         let render_destination = unsafe { (*self.os_app).game_view_controller };
         let sample_count = 1 as mtl::NSUInteger;
@@ -232,9 +247,9 @@ where
             let color_attachment: mtl::Id = msg_send![
                 color_attachments, objectAtIndexedSubscript:0 as mtl::NSUInteger];
             let _: () = msg_send![color_attachment, setPixelFormat: color_format];
-            let _: () = msg_send![
-                color_attachments, setObject:color_attachment
-                atIndexedSubscript:0 as mtl::NSUInteger];
+            // let _: () = msg_send![
+            //     color_attachments, setObject:color_attachment
+            //     atIndexedSubscript:0 as mtl::NSUInteger];
             let _: () = msg_send![
                 pipeline_state_descriptor,
                 setDepthAttachmentPixelFormat: depth_stencil_format
@@ -295,12 +310,12 @@ where
         let attributes: mtl::Id = unsafe { msg_send![modle_vertex_descriptor, attributes] };
         let set = |attributes: mtl::Id, index: mtl::NSUInteger, att: mtl::Id| {
             let attribute: mtl::Id =
-                unsafe { msg_send![attributes, objectAtIndexedSubscript: index] };
+                unsafe { msg_send![attributes, objectAtIndex: index] };
             let _: () = unsafe { msg_send![attribute, setName: att] };
-            let _: () = unsafe {
-                msg_send![attributes, setObject:attribute
-                atIndexedSubscript:index]
-            };
+            // let _: () = unsafe {
+            //     msg_send![attributes, setObject:attribute
+            //     atIndexedSubscript:index]
+            // };
         };
         set(attributes, VERTEX_ATTRIBUTE_POSITION, unsafe {
             mdl::MDLVertexAttributePosition
@@ -355,10 +370,15 @@ where
 // }
 
         let mut uniforms: Uniforms = unsafe { zeroed() };
-        uniforms.projection_matrix = Mat4x4::<f32>::ident().get_smat4x4f();
-        uniforms.view_matrix = Mat4x4::<f32>::ident().get_smat4x4f();
-        uniforms.material_shininess = 30.0;
-        uniforms.model_view_matrix = Mat4x4::<f32>::ident().get_smat4x4f();
+        uniforms.projection_matrix = Mat4x4::projection(1f32, 1.7, 0.1, 100.0).get_smat4x4f();
+        let view = Mat4x4::translator(&Vec3 {
+            x: 0f32,
+            y: 0.0,
+            z: -8.0,
+        });
+        uniforms.view_matrix = view.get_smat4x4f();
+        uniforms.material_shininess = 30f32;
+        uniforms.model_view_matrix = view.get_smat4x4f();
         uniforms.normal_matrix = Mat3x3::<f32>::ident().get_smat3x3f();
         uniforms.ambient_light_color = SVec3F(0.02, 0.02, 0.02);
         uniforms.directional_light_direction = SVec3F(0.0, 0.0, -1.0);
@@ -465,7 +485,6 @@ where
                 let _: () = msg_send![
                     render_encoder, setVertexBuffer:self.dynamic_uniform_buffer
                     offset:self.uniform_buffer_offset atIndex:BUFFER_INDEX_UNIFORMS];
-                logi!("reached");
                 let _: () = msg_send![
                     render_encoder, setFragmentBuffer:self.dynamic_uniform_buffer
                     offset:self.uniform_buffer_offset atIndex:BUFFER_INDEX_UNIFORMS];
@@ -475,9 +494,8 @@ where
             for buffer_index in 0..buffer_index_count {
                 let vertex_buffer: mtl::Id = unsafe {
                     msg_send![
-                    vertex_buffers, objectAtIndexedSubscript:buffer_index]
+                    vertex_buffers, objectAtIndex:buffer_index]
                 };
-                logi!("reached");
                 let ns_null = mtl::get_class("NSNull");
                 let ns_null: mtl::Id = unsafe { msg_send![ns_null, null] };
                 if vertex_buffer != ns_null {
@@ -489,34 +507,28 @@ where
                     }
                 }
             }
-            logi!("reached");
             unsafe {
                 let _: () = msg_send![
                 render_encoder,
                 setFragmentTexture:self.texture.as_ref().unwrap().as_texture2d().raw.color_map
                 atIndex:TEXTURE_INDEX_COLOR];
             }
-            logi!("reached");
             let submeshes: mtl::Id = unsafe { msg_send![self.mtk_mesh, submeshes] };
             let submeshes_count: mtl::NSUInteger = unsafe { msg_send![submeshes, count] };
-            logi!("submeshes_count: {}", submeshes_count);
             for submesh_index in 0..submeshes_count {
                 let submesh: mtl::Id = unsafe {
                     msg_send![
-                    submeshes, objectAtIndexedSubscript:submesh_index]
+                    submeshes, objectAtIndex:submesh_index]
                 };
                 if submesh == null_mut() {
                     logf!("Submesh is null");
                 }
-                logi!("reached");
                 let primitive_type: mtl::NSUInteger = unsafe { msg_send![submesh, primitiveType] };
                 let index_count: mtl::NSUInteger = unsafe { msg_send![submesh, indexCount] };
                 let index_type: mtl::NSUInteger = unsafe { msg_send![submesh, indexType] };
                 let index_buffer: mtl::Id = unsafe { msg_send![submesh, indexBuffer] };
                 let buffer: mtl::Id = unsafe { msg_send![index_buffer, buffer] };
                 let offset: mtl::NSUInteger = unsafe { msg_send![index_buffer, offset] };
-                logi!("reached");
-                logi!("{}----{}----{}---{:?}---{}", primitive_type, index_count, index_type, buffer, offset);
                 unsafe {
                     let _: () = msg_send![
                     render_encoder, drawIndexedPrimitives:primitive_type
@@ -524,7 +536,6 @@ where
                     indexBuffer:buffer indexBufferOffset:offset];
                 }
             }
-            logi!("reached");
             unsafe {
                 let _: () = msg_send![render_encoder, popDebugGroup];
                 let _: () = msg_send![render_encoder, endEncoding];
@@ -538,5 +549,7 @@ where
             let _: () = msg_send![command_buffer, presentDrawable:current_drawable];
             let _: () = msg_send![command_buffer, commit];
         }
+        // use std::{thread, time};
+        // thread::sleep(time::Duration::from_millis(50000));
     }
 }
