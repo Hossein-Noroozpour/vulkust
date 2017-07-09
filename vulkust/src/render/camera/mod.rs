@@ -53,6 +53,9 @@ where
     fn set_rotation_speed(&mut self, speed: E) {
         logf!("Unimplemented");
     }
+    fn set_speed(&mut self, speed: E) {
+        logf!("Unimplemented");
+    }
 }
 
 struct Basic<E>
@@ -143,7 +146,7 @@ where
     }
 
     fn rotate(&mut self, axis: &Vec3<E>) {
-        let r = Mat4x4::rotation(-self.rotation_speed, axis);
+        let r = Mat4x4::rotation(self.rotation_speed, axis);
         let rr = Mat3x3::rotation(self.rotation_speed, axis);
         self.lx = &rr * &self.lx;
         self.ly = &rr * &self.ly;
@@ -183,5 +186,9 @@ where
 
     fn set_rotation_speed(&mut self, speed: E) {
         self.rotation_speed = speed;
+    }
+
+    fn set_speed(&mut self, speed: E) {
+        self.speed = speed;
     }
 }

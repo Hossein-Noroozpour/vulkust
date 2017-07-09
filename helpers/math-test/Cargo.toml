@@ -1,0 +1,11 @@
+[package]
+name = "math-test"
+version = "0.1.0"
+authors = ["Hossein Noroozpour <Hossein.Noroozpour@GMail.com>"]
+
+[dependencies]
+vulkust = { path = "../../vulkust" }
+rand = "*"
+
+[profile.release]
+lto = true

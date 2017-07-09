@@ -3,7 +3,7 @@ extern crate vulkust;
 
 use std::mem::transmute;
 use self::vulkust::core::application::ApplicationTrait as MyAppTrait;
-use self::vulkust::core::event::{Event, Mouse, Button};
+use self::vulkust::core::event::{Event, Mouse, Button, Keyboard};
 use self::vulkust::math::vector::Vec3;
 use self::vulkust::system::os::OsApplication;
 use self::vulkust::render::engine::{RenderEngine, EngineTrait};
@@ -12,6 +12,10 @@ struct MyGame {
     os_app: &'static mut OsApplication<MyGame>,
     rnd_eng: &'static mut RenderEngine<MyGame>,
     middle_mouse_down: bool,
+    forward: bool,
+    backward: bool,
+    left: bool,
+    right: bool,
 }
 
 impl MyAppTrait for MyGame {
@@ -20,6 +24,10 @@ impl MyAppTrait for MyGame {
             os_app: unsafe { transmute(0usize) },
             rnd_eng: unsafe { transmute(0usize) },
             middle_mouse_down: false,
+            forward: false,
+            backward: false,
+            left: false,
+            right: false,
         }
     }
 
@@ -54,7 +62,24 @@ impl MyAppTrait for MyGame {
                             _ => {},
                         }
                     },
-                    _ => {},
+                    Button::Keyboard(k) => {
+                        match k {
+                            Keyboard::W => {
+                                self.forward = true;
+                            },
+                            Keyboard::S => {
+                                self.backward = true;
+                            },
+                            Keyboard::A => {
+                                self.left = true;
+                            },
+                            Keyboard::D => {
+                                self.right = true;
+                            },
+                            _ => {},
+                        }
+                    },
+                    // _ => {},
                 }
             },
             Event::Release {button} => {
@@ -67,7 +92,24 @@ impl MyAppTrait for MyGame {
                             _ => {},
                         }
                     },
-                    _ => {},
+                    Button::Keyboard(k) => {
+                        match k {
+                            Keyboard::W => {
+                                self.forward = false;
+                            },
+                            Keyboard::S => {
+                                self.backward = false;
+                            },
+                            Keyboard::A => {
+                                self.left = false;
+                            },
+                            Keyboard::D => {
+                                self.right = false;
+                            },
+                            _ => {},
+                        }
+                    },
+                    // _ => {},
                 }
             },
             _ => {},
@@ -75,6 +117,24 @@ impl MyAppTrait for MyGame {
     }
 
     fn update(&mut self) -> bool {
+        let mut camera =
+            self.rnd_eng.get_mut_basic().get_mut_current_scene().get_mut_current_camera();
+        if self.forward {
+            camera.set_speed(0.05);
+            camera.forward();
+        }
+        if self.backward {
+            camera.set_speed(-0.05);
+            camera.forward();
+        }
+        if self.left {
+            camera.set_speed(-0.05);
+            camera.side();
+        }
+        if self.right {
+            camera.set_speed(0.05);
+            camera.side();
+        }
         return false;
     }
 

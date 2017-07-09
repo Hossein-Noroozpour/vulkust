@@ -535,6 +535,7 @@ where
         )
     }
 
+    // v: must be normalized
     pub fn rotation(d: E, v: &Vec3<E>) -> Self {
         let sinus: E = E::new(d.to().sin());
         let cosinus: E = E::new(d.to().cos());

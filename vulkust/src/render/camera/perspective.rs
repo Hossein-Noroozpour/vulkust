@@ -117,4 +117,7 @@ where
     fn set_rotation_speed(&mut self, speed: E) {
         self.b.set_rotation_speed(speed);
     }
+    fn set_speed(&mut self, speed: E) {
+        self.b.set_speed(speed);
+    }
 }
