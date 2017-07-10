@@ -50,10 +50,10 @@ where
     fn look_at(&mut self, _eye: &Vec3<E>, _at: &Vec3<E>, _up: &Vec3<E>) {
         logf!("Unimplemented");
     }
-    fn set_rotation_speed(&mut self, speed: E) {
+    fn set_rotation_speed(&mut self, _speed: E) {
         logf!("Unimplemented");
     }
-    fn set_speed(&mut self, speed: E) {
+    fn set_speed(&mut self, _speed: E) {
         logf!("Unimplemented");
     }
 }
@@ -62,13 +62,13 @@ struct Basic<E>
 where
     E: Float,
 {
-    pub speed: E,
-    pub rotation_speed: E,
-    pos: Vec3<E>,
-    lx: Vec3<E>,
-    ly: Vec3<E>,
-    lz: Vec3<E>,
-    r: Mat3x3<E>,
+    s: E,
+    rs: E,
+    p: Vec3<E>,
+    x: Vec3<E>,
+    y: Vec3<E>,
+    z: Vec3<E>,
+    r: Mat4x4<E>,
     v: Mat4x4<E>,
 }
 
@@ -79,29 +79,29 @@ where
 {
     pub fn new() -> Self {
         Basic {
-            speed: E::new(0.01),
-            rotation_speed: E::new(0.1),
-            pos: Vec3 {
+            s: E::new(0.01),
+            rs: E::new(0.1),
+            p: Vec3 {
                 x: E::new(0.0),
                 y: E::new(0.0),
                 z: E::new(0.0),
             },
-            lx: Vec3 {
+            x: Vec3 {
                 x: E::new(1.0),
                 y: E::new(0.0),
                 z: E::new(0.0),
             },
-            ly: Vec3 {
+            y: Vec3 {
                 x: E::new(0.0),
                 y: E::new(1.0),
                 z: E::new(0.0),
             },
-            lz: Vec3 {
+            z: Vec3 {
                 x: E::new(0.0),
                 y: E::new(0.0),
                 z: E::new(1.0),
             },
-            r: Mat3x3::ident(),
+            r: Mat4x4::ident(),
             v: Mat4x4::ident(),
         }
     }
@@ -112,55 +112,61 @@ where
     E: Float,
 {
     fn travel(&mut self, d: &Vec3<E>) {
-        self.pos += d;
-        self.v.translate(&-d);
+        self.p += d;
+        let t = Mat4x4::translator(&-d);
+        self.v *= &t;
     }
 
     fn place(&mut self, l: &Vec3<E>) {
-        self.pos = *l;
-        self.v.set_translation(&l);
+        let t = Mat4x4::translator(&-&(l - &self.p));
+        self.p = *l;
+        self.v *= &t;
     }
 
     fn rotate_local_x(&mut self) {
-        let r = Mat4x4::rotation(-self.rotation_speed, &self.lx);
-        let rr = Mat3x3::rotation(self.rotation_speed, &self.lx);
-        self.ly = &rr * &self.ly;
-        self.lz = &rr * &self.lz;
-        self.v = &r * &self.v;
+        let r = Mat4x4::rotation(-self.rs, &self.x);
+        let rr = Mat3x3::rotation(self.rs, &self.x);
+        self.y = &rr * &self.y;
+        self.z = &rr * &self.z;
+        self.r *= &r;
+        self.v = &self.r * &Mat4x4::translator(&-&self.p);
     }
 
     fn rotate_local_y(&mut self) {
-        let r = Mat4x4::rotation(-self.rotation_speed, &self.ly);
-        let rr = Mat3x3::rotation(self.rotation_speed, &self.ly);
-        self.lx = &rr * &self.lx;
-        self.lz = &rr * &self.lz;
-        self.v = &r * &self.v;
+        let r = Mat4x4::rotation(-self.rs, &self.y);
+        let rr = Mat3x3::rotation(self.rs, &self.y);
+        self.x = &rr * &self.x;
+        self.z = &rr * &self.z;
+        self.r *= &r;
+        self.v = &self.r * &Mat4x4::translator(&-&self.p);
     }
 
     fn rotate_local_z(&mut self) {
-        let r = Mat4x4::rotation(-self.rotation_speed, &self.lz);
-        let rr = Mat3x3::rotation(self.rotation_speed, &self.lz);
-        self.lx = &rr * &self.lx;
-        self.ly = &rr * &self.ly;
-        self.v = &r * &self.v;
+        let r = Mat4x4::rotation(-self.rs, &self.z);
+        let rr = Mat3x3::rotation(self.rs, &self.z);
+        self.x = &rr * &self.x;
+        self.y = &rr * &self.y;
+        self.r *= &r;
+        self.v = &self.r * &Mat4x4::translator(&-&self.p);
     }
 
     fn rotate(&mut self, axis: &Vec3<E>) {
-        let r = Mat4x4::rotation(self.rotation_speed, axis);
-        let rr = Mat3x3::rotation(self.rotation_speed, axis);
-        self.lx = &rr * &self.lx;
-        self.ly = &rr * &self.ly;
-        self.lz = &rr * &self.lz;
-        self.v = &r * &self.v;
+        let r = Mat4x4::rotation(-self.rs, axis);
+        let rr = Mat3x3::rotation(self.rs, axis);
+        self.x = &rr * &self.x;
+        self.y = &rr * &self.y;
+        self.z = &rr * &self.z;
+        self.r *= &r;
+        self.v = &self.r * &Mat4x4::translator(&-&self.p);
     }
 
     fn side(&mut self) {
-        let d = &self.lx * self.speed;
+        let d = &self.x * self.s;
         self.travel(&d);
     }
 
     fn forward(&mut self) {
-        let d = &self.lz * self.speed;
+        let d = &self.z * self.s;
         self.travel(&d);
     }
 
@@ -169,26 +175,26 @@ where
     }
 
     fn look_at(&mut self, eye: &Vec3<E>, at: &Vec3<E>, up: &Vec3<E>) {
-        self.lz = (at - eye).normalized();
-        self.lx = self.lz.cross(up).normalized();
-        self.ly = self.lx.cross(&self.lz);
-        self.pos = *eye;
+        self.z = (at - eye).normalized();
+        self.x = self.z.cross(up).normalized();
+        self.y = self.x.cross(&self.z);
+        self.p = *eye;
         self.v = Mat4x4 {
             data: [
-                [self.lx.x,          self.ly.x,       -self.lz.x,        E::new(0.0)],
-                [self.lx.y,          self.ly.y,       -self.lz.y,        E::new(0.0)],
-                [self.lx.z,          self.ly.z,       -self.lz.z,        E::new(0.0)],
-                [-self.lx.dot(eye), -self.ly.dot(eye), self.lz.dot(eye), E::new(1.0)],
+                [self.x.x,          self.y.x,       -self.z.x,        E::new(0.0)],
+                [self.x.y,          self.y.y,       -self.z.y,        E::new(0.0)],
+                [self.x.z,          self.y.z,       -self.z.z,        E::new(0.0)],
+                [-self.x.dot(eye), -self.y.dot(eye), self.z.dot(eye), E::new(1.0)],
             ],
         };
-        self.r = self.v.get_mat3x3();
+        self.r = &self.v * &Mat4x4::translator(&self.p);  
     }
 
     fn set_rotation_speed(&mut self, speed: E) {
-        self.rotation_speed = speed;
+        self.rs = speed;
     }
 
     fn set_speed(&mut self, speed: E) {
-        self.speed = speed;
+        self.s = speed;
     }
 }
