@@ -2,6 +2,8 @@
 //pub mod vertex;
 //pub mod mesh;
 pub mod camera;
+pub mod light;
+pub mod model;
 pub mod scene;
 pub mod engine;
 pub mod shader;

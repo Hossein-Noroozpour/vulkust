@@ -8,6 +8,7 @@ extern crate bitflags;
 
 #[macro_use]
 pub mod macros;
+pub mod audio;
 pub mod core;
 pub mod math;
 #[cfg(metal)]

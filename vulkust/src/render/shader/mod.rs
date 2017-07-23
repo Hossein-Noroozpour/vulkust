@@ -29,8 +29,8 @@ impl Shader {
         // logi!("shader size is: {}", size);
         let fragment = file.read_bytes(size as usize);
         Shader {
-            vertex: Stage::new(vertex, os_app),
-            fragment: Stage::new(fragment, os_app),
+            vertex: Stage::new(vertex, os_app, "vertex"),
+            fragment: Stage::new(fragment, os_app, "fragment"),
         }
     }
 }

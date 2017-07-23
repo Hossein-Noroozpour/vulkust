@@ -1,3 +1,4 @@
+pub mod manager;
 pub mod perspective;
 
 use super::super::math::number::Float;
@@ -187,7 +188,7 @@ where
                 [-self.x.dot(eye), -self.y.dot(eye), self.z.dot(eye), E::new(1.0)],
             ],
         };
-        self.r = &self.v * &Mat4x4::translator(&self.p);  
+        self.r = &self.v * &Mat4x4::translator(&self.p);
     }
 
     fn set_rotation_speed(&mut self, speed: E) {

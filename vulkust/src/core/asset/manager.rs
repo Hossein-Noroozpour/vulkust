@@ -1,3 +1,8 @@
+use super::super::super::audio::manager::Manager as AudioManager;
+use super::super::super::render::camera::manager::Manager as CameraManager;
+use super::super::super::render::light::manager::Manager as LightManager;
+use super::super::super::render::model::manager::Manager as ModelManager;
+use super::super::super::render::scene::manager::Manager as SceneManager;
 use super::super::super::render::shader::manager::Manager as ShaderManager;
 use super::super::super::render::shader::ShaderTrait;
 use super::super::super::render::texture::manager::Manager as TextureManager;
@@ -10,7 +15,12 @@ use std::sync::Arc;
 pub struct Manager {
     pub file: File,
     pub shader_manager: ShaderManager,
+    pub camera_manager: CameraManager,
+    pub audio_manager: AudioManager,
+    pub light_manager: LightManager,
     pub texture_manager: TextureManager,
+    pub model_manager: ModelManager,
+    pub scene_manager: SceneManager,
 }
 
 impl Manager {
@@ -18,7 +28,12 @@ impl Manager {
         Manager {
             file: file,
             shader_manager: ShaderManager::new(),
+            camera_manager: CameraManager::new(),
+            audio_manager: AudioManager::new(),
+            light_manager: LightManager::new(),
             texture_manager: TextureManager::new(),
+            model_manager: ModelManager::new(),
+            scene_manager: SceneManager::new(),
         }
     }
 
