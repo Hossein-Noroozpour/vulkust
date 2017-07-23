@@ -16,7 +16,7 @@ assets/
 *.iml
 *.spv
 .DS_Store
-data.gx3d
+*.gx3d
 .vscode
 /.vscode
 .vscode/
