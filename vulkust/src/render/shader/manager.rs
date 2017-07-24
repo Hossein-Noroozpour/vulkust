@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 use std::sync::{Weak, Arc};
 use std::io::{Seek, SeekFrom};
+use std::ops::{ShlAssign, BitOrAssign};
+use std::default::Default;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
 use super::super::super::system::os::OsApplication;
@@ -11,6 +13,15 @@ pub struct Manager {
     pub offsets: BTreeMap<u64, u64>,
 }
 
+fn from_gx3d_id<T>(v: Vec<u8>) -> T where T: ShlAssign<T> + BitOrAssign<T> + Default + From<u8> {
+    let mut id = T::default();
+    for b in v {
+        id <<= T::from(8u8);
+        id |= T::from(b);
+    }
+    return id;
+}
+
 impl Manager {
     pub fn new() -> Self {
         Manager {
@@ -19,11 +30,11 @@ impl Manager {
         }
     }
 
-    pub fn read_tabale(&mut self, file: &mut File) {
+    pub fn read_table(&mut self, file: &mut File) {
         let count: u64 = file.read_type();
         for _ in 0..count {
-            let id: u64 = file.read_type();
-            let offset: u64 = file.read_type();
+            let id = from_gx3d_id(file.read_bytes(6));
+            let offset = file.read_type();
             // logi!("Shader with id: {} and offset {} loaded.", id, offset);
             self.offsets.insert(id, offset);
         }

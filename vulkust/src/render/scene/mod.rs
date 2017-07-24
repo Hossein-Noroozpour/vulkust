@@ -1,17 +1,23 @@
 pub mod manager;
 
 use std::mem::transmute;
+use super::super::core::application::ApplicationTrait;
+use super::super::system::os::OsApplication;
+use super::super::system::file::File;
 use super::camera::Camera;
 use super::camera::perspective::Perspective;
 
-pub struct Scene {
+pub trait Scene {}
+
+pub struct BasicScene {
     current_camera: usize,
     cameras: Vec<*mut Camera<f32>>,
 }
 
-impl Scene {
-    pub fn new() -> Self {
-        Scene {
+impl BasicScene {
+    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    where CoreApp: ApplicationTrait {
+        BasicScene {
             current_camera: 0,
             cameras: vec![Box::into_raw(Box::new(Perspective::new()))],
         }
@@ -37,3 +43,5 @@ impl Scene {
         unsafe { transmute(self.cameras[self.current_camera]) }
     }
 }
+
+impl Scene for BasicScene {}

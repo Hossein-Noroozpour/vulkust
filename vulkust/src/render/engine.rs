@@ -1,3 +1,6 @@
+use std::cell::{RefCell, RefMut, Ref};
+use std::sync::Arc;
+
 #[cfg(feature = "d3d12")]
 use super::super::d3d12::engine::Engine;
 #[cfg(any(feature = "metal", target_os = "macos"))]
@@ -28,21 +31,23 @@ where
 }
 
 pub struct Basic {
-    pub current_scene: Scene,
+    pub current_scene: Arc<RefCell<Scene>>,
 }
 
 impl Basic {
-    pub fn new() -> Self {
+    pub fn new<CoreApp>(os_app: *mut OsApplication<CoreApp>) -> Self
+    where
+        CoreApp: ApplicationTrait, {
         Basic {
-            current_scene: Scene::new(),
+            current_scene: unsafe { (*os_app).asset_manager.get_scene(0, os_app) },
         }
     }
 
-    pub fn get_mut_current_scene(&mut self) -> &mut Scene {
-        &mut self.current_scene
+    pub fn get_mut_current_scene(&mut self) -> RefMut<Scene + 'static> {
+        self.current_scene.borrow_mut()
     }
 
-    pub fn get_current_scene(&self) -> &Scene {
-        &self.current_scene
+    pub fn get_current_scene(&self) -> Ref<Scene + 'static> {
+        self.current_scene.borrow()
     }
 }

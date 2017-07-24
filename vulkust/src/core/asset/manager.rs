@@ -1,8 +1,11 @@
+use std::sync::Arc;
+use std::cell::RefCell;
 use super::super::super::audio::manager::Manager as AudioManager;
 use super::super::super::render::camera::manager::Manager as CameraManager;
 use super::super::super::render::light::manager::Manager as LightManager;
 use super::super::super::render::model::manager::Manager as ModelManager;
 use super::super::super::render::scene::manager::Manager as SceneManager;
+use super::super::super::render::scene::Scene;
 use super::super::super::render::shader::manager::Manager as ShaderManager;
 use super::super::super::render::shader::ShaderTrait;
 use super::super::super::render::texture::manager::Manager as TextureManager;
@@ -10,7 +13,6 @@ use super::super::super::render::texture::TextureTrait;
 use super::super::super::system::file::File;
 use super::super::super::system::os::OsApplication;
 use super::super::application::ApplicationTrait;
-use std::sync::Arc;
 
 pub struct Manager {
     pub file: File,
@@ -38,8 +40,13 @@ impl Manager {
     }
 
     pub fn initialize(&mut self) {
-        self.shader_manager.read_tabale(&mut self.file);
-        self.texture_manager.read_tabale(&mut self.file);
+        self.shader_manager.read_table(&mut self.file);
+        self.camera_manager.read_table(&mut self.file);
+        self.audio_manager.read_table(&mut self.file);
+        self.light_manager.read_table(&mut self.file);
+        self.texture_manager.read_table(&mut self.file);
+        self.model_manager.read_table(&mut self.file);
+        self.scene_manager.read_table(&mut self.file);
     }
 
     pub fn get_shader<CoreApp>(
@@ -62,5 +69,16 @@ impl Manager {
         CoreApp: ApplicationTrait,
     {
         self.texture_manager.get(id, &mut self.file, os_app)
+    }
+
+    pub fn get_scene<CoreApp>(
+        &mut self,
+        id: u64,
+        os_app: *mut OsApplication<CoreApp>,
+    ) -> Arc<RefCell<Scene>>
+    where
+        CoreApp: ApplicationTrait,
+    {
+        self.scene_manager.get(id, &mut self.file, os_app)
     }
 }
