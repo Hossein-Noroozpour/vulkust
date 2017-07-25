@@ -7,7 +7,10 @@ use super::super::system::file::File;
 use super::camera::Camera;
 use super::camera::perspective::Perspective;
 
-pub trait Scene {}
+pub trait Scene {
+    fn get_current_camera(&self) -> &Camera<f32>;
+    fn get_mut_current_camera(&mut self) -> &mut Camera<f32>;
+}
 
 pub struct BasicScene {
     current_camera: usize,
@@ -22,8 +25,10 @@ impl BasicScene {
             cameras: vec![Box::into_raw(Box::new(Perspective::new()))],
         }
     }
+}
 
-    pub fn get_mut_current_camera(&mut self) -> &mut Camera<f32> {
+impl Scene for BasicScene {
+    fn get_mut_current_camera(&mut self) -> &mut Camera<f32> {
         #[cfg(debug_assertions)]
         {
             if self.current_camera >= self.cameras.len() {
@@ -33,7 +38,7 @@ impl BasicScene {
         unsafe { transmute(self.cameras[self.current_camera]) }
     }
 
-    pub fn get_current_camera(&self) -> &Camera<f32> {
+    fn get_current_camera(&self) -> &Camera<f32> {
         #[cfg(debug_assertions)]
         {
             if self.current_camera >= self.cameras.len() {
@@ -43,5 +48,3 @@ impl BasicScene {
         unsafe { transmute(self.cameras[self.current_camera]) }
     }
 }
-
-impl Scene for BasicScene {}
