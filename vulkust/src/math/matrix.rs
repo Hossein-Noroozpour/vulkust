@@ -573,6 +573,16 @@ where
             ],
         }
     }
+
+    pub fn to_mat4x4(&self) -> Mat4x4<E> {
+        let mut m = Mat4x4::zero();
+        for i in 0..3 {
+            for j in 0..3 {
+                m.data[i][j] = self.data[i][j];
+            }
+        }
+        return m;
+    }
 }
 
 impl<'a, 'b, E> Mul<&'b Vec3<E>> for &'a Mat3x3<E>

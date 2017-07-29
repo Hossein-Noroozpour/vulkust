@@ -145,7 +145,7 @@ where
         true
     }
 
-    fn get_mouse_position(&mut self) -> (f64, f64) {
+    fn get_mouse_position(&self) -> (f64, f64) {
         unsafe {
             let coockie = xcb::xcb_query_pointer(self.connection, self.window);
             let reply: &mut xcb::xcb_query_pointer_reply_t =
@@ -155,6 +155,10 @@ where
             libc::free(transmute(reply));
             (x, y)
         }
+    }
+
+    fn get_window_ratio(&self) -> f64 {
+        (*self.screen).width_in_pixels as f64 / (*self.screen).height_in_pixels as f64
     }
 
     fn execute(&mut self) -> bool {
@@ -282,7 +286,7 @@ where
                             h: self.window_h as f64,
                         };
                         unsafe {
-                            (*self.render_engine).on_event(e); 
+                            (*self.render_engine).on_event(e);
                             (*self.core_app).on_event(e);
                         }
     				}

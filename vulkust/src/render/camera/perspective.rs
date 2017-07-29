@@ -1,6 +1,9 @@
+use super::super::super::core::application::ApplicationTrait;
 use super::super::super::math::number::Float;
 use super::super::super::math::matrix::Mat4x4;
 use super::super::super::math::vector::Vec3;
+use super::super::super::system::file::File;
+use super::super::super::system::os::OsApplication;
 use super::{Basic, Camera};
 
 pub struct Perspective<E>
@@ -9,7 +12,6 @@ where
 {
     b: Basic<E>,
     fov: E,
-    asp: E,
     near: E,
     far: E,
     p: Mat4x4<E>,
@@ -20,30 +22,17 @@ impl<E> Perspective<E>
 where
     E: Float,
 {
-    pub fn new() -> Self {
-        let mut b = Basic::new();
-        b.look_at(
-            &Vec3 {
-                x: E::new(0.0),
-                y: E::new(0.0),
-                z: E::new(-5.0),
-            },
-            &Vec3::new(E::new(0.0)),
-            &Vec3 {
-                x: E::new(0.0),
-                y: E::new(1.0),
-                z: E::new(0.0),
-            });
-        let fov = E::new(1.0);
-        let asp = E::new(1.7);
-        let near = E::new(0.1);
-        let far = E::new(10.0);
-        let p = Mat4x4::projection(fov, asp, near, far);
+    pub fn new<CoreApp>(f: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+            where CoreApp: ApplicationTrait {
+        let fov = f.read_type();
+        let near = f.read_type();
+        let far = f.read_type();
+        let mut b = Basic::new(f, os_app);
+        let p = Mat4x4::projection(fov, b.a, near, far);
         let vp =  &p * b.get_view();
         Perspective {
             b: b,
             fov: fov,
-            asp: asp,
             near: near,
             far: far,
             p: p,
@@ -89,19 +78,19 @@ where
         self.vp = &self.p * self.b.get_view();
     }
     fn set_viewport(&mut self, w: E, h: E) {
-        self.asp = w / h;
-        self.p = Mat4x4::projection(self.fov, self.asp, self.near, self.far);
+        self.b.a = w / h;
+        self.p = Mat4x4::projection(self.fov, self.b.a, self.near, self.far);
         self.vp = &self.p * self.b.get_view();
     }
     fn set_fild_of_view(&mut self, f: E) {
         self.fov = f;
-        self.p = Mat4x4::projection(self.fov, self.asp, self.near, self.far);
+        self.p = Mat4x4::projection(self.fov, self.b.a, self.near, self.far);
         self.vp = &self.p * self.b.get_view();
     }
     fn set_range(&mut self, s: E, e: E) {
         self.far = e;
         self.near = s;
-        self.p = Mat4x4::projection(self.fov, self.asp, self.near, self.far);
+        self.p = Mat4x4::projection(self.fov, self.b.a, self.near, self.far);
         self.vp = &self.p * self.b.get_view();
     }
     fn get_view(&self) -> &Mat4x4<E> {

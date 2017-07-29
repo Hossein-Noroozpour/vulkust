@@ -1,6 +1,7 @@
 use std::ops::{Add, Sub, Mul, Div, Neg, AddAssign, SubAssign, MulAssign, DivAssign};
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 use super::super::objc;
+use super::super::system::file::File;
 use super::number::Number;
 
 #[repr(simd)]
@@ -167,6 +168,10 @@ where
 {
     pub fn new(e: T) -> Self {
         Vec3 { x: e, y: e, z: e }
+    }
+
+    pub fn new_from_file(f: &mut File) -> Self {
+        Vec3 { x: f.read_type(),  y: f.read_type(),  z: f.read_type() }
     }
 
     pub fn dot(&self, o: &Vec3<T>) -> T {

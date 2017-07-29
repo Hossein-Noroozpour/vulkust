@@ -16,22 +16,22 @@ use super::command::buffer::Buffer as CmdBuff;
 pub enum Usage {
     Vertex,
     Index,
-};
+}
 
-struct Buffer {
+pub struct Buffer {
     pub cmd_pool: Arc<CmdPool>,
     pub vk_data: vk::VkBuffer,
     pub memory: vk::VkDeviceMemory,
-    pub offset: u32,
-    pub size: u32,
+    pub offset: u64,
+    pub size: u64,
 }
 
 impl Buffer {
-    fn create(&mut self, size: u32, usage: u32) {
+    fn create(&mut self, size: u64, usage: u32) {
         let mut buffer_info = vk::VkBufferCreateInfo::default();
         buffer_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         buffer_info.size = size as vk::VkDeviceSize;
-        buffer_info.usage = usage | 
+        buffer_info.usage = usage |
             vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT as u32;
         vulkan_check!(vk::vkCreateBuffer(
             self.cmd_pool.logical_device.vk_data,
@@ -50,7 +50,7 @@ impl Buffer {
         let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
         mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         mem_alloc.allocationSize = mem_reqs.size;
-        mem_alloc.memoryTypeIndex = 
+        mem_alloc.memoryTypeIndex =
             self.cmd_pool.logical_device.physical_device.get_memory_type_index(
                 mem_reqs.memoryTypeBits,
                 vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32);
@@ -68,7 +68,7 @@ impl Buffer {
         ));
     }
 
-    pub fn new(cmd_pool: Arc<CmdPool>, size: u32, usage: Usage) -> Self {
+    pub fn new(cmd_pool: Arc<CmdPool>, size: u64, usage: Usage) -> Self {
         let mut b = Buffer {
             cmd_pool: cmd_pool,
             vk_data: null_mut(),
@@ -84,11 +84,11 @@ impl Buffer {
         return b;
     }
 
-    pub fn seek(&mut self, offset: u32) {
+    pub fn seek(&mut self, offset: u64) {
         self.offset = offset;
     }
 
-    pub fn write(&mut self, data: *const c_void, size: u32) {
+    pub fn write(&mut self, data: *const c_void, size: u64) {
         if self.offset + size > self.size {
             logf!("Your data reached to the maximum size please specify a better size for buffer");
         }
@@ -116,7 +116,7 @@ impl Buffer {
             );
         }
         mem_alloc.allocationSize = mem_reqs.size;
-        mem_alloc.memoryTypeIndex = 
+        mem_alloc.memoryTypeIndex =
             self.cmd_pool.logical_device.physical_device.get_memory_type_index(
                 mem_reqs.memoryTypeBits,
                 vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32 |
@@ -145,7 +145,7 @@ impl Buffer {
             staging_memory,
             0,
         ));
-        let copy_cmd = CmdBuff::new(cmd_pool);
+        let copy_cmd = CmdBuff::new(self.cmd_pool);
         let mut copy_region = vk::VkBufferCopy::default();
         copy_region.dstOffset = self.offset as vk::VkDeviceSize;
         copy_region.size = size as vk::VkDeviceSize;
@@ -161,12 +161,12 @@ impl Buffer {
         copy_cmd.flush();
         unsafe {
             vk::vkDestroyBuffer(
-                logical_device.vk_data,
+                self.cmd_pool.logical_device.vk_data,
                 staging_buffer,
                 null(),
             );
             vk::vkFreeMemory(
-                logical_device.vk_data,
+                self.cmd_pool.logical_device.vk_data,
                 staging_memory,
                 null(),
             );

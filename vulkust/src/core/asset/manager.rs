@@ -1,9 +1,13 @@
 use std::sync::Arc;
 use std::cell::RefCell;
 use super::super::super::audio::manager::Manager as AudioManager;
+use super::super::super::audio::Audio;
 use super::super::super::render::camera::manager::Manager as CameraManager;
+use super::super::super::render::camera::Camera;
 use super::super::super::render::light::manager::Manager as LightManager;
+use super::super::super::render::light::Light;
 use super::super::super::render::model::manager::Manager as ModelManager;
+use super::super::super::render::model::Model;
 use super::super::super::render::scene::manager::Manager as SceneManager;
 use super::super::super::render::scene::Scene;
 use super::super::super::render::shader::manager::Manager as ShaderManager;
@@ -60,6 +64,39 @@ impl Manager {
         self.shader_manager.get(id, &mut self.file, os_app)
     }
 
+    pub fn get_camera<CoreApp>(
+        &mut self,
+        id: u64,
+        os_app: *mut OsApplication<CoreApp>,
+    ) -> Arc<RefCell<Camera<f32>>>
+    where
+        CoreApp: ApplicationTrait,
+    {
+        self.camera_manager.get(id, &mut self.file, os_app)
+    }
+
+    pub fn get_audio<CoreApp>(
+        &mut self,
+        id: u64,
+        os_app: *mut OsApplication<CoreApp>,
+    ) -> Arc<Audio>
+    where
+        CoreApp: ApplicationTrait,
+    {
+        self.audio_manager.get(id, &mut self.file, os_app)
+    }
+
+    pub fn get_light<CoreApp>(
+        &mut self,
+        id: u64,
+        os_app: *mut OsApplication<CoreApp>,
+    ) -> Arc<Light>
+    where
+        CoreApp: ApplicationTrait,
+    {
+        self.light_manager.get(id, &mut self.file, os_app)
+    }
+
     pub fn get_texture<CoreApp>(
         &mut self,
         id: u64,
@@ -69,6 +106,17 @@ impl Manager {
         CoreApp: ApplicationTrait,
     {
         self.texture_manager.get(id, &mut self.file, os_app)
+    }
+
+    pub fn get_model<CoreApp>(
+        &mut self,
+        id: u64,
+        os_app: *mut OsApplication<CoreApp>,
+    ) -> Arc<Model>
+    where
+        CoreApp: ApplicationTrait,
+    {
+        self.model_manager.get(id, &mut self.file, os_app)
     }
 
     pub fn get_scene<CoreApp>(

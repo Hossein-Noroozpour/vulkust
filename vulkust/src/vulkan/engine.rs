@@ -53,6 +53,7 @@ where
     pub render_pass: Option<Arc<RenderPass>>,
     pub framebuffers: Vec<Arc<Framebuffer>>,
     pub graphic_cmd_pool: Option<Arc<CmdPool>>,
+    pub transfer_cmd_pool: Option<Arc<CmdPool>>,
     pub basic_engine: Option<BasicEngine>,
     // for triangle
     pub mesh_buff: Option<Arc<Buffer>>,

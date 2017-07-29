@@ -1,5 +1,6 @@
 use std::ops::{Add, Sub, Mul, Div, Neg, AddAssign, SubAssign, MulAssign, DivAssign};
 use std::fmt::Debug;
+use std::default::Default;
 
 pub fn min<T>(a: T, b: T) -> T
 where
@@ -30,6 +31,7 @@ pub trait Number
     + SubAssign
     + MulAssign
     + DivAssign
+    + Default
     + Sized
     + Copy
     + Clone

@@ -1,9 +1,13 @@
 pub mod manager;
 pub mod perspective;
 
+use super::super::core::application::ApplicationTrait;
 use super::super::math::number::Float;
 use super::super::math::matrix::{Mat4x4, Mat3x3};
 use super::super::math::vector::Vec3;
+use super::super::system::file::File;
+use super::super::system::os::OsApplication;
+use super::super::system::os::ApplicationTrait as OsApp;
 
 pub trait Camera<E>
 where
@@ -65,6 +69,7 @@ where
 {
     s: E,
     rs: E,
+    a: E,
     p: Vec3<E>,
     x: Vec3<E>,
     y: Vec3<E>,
@@ -78,32 +83,31 @@ impl<E> Basic<E>
 where
     E: Float,
 {
-    pub fn new() -> Self {
+    pub fn new<CoreApp>(f: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+            where CoreApp: ApplicationTrait {
+        let p: Vec3<E> = Vec3::new_from_file(f);
+        let mut rr: Mat3x3<E> = Mat3x3::rotation(f.read_type(), &Vec3 {
+            x: E::new(1.0), y: E::new(0.0), z: E::new(0.0) });
+        rr *= &Mat3x3::rotation(f.read_type(), &Vec3 {
+            x: E::new(0.0), y: E::new(1.0), z: E::new(0.0) });
+        rr *= &Mat3x3::rotation(f.read_type(), &Vec3 {
+            x: E::new(0.0), y: E::new(0.0), z: E::new(1.0) });
+        let r = rr.inv();
+        let x: Vec3<E> = &r * &Vec3 { x: E::new(1.0), y: E::new(0.0), z: E::new(0.0) };
+        let y: Vec3<E> = &r * &Vec3 { x: E::new(0.0), y: E::new(1.0), z: E::new(0.0) };
+        let z: Vec3<E> = &r * &Vec3 { x: E::new(0.0), y: E::new(0.0), z: E::new(1.0) };
+        let r = rr.to_mat4x4();
+        let v = &r * &Mat4x4::translator(&-&p);
         Basic {
             s: E::new(0.01),
             rs: E::new(0.1),
-            p: Vec3 {
-                x: E::new(0.0),
-                y: E::new(0.0),
-                z: E::new(0.0),
-            },
-            x: Vec3 {
-                x: E::new(1.0),
-                y: E::new(0.0),
-                z: E::new(0.0),
-            },
-            y: Vec3 {
-                x: E::new(0.0),
-                y: E::new(1.0),
-                z: E::new(0.0),
-            },
-            z: Vec3 {
-                x: E::new(0.0),
-                y: E::new(0.0),
-                z: E::new(1.0),
-            },
-            r: Mat4x4::ident(),
-            v: Mat4x4::ident(),
+            a: E::new(unsafe { (*os_app).get_window_ratio() }),
+            p: p,
+            x: x,
+            y: y,
+            z: z,
+            r: r,
+            v: v,
         }
     }
 }
