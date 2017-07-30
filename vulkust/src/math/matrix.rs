@@ -162,7 +162,7 @@ where
         )
     }
 
-    pub fn projection(fovy: E, aspect: E, near: E, far: E) -> Self {
+    pub fn pers(fovy: E, aspect: E, near: E, far: E) -> Self {
         let fovy = (fovy * E::new(0.5)).tan();
         let ys = E::new(1.0) / fovy;
 		let xs = ys / aspect;
@@ -177,6 +177,17 @@ where
                 [E::new(0.0), E::new(0.0), ws,           E::new(0.0)],
                 // [E::new(0.0), E::new(0.0), zs,           ws],
                 // [E::new(0.0), E::new(0.0), E::new(-1.0), E::new(0.0)],
+            ],
+        }
+    }
+
+    pub fn ortho(aspect: E, near: E, far: E) -> Self {
+        Mat4x4 {
+            data: [
+                [E::new(2.0) / aspect, E::new(0.0), E::new(0.0), E::new(0.0)],
+				[E::new(0.0), E::new(2.0) * aspect, E::new(0.0), E::new(0.0)],
+				[E::new(0.0), E::new(0.0), E::new(2.0) / (near - far), E::new(0.0)],
+				[E::new(0.0), E::new(0.0), (far + near) / (near - far), E::new(1.0)],
             ],
         }
     }
@@ -582,6 +593,12 @@ where
             }
         }
         return m;
+    }
+
+    pub fn scale(&mut self, e: E) {
+        for i in 0..3 {
+            self.data[i][i] *= e;
+        }
     }
 }
 

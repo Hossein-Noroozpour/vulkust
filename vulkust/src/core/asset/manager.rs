@@ -79,7 +79,7 @@ impl Manager {
         &mut self,
         id: u64,
         os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<Audio>
+    ) -> Arc<RefCell<Audio>>
     where
         CoreApp: ApplicationTrait,
     {

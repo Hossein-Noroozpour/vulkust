@@ -28,7 +28,7 @@ where
         let near = f.read_type();
         let far = f.read_type();
         let mut b = Basic::new(f, os_app);
-        let p = Mat4x4::projection(fov, b.a, near, far);
+        let p = Mat4x4::pers(fov, b.a, near, far);
         let vp =  &p * b.get_view();
         Perspective {
             b: b,
@@ -79,18 +79,18 @@ where
     }
     fn set_viewport(&mut self, w: E, h: E) {
         self.b.a = w / h;
-        self.p = Mat4x4::projection(self.fov, self.b.a, self.near, self.far);
+        self.p = Mat4x4::pers(self.fov, self.b.a, self.near, self.far);
         self.vp = &self.p * self.b.get_view();
     }
     fn set_fild_of_view(&mut self, f: E) {
         self.fov = f;
-        self.p = Mat4x4::projection(self.fov, self.b.a, self.near, self.far);
+        self.p = Mat4x4::pers(self.fov, self.b.a, self.near, self.far);
         self.vp = &self.p * self.b.get_view();
     }
     fn set_range(&mut self, s: E, e: E) {
         self.far = e;
         self.near = s;
-        self.p = Mat4x4::projection(self.fov, self.b.a, self.near, self.far);
+        self.p = Mat4x4::pers(self.fov, self.b.a, self.near, self.far);
         self.vp = &self.p * self.b.get_view();
     }
     fn get_view(&self) -> &Mat4x4<E> {

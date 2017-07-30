@@ -1,10 +1,11 @@
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::sync::{Weak, Arc};
 use std::io::{Seek, SeekFrom};
 use super::super::core::application::ApplicationTrait;
 use super::super::system::os::OsApplication;
 use super::super::system::file::File;
-use super::{Audio};
+use super::{Audio, Music, Voice};
 
 pub struct Manager {
     pub cached: BTreeMap<u64, Weak<RefCell<Audio>>>,
@@ -58,9 +59,13 @@ impl Manager {
                 logf!("Can not seek to the requested offset.");
             }
         }
-        let aud = Perspective::new(file, os_app);
-        let camera: Arc<RefCell<Camera<f32>>> = Arc::new(RefCell::new(camera));
-        self.cached.insert(id, Arc::downgrade(&camera));
-        return camera;
+        let audio_type: u64 = file.read_type();
+        let aud: Arc<RefCell<Audio>> = match audio_type {
+            10 => Arc::new(RefCell::new(Music::new(file, os_app))),
+            20 => Arc::new(RefCell::new(Voice::new(file, os_app))),
+            _ => { logf!("Uexpected value"); },
+        };
+        self.cached.insert(id, Arc::downgrade(&aud));
+        return aud;
     }
 }
