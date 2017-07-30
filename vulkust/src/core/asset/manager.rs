@@ -90,7 +90,7 @@ impl Manager {
         &mut self,
         id: u64,
         os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<Light>
+    ) -> Arc<RefCell<Light>>
     where
         CoreApp: ApplicationTrait,
     {
@@ -112,7 +112,7 @@ impl Manager {
         &mut self,
         id: u64,
         os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<Model>
+    ) -> Arc<RefCell<Model>>
     where
         CoreApp: ApplicationTrait,
     {
