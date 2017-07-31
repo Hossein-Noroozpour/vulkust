@@ -167,7 +167,7 @@ extern "C" {
     ) -> i32;
 }
 
-use std::fmt::{Debug, Result, Formatter};
+use std::fmt::{Debug, Formatter, Result};
 
 impl Debug for AConfiguration {
     fn fmt(&self, f: &mut Formatter) -> Result {

@@ -1,5 +1,5 @@
 use std::mem::transmute;
-use super::super::super::objc::runtime::{Object, Sel, YES, BOOL};
+use super::super::super::objc::runtime::{Object, Sel, BOOL, YES};
 use super::super::metal as mtl;
 use super::game_view_controller as gvc;
 use super::application::Application as App;
@@ -20,8 +20,8 @@ where
     let frame: mtl::NSRect = unsafe { msg_send![main_screen, frame] };
     let frame = mtl::NSRect::new(0.0, 0.0, frame.size.width / 2.0, frame.size.height / 2.0);
     let style_mask = (mtl::NS_TITLED_WINDOW_MASK | mtl::NS_CLOSABLE_WINDOW_MASK |
-                          mtl::NS_RESIZABLE_WINDOW_MASK |
-                          mtl::NS_MINIATURIZABLE_WINDOW_MASK)
+        mtl::NS_RESIZABLE_WINDOW_MASK |
+        mtl::NS_MINIATURIZABLE_WINDOW_MASK)
         .bits() as mtl::NSUInteger;
     let backing = mtl::NS_BACKING_STORE_BUFFERED;
     let window: mtl::Id = unsafe {
@@ -58,7 +58,7 @@ where
         let _: () = msg_send![metal_view, setClearColor: clear_color];
         let _: () = msg_send![metal_view, setColorPixelFormat: pixel_format];
         let _: () = msg_send![metal_view, setDepthStencilPixelFormat: depth_stencil_format];
-        let _: () = msg_send![metal_view, setDelegate:game_view];
+        let _: () = msg_send![metal_view, setDelegate: game_view];
         let _: () = msg_send![game_view, setView: metal_view];
         let _: () = msg_send![window, setContentView: metal_view];
         let _: () = msg_send![window, setContentViewController: game_view];

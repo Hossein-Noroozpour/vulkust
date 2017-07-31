@@ -1,7 +1,7 @@
 use std::mem;
 use std::any::Any;
 use super::Id;
-use super::objc::runtime::{Sel, Class, Object};
+use super::objc::runtime::{Class, Object, Sel};
 use super::objc::MessageArguments;
 
 type Imp = unsafe extern "C" fn();

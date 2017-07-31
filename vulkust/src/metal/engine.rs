@@ -10,8 +10,8 @@ use self::block::ConcreteBlock;
 use super::super::objc;
 use super::super::core::application::ApplicationTrait;
 use super::super::core::event::Event;
-use super::super::math::matrix::{Mat4x4, SMat3x3F, SMat4x4F, Mat3x3};
-use super::super::math::vector::{Vec3, SVec3F, SVec3U32};
+use super::super::math::matrix::{Mat3x3, Mat4x4, SMat3x3F, SMat4x4F};
+use super::super::math::vector::{SVec3F, SVec3U32, Vec3};
 use super::super::sync::semaphore::Semaphore;
 use super::super::system::os::OsApplication;
 use super::super::render::engine::EngineTrait;
@@ -149,7 +149,7 @@ where
         let attribute: mtl::Id = unsafe {
             msg_send![
                 attributes,
-                objectAtIndexedSubscript:VERTEX_ATTRIBUTE_POSITION
+                objectAtIndexedSubscript: VERTEX_ATTRIBUTE_POSITION
             ]
         };
         unsafe {
@@ -234,12 +234,15 @@ where
         let label = mtl::NSString::new("MyPipeline");
         unsafe {
             let _: () = msg_send![pipeline_state_descriptor, setLabel:label.s];
-            let _: () = msg_send![pipeline_state_descriptor, setSampleCount:sample_count];
+            let _: () = msg_send![pipeline_state_descriptor, setSampleCount: sample_count];
             let _: () = msg_send![pipeline_state_descriptor,
                 setVertexFunction:shader.as_shader().vertex.function];
             let _: () = msg_send![pipeline_state_descriptor,
                 setFragmentFunction:shader.as_shader().fragment.function];
-            let _: () = msg_send![pipeline_state_descriptor, setVertexDescriptor:vertex_descriptor];
+            let _: () = msg_send![
+                pipeline_state_descriptor,
+                setVertexDescriptor: vertex_descriptor
+            ];
             let color_attachments: mtl::Id = msg_send![pipeline_state_descriptor, colorAttachments];
             let color_attachment: mtl::Id = msg_send![
                 color_attachments, objectAtIndexedSubscript:0 as mtl::NSUInteger];
@@ -306,8 +309,7 @@ where
             mtk::model_io_vertex_descriptor_from_metal(self.metal_vertex_descriptor);
         let attributes: mtl::Id = unsafe { msg_send![modle_vertex_descriptor, attributes] };
         let set = |attributes: mtl::Id, index: mtl::NSUInteger, att: mtl::Id| {
-            let attribute: mtl::Id =
-                unsafe { msg_send![attributes, objectAtIndex: index] };
+            let attribute: mtl::Id = unsafe { msg_send![attributes, objectAtIndex: index] };
             let _: () = unsafe { msg_send![attribute, setName: att] };
             // let _: () = unsafe {
             //     msg_send![attributes, setObject:attribute
@@ -343,9 +345,8 @@ where
 
     fn update_dynamic_buffer_state(&mut self) {
         self.uniform_buffer_index = (self.uniform_buffer_index + 1) % MAX_BUFFERS_COUNT;
-        self.uniform_buffer_offset = 
-            (self.uniform_buffer_size as mtl::NSUInteger *
-                self.uniform_buffer_index as mtl::NSUInteger) /
+        self.uniform_buffer_offset = (self.uniform_buffer_size as mtl::NSUInteger *
+            self.uniform_buffer_index as mtl::NSUInteger) /
             MAX_BUFFERS_COUNT;
         self.uniform_buffer_address = unsafe { msg_send![self.dynamic_uniform_buffer, contents] };
         let tmp_add: mtl::NSUInteger = unsafe { transmute(self.uniform_buffer_address) };
@@ -354,43 +355,45 @@ where
 
     fn update_game_state(&mut self) {
 
-// #[repr(C)]
-// pub struct Uniforms {
-//     pub projection_matrix: SMat4x4F,
-//     pub view_matrix: SMat4x4F,
-//     pub material_shininess: f32,
-//     pub model_view_matrix: SMat4x4F,
-//     pub normal_matrix: SMat3x3F,
-//     pub ambient_light_color: SVec3F,
-//     pub directional_light_direction: SVec3F,
-//     pub directional_light_color: SVec3F,
-// }
+        // #[repr(C)]
+        // pub struct Uniforms {
+        //     pub projection_matrix: SMat4x4F,
+        //     pub view_matrix: SMat4x4F,
+        //     pub material_shininess: f32,
+        //     pub model_view_matrix: SMat4x4F,
+        //     pub normal_matrix: SMat3x3F,
+        //     pub ambient_light_color: SVec3F,
+        //     pub directional_light_direction: SVec3F,
+        //     pub directional_light_color: SVec3F,
+        // }
 
         let mut uniforms: Uniforms = unsafe { zeroed() };
         uniforms.projection_matrix = Mat4x4::projection(1.0, 1.7, 0.1, 10.0).data;
-        uniforms.view_matrix = 
-            [
-                [1.000, 0.000,  0.000,  0.000],
-                [0.000, 1.000,  0.000,  0.000],
-                [0.000, 0.000,  1.000,  0.000],
-                [0.000, 0.000, -8.000,  1.000],
-            ];
+        uniforms.view_matrix = [
+            [1.000, 0.000, 0.000, 0.000],
+            [0.000, 1.000, 0.000, 0.000],
+            [0.000, 0.000, 1.000, 0.000],
+            [0.000, 0.000, -8.000, 1.000],
+        ];
         uniforms.material_shininess = [30.0; 4];
-        uniforms.model_view_matrix =  
-            [
-                [1.000, 0.000,  0.000,  0.000],
-                [0.000, 1.000,  0.000,  0.000],
-                [0.000, 0.000,  1.000,  0.000],
-                [0.000, 0.000, -8.000,  1.000],
-            ];
-        uniforms.normal_matrix = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]];
+        uniforms.model_view_matrix = [
+            [1.000, 0.000, 0.000, 0.000],
+            [0.000, 1.000, 0.000, 0.000],
+            [0.000, 0.000, 1.000, 0.000],
+            [0.000, 0.000, -8.000, 1.000],
+        ];
+        uniforms.normal_matrix = [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+        ];
         uniforms.ambient_light_color = [0.02, 0.02, 0.02, 0.02];
         uniforms.directional_light_direction = [0.0, 0.0, -1.0, 0.0];
         uniforms.directional_light_color = [0.7, 0.7, 0.7, 0.7];
         // let mut view_matrix = Mat4x4::ident();
         // view_matrix.translate(&Vec3 {
-        //         x: 0.0f32, 
-        //         y: 0.0, 
+        //         x: 0.0f32,
+        //         y: 0.0,
         //         z: -8.0,
         //     }
         // );
@@ -432,8 +435,12 @@ where
         // // uniforms.normal_matrix = SMat3x3F(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
         self.rotation += 0.01;
         let metal_uniforms: *mut Uniforms = unsafe { transmute(self.uniform_buffer_address) };
-        unsafe { 
-            libc::memcpy(transmute(metal_uniforms), transmute(&uniforms), size_of::<Uniforms>());
+        unsafe {
+            libc::memcpy(
+                transmute(metal_uniforms),
+                transmute(&uniforms),
+                size_of::<Uniforms>(),
+            );
         }
     }
 

@@ -32,7 +32,9 @@ impl Texture2D {
         let size: u64 = file.read_type();
         // logi!("Texture2D size is: {}", size);
         let data = file.read_bytes(size as usize);
-        Texture2D { raw: PlatformTexture2D::new(data, os_app) }
+        Texture2D {
+            raw: PlatformTexture2D::new(data, os_app),
+        }
     }
 }
 

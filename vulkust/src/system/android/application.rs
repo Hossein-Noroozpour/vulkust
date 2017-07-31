@@ -5,12 +5,12 @@ use std::ptr::null_mut;
 use self::libc::{c_void, size_t};
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::core::asset::manager::Manager as AssetManager;
-use super::super::super::render::engine::{RenderEngine, EngineTrait as RenderEngineTrait};
+use super::super::super::render::engine::{EngineTrait as RenderEngineTrait, RenderEngine};
 use super::super::file::File;
 use super::super::os::ApplicationTrait as OsApplicationTrait;
 use super::activity::ANativeActivity;
 use super::glue;
-use super::glue::{AppCmd, AndroidApp, AndroidPollSource};
+use super::glue::{AndroidApp, AndroidPollSource, AppCmd};
 use super::window::ANativeWindow;
 use super::looper::ALooper_pollAll;
 

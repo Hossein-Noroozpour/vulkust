@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::sync::{Weak, Arc};
+use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
 use super::super::core::application::ApplicationTrait;
 use super::super::system::os::OsApplication;
@@ -38,23 +38,19 @@ impl Manager {
         CoreApp: ApplicationTrait,
     {
         match self.cached.get(&id) {
-            Some(res) => {
-                match res.upgrade() {
-                    Some(res) => {
-                        return res;
-                    }
-                    None => {}
+            Some(res) => match res.upgrade() {
+                Some(res) => {
+                    return res;
                 }
-            }
+                None => {}
+            },
             None => {}
         }
         let offset = self.offsets[id as usize];
         match file.seek(SeekFrom::Start(offset)) {
-            Ok(o) => {
-                if o < offset {
-                    logf!("Seeked offset does not match!");
-                }
-            }
+            Ok(o) => if o < offset {
+                logf!("Seeked offset does not match!");
+            },
             _ => {
                 logf!("Can not seek to the requested offset.");
             }
@@ -63,7 +59,9 @@ impl Manager {
         let aud: Arc<RefCell<Audio>> = match audio_type {
             10 => Arc::new(RefCell::new(Music::new(file, os_app))),
             20 => Arc::new(RefCell::new(Voice::new(file, os_app))),
-            _ => { logf!("Uexpected value"); },
+            _ => {
+                logf!("Uexpected value");
+            }
         };
         self.cached.insert(id, Arc::downgrade(&aud));
         return aud;

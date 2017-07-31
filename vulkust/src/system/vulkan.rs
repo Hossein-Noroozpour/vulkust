@@ -3,9 +3,9 @@
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
-use std::os::raw::{c_int, c_char, c_long, c_uint, c_void, c_ulong, c_short, c_uchar, c_ushort,
-                   c_longlong};
-use std::mem::{zeroed, transmute};
+use std::os::raw::{c_char, c_int, c_long, c_longlong, c_short, c_uchar, c_uint, c_ulong, c_ushort,
+                   c_void};
+use std::mem::{transmute, zeroed};
 use std::default::Default;
 
 pub type ptrdiff_t = isize;
@@ -4820,7 +4820,7 @@ pub type PFN_VkCreateAndroidSurfaceKhr =
     ) -> VkResult;
 
 #[cfg(target_os = "linux")]
-use super::linux::xcb::{xcb_window_t, xcb_connection_t};
+use super::linux::xcb::{xcb_connection_t, xcb_window_t};
 #[cfg(target_os = "linux")]
 pub type VkXcbSurfaceCreateFlagsKHR = VkFlags;
 

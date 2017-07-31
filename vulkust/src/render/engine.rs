@@ -1,4 +1,4 @@
-use std::cell::{RefCell, RefMut, Ref};
+use std::cell::{Ref, RefCell, RefMut};
 use std::sync::Arc;
 
 #[cfg(feature = "d3d12")]
@@ -37,7 +37,8 @@ pub struct Basic {
 impl Basic {
     pub fn new<CoreApp>(os_app: *mut OsApplication<CoreApp>) -> Self
     where
-        CoreApp: ApplicationTrait, {
+        CoreApp: ApplicationTrait,
+    {
         Basic {
             current_scene: unsafe { (*os_app).asset_manager.get_scene(0, os_app) },
         }

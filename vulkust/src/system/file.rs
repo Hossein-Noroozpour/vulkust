@@ -1,9 +1,9 @@
 #[cfg(not(target_os = "android"))]
 use std::fs::File as StdFile;
-use std::io::{Read, Seek, SeekFrom, Result};
+use std::io::{Read, Result, Seek, SeekFrom};
 #[cfg(not(target_os = "android"))]
 use std::io::BufReader;
-use std::mem::{transmute, size_of};
+use std::mem::{size_of, transmute};
 #[cfg(target_os = "android")]
 use super::android::asset as aas;
 
@@ -131,6 +131,10 @@ impl File {
         let mut r = T::default();
         self.read_typed_bytes(unsafe { transmute(&mut r) }, size_of::<T>());
         r
+    }
+
+    pub fn read_id(&mut self) -> u64 {
+        self.read_type()
     }
 }
 

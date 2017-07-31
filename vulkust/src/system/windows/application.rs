@@ -4,13 +4,13 @@ extern crate user32;
 extern crate gdi32;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::core::asset::manager::Manager as AssetManager;
-use super::super::super::render::engine::{RenderEngine, EngineTrait};
+use super::super::super::render::engine::{EngineTrait, RenderEngine};
 use super::super::super::util::string::string_to_cwstring;
-use super::super::os::{OsApplication, ApplicationTrait as OsApplicationTrait};
+use super::super::os::{ApplicationTrait as OsApplicationTrait, OsApplication};
 use super::super::file::File;
 
 use std::ptr::{null, null_mut};
-use std::mem::{zeroed, size_of, transmute};
+use std::mem::{size_of, transmute, zeroed};
 use std::os::raw::c_void;
 
 pub struct Application<CoreApp>
@@ -78,8 +78,8 @@ where
                 winapi::winuser::IDC_ARROW,
             )
         };
-        wnd_class.hbrBackground = unsafe { gdi32::GetStockObject(winapi::wingdi::BLACK_BRUSH) } as
-            winapi::windef::HBRUSH;
+        wnd_class.hbrBackground =
+            unsafe { gdi32::GetStockObject(winapi::wingdi::BLACK_BRUSH) } as winapi::windef::HBRUSH;
         wnd_class.lpszClassName = application_name.as_ptr();
         wnd_class.hIconSm = unsafe {
             user32::LoadIconW(
@@ -159,10 +159,10 @@ where
         }
         #[cfg(feature = "fullscreen")]
         {
-            let x = (user32::GetSystemMetrics(winapi::winuser::SM_CXSCREEN) - window_rect.right) /
-                2;
-            let y = (user32::GetSystemMetrics(winapi::winuser::SM_CYSCREEN) -
-                window_rect.bottom) / 2;
+            let x =
+                (user32::GetSystemMetrics(winapi::winuser::SM_CXSCREEN) - window_rect.right) / 2;
+            let y =
+                (user32::GetSystemMetrics(winapi::winuser::SM_CYSCREEN) - window_rect.bottom) / 2;
             user32::SetWindowPos(
                 window,
                 0,

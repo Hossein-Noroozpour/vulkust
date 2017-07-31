@@ -1,6 +1,6 @@
 extern crate libc;
 use std::ptr;
-use std::mem::{transmute, zeroed, size_of};
+use std::mem::{size_of, transmute, zeroed};
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::config;
 use super::looper;

@@ -6,7 +6,7 @@ use std::default::Default;
 use std::sync::Arc;
 use std::ptr::{copy, null, null_mut};
 use std::os::raw::c_void;
-use std::mem::{transmute, size_of};
+use std::mem::{size_of, transmute};
 use super::super::math::number::Float;
 use super::super::system::vulkan as vk;
 use super::device::logical::Logical as LogicalDevice;
@@ -31,8 +31,8 @@ impl Buffer {
         let mut buffer_info = vk::VkBufferCreateInfo::default();
         buffer_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         buffer_info.size = size as vk::VkDeviceSize;
-        buffer_info.usage = usage |
-            vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT as u32;
+        buffer_info.usage =
+            usage | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT as u32;
         vulkan_check!(vk::vkCreateBuffer(
             self.cmd_pool.logical_device.vk_data,
             &buffer_info,
@@ -50,10 +50,13 @@ impl Buffer {
         let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
         mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         mem_alloc.allocationSize = mem_reqs.size;
-        mem_alloc.memoryTypeIndex =
-            self.cmd_pool.logical_device.physical_device.get_memory_type_index(
+        mem_alloc.memoryTypeIndex = self.cmd_pool
+            .logical_device
+            .physical_device
+            .get_memory_type_index(
                 mem_reqs.memoryTypeBits,
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32);
+                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32,
+            );
         vulkan_check!(vk::vkAllocateMemory(
             self.cmd_pool.logical_device.vk_data,
             &mem_alloc,
@@ -116,11 +119,14 @@ impl Buffer {
             );
         }
         mem_alloc.allocationSize = mem_reqs.size;
-        mem_alloc.memoryTypeIndex =
-            self.cmd_pool.logical_device.physical_device.get_memory_type_index(
+        mem_alloc.memoryTypeIndex = self.cmd_pool
+            .logical_device
+            .physical_device
+            .get_memory_type_index(
                 mem_reqs.memoryTypeBits,
                 vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32 |
-                    vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32);
+                    vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32,
+            );
         vulkan_check!(vk::vkAllocateMemory(
             self.cmd_pool.logical_device.vk_data,
             &mem_alloc,
@@ -136,7 +142,11 @@ impl Buffer {
             &mut buffer_data,
         ));
         unsafe {
-            libc::memcpy(transmute(buffer_data), transmute(data), size as libc::size_t);
+            libc::memcpy(
+                transmute(buffer_data),
+                transmute(data),
+                size as libc::size_t,
+            );
             vk::vkUnmapMemory(self.cmd_pool.logical_device.vk_data, staging_memory);
         }
         vulkan_check!(vk::vkBindBufferMemory(
@@ -160,16 +170,8 @@ impl Buffer {
         }
         copy_cmd.flush();
         unsafe {
-            vk::vkDestroyBuffer(
-                self.cmd_pool.logical_device.vk_data,
-                staging_buffer,
-                null(),
-            );
-            vk::vkFreeMemory(
-                self.cmd_pool.logical_device.vk_data,
-                staging_memory,
-                null(),
-            );
+            vk::vkDestroyBuffer(self.cmd_pool.logical_device.vk_data, staging_buffer, null());
+            vk::vkFreeMemory(self.cmd_pool.logical_device.vk_data, staging_memory, null());
         }
         self.offset += size;
     }

@@ -145,11 +145,11 @@ impl Physical {
         }
         for i in 0..queue_family_properties.len() {
             if ((queue_family_properties[i].queueFlags as u32) &
-                    (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
+                (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
                 ((queue_family_properties[i].queueFlags as u32) &
-                     (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0 &&
+                    (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0 &&
                 ((queue_family_properties[i].queueFlags as u32) &
-                     (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0 &&
+                    (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0 &&
                 supports_present[i]
             {
                 score_indices.score = 100;
@@ -160,17 +160,17 @@ impl Physical {
                 return score_indices;
             }
             if ((queue_family_properties[i].queueFlags as u32) &
-                    (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0
+                (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0
             {
                 score_indices.graphics_queue_node_index = i as u32;
             }
             if ((queue_family_properties[i].queueFlags as u32) &
-                    (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0
+                (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0
             {
                 score_indices.transfer_queue_node_index = i as u32;
             }
             if ((queue_family_properties[i].queueFlags as u32) &
-                    (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0
+                (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0
             {
                 score_indices.compute_queue_node_index = i as u32;
             }
@@ -180,9 +180,9 @@ impl Physical {
         }
         for i in 0..queue_family_properties.len() {
             if ((queue_family_properties[i].queueFlags as u32) &
-                    (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
+                (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
                 ((queue_family_properties[i].queueFlags as u32) &
-                     (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0 &&
+                    (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0 &&
                 supports_present[i]
             {
                 if score_indices.compute_queue_node_index != u32::max_value() {
@@ -198,7 +198,7 @@ impl Physical {
         }
         for i in 0..queue_family_properties.len() {
             if ((queue_family_properties[i].queueFlags as u32) &
-                    (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
+                (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0 &&
                 supports_present[i]
             {
                 if score_indices.compute_queue_node_index != u32::max_value() {

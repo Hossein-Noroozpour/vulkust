@@ -1,6 +1,6 @@
 pub mod manager;
 
-use super::super::math::matrix::{Mat4x4, Mat3x3};
+use super::super::math::matrix::{Mat3x3, Mat4x4};
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 
@@ -17,14 +17,39 @@ pub struct Sun {
 
 impl Sun {
     pub fn new(file: &mut File) -> Self {
-        let mut dir = Vec3 { x: 1.0, y: 0.0, z: 0.0 };
+        let mut dir = Vec3 {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+        };
         let far = file.read_type();
         let near = file.read_type();
         let size = file.read_type();
         let mut loc = Vec3::new_from_file(file);
-        let mut r = Mat3x3::rotation(-file.read_type::<f32>(), &Vec3 { x: 1.0, y: 0.0, z: 0.0 });
-        r *= &Mat3x3::rotation(-file.read_type::<f32>(), &Vec3 { x: 0.0, y: 1.0, z: 0.0 });
-        r *= &Mat3x3::rotation(-file.read_type::<f32>(), &Vec3 { x: 0.0, y: 0.0, z: 1.0 });
+        let mut r = Mat3x3::rotation(
+            -file.read_type::<f32>(),
+            &Vec3 {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            },
+        );
+        r *= &Mat3x3::rotation(
+            -file.read_type::<f32>(),
+            &Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            },
+        );
+        r *= &Mat3x3::rotation(
+            -file.read_type::<f32>(),
+            &Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+            },
+        );
         dir = (&r * &dir).normalized();
         r.scale(size);
         let r = r.to_mat4x4();

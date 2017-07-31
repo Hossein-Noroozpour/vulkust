@@ -58,8 +58,8 @@ impl RenderPass {
         dependencies[0].dstAccessMask = vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as
             u32 |
             vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
-        dependencies[0].dependencyFlags = vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as
-            u32;
+        dependencies[0].dependencyFlags =
+            vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;
         dependencies[1].dstSubpass = vk::VK_SUBPASS_EXTERNAL;
         dependencies[1].srcStageMask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
@@ -69,8 +69,8 @@ impl RenderPass {
             u32 |
             vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
         dependencies[1].dstAccessMask = vk::VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT as u32;
-        dependencies[1].dependencyFlags = vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as
-            u32;
+        dependencies[1].dependencyFlags =
+            vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;
         let mut render_pass_create_info = vk::VkRenderPassCreateInfo::default();
         render_pass_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;

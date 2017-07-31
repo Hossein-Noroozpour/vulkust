@@ -3,7 +3,7 @@ pub mod perspective;
 
 use super::super::core::application::ApplicationTrait;
 use super::super::math::number::Float;
-use super::super::math::matrix::{Mat4x4, Mat3x3};
+use super::super::math::matrix::{Mat3x3, Mat4x4};
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::super::system::os::OsApplication;
@@ -84,18 +84,50 @@ where
     E: Float,
 {
     pub fn new<CoreApp>(f: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-            where CoreApp: ApplicationTrait {
+    where
+        CoreApp: ApplicationTrait,
+    {
         let p: Vec3<E> = Vec3::new_from_file(f);
-        let mut rr: Mat3x3<E> = Mat3x3::rotation(f.read_type(), &Vec3 {
-            x: E::new(1.0), y: E::new(0.0), z: E::new(0.0) });
-        rr *= &Mat3x3::rotation(f.read_type(), &Vec3 {
-            x: E::new(0.0), y: E::new(1.0), z: E::new(0.0) });
-        rr *= &Mat3x3::rotation(f.read_type(), &Vec3 {
-            x: E::new(0.0), y: E::new(0.0), z: E::new(1.0) });
+        let mut rr: Mat3x3<E> = Mat3x3::rotation(
+            f.read_type(),
+            &Vec3 {
+                x: E::new(1.0),
+                y: E::new(0.0),
+                z: E::new(0.0),
+            },
+        );
+        rr *= &Mat3x3::rotation(
+            f.read_type(),
+            &Vec3 {
+                x: E::new(0.0),
+                y: E::new(1.0),
+                z: E::new(0.0),
+            },
+        );
+        rr *= &Mat3x3::rotation(
+            f.read_type(),
+            &Vec3 {
+                x: E::new(0.0),
+                y: E::new(0.0),
+                z: E::new(1.0),
+            },
+        );
         let r = rr.inv();
-        let x: Vec3<E> = &r * &Vec3 { x: E::new(1.0), y: E::new(0.0), z: E::new(0.0) };
-        let y: Vec3<E> = &r * &Vec3 { x: E::new(0.0), y: E::new(1.0), z: E::new(0.0) };
-        let z: Vec3<E> = &r * &Vec3 { x: E::new(0.0), y: E::new(0.0), z: E::new(1.0) };
+        let x: Vec3<E> = &r * &Vec3 {
+            x: E::new(1.0),
+            y: E::new(0.0),
+            z: E::new(0.0),
+        };
+        let y: Vec3<E> = &r * &Vec3 {
+            x: E::new(0.0),
+            y: E::new(1.0),
+            z: E::new(0.0),
+        };
+        let z: Vec3<E> = &r * &Vec3 {
+            x: E::new(0.0),
+            y: E::new(0.0),
+            z: E::new(1.0),
+        };
         let r = rr.to_mat4x4();
         let v = &r * &Mat4x4::translator(&-&p);
         Basic {
@@ -186,10 +218,15 @@ where
         self.p = *eye;
         self.v = Mat4x4 {
             data: [
-                [self.x.x,          self.y.x,       -self.z.x,        E::new(0.0)],
-                [self.x.y,          self.y.y,       -self.z.y,        E::new(0.0)],
-                [self.x.z,          self.y.z,       -self.z.z,        E::new(0.0)],
-                [-self.x.dot(eye), -self.y.dot(eye), self.z.dot(eye), E::new(1.0)],
+                [self.x.x, self.y.x, -self.z.x, E::new(0.0)],
+                [self.x.y, self.y.y, -self.z.y, E::new(0.0)],
+                [self.x.z, self.y.z, -self.z.z, E::new(0.0)],
+                [
+                    -self.x.dot(eye),
+                    -self.y.dot(eye),
+                    self.z.dot(eye),
+                    E::new(1.0),
+                ],
             ],
         };
         self.r = &self.v * &Mat4x4::translator(&self.p);

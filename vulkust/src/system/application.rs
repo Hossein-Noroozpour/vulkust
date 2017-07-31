@@ -3,8 +3,8 @@ extern crate libc;
 use std::os::raw::c_void as std_void;
 use std::mem::transmute;
 use super::super::core::application::ApplicationTrait;
-use super::super::render::engine::{RenderEngine, EngineTrait as RenderEngineTrait};
-use super::os::{OsApplication, ApplicationTrait as OsApplicationTrait};
+use super::super::render::engine::{EngineTrait as RenderEngineTrait, RenderEngine};
+use super::os::{ApplicationTrait as OsApplicationTrait, OsApplication};
 
 pub struct Application<CoreApp>
 where
@@ -61,8 +61,9 @@ where
     #[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
     pub fn run(&mut self) {
         unsafe { (*self.render_engine).initialize() };
-        unsafe { (*self.core_app).initialize(
-            transmute(self.os_app), transmute(self.render_engine)) };
+        unsafe {
+            (*self.core_app).initialize(transmute(self.os_app), transmute(self.render_engine))
+        };
         unsafe { (*self.os_app).execute() };
         unsafe { (*self.core_app).terminate() };
         unsafe { (*self.render_engine).terminate() };

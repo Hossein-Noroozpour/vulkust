@@ -14,7 +14,7 @@ use std::os::raw::{c_char, c_void};
 use super::super::system::vulkan as vk;
 
 #[cfg(not(feature = "no-vulkan-debug"))]
-use super::super::util::string::{slice_to_string, strings_to_cstrings, cstrings_to_ptrs};
+use super::super::util::string::{cstrings_to_ptrs, slice_to_string, strings_to_cstrings};
 
 pub struct Instance {
     pub vk_data: vk::VkInstance,

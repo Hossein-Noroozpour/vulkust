@@ -1,5 +1,5 @@
 use std::ops::{Mul, MulAssign};
-use super::number::{Number, Float};
+use super::number::{Float, Number};
 use super::vector::Vec3;
 
 #[repr(simd)]
@@ -19,7 +19,7 @@ pub struct SMat4x4D(
     pub f64,
     pub f64,
     pub f64,
-    pub f64
+    pub f64,
 );
 
 #[repr(simd)]
@@ -39,7 +39,7 @@ pub struct SMat4x4F(
     pub f32,
     pub f32,
     pub f32,
-    pub f32
+    pub f32,
 );
 
 // column major matrix
@@ -68,7 +68,9 @@ where
     }
 
     pub fn zero() -> Mat4x4<E> {
-        Mat4x4 { data: [[E::new(0.0); 4]; 4] }
+        Mat4x4 {
+            data: [[E::new(0.0); 4]; 4],
+        }
     }
 
     pub fn rotation(d: E, v: &Vec3<E>) -> Mat4x4<E> {
@@ -165,16 +167,16 @@ where
     pub fn pers(fovy: E, aspect: E, near: E, far: E) -> Self {
         let fovy = (fovy * E::new(0.5)).tan();
         let ys = E::new(1.0) / fovy;
-		let xs = ys / aspect;
+        let xs = ys / aspect;
         let near_far = near - far;
         let zs = (far + near) / near_far;
-	    let ws = (E::new(2.0) * far * near) / near_far;
+        let ws = (E::new(2.0) * far * near) / near_far;
         Mat4x4 {
             data: [
-                [xs,          E::new(0.0), E::new(0.0),  E::new(0.0)],
-                [E::new(0.0), ys,          E::new(0.0),  E::new(0.0)],
-                [E::new(0.0), E::new(0.0), zs,           E::new(-1.0)],
-                [E::new(0.0), E::new(0.0), ws,           E::new(0.0)],
+                [xs, E::new(0.0), E::new(0.0), E::new(0.0)],
+                [E::new(0.0), ys, E::new(0.0), E::new(0.0)],
+                [E::new(0.0), E::new(0.0), zs, E::new(-1.0)],
+                [E::new(0.0), E::new(0.0), ws, E::new(0.0)],
                 // [E::new(0.0), E::new(0.0), zs,           ws],
                 // [E::new(0.0), E::new(0.0), E::new(-1.0), E::new(0.0)],
             ],
@@ -185,9 +187,19 @@ where
         Mat4x4 {
             data: [
                 [E::new(2.0) / aspect, E::new(0.0), E::new(0.0), E::new(0.0)],
-				[E::new(0.0), E::new(2.0) * aspect, E::new(0.0), E::new(0.0)],
-				[E::new(0.0), E::new(0.0), E::new(2.0) / (near - far), E::new(0.0)],
-				[E::new(0.0), E::new(0.0), (far + near) / (near - far), E::new(1.0)],
+                [E::new(0.0), E::new(2.0) * aspect, E::new(0.0), E::new(0.0)],
+                [
+                    E::new(0.0),
+                    E::new(0.0),
+                    E::new(2.0) / (near - far),
+                    E::new(0.0),
+                ],
+                [
+                    E::new(0.0),
+                    E::new(0.0),
+                    (far + near) / (near - far),
+                    E::new(1.0),
+                ],
             ],
         }
     }
@@ -204,39 +216,39 @@ where
 
     pub fn det(&self) -> E {
         (self.data[0][0] *
-             ((self.data[1][1] *
-                   ((self.data[2][2] * self.data[3][3]) - (self.data[2][3] * self.data[3][2]))) -
-                  (self.data[1][2] *
-                       ((self.data[2][1] * self.data[3][3]) - (self.data[2][3] * self.data[3][1]))) +
-                  (self.data[1][3] *
-                       ((self.data[2][1] * self.data[3][2]) - (self.data[2][2] * self.data[3][1]))))) -
+            ((self.data[1][1] *
+                ((self.data[2][2] * self.data[3][3]) - (self.data[2][3] * self.data[3][2]))) -
+                (self.data[1][2] *
+                    ((self.data[2][1] * self.data[3][3]) - (self.data[2][3] * self.data[3][1]))) +
+                (self.data[1][3] *
+                    ((self.data[2][1] * self.data[3][2]) - (self.data[2][2] * self.data[3][1]))))) -
             (self.data[0][1] *
-                 ((self.data[1][0] *
-                       ((self.data[2][2] * self.data[3][3]) - (self.data[2][3] * self.data[3][2]))) -
-                      (self.data[1][2] *
-                           ((self.data[2][0] * self.data[3][3]) -
-                                (self.data[2][3] * self.data[3][0]))) +
-                      (self.data[1][3] *
-                           ((self.data[2][0] * self.data[3][2]) -
-                                (self.data[2][2] * self.data[3][0]))))) +
+                ((self.data[1][0] *
+                    ((self.data[2][2] * self.data[3][3]) - (self.data[2][3] * self.data[3][2]))) -
+                    (self.data[1][2] *
+                        ((self.data[2][0] * self.data[3][3]) -
+                            (self.data[2][3] * self.data[3][0]))) +
+                    (self.data[1][3] *
+                        ((self.data[2][0] * self.data[3][2]) -
+                            (self.data[2][2] * self.data[3][0]))))) +
             (self.data[0][2] *
-                 ((self.data[1][0] *
-                       ((self.data[2][1] * self.data[3][3]) - (self.data[2][3] * self.data[3][1]))) -
-                      (self.data[1][1] *
-                           ((self.data[2][0] * self.data[3][3]) -
-                                (self.data[2][3] * self.data[3][0]))) +
-                      (self.data[1][3] *
-                           ((self.data[2][0] * self.data[3][1]) -
-                                (self.data[2][1] * self.data[3][0]))))) -
+                ((self.data[1][0] *
+                    ((self.data[2][1] * self.data[3][3]) - (self.data[2][3] * self.data[3][1]))) -
+                    (self.data[1][1] *
+                        ((self.data[2][0] * self.data[3][3]) -
+                            (self.data[2][3] * self.data[3][0]))) +
+                    (self.data[1][3] *
+                        ((self.data[2][0] * self.data[3][1]) -
+                            (self.data[2][1] * self.data[3][0]))))) -
             (self.data[0][3] *
-                 ((self.data[1][0] *
-                       ((self.data[2][1] * self.data[3][2]) - (self.data[2][2] * self.data[3][1]))) -
-                      (self.data[1][1] *
-                           ((self.data[2][0] * self.data[3][2]) -
-                                (self.data[2][2] * self.data[3][0]))) +
-                      (self.data[1][2] *
-                           ((self.data[2][0] * self.data[3][1]) -
-                                (self.data[2][1] * self.data[3][0])))))
+                ((self.data[1][0] *
+                    ((self.data[2][1] * self.data[3][2]) - (self.data[2][2] * self.data[3][1]))) -
+                    (self.data[1][1] *
+                        ((self.data[2][0] * self.data[3][2]) -
+                            (self.data[2][2] * self.data[3][0]))) +
+                    (self.data[1][2] *
+                        ((self.data[2][0] * self.data[3][1]) -
+                            (self.data[2][1] * self.data[3][0])))))
     }
 
     pub fn inv(&self) -> Self {
@@ -245,155 +257,155 @@ where
             data: [
                 [
                     ((self.data[1][1] *
-                          ((self.data[2][2] * self.data[3][3]) -
-                               (self.data[2][3] * self.data[3][2]))) -
-                         (self.data[1][2] *
-                              ((self.data[2][1] * self.data[3][3]) -
-                                   (self.data[2][3] * self.data[3][1]))) +
-                         (self.data[1][3] *
-                              ((self.data[2][1] * self.data[3][2]) -
-                                   (self.data[2][2] * self.data[3][1])))) / d,
+                        ((self.data[2][2] * self.data[3][3]) -
+                            (self.data[2][3] * self.data[3][2]))) -
+                        (self.data[1][2] *
+                            ((self.data[2][1] * self.data[3][3]) -
+                                (self.data[2][3] * self.data[3][1]))) +
+                        (self.data[1][3] *
+                            ((self.data[2][1] * self.data[3][2]) -
+                                (self.data[2][2] * self.data[3][1])))) / d,
                     ((self.data[1][0] *
-                          ((self.data[2][2] * self.data[3][3]) -
-                               (self.data[2][3] * self.data[3][2]))) -
-                         (self.data[1][2] *
-                              ((self.data[2][0] * self.data[3][3]) -
-                                   (self.data[2][3] * self.data[3][0]))) +
-                         (self.data[1][3] *
-                              ((self.data[2][0] * self.data[3][2]) -
-                                   (self.data[2][2] * self.data[3][0])))) / d,
+                        ((self.data[2][2] * self.data[3][3]) -
+                            (self.data[2][3] * self.data[3][2]))) -
+                        (self.data[1][2] *
+                            ((self.data[2][0] * self.data[3][3]) -
+                                (self.data[2][3] * self.data[3][0]))) +
+                        (self.data[1][3] *
+                            ((self.data[2][0] * self.data[3][2]) -
+                                (self.data[2][2] * self.data[3][0])))) / d,
                     ((self.data[1][0] *
-                          ((self.data[2][1] * self.data[3][3]) -
-                               (self.data[2][3] * self.data[3][1]))) -
-                         (self.data[1][1] *
-                              ((self.data[2][0] * self.data[3][3]) -
-                                   (self.data[2][3] * self.data[3][0]))) +
-                         (self.data[1][3] *
-                              ((self.data[2][0] * self.data[3][1]) -
-                                   (self.data[2][1] * self.data[3][0])))) / d,
+                        ((self.data[2][1] * self.data[3][3]) -
+                            (self.data[2][3] * self.data[3][1]))) -
+                        (self.data[1][1] *
+                            ((self.data[2][0] * self.data[3][3]) -
+                                (self.data[2][3] * self.data[3][0]))) +
+                        (self.data[1][3] *
+                            ((self.data[2][0] * self.data[3][1]) -
+                                (self.data[2][1] * self.data[3][0])))) / d,
                     ((self.data[1][0] *
-                          ((self.data[2][1] * self.data[3][2]) -
-                               (self.data[2][2] * self.data[3][1]))) -
-                         (self.data[1][1] *
-                              ((self.data[2][0] * self.data[3][2]) -
-                                   (self.data[2][2] * self.data[3][0]))) +
-                         (self.data[1][2] *
-                              ((self.data[2][0] * self.data[3][1]) -
-                                   (self.data[2][1] * self.data[3][0])))) / d,
+                        ((self.data[2][1] * self.data[3][2]) -
+                            (self.data[2][2] * self.data[3][1]))) -
+                        (self.data[1][1] *
+                            ((self.data[2][0] * self.data[3][2]) -
+                                (self.data[2][2] * self.data[3][0]))) +
+                        (self.data[1][2] *
+                            ((self.data[2][0] * self.data[3][1]) -
+                                (self.data[2][1] * self.data[3][0])))) / d,
                 ],
                 [
                     ((self.data[0][1] *
-                          ((self.data[2][2] * self.data[3][3]) -
-                               (self.data[2][3] * self.data[3][2]))) -
-                         (self.data[0][2] *
-                              ((self.data[2][1] * self.data[3][3]) -
-                                   (self.data[2][3] * self.data[3][1]))) +
-                         (self.data[0][3] *
-                              ((self.data[2][1] * self.data[3][2]) -
-                                   (self.data[2][2] * self.data[3][1])))) / d,
+                        ((self.data[2][2] * self.data[3][3]) -
+                            (self.data[2][3] * self.data[3][2]))) -
+                        (self.data[0][2] *
+                            ((self.data[2][1] * self.data[3][3]) -
+                                (self.data[2][3] * self.data[3][1]))) +
+                        (self.data[0][3] *
+                            ((self.data[2][1] * self.data[3][2]) -
+                                (self.data[2][2] * self.data[3][1])))) / d,
                     ((self.data[0][0] *
-                          ((self.data[2][2] * self.data[3][3]) -
-                               (self.data[2][3] * self.data[3][2]))) -
-                         (self.data[0][2] *
-                              ((self.data[2][0] * self.data[3][3]) -
-                                   (self.data[2][3] * self.data[3][0]))) +
-                         (self.data[0][3] *
-                              ((self.data[2][0] * self.data[3][2]) -
-                                   (self.data[2][2] * self.data[3][0])))) / d,
+                        ((self.data[2][2] * self.data[3][3]) -
+                            (self.data[2][3] * self.data[3][2]))) -
+                        (self.data[0][2] *
+                            ((self.data[2][0] * self.data[3][3]) -
+                                (self.data[2][3] * self.data[3][0]))) +
+                        (self.data[0][3] *
+                            ((self.data[2][0] * self.data[3][2]) -
+                                (self.data[2][2] * self.data[3][0])))) / d,
                     ((self.data[0][0] *
-                          ((self.data[2][1] * self.data[3][3]) -
-                               (self.data[2][3] * self.data[3][1]))) -
-                         (self.data[0][1] *
-                              ((self.data[2][0] * self.data[3][3]) -
-                                   (self.data[2][3] * self.data[3][0]))) +
-                         (self.data[0][3] *
-                              ((self.data[2][0] * self.data[3][1]) -
-                                   (self.data[2][1] * self.data[3][0])))) / d,
+                        ((self.data[2][1] * self.data[3][3]) -
+                            (self.data[2][3] * self.data[3][1]))) -
+                        (self.data[0][1] *
+                            ((self.data[2][0] * self.data[3][3]) -
+                                (self.data[2][3] * self.data[3][0]))) +
+                        (self.data[0][3] *
+                            ((self.data[2][0] * self.data[3][1]) -
+                                (self.data[2][1] * self.data[3][0])))) / d,
                     ((self.data[0][0] *
-                          ((self.data[2][1] * self.data[3][2]) -
-                               (self.data[2][2] * self.data[3][1]))) -
-                         (self.data[0][1] *
-                              ((self.data[2][0] * self.data[3][2]) -
-                                   (self.data[2][2] * self.data[3][0]))) +
-                         (self.data[0][2] *
-                              ((self.data[2][0] * self.data[3][1]) -
-                                   (self.data[2][1] * self.data[3][0])))) / d,
+                        ((self.data[2][1] * self.data[3][2]) -
+                            (self.data[2][2] * self.data[3][1]))) -
+                        (self.data[0][1] *
+                            ((self.data[2][0] * self.data[3][2]) -
+                                (self.data[2][2] * self.data[3][0]))) +
+                        (self.data[0][2] *
+                            ((self.data[2][0] * self.data[3][1]) -
+                                (self.data[2][1] * self.data[3][0])))) / d,
                 ],
                 [
                     ((self.data[0][1] *
-                          ((self.data[1][2] * self.data[3][3]) -
-                               (self.data[1][3] * self.data[3][2]))) -
-                         (self.data[0][2] *
-                              ((self.data[1][1] * self.data[3][3]) -
-                                   (self.data[1][3] * self.data[3][1]))) +
-                         (self.data[0][3] *
-                              ((self.data[1][1] * self.data[3][2]) -
-                                   (self.data[1][2] * self.data[3][1])))) / d,
+                        ((self.data[1][2] * self.data[3][3]) -
+                            (self.data[1][3] * self.data[3][2]))) -
+                        (self.data[0][2] *
+                            ((self.data[1][1] * self.data[3][3]) -
+                                (self.data[1][3] * self.data[3][1]))) +
+                        (self.data[0][3] *
+                            ((self.data[1][1] * self.data[3][2]) -
+                                (self.data[1][2] * self.data[3][1])))) / d,
                     ((self.data[0][0] *
-                          ((self.data[1][2] * self.data[3][3]) -
-                               (self.data[1][3] * self.data[3][2]))) -
-                         (self.data[0][2] *
-                              ((self.data[1][0] * self.data[3][3]) -
-                                   (self.data[1][3] * self.data[3][0]))) +
-                         (self.data[0][3] *
-                              ((self.data[1][0] * self.data[3][2]) -
-                                   (self.data[1][2] * self.data[3][0])))) / d,
+                        ((self.data[1][2] * self.data[3][3]) -
+                            (self.data[1][3] * self.data[3][2]))) -
+                        (self.data[0][2] *
+                            ((self.data[1][0] * self.data[3][3]) -
+                                (self.data[1][3] * self.data[3][0]))) +
+                        (self.data[0][3] *
+                            ((self.data[1][0] * self.data[3][2]) -
+                                (self.data[1][2] * self.data[3][0])))) / d,
                     ((self.data[0][0] *
-                          ((self.data[1][1] * self.data[3][3]) -
-                               (self.data[1][3] * self.data[3][1]))) -
-                         (self.data[0][1] *
-                              ((self.data[1][0] * self.data[3][3]) -
-                                   (self.data[1][3] * self.data[3][0]))) +
-                         (self.data[0][3] *
-                              ((self.data[1][0] * self.data[3][1]) -
-                                   (self.data[1][1] * self.data[3][0])))) / d,
+                        ((self.data[1][1] * self.data[3][3]) -
+                            (self.data[1][3] * self.data[3][1]))) -
+                        (self.data[0][1] *
+                            ((self.data[1][0] * self.data[3][3]) -
+                                (self.data[1][3] * self.data[3][0]))) +
+                        (self.data[0][3] *
+                            ((self.data[1][0] * self.data[3][1]) -
+                                (self.data[1][1] * self.data[3][0])))) / d,
                     ((self.data[0][0] *
-                          ((self.data[1][1] * self.data[3][2]) -
-                               (self.data[1][2] * self.data[3][1]))) -
-                         (self.data[0][1] *
-                              ((self.data[1][0] * self.data[3][2]) -
-                                   (self.data[1][2] * self.data[3][0]))) +
-                         (self.data[0][2] *
-                              ((self.data[1][0] * self.data[3][1]) -
-                                   (self.data[1][1] * self.data[3][0])))) / d,
+                        ((self.data[1][1] * self.data[3][2]) -
+                            (self.data[1][2] * self.data[3][1]))) -
+                        (self.data[0][1] *
+                            ((self.data[1][0] * self.data[3][2]) -
+                                (self.data[1][2] * self.data[3][0]))) +
+                        (self.data[0][2] *
+                            ((self.data[1][0] * self.data[3][1]) -
+                                (self.data[1][1] * self.data[3][0])))) / d,
                 ],
                 [
                     ((self.data[0][1] *
-                          ((self.data[1][2] * self.data[2][3]) -
-                               (self.data[1][3] * self.data[2][2]))) -
-                         (self.data[0][2] *
-                              ((self.data[1][1] * self.data[2][3]) -
-                                   (self.data[1][3] * self.data[2][1]))) +
-                         (self.data[0][3] *
-                              ((self.data[1][1] * self.data[2][2]) -
-                                   (self.data[1][2] * self.data[2][1])))) / d,
+                        ((self.data[1][2] * self.data[2][3]) -
+                            (self.data[1][3] * self.data[2][2]))) -
+                        (self.data[0][2] *
+                            ((self.data[1][1] * self.data[2][3]) -
+                                (self.data[1][3] * self.data[2][1]))) +
+                        (self.data[0][3] *
+                            ((self.data[1][1] * self.data[2][2]) -
+                                (self.data[1][2] * self.data[2][1])))) / d,
                     ((self.data[0][0] *
-                          ((self.data[1][2] * self.data[2][3]) -
-                               (self.data[1][3] * self.data[2][2]))) -
-                         (self.data[0][2] *
-                              ((self.data[1][0] * self.data[2][3]) -
-                                   (self.data[1][3] * self.data[2][0]))) +
-                         (self.data[0][3] *
-                              ((self.data[1][0] * self.data[2][2]) -
-                                   (self.data[1][2] * self.data[2][0])))) / d,
+                        ((self.data[1][2] * self.data[2][3]) -
+                            (self.data[1][3] * self.data[2][2]))) -
+                        (self.data[0][2] *
+                            ((self.data[1][0] * self.data[2][3]) -
+                                (self.data[1][3] * self.data[2][0]))) +
+                        (self.data[0][3] *
+                            ((self.data[1][0] * self.data[2][2]) -
+                                (self.data[1][2] * self.data[2][0])))) / d,
                     ((self.data[0][0] *
-                          ((self.data[1][1] * self.data[2][3]) -
-                               (self.data[1][3] * self.data[2][1]))) -
-                         (self.data[0][1] *
-                              ((self.data[1][0] * self.data[2][3]) -
-                                   (self.data[1][3] * self.data[2][0]))) +
-                         (self.data[0][3] *
-                              ((self.data[1][0] * self.data[2][1]) -
-                                   (self.data[1][1] * self.data[2][0])))) / d,
+                        ((self.data[1][1] * self.data[2][3]) -
+                            (self.data[1][3] * self.data[2][1]))) -
+                        (self.data[0][1] *
+                            ((self.data[1][0] * self.data[2][3]) -
+                                (self.data[1][3] * self.data[2][0]))) +
+                        (self.data[0][3] *
+                            ((self.data[1][0] * self.data[2][1]) -
+                                (self.data[1][1] * self.data[2][0])))) / d,
                     ((self.data[0][0] *
-                          ((self.data[1][1] * self.data[2][2]) -
-                               (self.data[1][2] * self.data[2][1]))) -
-                         (self.data[0][1] *
-                              ((self.data[1][0] * self.data[2][2]) -
-                                   (self.data[1][2] * self.data[2][0]))) +
-                         (self.data[0][2] *
-                              ((self.data[1][0] * self.data[2][1]) -
-                                   (self.data[1][1] * self.data[2][0])))) / d,
+                        ((self.data[1][1] * self.data[2][2]) -
+                            (self.data[1][2] * self.data[2][1]))) -
+                        (self.data[0][1] *
+                            ((self.data[1][0] * self.data[2][2]) -
+                                (self.data[1][2] * self.data[2][0]))) +
+                        (self.data[0][2] *
+                            ((self.data[1][0] * self.data[2][1]) -
+                                (self.data[1][1] * self.data[2][0])))) / d,
                 ],
             ],
         }
@@ -462,7 +474,7 @@ pub struct SMat3x3F(
     pub f32,
     pub f32,
     pub f32,
-    pub f32
+    pub f32,
 );
 
 #[repr(C)]
@@ -479,7 +491,9 @@ where
     E: Float,
 {
     pub fn zero() -> Self {
-        Mat3x3 { data: [[E::new(0.0); 3]; 3] }
+        Mat3x3 {
+            data: [[E::new(0.0); 3]; 3],
+        }
     }
 
     pub fn ident() -> Self {
@@ -492,11 +506,11 @@ where
 
     pub fn det(&self) -> E {
         (self.data[0][0] *
-             ((self.data[1][1] * self.data[2][2]) - (self.data[1][2] * self.data[2][1]))) -
+            ((self.data[1][1] * self.data[2][2]) - (self.data[1][2] * self.data[2][1]))) -
             (self.data[0][1] *
-                 ((self.data[1][0] * self.data[2][2]) - (self.data[1][2] * self.data[2][0]))) +
+                ((self.data[1][0] * self.data[2][2]) - (self.data[1][2] * self.data[2][0]))) +
             (self.data[0][2] *
-                 ((self.data[1][0] * self.data[2][1]) - (self.data[1][1] * self.data[2][0])))
+                ((self.data[1][0] * self.data[2][1]) - (self.data[1][1] * self.data[2][0])))
     }
 
     pub fn inv(&self) -> Self {
@@ -505,17 +519,21 @@ where
             data: [
                 [
                     ((self.data[1][1] * self.data[2][2]) - (self.data[1][2] * self.data[2][1])) / d,
-                    ((self.data[1][0] * self.data[2][2]) - (self.data[1][2] * self.data[2][0])) / -d,
+                    ((self.data[1][0] * self.data[2][2]) - (self.data[1][2] * self.data[2][0])) /
+                        -d,
                     ((self.data[1][0] * self.data[2][1]) - (self.data[1][1] * self.data[2][0])) / d,
                 ],
                 [
-                    ((self.data[0][1] * self.data[2][2]) - (self.data[0][2] * self.data[2][1])) / -d,
+                    ((self.data[0][1] * self.data[2][2]) - (self.data[0][2] * self.data[2][1])) /
+                        -d,
                     ((self.data[0][0] * self.data[2][2]) - (self.data[0][2] * self.data[2][0])) / d,
-                    ((self.data[0][0] * self.data[2][1]) - (self.data[0][1] * self.data[2][0])) / -d,
+                    ((self.data[0][0] * self.data[2][1]) - (self.data[0][1] * self.data[2][0])) /
+                        -d,
                 ],
                 [
                     ((self.data[0][1] * self.data[1][2]) - (self.data[0][2] * self.data[1][1])) / d,
-                    ((self.data[0][0] * self.data[1][2]) - (self.data[0][2] * self.data[1][0])) / -d,
+                    ((self.data[0][0] * self.data[1][2]) - (self.data[0][2] * self.data[1][0])) /
+                        -d,
                     ((self.data[0][0] * self.data[1][1]) - (self.data[0][1] * self.data[1][0])) / d,
                 ],
             ],

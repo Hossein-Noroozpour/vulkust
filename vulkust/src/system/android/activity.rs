@@ -1,7 +1,7 @@
 #![allow(non_camel_case_types, non_upper_case_globals, non_snake_case)]
 extern crate libc;
-use self::libc::{c_void, c_char, c_int};
-use super::jni::{JavaVM, JNIEnv, jobject};
+use self::libc::{c_char, c_int, c_void};
+use super::jni::{jobject, JNIEnv, JavaVM};
 use super::asset::AAssetManager;
 use super::rect::ARect;
 use super::input::AInputQueue;

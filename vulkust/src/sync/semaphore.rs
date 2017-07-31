@@ -1,4 +1,4 @@
-use std::sync::{Mutex, Condvar};
+use std::sync::{Condvar, Mutex};
 
 pub struct Semaphore {
     lock: Mutex<isize>,

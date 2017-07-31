@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types, non_snake_case)]
 
-use std::os::raw::{c_int, c_void, c_char, c_uchar, c_short, c_ushort, c_longlong};
+use std::os::raw::{c_char, c_int, c_longlong, c_short, c_uchar, c_ushort, c_void};
 use std::mem::{transmute, zeroed};
 use std::default::Default;
 

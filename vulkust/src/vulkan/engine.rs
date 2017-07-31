@@ -1,9 +1,9 @@
-use std::ptr::{null_mut, null};
+use std::ptr::{null, null_mut};
 use std::sync::Arc;
 use std::mem::size_of;
 use super::super::system::vulkan as vk;
 use super::super::math::matrix::Mat4x4;
-use super::super::render::engine::{EngineTrait, Basic as BasicEngine};
+use super::super::render::engine::{Basic as BasicEngine, EngineTrait};
 use super::super::render::camera::Camera;
 use super::super::render::camera::perspective::Perspective;
 use super::super::core::application::ApplicationTrait;
@@ -13,7 +13,7 @@ use super::instance::Instance;
 use super::surface::Surface;
 use super::device::physical::Physical as PhysicalDevice;
 use super::device::logical::Logical as LogicalDevice;
-use super::swapchain::{Swapchain, NextImageResult};
+use super::swapchain::{NextImageResult, Swapchain};
 use super::image::view::View as ImageView;
 use super::render_pass::RenderPass;
 use super::framebuffer::Framebuffer;
@@ -213,8 +213,8 @@ where
         match e {
             Event::WindowSize { w, h } => {
                 self.window_resized(w, h);
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
 
@@ -224,14 +224,15 @@ where
         let current_buffer = match self.swapchain
             .as_ref()
             .unwrap()
-            .get_next_image_index(present_complete_semaphore) {
-            NextImageResult::Next(c) => { c },
+            .get_next_image_index(present_complete_semaphore)
+        {
+            NextImageResult::Next(c) => c,
             NextImageResult::NeedsRefresh => {
                 unsafe {
                     (*(*self.os_app).render_engine).reinitialize();
                 }
                 return;
-            },
+            }
         } as usize;
         let uniform_data = {
             let current_scene = self.basic_engine.as_ref().unwrap().current_scene.borrow();
@@ -242,7 +243,10 @@ where
                 model: Mat4x4::ident(),
             }
         };
-        self.uniform.as_ref().unwrap().update(unsafe { transmute(&uniform_data) });
+        self.uniform
+            .as_ref()
+            .unwrap()
+            .update(unsafe { transmute(&uniform_data) });
         vulkan_check!(vk::vkWaitForFences(
             vk_device,
             1,

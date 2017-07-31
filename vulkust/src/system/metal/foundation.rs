@@ -1,6 +1,6 @@
 use std::mem::transmute;
 use std::os::raw::c_void;
-use super::{objc, NSUInteger, NSString, Id, IdPtr, get_class};
+use super::{get_class, objc, Id, IdPtr, NSString, NSUInteger};
 
 pub struct NSDictionaryBuilder {
     pub keys: Vec<NSString>,

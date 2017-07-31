@@ -1,5 +1,5 @@
 #[cfg(not(feature = "no-log"))]
-use std::os::raw::{c_int, c_char};
+use std::os::raw::{c_char, c_int};
 
 #[cfg(not(feature = "no-log"))]
 #[repr(i32)]

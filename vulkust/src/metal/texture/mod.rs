@@ -42,6 +42,8 @@ impl Texture2D {
         if color_map == null_mut() || error.is_error() {
             logf!("Creating texture failed with error: {}", error);
         }
-        Texture2D { color_map: color_map }
+        Texture2D {
+            color_map: color_map,
+        }
     }
 }

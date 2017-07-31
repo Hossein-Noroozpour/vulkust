@@ -29,9 +29,15 @@ pub struct BasicScene {
 
 impl BasicScene {
     pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-    where CoreApp: ApplicationTrait {
+    where
+        CoreApp: ApplicationTrait,
+    {
         let cmd_pool = unsafe {
-            (*(*os_app).render_engine).transfer_cmd_pool.as_ref().unwrap().clone()
+            (*(*os_app).render_engine)
+                .transfer_cmd_pool
+                .as_ref()
+                .unwrap()
+                .clone()
         };
         let mut asset_manager = unsafe { &mut ((*os_app).asset_manager) };
         let v_size = file.read_type::<u64>() * 1024;

@@ -17,7 +17,7 @@ pub fn allocate_with_requirements(
     for index in 0..memory_prop.memoryTypeCount {
         if (type_bits & 1) == 1 &&
             ((memory_prop.memoryTypes[index as usize].propertyFlags as u32) &
-                 (vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32)) !=
+                (vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32)) !=
                 0
         {
             mem_alloc.memoryTypeIndex = index;

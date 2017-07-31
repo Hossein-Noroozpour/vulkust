@@ -4,7 +4,7 @@ use std::default::Default;
 use std::collections::HashSet;
 use super::super::super::system::vulkan as vk;
 use super::physical::Physical;
-use super::super::super::util::string::{strings_to_cstrings, cstrings_to_ptrs};
+use super::super::super::util::string::{cstrings_to_ptrs, strings_to_cstrings};
 
 pub struct Logical {
     pub physical_device: Arc<Physical>,

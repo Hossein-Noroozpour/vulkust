@@ -7,7 +7,8 @@ pub trait ApplicationTrait: Sized {
     fn initialize(
         &mut self,
         _o: &'static mut OsApplication<Self>,
-        _r: &'static mut RenderEngine<Self>) -> bool {
+        _r: &'static mut RenderEngine<Self>,
+    ) -> bool {
         return true;
     }
     fn on_event(&mut self, _e: Event) {}

@@ -1,19 +1,22 @@
 use std::collections::BTreeMap;
-use std::sync::{Weak, Arc};
+use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
-use std::ops::{ShlAssign, BitOrAssign};
+use std::ops::{BitOrAssign, ShlAssign};
 use std::default::Default;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
 use super::super::super::system::os::OsApplication;
-use super::{ShaderTrait, Shader};
+use super::{Shader, ShaderTrait};
 
 pub struct Manager {
     pub cached: BTreeMap<u64, Weak<ShaderTrait>>,
     pub offsets: BTreeMap<u64, u64>,
 }
 
-fn from_gx3d_id<T>(v: Vec<u8>) -> T where T: ShlAssign<T> + BitOrAssign<T> + Default + From<u8> {
+fn from_gx3d_id<T>(v: Vec<u8>) -> T
+where
+    T: ShlAssign<T> + BitOrAssign<T> + Default + From<u8>,
+{
     let mut id = T::default();
     for b in v {
         id <<= T::from(8u8);
@@ -50,24 +53,20 @@ impl Manager {
         CoreApp: ApplicationTrait,
     {
         match self.cached.get(&id) {
-            Some(res) => {
-                match res.upgrade() {
-                    Some(res) => {
-                        return res;
-                    }
-                    None => {}
+            Some(res) => match res.upgrade() {
+                Some(res) => {
+                    return res;
                 }
-            }
+                None => {}
+            },
             None => {}
         }
         match self.offsets.get(&id) {
             Some(offset) => {
                 match file.seek(SeekFrom::Start(*offset)) {
-                    Ok(o) => {
-                        if o < *offset {
-                            logf!("Seeked offset does not match!");
-                        }
-                    }
+                    Ok(o) => if o < *offset {
+                        logf!("Seeked offset does not match!");
+                    },
                     _ => {
                         logf!("Can not seek to the requested offset.");
                     }

@@ -5,11 +5,11 @@ pub mod util;
 pub mod foundation;
 
 use std;
-use std::os::raw::{c_void, c_char};
+use std::os::raw::{c_char, c_void};
 use std::ffi::CStr;
 use std::mem::transmute;
 pub use super::super::objc;
-pub use super::super::objc::runtime::{Object, Class, YES, NO};
+pub use super::super::objc::runtime::{Class, Object, NO, YES};
 use super::super::objc::declare::ClassDecl;
 
 // types ------------------------------------------------------------------------------------------
@@ -39,8 +39,8 @@ pub const RESOURCE_CPU_CACHE_MODE_MASK: NSUInteger = 0xF << RESOURCE_CPU_CACHE_M
 pub const RESOURCE_STORAGE_MODE_SHIFT: NSUInteger = 4;
 pub const RESOURCE_STORAGE_MODE_MASK: NSUInteger = 0xF << RESOURCE_STORAGE_MODE_SHIFT;
 pub const RESOURCE_HAZARD_TRACKING_MODE_SHIFT: NSUInteger = 8;
-pub const RESOURCE_HAZARD_TRACKING_MODE_MASK: NSUInteger = 0x1 <<
-    RESOURCE_HAZARD_TRACKING_MODE_SHIFT;
+pub const RESOURCE_HAZARD_TRACKING_MODE_MASK: NSUInteger =
+    0x1 << RESOURCE_HAZARD_TRACKING_MODE_SHIFT;
 
 // structs ----------------------------------------------------------------------------------------
 
@@ -204,10 +204,18 @@ impl NSError {
         NSError { err: 0 as Id }
     }
     pub fn to_string(&self) -> String {
-        let des = NSString { s: unsafe { msg_send![self.err, localizedDescription] } };
-        let rec = NSString { s: unsafe { msg_send![self.err, localizedRecoveryOptions] } };
-        let sug = NSString { s: unsafe { msg_send![self.err, localizedRecoverySuggestion] } };
-        let res = NSString { s: unsafe { msg_send![self.err, localizedFailureReason] } };
+        let des = NSString {
+            s: unsafe { msg_send![self.err, localizedDescription] },
+        };
+        let rec = NSString {
+            s: unsafe { msg_send![self.err, localizedRecoveryOptions] },
+        };
+        let sug = NSString {
+            s: unsafe { msg_send![self.err, localizedRecoverySuggestion] },
+        };
+        let res = NSString {
+            s: unsafe { msg_send![self.err, localizedFailureReason] },
+        };
         format!("NSError(localizedDescription({}), ", des) +
             &format!("localizedRecoveryOptions({}), ", rec) +
             &format!("localizedRecoverySuggestion({}), ", sug) +
@@ -734,7 +742,9 @@ pub struct NsAutoReleasePool {
 
 impl NsAutoReleasePool {
     pub fn new() -> Self {
-        NsAutoReleasePool { pool: get_instance(NS_AUTO_RELEASE_POOL) }
+        NsAutoReleasePool {
+            pool: get_instance(NS_AUTO_RELEASE_POOL),
+        }
     }
 }
 
