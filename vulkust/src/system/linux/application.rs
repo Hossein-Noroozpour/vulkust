@@ -158,7 +158,7 @@ where
     }
 
     fn get_window_ratio(&self) -> f64 {
-        (*self.screen).width_in_pixels as f64 / (*self.screen).height_in_pixels as f64
+        unsafe { (*self.screen).width_in_pixels as f64 / (*self.screen).height_in_pixels as f64 }
     }
 
     fn execute(&mut self) -> bool {

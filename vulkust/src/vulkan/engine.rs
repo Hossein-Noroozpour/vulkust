@@ -86,6 +86,7 @@ where
             render_pass: None,
             framebuffers: Vec::new(),
             graphic_cmd_pool: None,
+            transfer_cmd_pool: None,
             basic_engine: None,
             mesh_buff: None,
             uniform: None,
@@ -149,20 +150,23 @@ where
             1.0f32,
         ];
         let indices = [0u32, 1u32, 2u32];
-        let mesh_buff = Arc::new(Buffer::new(
-            logical_device.clone(),
-            graphic_cmd_pool.clone(),
-            unsafe { transmute(vertices.as_ptr()) },
-            vertices.len() as u32 * 4,
-            unsafe { transmute(indices.as_ptr()) },
-            indices.len() as u32 * 4,
-        ));
+        // let mesh_buff = Arc::new(Buffer::new(
+        //     logical_device.clone(),
+        //     graphic_cmd_pool.clone(),
+        //     unsafe { transmute(vertices.as_ptr()) },
+        //     vertices.len() as u32 * 4,
+        //     unsafe { transmute(indices.as_ptr()) },
+        //     indices.len() as u32 * 4,
+        // ));
         self.basic_engine = Some(BasicEngine::new(self.os_app));
-        let uniform_data = UniformData {
-            projection: *self.basic_engine.as_ref().unwrap().current_scene.borrow()
-                .get_current_camera().get_view_projection(),
-            view: Mat4x4::ident(),
-            model: Mat4x4::ident(),
+        let uniform_data = {
+            let current_scene = self.basic_engine.as_ref().unwrap().current_scene.borrow();
+            let current_camera = current_scene.get_current_camera().borrow();
+            UniformData {
+                projection: current_camera.get_view_projection().clone(),
+                view: Mat4x4::ident(),
+                model: Mat4x4::ident(),
+            }
         };
         let uniform = Arc::new(Uniform::new(
             logical_device.clone(),
@@ -188,7 +192,7 @@ where
         self.depth_stencil_image_view = Some(depth_stencil);
         self.render_pass = Some(render_pass);
         self.graphic_cmd_pool = Some(graphic_cmd_pool);
-        self.mesh_buff = Some(mesh_buff);
+        // self.mesh_buff = Some(mesh_buff);
         self.uniform = Some(uniform);
         self.pipeline_layout = Some(pipeline_layout);
         self.pipeline_cache = Some(pipeline_cache);
@@ -229,11 +233,14 @@ where
                 return;
             },
         } as usize;
-        let uniform_data = UniformData {
-            projection: *self.basic_engine.as_ref().unwrap().current_scene.borrow()
-                .get_current_camera().get_view_projection(),
-            view: Mat4x4::ident(),
-            model: Mat4x4::ident(),
+        let uniform_data = {
+            let current_scene = self.basic_engine.as_ref().unwrap().current_scene.borrow();
+            let current_camera = current_scene.get_current_camera().borrow();
+            UniformData {
+                projection: current_camera.get_view_projection().clone(),
+                view: Mat4x4::ident(),
+                model: Mat4x4::ident(),
+            }
         };
         self.uniform.as_ref().unwrap().update(unsafe { transmute(&uniform_data) });
         vulkan_check!(vk::vkWaitForFences(
@@ -351,27 +358,27 @@ where
                     self.pipeline.as_ref().unwrap().vk_data,
                 );
                 let offsets = 0 as vk::VkDeviceSize;
-                vk::vkCmdBindVertexBuffers(
-                    draw_command.vk_data,
-                    0,
-                    1,
-                    &(self.mesh_buff.as_ref().unwrap().vertices_buffer),
-                    &offsets,
-                );
-                vk::vkCmdBindIndexBuffer(
-                    draw_command.vk_data,
-                    self.mesh_buff.as_ref().unwrap().indices_buffer,
-                    0,
-                    vk::VkIndexType::VK_INDEX_TYPE_UINT32,
-                );
-                vk::vkCmdDrawIndexed(
-                    draw_command.vk_data,
-                    self.mesh_buff.as_ref().unwrap().indices_count,
-                    1,
-                    0,
-                    0,
-                    1,
-                );
+                // vk::vkCmdBindVertexBuffers(
+                //     draw_command.vk_data,
+                //     0,
+                //     1,
+                //     &(self.mesh_buff.as_ref().unwrap().vertices_buffer),
+                //     &offsets,
+                // );
+                // vk::vkCmdBindIndexBuffer(
+                //     draw_command.vk_data,
+                //     self.mesh_buff.as_ref().unwrap().indices_buffer,
+                //     0,
+                //     vk::VkIndexType::VK_INDEX_TYPE_UINT32,
+                // );
+                // vk::vkCmdDrawIndexed(
+                //     draw_command.vk_data,
+                //     self.mesh_buff.as_ref().unwrap().indices_count,
+                //     1,
+                //     0,
+                //     0,
+                //     1,
+                // );
 
                 vk::vkCmdEndRenderPass(draw_command.vk_data);
             }
@@ -410,8 +417,11 @@ where
     }
 
     fn window_resized(&mut self, w: f64, h: f64) {
-        self.basic_engine.as_mut().unwrap().current_scene.borrow_mut().get_mut_current_camera()
-            .set_viewport(w as f32, h as f32);
+        {
+            let current_scene = self.basic_engine.as_mut().unwrap().current_scene.borrow();
+            let mut current_camera = current_scene.get_current_camera().borrow_mut();
+            current_camera.set_viewport(w as f32, h as f32);
+        }
         self.reinitialize();
     }
 }

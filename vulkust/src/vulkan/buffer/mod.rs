@@ -145,7 +145,7 @@ impl Buffer {
             staging_memory,
             0,
         ));
-        let copy_cmd = CmdBuff::new(self.cmd_pool);
+        let copy_cmd = CmdBuff::new(self.cmd_pool.clone());
         let mut copy_region = vk::VkBufferCopy::default();
         copy_region.dstOffset = self.offset as vk::VkDeviceSize;
         copy_region.size = size as vk::VkDeviceSize;

@@ -14,8 +14,7 @@ use super::light::Light;
 use super::model::Model;
 
 pub trait Scene {
-    fn get_current_camera(&self) -> &Camera<f32>;
-    fn get_mut_current_camera(&mut self) -> &mut Camera<f32>;
+    fn get_current_camera(&self) -> &Arc<RefCell<Camera<f32>>>;
 }
 
 pub struct BasicScene {
@@ -34,7 +33,7 @@ impl BasicScene {
         let cmd_pool = unsafe {
             (*(*os_app).render_engine).transfer_cmd_pool.as_ref().unwrap().clone()
         };
-        let ref mut asset_manager = unsafe { &((*os_app).asset_manager) };
+        let mut asset_manager = unsafe { &mut ((*os_app).asset_manager) };
         let v_size = file.read_type::<u64>() * 1024;
         let i_size = file.read_type::<u64>() * 1024;
         let meshes_vertices_buffer = Buffer::new(cmd_pool.clone(), v_size, BufferUsage::Vertex);
@@ -45,51 +44,44 @@ impl BasicScene {
             let id: u64 = file.read_type();
             cameras.push(asset_manager.get_camera(id, os_app));
         }
-        let speaker_count: u64 = file.read_type();
-        let mut speakers = Vec::new();
-        for _ in 0..speakers_count {
+        let audios_count: u64 = file.read_type();
+        let mut audios = Vec::new();
+        for _ in 0..audios_count {
             let id: u64 = file.read_type();
-            s.push(asset_manager.get_camera(id, os_app));
+            audios.push(asset_manager.get_audio(id, os_app));
         }
-        let cameras_count: u64 = file.read_type();
-        let mut cameras = Vec::new();
-        for _ in 0..cameras_count {
+        let lights_count: u64 = file.read_type();
+        let mut lights = Vec::new();
+        for _ in 0..lights_count {
             let id: u64 = file.read_type();
-            cameras.push(asset_manager.get_camera(id, os_app));
+            lights.push(asset_manager.get_light(id, os_app));
         }
-        let cameras_count: u64 = file.read_type();
-        let mut cameras = Vec::new();
-        for _ in 0..cameras_count {
+        let models_count: u64 = file.read_type();
+        let mut models = Vec::new();
+        for _ in 0..models_count {
             let id: u64 = file.read_type();
-            cameras.push(asset_manager.get_camera(id, os_app));
+            models.push(asset_manager.get_model(id, os_app));
         }
         BasicScene {
             meshes_vertices_buffer: meshes_vertices_buffer,
             meshes_indices_buffer: meshes_indices_buffer,
             current_camera: 0,
             cameras: cameras,
+            audios: audios,
+            lights: lights,
+            models: models,
         }
     }
 }
 
 impl Scene for BasicScene {
-    fn get_mut_current_camera(&mut self) -> &mut Camera<f32> {
+    fn get_current_camera(&self) -> &Arc<RefCell<Camera<f32>>> {
         #[cfg(debug_assertions)]
         {
             if self.current_camera >= self.cameras.len() {
                 logf!("Camera index out of range.");
             }
         }
-        unsafe { transmute(self.cameras[self.current_camera]) }
-    }
-
-    fn get_current_camera(&self) -> &Camera<f32> {
-        #[cfg(debug_assertions)]
-        {
-            if self.current_camera >= self.cameras.len() {
-                logf!("Camera index out of range.");
-            }
-        }
-        unsafe { transmute(self.cameras[self.current_camera]) }
+        return &self.cameras[self.current_camera];
     }
 }
