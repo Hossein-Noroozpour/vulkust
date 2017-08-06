@@ -101,12 +101,12 @@ impl Pipeline {
         shader_stages[0].sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shader_stages[0].stage = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
-        shader_stages[0].module = shader.as_shader().vertex.module;
+        shader_stages[0].module = shader.as_two_stage().vertex.module;
         shader_stages[0].pName = stage_name.as_ptr();
         shader_stages[1].sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shader_stages[1].stage = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
-        shader_stages[1].module = shader.as_shader().fragment.module;
+        shader_stages[1].module = shader.as_two_stage().fragment.module;
         shader_stages[1].pName = stage_name.as_ptr();
         pipeline_create_info.stageCount = shader_stages.len() as u32;
         pipeline_create_info.pStages = shader_stages.as_ptr();

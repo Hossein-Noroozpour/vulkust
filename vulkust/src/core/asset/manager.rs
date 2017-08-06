@@ -11,9 +11,9 @@ use super::super::super::render::model::Model;
 use super::super::super::render::scene::manager::Manager as SceneManager;
 use super::super::super::render::scene::Scene;
 use super::super::super::render::shader::manager::Manager as ShaderManager;
-use super::super::super::render::shader::ShaderTrait;
+use super::super::super::render::shader::Shader;
 use super::super::super::render::texture::manager::Manager as TextureManager;
-use super::super::super::render::texture::TextureTrait;
+use super::super::super::render::texture::Texture;
 use super::super::super::system::file::File;
 use super::super::super::system::os::OsApplication;
 use super::super::application::ApplicationTrait;
@@ -57,7 +57,7 @@ impl Manager {
         &mut self,
         id: u64,
         os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<ShaderTrait>
+    ) -> Arc<Shader>
     where
         CoreApp: ApplicationTrait,
     {
@@ -101,7 +101,7 @@ impl Manager {
         &mut self,
         id: u64,
         os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<TextureTrait>
+    ) -> Arc<Texture>
     where
         CoreApp: ApplicationTrait,
     {

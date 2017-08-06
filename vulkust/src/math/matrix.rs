@@ -1,6 +1,7 @@
 use std::ops::{Mul, MulAssign};
 use super::number::{Float, Number};
 use super::vector::Vec3;
+use super::super::system::file::File;
 
 #[repr(simd)]
 pub struct SMat4x4D(
@@ -408,6 +409,18 @@ where
                                 (self.data[1][1] * self.data[2][0])))) / d,
                 ],
             ],
+        }
+    }
+
+    pub fn new_from_file(f: &mut File) -> Self {
+        let mut data = [[E::new(0.0); 4]; 4];
+        for i in 0..4 {
+            for j in 0..4 {
+                data[i][j] = f.read_type();
+            }
+        }
+        Mat4x4 {
+            data: data,
         }
     }
 }

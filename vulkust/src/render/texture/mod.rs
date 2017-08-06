@@ -9,7 +9,9 @@ use super::super::metal::texture::Texture2D as PlatformTexture2D;
 #[cfg(vulkan)]
 use super::super::vulkan::texture::Texture2D as PlatformTexture2D;
 
-pub trait TextureTrait: Debug {
+pub type Id = u64;
+
+pub trait Texture: Debug {
     fn as_texture2d(&self) -> &Texture2D {
         logf!("This object can not convert to Texture2D.");
     }
@@ -38,7 +40,7 @@ impl Texture2D {
     }
 }
 
-impl TextureTrait for Texture2D {
+impl Texture for Texture2D {
     fn as_texture2d(&self) -> &Texture2D {
         return self;
     }

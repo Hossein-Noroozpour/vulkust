@@ -1,11 +1,12 @@
 // pub mod config;
-//pub mod vertex;
-//pub mod mesh;
 pub mod camera;
 pub mod light;
+pub mod material;
 pub mod model;
 pub mod scene;
-pub mod engine;
 pub mod shader;
 pub mod texture;
 pub mod buffer;
+pub mod engine;
+pub mod mesh;
+//pub mod vertex;

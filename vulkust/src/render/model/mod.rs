@@ -6,6 +6,7 @@ use super::super::core::application::ApplicationTrait;
 use super::super::math::matrix::Mat4x4;
 use super::super::system::os::OsApplication;
 use super::super::system::file::File;
+use super::mesh::Mesh;
 
 pub trait Model {}
 
@@ -14,11 +15,30 @@ pub struct StaticModel {
     pub children: Vec<Box<Model>>,
 }
 
+impl StaticModel {
+    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    where
+        CoreApp: ApplicationTrait,
+    {
+        let mesh = Mesh::new(file, os_app);
+        logf!("Unimplmented");
+    }
+}
+
 impl Model for StaticModel {}
 
 pub struct DynamicModel {
     pub occ_mesh: Mesh,
     pub children: Vec<Box<Model>>,
+}
+
+impl DynamicModel {
+    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    where
+        CoreApp: ApplicationTrait,
+    {
+        logf!("Unimplmented");
+    }
 }
 
 impl Model for DynamicModel {}

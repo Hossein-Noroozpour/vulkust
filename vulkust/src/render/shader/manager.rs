@@ -6,23 +6,11 @@ use std::default::Default;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
 use super::super::super::system::os::OsApplication;
-use super::{Shader, ShaderTrait};
+use super::{TwoStage, Shader, read_id};
 
 pub struct Manager {
-    pub cached: BTreeMap<u64, Weak<ShaderTrait>>,
+    pub cached: BTreeMap<u64, Weak<Shader>>,
     pub offsets: BTreeMap<u64, u64>,
-}
-
-fn from_gx3d_id<T>(v: Vec<u8>) -> T
-where
-    T: ShlAssign<T> + BitOrAssign<T> + Default + From<u8>,
-{
-    let mut id = T::default();
-    for b in v {
-        id <<= T::from(8u8);
-        id |= T::from(b);
-    }
-    return id;
 }
 
 impl Manager {
@@ -36,7 +24,7 @@ impl Manager {
     pub fn read_table(&mut self, file: &mut File) {
         let count: u64 = file.read_type();
         for _ in 0..count {
-            let id = from_gx3d_id(file.read_bytes(6));
+            let id = read_id(file);
             let offset = file.read_type();
             // logi!("Shader with id: {} and offset {} loaded.", id, offset);
             self.offsets.insert(id, offset);
@@ -48,7 +36,7 @@ impl Manager {
         id: u64,
         file: &mut File,
         os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<ShaderTrait>
+    ) -> Arc<Shader>
     where
         CoreApp: ApplicationTrait,
     {
@@ -77,12 +65,12 @@ impl Manager {
             }
         };
         let shader = match id {
-            1 => Shader::new(file, os_app),
+            1 => TwoStage::new(file, os_app),
             _ => {
                 logf!("Requsted shader Id: {} not found.", id);
             }
         };
-        let shader: Arc<ShaderTrait> = Arc::new(shader);
+        let shader: Arc<Shader> = Arc::new(shader);
         self.cached.insert(id, Arc::downgrade(&shader));
         return shader;
     }

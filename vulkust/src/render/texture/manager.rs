@@ -4,11 +4,11 @@ use std::io::{Seek, SeekFrom};
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
 use super::super::super::system::os::OsApplication;
-use super::{Texture2D, TextureTrait};
+use super::{Texture2D, Texture, Id};
 
 #[derive(Debug)]
 pub struct Manager {
-    pub cached: BTreeMap<u64, Weak<TextureTrait>>,
+    pub cached: BTreeMap<Id, Weak<Texture>>,
     pub offsets: Vec<u64>,
 }
 
@@ -30,10 +30,10 @@ impl Manager {
 
     pub fn get<CoreApp>(
         &mut self,
-        id: u64,
+        id: Id,
         file: &mut File,
         os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<TextureTrait>
+    ) -> Arc<Texture>
     where
         CoreApp: ApplicationTrait,
     {
@@ -61,7 +61,7 @@ impl Manager {
                 logf!("Requsted texture Id: {} not found.", id);
             }
         };
-        let texture: Arc<TextureTrait> = Arc::new(texture);
+        let texture: Arc<Texture> = Arc::new(texture);
         self.cached.insert(id, Arc::downgrade(&texture));
         return texture;
     }

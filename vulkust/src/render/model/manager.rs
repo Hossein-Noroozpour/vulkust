@@ -5,7 +5,7 @@ use std::io::{Seek, SeekFrom};
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::os::OsApplication;
 use super::super::super::system::file::File;
-use super::{Basic, Model};
+use super::{read_model, Model};
 
 pub struct Manager {
     pub cached: BTreeMap<u64, Weak<RefCell<Model>>>,
@@ -55,7 +55,7 @@ impl Manager {
                 logf!("Can not seek to the requested offset.");
             }
         }
-        let l: Arc<RefCell<Model>> = Arc::new(RefCell::new(Basic::new(file, os_app)));
+        let l: Arc<RefCell<Model>> = read_model(file, os_app);
         self.cached.insert(id, Arc::downgrade(&l));
         return l;
     }
