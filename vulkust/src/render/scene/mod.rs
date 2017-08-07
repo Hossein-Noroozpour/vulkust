@@ -8,6 +8,7 @@ use super::super::core::application::ApplicationTrait;
 use super::super::system::os::OsApplication;
 use super::super::system::file::File;
 use super::buffer::{Buffer, Usage as BufferUsage};
+use super::buffer::uniform::Uniform;
 use super::camera::Camera;
 use super::camera::perspective::Perspective;
 use super::light::Light;
@@ -20,6 +21,7 @@ pub trait Scene {
 pub struct BasicScene {
     meshes_vertices_buffer: Buffer,
     meshes_indices_buffer: Buffer,
+    uniform_buffer: Uniform,
     current_camera: usize,
     cameras: Vec<Arc<RefCell<Camera<f32>>>>,
     audios: Vec<Arc<RefCell<Audio>>>,
@@ -39,11 +41,13 @@ impl BasicScene {
                 .unwrap()
                 .clone()
         };
+        let device = cmd_pool.logical_device.clone();
         let mut asset_manager = unsafe { &mut ((*os_app).asset_manager) };
         let v_size = file.read_type::<u64>() * 1024;
         let i_size = file.read_type::<u64>() * 1024;
         let meshes_vertices_buffer = Buffer::new(cmd_pool.clone(), v_size, BufferUsage::Vertex);
         let meshes_indices_buffer = Buffer::new(cmd_pool.clone(), i_size, BufferUsage::Index);
+        let uniform_buffer = Uniform::new(device, 1024);
         let cameras_count: u64 = file.read_type();
         let mut cameras = Vec::new();
         for _ in 0..cameras_count {
@@ -71,6 +75,7 @@ impl BasicScene {
         BasicScene {
             meshes_vertices_buffer: meshes_vertices_buffer,
             meshes_indices_buffer: meshes_indices_buffer,
+            uniform_buffer: uniform_buffer,
             current_camera: 0,
             cameras: cameras,
             audios: audios,
