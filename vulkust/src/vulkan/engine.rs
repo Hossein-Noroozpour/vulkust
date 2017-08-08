@@ -40,10 +40,10 @@ struct UniformData {
 
 pub struct Engine<CoreApp>
 where
-    CoreApp: ApplicationTrait,
+    CoreApp: 'static + ApplicationTrait,
 {
-    pub core_app: *mut CoreApp,
-    pub os_app: *mut OsApplication<CoreApp>,
+    pub core_app: &'static mut CoreApp,
+    pub os_app: &'static mut OsApplication<CoreApp>,
     pub instance: Arc<Instance>,
     pub surface: Option<Arc<Surface>>,
     pub physical_device: Option<Arc<PhysicalDevice>>,
@@ -75,8 +75,8 @@ where
 {
     fn new() -> Self {
         Engine {
-            core_app: null_mut(),
-            os_app: null_mut(),
+            core_app: unsafe { transmute(0usize) },
+            os_app: unsafe { transmute(0usize) },
             instance: Arc::new(Instance::new()),
             surface: None,
             physical_device: None,
@@ -102,11 +102,11 @@ where
         }
     }
 
-    fn set_core_app(&mut self, c: *mut CoreApp) {
+    fn set_core_app(&mut self, c: &'static mut CoreApp) {
         self.core_app = c;
     }
 
-    fn set_os_app(&mut self, o: *mut OsApplication<CoreApp>) {
+    fn set_os_app(&mut self, o: &'static mut OsApplication<CoreApp>) {
         self.os_app = o;
     }
 

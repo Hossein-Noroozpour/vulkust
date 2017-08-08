@@ -8,7 +8,7 @@ use super::os::{ApplicationTrait as OsApplicationTrait, OsApplication};
 
 pub struct Application<CoreApp>
 where
-    CoreApp: ApplicationTrait,
+    CoreApp: 'static + ApplicationTrait,
 {
     os_app: *mut OsApplication<CoreApp>,
     render_engine: *mut RenderEngine<CoreApp>,
@@ -45,10 +45,10 @@ where
         let os_app = Box::into_raw(Box::new(OsApplication::<CoreApp>::new(args)));
         let render_engine = Box::into_raw(Box::new(RenderEngine::<CoreApp>::new()));
         let core_app = Box::into_raw(Box::new(CoreApp::new()));
-        unsafe { (*os_app).set_core_app(core_app) };
-        unsafe { (*os_app).set_rnd_eng(render_engine) };
-        unsafe { (*render_engine).set_os_app(os_app) };
-        unsafe { (*render_engine).set_core_app(core_app) };
+        unsafe { (*os_app).set_core_app(transmute(core_app)) };
+        unsafe { (*os_app).set_rnd_eng(transmute(render_engine)) };
+        unsafe { (*render_engine).set_os_app(transmute(os_app)) };
+        unsafe { (*render_engine).set_core_app(transmute(core_app)) };
         unsafe { (*os_app).initialize() };
         //logi!("{:?}     {:?}", os_app, render_engine);
         Application {

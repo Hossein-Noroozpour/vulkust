@@ -1,5 +1,6 @@
 // pub mod config;
 pub mod camera;
+pub mod device;
 pub mod light;
 pub mod material;
 pub mod model;

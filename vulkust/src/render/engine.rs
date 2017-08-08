@@ -22,8 +22,8 @@ where
     CoreApp: ApplicationTrait,
 {
     fn new() -> Self;
-    fn set_core_app(&mut self, c: *mut CoreApp);
-    fn set_os_app(&mut self, o: *mut OsApplication<CoreApp>);
+    fn set_core_app(&mut self, c: &'static mut CoreApp);
+    fn set_os_app(&mut self, o: &'static mut OsApplication<CoreApp>);
     fn initialize(&mut self);
     fn on_event(&mut self, e: Event);
     fn update(&mut self);
@@ -37,7 +37,7 @@ pub struct Basic {
 }
 
 impl Basic {
-    pub fn new<CoreApp>(os_app: *mut OsApplication<CoreApp>) -> Self
+    pub fn new<CoreApp>(os_app: &mut OsApplication<CoreApp>) -> Self
     where
         CoreApp: ApplicationTrait,
     {

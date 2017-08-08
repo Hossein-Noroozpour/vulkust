@@ -30,7 +30,7 @@ pub struct BasicScene {
 }
 
 impl BasicScene {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    pub fn new<CoreApp>(file: &mut File, os_app: &mut OsApplication<CoreApp>) -> Self
     where
         CoreApp: ApplicationTrait,
     {
@@ -52,24 +52,28 @@ impl BasicScene {
         let mut cameras = Vec::new();
         for _ in 0..cameras_count {
             let id: u64 = file.read_type();
+            logf!("Unchecked!");
             cameras.push(asset_manager.get_camera(id, os_app));
         }
         let audios_count: u64 = file.read_type();
         let mut audios = Vec::new();
         for _ in 0..audios_count {
             let id: u64 = file.read_type();
+            logf!("Unchecked!");
             audios.push(asset_manager.get_audio(id, os_app));
         }
         let lights_count: u64 = file.read_type();
         let mut lights = Vec::new();
         for _ in 0..lights_count {
             let id: u64 = file.read_type();
+            logf!("Unchecked!");
             lights.push(asset_manager.get_light(id, os_app));
         }
         let models_count: u64 = file.read_type();
         let mut models = Vec::new();
         for _ in 0..models_count {
             let id: u64 = file.read_type();
+            logf!("Unchecked!");
             models.push(asset_manager.get_model(id, os_app));
         }
         BasicScene {

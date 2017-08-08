@@ -4,6 +4,7 @@ use super::super::super::audio::manager::Manager as AudioManager;
 use super::super::super::audio::Audio;
 use super::super::super::render::camera::manager::Manager as CameraManager;
 use super::super::super::render::camera::Camera;
+use super::super::super::render::device::logical::Logical as LogicalDevice;
 use super::super::super::render::light::manager::Manager as LightManager;
 use super::super::super::render::light::Light;
 use super::super::super::render::model::manager::Manager as ModelManager;
@@ -53,21 +54,14 @@ impl Manager {
         self.scene_manager.read_table(&mut self.file);
     }
 
-    pub fn get_shader<CoreApp>(
-        &mut self,
-        id: u64,
-        os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<Shader>
-    where
-        CoreApp: ApplicationTrait,
-    {
-        self.shader_manager.get(id, &mut self.file, os_app)
+    pub fn get_shader(&mut self, id: u64, logical_device: Arc<LogicalDevice>) -> Arc<Shader> {
+        self.shader_manager.get(id, &mut self.file, logical_device)
     }
 
     pub fn get_camera<CoreApp>(
         &mut self,
         id: u64,
-        os_app: *mut OsApplication<CoreApp>,
+        os_app: &mut OsApplication<CoreApp>,
     ) -> Arc<RefCell<Camera<f32>>>
     where
         CoreApp: ApplicationTrait,
@@ -78,7 +72,7 @@ impl Manager {
     pub fn get_audio<CoreApp>(
         &mut self,
         id: u64,
-        os_app: *mut OsApplication<CoreApp>,
+        os_app: &mut OsApplication<CoreApp>,
     ) -> Arc<RefCell<Audio>>
     where
         CoreApp: ApplicationTrait,
@@ -89,7 +83,7 @@ impl Manager {
     pub fn get_light<CoreApp>(
         &mut self,
         id: u64,
-        os_app: *mut OsApplication<CoreApp>,
+        os_app: &mut OsApplication<CoreApp>,
     ) -> Arc<RefCell<Light>>
     where
         CoreApp: ApplicationTrait,
@@ -100,7 +94,7 @@ impl Manager {
     pub fn get_texture<CoreApp>(
         &mut self,
         id: u64,
-        os_app: *mut OsApplication<CoreApp>,
+        os_app: &mut OsApplication<CoreApp>,
     ) -> Arc<Texture>
     where
         CoreApp: ApplicationTrait,
@@ -111,7 +105,7 @@ impl Manager {
     pub fn get_model<CoreApp>(
         &mut self,
         id: u64,
-        os_app: *mut OsApplication<CoreApp>,
+        os_app: &mut OsApplication<CoreApp>,
     ) -> Arc<RefCell<Model>>
     where
         CoreApp: ApplicationTrait,
@@ -122,7 +116,7 @@ impl Manager {
     pub fn get_scene<CoreApp>(
         &mut self,
         id: u64,
-        os_app: *mut OsApplication<CoreApp>,
+        os_app: &mut OsApplication<CoreApp>,
     ) -> Arc<RefCell<Scene>>
     where
         CoreApp: ApplicationTrait,

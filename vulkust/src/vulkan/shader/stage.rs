@@ -12,17 +12,7 @@ pub struct Stage {
 }
 
 impl Stage {
-    pub fn new<CoreApp>(data: Vec<u8>, os_app: *mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
-        let logical_device = unsafe {
-            (*(*os_app).render_engine)
-                .logical_device
-                .as_ref()
-                .unwrap()
-                .clone()
-        };
+    pub fn new(data: Vec<u8>, logical_device: Arc<LogicalDevice>) -> Self {
         let mut module_create_info = vk::VkShaderModuleCreateInfo::default();
         module_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         module_create_info.codeSize = data.len();

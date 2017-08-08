@@ -1,11 +1,12 @@
 pub mod manager;
 pub mod stage;
 
-
+use std::sync::Arc;
 use std::ops::{BitOrAssign, ShlAssign};
 use super::super::system::file::File;
 use super::super::system::os::OsApplication;
 use super::super::core::application::ApplicationTrait;
+use super::device::logical::Logical as LogicalDevice;
 use self::stage::Stage;
 
 pub trait Shader {
@@ -20,10 +21,7 @@ pub struct TwoStage {
 }
 
 impl TwoStage {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn new(file: &mut File, logical_device: Arc<LogicalDevice>) -> Self {
         let size: u64 = file.read_type();
         // logi!("shader size is: {}", size);
         let vertex = file.read_bytes(size as usize);
@@ -31,8 +29,8 @@ impl TwoStage {
         // logi!("shader size is: {}", size);
         let fragment = file.read_bytes(size as usize);
         TwoStage {
-            vertex: Stage::new(vertex, os_app),
-            fragment: Stage::new(fragment, os_app),
+            vertex: Stage::new(vertex, logical_device.clone()),
+            fragment: Stage::new(fragment, logical_device),
         }
     }
 }

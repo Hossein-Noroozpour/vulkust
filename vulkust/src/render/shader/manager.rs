@@ -6,6 +6,7 @@ use std::default::Default;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
 use super::super::super::system::os::OsApplication;
+use super::super::device::logical::Logical as LogicalDevice;
 use super::{TwoStage, Shader, read_id};
 
 pub struct Manager {
@@ -31,15 +32,8 @@ impl Manager {
         }
     }
 
-    pub fn get<CoreApp>(
-        &mut self,
-        id: u64,
-        file: &mut File,
-        os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<Shader>
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn get(
+        &mut self, id: u64, file: &mut File, logical_device: Arc<LogicalDevice>) -> Arc<Shader> {
         match self.cached.get(&id) {
             Some(res) => match res.upgrade() {
                 Some(res) => {
@@ -65,7 +59,7 @@ impl Manager {
             }
         };
         let shader = match id {
-            1 => TwoStage::new(file, os_app),
+            1 => TwoStage::new(file, logical_device),
             _ => {
                 logf!("Requsted shader Id: {} not found.", id);
             }

@@ -16,7 +16,7 @@ pub struct StaticModel {
 }
 
 impl StaticModel {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    pub fn new<CoreApp>(file: &mut File, os_app: &mut OsApplication<CoreApp>) -> Self
     where
         CoreApp: ApplicationTrait,
     {
@@ -33,7 +33,7 @@ pub struct DynamicModel {
 }
 
 impl DynamicModel {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    pub fn new<CoreApp>(file: &mut File, os_app: &mut OsApplication<CoreApp>) -> Self
     where
         CoreApp: ApplicationTrait,
     {
@@ -49,7 +49,7 @@ pub struct CopyModel {
 }
 
 impl CopyModel {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    pub fn new<CoreApp>(file: &mut File, os_app: &mut OsApplication<CoreApp>) -> Self
     where
         CoreApp: ApplicationTrait,
     {
@@ -66,7 +66,7 @@ impl Model for CopyModel {}
 
 pub fn read_model<CoreApp>(
     file: &mut File,
-    os_app: *mut OsApplication<CoreApp>,
+    os_app: &mut OsApplication<CoreApp>,
 ) -> Arc<RefCell<Model>>
 where
     CoreApp: ApplicationTrait,

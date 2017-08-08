@@ -11,7 +11,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    pub fn new<CoreApp>(file: &mut File, os_app: &mut OsApplication<CoreApp>) -> Self
     where
         CoreApp: ApplicationTrait,
     {

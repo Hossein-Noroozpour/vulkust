@@ -16,7 +16,7 @@ use std::ffi::CString;
 
 pub struct Application<CoreApp>
 where
-    CoreApp: ApplicationTrait,
+    CoreApp: 'static + ApplicationTrait,
 {
     pub asset_manager: AssetManager,
     pub connection: *mut xcb::xcb_connection_t,
@@ -24,7 +24,7 @@ where
     pub window: xcb::xcb_window_t,
     pub atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t,
     pub core_app: *mut CoreApp,
-    pub render_engine: *mut RenderEngine<CoreApp>,
+    pub render_engine: &'static mut RenderEngine<CoreApp>,
     pub is_running: bool,
     pub mouse_previous_location: (f64, f64),
     pub window_w: u64,
@@ -45,7 +45,7 @@ where
             window: 0 as _,
             atom_wm_delete_window: null_mut(),
             core_app: null_mut(),
-            render_engine: null_mut(),
+            render_engine: unsafe { transmute(0usize) },
             is_running: true,
             mouse_previous_location: (0f64, 0f64),
             window_w: 1000,
@@ -133,10 +133,10 @@ where
         }
         this
     }
-    fn set_core_app(&mut self, c: *mut CoreApp) {
+    fn set_core_app(&mut self, c: &'static mut CoreApp) {
         self.core_app = c;
     }
-    fn set_rnd_eng(&mut self, r: *mut RenderEngine<CoreApp>) {
+    fn set_rnd_eng(&mut self, r: &'static mut RenderEngine<CoreApp>) {
         self.render_engine = r;
     }
 
