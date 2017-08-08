@@ -33,7 +33,7 @@ impl Manager {
         &mut self,
         id: u64,
         file: &mut File,
-        os_app: *mut OsApplication<CoreApp>,
+        os_app: &mut OsApplication<CoreApp>,
     ) -> Arc<RefCell<Camera<f32>>>
     where
         CoreApp: ApplicationTrait,

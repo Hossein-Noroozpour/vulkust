@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::cell::RefCell;
 use super::super::super::audio::manager::Manager as AudioManager;
 use super::super::super::audio::Audio;
+use super::super::super::render::buffer::Buffer;
 use super::super::super::render::camera::manager::Manager as CameraManager;
 use super::super::super::render::camera::Camera;
 use super::super::super::render::device::logical::Logical as LogicalDevice;
@@ -106,11 +107,13 @@ impl Manager {
         &mut self,
         id: u64,
         os_app: &mut OsApplication<CoreApp>,
+        vertices_buffer: &mut Buffer,
+        indices_buffer: &mut Buffer
     ) -> Arc<RefCell<Model>>
     where
         CoreApp: ApplicationTrait,
     {
-        self.model_manager.get(id, &mut self.file, os_app)
+        self.model_manager.get(id, &mut self.file, os_app, vertices_buffer, indices_buffer)
     }
 
     pub fn get_scene<CoreApp>(

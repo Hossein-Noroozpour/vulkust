@@ -5,6 +5,7 @@ use std::io::{Seek, SeekFrom};
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::os::OsApplication;
 use super::super::super::system::file::File;
+use super::super::buffer::Buffer;
 use super::{read_model, Model};
 
 pub struct Manager {
@@ -33,6 +34,8 @@ impl Manager {
         id: u64,
         file: &mut File,
         os_app: &mut OsApplication<CoreApp>,
+        vertices_buffer: &mut Buffer,
+        indices_buffer: &mut Buffer,
     ) -> Arc<RefCell<Model>>
     where
         CoreApp: ApplicationTrait,
@@ -55,7 +58,7 @@ impl Manager {
                 logf!("Can not seek to the requested offset.");
             }
         }
-        let l: Arc<RefCell<Model>> = read_model(file, os_app);
+        let l: Arc<RefCell<Model>> = read_model(file, os_app, vertices_buffer, indices_buffer);
         self.cached.insert(id, Arc::downgrade(&l));
         return l;
     }

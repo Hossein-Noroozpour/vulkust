@@ -42,39 +42,38 @@ impl BasicScene {
                 .clone()
         };
         let device = cmd_pool.logical_device.clone();
-        let mut asset_manager = unsafe { &mut ((*os_app).asset_manager) };
+        let asset_manager = &mut os_app.asset_manager;
         let v_size = file.read_type::<u64>() * 1024;
         let i_size = file.read_type::<u64>() * 1024;
-        let meshes_vertices_buffer = Buffer::new(cmd_pool.clone(), v_size, BufferUsage::Vertex);
-        let meshes_indices_buffer = Buffer::new(cmd_pool.clone(), i_size, BufferUsage::Index);
+        let mut meshes_vertices_buffer =
+            Buffer::new(cmd_pool.clone(), v_size, BufferUsage::Vertex);
+        let mut meshes_indices_buffer =
+            Buffer::new(cmd_pool.clone(), i_size, BufferUsage::Index);
         let uniform_buffer = Uniform::new(device, 1024);
         let cameras_count: u64 = file.read_type();
         let mut cameras = Vec::new();
         for _ in 0..cameras_count {
             let id: u64 = file.read_type();
-            logf!("Unchecked!");
             cameras.push(asset_manager.get_camera(id, os_app));
         }
         let audios_count: u64 = file.read_type();
         let mut audios = Vec::new();
         for _ in 0..audios_count {
             let id: u64 = file.read_type();
-            logf!("Unchecked!");
             audios.push(asset_manager.get_audio(id, os_app));
         }
         let lights_count: u64 = file.read_type();
         let mut lights = Vec::new();
         for _ in 0..lights_count {
             let id: u64 = file.read_type();
-            logf!("Unchecked!");
             lights.push(asset_manager.get_light(id, os_app));
         }
         let models_count: u64 = file.read_type();
         let mut models = Vec::new();
         for _ in 0..models_count {
             let id: u64 = file.read_type();
-            logf!("Unchecked!");
-            models.push(asset_manager.get_model(id, os_app));
+            models.push(asset_manager.get_model(
+                id, os_app, &mut meshes_vertices_buffer, &mut meshes_indices_buffer));
         }
         BasicScene {
             meshes_vertices_buffer: meshes_vertices_buffer,

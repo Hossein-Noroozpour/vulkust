@@ -19,16 +19,16 @@ use super::render_pass::RenderPass;
 use super::framebuffer::Framebuffer;
 use super::command::pool::Pool as CmdPool;
 // for the triangle
-use super::buffer::Buffer;
-use super::buffer::uniform::Uniform;
-use super::pipeline::layout::Layout;
-use super::pipeline::pipeline::Pipeline;
-use super::pipeline::cache::Cache as PipelineCache;
-use super::descriptor::pool::Pool as DescriptorPool;
-use super::descriptor::set::Set as DescriptorSet;
+// use super::buffer::Buffer;
+// use super::buffer::uniform::Uniform;
+// use super::pipeline::layout::Layout;
+// use super::pipeline::pipeline::Pipeline;
+// use super::pipeline::cache::Cache as PipelineCache;
+// use super::descriptor::pool::Pool as DescriptorPool;
+// use super::descriptor::set::Set as DescriptorSet;
 use super::command::buffer::Buffer as CmdBuffer;
-use super::synchronizer::semaphore::Semaphore;
-use super::fence::Fence;
+// use super::synchronizer::semaphore::Semaphore;
+// use super::fence::Fence;
 use std::mem::transmute;
 
 #[repr(C)]

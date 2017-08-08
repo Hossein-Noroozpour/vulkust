@@ -83,7 +83,7 @@ impl<E> Basic<E>
 where
     E: Float,
 {
-    pub fn new<CoreApp>(f: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    pub fn new<CoreApp>(f: &mut File, os_app: &mut OsApplication<CoreApp>) -> Self
     where
         CoreApp: ApplicationTrait,
     {
@@ -133,7 +133,7 @@ where
         Basic {
             s: E::new(0.01),
             rs: E::new(0.1),
-            a: E::new(unsafe { (*os_app).get_window_ratio() }),
+            a: E::new(os_app.get_window_ratio()),
             p: p,
             x: x,
             y: y,

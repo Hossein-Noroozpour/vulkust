@@ -136,6 +136,10 @@ impl File {
     pub fn read_id(&mut self) -> u64 {
         self.read_type()
     }
+
+    pub fn read_count(&mut self) -> u64 {
+        self.read_type()
+    }
 }
 
 impl Read for File {

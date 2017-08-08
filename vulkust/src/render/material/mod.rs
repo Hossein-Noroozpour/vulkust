@@ -9,10 +9,20 @@ use super::super::system::file::File;
 use super::shader::{Id as ShaderId, read_id, Shader};
 use super::texture::Texture;
 
+pub const FLOAT_SIZE: u64 = 4;
+pub const POSITION_ELEMENT: u64 = FLOAT_SIZE * 3;
+pub const NORMAL_ELEMENT: u64 = FLOAT_SIZE * 3;
+pub const UV_ELEMENT: u64 = FLOAT_SIZE * 2;
+pub const POSITION_VERTEX_SIZE: u64 = POSITION_ELEMENT;
+pub const POSITION_NORMAL_VERTEX_SIZE: u64 = POSITION_ELEMENT + NORMAL_ELEMENT;
+pub const POSITION_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + UV_ELEMENT;
+pub const POSITION_NORMAL_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + NORMAL_ELEMENT + UV_ELEMENT;
 pub const WHITE_ID: ShaderId = 0;
 pub const DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID: ShaderId = 2207629967616;
 
-pub trait Material {}
+pub trait Material {
+    fn get_vertex_size(&self) -> u64;
+}
 
 pub struct White {
     pub shader: Arc<Shader>,
@@ -29,7 +39,11 @@ impl White {
     }
 }
 
-impl Material for White {}
+impl Material for White {
+    fn get_vertex_size(&self) -> u64 {
+        return POSITION_VERTEX_SIZE;
+    }
+}
 
 pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
     pub shader: Arc<Shader>,
@@ -57,7 +71,11 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
     }
 }
 
-impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {}
+impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
+    fn get_vertex_size(&self) -> u64 {
+        return POSITION_NORMAL_UV_VERTEX_SIZE;
+    }
+}
 
 pub fn read_material<CoreApp>(file: &mut File, os_app: &mut OsApplication<CoreApp>) ->
         Arc<RefCell<Material>> where CoreApp: ApplicationTrait {

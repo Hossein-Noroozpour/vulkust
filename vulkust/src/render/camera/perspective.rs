@@ -22,7 +22,7 @@ impl<E> Perspective<E>
 where
     E: Float,
 {
-    pub fn new<CoreApp>(f: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
+    pub fn new<CoreApp>(f: &mut File, os_app: &mut OsApplication<CoreApp>) -> Self
     where
         CoreApp: ApplicationTrait,
     {
