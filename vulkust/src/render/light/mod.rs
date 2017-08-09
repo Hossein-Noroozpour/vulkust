@@ -25,7 +25,7 @@ impl Sun {
         let far = file.read_type();
         let near = file.read_type();
         let size = file.read_type();
-        let mut loc = Vec3::new_from_file(file);
+        let loc = Vec3::new_from_file(file);
         let mut r = Mat3x3::rotation(
             -file.read_type::<f32>(),
             &Vec3 {

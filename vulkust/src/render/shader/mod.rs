@@ -2,10 +2,7 @@ pub mod manager;
 pub mod stage;
 
 use std::sync::Arc;
-use std::ops::{BitOrAssign, ShlAssign};
 use super::super::system::file::File;
-use super::super::system::os::OsApplication;
-use super::super::core::application::ApplicationTrait;
 use super::device::logical::Logical as LogicalDevice;
 use self::stage::Stage;
 

@@ -1,10 +1,6 @@
 use std::sync::Arc;
 use std::cell::RefCell;
-use std::mem::transmute;
-use super::super::core::application::ApplicationTrait;
-use super::super::math::matrix::Mat4x4;
 use super::super::math::vector::Vec3;
-use super::super::system::os::OsApplication;
 use super::super::system::file::File;
 use super::device::logical::Logical as LogicalDevice;
 use super::shader::{Id as ShaderId, read_id, Shader};

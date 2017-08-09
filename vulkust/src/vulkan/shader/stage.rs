@@ -1,9 +1,7 @@
 use std::mem::transmute;
 use std::sync::Arc;
 use std::ptr::null;
-use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::vulkan as vk;
-use super::super::super::system::os::OsApplication;
 use super::super::device::logical::Logical as LogicalDevice;
 
 pub struct Stage {

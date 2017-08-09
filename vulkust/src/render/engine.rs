@@ -12,8 +12,6 @@ use super::super::core::application::ApplicationTrait;
 use super::super::core::event::Event;
 use super::super::system::os::OsApplication;
 use super::super::system::os::ApplicationTrait as OsApp;
-use super::buffer::Buffer;
-use super::buffer::uniform::Uniform;
 use super::scene::Scene;
 
 pub type RenderEngine<CoreApp> = Engine<CoreApp>;

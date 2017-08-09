@@ -4,12 +4,10 @@ pub mod uniform;
 
 use std::default::Default;
 use std::sync::Arc;
-use std::ptr::{copy, null, null_mut};
+use std::ptr::{null, null_mut};
 use std::os::raw::c_void;
-use std::mem::{size_of, transmute};
-use super::super::math::number::Float;
+use std::mem::transmute;
 use super::super::system::vulkan as vk;
-use super::device::logical::Logical as LogicalDevice;
 use super::command::pool::Pool as CmdPool;
 use super::command::buffer::Buffer as CmdBuff;
 

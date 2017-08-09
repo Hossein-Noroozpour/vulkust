@@ -1,9 +1,6 @@
 use std::sync::Arc;
 use std::cell::RefCell;
 use std::mem::transmute;
-use super::super::core::application::ApplicationTrait;
-use super::super::math::matrix::Mat4x4;
-use super::super::system::os::OsApplication;
 use super::super::system::file::File;
 use super::buffer::Buffer;
 use super::device::logical::Logical as LogicalDevice;

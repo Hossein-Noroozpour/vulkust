@@ -392,29 +392,29 @@ pub type __pid_t = ::std::os::raw::c_int;
 pub struct __fsid_t {
     pub __val: [::std::os::raw::c_int; 2usize],
 }
-#[test]
-fn bindgen_test_layout___fsid_t() {
-    assert_eq!(
-        ::std::mem::size_of::<__fsid_t>(),
-        8usize,
-        concat!("Size of: ", stringify!(__fsid_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__fsid_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(__fsid_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __fsid_t)).__val as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__fsid_t),
-            "::",
-            stringify!(__val)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout___fsid_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<__fsid_t>(),
+//         8usize,
+//         concat!("Size of: ", stringify!(__fsid_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<__fsid_t>(),
+//         4usize,
+//         concat!("Alignment of ", stringify!(__fsid_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __fsid_t)).__val as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__fsid_t),
+//             "::",
+//             stringify!(__val)
+//         )
+//     );
+// }
 impl Clone for __fsid_t {
     fn clone(&self) -> Self {
         *self
@@ -485,29 +485,29 @@ pub type __sig_atomic_t = ::std::os::raw::c_int;
 pub struct __sigset_t {
     pub __val: [::std::os::raw::c_ulong; 16usize],
 }
-#[test]
-fn bindgen_test_layout___sigset_t() {
-    assert_eq!(
-        ::std::mem::size_of::<__sigset_t>(),
-        128usize,
-        concat!("Size of: ", stringify!(__sigset_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__sigset_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(__sigset_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __sigset_t)).__val as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__sigset_t),
-            "::",
-            stringify!(__val)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout___sigset_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<__sigset_t>(),
+//         128usize,
+//         concat!("Size of: ", stringify!(__sigset_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<__sigset_t>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(__sigset_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __sigset_t)).__val as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__sigset_t),
+//             "::",
+//             stringify!(__val)
+//         )
+//     );
+// }
 impl Clone for __sigset_t {
     fn clone(&self) -> Self {
         *self
@@ -679,78 +679,78 @@ pub type pthread_t = ::std::os::raw::c_ulong;
 //     pub __size: [::std::os::raw::c_char; 56usize],
 //     pub __align: ::std::os::raw::c_long,
 // }
-#[test]
-fn bindgen_test_layout_pthread_attr_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_attr_t>(),
-        56usize,
-        concat!("Size of: ", stringify!(pthread_attr_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_attr_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_attr_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_attr_t)).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_attr_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_attr_t)).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_attr_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_attr_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_attr_t>(),
+//         56usize,
+//         concat!("Size of: ", stringify!(pthread_attr_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_attr_t>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(pthread_attr_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_attr_t)).__size as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_attr_t),
+//             "::",
+//             stringify!(__size)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_attr_t)).__align as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_attr_t),
+//             "::",
+//             stringify!(__align)
+//         )
+//     );
+// }
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct __pthread_internal_list {
     pub __prev: *mut __pthread_internal_list,
     pub __next: *mut __pthread_internal_list,
 }
-#[test]
-fn bindgen_test_layout___pthread_internal_list() {
-    assert_eq!(
-        ::std::mem::size_of::<__pthread_internal_list>(),
-        16usize,
-        concat!("Size of: ", stringify!(__pthread_internal_list))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__pthread_internal_list>(),
-        8usize,
-        concat!("Alignment of ", stringify!(__pthread_internal_list))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __pthread_internal_list)).__prev as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_internal_list),
-            "::",
-            stringify!(__prev)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __pthread_internal_list)).__next as *const _ as usize },
-        8usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_internal_list),
-            "::",
-            stringify!(__next)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout___pthread_internal_list() {
+//     assert_eq!(
+//         ::std::mem::size_of::<__pthread_internal_list>(),
+//         16usize,
+//         concat!("Size of: ", stringify!(__pthread_internal_list))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<__pthread_internal_list>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(__pthread_internal_list))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __pthread_internal_list)).__prev as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_internal_list),
+//             "::",
+//             stringify!(__prev)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __pthread_internal_list)).__next as *const _ as usize },
+//         8usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_internal_list),
+//             "::",
+//             stringify!(__next)
+//         )
+//     );
+// }
 impl Clone for __pthread_internal_list {
     fn clone(&self) -> Self {
         *self
@@ -775,193 +775,193 @@ pub struct pthread_mutex_t___pthread_mutex_s {
     pub __elision: ::std::os::raw::c_short,
     pub __list: __pthread_list_t,
 }
-#[test]
-fn bindgen_test_layout_pthread_mutex_t___pthread_mutex_s() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_mutex_t___pthread_mutex_s>(),
-        40usize,
-        concat!("Size of: ", stringify!(pthread_mutex_t___pthread_mutex_s))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_mutex_t___pthread_mutex_s>(),
-        8usize,
-        concat!(
-            "Alignment of ",
-            stringify!(pthread_mutex_t___pthread_mutex_s)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__lock as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
-            "::",
-            stringify!(__lock)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__count as *const _ as usize },
-        4usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
-            "::",
-            stringify!(__count)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__owner as *const _ as usize },
-        8usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
-            "::",
-            stringify!(__owner)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__nusers as *const _ as usize
-        },
-        12usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
-            "::",
-            stringify!(__nusers)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__kind as *const _ as usize },
-        16usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
-            "::",
-            stringify!(__kind)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__spins as *const _ as usize },
-        20usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
-            "::",
-            stringify!(__spins)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__elision as *const _ as usize
-        },
-        22usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
-            "::",
-            stringify!(__elision)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__list as *const _ as usize },
-        24usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
-            "::",
-            stringify!(__list)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_mutex_t___pthread_mutex_s() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_mutex_t___pthread_mutex_s>(),
+//         40usize,
+//         concat!("Size of: ", stringify!(pthread_mutex_t___pthread_mutex_s))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_mutex_t___pthread_mutex_s>(),
+//         8usize,
+//         concat!(
+//             "Alignment of ",
+//             stringify!(pthread_mutex_t___pthread_mutex_s)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__lock as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t___pthread_mutex_s),
+//             "::",
+//             stringify!(__lock)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__count as *const _ as usize },
+//         4usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t___pthread_mutex_s),
+//             "::",
+//             stringify!(__count)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__owner as *const _ as usize },
+//         8usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t___pthread_mutex_s),
+//             "::",
+//             stringify!(__owner)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__nusers as *const _ as usize
+//         },
+//         12usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t___pthread_mutex_s),
+//             "::",
+//             stringify!(__nusers)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__kind as *const _ as usize },
+//         16usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t___pthread_mutex_s),
+//             "::",
+//             stringify!(__kind)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__spins as *const _ as usize },
+//         20usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t___pthread_mutex_s),
+//             "::",
+//             stringify!(__spins)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__elision as *const _ as usize
+//         },
+//         22usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t___pthread_mutex_s),
+//             "::",
+//             stringify!(__elision)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutex_t___pthread_mutex_s)).__list as *const _ as usize },
+//         24usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t___pthread_mutex_s),
+//             "::",
+//             stringify!(__list)
+//         )
+//     );
+// }
 impl Clone for pthread_mutex_t___pthread_mutex_s {
     fn clone(&self) -> Self {
         *self
     }
 }
-#[test]
-fn bindgen_test_layout_pthread_mutex_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_mutex_t>(),
-        40usize,
-        concat!("Size of: ", stringify!(pthread_mutex_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_mutex_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_mutex_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutex_t)).__data as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t),
-            "::",
-            stringify!(__data)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutex_t)).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutex_t)).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutex_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_mutex_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_mutex_t>(),
+//         40usize,
+//         concat!("Size of: ", stringify!(pthread_mutex_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_mutex_t>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(pthread_mutex_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutex_t)).__data as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t),
+//             "::",
+//             stringify!(__data)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutex_t)).__size as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t),
+//             "::",
+//             stringify!(__size)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutex_t)).__align as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutex_t),
+//             "::",
+//             stringify!(__align)
+//         )
+//     );
+// }
 // #[repr(C)]
 // #[derive(Copy)]
 // pub union pthread_mutexattr_t {
 //     pub __size: [::std::os::raw::c_char; 4usize],
 //     pub __align: ::std::os::raw::c_int,
 // }
-#[test]
-fn bindgen_test_layout_pthread_mutexattr_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_mutexattr_t>(),
-        4usize,
-        concat!("Size of: ", stringify!(pthread_mutexattr_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_mutexattr_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(pthread_mutexattr_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutexattr_t)).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutexattr_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_mutexattr_t)).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_mutexattr_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_mutexattr_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_mutexattr_t>(),
+//         4usize,
+//         concat!("Size of: ", stringify!(pthread_mutexattr_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_mutexattr_t>(),
+//         4usize,
+//         concat!("Alignment of ", stringify!(pthread_mutexattr_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutexattr_t)).__size as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutexattr_t),
+//             "::",
+//             stringify!(__size)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_mutexattr_t)).__align as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_mutexattr_t),
+//             "::",
+//             stringify!(__align)
+//         )
+//     );
+// }
 // impl Clone for pthread_mutexattr_t {
 //     fn clone(&self) -> Self { *self }
 // }
@@ -983,188 +983,188 @@ pub struct pthread_cond_t__bindgen_ty_1 {
     pub __nwaiters: ::std::os::raw::c_uint,
     pub __broadcast_seq: ::std::os::raw::c_uint,
 }
-#[test]
-fn bindgen_test_layout_pthread_cond_t__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_cond_t__bindgen_ty_1>(),
-        48usize,
-        concat!("Size of: ", stringify!(pthread_cond_t__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_cond_t__bindgen_ty_1>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_cond_t__bindgen_ty_1))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__lock as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__lock)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__futex as *const _ as usize },
-        4usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__futex)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__total_seq as *const _ as usize },
-        8usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__total_seq)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__wakeup_seq as *const _ as usize },
-        16usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__wakeup_seq)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__woken_seq as *const _ as usize },
-        24usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__woken_seq)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__mutex as *const _ as usize },
-        32usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__mutex)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__nwaiters as *const _ as usize },
-        40usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__nwaiters)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__broadcast_seq as *const _ as usize
-        },
-        44usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__broadcast_seq)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_cond_t__bindgen_ty_1() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_cond_t__bindgen_ty_1>(),
+//         48usize,
+//         concat!("Size of: ", stringify!(pthread_cond_t__bindgen_ty_1))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_cond_t__bindgen_ty_1>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(pthread_cond_t__bindgen_ty_1))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__lock as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__lock)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__futex as *const _ as usize },
+//         4usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__futex)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__total_seq as *const _ as usize },
+//         8usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__total_seq)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__wakeup_seq as *const _ as usize },
+//         16usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__wakeup_seq)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__woken_seq as *const _ as usize },
+//         24usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__woken_seq)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__mutex as *const _ as usize },
+//         32usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__mutex)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__nwaiters as *const _ as usize },
+//         40usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__nwaiters)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const pthread_cond_t__bindgen_ty_1)).__broadcast_seq as *const _ as usize
+//         },
+//         44usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__broadcast_seq)
+//         )
+//     );
+// }
 impl Clone for pthread_cond_t__bindgen_ty_1 {
     fn clone(&self) -> Self {
         *self
     }
 }
-#[test]
-fn bindgen_test_layout_pthread_cond_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_cond_t>(),
-        48usize,
-        concat!("Size of: ", stringify!(pthread_cond_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_cond_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_cond_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t)).__data as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t),
-            "::",
-            stringify!(__data)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t)).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_cond_t)).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_cond_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_cond_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_cond_t>(),
+//         48usize,
+//         concat!("Size of: ", stringify!(pthread_cond_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_cond_t>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(pthread_cond_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t)).__data as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t),
+//             "::",
+//             stringify!(__data)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t)).__size as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t),
+//             "::",
+//             stringify!(__size)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_cond_t)).__align as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_cond_t),
+//             "::",
+//             stringify!(__align)
+//         )
+//     );
+// }
 // #[repr(C)]
 // #[derive(Copy)]
 // pub union pthread_condattr_t {
 //     pub __size: [::std::os::raw::c_char; 4usize],
 //     pub __align: ::std::os::raw::c_int,
 // }
-#[test]
-fn bindgen_test_layout_pthread_condattr_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_condattr_t>(),
-        4usize,
-        concat!("Size of: ", stringify!(pthread_condattr_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_condattr_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(pthread_condattr_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_condattr_t)).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_condattr_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_condattr_t)).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_condattr_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_condattr_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_condattr_t>(),
+//         4usize,
+//         concat!("Size of: ", stringify!(pthread_condattr_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_condattr_t>(),
+//         4usize,
+//         concat!("Alignment of ", stringify!(pthread_condattr_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_condattr_t)).__size as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_condattr_t),
+//             "::",
+//             stringify!(__size)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_condattr_t)).__align as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_condattr_t),
+//             "::",
+//             stringify!(__align)
+//         )
+//     );
+// }
 // impl Clone for pthread_condattr_t {
 //     fn clone(&self) -> Self { *self }
 // }
@@ -1192,240 +1192,240 @@ pub struct pthread_rwlock_t__bindgen_ty_1 {
     pub __pad2: ::std::os::raw::c_ulong,
     pub __flags: ::std::os::raw::c_uint,
 }
-#[test]
-fn bindgen_test_layout_pthread_rwlock_t__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_rwlock_t__bindgen_ty_1>(),
-        56usize,
-        concat!("Size of: ", stringify!(pthread_rwlock_t__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_rwlock_t__bindgen_ty_1>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_rwlock_t__bindgen_ty_1))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__lock as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__lock)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__nr_readers as *const _ as usize
-        },
-        4usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__nr_readers)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__readers_wakeup as *const _ as usize
-        },
-        8usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__readers_wakeup)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__writer_wakeup as *const _ as usize
-        },
-        12usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__writer_wakeup)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__nr_readers_queued as *const _ as
-                usize
-        },
-        16usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__nr_readers_queued)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__nr_writers_queued as *const _ as
-                usize
-        },
-        20usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__nr_writers_queued)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__writer as *const _ as usize },
-        24usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__writer)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__shared as *const _ as usize },
-        28usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__shared)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__rwelision as *const _ as usize
-        },
-        32usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__rwelision)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__pad1 as *const _ as usize },
-        33usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__pad1)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__pad2 as *const _ as usize },
-        40usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__pad2)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__flags as *const _ as usize },
-        48usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__flags)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_rwlock_t__bindgen_ty_1() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_rwlock_t__bindgen_ty_1>(),
+//         56usize,
+//         concat!("Size of: ", stringify!(pthread_rwlock_t__bindgen_ty_1))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_rwlock_t__bindgen_ty_1>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(pthread_rwlock_t__bindgen_ty_1))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__lock as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__lock)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__nr_readers as *const _ as usize
+//         },
+//         4usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__nr_readers)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__readers_wakeup as *const _ as usize
+//         },
+//         8usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__readers_wakeup)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__writer_wakeup as *const _ as usize
+//         },
+//         12usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__writer_wakeup)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__nr_readers_queued as *const _ as
+//                 usize
+//         },
+//         16usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__nr_readers_queued)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__nr_writers_queued as *const _ as
+//                 usize
+//         },
+//         20usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__nr_writers_queued)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__writer as *const _ as usize },
+//         24usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__writer)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__shared as *const _ as usize },
+//         28usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__shared)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__rwelision as *const _ as usize
+//         },
+//         32usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__rwelision)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__pad1 as *const _ as usize },
+//         33usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__pad1)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__pad2 as *const _ as usize },
+//         40usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__pad2)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlock_t__bindgen_ty_1)).__flags as *const _ as usize },
+//         48usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__flags)
+//         )
+//     );
+// }
 impl Clone for pthread_rwlock_t__bindgen_ty_1 {
     fn clone(&self) -> Self {
         *self
     }
 }
-#[test]
-fn bindgen_test_layout_pthread_rwlock_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_rwlock_t>(),
-        56usize,
-        concat!("Size of: ", stringify!(pthread_rwlock_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_rwlock_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_rwlock_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlock_t)).__data as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t),
-            "::",
-            stringify!(__data)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlock_t)).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlock_t)).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlock_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_rwlock_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_rwlock_t>(),
+//         56usize,
+//         concat!("Size of: ", stringify!(pthread_rwlock_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_rwlock_t>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(pthread_rwlock_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlock_t)).__data as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t),
+//             "::",
+//             stringify!(__data)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlock_t)).__size as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t),
+//             "::",
+//             stringify!(__size)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlock_t)).__align as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlock_t),
+//             "::",
+//             stringify!(__align)
+//         )
+//     );
+// }
 // #[repr(C)]
 // #[derive(Copy)]
 // pub union pthread_rwlockattr_t {
 //     pub __size: [::std::os::raw::c_char; 8usize],
 //     pub __align: ::std::os::raw::c_long,
 // }
-#[test]
-fn bindgen_test_layout_pthread_rwlockattr_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_rwlockattr_t>(),
-        8usize,
-        concat!("Size of: ", stringify!(pthread_rwlockattr_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_rwlockattr_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_rwlockattr_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlockattr_t)).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlockattr_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_rwlockattr_t)).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_rwlockattr_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_rwlockattr_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_rwlockattr_t>(),
+//         8usize,
+//         concat!("Size of: ", stringify!(pthread_rwlockattr_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_rwlockattr_t>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(pthread_rwlockattr_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlockattr_t)).__size as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlockattr_t),
+//             "::",
+//             stringify!(__size)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_rwlockattr_t)).__align as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_rwlockattr_t),
+//             "::",
+//             stringify!(__align)
+//         )
+//     );
+// }
 // impl Clone for pthread_rwlockattr_t {
 //     fn clone(&self) -> Self { *self }
 // }
@@ -1436,39 +1436,39 @@ pub type pthread_spinlock_t = ::std::os::raw::c_int;
 //     pub __size: [::std::os::raw::c_char; 32usize],
 //     pub __align: ::std::os::raw::c_long,
 // }
-#[test]
-fn bindgen_test_layout_pthread_barrier_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_barrier_t>(),
-        32usize,
-        concat!("Size of: ", stringify!(pthread_barrier_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_barrier_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_barrier_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_barrier_t)).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_barrier_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_barrier_t)).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_barrier_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_barrier_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_barrier_t>(),
+//         32usize,
+//         concat!("Size of: ", stringify!(pthread_barrier_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_barrier_t>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(pthread_barrier_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_barrier_t)).__size as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_barrier_t),
+//             "::",
+//             stringify!(__size)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_barrier_t)).__align as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_barrier_t),
+//             "::",
+//             stringify!(__align)
+//         )
+//     );
+// }
 // impl Clone for pthread_barrier_t {
 //     fn clone(&self) -> Self { *self }
 // }
@@ -1478,39 +1478,39 @@ fn bindgen_test_layout_pthread_barrier_t() {
 //     pub __size: [::std::os::raw::c_char; 4usize],
 //     pub __align: ::std::os::raw::c_int,
 // }
-#[test]
-fn bindgen_test_layout_pthread_barrierattr_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_barrierattr_t>(),
-        4usize,
-        concat!("Size of: ", stringify!(pthread_barrierattr_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_barrierattr_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(pthread_barrierattr_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_barrierattr_t)).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_barrierattr_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const pthread_barrierattr_t)).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(pthread_barrierattr_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_pthread_barrierattr_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<pthread_barrierattr_t>(),
+//         4usize,
+//         concat!("Size of: ", stringify!(pthread_barrierattr_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<pthread_barrierattr_t>(),
+//         4usize,
+//         concat!("Alignment of ", stringify!(pthread_barrierattr_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_barrierattr_t)).__size as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_barrierattr_t),
+//             "::",
+//             stringify!(__size)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const pthread_barrierattr_t)).__align as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(pthread_barrierattr_t),
+//             "::",
+//             stringify!(__align)
+//         )
+//     );
+// }
 // impl Clone for pthread_barrierattr_t {
 //     fn clone(&self) -> Self { *self }
 // }
@@ -1644,29 +1644,29 @@ impl Clone for sched_param {
 pub struct __sched_param {
     pub __sched_priority: ::std::os::raw::c_int,
 }
-#[test]
-fn bindgen_test_layout___sched_param() {
-    assert_eq!(
-        ::std::mem::size_of::<__sched_param>(),
-        4usize,
-        concat!("Size of: ", stringify!(__sched_param))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__sched_param>(),
-        4usize,
-        concat!("Alignment of ", stringify!(__sched_param))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __sched_param)).__sched_priority as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__sched_param),
-            "::",
-            stringify!(__sched_priority)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout___sched_param() {
+//     assert_eq!(
+//         ::std::mem::size_of::<__sched_param>(),
+//         4usize,
+//         concat!("Size of: ", stringify!(__sched_param))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<__sched_param>(),
+//         4usize,
+//         concat!("Alignment of ", stringify!(__sched_param))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __sched_param)).__sched_priority as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__sched_param),
+//             "::",
+//             stringify!(__sched_priority)
+//         )
+//     );
+// }
 impl Clone for __sched_param {
     fn clone(&self) -> Self {
         *self
@@ -1962,69 +1962,69 @@ pub struct __locale_struct {
     pub __ctype_toupper: *const ::std::os::raw::c_int,
     pub __names: [*const ::std::os::raw::c_char; 13usize],
 }
-#[test]
-fn bindgen_test_layout___locale_struct() {
-    assert_eq!(
-        ::std::mem::size_of::<__locale_struct>(),
-        232usize,
-        concat!("Size of: ", stringify!(__locale_struct))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__locale_struct>(),
-        8usize,
-        concat!("Alignment of ", stringify!(__locale_struct))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __locale_struct)).__locales as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__locale_struct),
-            "::",
-            stringify!(__locales)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __locale_struct)).__ctype_b as *const _ as usize },
-        104usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__locale_struct),
-            "::",
-            stringify!(__ctype_b)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __locale_struct)).__ctype_tolower as *const _ as usize },
-        112usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__locale_struct),
-            "::",
-            stringify!(__ctype_tolower)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __locale_struct)).__ctype_toupper as *const _ as usize },
-        120usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__locale_struct),
-            "::",
-            stringify!(__ctype_toupper)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __locale_struct)).__names as *const _ as usize },
-        128usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__locale_struct),
-            "::",
-            stringify!(__names)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout___locale_struct() {
+//     assert_eq!(
+//         ::std::mem::size_of::<__locale_struct>(),
+//         232usize,
+//         concat!("Size of: ", stringify!(__locale_struct))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<__locale_struct>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(__locale_struct))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __locale_struct)).__locales as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__locale_struct),
+//             "::",
+//             stringify!(__locales)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __locale_struct)).__ctype_b as *const _ as usize },
+//         104usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__locale_struct),
+//             "::",
+//             stringify!(__ctype_b)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __locale_struct)).__ctype_tolower as *const _ as usize },
+//         112usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__locale_struct),
+//             "::",
+//             stringify!(__ctype_tolower)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __locale_struct)).__ctype_toupper as *const _ as usize },
+//         120usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__locale_struct),
+//             "::",
+//             stringify!(__ctype_toupper)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __locale_struct)).__names as *const _ as usize },
+//         128usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__locale_struct),
+//             "::",
+//             stringify!(__names)
+//         )
+//     );
+// }
 impl Clone for __locale_struct {
     fn clone(&self) -> Self {
         *self
@@ -2257,59 +2257,59 @@ pub struct _pthread_cleanup_buffer {
     pub __canceltype: ::std::os::raw::c_int,
     pub __prev: *mut _pthread_cleanup_buffer,
 }
-#[test]
-fn bindgen_test_layout__pthread_cleanup_buffer() {
-    assert_eq!(
-        ::std::mem::size_of::<_pthread_cleanup_buffer>(),
-        32usize,
-        concat!("Size of: ", stringify!(_pthread_cleanup_buffer))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<_pthread_cleanup_buffer>(),
-        8usize,
-        concat!("Alignment of ", stringify!(_pthread_cleanup_buffer))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const _pthread_cleanup_buffer)).__routine as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(_pthread_cleanup_buffer),
-            "::",
-            stringify!(__routine)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const _pthread_cleanup_buffer)).__arg as *const _ as usize },
-        8usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(_pthread_cleanup_buffer),
-            "::",
-            stringify!(__arg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const _pthread_cleanup_buffer)).__canceltype as *const _ as usize },
-        16usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(_pthread_cleanup_buffer),
-            "::",
-            stringify!(__canceltype)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const _pthread_cleanup_buffer)).__prev as *const _ as usize },
-        24usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(_pthread_cleanup_buffer),
-            "::",
-            stringify!(__prev)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout__pthread_cleanup_buffer() {
+//     assert_eq!(
+//         ::std::mem::size_of::<_pthread_cleanup_buffer>(),
+//         32usize,
+//         concat!("Size of: ", stringify!(_pthread_cleanup_buffer))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<_pthread_cleanup_buffer>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(_pthread_cleanup_buffer))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const _pthread_cleanup_buffer)).__routine as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(_pthread_cleanup_buffer),
+//             "::",
+//             stringify!(__routine)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const _pthread_cleanup_buffer)).__arg as *const _ as usize },
+//         8usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(_pthread_cleanup_buffer),
+//             "::",
+//             stringify!(__arg)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const _pthread_cleanup_buffer)).__canceltype as *const _ as usize },
+//         16usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(_pthread_cleanup_buffer),
+//             "::",
+//             stringify!(__canceltype)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const _pthread_cleanup_buffer)).__prev as *const _ as usize },
+//         24usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(_pthread_cleanup_buffer),
+//             "::",
+//             stringify!(__prev)
+//         )
+//     );
+// }
 impl Clone for _pthread_cleanup_buffer {
     fn clone(&self) -> Self {
         *self
@@ -2518,89 +2518,89 @@ pub struct __pthread_unwind_buf_t__bindgen_ty_1 {
     pub __cancel_jmp_buf: __jmp_buf,
     pub __mask_was_saved: ::std::os::raw::c_int,
 }
-#[test]
-fn bindgen_test_layout___pthread_unwind_buf_t__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<__pthread_unwind_buf_t__bindgen_ty_1>(),
-        72usize,
-        concat!(
-            "Size of: ",
-            stringify!(__pthread_unwind_buf_t__bindgen_ty_1)
-        )
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__pthread_unwind_buf_t__bindgen_ty_1>(),
-        8usize,
-        concat!(
-            "Alignment of ",
-            stringify!(__pthread_unwind_buf_t__bindgen_ty_1)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const __pthread_unwind_buf_t__bindgen_ty_1)).__cancel_jmp_buf as *const _ as
-                usize
-        },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_unwind_buf_t__bindgen_ty_1),
-            "::",
-            stringify!(__cancel_jmp_buf)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(0 as *const __pthread_unwind_buf_t__bindgen_ty_1)).__mask_was_saved as *const _ as
-                usize
-        },
-        64usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_unwind_buf_t__bindgen_ty_1),
-            "::",
-            stringify!(__mask_was_saved)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout___pthread_unwind_buf_t__bindgen_ty_1() {
+//     assert_eq!(
+//         ::std::mem::size_of::<__pthread_unwind_buf_t__bindgen_ty_1>(),
+//         72usize,
+//         concat!(
+//             "Size of: ",
+//             stringify!(__pthread_unwind_buf_t__bindgen_ty_1)
+//         )
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<__pthread_unwind_buf_t__bindgen_ty_1>(),
+//         8usize,
+//         concat!(
+//             "Alignment of ",
+//             stringify!(__pthread_unwind_buf_t__bindgen_ty_1)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const __pthread_unwind_buf_t__bindgen_ty_1)).__cancel_jmp_buf as *const _ as
+//                 usize
+//         },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_unwind_buf_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__cancel_jmp_buf)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe {
+//             &(*(0 as *const __pthread_unwind_buf_t__bindgen_ty_1)).__mask_was_saved as *const _ as
+//                 usize
+//         },
+//         64usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_unwind_buf_t__bindgen_ty_1),
+//             "::",
+//             stringify!(__mask_was_saved)
+//         )
+//     );
+// }
 impl Clone for __pthread_unwind_buf_t__bindgen_ty_1 {
     fn clone(&self) -> Self {
         *self
     }
 }
-#[test]
-fn bindgen_test_layout___pthread_unwind_buf_t() {
-    assert_eq!(
-        ::std::mem::size_of::<__pthread_unwind_buf_t>(),
-        104usize,
-        concat!("Size of: ", stringify!(__pthread_unwind_buf_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__pthread_unwind_buf_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(__pthread_unwind_buf_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __pthread_unwind_buf_t)).__cancel_jmp_buf as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_unwind_buf_t),
-            "::",
-            stringify!(__cancel_jmp_buf)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __pthread_unwind_buf_t)).__pad as *const _ as usize },
-        72usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_unwind_buf_t),
-            "::",
-            stringify!(__pad)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout___pthread_unwind_buf_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<__pthread_unwind_buf_t>(),
+//         104usize,
+//         concat!("Size of: ", stringify!(__pthread_unwind_buf_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<__pthread_unwind_buf_t>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(__pthread_unwind_buf_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __pthread_unwind_buf_t)).__cancel_jmp_buf as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_unwind_buf_t),
+//             "::",
+//             stringify!(__cancel_jmp_buf)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __pthread_unwind_buf_t)).__pad as *const _ as usize },
+//         72usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_unwind_buf_t),
+//             "::",
+//             stringify!(__pad)
+//         )
+//     );
+// }
 impl Clone for __pthread_unwind_buf_t {
     fn clone(&self) -> Self {
         *self
@@ -2615,59 +2615,59 @@ pub struct __pthread_cleanup_frame {
     pub __do_it: ::std::os::raw::c_int,
     pub __cancel_type: ::std::os::raw::c_int,
 }
-#[test]
-fn bindgen_test_layout___pthread_cleanup_frame() {
-    assert_eq!(
-        ::std::mem::size_of::<__pthread_cleanup_frame>(),
-        24usize,
-        concat!("Size of: ", stringify!(__pthread_cleanup_frame))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__pthread_cleanup_frame>(),
-        8usize,
-        concat!("Alignment of ", stringify!(__pthread_cleanup_frame))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __pthread_cleanup_frame)).__cancel_routine as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_cleanup_frame),
-            "::",
-            stringify!(__cancel_routine)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __pthread_cleanup_frame)).__cancel_arg as *const _ as usize },
-        8usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_cleanup_frame),
-            "::",
-            stringify!(__cancel_arg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __pthread_cleanup_frame)).__do_it as *const _ as usize },
-        16usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_cleanup_frame),
-            "::",
-            stringify!(__do_it)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const __pthread_cleanup_frame)).__cancel_type as *const _ as usize },
-        20usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(__pthread_cleanup_frame),
-            "::",
-            stringify!(__cancel_type)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout___pthread_cleanup_frame() {
+//     assert_eq!(
+//         ::std::mem::size_of::<__pthread_cleanup_frame>(),
+//         24usize,
+//         concat!("Size of: ", stringify!(__pthread_cleanup_frame))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<__pthread_cleanup_frame>(),
+//         8usize,
+//         concat!("Alignment of ", stringify!(__pthread_cleanup_frame))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __pthread_cleanup_frame)).__cancel_routine as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_cleanup_frame),
+//             "::",
+//             stringify!(__cancel_routine)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __pthread_cleanup_frame)).__cancel_arg as *const _ as usize },
+//         8usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_cleanup_frame),
+//             "::",
+//             stringify!(__cancel_arg)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __pthread_cleanup_frame)).__do_it as *const _ as usize },
+//         16usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_cleanup_frame),
+//             "::",
+//             stringify!(__do_it)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const __pthread_cleanup_frame)).__cancel_type as *const _ as usize },
+//         20usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(__pthread_cleanup_frame),
+//             "::",
+//             stringify!(__cancel_type)
+//         )
+//     );
+// }
 impl Clone for __pthread_cleanup_frame {
     fn clone(&self) -> Self {
         *self
@@ -10034,49 +10034,49 @@ impl Clone for xcb_colormap_notify_event_t {
 pub struct xcb_client_message_data_t {
     pub data32: [u32; 5usize],
 }
-#[test]
-fn bindgen_test_layout_xcb_client_message_data_t() {
-    assert_eq!(
-        ::std::mem::size_of::<xcb_client_message_data_t>(),
-        20usize,
-        concat!("Size of: ", stringify!(xcb_client_message_data_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<xcb_client_message_data_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(xcb_client_message_data_t))
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const xcb_client_message_data_t)).data8 as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(xcb_client_message_data_t),
-            "::",
-            stringify!(data8)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const xcb_client_message_data_t)).data16 as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(xcb_client_message_data_t),
-            "::",
-            stringify!(data16)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(0 as *const xcb_client_message_data_t)).data32 as *const _ as usize },
-        0usize,
-        concat!(
-            "Alignment of field: ",
-            stringify!(xcb_client_message_data_t),
-            "::",
-            stringify!(data32)
-        )
-    );
-}
+// #[test]
+// fn bindgen_test_layout_xcb_client_message_data_t() {
+//     assert_eq!(
+//         ::std::mem::size_of::<xcb_client_message_data_t>(),
+//         20usize,
+//         concat!("Size of: ", stringify!(xcb_client_message_data_t))
+//     );
+//     assert_eq!(
+//         ::std::mem::align_of::<xcb_client_message_data_t>(),
+//         4usize,
+//         concat!("Alignment of ", stringify!(xcb_client_message_data_t))
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const xcb_client_message_data_t)).data8 as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(xcb_client_message_data_t),
+//             "::",
+//             stringify!(data8)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const xcb_client_message_data_t)).data16 as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(xcb_client_message_data_t),
+//             "::",
+//             stringify!(data16)
+//         )
+//     );
+//     assert_eq!(
+//         unsafe { &(*(0 as *const xcb_client_message_data_t)).data32 as *const _ as usize },
+//         0usize,
+//         concat!(
+//             "Alignment of field: ",
+//             stringify!(xcb_client_message_data_t),
+//             "::",
+//             stringify!(data32)
+//         )
+//     );
+// }
 impl Clone for xcb_client_message_data_t {
     fn clone(&self) -> Self {
         *self

@@ -2,9 +2,7 @@ pub mod manager;
 
 use std::sync::Arc;
 use std::cell::RefCell;
-use super::super::core::application::ApplicationTrait;
 use super::super::math::matrix::Mat4x4;
-use super::super::system::os::OsApplication;
 use super::super::system::file::File;
 use super::buffer::Buffer;
 use super::shader::manager::Manager as ShaderManager;

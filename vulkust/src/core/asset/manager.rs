@@ -18,8 +18,6 @@ use super::super::super::render::shader::Shader;
 use super::super::super::render::texture::manager::Manager as TextureManager;
 use super::super::super::render::texture::Texture;
 use super::super::super::system::file::File;
-use super::super::super::system::os::OsApplication;
-use super::super::application::ApplicationTrait;
 
 pub struct Manager {
     pub file: File,

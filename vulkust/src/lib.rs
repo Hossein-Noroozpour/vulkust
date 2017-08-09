@@ -3,7 +3,6 @@
 #[cfg(appleos)]
 #[macro_use]
 pub extern crate objc;
-#[macro_use]
 extern crate bitflags;
 
 #[macro_use]

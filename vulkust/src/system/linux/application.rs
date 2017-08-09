@@ -23,7 +23,7 @@ where
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,
     pub atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t,
-    pub core_app: *mut CoreApp,
+    pub core_app: &'static mut CoreApp,
     pub render_engine: &'static mut RenderEngine<CoreApp>,
     pub is_running: bool,
     pub mouse_previous_location: (f64, f64),
@@ -44,7 +44,7 @@ where
             screen: null_mut(),
             window: 0 as _,
             atom_wm_delete_window: null_mut(),
-            core_app: null_mut(),
+            core_app: unsafe { transmute(0usize) },
             render_engine: unsafe { transmute(0usize) },
             is_running: true,
             mouse_previous_location: (0f64, 0f64),
@@ -179,12 +179,8 @@ where
                     libc::free(transmute(event));
                 }
             }
-            unsafe {
-                (*(self.core_app)).update();
-            }
-            unsafe {
-                (*(self.render_engine)).update();
-            }
+            self.core_app.update();
+            self.render_engine.update();
         }
         return true;
     }
@@ -221,9 +217,7 @@ where
                     delta_y: self.mouse_previous_location.1 - pos.1,
                 };
                 self.mouse_previous_location = pos;
-                unsafe {
-                    (*self.core_app).on_event(e);
-                }
+                self.core_app.on_event(e);
             }
             xproto::XCB_BUTTON_PRESS => {
                 let press: &mut xcb::xcb_button_press_event_t = unsafe { transmute(e) };
@@ -240,9 +234,7 @@ where
                 let e = Event::Press {
                     button: Button::Mouse(m),
                 };
-                unsafe {
-                    (*self.core_app).on_event(e);
-                }
+                self.core_app.on_event(e);
             }
             xproto::XCB_BUTTON_RELEASE => {
                 let release: &mut xcb::xcb_button_release_event_t = unsafe { transmute(e) };
@@ -259,9 +251,7 @@ where
                 let e = Event::Release {
                     button: Button::Mouse(m),
                 };
-                unsafe {
-                    (*self.core_app).on_event(e);
-                }
+                self.core_app.on_event(e);
             }
             a @ xproto::XCB_KEY_PRESS | a @ xproto::XCB_KEY_RELEASE => {
                 let key_event: &xcb::xcb_key_release_event_t = unsafe { transmute(e) };
@@ -282,9 +272,7 @@ where
                 } else {
                     Event::Press { button: b }
                 };
-                unsafe {
-                    (*self.core_app).on_event(e);
-                }
+                self.core_app.on_event(e);
             }
             xproto::XCB_DESTROY_NOTIFY => {
                 self.is_running = false;
@@ -301,10 +289,8 @@ where
                             w: self.window_w as f64,
                             h: self.window_h as f64,
                         };
-                        unsafe {
-                            (*self.render_engine).on_event(e);
-                            (*self.core_app).on_event(e);
-                        }
+                        self.render_engine.on_event(e);
+                        self.core_app.on_event(e);
                     }
                 }
             }

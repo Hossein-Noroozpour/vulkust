@@ -2,9 +2,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
-use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
-use super::super::super::system::os::OsApplication;
 use super::perspective::Perspective;
 use super::Camera;
 

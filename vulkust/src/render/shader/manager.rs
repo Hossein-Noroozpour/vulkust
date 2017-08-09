@@ -1,11 +1,7 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
-use std::ops::{BitOrAssign, ShlAssign};
-use std::default::Default;
-use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
-use super::super::super::system::os::OsApplication;
 use super::super::device::logical::Logical as LogicalDevice;
 use super::{TwoStage, Shader, read_id};
 

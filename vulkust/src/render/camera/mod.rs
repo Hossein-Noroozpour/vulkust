@@ -1,13 +1,10 @@
 pub mod manager;
 pub mod perspective;
 
-use super::super::core::application::ApplicationTrait;
 use super::super::math::number::Float;
 use super::super::math::matrix::{Mat3x3, Mat4x4};
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
-use super::super::system::os::OsApplication;
-use super::super::system::os::ApplicationTrait as OsApp;
 
 pub trait Camera<E>
 where

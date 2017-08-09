@@ -1,9 +1,7 @@
-use super::super::super::core::application::ApplicationTrait;
 use super::super::super::math::number::Float;
 use super::super::super::math::matrix::Mat4x4;
 use super::super::super::math::vector::Vec3;
 use super::super::super::system::file::File;
-use super::super::super::system::os::OsApplication;
 use super::{Basic, Camera};
 
 pub struct Perspective<E>
@@ -26,7 +24,7 @@ where
         let fov = f.read_type();
         let near = f.read_type();
         let far = f.read_type();
-        let mut b = Basic::new(f, ratio);
+        let b = Basic::new(f, ratio);
         let p = Mat4x4::pers(fov, b.a, near, far);
         let vp = &p * b.get_view();
         Perspective {

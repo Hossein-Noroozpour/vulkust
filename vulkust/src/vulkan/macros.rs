@@ -1,6 +1,7 @@
 #[macro_export]
 macro_rules! vulkan_check {
     ( $x:expr ) => {
+        #[allow(unused_unsafe)]
         unsafe {
             match $x {
                 vk::VkResult::VK_SUCCESS => {},

@@ -1,18 +1,14 @@
 pub mod manager;
 
 use std::cell::RefCell;
-use std::mem::transmute;
 use std::sync::Arc;
 use super::super::audio::Audio;
 use super::super::audio::manager::Manager as AudioManager;
-use super::super::core::application::ApplicationTrait;
-use super::super::system::os::OsApplication;
 use super::super::system::file::File;
 use super::buffer::{Buffer, Usage as BufferUsage};
 use super::buffer::uniform::Uniform;
 use super::camera::Camera;
 use super::camera::manager::Manager as CameraManager;
-use super::camera::perspective::Perspective;
 use super::command::pool::Pool as CmdPool;
 use super::light::Light;
 use super::light::manager::Manager as LightManager;
@@ -26,14 +22,14 @@ pub trait Scene {
 }
 
 pub struct BasicScene {
-    meshes_vertices_buffer: Buffer,
-    meshes_indices_buffer: Buffer,
-    uniform_buffer: Uniform,
-    current_camera: usize,
-    cameras: Vec<Arc<RefCell<Camera<f32>>>>,
-    audios: Vec<Arc<RefCell<Audio>>>,
-    lights: Vec<Arc<RefCell<Light>>>,
-    models: Vec<Arc<RefCell<Model>>>,
+    pub meshes_vertices_buffer: Buffer,
+    pub meshes_indices_buffer: Buffer,
+    pub uniform_buffer: Uniform,
+    pub current_camera: usize,
+    pub cameras: Vec<Arc<RefCell<Camera<f32>>>>,
+    pub audios: Vec<Arc<RefCell<Audio>>>,
+    pub lights: Vec<Arc<RefCell<Light>>>,
+    pub models: Vec<Arc<RefCell<Model>>>,
 }
 
 impl BasicScene {

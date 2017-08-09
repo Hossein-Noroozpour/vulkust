@@ -1,5 +1,3 @@
-use super::super::core::application::ApplicationTrait;
-
 // TODO
 #[derive(Debug)]
 pub struct Texture2D {}

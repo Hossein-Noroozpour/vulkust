@@ -2,7 +2,9 @@ pub mod manager;
 
 use super::system::file::File;
 
-pub trait Audio {}
+pub trait Audio {
+    fn play(&self);
+}
 
 struct Basic {
     pub file_content: Vec<u8>,
@@ -15,6 +17,9 @@ impl Basic {
         Basic {
             file_content: file_content,
         }
+    }
+    pub fn play(&self) {
+        logf!("Unimplemented!");
     }
 }
 
@@ -30,7 +35,11 @@ impl Music {
     }
 }
 
-impl Audio for Music {}
+impl Audio for Music {
+    fn play(&self) {
+        self.b.play();
+    }
+}
 
 pub struct Voice {
     b: Basic,
@@ -44,4 +53,8 @@ impl Voice {
     }
 }
 
-impl Audio for Voice {}
+impl Audio for Voice {
+    fn play(&self) {
+        self.b.play();
+    }
+}
