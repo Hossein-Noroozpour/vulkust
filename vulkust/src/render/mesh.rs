@@ -6,7 +6,10 @@ use super::super::math::matrix::Mat4x4;
 use super::super::system::os::OsApplication;
 use super::super::system::file::File;
 use super::buffer::Buffer;
+use super::device::logical::Logical as LogicalDevice;
 use super::material::{read_material, Material};
+use super::shader::manager::Manager as ShaderManager;
+use super::texture::manager::Manager as TextureManager;
 
 pub const INDEX_ELEMENTS_SIZE: u64 = 4;
 
@@ -23,8 +26,12 @@ impl Mesh {
     pub fn new(
         file: &mut File,
         vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer) -> Self {
-        let material = read_material(file);
+        indices_buffer: &mut Buffer,
+        logical_device: Arc<LogicalDevice>,
+        shader_manager: &mut ShaderManager,
+        texture_manager: &mut TextureManager,
+    ) -> Self {
+        let material = read_material(file, logical_device, shader_manager, texture_manager);
         let vertex_size = material.borrow().get_vertex_size();
         let vertices_size = vertex_size * file.read_count();
         let data = file.read_bytes(vertices_size as usize);

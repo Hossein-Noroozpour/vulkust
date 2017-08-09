@@ -28,7 +28,10 @@ impl StaticModel {
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
-        let mesh = Mesh::new(file, vertices_buffer, indices_buffer);
+        let device = vertices_buffer.cmd_pool.logical_device.clone();
+        let mesh = Mesh::new(
+            file, vertices_buffer, indices_buffer,
+            device, shader_manager, texture_manager);
         let children_count: u64 = file.read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
@@ -60,8 +63,10 @@ impl DynamicModel {
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
+        let device = vertices_buffer.cmd_pool.logical_device.clone();
         let m = Mat4x4::new_from_file(file);
-        let mesh = Mesh::new(file, vertices_buffer, indices_buffer);
+        let mesh = Mesh::new(
+            file, vertices_buffer, indices_buffer, device, shader_manager, texture_manager);
         let children_count: u64 = file.read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
