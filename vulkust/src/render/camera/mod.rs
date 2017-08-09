@@ -83,10 +83,7 @@ impl<E> Basic<E>
 where
     E: Float,
 {
-    pub fn new<CoreApp>(f: &mut File, os_app: &mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn new(f: &mut File, ratio: E) -> Self {
         let p: Vec3<E> = Vec3::new_from_file(f);
         let mut rr: Mat3x3<E> = Mat3x3::rotation(
             f.read_type(),
@@ -133,7 +130,7 @@ where
         Basic {
             s: E::new(0.01),
             rs: E::new(0.1),
-            a: E::new(os_app.get_window_ratio()),
+            a: ratio,
             p: p,
             x: x,
             y: y,

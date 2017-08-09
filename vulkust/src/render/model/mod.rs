@@ -7,7 +7,10 @@ use super::super::math::matrix::Mat4x4;
 use super::super::system::os::OsApplication;
 use super::super::system::file::File;
 use super::buffer::Buffer;
+use super::shader::manager::Manager as ShaderManager;
+use super::texture::manager::Manager as TextureManager;
 use super::mesh::Mesh;
+use self::manager::Manager;
 
 pub trait Model {}
 
@@ -17,19 +20,21 @@ pub struct StaticModel {
 }
 
 impl StaticModel {
-    pub fn new<CoreApp>(
+    pub fn new(
         file: &mut File,
-        os_app: &mut OsApplication<CoreApp>,
+        model_manager: &mut Manager,
         vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
-        let mesh = Mesh::new(file, os_app, vertices_buffer, indices_buffer);
+        indices_buffer: &mut Buffer,
+        texture_manager: &mut TextureManager,
+        shader_manager: &mut ShaderManager,
+    ) -> Self {
+        let mesh = Mesh::new(file, vertices_buffer, indices_buffer);
         let children_count: u64 = file.read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
-            children.push(read_boxed_model(file, os_app, vertices_buffer, indices_buffer));
+            children.push(read_boxed_model(
+                file, model_manager, vertices_buffer, indices_buffer,
+                texture_manager, shader_manager));
         }
         StaticModel {
             draw_mesh: mesh,
@@ -47,19 +52,22 @@ pub struct DynamicModel {
 }
 
 impl DynamicModel {
-    pub fn new<CoreApp>(
-        file: &mut File, os_app: &mut OsApplication<CoreApp>,
+    pub fn new(
+        file: &mut File,
+        model_manager: &mut Manager,
         vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
+        indices_buffer: &mut Buffer,
+        texture_manager: &mut TextureManager,
+        shader_manager: &mut ShaderManager,
+    ) -> Self {
         let m = Mat4x4::new_from_file(file);
-        let mesh = Mesh::new(file, os_app, vertices_buffer, indices_buffer);
+        let mesh = Mesh::new(file, vertices_buffer, indices_buffer);
         let children_count: u64 = file.read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
-            children.push(read_boxed_model(file, os_app, vertices_buffer, indices_buffer));
+            children.push(read_boxed_model(
+                file, model_manager, vertices_buffer, indices_buffer,
+                texture_manager, shader_manager));
         }
         DynamicModel {
             transform: m,
@@ -77,56 +85,65 @@ pub struct CopyModel {
 }
 
 impl CopyModel {
-    pub fn new<CoreApp>(
-        file: &mut File, os_app: &mut OsApplication<CoreApp>,
+    pub fn new(
+        file: &mut File,
+        model_manager: &mut Manager,
         vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
+        indices_buffer: &mut Buffer,
+        texture_manager: &mut TextureManager,
+        shader_manager: &mut ShaderManager,
+    ) -> Self {
         let t = Mat4x4::new_from_file(file);
         let id = file.read_id();
         CopyModel {
             t: t,
-            sm: os_app.asset_manager.get_model(id, os_app, vertices_buffer, indices_buffer),
+            sm: model_manager.get(
+                id, file, vertices_buffer, indices_buffer, texture_manager, shader_manager),
         }
     }
 }
 
 impl Model for CopyModel {}
 
-pub fn read_model<CoreApp>(
+pub fn read_model(
     file: &mut File,
-    os_app: &mut OsApplication<CoreApp>,
+    model_manager: &mut Manager,
     vertices_buffer: &mut Buffer,
     indices_buffer: &mut Buffer,
-) -> Arc<RefCell<Model>>
-where
-    CoreApp: ApplicationTrait,
-{
+    texture_manager: &mut TextureManager,
+    shader_manager: &mut ShaderManager,
+) -> Arc<RefCell<Model>> {
     return if file.read_bool() {
-        Arc::new(RefCell::new(CopyModel::new(file, os_app, vertices_buffer, indices_buffer)))
+        Arc::new(RefCell::new(CopyModel::new(
+            file, model_manager, vertices_buffer,
+            indices_buffer, texture_manager, shader_manager)))
     } else if file.read_bool() {
-        Arc::new(RefCell::new(DynamicModel::new(file, os_app, vertices_buffer, indices_buffer)))
+        Arc::new(RefCell::new(DynamicModel::new(
+            file, model_manager, vertices_buffer,
+            indices_buffer, texture_manager, shader_manager)))
     } else {
-        Arc::new(RefCell::new(StaticModel::new(file, os_app, vertices_buffer, indices_buffer)))
+        Arc::new(RefCell::new(StaticModel::new(
+            file, model_manager, vertices_buffer,
+            indices_buffer, texture_manager, shader_manager)))
     };
 }
 
-fn read_boxed_model<CoreApp>(
+fn read_boxed_model(
     file: &mut File,
-    os_app: &mut OsApplication<CoreApp>,
+    model_manager: &mut Manager,
     vertices_buffer: &mut Buffer,
     indices_buffer: &mut Buffer,
-) -> Box<Model>
-where
-    CoreApp: ApplicationTrait,
-{
+    texture_manager: &mut TextureManager,
+    shader_manager: &mut ShaderManager,
+) -> Box<Model> {
     return if file.read_bool() {
-        Box::new(CopyModel::new(file, os_app, vertices_buffer, indices_buffer))
+        Box::new(CopyModel::new(
+            file, model_manager, vertices_buffer, indices_buffer, texture_manager, shader_manager))
     } else if file.read_bool() {
-        Box::new(DynamicModel::new(file, os_app, vertices_buffer, indices_buffer))
+        Box::new(DynamicModel::new(
+            file, model_manager, vertices_buffer, indices_buffer, texture_manager, shader_manager))
     } else {
-        Box::new(StaticModel::new(file, os_app, vertices_buffer, indices_buffer))
+        Box::new(StaticModel::new(
+            file, model_manager, vertices_buffer, indices_buffer, texture_manager, shader_manager))
     };
 }

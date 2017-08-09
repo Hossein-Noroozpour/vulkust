@@ -1,7 +1,5 @@
 pub mod manager;
 
-use super::core::application::ApplicationTrait;
-use super::system::os::OsApplication;
 use super::system::file::File;
 
 pub trait Audio {}
@@ -11,10 +9,7 @@ struct Basic {
 }
 
 impl Basic {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn new(file: &mut File) -> Self {
         let size: u64 = file.read_type();
         let file_content = file.read_bytes(size as usize);
         Basic {
@@ -28,12 +23,9 @@ pub struct Music {
 }
 
 impl Music {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn new(file: &mut File) -> Self {
         Music {
-            b: Basic::new(file, os_app),
+            b: Basic::new(file),
         }
     }
 }
@@ -45,12 +37,9 @@ pub struct Voice {
 }
 
 impl Voice {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn new(file: &mut File) -> Self {
         Voice {
-            b: Basic::new(file, os_app),
+            b: Basic::new(file),
         }
     }
 }

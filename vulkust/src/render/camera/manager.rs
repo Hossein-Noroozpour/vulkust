@@ -29,15 +29,7 @@ impl Manager {
         }
     }
 
-    pub fn get<CoreApp>(
-        &mut self,
-        id: u64,
-        file: &mut File,
-        os_app: &mut OsApplication<CoreApp>,
-    ) -> Arc<RefCell<Camera<f32>>>
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn get(&mut self, id: u64, file: &mut File, ratio: f32) -> Arc<RefCell<Camera<f32>>> {
         match self.cached.get(&id) {
             Some(res) => match res.upgrade() {
                 Some(res) => {
@@ -56,7 +48,7 @@ impl Manager {
                 logf!("Can not seek to the requested offset.");
             }
         }
-        let camera = Perspective::new(file, os_app);
+        let camera = Perspective::new(file, ratio);
         let camera: Arc<RefCell<Camera<f32>>> = Arc::new(RefCell::new(camera));
         self.cached.insert(id, Arc::downgrade(&camera));
         return camera;

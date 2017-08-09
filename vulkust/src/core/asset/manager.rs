@@ -59,71 +59,41 @@ impl Manager {
         self.shader_manager.get(id, &mut self.file, logical_device)
     }
 
-    pub fn get_camera<CoreApp>(
-        &mut self,
-        id: u64,
-        os_app: &mut OsApplication<CoreApp>,
-    ) -> Arc<RefCell<Camera<f32>>>
-    where
-        CoreApp: ApplicationTrait,
-    {
-        self.camera_manager.get(id, &mut self.file, os_app)
+    pub fn get_camera(&mut self, id: u64, ratio: f32) -> Arc<RefCell<Camera<f32>>> {
+        self.camera_manager.get(id, &mut self.file, ratio)
     }
 
-    pub fn get_audio<CoreApp>(
-        &mut self,
-        id: u64,
-        os_app: &mut OsApplication<CoreApp>,
-    ) -> Arc<RefCell<Audio>>
-    where
-        CoreApp: ApplicationTrait,
-    {
-        self.audio_manager.get(id, &mut self.file, os_app)
+    pub fn get_audio(&mut self, id: u64) -> Arc<RefCell<Audio>> {
+        self.audio_manager.get(id, &mut self.file)
     }
 
-    pub fn get_light<CoreApp>(
-        &mut self,
-        id: u64,
-        os_app: &mut OsApplication<CoreApp>,
-    ) -> Arc<RefCell<Light>>
-    where
-        CoreApp: ApplicationTrait,
-    {
-        self.light_manager.get(id, &mut self.file, os_app)
+    pub fn get_light(&mut self, id: u64) -> Arc<RefCell<Light>> {
+        self.light_manager.get(id, &mut self.file)
     }
 
-    pub fn get_texture<CoreApp>(
-        &mut self,
-        id: u64,
-        os_app: &mut OsApplication<CoreApp>,
-    ) -> Arc<Texture>
-    where
-        CoreApp: ApplicationTrait,
-    {
-        self.texture_manager.get(id, &mut self.file, os_app)
+    pub fn get_texture(&mut self, id: u64) -> Arc<Texture> {
+        self.texture_manager.get(id, &mut self.file)
     }
 
-    pub fn get_model<CoreApp>(
+    pub fn get_model(
         &mut self,
         id: u64,
-        os_app: &mut OsApplication<CoreApp>,
         vertices_buffer: &mut Buffer,
         indices_buffer: &mut Buffer
-    ) -> Arc<RefCell<Model>>
-    where
-        CoreApp: ApplicationTrait,
-    {
-        self.model_manager.get(id, &mut self.file, os_app, vertices_buffer, indices_buffer)
+    ) -> Arc<RefCell<Model>> {
+        let shader_manager = &mut self.shader_manager;
+        let texture_manager = &mut self.texture_manager;
+        self.model_manager.get(
+            id, &mut self.file, vertices_buffer, indices_buffer, texture_manager, shader_manager)
     }
 
-    pub fn get_scene<CoreApp>(
-        &mut self,
-        id: u64,
-        os_app: &mut OsApplication<CoreApp>,
-    ) -> Arc<RefCell<Scene>>
-    where
-        CoreApp: ApplicationTrait,
-    {
-        self.scene_manager.get(id, &mut self.file, os_app)
+    pub fn get_scene(&mut self, id: u64) -> Arc<RefCell<Scene>> {
+        self.scene_manager.get(id, &mut self.file
+            camera_manager,
+            audio_manager,
+            light_manager,
+            model_manager,
+            shader_manager,
+            texture_manager)
     }
 }

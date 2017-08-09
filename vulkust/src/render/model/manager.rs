@@ -2,10 +2,10 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
-use super::super::super::core::application::ApplicationTrait;
-use super::super::super::system::os::OsApplication;
 use super::super::super::system::file::File;
 use super::super::buffer::Buffer;
+use super::super::texture::manager::Manager as TextureManager;
+use super::super::shader::manager::Manager as ShaderManager;
 use super::{read_model, Model};
 
 pub struct Manager {
@@ -29,17 +29,15 @@ impl Manager {
         }
     }
 
-    pub fn get<CoreApp>(
+    pub fn get(
         &mut self,
         id: u64,
         file: &mut File,
-        os_app: &mut OsApplication<CoreApp>,
         vertices_buffer: &mut Buffer,
         indices_buffer: &mut Buffer,
-    ) -> Arc<RefCell<Model>>
-    where
-        CoreApp: ApplicationTrait,
-    {
+        texture_manager: &mut TextureManager,
+        shader_manager: &mut ShaderManager,
+    ) -> Arc<RefCell<Model>> {
         match self.cached.get(&id) {
             Some(res) => match res.upgrade() {
                 Some(res) => {
@@ -58,7 +56,8 @@ impl Manager {
                 logf!("Can not seek to the requested offset.");
             }
         }
-        let l: Arc<RefCell<Model>> = read_model(file, os_app, vertices_buffer, indices_buffer);
+        let l: Arc<RefCell<Model>> = read_model(
+            file, self, vertices_buffer, indices_buffer, texture_manager, shader_manager);
         self.cached.insert(id, Arc::downgrade(&l));
         return l;
     }

@@ -28,15 +28,7 @@ impl Manager {
         }
     }
 
-    pub fn get<CoreApp>(
-        &mut self,
-        id: u64,
-        file: &mut File,
-        os_app: *mut OsApplication<CoreApp>,
-    ) -> Arc<RefCell<Light>>
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn get(&mut self, id: u64, file: &mut File) -> Arc<RefCell<Light>> {
         match self.cached.get(&id) {
             Some(res) => match res.upgrade() {
                 Some(res) => {

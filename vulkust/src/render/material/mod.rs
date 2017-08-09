@@ -58,8 +58,7 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
         let device = os_app.render_engine.logical_device.as_ref().unwrap().clone();
         let shader = os_app.asset_manager.get_shader(
             DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID, device);
-        let texture = os_app.asset_manager.get_texture(
-            file.read_id(), os_app);
+        let texture = os_app.asset_manager.get_texture(file.read_id());
         let speculation_color = Vec3::new_from_file(file);
         let speculation_intensity = file.read_type();
         DirectionalTexturedSpeculatedNocubeFullshadowOpaque {

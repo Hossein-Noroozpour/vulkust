@@ -2,8 +2,6 @@ pub mod manager;
 
 use std::fmt::Debug;
 use super::super::system::file::File;
-use super::super::system::os::OsApplication;
-use super::super::core::application::ApplicationTrait;
 #[cfg(metal)]
 use super::super::metal::texture::Texture2D as PlatformTexture2D;
 #[cfg(vulkan)]
@@ -27,15 +25,12 @@ pub struct Texture2D {
 }
 
 impl Texture2D {
-    pub fn new<CoreApp>(file: &mut File, os_app: *mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn new(file: &mut File) -> Self {
         let size: u64 = file.read_type();
         // logi!("Texture2D size is: {}", size);
         let data = file.read_bytes(size as usize);
         Texture2D {
-            raw: PlatformTexture2D::new(data, os_app),
+            raw: PlatformTexture2D::new(data),
         }
     }
 }

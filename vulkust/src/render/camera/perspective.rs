@@ -22,14 +22,11 @@ impl<E> Perspective<E>
 where
     E: Float,
 {
-    pub fn new<CoreApp>(f: &mut File, os_app: &mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
+    pub fn new(f: &mut File, ratio: E) -> Self {
         let fov = f.read_type();
         let near = f.read_type();
         let far = f.read_type();
-        let mut b = Basic::new(f, os_app);
+        let mut b = Basic::new(f, ratio);
         let p = Mat4x4::pers(fov, b.a, near, far);
         let vp = &p * b.get_view();
         Perspective {

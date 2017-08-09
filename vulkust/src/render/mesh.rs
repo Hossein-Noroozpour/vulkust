@@ -20,15 +20,11 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn new<CoreApp>(
+    pub fn new(
         file: &mut File,
-        os_app: &mut OsApplication<CoreApp>,
         vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
-        let material = read_material(file, os_app);
+        indices_buffer: &mut Buffer) -> Self {
+        let material = read_material(file);
         let vertex_size = material.borrow().get_vertex_size();
         let vertices_size = vertex_size * file.read_count();
         let data = file.read_bytes(vertices_size as usize);
