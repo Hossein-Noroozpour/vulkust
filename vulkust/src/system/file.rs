@@ -10,6 +10,7 @@ use super::android::asset as aas;
 #[derive(Debug)]
 pub struct File {
     pub endian_compatible: bool,
+    offset: usize,
     #[cfg(not(target_os = "android"))]
     pub reader: BufReader<StdFile>,
     #[cfg(target_os = "android")]
@@ -41,6 +42,7 @@ impl File {
             Ok(f) => {
                 let mut s = File {
                     endian_compatible: true,
+                    offset: 0,
                     reader: BufReader::new(f),
                 };
                 s.check_endian();
@@ -66,6 +68,7 @@ impl File {
         }
         let mut file = File {
             endian_compatible: true,
+            offset: 0,
             asset: asset,
         };
         file.check_endian();
@@ -140,24 +143,47 @@ impl File {
     pub fn read_count(&mut self) -> u64 {
         self.read_type()
     }
+
+    pub fn read_offset(&mut self) -> u64 {
+        self.read_type()
+    }
+
+    pub fn tell(&self) -> usize {
+        return self.offset;
+    }
+
+    pub fn goto(&mut self, offset: usize) {
+        if soffset == self.offset {
+            return;
+        }
+        let _ = self.seek(SeekFrom::Start(offset as u64));
+    }
 }
 
 impl Read for File {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
-        #[cfg(not(target_os = "android"))] return self.reader.read(buf);
+        #[cfg(not(target_os = "android"))] 
+        let result = self.reader.read(buf);
         #[cfg(target_os = "android")]
-        return Ok(unsafe {
+        let result = Ok(unsafe {
             aas::AAsset_read(self.asset, transmute(buf.as_mut_ptr()), buf.len()) as usize
         });
+        match result {
+            Ok(c) => self.offset += c,
+            _ => {
+                logf!("Error in reading stream.");
+            }
+        };
+        return result;
     }
 }
 
 impl Seek for File {
     fn seek(&mut self, pos: SeekFrom) -> Result<u64> {
-        #[cfg(not(target_os = "android"))] return self.reader.seek(pos);
+        #[cfg(not(target_os = "android"))] let result = self.reader.seek(pos);
         #[cfg(target_os = "android")]
         {
-            return Ok(match pos {
+            let result = Ok(match pos {
                 SeekFrom::Start(pos) => unsafe {
                     aas::AAsset_seek(self.asset, pos as isize, aas::SEEK_SET.bits()) as u64
                 },
@@ -169,5 +195,14 @@ impl Seek for File {
                 },
             });
         }
+        match result {
+            Ok(c) => {
+                self.offset = c as usize;
+            },
+            _ => {
+                logf!("Error in file seeking!");
+            }
+        }
+        return result;
     }
 }

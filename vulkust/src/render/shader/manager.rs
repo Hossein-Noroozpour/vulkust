@@ -19,11 +19,12 @@ impl Manager {
     }
 
     pub fn read_table(&mut self, file: &mut File) {
-        let count: u64 = file.read_type();
+        let count = file.read_count();
         for _ in 0..count {
             let id = read_id(file);
-            let offset = file.read_type();
-            // logi!("Shader with id: {} and offset {} loaded.", id, offset);
+            let offset = file.read_offset();
+            #[cfg(shader_import_debug)]
+            logi!("Shader with id: {} and offset {} loaded.", id, offset);
             self.offsets.insert(id, offset);
         }
     }

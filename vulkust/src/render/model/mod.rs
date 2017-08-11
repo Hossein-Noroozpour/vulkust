@@ -7,7 +7,7 @@ use super::super::system::file::File;
 use super::buffer::Buffer;
 use super::shader::manager::Manager as ShaderManager;
 use super::texture::manager::Manager as TextureManager;
-use super::mesh::Mesh;
+use super::mesh::{Mesh, OccMesh};
 use self::manager::Manager;
 
 pub trait Model {}
@@ -46,9 +46,41 @@ impl StaticModel {
 
 impl Model for StaticModel {}
 
+pub struct RootStaticModel {
+    pub occ_mesh: OccMesh,
+    pub children: Vec<Box<Model>>,
+}
+
+impl RootStaticModel {
+    pub fn new(
+        file: &mut File,
+        model_manager: &mut Manager,
+        vertices_buffer: &mut Buffer,
+        indices_buffer: &mut Buffer,
+        texture_manager: &mut TextureManager,
+        shader_manager: &mut ShaderManager,
+    ) -> Self {
+        let mesh = OccMesh::new(
+            file, vertices_buffer, indices_buffer);
+        let children_count = file.read_count();
+        let mut children = Vec::new();
+        for _ in 0..children_count {
+            children.push(read_boxed_model(
+                file, model_manager, vertices_buffer, indices_buffer,
+                texture_manager, shader_manager));
+        }
+        RootStaticModel {
+            occ_mesh: mesh,
+            children: children,
+        }
+    }
+}
+
+impl Model for RootStaticModel {}
+
 pub struct DynamicModel {
     pub transform: Mat4x4<f32>,
-    pub occ_mesh: Mesh,
+    pub occ_mesh: OccMesh,
     pub children: Vec<Box<Model>>,
 }
 
@@ -61,10 +93,8 @@ impl DynamicModel {
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
-        let device = vertices_buffer.cmd_pool.logical_device.clone();
         let m = Mat4x4::new_from_file(file);
-        let mesh = Mesh::new(
-            file, vertices_buffer, indices_buffer, device, shader_manager, texture_manager);
+        let mesh = OccMesh::new(file, vertices_buffer, indices_buffer);
         let children_count: u64 = file.read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
@@ -125,7 +155,7 @@ pub fn read_model(
             file, model_manager, vertices_buffer,
             indices_buffer, texture_manager, shader_manager)))
     } else {
-        Arc::new(RefCell::new(StaticModel::new(
+        Arc::new(RefCell::new(RootStaticModel::new(
             file, model_manager, vertices_buffer,
             indices_buffer, texture_manager, shader_manager)))
     };

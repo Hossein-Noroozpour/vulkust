@@ -26,10 +26,10 @@ impl Manager {
     }
 
     pub fn read_table(&mut self, file: &mut File) {
-        let count: u64 = file.read_type();
+        let count = file.read_count();
         self.offsets.resize(count as usize, 0);
         for i in 0..count as usize {
-            self.offsets[i] = file.read_type();
+            self.offsets[i] = file.read_offset();
         }
     }
 
@@ -56,6 +56,8 @@ impl Manager {
             None => {}
         }
         let offset = self.offsets[id as usize];
+        #[cfg(scene_import_debug)]
+        logi!("scene with id {} has offset {}", id, offset);
         match file.seek(SeekFrom::Start(offset)) {
             Ok(o) => if o < offset {
                 logf!("Seeked offset does not match!");

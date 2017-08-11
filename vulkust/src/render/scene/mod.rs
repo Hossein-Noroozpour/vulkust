@@ -51,30 +51,42 @@ impl BasicScene {
         let mut meshes_indices_buffer =
             Buffer::new(transfer_cmd_pool.clone(), i_size, BufferUsage::Index);
         let uniform_buffer = Uniform::new(device, 1024);
-        let cameras_count: u64 = file.read_type();
+        let cameras_count = file.read_count() as usize;
+        let mut cameras_ids = vec![0; cameras_count];
+        for i in 0..cameras_count {
+            cameras_ids[i] = file.read_id();
+        }
+        let audios_count = file.read_count() as usize;
+        let mut audios_ids = vec![0; audios_count];
+        for i in 0..audios_count {
+            audios_ids[i] = file.read_id();
+        }
+        let lights_count = file.read_count() as usize;
+        let mut lights_ids = vec![0; lights_count];
+        for i in 0..lights_count {
+            lights_ids[i] = file.read_id();
+        }
+        let models_count = file.read_count() as usize;
+        let mut models_ids = vec![0; models_count];
+        for i in 0..models_count {
+            models_ids[i] = file.read_id();
+        }
         let mut cameras = Vec::new();
-        for _ in 0..cameras_count {
-            let id: u64 = file.read_type();
-            cameras.push(camera_manager.get(id, file, screen_ratio));
+        for i in cameras_ids {
+            cameras.push(camera_manager.get(i, file, screen_ratio));
         }
-        let audios_count: u64 = file.read_type();
         let mut audios = Vec::new();
-        for _ in 0..audios_count {
-            let id: u64 = file.read_type();
-            audios.push(audio_manager.get(id, file));
+        for i in audios_ids {
+            audios.push(audio_manager.get(i, file));
         }
-        let lights_count: u64 = file.read_type();
         let mut lights = Vec::new();
-        for _ in 0..lights_count {
-            let id: u64 = file.read_type();
-            lights.push(light_manager.get(id, file));
+        for i in lights_ids {
+            lights.push(light_manager.get(i, file));
         }
-        let models_count: u64 = file.read_type();
         let mut models = Vec::new();
-        for _ in 0..models_count {
-            let id: u64 = file.read_type();
+        for i in models_ids {
             models.push(model_manager.get(
-                id, file,
+                i, file,
                 &mut meshes_vertices_buffer, &mut meshes_indices_buffer,
                 texture_manager, shader_manager));
         }

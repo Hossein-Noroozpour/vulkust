@@ -19,10 +19,10 @@ impl Manager {
     }
 
     pub fn read_table(&mut self, file: &mut File) {
-        let count: u64 = file.read_type();
+        let count = file.read_count();
         self.offsets.resize(count as usize, 0);
         for i in 0..count as usize {
-            self.offsets[i] = file.read_type();
+            self.offsets[i] = file.read_offset();
         }
     }
 
