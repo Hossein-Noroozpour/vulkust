@@ -128,10 +128,13 @@ impl CopyModel {
     ) -> Self {
         let t = Mat4x4::new_from_file(file);
         let id = file.read_id();
+        let offset = file.tell();
+        let sm = model_manager.get(
+                id, file, vertices_buffer, indices_buffer, texture_manager, shader_manager);
+        file.goto(offset);
         CopyModel {
             t: t,
-            sm: model_manager.get(
-                id, file, vertices_buffer, indices_buffer, texture_manager, shader_manager),
+            sm: sm,
         }
     }
 }

@@ -33,9 +33,11 @@ pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
 impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
     pub fn new(file: &mut File, logical_device: Arc<LogicalDevice>,
         shader_manager: &mut ShaderManager, texture_manager: &mut TextureManager) -> Self {
+        let offset = file.tell();
         let shader = shader_manager.get(
             DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID, file, logical_device);
         let texture = texture_manager.get(file.read_id(), file);
+        file.goto(offset);
         let speculation_color = Vec3::new_from_file(file);
         let speculation_intensity = file.read_type();
         DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
