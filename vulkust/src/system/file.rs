@@ -153,7 +153,7 @@ impl File {
     }
 
     pub fn goto(&mut self, offset: usize) {
-        if soffset == self.offset {
+        if offset == self.offset {
             return;
         }
         let _ = self.seek(SeekFrom::Start(offset as u64));
@@ -162,7 +162,7 @@ impl File {
 
 impl Read for File {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
-        #[cfg(not(target_os = "android"))] 
+        #[cfg(not(target_os = "android"))]
         let result = self.reader.read(buf);
         #[cfg(target_os = "android")]
         let result = Ok(unsafe {
@@ -180,7 +180,7 @@ impl Read for File {
 
 impl Seek for File {
     fn seek(&mut self, pos: SeekFrom) -> Result<u64> {
-        #[cfg(not(target_os = "android"))] let result = self.reader.seek(pos);
+#[cfg(not(target_os = "android"))]        let result = self.reader.seek(pos);
         #[cfg(target_os = "android")]
         {
             let result = Ok(match pos {
@@ -198,7 +198,7 @@ impl Seek for File {
         match result {
             Ok(c) => {
                 self.offset = c as usize;
-            },
+            }
             _ => {
                 logf!("Error in file seeking!");
             }
