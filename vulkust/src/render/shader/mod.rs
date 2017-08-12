@@ -41,7 +41,7 @@ impl Shader for TwoStage {
 pub type Id = u64;
 
 pub fn from_gx3d_id(v: Vec<u8>) -> Id {
-    let mut id = Id::default();
+    let mut id = 0;
     for b in v {
         id <<= 8;
         id |= b as Id;

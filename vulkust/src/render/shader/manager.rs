@@ -55,13 +55,7 @@ impl Manager {
                 logf!("Requested shader {} does not exist.", id);
             }
         };
-        let shader = match id {
-            1 => TwoStage::new(file, logical_device),
-            _ => {
-                logf!("Requsted shader Id: {} not found.", id);
-            }
-        };
-        let shader: Arc<Shader> = Arc::new(shader);
+        let shader: Arc<Shader> = Arc::new(TwoStage::new(file, logical_device));
         self.cached.insert(id, Arc::downgrade(&shader));
         return shader;
     }

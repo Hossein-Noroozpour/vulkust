@@ -29,9 +29,16 @@ impl Mesh {
         shader_manager: &mut ShaderManager,
         texture_manager: &mut TextureManager,
     ) -> Self {
+        #[cfg(mesh_debug)]
+        logi!("before material read {}", file.tell());
         let material = read_material(file, logical_device, shader_manager, texture_manager);
+        #[cfg(mesh_debug)]
+        logi!("after material read {}", file.tell());
         let vertex_size = material.borrow().get_vertex_size();
-        let vertices_size = vertex_size * file.read_count();
+        let vertices_count = file.read_count();
+        #[cfg(mesh_debug)]
+        logi!("mesh vertices count is: {}", vertices_count);
+        let vertices_size = vertex_size * vertices_count;
         let data = file.read_bytes(vertices_size as usize);
         let vertices_buffer_offset = vertices_buffer.offset;
         vertices_buffer.write(unsafe { transmute(data.as_ptr()) }, vertices_size);
@@ -65,6 +72,8 @@ impl OccMesh {
     ) -> Self {
         let _ = read_shader_id(file);
         let vertices_size = 3 * 4 * file.read_count();
+        #[cfg(mesh_debug)]
+        logi!("occlusion mesh with vertices size {}", vertices_size);
         let data = file.read_bytes(vertices_size as usize);
         let vertices_buffer_offset = vertices_buffer.offset;
         vertices_buffer.write(unsafe { transmute(data.as_ptr()) }, vertices_size);

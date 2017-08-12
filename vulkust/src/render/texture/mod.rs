@@ -26,7 +26,7 @@ pub struct Texture2D {
 
 impl Texture2D {
     pub fn new(file: &mut File) -> Self {
-        let size: u64 = file.read_type();
+        let size = file.read_count();
         // logi!("Texture2D size is: {}", size);
         let data = file.read_bytes(size as usize);
         Texture2D {

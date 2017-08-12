@@ -45,10 +45,15 @@ impl Manager {
                 logf!("Can not seek to the requested offset.");
             }
         }
-        let texture = match id {
-            1 => Texture2D::new(file),
+        let type_id = file.read_id();
+        let texture = match type_id {
+            10 => Texture2D::new(file),
             _ => {
-                logf!("Requsted texture Id: {} not found.", id);
+                logf!(
+                    "{} {} {} {} {}", 
+                    "Requsted texture with Id:", id, 
+                    "found but type:", type_id, 
+                    "is not implemented yet.");
             }
         };
         let texture: Arc<Texture> = Arc::new(texture);

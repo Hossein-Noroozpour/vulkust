@@ -26,6 +26,7 @@ pub struct Buffer {
 
 impl Buffer {
     fn create(&mut self, size: u64, usage: u32) {
+        self.size = size;
         let mut buffer_info = vk::VkBufferCreateInfo::default();
         buffer_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         buffer_info.size = size as vk::VkDeviceSize;
@@ -75,7 +76,7 @@ impl Buffer {
             vk_data: null_mut(),
             memory: null_mut(),
             offset: 0,
-            size: 0,
+            size: size,
         };
         let usage = match usage {
             Usage::Vertex => vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT as u32,
@@ -91,7 +92,11 @@ impl Buffer {
 
     pub fn write(&mut self, data: *const c_void, size: u64) {
         if self.offset + size > self.size {
-            logf!("Your data reached to the maximum size please specify a better size for buffer");
+            logf!(
+                "{}{} {}{} {}{}",
+                "Your data reached to the maximum size: ", self.size,
+                "please specify a better size for buffer current offset is: ", self.offset,
+                "data you want to write has size: ", size);
         }
         let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
         mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
