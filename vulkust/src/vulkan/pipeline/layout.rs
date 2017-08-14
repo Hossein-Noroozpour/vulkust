@@ -16,7 +16,7 @@ impl Layout {
         let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
         layout_binding.descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         layout_binding.descriptorCount = 1;
-        layout_binding.stageFlags = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32;
+        layout_binding.stageFlags = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_ALL as u32;
         let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
         descriptor_layout.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;

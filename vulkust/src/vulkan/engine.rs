@@ -18,12 +18,11 @@ use super::image::view::View as ImageView;
 use super::render_pass::RenderPass;
 use super::framebuffer::Framebuffer;
 use super::command::pool::Pool as CmdPool;
-// for the triangle
+use super::pipeline::layout::Layout;
+use super::pipeline::cache::Cache as PipelineCache;
 // use super::buffer::Buffer;
 // use super::buffer::uniform::Uniform;
-// use super::pipeline::layout::Layout;
 // use super::pipeline::pipeline::Pipeline;
-// use super::pipeline::cache::Cache as PipelineCache;
 // use super::descriptor::pool::Pool as DescriptorPool;
 // use super::descriptor::set::Set as DescriptorSet;
 // use super::command::buffer::Buffer as CmdBuffer;
@@ -54,12 +53,12 @@ where
     pub framebuffers: Vec<Arc<Framebuffer>>,
     pub graphic_cmd_pool: Option<Arc<CmdPool>>,
     pub transfer_cmd_pool: Option<Arc<CmdPool>>,
+    pub pipeline_layout: Option<Arc<Layout>>,
+    pub pipeline_cache: Option<Arc<PipelineCache>>,
     pub basic_engine: Option<BasicEngine>,
     // for triangle
     // pub mesh_buff: Option<Arc<Buffer>>,
     // pub uniform: Option<Arc<Uniform>>,
-    // pub pipeline_layout: Option<Arc<Layout>>,
-    // pub pipeline_cache: Option<Arc<PipelineCache>>,
     // pub pipeline: Option<Arc<Pipeline>>,
     // pub descriptor_pool: Option<Arc<DescriptorPool>>,
     // pub descriptor_set: Option<Arc<DescriptorSet>>,
@@ -87,11 +86,11 @@ where
             framebuffers: Vec::new(),
             graphic_cmd_pool: None,
             transfer_cmd_pool: None,
+            pipeline_layout: None,
+            pipeline_cache: None,
             basic_engine: None,
             // mesh_buff: None,
             // uniform: None,
-            // pipeline_layout: None,
-            // pipeline_cache: None,
             // pipeline: None,
             // descriptor_pool: None,
             // descriptor_set: None,
@@ -133,52 +132,13 @@ where
         let graphic_cmd_pool = Arc::new(CmdPool::new(logical_device.clone()));
         self.graphic_cmd_pool = Some(graphic_cmd_pool.clone());
         self.transfer_cmd_pool = Some(graphic_cmd_pool);
+        let pipeline_layout = Arc::new(Layout::new(logical_device.clone()));
+        self.pipeline_layout = Some(pipeline_layout);
+        let pipeline_cache = Arc::new(PipelineCache::new(logical_device.clone()));
+        self.pipeline_cache = Some(pipeline_cache);
+        // TODO
         self.basic_engine = Some(BasicEngine::new(self.os_app));
-        // let vertices = [
-        //     1.0f32,
-        //     1.0f32,
-        //     0.0f32,
-        //     1.0f32,
-        //     0.0f32,
-        //     0.0f32,
-        //     -1.0f32,
-        //     1.0f32,
-        //     0.0f32,
-        //     0.0f32,
-        //     1.0f32,
-        //     0.0f32,
-        //     0.0f32,
-        //     -1.0f32,
-        //     0.0f32,
-        //     0.0f32,
-        //     0.0f32,
-        //     1.0f32,
-        // ];
-        // let indices = [0u32, 1u32, 2u32];
-        // let mesh_buff = Arc::new(Buffer::new(
-        //     logical_device.clone(),
-        //     graphic_cmd_pool.clone(),
-        //     unsafe { transmute(vertices.as_ptr()) },
-        //     vertices.len() as u32 * 4,
-        //     unsafe { transmute(indices.as_ptr()) },
-        //     indices.len() as u32 * 4,
-        // ));
-        // let uniform_data = {
-        //     let current_scene = self.basic_engine.as_ref().unwrap().current_scene.borrow();
-        //     let current_camera = current_scene.get_current_camera().borrow();
-        //     UniformData {
-        //         projection: current_camera.get_view_projection().clone(),
-        //         view: Mat4x4::ident(),
-        //         model: Mat4x4::ident(),
-        //     }
-        // };
-        // let uniform = Arc::new(Uniform::new(
-        //     logical_device.clone(),
-        //     size_of::<UniformData>() as u32,
-        // ));
-        // uniform.update(unsafe { transmute(&uniform_data) });
-        // let pipeline_layout = Arc::new(Layout::new(logical_device.clone()));
-        // let pipeline_cache = Arc::new(PipelineCache::new(logical_device.clone()));
+
         // let pipeline = Arc::new(Pipeline::new(
         //     pipeline_layout.clone(),
         //     render_pass.clone(),
@@ -195,8 +155,6 @@ where
         // let render_complete_semaphore = Semaphore::new(logical_device.clone());
         // self.mesh_buff = Some(mesh_buff);
         // self.uniform = Some(uniform);
-        // self.pipeline_layout = Some(pipeline_layout);
-        // self.pipeline_cache = Some(pipeline_cache);
         // self.pipeline = Some(pipeline);
         // self.descriptor_pool = Some(descriptor_pool);
         // self.descriptor_set = Some(descriptor_set);
@@ -402,10 +360,12 @@ where
         // self.descriptor_set = None;
         // self.descriptor_pool = None;
         // self.pipeline = None;
-        // self.pipeline_cache = None;
-        // self.pipeline_layout = None;
         // self.uniform = None;
         // self.mesh_buff = None;
+        self.basic_engine = None;
+        // TODO
+        self.pipeline_cache = None;
+        self.pipeline_layout = None;
         self.graphic_cmd_pool = None;
         self.framebuffers.clear();
         self.render_pass = None;

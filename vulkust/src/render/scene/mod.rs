@@ -46,11 +46,12 @@ impl BasicScene {
         let device = transfer_cmd_pool.logical_device.clone();
         let v_size = file.read_type::<u64>() * 1024;
         let i_size = file.read_type::<u64>() * 1024;
+        let u_size = file.read_type::<u64>() * 1024;
         let mut meshes_vertices_buffer =
             Buffer::new(transfer_cmd_pool.clone(), v_size, BufferUsage::Vertex);
         let mut meshes_indices_buffer =
             Buffer::new(transfer_cmd_pool.clone(), i_size, BufferUsage::Index);
-        let uniform_buffer = Uniform::new(device, 1024);
+        let uniform_buffer = Uniform::new(device, u_size as u32);
         let cameras_count = file.read_count() as usize;
         let mut cameras_ids = vec![0; cameras_count];
         for i in 0..cameras_count {
