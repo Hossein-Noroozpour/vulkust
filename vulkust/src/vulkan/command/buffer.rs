@@ -51,6 +51,16 @@ impl Buffer {
             vk::vkCmdSetScissor(self.vk_data, 0, 1, &rec);
         }
     }
+
+    pub fn copy_buffer(
+        &mut self, src: vk::VkBuffer, dst: vk::VkBuffer, 
+        regions: &Vec<vk::VkBufferCopy>) {
+        unsafe {
+            vk::vkCmdCopyBuffer(
+                self.vk_data, src, dst, regions.len() as u32, regions.as_ptr());
+        }
+    }
+
     pub fn flush(&self) {;
         let fence = Fence::new(self.pool.logical_device.clone());
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));

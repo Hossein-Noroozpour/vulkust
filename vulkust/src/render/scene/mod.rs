@@ -5,7 +5,7 @@ use std::sync::Arc;
 use super::super::audio::Audio;
 use super::super::audio::manager::Manager as AudioManager;
 use super::super::system::file::File;
-use super::buffer::{Buffer, Usage as BufferUsage};
+use super::buffer::Manager as BufferManager;
 use super::buffer::uniform::Uniform;
 use super::camera::Camera;
 use super::camera::manager::Manager as CameraManager;
@@ -22,9 +22,7 @@ pub trait Scene {
 }
 
 pub struct BasicScene {
-    pub meshes_vertices_buffer: Buffer,
-    pub meshes_indices_buffer: Buffer,
-    pub uniform_buffer: Uniform,
+    pub buffer_manager: BufferManager,
     pub current_camera: usize,
     pub cameras: Vec<Arc<RefCell<Camera<f32>>>>,
     pub audios: Vec<Arc<RefCell<Audio>>>,
@@ -44,14 +42,10 @@ impl BasicScene {
         screen_ratio: f32,
         transfer_cmd_pool: Arc<CmdPool>) -> Self {
         let device = transfer_cmd_pool.logical_device.clone();
-        let v_size = file.read_type::<u64>() * 1024;
-        let i_size = file.read_type::<u64>() * 1024;
+        let vi_size = file.read_type::<u64>() * 1024;
         let u_size = file.read_type::<u64>() * 1024;
-        let mut meshes_vertices_buffer =
-            Buffer::new(transfer_cmd_pool.clone(), v_size, BufferUsage::Vertex);
-        let mut meshes_indices_buffer =
-            Buffer::new(transfer_cmd_pool.clone(), i_size, BufferUsage::Index);
-        let uniform_buffer = Uniform::new(device, u_size as u32);
+        let mut buffer_manager = BufferManager::new(
+            device.clone(), vi_size as usize, u_size as usize);
         let cameras_count = file.read_count() as usize;
         let mut cameras_ids = vec![0; cameras_count];
         for i in 0..cameras_count {

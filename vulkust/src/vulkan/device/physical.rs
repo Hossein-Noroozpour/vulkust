@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::ptr::null_mut;
 use std::mem::transmute;
+use std::cmp::max;
 use super::super::super::system::vulkan as vk;
 use super::super::surface::Surface;
 
@@ -12,6 +13,7 @@ pub struct Physical {
     pub present_queue_node_index: u32,
     pub vk_data: vk::VkPhysicalDevice,
     pub memory_properties: vk::VkPhysicalDeviceMemoryProperties,
+    pub properties: vk::VkPhysicalDeviceProperties,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -28,8 +30,10 @@ impl Physical {
         let devices = Self::enumerate_devices(surface.instance.vk_data);
         let (vk_data, si) = Self::choose_best_device(&devices, &surface);
         let mut memory_properties = vk::VkPhysicalDeviceMemoryProperties::default();
+        let mut properties = vk::VkPhysicalDeviceProperties::default();
         unsafe {
             vk::vkGetPhysicalDeviceMemoryProperties(vk_data, &mut memory_properties);
+            vk::vkGetPhysicalDeviceProperties(vk_data, &mut properties);
         }
         let physical = Physical {
             surface: surface,
@@ -39,6 +43,7 @@ impl Physical {
             present_queue_node_index: si.present_queue_node_index,
             vk_data: vk_data,
             memory_properties: memory_properties,
+            properties: properties,
         };
         physical
     }
@@ -293,6 +298,19 @@ impl Physical {
             type_bits >>= 1;
         }
         logf!("Could not find the requsted memory type.");
+    }
+    pub fn get_max_min_alignment(&self) -> u64 {
+        let limits = &self.properties.limits;
+        max(max(max(
+            limits.minMemoryMapAlignment as u64,
+            limits.minStorageBufferOffsetAlignment
+        ), max(
+            limits.minTexelBufferOffsetAlignment,
+            limits.minUniformBufferOffsetAlignment
+        )), max(
+            limits.optimalBufferCopyOffsetAlignment,
+            limits.optimalBufferCopyRowPitchAlignment,
+        ))
     }
 }
 
