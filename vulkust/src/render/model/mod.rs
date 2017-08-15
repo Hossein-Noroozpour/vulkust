@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::cell::RefCell;
 use super::super::math::matrix::Mat4x4;
 use super::super::system::file::File;
-use super::buffer::Buffer;
+use super::buffer::Manager as BufferManager;
 use super::shader::manager::Manager as ShaderManager;
 use super::texture::manager::Manager as TextureManager;
 use super::mesh::{Mesh, OccMesh};
@@ -21,20 +21,17 @@ impl StaticModel {
     pub fn new(
         file: &mut File,
         model_manager: &mut Manager,
-        vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer,
+        buffer_manager: &Arc<RefCell<BufferManager>>,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
-        let device = vertices_buffer.cmd_pool.logical_device.clone();
-        let mesh = Mesh::new(
-            file, vertices_buffer, indices_buffer,
-            device, shader_manager, texture_manager);
+        let device = buffer_manager.borrow().get_device().clone();
+        let mesh = Mesh::new(file, buffer_manager, device, shader_manager, texture_manager);
         let children_count: u64 = file.read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
             children.push(read_boxed_model(
-                file, model_manager, vertices_buffer, indices_buffer,
+                file, model_manager, buffer_manager,
                 texture_manager, shader_manager));
         }
         StaticModel {
@@ -55,18 +52,16 @@ impl RootStaticModel {
     pub fn new(
         file: &mut File,
         model_manager: &mut Manager,
-        vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer,
+        buffer_manager: &Arc<RefCell<BufferManager>>,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
-        let mesh = OccMesh::new(
-            file, vertices_buffer, indices_buffer);
+        let mesh = OccMesh::new(file, buffer_manager);
         let children_count = file.read_count();
         let mut children = Vec::new();
         for _ in 0..children_count {
             children.push(read_boxed_model(
-                file, model_manager, vertices_buffer, indices_buffer,
+                file, model_manager, buffer_manager,
                 texture_manager, shader_manager));
         }
         RootStaticModel {
@@ -88,18 +83,17 @@ impl DynamicModel {
     pub fn new(
         file: &mut File,
         model_manager: &mut Manager,
-        vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer,
+        buffer_manager: &Arc<RefCell<BufferManager>>,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
         let m = Mat4x4::new_from_file(file);
-        let mesh = OccMesh::new(file, vertices_buffer, indices_buffer);
+        let mesh = OccMesh::new(file, buffer_manager);
         let children_count: u64 = file.read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
             children.push(read_boxed_model(
-                file, model_manager, vertices_buffer, indices_buffer,
+                file, model_manager, buffer_manager,
                 texture_manager, shader_manager));
         }
         DynamicModel {
@@ -121,8 +115,7 @@ impl CopyModel {
     pub fn new(
         file: &mut File,
         model_manager: &mut Manager,
-        vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer,
+        buffer_manager: &Arc<RefCell<BufferManager>>,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
@@ -130,7 +123,7 @@ impl CopyModel {
         let id = file.read_id();
         let offset = file.tell();
         let sm = model_manager.get(
-                id, file, vertices_buffer, indices_buffer, texture_manager, shader_manager);
+                id, file, buffer_manager, texture_manager, shader_manager);
         file.goto(offset);
         CopyModel {
             t: t,
@@ -144,42 +137,37 @@ impl Model for CopyModel {}
 pub fn read_model(
     file: &mut File,
     model_manager: &mut Manager,
-    vertices_buffer: &mut Buffer,
-    indices_buffer: &mut Buffer,
+    buffer_manager: &Arc<RefCell<BufferManager>>,
     texture_manager: &mut TextureManager,
     shader_manager: &mut ShaderManager,
 ) -> Arc<RefCell<Model>> {
     return if file.read_bool() {
         Arc::new(RefCell::new(CopyModel::new(
-            file, model_manager, vertices_buffer,
-            indices_buffer, texture_manager, shader_manager)))
+            file, model_manager, buffer_manager, texture_manager, shader_manager)))
     } else if file.read_bool() {
         Arc::new(RefCell::new(DynamicModel::new(
-            file, model_manager, vertices_buffer,
-            indices_buffer, texture_manager, shader_manager)))
+            file, model_manager, buffer_manager, texture_manager, shader_manager)))
     } else {
         Arc::new(RefCell::new(RootStaticModel::new(
-            file, model_manager, vertices_buffer,
-            indices_buffer, texture_manager, shader_manager)))
+            file, model_manager, buffer_manager, texture_manager, shader_manager)))
     };
 }
 
 fn read_boxed_model(
     file: &mut File,
     model_manager: &mut Manager,
-    vertices_buffer: &mut Buffer,
-    indices_buffer: &mut Buffer,
+    buffer_manager: &Arc<RefCell<BufferManager>>,
     texture_manager: &mut TextureManager,
     shader_manager: &mut ShaderManager,
 ) -> Box<Model> {
     return if file.read_bool() {
         Box::new(CopyModel::new(
-            file, model_manager, vertices_buffer, indices_buffer, texture_manager, shader_manager))
+            file, model_manager, buffer_manager, texture_manager, shader_manager))
     } else if file.read_bool() {
         Box::new(DynamicModel::new(
-            file, model_manager, vertices_buffer, indices_buffer, texture_manager, shader_manager))
+            file, model_manager, buffer_manager, texture_manager, shader_manager))
     } else {
         Box::new(StaticModel::new(
-            file, model_manager, vertices_buffer, indices_buffer, texture_manager, shader_manager))
+            file, model_manager, buffer_manager, texture_manager, shader_manager))
     };
 }

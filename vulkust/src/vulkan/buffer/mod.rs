@@ -1,14 +1,11 @@
 extern crate libc;
 
-pub mod uniform;
-
 use std::default::Default;
 use std::sync::Arc;
 use std::ptr::{null, null_mut};
 use std::os::raw::c_void;
 use std::mem::transmute;
 use super::super::system::vulkan as vk;
-use super::command::pool::Pool as CmdPool;
 use super::command::buffer::Buffer as CmdBuff;
 use super::device::logical::Logical as LogicalDevice;
 
@@ -70,18 +67,20 @@ impl Region {
             memory,
             0,
         ));
+        let alignment = logical_device.physical_device.get_max_min_alignment() as usize; 
         Region {
             logical_device: logical_device,
             buffer: buffer,
             memory: memory,
-            alignment: logical_device.physical_device.get_max_min_alignment() as usize,
+            alignment: alignment,
             start: start,
             offset: 0,
             size: size,
         }
     }
 
-    pub fn write(&mut self, data: *const c_void, size: usize) {
+    pub fn write(&mut self, data: *const c_void, size: usize) -> (usize, usize) {
+        let begin = self.offset;
         if self.offset + size > self.size {
             logf!(
                 "{}{} {}{} {}{}",
@@ -102,9 +101,10 @@ impl Region {
         if rem != 0 {
             self.offset += self.alignment - rem;
         }
+        (begin, self.offset)
     }
 
-    pub fn push(&mut self, cmd: &mut CmdBuff, start: usize, dst: vk::VkBuffer) {
+    pub fn push(&self, cmd: &mut CmdBuff, start: usize, dst: vk::VkBuffer) {
         let mut regions = vec![vk::VkBufferCopy::default(); 1];
         regions[0].dstOffset = start as vk::VkDeviceSize;
         regions[0].size = self.size as vk::VkDeviceSize;
@@ -205,12 +205,12 @@ impl Manager {
         self.uniforms.offset = offset;
     }
 
-    pub fn write_vi(&mut self, data: *const c_void, size: usize) {
-        self.vertices_indices.write(data, size);
+    pub fn write_vi(&mut self, data: *const c_void, size: usize) -> (usize, usize) {
+        self.vertices_indices.write(data, size)
     }
 
-    pub fn write_u(&mut self, data: *const c_void, size: usize) {
-        self.uniforms.write(data, size);
+    pub fn write_u(&mut self, data: *const c_void, size: usize) -> (usize, usize) {
+        self.uniforms.write(data, size)
     }
 
     pub fn push_vi(&self, cmd: &mut CmdBuff) {
@@ -219,6 +219,18 @@ impl Manager {
 
     pub fn push_u(&self, cmd: &mut CmdBuff) {
         self.uniforms.push(cmd, self.vertices_indices.size, self.vk_data);
+    }
+
+    pub fn get_id(&self) -> u64 {
+        self.vk_data as u64
+    }
+
+    pub fn get_buffer(&self) -> vk::VkBuffer {
+        self.vk_data
+    }
+
+    pub fn get_device(&self) -> &Arc<LogicalDevice> {
+        &self.uniforms.logical_device
     }
 }
 

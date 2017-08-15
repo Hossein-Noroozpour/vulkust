@@ -6,7 +6,6 @@ use super::super::audio::Audio;
 use super::super::audio::manager::Manager as AudioManager;
 use super::super::system::file::File;
 use super::buffer::Manager as BufferManager;
-use super::buffer::uniform::Uniform;
 use super::camera::Camera;
 use super::camera::manager::Manager as CameraManager;
 use super::command::pool::Pool as CmdPool;
@@ -22,7 +21,7 @@ pub trait Scene {
 }
 
 pub struct BasicScene {
-    pub buffer_manager: BufferManager,
+    pub buffer_manager: Arc<RefCell<BufferManager>>,
     pub current_camera: usize,
     pub cameras: Vec<Arc<RefCell<Camera<f32>>>>,
     pub audios: Vec<Arc<RefCell<Audio>>>,
@@ -44,8 +43,8 @@ impl BasicScene {
         let device = transfer_cmd_pool.logical_device.clone();
         let vi_size = file.read_type::<u64>() * 1024;
         let u_size = file.read_type::<u64>() * 1024;
-        let mut buffer_manager = BufferManager::new(
-            device.clone(), vi_size as usize, u_size as usize);
+        let buffer_manager = Arc::new(RefCell::new(BufferManager::new(
+            device.clone(), vi_size as usize, u_size as usize)));
         let cameras_count = file.read_count() as usize;
         let mut cameras_ids = vec![0; cameras_count];
         for i in 0..cameras_count {
@@ -81,14 +80,11 @@ impl BasicScene {
         let mut models = Vec::new();
         for i in models_ids {
             models.push(model_manager.get(
-                i, file,
-                &mut meshes_vertices_buffer, &mut meshes_indices_buffer,
+                i, file, &buffer_manager,
                 texture_manager, shader_manager));
         }
         BasicScene {
-            meshes_vertices_buffer: meshes_vertices_buffer,
-            meshes_indices_buffer: meshes_indices_buffer,
-            uniform_buffer: uniform_buffer,
+            buffer_manager: buffer_manager,
             current_camera: 0,
             cameras: cameras,
             audios: audios,

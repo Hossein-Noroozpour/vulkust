@@ -3,13 +3,13 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
 use super::super::super::system::file::File;
-use super::super::buffer::Buffer;
+use super::super::buffer::Manager as BufferManager;
 use super::super::texture::manager::Manager as TextureManager;
 use super::super::shader::manager::Manager as ShaderManager;
 use super::{read_model, Model};
 
 pub struct Manager {
-    pub cached: BTreeMap<u64, Weak<RefCell<Model>>>,
+    pub cached: BTreeMap<u64, BTreeMap<u64, Weak<RefCell<Model>>>>,
     pub offsets: Vec<u64>,
 }
 
@@ -33,19 +33,24 @@ impl Manager {
         &mut self,
         id: u64,
         file: &mut File,
-        vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer,
+        buffer_manager: &Arc<RefCell<BufferManager>>,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Arc<RefCell<Model>> {
-        match self.cached.get(&id) {
-            Some(res) => match res.upgrade() {
-                Some(res) => {
-                    return res;
-                }
-                None => {}
+        let w_buffer = buffer_manager.borrow().get_id();
+        match self.cached.get(&w_buffer) {
+            Some(cached) => match cached.get(&id) {
+                Some(res) => match res.upgrade() {
+                    Some(res) => {
+                        #[cfg(model_import_debug)]
+                        logi!("Model with id {}", id);
+                        return res
+                    },
+                    None => {},
+                },
+                None => {},
             },
-            None => {}
+            None => {},
         }
         let offset = self.offsets[id as usize];
         match file.seek(SeekFrom::Start(offset)) {
@@ -57,8 +62,10 @@ impl Manager {
             }
         }
         let l: Arc<RefCell<Model>> = read_model(
-            file, self, vertices_buffer, indices_buffer, texture_manager, shader_manager);
-        self.cached.insert(id, Arc::downgrade(&l));
+            file, self, buffer_manager, texture_manager, shader_manager);
+        let mut cached = BTreeMap::new();
+        cached.insert(id, Arc::downgrade(&l));
+        self.cached.insert(w_buffer, cached);
         return l;
     }
 }

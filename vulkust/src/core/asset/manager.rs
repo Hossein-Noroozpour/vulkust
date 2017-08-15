@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::cell::RefCell;
 use super::super::super::audio::manager::Manager as AudioManager;
 use super::super::super::audio::Audio;
-use super::super::super::render::buffer::Buffer;
+use super::super::super::render::buffer::Manager as BufferManager;
 use super::super::super::render::camera::manager::Manager as CameraManager;
 use super::super::super::render::camera::Camera;
 use super::super::super::render::command::pool::Pool as CmdPool;
@@ -77,13 +77,12 @@ impl Manager {
     pub fn get_model(
         &mut self,
         id: u64,
-        vertices_buffer: &mut Buffer,
-        indices_buffer: &mut Buffer
+        buffer_manager: &Arc<RefCell<BufferManager>>
     ) -> Arc<RefCell<Model>> {
         let shader_manager = &mut self.shader_manager;
         let texture_manager = &mut self.texture_manager;
         self.model_manager.get(
-            id, &mut self.file, vertices_buffer, indices_buffer, texture_manager, shader_manager)
+            id, &mut self.file, buffer_manager, texture_manager, shader_manager)
     }
 
     pub fn get_scene(

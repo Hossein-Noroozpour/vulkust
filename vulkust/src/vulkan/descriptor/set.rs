@@ -1,21 +1,21 @@
+use std::cell::RefCell;
 use std::sync::Arc;
 use std::default::Default;
 use std::ptr::null;
 use super::super::super::system::vulkan as vk;
+use super::super::buffer::Manager as BufferManager;
 use super::super::pipeline::layout::Layout as PipelineLayout;
-use super::super::buffer::uniform::Uniform as UniformBuffer;
 use super::pool::Pool;
 pub struct Set {
     pub pool: Arc<Pool>,
     pub pipeline_layout: Arc<PipelineLayout>,
-    pub buffer: Arc<UniformBuffer>,
     pub vk_data: vk::VkDescriptorSet,
 }
 impl Set {
     pub fn new(
         pool: Arc<Pool>,
         pipeline_layout: Arc<PipelineLayout>,
-        buffer: Arc<UniformBuffer>,
+        buffer: &Arc<RefCell<BufferManager>>,
     ) -> Self {
         let mut alloc_info = vk::VkDescriptorSetAllocateInfo::default();
         alloc_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
