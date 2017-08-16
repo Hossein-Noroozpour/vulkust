@@ -139,12 +139,6 @@ where
         // TODO
         self.basic_engine = Some(BasicEngine::new(self.os_app));
 
-        // let pipeline = Arc::new(Pipeline::new(
-        //     pipeline_layout.clone(),
-        //     render_pass.clone(),
-        //     pipeline_cache.clone(),
-        //     self.os_app,
-        // ));
         // let descriptor_pool = Arc::new(DescriptorPool::new(logical_device.clone()));
         // let descriptor_set = Arc::new(DescriptorSet::new(
         //     descriptor_pool.clone(),
