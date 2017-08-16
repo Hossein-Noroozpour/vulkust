@@ -21,18 +21,28 @@ impl StaticModel {
     pub fn new(
         file: &mut File,
         model_manager: &mut Manager,
-        buffer_manager: &Arc<RefCell<BufferManager>>,
+        buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
-        let device = buffer_manager.borrow().get_device().clone();
-        let mesh = Mesh::new(file, buffer_manager, device, shader_manager, texture_manager);
+        let device = buffer_manager.get_device().clone();
+        let mesh = Mesh::new(
+            file,
+            buffer_manager,
+            device,
+            shader_manager,
+            texture_manager,
+        );
         let children_count: u64 = file.read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
             children.push(read_boxed_model(
-                file, model_manager, buffer_manager,
-                texture_manager, shader_manager));
+                file,
+                model_manager,
+                buffer_manager,
+                texture_manager,
+                shader_manager,
+            ));
         }
         StaticModel {
             draw_mesh: mesh,
@@ -52,7 +62,7 @@ impl RootStaticModel {
     pub fn new(
         file: &mut File,
         model_manager: &mut Manager,
-        buffer_manager: &Arc<RefCell<BufferManager>>,
+        buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
@@ -61,8 +71,12 @@ impl RootStaticModel {
         let mut children = Vec::new();
         for _ in 0..children_count {
             children.push(read_boxed_model(
-                file, model_manager, buffer_manager,
-                texture_manager, shader_manager));
+                file,
+                model_manager,
+                buffer_manager,
+                texture_manager,
+                shader_manager,
+            ));
         }
         RootStaticModel {
             occ_mesh: mesh,
@@ -83,7 +97,7 @@ impl DynamicModel {
     pub fn new(
         file: &mut File,
         model_manager: &mut Manager,
-        buffer_manager: &Arc<RefCell<BufferManager>>,
+        buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
@@ -93,8 +107,12 @@ impl DynamicModel {
         let mut children = Vec::new();
         for _ in 0..children_count {
             children.push(read_boxed_model(
-                file, model_manager, buffer_manager,
-                texture_manager, shader_manager));
+                file,
+                model_manager,
+                buffer_manager,
+                texture_manager,
+                shader_manager,
+            ));
         }
         DynamicModel {
             transform: m,
@@ -115,20 +133,16 @@ impl CopyModel {
     pub fn new(
         file: &mut File,
         model_manager: &mut Manager,
-        buffer_manager: &Arc<RefCell<BufferManager>>,
+        buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Self {
         let t = Mat4x4::new_from_file(file);
         let id = file.read_id();
         let offset = file.tell();
-        let sm = model_manager.get(
-                id, file, buffer_manager, texture_manager, shader_manager);
+        let sm = model_manager.get(id, file, buffer_manager, texture_manager, shader_manager);
         file.goto(offset);
-        CopyModel {
-            t: t,
-            sm: sm,
-        }
+        CopyModel { t: t, sm: sm }
     }
 }
 
@@ -137,37 +151,67 @@ impl Model for CopyModel {}
 pub fn read_model(
     file: &mut File,
     model_manager: &mut Manager,
-    buffer_manager: &Arc<RefCell<BufferManager>>,
+    buffer_manager: &mut BufferManager,
     texture_manager: &mut TextureManager,
     shader_manager: &mut ShaderManager,
 ) -> Arc<RefCell<Model>> {
     return if file.read_bool() {
         Arc::new(RefCell::new(CopyModel::new(
-            file, model_manager, buffer_manager, texture_manager, shader_manager)))
+            file,
+            model_manager,
+            buffer_manager,
+            texture_manager,
+            shader_manager,
+        )))
     } else if file.read_bool() {
         Arc::new(RefCell::new(DynamicModel::new(
-            file, model_manager, buffer_manager, texture_manager, shader_manager)))
+            file,
+            model_manager,
+            buffer_manager,
+            texture_manager,
+            shader_manager,
+        )))
     } else {
         Arc::new(RefCell::new(RootStaticModel::new(
-            file, model_manager, buffer_manager, texture_manager, shader_manager)))
+            file,
+            model_manager,
+            buffer_manager,
+            texture_manager,
+            shader_manager,
+        )))
     };
 }
 
 fn read_boxed_model(
     file: &mut File,
     model_manager: &mut Manager,
-    buffer_manager: &Arc<RefCell<BufferManager>>,
+    buffer_manager: &mut BufferManager,
     texture_manager: &mut TextureManager,
     shader_manager: &mut ShaderManager,
 ) -> Box<Model> {
     return if file.read_bool() {
         Box::new(CopyModel::new(
-            file, model_manager, buffer_manager, texture_manager, shader_manager))
+            file,
+            model_manager,
+            buffer_manager,
+            texture_manager,
+            shader_manager,
+        ))
     } else if file.read_bool() {
         Box::new(DynamicModel::new(
-            file, model_manager, buffer_manager, texture_manager, shader_manager))
+            file,
+            model_manager,
+            buffer_manager,
+            texture_manager,
+            shader_manager,
+        ))
     } else {
         Box::new(StaticModel::new(
-            file, model_manager, buffer_manager, texture_manager, shader_manager))
+            file,
+            model_manager,
+            buffer_manager,
+            texture_manager,
+            shader_manager,
+        ))
     };
 }

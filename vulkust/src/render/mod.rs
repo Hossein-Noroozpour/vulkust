@@ -11,4 +11,4 @@ pub mod buffer;
 pub mod command;
 pub mod engine;
 pub mod mesh;
-//pub mod vertex;
+pub mod vertex;

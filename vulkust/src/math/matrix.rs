@@ -419,9 +419,7 @@ where
                 data[i][j] = f.read_type();
             }
         }
-        Mat4x4 {
-            data: data,
-        }
+        Mat4x4 { data: data }
     }
 }
 

@@ -3,7 +3,7 @@ use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
 use super::super::super::system::file::File;
 use super::super::device::logical::Logical as LogicalDevice;
-use super::{TwoStage, Shader, read_id};
+use super::{read_id, Shader, TwoStage};
 
 pub struct Manager {
     pub cached: BTreeMap<u64, Weak<Shader>>,
@@ -30,7 +30,11 @@ impl Manager {
     }
 
     pub fn get(
-        &mut self, id: u64, file: &mut File, logical_device: Arc<LogicalDevice>) -> Arc<Shader> {
+        &mut self,
+        id: u64,
+        file: &mut File,
+        logical_device: Arc<LogicalDevice>,
+    ) -> Arc<Shader> {
         match self.cached.get(&id) {
             Some(res) => match res.upgrade() {
                 Some(res) => {

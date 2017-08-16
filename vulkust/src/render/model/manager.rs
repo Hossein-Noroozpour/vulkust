@@ -33,24 +33,24 @@ impl Manager {
         &mut self,
         id: u64,
         file: &mut File,
-        buffer_manager: &Arc<RefCell<BufferManager>>,
+        buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
         shader_manager: &mut ShaderManager,
     ) -> Arc<RefCell<Model>> {
-        let w_buffer = buffer_manager.borrow().get_id();
+        let w_buffer = buffer_manager.get_id();
         match self.cached.get(&w_buffer) {
             Some(cached) => match cached.get(&id) {
                 Some(res) => match res.upgrade() {
                     Some(res) => {
                         #[cfg(model_import_debug)]
                         logi!("Model with id {}", id);
-                        return res
-                    },
-                    None => {},
+                        return res;
+                    }
+                    None => {}
                 },
-                None => {},
+                None => {}
             },
-            None => {},
+            None => {}
         }
         let offset = self.offsets[id as usize];
         match file.seek(SeekFrom::Start(offset)) {
@@ -61,8 +61,8 @@ impl Manager {
                 logf!("Can not seek to the requested offset.");
             }
         }
-        let l: Arc<RefCell<Model>> = read_model(
-            file, self, buffer_manager, texture_manager, shader_manager);
+        let l: Arc<RefCell<Model>> =
+            read_model(file, self, buffer_manager, texture_manager, shader_manager);
         let mut cached = BTreeMap::new();
         cached.insert(id, Arc::downgrade(&l));
         self.cached.insert(w_buffer, cached);

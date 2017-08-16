@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
 use super::super::super::system::file::File;
-use super::{Texture2D, Texture, Id};
+use super::{Id, Texture, Texture2D};
 
 #[derive(Debug)]
 pub struct Manager {
@@ -50,10 +50,13 @@ impl Manager {
             10 => Texture2D::new(file),
             _ => {
                 logf!(
-                    "{} {} {} {} {}", 
-                    "Requsted texture with Id:", id, 
-                    "found but type:", type_id, 
-                    "is not implemented yet.");
+                    "{} {} {} {} {}",
+                    "Requsted texture with Id:",
+                    id,
+                    "found but type:",
+                    type_id,
+                    "is not implemented yet."
+                );
             }
         };
         let texture: Arc<Texture> = Arc::new(texture);

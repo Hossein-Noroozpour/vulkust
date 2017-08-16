@@ -10,6 +10,10 @@ pub trait Shader {
     fn as_two_stage(&self) -> &TwoStage {
         logf!("This object can not convert to TwoStage Shader.");
     }
+    fn get_stages_count(&self) -> usize;
+    fn get_stage(&self, i: usize) -> &Stage;
+    fn get_vertex_stage(&self) -> &Stage;
+    fn get_fragment_stage(&self) -> &Stage;
 }
 
 pub struct TwoStage {
@@ -35,6 +39,28 @@ impl TwoStage {
 impl Shader for TwoStage {
     fn as_two_stage(&self) -> &TwoStage {
         return self;
+    }
+
+    fn get_stages_count(&self) -> usize {
+        2
+    }
+
+    fn get_stage(&self, i: usize) -> &Stage {
+        match i {
+            0 => &self.vertex,
+            1 => &self.fragment,
+            c @ _ => {
+                logf!("TwoStage does not have stage number {}", c);
+            }
+        }
+    }
+
+    fn get_vertex_stage(&self) -> &Stage {
+        &self.vertex
+    }
+
+    fn get_fragment_stage(&self) -> &Stage {
+        &self.fragment
     }
 }
 

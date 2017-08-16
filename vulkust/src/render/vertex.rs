@@ -1,10 +1,9 @@
-use super::super::math::vector::{
-    Vec3,
-    Vec2,
-};
+pub trait Vertex {}
 
-pub trait Vertex {
-
+#[derive(Clone)]
+pub enum Attribute {
+    Vec3F32,
+    Vec2F32,
 }
 
 #[repr(C)]

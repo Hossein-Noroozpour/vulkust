@@ -301,16 +301,22 @@ impl Physical {
     }
     pub fn get_max_min_alignment(&self) -> u64 {
         let limits = &self.properties.limits;
-        max(max(max(
-            limits.minMemoryMapAlignment as u64,
-            limits.minStorageBufferOffsetAlignment
-        ), max(
-            limits.minTexelBufferOffsetAlignment,
-            limits.minUniformBufferOffsetAlignment
-        )), max(
-            limits.optimalBufferCopyOffsetAlignment,
-            limits.optimalBufferCopyRowPitchAlignment,
-        ))
+        max(
+            max(
+                max(
+                    limits.minMemoryMapAlignment as u64,
+                    limits.minStorageBufferOffsetAlignment,
+                ),
+                max(
+                    limits.minTexelBufferOffsetAlignment,
+                    limits.minUniformBufferOffsetAlignment,
+                ),
+            ),
+            max(
+                limits.optimalBufferCopyOffsetAlignment,
+                limits.optimalBufferCopyRowPitchAlignment,
+            ),
+        )
     }
 }
 

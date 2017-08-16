@@ -22,7 +22,7 @@ pub struct Mesh {
 impl Mesh {
     pub fn new(
         file: &mut File,
-        buffer_manager: &Arc<RefCell<BufferManager>>,
+        buffer_manager: &mut BufferManager,
         logical_device: Arc<LogicalDevice>,
         shader_manager: &mut ShaderManager,
         texture_manager: &mut TextureManager,
@@ -38,11 +38,13 @@ impl Mesh {
         logi!("mesh vertices count is: {}", vertices_count);
         let vertices_size = (vertex_size * vertices_count) as usize;
         let mut data = file.read_bytes(vertices_size);
-        let vertices_range = buffer_manager.borrow_mut().write_vi(unsafe { transmute(data.as_ptr()) }, vertices_size);
+        let vertices_range =
+            buffer_manager.write_vi(unsafe { transmute(data.as_ptr()) }, vertices_size);
         let indices_count = file.read_count();
         let indices_size = (INDEX_ELEMENTS_SIZE * indices_count) as usize;
         data = file.read_bytes(indices_size as usize);
-        let indices_range = buffer_manager.borrow_mut().write_vi(unsafe { transmute(data.as_ptr()) }, indices_size);
+        let indices_range =
+            buffer_manager.write_vi(unsafe { transmute(data.as_ptr()) }, indices_size);
         Mesh {
             material: material,
             vertex_size: vertex_size,
@@ -60,20 +62,19 @@ pub struct OccMesh {
 }
 
 impl OccMesh {
-    pub fn new(
-        file: &mut File,
-        buffer_manager: &Arc<RefCell<BufferManager>>,
-    ) -> Self {
+    pub fn new(file: &mut File, buffer_manager: &mut BufferManager) -> Self {
         let _ = read_shader_id(file);
         let vertices_size = (3 * 4 * file.read_count()) as usize;
         #[cfg(mesh_debug)]
         logi!("occlusion mesh with vertices size {}", vertices_size);
         let mut data = file.read_bytes(vertices_size);
-        let vertices_range = buffer_manager.borrow_mut().write_vi(unsafe { transmute(data.as_ptr()) }, vertices_size);
+        let vertices_range =
+            buffer_manager.write_vi(unsafe { transmute(data.as_ptr()) }, vertices_size);
         let indices_count = file.read_count();
         let indices_size = (INDEX_ELEMENTS_SIZE * indices_count) as usize;
         data = file.read_bytes(indices_size);
-        let indices_range = buffer_manager.borrow_mut().write_vi(unsafe { transmute(data.as_ptr()) }, indices_size);
+        let indices_range =
+            buffer_manager.write_vi(unsafe { transmute(data.as_ptr()) }, indices_size);
         OccMesh {
             vertices_range: vertices_range,
             indices_count: indices_count,

@@ -11,7 +11,6 @@ use super::super::vulkan::engine::Engine;
 use super::super::core::application::ApplicationTrait;
 use super::super::core::event::Event;
 use super::super::system::os::OsApplication;
-use super::super::system::os::ApplicationTrait as OsApp;
 use super::scene::Scene;
 
 pub type RenderEngine<CoreApp> = Engine<CoreApp>;
@@ -37,11 +36,12 @@ pub struct Basic {
 
 impl Basic {
     pub fn new<CoreApp>(os_app: &mut OsApplication<CoreApp>) -> Self
-    where CoreApp: ApplicationTrait {
-        let screen_ratio = os_app.get_window_ratio() as f32;
-        let transfer_cmd_pool = os_app.render_engine.transfer_cmd_pool.as_ref().unwrap().clone();
+    where
+        CoreApp: ApplicationTrait,
+    {
+        let engine = &mut os_app.render_engine;
         Basic {
-            current_scene: os_app.asset_manager.get_scene(0, screen_ratio, transfer_cmd_pool),
+            current_scene: os_app.asset_manager.get_scene(0, *engine),
         }
     }
 

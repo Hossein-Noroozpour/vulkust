@@ -3,48 +3,42 @@ pub mod manager;
 use std::cell::RefCell;
 use std::sync::Arc;
 use super::super::audio::Audio;
-use super::super::audio::manager::Manager as AudioManager;
+use super::super::core::application::ApplicationTrait;
 use super::super::system::file::File;
+use super::super::system::os::ApplicationTrait as OsApp;
 use super::buffer::Manager as BufferManager;
 use super::camera::Camera;
-use super::camera::manager::Manager as CameraManager;
-use super::command::pool::Pool as CmdPool;
+use super::engine::RenderEngine;
 use super::light::Light;
-use super::light::manager::Manager as LightManager;
+use super::material::White;
 use super::model::Model;
-use super::model::manager::Manager as ModelManager;
-use super::shader::manager::Manager as ShaderManager;
-use super::texture::manager::Manager as TextureManager;
 
 pub trait Scene {
     fn get_current_camera(&self) -> &Arc<RefCell<Camera<f32>>>;
 }
 
 pub struct BasicScene {
-    pub buffer_manager: Arc<RefCell<BufferManager>>,
+    pub buffer_manager: BufferManager,
     pub current_camera: usize,
     pub cameras: Vec<Arc<RefCell<Camera<f32>>>>,
     pub audios: Vec<Arc<RefCell<Audio>>>,
     pub lights: Vec<Arc<RefCell<Light>>>,
     pub models: Vec<Arc<RefCell<Model>>>,
+    pub occ_material: White,
 }
 
 impl BasicScene {
-    pub fn new(
-        file: &mut File,
-        camera_manager: &mut CameraManager,
-        audio_manager: &mut AudioManager,
-        light_manager: &mut LightManager,
-        model_manager: &mut ModelManager,
-        shader_manager: &mut ShaderManager,
-        texture_manager: &mut TextureManager,
-        screen_ratio: f32,
-        transfer_cmd_pool: Arc<CmdPool>) -> Self {
-        let device = transfer_cmd_pool.logical_device.clone();
+    pub fn new<CoreApp>(file: &mut File, engine: &mut RenderEngine<CoreApp>) -> Self
+    where
+        CoreApp: ApplicationTrait,
+    {
+        let device = engine.logical_device.as_ref().unwrap();
+        let window_ratio = engine.os_app.get_window_ratio() as f32;
+        let asset_manager = &mut engine.os_app.asset_manager;
         let vi_size = file.read_type::<u64>() * 1024;
         let u_size = file.read_type::<u64>() * 1024;
-        let buffer_manager = Arc::new(RefCell::new(BufferManager::new(
-            device.clone(), vi_size as usize, u_size as usize)));
+        let mut buffer_manager =
+            BufferManager::new(device.clone(), vi_size as usize, u_size as usize);
         let cameras_count = file.read_count() as usize;
         let mut cameras_ids = vec![0; cameras_count];
         for i in 0..cameras_count {
@@ -65,23 +59,22 @@ impl BasicScene {
         for i in 0..models_count {
             models_ids[i] = file.read_id();
         }
+        let occ_material = White::new(file, device.clone(), &mut asset_manager.shader_manager);
         let mut cameras = Vec::new();
         for i in cameras_ids {
-            cameras.push(camera_manager.get(i, file, screen_ratio));
+            cameras.push(asset_manager.get_camera(i, window_ratio));
         }
         let mut audios = Vec::new();
         for i in audios_ids {
-            audios.push(audio_manager.get(i, file));
+            audios.push(asset_manager.get_audio(i));
         }
         let mut lights = Vec::new();
         for i in lights_ids {
-            lights.push(light_manager.get(i, file));
+            lights.push(asset_manager.get_light(i));
         }
         let mut models = Vec::new();
         for i in models_ids {
-            models.push(model_manager.get(
-                i, file, &buffer_manager,
-                texture_manager, shader_manager));
+            models.push(asset_manager.get_model(i, &mut buffer_manager));
         }
         BasicScene {
             buffer_manager: buffer_manager,
@@ -90,6 +83,7 @@ impl BasicScene {
             audios: audios,
             lights: lights,
             models: models,
+            occ_material: occ_material,
         }
     }
 }

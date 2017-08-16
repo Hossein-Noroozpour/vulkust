@@ -11,12 +11,12 @@ use super::device::logical::Logical as LogicalDevice;
 
 struct Region {
     pub logical_device: Arc<LogicalDevice>,
-    pub buffer:         vk::VkBuffer,
-    pub memory:         vk::VkDeviceMemory,
-    pub alignment:      usize,
-    pub start:          usize,
-    pub offset:         usize,
-    pub size:           usize,
+    pub buffer: vk::VkBuffer,
+    pub memory: vk::VkDeviceMemory,
+    pub alignment: usize,
+    pub start: usize,
+    pub offset: usize,
+    pub size: usize,
 }
 
 impl Region {
@@ -34,11 +34,7 @@ impl Region {
         ));
         let mut mem_reqs = vk::VkMemoryRequirements::default();
         unsafe {
-            vk::vkGetBufferMemoryRequirements(
-                logical_device.vk_data,
-                buffer,
-                &mut mem_reqs,
-            );
+            vk::vkGetBufferMemoryRequirements(logical_device.vk_data, buffer, &mut mem_reqs);
         }
         let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
         mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -50,7 +46,10 @@ impl Region {
         );
         let mut memory = 0 as vk::VkDeviceMemory;
         vulkan_check!(vk::vkAllocateMemory(
-            logical_device.vk_data, &mem_alloc, null(), &mut memory,
+            logical_device.vk_data,
+            &mem_alloc,
+            null(),
+            &mut memory,
         ));
         let mut start = 0;
         vulkan_check!(vk::vkMapMemory(
@@ -67,7 +66,7 @@ impl Region {
             memory,
             0,
         ));
-        let alignment = logical_device.physical_device.get_max_min_alignment() as usize; 
+        let alignment = logical_device.physical_device.get_max_min_alignment() as usize;
         Region {
             logical_device: logical_device,
             buffer: buffer,
@@ -84,9 +83,13 @@ impl Region {
         if self.offset + size > self.size {
             logf!(
                 "{}{} {}{} {}{}",
-                "Your data reached to the maximum size: ", self.size,
-                "please specify a better size for buffer current offset is: ", self.offset,
-                "data you want to write has size: ", size);
+                "Your data reached to the maximum size: ",
+                self.size,
+                "please specify a better size for buffer current offset is: ",
+                self.offset,
+                "data you want to write has size: ",
+                size
+            );
         }
         unsafe {
             libc::memcpy(
@@ -97,7 +100,7 @@ impl Region {
         }
         self.offset += size;
         let flag = self.alignment - 1;
-        let rem = self.offset & flag; 
+        let rem = self.offset & flag;
         if rem != 0 {
             self.offset += self.alignment - rem;
         }
@@ -122,7 +125,7 @@ impl Drop for Region {
             vk::vkFreeMemory(self.logical_device.vk_data, self.memory, null());
         }
     }
-} 
+}
 
 pub struct Manager {
     vk_data: vk::VkBuffer,
@@ -135,10 +138,8 @@ impl Manager {
     fn create(&mut self) {
         let mut buffer_info = vk::VkBufferCreateInfo::default();
         buffer_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_info.size = 
-            (self.vertices_indices.size + self.uniforms.size) as vk::VkDeviceSize;
-        buffer_info.usage = 
-            vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT as u32 |
+        buffer_info.size = (self.vertices_indices.size + self.uniforms.size) as vk::VkDeviceSize;
+        buffer_info.usage = vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT as u32 |
             vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT as u32 |
             vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT as u32 |
             vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT as u32;
@@ -159,7 +160,8 @@ impl Manager {
         let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
         mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         mem_alloc.allocationSize = mem_reqs.size;
-        mem_alloc.memoryTypeIndex = self.uniforms.logical_device
+        mem_alloc.memoryTypeIndex = self.uniforms
+            .logical_device
             .physical_device
             .get_memory_type_index(
                 mem_reqs.memoryTypeBits,
@@ -218,7 +220,8 @@ impl Manager {
     }
 
     pub fn push_u(&self, cmd: &mut CmdBuff) {
-        self.uniforms.push(cmd, self.vertices_indices.size, self.vk_data);
+        self.uniforms
+            .push(cmd, self.vertices_indices.size, self.vk_data);
     }
 
     pub fn get_id(&self) -> u64 {

@@ -13,7 +13,7 @@ use super::instance::Instance;
 use super::surface::Surface;
 use super::device::physical::Physical as PhysicalDevice;
 use super::device::logical::Logical as LogicalDevice;
-use super::swapchain::{Swapchain};
+use super::swapchain::Swapchain;
 use super::image::view::View as ImageView;
 use super::render_pass::RenderPass;
 use super::framebuffer::Framebuffer;

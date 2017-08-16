@@ -53,11 +53,19 @@ impl Buffer {
     }
 
     pub fn copy_buffer(
-        &mut self, src: vk::VkBuffer, dst: vk::VkBuffer, 
-        regions: &Vec<vk::VkBufferCopy>) {
+        &mut self,
+        src: vk::VkBuffer,
+        dst: vk::VkBuffer,
+        regions: &Vec<vk::VkBufferCopy>,
+    ) {
         unsafe {
             vk::vkCmdCopyBuffer(
-                self.vk_data, src, dst, regions.len() as u32, regions.as_ptr());
+                self.vk_data,
+                src,
+                dst,
+                regions.len() as u32,
+                regions.as_ptr(),
+            );
         }
     }
 

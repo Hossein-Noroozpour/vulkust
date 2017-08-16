@@ -6,7 +6,7 @@ use super::super::super::core::application::ApplicationTrait;
 use super::super::super::core::asset::manager::Manager as AssetManager;
 use super::super::super::render::engine::{EngineTrait, RenderEngine};
 use super::super::super::util::string::string_to_cwstring;
-use super::super::os::{ApplicationTrait as OsApplicationTrait};
+use super::super::os::ApplicationTrait as OsApplicationTrait;
 use super::super::file::File;
 
 use std::ptr::{null, null_mut};
@@ -99,9 +99,7 @@ where
         #[cfg(not(feature = "fullscreen"))]
         let dwex_style = winapi::winuser::WS_EX_APPWINDOW | winapi::winuser::WS_EX_WINDOWEDGE;
         #[cfg(not(feature = "fullscreen"))]
-        let dw_style =
-            winapi::winuser::WS_OVERLAPPEDWINDOW |
-            winapi::winuser::WS_CLIPSIBLINGS |
+        let dw_style = winapi::winuser::WS_OVERLAPPEDWINDOW | winapi::winuser::WS_CLIPSIBLINGS |
             winapi::winuser::WS_CLIPCHILDREN;
         #[cfg(feature = "fullscreen")]
         let dwex_style = winapi::winuser::WS_EX_APPWINDOW;

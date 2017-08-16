@@ -2,11 +2,12 @@ use std::sync::Arc;
 use std::cell::RefCell;
 use super::super::super::audio::manager::Manager as AudioManager;
 use super::super::super::audio::Audio;
+use super::super::super::core::application::ApplicationTrait;
 use super::super::super::render::buffer::Manager as BufferManager;
 use super::super::super::render::camera::manager::Manager as CameraManager;
 use super::super::super::render::camera::Camera;
-use super::super::super::render::command::pool::Pool as CmdPool;
 use super::super::super::render::device::logical::Logical as LogicalDevice;
+use super::super::super::render::engine::RenderEngine;
 use super::super::super::render::light::manager::Manager as LightManager;
 use super::super::super::render::light::Light;
 use super::super::super::render::model::manager::Manager as ModelManager;
@@ -77,33 +78,27 @@ impl Manager {
     pub fn get_model(
         &mut self,
         id: u64,
-        buffer_manager: &Arc<RefCell<BufferManager>>
+        buffer_manager: &mut BufferManager,
     ) -> Arc<RefCell<Model>> {
         let shader_manager = &mut self.shader_manager;
         let texture_manager = &mut self.texture_manager;
         self.model_manager.get(
-            id, &mut self.file, buffer_manager, texture_manager, shader_manager)
+            id,
+            &mut self.file,
+            buffer_manager,
+            texture_manager,
+            shader_manager,
+        )
     }
 
-    pub fn get_scene(
-        &mut self, id: u64, screen_ratio: f32,
-        transfer_cmd_pool: Arc<CmdPool>) -> Arc<RefCell<Scene>> {
-        let shader_manager = &mut self.shader_manager;
-        let camera_manager = &mut self.camera_manager;
-        let audio_manager = &mut self.audio_manager;
-        let light_manager = &mut self.light_manager;
-        let texture_manager = &mut self.texture_manager;
-        let model_manager = &mut self.model_manager;
-        self.scene_manager.get(
-            id, &mut self.file,
-            camera_manager,
-            audio_manager,
-            light_manager,
-            model_manager,
-            shader_manager,
-            texture_manager,
-            screen_ratio,
-            transfer_cmd_pool,
-        )
+    pub fn get_scene<CoreApp>(
+        &mut self,
+        id: u64,
+        engine: &mut RenderEngine<CoreApp>,
+    ) -> Arc<RefCell<Scene>>
+    where
+        CoreApp: ApplicationTrait,
+    {
+        self.scene_manager.get(id, &mut self.file, engine)
     }
 }
