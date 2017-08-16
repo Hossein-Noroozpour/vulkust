@@ -10,8 +10,9 @@ use super::buffer::Manager as BufferManager;
 use super::camera::Camera;
 use super::engine::RenderEngine;
 use super::light::Light;
-use super::material::White;
+use super::material::{Material, White};
 use super::model::Model;
+use super::pipeline::Pipeline;
 
 pub trait Scene {
     fn get_current_camera(&self) -> &Arc<RefCell<Camera<f32>>>;
@@ -24,7 +25,8 @@ pub struct BasicScene {
     pub audios: Vec<Arc<RefCell<Audio>>>,
     pub lights: Vec<Arc<RefCell<Light>>>,
     pub models: Vec<Arc<RefCell<Model>>>,
-    pub occ_material: White,
+    pub occ_material: Arc<RefCell<Material>>,
+    pub occ_pipeline: Pipeline,
 }
 
 impl BasicScene {
@@ -59,7 +61,8 @@ impl BasicScene {
         for i in 0..models_count {
             models_ids[i] = file.read_id();
         }
-        let occ_material = White::new(file, device.clone(), &mut asset_manager.shader_manager);
+        let occ_material: Arc<RefCell<Material>> = Arc::new(RefCell::new(White::new(
+            file, device.clone(), &mut asset_manager.shader_manager)));
         let mut cameras = Vec::new();
         for i in cameras_ids {
             cameras.push(asset_manager.get_camera(i, window_ratio));
@@ -76,6 +79,8 @@ impl BasicScene {
         for i in models_ids {
             models.push(asset_manager.get_model(i, &mut buffer_manager));
         }
+        let _ = device;
+        let occ_pipeline = Pipeline::new(&engine.os_app.render_engine, &occ_material);
         BasicScene {
             buffer_manager: buffer_manager,
             current_camera: 0,
@@ -84,6 +89,7 @@ impl BasicScene {
             lights: lights,
             models: models,
             occ_material: occ_material,
+            occ_pipeline: occ_pipeline,
         }
     }
 }

@@ -11,4 +11,5 @@ pub mod buffer;
 pub mod command;
 pub mod engine;
 pub mod mesh;
+pub mod pipeline;
 pub mod vertex;
