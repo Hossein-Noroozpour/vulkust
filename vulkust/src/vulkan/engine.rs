@@ -11,6 +11,7 @@ use super::super::core::event::Event;
 use super::super::system::os::OsApplication;
 use super::instance::Instance;
 use super::surface::Surface;
+use super::descriptor::Pool as DescriptorPool;
 use super::device::physical::Physical as PhysicalDevice;
 use super::device::logical::Logical as LogicalDevice;
 use super::swapchain::Swapchain;
@@ -23,7 +24,6 @@ use super::pipeline::cache::Cache as PipelineCache;
 // use super::buffer::Buffer;
 // use super::buffer::uniform::Uniform;
 // use super::pipeline::pipeline::Pipeline;
-// use super::descriptor::pool::Pool as DescriptorPool;
 // use super::descriptor::set::Set as DescriptorSet;
 // use super::command::buffer::Buffer as CmdBuffer;
 // use super::synchronizer::semaphore::Semaphore;
@@ -55,12 +55,12 @@ where
     pub transfer_cmd_pool: Option<Arc<CmdPool>>,
     pub pipeline_layout: Option<Arc<Layout>>,
     pub pipeline_cache: Option<Arc<PipelineCache>>,
+    pub descriptor_pool: Option<Arc<DescriptorPool>>,
     pub basic_engine: Option<BasicEngine>,
     // for triangle
     // pub mesh_buff: Option<Arc<Buffer>>,
     // pub uniform: Option<Arc<Uniform>>,
     // pub pipeline: Option<Arc<Pipeline>>,
-    // pub descriptor_pool: Option<Arc<DescriptorPool>>,
     // pub descriptor_set: Option<Arc<DescriptorSet>>,
     // pub draw_commands: Vec<CmdBuffer>,
     // pub present_complete_semaphore: Option<Semaphore>,
@@ -88,11 +88,11 @@ where
             transfer_cmd_pool: None,
             pipeline_layout: None,
             pipeline_cache: None,
+            descriptor_pool: None,
             basic_engine: None,
             // mesh_buff: None,
             // uniform: None,
             // pipeline: None,
-            // descriptor_pool: None,
             // descriptor_set: None,
             // draw_commands: Vec::new(),
             // present_complete_semaphore: None,
@@ -136,10 +136,10 @@ where
         self.pipeline_layout = Some(pipeline_layout);
         let pipeline_cache = Arc::new(PipelineCache::new(logical_device.clone()));
         self.pipeline_cache = Some(pipeline_cache);
+        self.descriptor_pool = Some(Arc::new(DescriptorPool::new(logical_device.clone())));
         // TODO
         self.basic_engine = Some(BasicEngine::new(self.os_app));
 
-        // let descriptor_pool = Arc::new(DescriptorPool::new(logical_device.clone()));
         // let descriptor_set = Arc::new(DescriptorSet::new(
         //     descriptor_pool.clone(),
         //     pipeline_layout.clone(),
@@ -147,14 +147,7 @@ where
         // ));
         // let present_complete_semaphore = Semaphore::new(logical_device.clone());
         // let render_complete_semaphore = Semaphore::new(logical_device.clone());
-        // self.mesh_buff = Some(mesh_buff);
-        // self.uniform = Some(uniform);
-        // self.pipeline = Some(pipeline);
-        // self.descriptor_pool = Some(descriptor_pool);
-        // self.descriptor_set = Some(descriptor_set);
         // self.initialize_draw_commands();
-        // self.present_complete_semaphore = Some(present_complete_semaphore);
-        // self.render_complete_semaphore = Some(render_complete_semaphore);
         // for _ in 0..self.framebuffers.len() {
         //     self.wait_fences.push(Fence::new_signaled(
         //         self.logical_device.as_ref().unwrap().clone(),
@@ -352,12 +345,12 @@ where
         // self.present_complete_semaphore = None;
         // self.draw_commands.clear();
         // self.descriptor_set = None;
-        // self.descriptor_pool = None;
         // self.pipeline = None;
         // self.uniform = None;
         // self.mesh_buff = None;
         self.basic_engine = None;
         // TODO
+        self.descriptor_pool = None;
         self.pipeline_cache = None;
         self.pipeline_layout = None;
         self.graphic_cmd_pool = None;

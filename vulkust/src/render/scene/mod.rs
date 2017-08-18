@@ -92,6 +92,10 @@ impl BasicScene {
             occ_pipeline: occ_pipeline,
         }
     }
+
+    pub fn render(&self) {
+        // TODO
+    }
 }
 
 impl Scene for BasicScene {
