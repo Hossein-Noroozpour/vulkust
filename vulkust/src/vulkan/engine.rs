@@ -1,14 +1,9 @@
-// use std::ptr::{null, null_mut};
 use std::sync::Arc;
-// use std::mem::size_of;
-// use super::super::system::vulkan as vk;
-// use super::super::math::matrix::Mat4x4;
 use super::super::render::engine::{Basic as BasicEngine, EngineTrait};
-// use super::super::render::camera::Camera;
-// use super::super::render::camera::perspective::Perspective;
 use super::super::core::application::ApplicationTrait;
 use super::super::core::event::Event;
 use super::super::system::os::OsApplication;
+use super::super::system::vulkan as vk;
 use super::instance::Instance;
 use super::surface::Surface;
 use super::descriptor::Pool as DescriptorPool;
@@ -17,25 +12,14 @@ use super::device::logical::Logical as LogicalDevice;
 use super::swapchain::Swapchain;
 use super::image::view::View as ImageView;
 use super::render_pass::RenderPass;
+use super::fence::Fence;
 use super::framebuffer::Framebuffer;
+use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::Pool as CmdPool;
 use super::pipeline::layout::Layout;
 use super::pipeline::cache::Cache as PipelineCache;
-// use super::buffer::Buffer;
-// use super::buffer::uniform::Uniform;
-// use super::pipeline::pipeline::Pipeline;
-// use super::descriptor::set::Set as DescriptorSet;
-// use super::command::buffer::Buffer as CmdBuffer;
-// use super::synchronizer::semaphore::Semaphore;
-// use super::fence::Fence;
+use super::synchronizer::semaphore::Semaphore;
 use std::mem::transmute;
-
-// #[repr(C)]
-// struct UniformData {
-//     pub projection: Mat4x4<f32>,
-//     pub view: Mat4x4<f32>,
-//     pub model: Mat4x4<f32>,
-// }
 
 pub struct Engine<CoreApp>
 where
@@ -56,16 +40,11 @@ where
     pub pipeline_layout: Option<Arc<Layout>>,
     pub pipeline_cache: Option<Arc<PipelineCache>>,
     pub descriptor_pool: Option<Arc<DescriptorPool>>,
+    pub draw_commands: Vec<CmdBuffer>,
+    pub present_complete_semaphore: Option<Semaphore>,
+    pub render_complete_semaphore: Option<Semaphore>,
+    pub wait_fences: Vec<Fence>,
     pub basic_engine: Option<BasicEngine>,
-    // for triangle
-    // pub mesh_buff: Option<Arc<Buffer>>,
-    // pub uniform: Option<Arc<Uniform>>,
-    // pub pipeline: Option<Arc<Pipeline>>,
-    // pub descriptor_set: Option<Arc<DescriptorSet>>,
-    // pub draw_commands: Vec<CmdBuffer>,
-    // pub present_complete_semaphore: Option<Semaphore>,
-    // pub render_complete_semaphore: Option<Semaphore>,
-    // pub wait_fences: Vec<Fence>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp>
@@ -89,15 +68,11 @@ where
             pipeline_layout: None,
             pipeline_cache: None,
             descriptor_pool: None,
+            draw_commands: Vec::new(),
+            present_complete_semaphore: None,
+            render_complete_semaphore: None,
+            wait_fences: Vec::new(),
             basic_engine: None,
-            // mesh_buff: None,
-            // uniform: None,
-            // pipeline: None,
-            // descriptor_set: None,
-            // draw_commands: Vec::new(),
-            // present_complete_semaphore: None,
-            // render_complete_semaphore: None,
-            // wait_fences: Vec::new(),
         }
     }
 
@@ -137,22 +112,16 @@ where
         let pipeline_cache = Arc::new(PipelineCache::new(logical_device.clone()));
         self.pipeline_cache = Some(pipeline_cache);
         self.descriptor_pool = Some(Arc::new(DescriptorPool::new(logical_device.clone())));
+        self.present_complete_semaphore = Some(Semaphore::new(logical_device.clone()));
+        self.render_complete_semaphore = Some(Semaphore::new(logical_device.clone()));
+        for _ in 0..self.framebuffers.len() {
+            self.wait_fences.push(Fence::new_signaled(
+                self.logical_device.as_ref().unwrap().clone(),
+            ));
+        }
         // TODO
         self.basic_engine = Some(BasicEngine::new(self.os_app));
-
-        // let descriptor_set = Arc::new(DescriptorSet::new(
-        //     descriptor_pool.clone(),
-        //     pipeline_layout.clone(),
-        //     uniform.clone(),
-        // ));
-        // let present_complete_semaphore = Semaphore::new(logical_device.clone());
-        // let render_complete_semaphore = Semaphore::new(logical_device.clone());
-        // self.initialize_draw_commands();
-        // for _ in 0..self.framebuffers.len() {
-        //     self.wait_fences.push(Fence::new_signaled(
-        //         self.logical_device.as_ref().unwrap().clone(),
-        //     ));
-        // }
+        self.record();
     }
 
     fn on_event(&mut self, e: Event) {
@@ -253,106 +222,101 @@ impl<CoreApp> Engine<CoreApp>
 where
     CoreApp: ApplicationTrait,
 {
-    // fn initialize_draw_commands(&mut self) {
-    //     let mut clear_values = [vk::VkClearValue::default(); 2];
-    //     clear_values[0].data = [0.4, 0.4, 0.4, 1.0];
-    //     clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
-    //     let surface_caps = self.physical_device
-    //         .as_ref()
-    //         .unwrap()
-    //         .get_surface_capabilities();
-    //     let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
-    //     render_pass_begin_info.sType =
-    //         vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    //     render_pass_begin_info.renderPass = self.render_pass.as_ref().unwrap().vk_data;
-    //     render_pass_begin_info.renderArea.offset.x = 0;
-    //     render_pass_begin_info.renderArea.offset.y = 0;
-    //     render_pass_begin_info.renderArea.extent.width = surface_caps.currentExtent.width;
-    //     render_pass_begin_info.renderArea.extent.height = surface_caps.currentExtent.height;
-    //     render_pass_begin_info.clearValueCount = 2;
-    //     render_pass_begin_info.pClearValues = clear_values.as_ptr();
-    //     let mut draw_commands = Vec::new();
-    //     let images_count = self.framebuffers.len();
-    //     for i in 0..images_count {
-    //         render_pass_begin_info.framebuffer = self.framebuffers[i].vk_data;
-    //         let draw_command = CmdBuffer::new(self.graphic_cmd_pool.as_ref().unwrap().clone());
-    //         draw_command.begin_render_pass_with_info(render_pass_begin_info);
-    //         let mut viewport = vk::VkViewport::default();
-    //         viewport.x = 0.0;
-    //         viewport.y = 0.0;
-    //         viewport.height = surface_caps.currentExtent.height as f32;
-    //         viewport.width = surface_caps.currentExtent.width as f32;
-    //         viewport.minDepth = 0.0;
-    //         viewport.maxDepth = 1.0;
-    //         draw_command.set_viewport(viewport);
-    //         let mut scissor = vk::VkRect2D::default();
-    //         scissor.extent.width = surface_caps.currentExtent.width;
-    //         scissor.extent.height = surface_caps.currentExtent.height;
-    //         scissor.offset.x = 0;
-    //         scissor.offset.y = 0;
-    //         draw_command.set_scissor(scissor);
-    //         unsafe {
-    //             // vk::vkCmdBindDescriptorSets(
-    //             //     draw_command.vk_data,
-    //             //     vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-    //             //     self.pipeline_layout.as_ref().unwrap().vk_data,
-    //             //     0,
-    //             //     1,
-    //             //     &(self.descriptor_set.as_ref().unwrap().vk_data),
-    //             //     0,
-    //             //     null(),
-    //             // );
-    //             // vk::vkCmdBindPipeline(
-    //             //     draw_command.vk_data,
-    //             //     vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-    //             //     self.pipeline.as_ref().unwrap().vk_data,
-    //             // );
-    //             // let offsets = 0 as vk::VkDeviceSize;
-    //             // vk::vkCmdBindVertexBuffers(
-    //             //     draw_command.vk_data,
-    //             //     0,
-    //             //     1,
-    //             //     &(self.mesh_buff.as_ref().unwrap().vertices_buffer),
-    //             //     &offsets,
-    //             // );
-    //             // vk::vkCmdBindIndexBuffer(
-    //             //     draw_command.vk_data,
-    //             //     self.mesh_buff.as_ref().unwrap().indices_buffer,
-    //             //     0,
-    //             //     vk::VkIndexType::VK_INDEX_TYPE_UINT32,
-    //             // );
-    //             // vk::vkCmdDrawIndexed(
-    //             //     draw_command.vk_data,
-    //             //     self.mesh_buff.as_ref().unwrap().indices_count,
-    //             //     1,
-    //             //     0,
-    //             //     0,
-    //             //     1,
-    //             // );
-
-    //             vk::vkCmdEndRenderPass(draw_command.vk_data);
-    //         }
-    //         vulkan_check!(vk::vkEndCommandBuffer(draw_command.vk_data));
-    //         draw_commands.push(draw_command);
-    //     }
-    //     // self.draw_commands = draw_commands;
-    // }
+    fn record(&mut self) {
+        let mut clear_values = [vk::VkClearValue::default(); 2];
+        clear_values[0].data = [0.4, 0.4, 0.4, 1.0];
+        clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
+        let surface_caps = self.physical_device
+            .as_ref()
+            .unwrap()
+            .get_surface_capabilities();
+        let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
+        render_pass_begin_info.sType =
+            vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_begin_info.renderPass = self.render_pass.as_ref().unwrap().vk_data;
+        render_pass_begin_info.renderArea.offset.x = 0;
+        render_pass_begin_info.renderArea.offset.y = 0;
+        render_pass_begin_info.renderArea.extent.width = surface_caps.currentExtent.width;
+        render_pass_begin_info.renderArea.extent.height = surface_caps.currentExtent.height;
+        render_pass_begin_info.clearValueCount = clear_values.len() as u32;
+        render_pass_begin_info.pClearValues = clear_values.as_ptr();
+        let images_count = self.framebuffers.len();
+        for i in 0..images_count {
+            render_pass_begin_info.framebuffer = self.framebuffers[i].vk_data;
+            let mut draw_command = CmdBuffer::new(self.graphic_cmd_pool.as_ref().unwrap().clone());
+            draw_command.begin_render_pass_with_info(render_pass_begin_info);
+            let mut viewport = vk::VkViewport::default();
+            viewport.x = 0.0;
+            viewport.y = 0.0;
+            viewport.height = surface_caps.currentExtent.height as f32;
+            viewport.width = surface_caps.currentExtent.width as f32;
+            viewport.minDepth = 0.0;
+            viewport.maxDepth = 1.0;
+            draw_command.set_viewport(viewport);
+            let mut scissor = vk::VkRect2D::default();
+            scissor.extent.width = surface_caps.currentExtent.width;
+            scissor.extent.height = surface_caps.currentExtent.height;
+            scissor.offset.x = 0;
+            scissor.offset.y = 0;
+            draw_command.set_scissor(scissor);
+            self.basic_engine.as_mut().unwrap().record(&mut draw_command, i);
+            // unsafe {
+                // vk::vkCmdBindDescriptorSets(
+                //     draw_command.vk_data,
+                //     vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                //     self.pipeline_layout.as_ref().unwrap().vk_data,
+                //     0,
+                //     1,
+                //     &(self.descriptor_set.as_ref().unwrap().vk_data),
+                //     0,
+                //     null(),
+                // );
+                // vk::vkCmdBindPipeline(
+                //     draw_command.vk_data,
+                //     vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                //     self.pipeline.as_ref().unwrap().vk_data,
+                // );
+                // let offsets = 0 as vk::VkDeviceSize;
+                // vk::vkCmdBindVertexBuffers(
+                //     draw_command.vk_data,
+                //     0,
+                //     1,
+                //     &(self.mesh_buff.as_ref().unwrap().vertices_buffer),
+                //     &offsets,
+                // );
+                // vk::vkCmdBindIndexBuffer(
+                //     draw_command.vk_data,
+                //     self.mesh_buff.as_ref().unwrap().indices_buffer,
+                //     0,
+                //     vk::VkIndexType::VK_INDEX_TYPE_UINT32,
+                // );
+                // vk::vkCmdDrawIndexed(
+                //     draw_command.vk_data,
+                //     self.mesh_buff.as_ref().unwrap().indices_count,
+                //     1,
+                //     0,
+                //     0,
+                //     1,
+                // );
+            // }
+            draw_command.end_render_pass();
+            draw_command.end();
+            self.draw_commands.push(draw_command);
+        }
+    }
 
     fn clean(&mut self) {
         self.logical_device.as_ref().unwrap().wait_idle();
-        // self.wait_fences.clear();
-        // self.render_complete_semaphore = None;
-        // self.present_complete_semaphore = None;
-        // self.draw_commands.clear();
-        // self.descriptor_set = None;
-        // self.pipeline = None;
-        // self.uniform = None;
-        // self.mesh_buff = None;
         self.basic_engine = None;
         // TODO
+        self.wait_fences.clear();
+        self.render_complete_semaphore = None;
+        self.present_complete_semaphore = None;
+        self.draw_commands.clear();
         self.descriptor_pool = None;
         self.pipeline_cache = None;
         self.pipeline_layout = None;
+        self.transfer_cmd_pool = None;
         self.graphic_cmd_pool = None;
         self.framebuffers.clear();
         self.render_pass = None;

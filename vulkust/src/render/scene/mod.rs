@@ -4,9 +4,11 @@ use std::cell::RefCell;
 use std::sync::Arc;
 use super::super::audio::Audio;
 use super::super::core::application::ApplicationTrait;
+use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::super::system::os::ApplicationTrait as OsApp;
 use super::buffer::Manager as BufferManager;
+use super::command::buffer::Buffer as CmdBuff;
 use super::camera::Camera;
 use super::engine::RenderEngine;
 use super::light::Light;
@@ -14,8 +16,24 @@ use super::material::{Material, White};
 use super::model::Model;
 use super::pipeline::Pipeline;
 
+pub struct UniformData {
+    pub sun_dir: Vec3<f32>,
+    pub eye_loc: Vec3<f32>,
+}
+
+impl UniformData {
+    pub fn new() -> Self {
+        UniformData {
+            sun_dir: Vec3::new(),
+            eye_loc: Vec3::new(),
+        }
+    }
+}
+
 pub trait Scene {
     fn get_current_camera(&self) -> &Arc<RefCell<Camera<f32>>>;
+    fn render(&mut self);
+    fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize);
 }
 
 pub struct BasicScene {
@@ -81,6 +99,7 @@ impl BasicScene {
         }
         let _ = device;
         let occ_pipeline = Pipeline::new(&engine.os_app.render_engine, &occ_material);
+        loge!("push data in buffers");
         BasicScene {
             buffer_manager: buffer_manager,
             current_camera: 0,
@@ -91,10 +110,6 @@ impl BasicScene {
             occ_material: occ_material,
             occ_pipeline: occ_pipeline,
         }
-    }
-
-    pub fn render(&self) {
-        // TODO
     }
 }
 
@@ -107,5 +122,30 @@ impl Scene for BasicScene {
             }
         }
         return &self.cameras[self.current_camera];
+    }
+
+    fn render(&mut self) {
+        // TODO: step 1
+        // TODO: step 2
+        let camera = self.cameras[0].borrow();
+        let vp = camera.get_view_projection();
+        for model in &mut self.models {
+            model.borrow_mut().compute_mvp(vp);
+        }
+        ////// Temporary @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+        ////// Temporary @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        // TODO: step 4
+        // TODO: step 5
+        // TODO: step 6
+        // TODO: step 7
+        // TODO: step 8
+    }
+
+    fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize) {
+        // material binding (descriptor, pipeline) 
+        // model mesh binding (vertex, index) and draw index
     }
 }

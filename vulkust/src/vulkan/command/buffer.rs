@@ -32,7 +32,7 @@ impl Buffer {
             vk_data: vk_data,
         }
     }
-    pub fn begin_render_pass_with_info(&self, render_pass_begin_info: vk::VkRenderPassBeginInfo) {
+    pub fn begin_render_pass_with_info(&mut self, render_pass_begin_info: vk::VkRenderPassBeginInfo) {
         unsafe {
             vk::vkCmdBeginRenderPass(
                 self.vk_data,
@@ -41,12 +41,12 @@ impl Buffer {
             );
         }
     }
-    pub fn set_viewport(&self, viewport: vk::VkViewport) {
+    pub fn set_viewport(&mut self, viewport: vk::VkViewport) {
         unsafe {
             vk::vkCmdSetViewport(self.vk_data, 0, 1, &viewport);
         }
     }
-    pub fn set_scissor(&self, rec: vk::VkRect2D) {
+    pub fn set_scissor(&mut self, rec: vk::VkRect2D) {
         unsafe {
             vk::vkCmdSetScissor(self.vk_data, 0, 1, &rec);
         }
@@ -69,7 +69,7 @@ impl Buffer {
         }
     }
 
-    pub fn flush(&self) {;
+    pub fn flush(&mut self) {;
         let fence = Fence::new(self.pool.logical_device.clone());
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
         let mut submit_info = vk::VkSubmitInfo::default();
@@ -83,6 +83,16 @@ impl Buffer {
             fence.vk_data,
         ));
         fence.wait();
+    }
+
+    pub fn end_render_pass(&mut self) {
+        unsafe {
+            vk::vkCmdEndRenderPass(self.vk_data);
+        }
+    }
+
+    pub fn end(&mut self) {
+        vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
     }
 }
 

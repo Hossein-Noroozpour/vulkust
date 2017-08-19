@@ -5,14 +5,27 @@ use std::cell::RefCell;
 use super::super::math::matrix::Mat4x4;
 use super::super::system::file::File;
 use super::buffer::Manager as BufferManager;
+use super::command::buffer::Buffer as CmdBuff;
+use super::material::Material;
 use super::shader::manager::Manager as ShaderManager;
 use super::texture::manager::Manager as TextureManager;
 use super::mesh::{Mesh, OccMesh};
 use self::manager::Manager;
 
-pub trait Model {}
+pub enum Dynamism {
+    Dynamic,
+    Static,
+}
+
+pub trait Model {
+    fn compute_mvp(&mut self, vp: &Mat4x4<f32>);
+    fn static_mvp(&mut self, vp: &Mat4x4<f32>, parent_mvp: &Mat4x4<f32>);
+    fn get_dynamism(&self) -> Dynamism;
+    fn occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize);
+}
 
 pub struct StaticModel {
+    pub mvp: Mat4x4<f32>,
     pub draw_mesh: Mesh,
     pub children: Vec<Box<Model>>,
 }
@@ -45,17 +58,43 @@ impl StaticModel {
             ));
         }
         StaticModel {
+            mvp: Mat4x4::ident(),
             draw_mesh: mesh,
             children: children,
         }
     }
 }
 
-impl Model for StaticModel {}
+impl Model for StaticModel {
+    fn compute_mvp(&mut self, _vp: &Mat4x4<f32>) {
+        logf!("This function must not be called because the static model mvp depends on its parent");
+    }
+
+    fn static_mvp(&mut self, vp: &Mat4x4<f32>, parent_mvp: &Mat4x4<f32>) {
+        self.mvp = *parent_mvp;
+        for m in &mut self.children {
+            match m.get_dynamism() {
+                Dynamism::Dynamic => m.compute_mvp(vp),
+                Dynamism::Static => m.static_mvp(vp, parent_mvp),
+            }
+        }
+    }
+
+    fn get_dynamism(&self) -> Dynamism {
+        Dynamism::Static
+    }
+
+    fn occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize) {
+        for m in &mut self.children {
+            m.occ(cmd_buff, mat, frame_index);
+        }
+    }
+}
 
 pub struct RootStaticModel {
     pub occ_mesh: OccMesh,
     pub children: Vec<Box<Model>>,
+    pub mvp: Mat4x4<f32>,
 }
 
 impl RootStaticModel {
@@ -81,13 +120,40 @@ impl RootStaticModel {
         RootStaticModel {
             occ_mesh: mesh,
             children: children,
+            mvp: Mat4x4::ident(),
         }
     }
 }
 
-impl Model for RootStaticModel {}
+impl Model for RootStaticModel {
+    fn compute_mvp(&mut self, vp: &Mat4x4<f32>) {
+        self.mvp = *vp;
+        for m in &mut self.children {
+            match m.get_dynamism() {
+                Dynamism::Dynamic => m.compute_mvp(vp),
+                Dynamism::Static => m.static_mvp(vp, &self.mvp)
+            }
+        }
+    }
+
+    fn static_mvp(&mut self, _vp: &Mat4x4<f32>, _parent_mvp: &Mat4x4<f32>) {
+        logf!("Static root model mvp does not have parent.");
+    }
+
+    fn get_dynamism(&self) -> Dynamism {
+        Dynamism::Static
+    }
+
+    fn occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize) {
+        
+        for m in &mut self.children {
+            m.occ(cmd_buff, mat, frame_index);
+        }
+    }
+}
 
 pub struct DynamicModel {
+    pub mvp: Mat4x4<f32>,
     pub transform: Mat4x4<f32>,
     pub occ_mesh: OccMesh,
     pub children: Vec<Box<Model>>,
@@ -115,6 +181,7 @@ impl DynamicModel {
             ));
         }
         DynamicModel {
+            mvp: Mat4x4::ident(),
             transform: m,
             occ_mesh: mesh,
             children: children,
@@ -122,9 +189,28 @@ impl DynamicModel {
     }
 }
 
-impl Model for DynamicModel {}
+impl Model for DynamicModel {
+    fn compute_mvp(&mut self, vp: &Mat4x4<f32>) {
+        self.mvp = vp * &self.transform;
+        for m in &mut self.children {
+            match m.get_dynamism() {
+                Dynamism::Dynamic => m.compute_mvp(vp),
+                Dynamism::Static => m.static_mvp(vp, &self.mvp)
+            }
+        }
+    }
+
+    fn static_mvp(&mut self, _vp: &Mat4x4<f32>, _parent_mvp: &Mat4x4<f32>) {
+        logf!("Dynamic model mvp does not depend on its parent.");
+    }
+
+    fn get_dynamism(&self) -> Dynamism {
+        Dynamism::Dynamic
+    }
+}
 
 pub struct CopyModel {
+    pub mvp: Mat4x4<f32>,
     pub t: Mat4x4<f32>,
     pub sm: Arc<RefCell<Model>>,
 }
@@ -142,11 +228,28 @@ impl CopyModel {
         let offset = file.tell();
         let sm = model_manager.get(id, file, buffer_manager, texture_manager, shader_manager);
         file.goto(offset);
-        CopyModel { t: t, sm: sm }
+        CopyModel {
+            mvp: Mat4x4::ident(),
+            t: t, 
+            sm: sm 
+        }
     }
 }
 
-impl Model for CopyModel {}
+impl Model for CopyModel {
+    fn compute_mvp(&mut self, vp: &Mat4x4<f32>) {
+        self.mvp = vp * &self.t;
+        self.sm.borrow_mut().static_mvp(vp, &self.mvp);
+    }
+
+    fn static_mvp(&mut self, _vp: &Mat4x4<f32>, _parent_mvp: &Mat4x4<f32>) {
+        logf!("Copy model mvp does not depend on its parent.");
+    }
+
+    fn get_dynamism(&self) -> Dynamism {
+        Dynamism::Dynamic
+    }
+}
 
 pub fn read_model(
     file: &mut File,

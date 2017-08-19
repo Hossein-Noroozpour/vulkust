@@ -11,6 +11,7 @@ use super::super::vulkan::engine::Engine;
 use super::super::core::application::ApplicationTrait;
 use super::super::core::event::Event;
 use super::super::system::os::OsApplication;
+use super::command::buffer::Buffer as CmdBuff;
 use super::scene::Scene;
 
 pub type RenderEngine<CoreApp> = Engine<CoreApp>;
@@ -51,5 +52,13 @@ impl Basic {
 
     pub fn get_current_scene(&self) -> Ref<Scene + 'static> {
         self.current_scene.borrow()
+    }
+
+    pub fn update(&mut self) {
+        self.current_scene.borrow_mut().render();
+    }
+
+    pub fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize) {
+        self.current_scene.borrow_mut().record(cmd_buff, frame_index);
     }
 }
