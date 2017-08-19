@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::cell::RefCell;
 use std::mem::transmute;
+use super::super::math::matrix::Mat4x4;
 use super::super::system::file::File;
 use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
@@ -29,7 +30,7 @@ impl Mesh {
     ) -> Self {
         #[cfg(mesh_debug)]
         logi!("before material read {}", file.tell());
-        let material = read_material(file, logical_device, shader_manager, texture_manager);
+        let material = read_material(file, logical_device, shader_manager, texture_manager, buffer_manager);
         #[cfg(mesh_debug)]
         logi!("after material read {}", file.tell());
         let vertex_size = material.borrow().get_vertex_size();
@@ -39,12 +40,12 @@ impl Mesh {
         let vertices_size = (vertex_size * vertices_count) as usize;
         let mut data = file.read_bytes(vertices_size);
         let vertices_range =
-            buffer_manager.write_vi(unsafe { transmute(data.as_ptr()) }, vertices_size);
+            buffer_manager.add_vi(unsafe { transmute(data.as_ptr()) }, vertices_size);
         let indices_count = file.read_count();
         let indices_size = (INDEX_ELEMENTS_SIZE * indices_count) as usize;
         data = file.read_bytes(indices_size as usize);
         let indices_range =
-            buffer_manager.write_vi(unsafe { transmute(data.as_ptr()) }, indices_size);
+            buffer_manager.add_vi(unsafe { transmute(data.as_ptr()) }, indices_size);
         Mesh {
             material: material,
             vertex_size: vertex_size,
@@ -55,10 +56,16 @@ impl Mesh {
     }
 }
 
+#[derive(Default)]
+struct OccUniform {
+    pub mvp: Mat4x4<f32>,
+}
+
 pub struct OccMesh {
     pub vertices_range: (usize, usize),
     pub indices_count: u64,
     pub indices_range: (usize, usize),
+    pub uniform_ranges: Vec<(usize, usize)>,
 }
 
 impl OccMesh {
@@ -69,16 +76,18 @@ impl OccMesh {
         logi!("occlusion mesh with vertices size {}", vertices_size);
         let mut data = file.read_bytes(vertices_size);
         let vertices_range =
-            buffer_manager.write_vi(unsafe { transmute(data.as_ptr()) }, vertices_size);
+            buffer_manager.add_vi(unsafe { transmute(data.as_ptr()) }, vertices_size);
         let indices_count = file.read_count();
         let indices_size = (INDEX_ELEMENTS_SIZE * indices_count) as usize;
         data = file.read_bytes(indices_size);
         let indices_range =
-            buffer_manager.write_vi(unsafe { transmute(data.as_ptr()) }, indices_size);
+            buffer_manager.add_vi(unsafe { transmute(data.as_ptr()) }, indices_size);
+        let uni = buffer_manager.add_u(&OccUniform::default());
         OccMesh {
             vertices_range: vertices_range,
             indices_count: indices_count,
             indices_range: indices_range,
+            uniform_ranges: uni,
         }
     }
 }

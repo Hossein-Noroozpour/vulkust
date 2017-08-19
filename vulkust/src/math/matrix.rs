@@ -45,7 +45,7 @@ pub struct SMat4x4F(
 
 // column major matrix
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Mat4x4<E>
 where
     E: Number,

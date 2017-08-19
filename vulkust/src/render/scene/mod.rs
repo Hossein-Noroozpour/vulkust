@@ -24,8 +24,8 @@ pub struct UniformData {
 impl UniformData {
     pub fn new() -> Self {
         UniformData {
-            sun_dir: Vec3::new(),
-            eye_loc: Vec3::new(),
+            sun_dir: Vec3::new(0.0),
+            eye_loc: Vec3::new(0.0),
         }
     }
 }
@@ -145,6 +145,7 @@ impl Scene for BasicScene {
     }
 
     fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize) {
+        // shader 
         // material binding (descriptor, pipeline) 
         // model mesh binding (vertex, index) and draw index
     }

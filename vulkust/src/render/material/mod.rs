@@ -1,8 +1,12 @@
-use std::sync::Arc;
 use std::cell::RefCell;
+use std::default::Default;
+use std::mem::transmute;
+use std::sync::Arc;
+use super::super::math::matrix::Mat4x4;
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::device::logical::Logical as LogicalDevice;
+use super::buffer::Manager as BufferManager;
 use super::shader::{read_id, Id as ShaderId, Shader};
 use super::shader::manager::Manager as ShaderManager;
 use super::texture::Texture;
@@ -31,6 +35,17 @@ pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
     pub texture: Arc<Texture>,
     pub speculation_color: Vec3<f32>,
     pub speculation_intensity: f32,
+    pub uniform_ranges: Vec<(usize, usize)>,
+}
+
+#[derive(Default)]
+struct DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform {
+    pub mvp: Mat4x4<f32>,
+    pub tranform: Mat4x4<f32>,
+    pub eye_loc: Vec3<f32>,
+    pub sun_dir: Vec3<f32>,
+    pub spec_color: Vec3<f32>,
+    pub spec_intensity: f32,
 }
 
 impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
@@ -39,6 +54,7 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
         logical_device: Arc<LogicalDevice>,
         shader_manager: &mut ShaderManager,
         texture_manager: &mut TextureManager,
+        buffer_manager: &mut BufferManager,
     ) -> Self {
         let texture_id = file.read_id();
         let offset = file.tell();
@@ -56,11 +72,14 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
             logi!("speculation_color: {:?}", speculation_color);
             logi!("speculation_intensity: {}", speculation_intensity);
         }
+        let uni = DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform::default();
+        let uni = buffer_manager.add_u(&uni);
         DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
             shader: shader,
             texture: texture,
             speculation_color: speculation_color,
             speculation_intensity: speculation_intensity,
+            uniform_ranges: uni,
         }
     }
 }
@@ -117,6 +136,7 @@ pub fn read_material(
     logical_device: Arc<LogicalDevice>,
     shader_manager: &mut ShaderManager,
     texture_manager: &mut TextureManager,
+    buffer_manager: &mut BufferManager
 ) -> Arc<RefCell<Material>> {
     let shader_id = read_id(file);
     return match shader_id {
@@ -129,6 +149,7 @@ pub fn read_material(
                 logical_device,
                 shader_manager,
                 texture_manager,
+                buffer_manager,
             ),
         )),
         _ => {

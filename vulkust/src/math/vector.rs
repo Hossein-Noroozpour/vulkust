@@ -62,7 +62,7 @@ where
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3<T>
 where
     T: Number,

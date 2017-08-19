@@ -12,6 +12,10 @@ use super::texture::manager::Manager as TextureManager;
 use super::mesh::{Mesh, OccMesh};
 use self::manager::Manager;
 
+pub struct UniformData {
+    pub mvp: Mat4x4<f32>,
+}
+
 pub enum Dynamism {
     Dynamic,
     Static,
@@ -145,7 +149,7 @@ impl Model for RootStaticModel {
     }
 
     fn occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize) {
-        
+        fsdfsdfsdf
         for m in &mut self.children {
             m.occ(cmd_buff, mat, frame_index);
         }

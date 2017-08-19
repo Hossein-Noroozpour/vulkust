@@ -1,10 +1,10 @@
 extern crate libc;
 
 use std::default::Default;
-use std::sync::Arc;
-use std::ptr::{null, null_mut};
+use std::mem::{transmute, size_of};
 use std::os::raw::c_void;
-use std::mem::transmute;
+use std::ptr::{null, null_mut};
+use std::sync::Arc;
 use super::super::system::vulkan as vk;
 use super::command::buffer::Buffer as CmdBuff;
 use super::device::logical::Logical as LogicalDevice;
@@ -132,6 +132,8 @@ pub struct Manager {
     memory: vk::VkDeviceMemory,
     vertices_indices: Region,
     uniforms: Region,
+    uniforms_align: usize,
+    frames_count: usize,
 }
 
 impl Manager {
@@ -181,15 +183,17 @@ impl Manager {
         ));
     }
 
-    pub fn new(logical_device: Arc<LogicalDevice>, vi_size: usize, u_size: usize) -> Self {
+    pub fn new(logical_device: Arc<LogicalDevice>, vi_size: usize, u_size: usize, frames_count: usize) -> Self {
         let alignment = logical_device.physical_device.get_max_min_alignment() as usize;
         let vertices = Region::new(logical_device.clone(), vi_size);
-        let uniforms = Region::new(logical_device, u_size);
+        let uniforms = Region::new(logical_device, u_size * frames_count);
         let mut b = Manager {
             vk_data: null_mut(),
             memory: null_mut(),
             vertices_indices: vertices,
             uniforms: uniforms,
+            uniforms_align: u_size,
+            frames_count: frames_count,
         };
         let flag = alignment - 1;
         if vi_size & flag != 0 || u_size & flag != 0 {
@@ -207,12 +211,31 @@ impl Manager {
         self.uniforms.offset = offset;
     }
 
-    pub fn write_vi(&mut self, data: *const c_void, size: usize) -> (usize, usize) {
+    pub fn add_vi(&mut self, data: *const c_void, size: usize) -> (usize, usize) {
         self.vertices_indices.write(data, size)
     }
 
-    pub fn write_u(&mut self, data: *const c_void, size: usize) -> (usize, usize) {
-        self.uniforms.write(data, size)
+    pub fn add_u<T>(&mut self, data: &T) -> Vec<(usize, usize)> {
+        self.add_u_with_ptr(unsafe { transmute(data) }, size_of::<T>())
+    }
+
+    fn add_u_with_ptr(&mut self, data: *const c_void, size: usize) -> Vec<(usize, usize)> {
+        let mut res = vec![(0, 0); self.frames_count];
+        let mut offset = self.uniforms.offset;
+        res[0] = self.uniforms.write(data, size);
+        let last_offset = self.uniforms.offset;
+        for i in 1..self.frames_count {
+            offset += self.uniforms_align;
+            self.seek_u(offset);
+            res[i] = self.uniforms.write(data, size);
+        }
+        self.seek_u(last_offset);
+        return res;
+    }
+
+    pub fn update_u(&mut self, data: *const c_void, size: usize, offset: usize) {
+        self.seek_u(offset);
+        let _ = self.uniforms.write(data, size);
     }
 
     pub fn push_vi(&self, cmd: &mut CmdBuff) {
