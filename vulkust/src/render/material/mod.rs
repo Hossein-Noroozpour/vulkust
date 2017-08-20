@@ -6,8 +6,10 @@ use super::super::math::matrix::Mat4x4;
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::device::logical::Logical as LogicalDevice;
+use super::descriptor::Set as DescriptorSet;
 use super::buffer::Manager as BufferManager;
 use super::model::UniformData as MdlUniData;
+use super::pipeline::Pipeline;
 use super::scene::UniformData as ScnUniData;
 use super::shader::{read_id, Id as ShaderId, Shader};
 use super::shader::manager::Manager as ShaderManager;
@@ -31,6 +33,8 @@ pub trait Material {
     fn get_vertex_attributes(&self) -> Vec<VertexAttribute>;
     fn get_shader(&self) -> &Arc<Shader>;
     fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize);
+    fn set_pipeline(&mut self, pipeline: Arc<Pipeline>);
+    fn set_descriptor_set(&mut self, descriptor_set: Arc<DescriptorSet>);
 }
 
 pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
@@ -38,6 +42,8 @@ pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
     pub texture: Arc<Texture>,
     pub uniforms: Vec<&'static mut DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform>,
     pub uniforms_ranges: Vec<(usize, usize)>,
+    pub pipeline: Option<Arc<Pipeline>>,
+    pub descriptor_set: Option<Arc<DescriptorSet>>,
 }
 
 #[repr(C)]
@@ -84,6 +90,8 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
             texture: texture,
             uniforms: uniforms,
             uniforms_ranges: uniforms_ranges,
+            pipeline: None, // TODO
+            descriptor_set: None, // TODO
         }
     }
 }
@@ -111,10 +119,20 @@ impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
         self.uniforms[frame_index].eye_loc = sud.eye_loc;
         self.uniforms[frame_index].sun_dir = sud.sun_dir;
     }
+
+    fn set_pipeline(&mut self, pipeline: Arc<Pipeline>) {
+        self.pipeline = Some(pipeline);
+    }
+
+    fn set_descriptor_set(&mut self, descriptor_set: Arc<DescriptorSet>) {
+        self.descriptor_set = Some(descriptor_set);
+    }
 }
 
 pub struct White {
     pub shader: Arc<Shader>,
+    pub pipeline: Option<Arc<Pipeline>>,
+    pub descriptor_set: Option<Arc<DescriptorSet>>,
 }
 
 impl White {
@@ -124,7 +142,11 @@ impl White {
         shader_manager: &mut ShaderManager,
     ) -> Self {
         let shader = shader_manager.get(WHITE_ID, file, logical_device);
-        White { shader: shader }
+        White { 
+            shader: shader,
+            pipeline: None, // TODO
+            descriptor_set: None, // TODO
+        }
     }
 }
 
@@ -143,6 +165,14 @@ impl Material for White {
 
     fn update_uniform(&self, _sud: &ScnUniData, _mud: &MdlUniData, _frame_index: usize) {
         logf!("White shader does not implement this function because this is special!!!");
+    }
+
+    fn set_pipeline(&mut self, pipeline: Arc<Pipeline>) {
+        self.pipeline = Some(pipeline);
+    }
+
+    fn set_descriptor_set(&mut self, descriptor_set: Arc<DescriptorSet>) {
+        self.descriptor_set = Some(descriptor_set);
     }
 }
 

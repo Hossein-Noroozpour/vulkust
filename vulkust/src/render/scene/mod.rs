@@ -12,10 +12,10 @@ use super::super::system::os::ApplicationTrait as OsApp;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuff;
 use super::camera::Camera;
-use super::descriptor::Manager as DescriptorManager;
+use super::descriptor::{Manager as DescriptorManager, Set as DescriptorSet};
 use super::engine::RenderEngine;
 use super::light::Light;
-use super::material::{Material, White};
+use super::material::{Material, White, WHITE_ID};
 use super::model::Model;
 use super::pipeline::Pipeline;
 
@@ -35,6 +35,7 @@ pub trait Scene {
 pub struct BasicScene {
     pub uniform_data: UniformData,
     pub buffer_manager: BufferManager,
+    pub descriptor_manager: DescriptorManager,
     pub current_camera: usize,
     pub cameras: Vec<Arc<RefCell<Camera<f32>>>>,
     pub audios: Vec<Arc<RefCell<Audio>>>,
@@ -42,7 +43,7 @@ pub struct BasicScene {
     pub models: Vec<Arc<RefCell<Model>>>,
     pub occ_material: Arc<RefCell<Material>>,
     pub occ_pipeline: Pipeline,
-    pub descriptor_manager: DescriptorManager,
+    pub occ_descriptor: Arc<DescriptorSet>,
 }
 
 impl BasicScene {
@@ -98,10 +99,12 @@ impl BasicScene {
         let _ = device;
         let occ_pipeline = Pipeline::new(&engine.os_app.render_engine, &occ_material);
         let des_pool = engine.descriptor_pool.as_ref().unwrap().clone();
-        let descriptor_manager = DescriptorManager::new(des_pool, occ_pipeline.layout.clone(), &buffer_manager);
+        let mut descriptor_manager = DescriptorManager::new(des_pool, occ_pipeline.layout.clone(), &buffer_manager);
+        let occ_descriptor = descriptor_manager.get(WHITE_ID);
         BasicScene {
             uniform_data: UniformData::default(),
             buffer_manager: buffer_manager,
+            descriptor_manager: descriptor_manager,
             current_camera: 0,
             cameras: cameras,
             audios: audios,
@@ -109,7 +112,7 @@ impl BasicScene {
             models: models,
             occ_material: occ_material,
             occ_pipeline: occ_pipeline,
-            descriptor_manager: descriptor_manager,
+            occ_descriptor: occ_descriptor,
         }
     }
 }
@@ -147,6 +150,7 @@ impl Scene for BasicScene {
 
     fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize) {
         self.buffer_manager.push_u(cmd_buff, frame_index);
+        cmd_buff.bind_descriptor_set(self.)
         // shader (descriptor, pipeline)
         // material the descriptor offseting
         // model mesh binding (vertex, index) and draw index

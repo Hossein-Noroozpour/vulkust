@@ -1,9 +1,11 @@
-use super::super::super::system::vulkan as vk;
-
-use super::pool::Pool;
-use super::super::fence::Fence;
 use std::sync::Arc;
 use std::default::Default;
+use super::super::super::system::vulkan as vk;
+use super::super::descriptor::Set as DescriptorSet;
+use super::super::pipeline::layout::Layout as PipelineLayout;
+use super::super::pipeline::Pipeline;
+use super::super::fence::Fence;
+use super::pool::Pool;
 
 pub struct Buffer {
     pub pool: Arc<Pool>,
@@ -93,6 +95,24 @@ impl Buffer {
 
     pub fn end(&mut self) {
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
+    }
+
+    pub fn bind_descriptor_set(&mut self, pl: &Arc<PipelineLayout>, ds: &Arc<DescriptorSet>, offset: usize) {
+        let offset = offset as u32;
+        let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+        unsafe {
+            vk::vkCmdBindDescriptorSets(
+                self.vk_data, bind_point, pl.vk_data, 0, 1, &(ds.vk_data), 1, &offset);
+        }
+    }
+
+    pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
+        let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+        unsafe {
+            vk::vkCmdBindPipeline(
+                self.vk_data, bind_point, p.vk_data,
+            );
+        }
     }
 }
 
