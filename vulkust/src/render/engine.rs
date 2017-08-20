@@ -54,8 +54,8 @@ impl Basic {
         self.current_scene.borrow()
     }
 
-    pub fn update(&mut self) {
-        self.current_scene.borrow_mut().render();
+    pub fn update(&mut self, frame_index: usize) {
+        self.current_scene.borrow_mut().update(frame_index);
     }
 
     pub fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize) {

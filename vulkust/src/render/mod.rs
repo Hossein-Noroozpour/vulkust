@@ -9,6 +9,7 @@ pub mod shader;
 pub mod texture;
 pub mod buffer;
 pub mod command;
+pub mod descriptor;
 pub mod engine;
 pub mod mesh;
 pub mod pipeline;

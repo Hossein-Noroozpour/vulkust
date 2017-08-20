@@ -7,6 +7,8 @@ use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::device::logical::Logical as LogicalDevice;
 use super::buffer::Manager as BufferManager;
+use super::model::UniformData as MdlUniData;
+use super::scene::UniformData as ScnUniData;
 use super::shader::{read_id, Id as ShaderId, Shader};
 use super::shader::manager::Manager as ShaderManager;
 use super::texture::Texture;
@@ -28,20 +30,21 @@ pub trait Material {
     fn get_vertex_size(&self) -> u64;
     fn get_vertex_attributes(&self) -> Vec<VertexAttribute>;
     fn get_shader(&self) -> &Arc<Shader>;
+    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize);
 }
 
 pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
     pub shader: Arc<Shader>,
     pub texture: Arc<Texture>,
-    pub speculation_color: Vec3<f32>,
-    pub speculation_intensity: f32,
-    pub uniform_ranges: Vec<(usize, usize)>,
+    pub uniforms: Vec<&'static mut DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform>,
+    pub uniforms_ranges: Vec<(usize, usize)>,
 }
 
+#[repr(C)]
 #[derive(Default)]
 struct DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform {
     pub mvp: Mat4x4<f32>,
-    pub tranform: Mat4x4<f32>,
+    pub transform: Mat4x4<f32>,
     pub eye_loc: Vec3<f32>,
     pub sun_dir: Vec3<f32>,
     pub spec_color: Vec3<f32>,
@@ -72,14 +75,15 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
             logi!("speculation_color: {:?}", speculation_color);
             logi!("speculation_intensity: {}", speculation_intensity);
         }
-        let uni = DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform::default();
-        let uni = buffer_manager.add_u(&uni);
+        let mut uni = DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform::default();
+        uni.spec_color = speculation_color;
+        uni.spec_intensity = speculation_intensity;
+        let (uniforms, uniforms_ranges) = buffer_manager.add_u(&uni);
         DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
             shader: shader,
             texture: texture,
-            speculation_color: speculation_color,
-            speculation_intensity: speculation_intensity,
-            uniform_ranges: uni,
+            uniforms: uniforms,
+            uniforms_ranges: uniforms_ranges,
         }
     }
 }
@@ -99,6 +103,13 @@ impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
 
     fn get_shader(&self) -> &Arc<Shader> {
         &self.shader
+    }
+
+    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
+        self.uniforms[frame_index].mvp = mud.mvp;
+        self.uniforms[frame_index].transform = mud.m;
+        self.uniforms[frame_index].eye_loc = sud.eye_loc;
+        self.uniforms[frame_index].sun_dir = sud.sun_dir;
     }
 }
 
@@ -128,6 +139,10 @@ impl Material for White {
 
     fn get_shader(&self) -> &Arc<Shader> {
         &self.shader
+    }
+
+    fn update_uniform(&self, _sud: &ScnUniData, _mud: &MdlUniData, _frame_index: usize) {
+        logf!("White shader does not implement this function because this is special!!!");
     }
 }
 

@@ -1,7 +1,11 @@
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::default::Default;
 use std::ptr::null;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
+use super::super::render::shader::Id as ShaderId;
 use super::super::system::vulkan as vk;
+use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::pipeline::layout::Layout as PipelineLayout;
 
@@ -44,15 +48,13 @@ impl Drop for Pool {
 }
 
 pub struct Set {
-    pub pool: Arc<Pool>,
-    pub pipeline_layout: Arc<PipelineLayout>,
     pub vk_data: vk::VkDescriptorSet,
 }
 
 impl Set {
-    pub fn new(
-        pool: Arc<Pool>,
-        pipeline_layout: Arc<PipelineLayout>,
+    fn new(
+        pool: &Arc<Pool>,
+        pipeline_layout: &Arc<PipelineLayout>,
         buffer_info: &vk::VkDescriptorBufferInfo,
     ) -> Self {
         let mut alloc_info = vk::VkDescriptorSetAllocateInfo::default();
@@ -84,9 +86,45 @@ impl Set {
             );
         }
         Set {
-            pool: pool,
-            pipeline_layout: pipeline_layout,
             vk_data: vk_data,
         }
+    }
+}
+
+pub struct Manager {
+    cached: BTreeMap<ShaderId, Weak<Set>>,
+    pool: Arc<Pool>,
+    pipeline_layout: Arc<PipelineLayout>,
+    buffer: vk::VkBuffer,
+}
+
+impl Manager {
+    pub fn new(
+        pool: Arc<Pool>,
+        pipeline_layout: Arc<PipelineLayout>,
+        buffer_manager: &BufferManager) -> Self {
+        Manager {
+            cached: BTreeMap::new(),
+            pool: pool,
+            pipeline_layout: pipeline_layout,
+            buffer: buffer_manager.get_buffer(),
+        }
+    }
+
+    pub fn get(&mut self, id: ShaderId) -> Arc<Set> {
+        match self.cached.get(&id) {
+            Some(res) => match res.upgrade() {
+                Some(res) => {
+                    return res;
+                }
+                None => {}
+            },
+            None => {}
+        }
+        let mut buff_info = vk::VkDescriptorBufferInfo::default();
+        buff_info.buffer = self.buffer;
+        let set = Arc::new(Set::new(&self.pool, &self.pipeline_layout, &buff_info));
+        self.cached.insert(id, Arc::downgrade(&set));
+        return set;
     }
 }

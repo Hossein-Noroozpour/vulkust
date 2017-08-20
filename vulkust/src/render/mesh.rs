@@ -6,6 +6,8 @@ use super::super::system::file::File;
 use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::material::{read_material, Material};
+use super::model::UniformData as MdlUniData;
+use super::scene::UniformData as ScnUniData;
 use super::shader::manager::Manager as ShaderManager;
 use super::shader::read_id as read_shader_id;
 use super::texture::manager::Manager as TextureManager;
@@ -54,6 +56,10 @@ impl Mesh {
             indices_range: indices_range,
         }
     }
+
+    pub fn update_uniform(&mut self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
+        self.material.borrow_mut().update_uniform(sud, mud, frame_index);
+    }
 }
 
 #[derive(Default)]
@@ -65,7 +71,8 @@ pub struct OccMesh {
     pub vertices_range: (usize, usize),
     pub indices_count: u64,
     pub indices_range: (usize, usize),
-    pub uniform_ranges: Vec<(usize, usize)>,
+    pub uniforms: Vec<&'static mut OccUniform>,
+    pub uniforms_ranges: Vec<(usize, usize)>,
 }
 
 impl OccMesh {
@@ -82,12 +89,17 @@ impl OccMesh {
         data = file.read_bytes(indices_size);
         let indices_range =
             buffer_manager.add_vi(unsafe { transmute(data.as_ptr()) }, indices_size);
-        let uni = buffer_manager.add_u(&OccUniform::default());
+        let (uniforms, uniforms_ranges) = buffer_manager.add_u(&OccUniform::default());
         OccMesh {
             vertices_range: vertices_range,
             indices_count: indices_count,
             indices_range: indices_range,
-            uniform_ranges: uni,
+            uniforms: uniforms,
+            uniforms_ranges: uniforms_ranges,
         }
+    }
+
+    pub fn update_uniform(&mut self, mud: &MdlUniData, frame_index: usize) {
+        self.uniforms[frame_index].mvp = mud.mvp;
     }
 }

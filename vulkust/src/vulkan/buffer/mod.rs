@@ -215,11 +215,16 @@ impl Manager {
         self.vertices_indices.write(data, size)
     }
 
-    pub fn add_u<T>(&mut self, data: &T) -> Vec<(usize, usize)> {
-        self.add_u_with_ptr(unsafe { transmute(data) }, size_of::<T>())
+    pub fn add_u<T>(&mut self, data: &T) -> (Vec<&'static mut T>, Vec<(usize, usize)>) {
+        let (ptrs, rngs) = self.add_u_with_ptr(unsafe { transmute(data) }, size_of::<T>());
+        let mut trefs = vec![unsafe { transmute(ptrs[0]) }; self.frames_count];
+        for i in 1..self.frames_count {
+            trefs[i] = unsafe { transmute(ptrs[i]) };
+        }
+        (trefs, rngs)
     }
 
-    fn add_u_with_ptr(&mut self, data: *const c_void, size: usize) -> Vec<(usize, usize)> {
+    fn add_u_with_ptr(&mut self, data: *const c_void, size: usize) -> (Vec<*mut c_void>, Vec<(usize, usize)>) {
         let mut res = vec![(0, 0); self.frames_count];
         let mut offset = self.uniforms.offset;
         res[0] = self.uniforms.write(data, size);
@@ -230,7 +235,15 @@ impl Manager {
             res[i] = self.uniforms.write(data, size);
         }
         self.seek_u(last_offset);
-        return res;
+        let uniforms_start = self.vertices_indices.size;
+        let map_start = self.uniforms.start;
+        let mut ptrs = vec![null_mut(); self.frames_count];
+        for i in 0..self.frames_count {
+            ptrs[i] = unsafe { transmute (res[i].0 + map_start) };
+            res[i].0 += uniforms_start;
+            res[i].1 += uniforms_start;
+        }
+        return (ptrs, res);
     }
 
     pub fn update_u(&mut self, data: *const c_void, size: usize, offset: usize) {
@@ -242,9 +255,11 @@ impl Manager {
         self.vertices_indices.push(cmd, 0, self.vk_data);
     }
 
-    pub fn push_u(&self, cmd: &mut CmdBuff) {
-        self.uniforms
-            .push(cmd, self.vertices_indices.size, self.vk_data);
+    pub fn push_u(&self, cmd: &mut CmdBuff, frame_index: usize) {
+        self.uniforms.push(
+            cmd, 
+            self.vertices_indices.size + (self.uniforms_align * frame_index), 
+            self.vk_data);
     }
 
     pub fn get_id(&self) -> u64 {

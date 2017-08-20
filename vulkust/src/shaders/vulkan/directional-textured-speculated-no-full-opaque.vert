@@ -6,7 +6,6 @@ layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 uv;
 layout (binding = 0) uniform UBO {
   mat4 mvp;
-  sampler2D texture_2d_sampler,
 } ubo;
 layout (location = 0) out vec2 out_uv;
 out gl_PerVertex {

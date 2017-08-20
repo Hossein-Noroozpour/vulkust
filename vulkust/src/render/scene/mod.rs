@@ -1,42 +1,39 @@
 pub mod manager;
 
 use std::cell::RefCell;
+use std::default::Default;
 use std::sync::Arc;
 use super::super::audio::Audio;
 use super::super::core::application::ApplicationTrait;
+use super::super::math::matrix::Mat4x4;
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::super::system::os::ApplicationTrait as OsApp;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuff;
 use super::camera::Camera;
+use super::descriptor::Manager as DescriptorManager;
 use super::engine::RenderEngine;
 use super::light::Light;
 use super::material::{Material, White};
 use super::model::Model;
 use super::pipeline::Pipeline;
 
+#[derive(Default)]
 pub struct UniformData {
     pub sun_dir: Vec3<f32>,
     pub eye_loc: Vec3<f32>,
-}
-
-impl UniformData {
-    pub fn new() -> Self {
-        UniformData {
-            sun_dir: Vec3::new(0.0),
-            eye_loc: Vec3::new(0.0),
-        }
-    }
+    pub vp: Mat4x4<f32>,
 }
 
 pub trait Scene {
     fn get_current_camera(&self) -> &Arc<RefCell<Camera<f32>>>;
-    fn render(&mut self);
+    fn update(&mut self, frame_index: usize);
     fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize);
 }
 
 pub struct BasicScene {
+    pub uniform_data: UniformData,
     pub buffer_manager: BufferManager,
     pub current_camera: usize,
     pub cameras: Vec<Arc<RefCell<Camera<f32>>>>,
@@ -45,6 +42,7 @@ pub struct BasicScene {
     pub models: Vec<Arc<RefCell<Model>>>,
     pub occ_material: Arc<RefCell<Material>>,
     pub occ_pipeline: Pipeline,
+    pub descriptor_manager: DescriptorManager,
 }
 
 impl BasicScene {
@@ -58,7 +56,7 @@ impl BasicScene {
         let vi_size = file.read_type::<u64>() * 1024;
         let u_size = file.read_type::<u64>() * 1024;
         let mut buffer_manager =
-            BufferManager::new(device.clone(), vi_size as usize, u_size as usize);
+            BufferManager::new(device.clone(), vi_size as usize, u_size as usize, engine.framebuffers.len());
         let cameras_count = file.read_count() as usize;
         let mut cameras_ids = vec![0; cameras_count];
         for i in 0..cameras_count {
@@ -99,8 +97,10 @@ impl BasicScene {
         }
         let _ = device;
         let occ_pipeline = Pipeline::new(&engine.os_app.render_engine, &occ_material);
-        loge!("push data in buffers");
+        let des_pool = engine.descriptor_pool.as_ref().unwrap().clone();
+        let descriptor_manager = DescriptorManager::new(des_pool, occ_pipeline.layout.clone(), &buffer_manager);
         BasicScene {
+            uniform_data: UniformData::default(),
             buffer_manager: buffer_manager,
             current_camera: 0,
             cameras: cameras,
@@ -109,6 +109,7 @@ impl BasicScene {
             models: models,
             occ_material: occ_material,
             occ_pipeline: occ_pipeline,
+            descriptor_manager: descriptor_manager,
         }
     }
 }
@@ -124,13 +125,13 @@ impl Scene for BasicScene {
         return &self.cameras[self.current_camera];
     }
 
-    fn render(&mut self) {
+    fn update(&mut self, frame_index: usize) {
         // TODO: step 1
         // TODO: step 2
-        let camera = self.cameras[0].borrow();
-        let vp = camera.get_view_projection();
+        let camera = self.cameras[self.current_camera].borrow();
+        self.uniform_data.vp = *camera.get_view_projection();
         for model in &mut self.models {
-            model.borrow_mut().compute_mvp(vp);
+            model.borrow_mut().parent_update_uniform(&self.uniform_data, frame_index);
         }
         ////// Temporary @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -145,8 +146,9 @@ impl Scene for BasicScene {
     }
 
     fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize) {
-        // shader 
-        // material binding (descriptor, pipeline) 
+        self.buffer_manager.push_u(cmd_buff, frame_index);
+        // shader (descriptor, pipeline)
+        // material the descriptor offseting
         // model mesh binding (vertex, index) and draw index
     }
 }

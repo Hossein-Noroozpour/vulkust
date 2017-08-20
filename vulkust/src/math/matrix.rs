@@ -45,7 +45,7 @@ pub struct SMat4x4F(
 
 // column major matrix
 #[repr(C)]
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct Mat4x4<E>
 where
     E: Number,
@@ -472,6 +472,14 @@ where
             }
         }
         self.data = data;
+    }
+}
+
+impl<E> Default for Mat4x4<E> where
+    E: Float,
+{
+    fn default() -> Self {
+        Mat4x4::ident()
     }
 }
 
