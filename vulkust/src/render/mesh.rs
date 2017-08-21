@@ -27,7 +27,7 @@ impl Mesh {
         file: &mut File,
         buffer_manager: &mut BufferManager,
         logical_device: Arc<LogicalDevice>,
-        shader_manager: &mut ShaderManager,
+        shader_manager: &Arc<RefCell<ShaderManager>>,
         texture_manager: &mut TextureManager,
     ) -> Self {
         #[cfg(mesh_debug)]

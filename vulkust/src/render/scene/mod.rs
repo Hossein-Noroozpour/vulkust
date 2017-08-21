@@ -34,7 +34,7 @@ pub trait Scene {
 
 pub struct BasicScene {
     pub uniform_data: UniformData,
-    pub buffer_manager: BufferManager,
+    pub buffer_manager: Arc<RefCell<BufferManager>>,
     pub descriptor_manager: DescriptorManager,
     pub current_camera: usize,
     pub cameras: Vec<Arc<RefCell<Camera<f32>>>>,

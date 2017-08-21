@@ -35,7 +35,7 @@ impl Manager {
         file: &mut File,
         buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
-        shader_manager: &mut ShaderManager,
+        shader_manager: &Arc<RefCell<ShaderManager>>,
     ) -> Arc<RefCell<Model>> {
         let w_buffer = buffer_manager.get_id();
         match self.cached.get(&w_buffer) {

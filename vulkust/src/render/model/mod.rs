@@ -59,7 +59,7 @@ impl StaticModel {
         model_manager: &mut Manager,
         buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
-        shader_manager: &mut ShaderManager,
+        shader_manager: &Arc<RefCell<ShaderManager>>,
     ) -> Self {
         let device = buffer_manager.get_device().clone();
         let mesh = Mesh::new(
@@ -126,7 +126,7 @@ impl RootStaticModel {
         model_manager: &mut Manager,
         buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
-        shader_manager: &mut ShaderManager,
+        shader_manager: &Arc<RefCell<ShaderManager>>,
     ) -> Self {
         let mesh = OccMesh::new(file, buffer_manager);
         let children_count = file.read_count();
@@ -188,7 +188,7 @@ impl DynamicModel {
         model_manager: &mut Manager,
         buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
-        shader_manager: &mut ShaderManager,
+        shader_manager: &Arc<RefCell<ShaderManager>>,
     ) -> Self {
         let m = Mat4x4::new_from_file(file);
         let mesh = OccMesh::new(file, buffer_manager);
@@ -249,7 +249,7 @@ impl CopyModel {
         model_manager: &mut Manager,
         buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
-        shader_manager: &mut ShaderManager,
+        shader_manager: &Arc<RefCell<ShaderManager>>,
     ) -> Self {
         let m = Mat4x4::new_from_file(file);
         let id = file.read_id();
@@ -289,7 +289,7 @@ pub fn read_model(
     model_manager: &mut Manager,
     buffer_manager: &mut BufferManager,
     texture_manager: &mut TextureManager,
-    shader_manager: &mut ShaderManager,
+    shader_manager: &Arc<RefCell<ShaderManager>>,
 ) -> Arc<RefCell<Model>> {
     return if file.read_bool() {
         Arc::new(RefCell::new(CopyModel::new(
@@ -323,7 +323,7 @@ fn read_boxed_model(
     model_manager: &mut Manager,
     buffer_manager: &mut BufferManager,
     texture_manager: &mut TextureManager,
-    shader_manager: &mut ShaderManager,
+    shader_manager: &Arc<RefCell<ShaderManager>>,
 ) -> Box<Model> {
     return if file.read_bool() {
         Box::new(CopyModel::new(

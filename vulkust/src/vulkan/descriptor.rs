@@ -7,7 +7,7 @@ use super::super::render::shader::Id as ShaderId;
 use super::super::system::vulkan as vk;
 use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
-use super::pipeline::layout::Layout as PipelineLayout;
+use super::pipeline::Layout as PipelineLayout;
 
 pub struct Pool {
     pub logical_device: Arc<LogicalDevice>,
@@ -48,13 +48,15 @@ impl Drop for Pool {
 }
 
 pub struct Set {
+    pool: Arc<Pool>,
+    pipeline_layout: Arc<PipelineLayout>,
     pub vk_data: vk::VkDescriptorSet,
 }
 
 impl Set {
     fn new(
-        pool: &Arc<Pool>,
-        pipeline_layout: &Arc<PipelineLayout>,
+        pool: Arc<Pool>,
+        pipeline_layout: Arc<PipelineLayout>,
         buffer_info: &vk::VkDescriptorBufferInfo,
     ) -> Self {
         let mut alloc_info = vk::VkDescriptorSetAllocateInfo::default();
@@ -86,6 +88,8 @@ impl Set {
             );
         }
         Set {
+            pool: pool,
+            pipeline_layout: pipeline_layout,
             vk_data: vk_data,
         }
     }

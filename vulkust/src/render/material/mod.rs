@@ -179,7 +179,7 @@ impl Material for White {
 pub fn read_material(
     file: &mut File,
     logical_device: Arc<LogicalDevice>,
-    shader_manager: &mut ShaderManager,
+    shader_manager: &Arc<RefCell<ShaderManager>>,
     texture_manager: &mut TextureManager,
     buffer_manager: &mut BufferManager
 ) -> Arc<RefCell<Material>> {

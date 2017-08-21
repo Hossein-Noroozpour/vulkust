@@ -22,7 +22,7 @@ use super::super::super::system::file::File;
 
 pub struct Manager {
     pub file: File,
-    pub shader_manager: ShaderManager,
+    pub shader_manager: Arc<RefCell<ShaderManager>>,
     pub camera_manager: CameraManager,
     pub audio_manager: AudioManager,
     pub light_manager: LightManager,
@@ -35,7 +35,7 @@ impl Manager {
     pub fn new(file: File) -> Self {
         Manager {
             file: file,
-            shader_manager: ShaderManager::new(),
+            shader_manager: Arc::new(RefCell::new(ShaderManager::new())),
             camera_manager: CameraManager::new(),
             audio_manager: AudioManager::new(),
             light_manager: LightManager::new(),
@@ -46,7 +46,7 @@ impl Manager {
     }
 
     pub fn initialize(&mut self) {
-        self.shader_manager.read_table(&mut self.file);
+        self.shader_manager.borrow_mut().read_table(&mut self.file);
         self.camera_manager.read_table(&mut self.file);
         self.audio_manager.read_table(&mut self.file);
         self.light_manager.read_table(&mut self.file);
@@ -56,7 +56,7 @@ impl Manager {
     }
 
     pub fn get_shader(&mut self, id: u64, logical_device: Arc<LogicalDevice>) -> Arc<Shader> {
-        self.shader_manager.get(id, &mut self.file, logical_device)
+        self.shader_manager.borrow_mut().get(id, &mut self.file, logical_device)
     }
 
     pub fn get_camera(&mut self, id: u64, ratio: f32) -> Arc<RefCell<Camera<f32>>> {
