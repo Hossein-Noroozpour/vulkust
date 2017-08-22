@@ -7,7 +7,9 @@ use std::mem::{transmute, size_of};
 use std::os::raw::c_void;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
+use super::super::render::mesh::INDEX_ELEMENTS_SIZE;
 use super::super::system::vulkan as vk;
+use super::super::util::List;
 use super::command::buffer::Buffer as CmdBuff;
 use super::device::logical::Logical as LogicalDevice;
 
@@ -163,20 +165,25 @@ pub struct SceneDynamics {
     main_memory: vk::VkDeviceMemory,
     staging_buffer: vk::VkBuffer,
     staging_memory: vk::VkDeviceMemory,
-    uniform_buffers: LinkedList<Weak<RefCell<UniformBuffer>>>,
+    uniform_buffers: List<Weak<RefCell<UniformBuffer>>>,
 }
 
 pub struct Manager {
-    size: usize,
-    address: *mut u8,
     main_buffer: vk::VkBuffer,
     main_memory: vk::VkDeviceMemory,
     staging_buffer: vk::VkBuffer,
     staging_memory: vk::VkDeviceMemory,
-    best_alignment: u64,
-    meshes_region_size: u64,
-    mesh_buffers: LinkedList<Weak<RefCell<MeshBuffer>>>,
-    frames_scene_dynamics: Vec<LinkedList<Weak<RefCell<SceneDynamics>>>>,
+    address: *mut u8,
+    size: usize,
+    best_alignment: usize,
+    best_alignment_flag: usize,
+    best_alignment_complement: usize,
+    meshes_region_filled: usize,
+    meshes_region_last_offset: usize,
+    meshes_region_size: usize,
+    frames_scene_dynamics_region_size: usize,
+    mesh_buffers: List<Weak<RefCell<MeshBuffer>>>,
+    frames_scene_dynamics: Vec<List<Weak<RefCell<SceneDynamics>>>>,
 }
 
 impl Manager {
@@ -273,13 +280,27 @@ impl Manager {
             staging_memory: staging_memory,
             best_alignment: best_alignment,
             meshes_region_size: meshes_size,
-            mesh_buffers: LinkedList::new(),
+            mesh_buffers: List::new(),
             frames_scene_dynamics: frames_scene_dynamics,
         }
     }
 
+    fn size_aligner(&self, size: usize) -> usize {
+        (size & self.best_alignment_complement) + 
+            if (size & self.best_alignment_flag) != 0 {
+                self.best_alignment
+            } else {
+                0
+            }
+    }
+
     pub fn add_mesh_buffer(
-        &mut self, vertices_size: usize, indices_count: usize) -> Arc<RefCell<MeshBuffer>> {
+        &mut self, vertex_size: usize, vertices_count: usize, indices_count: usize) -> Arc<RefCell<MeshBuffer>> {
+        let mesh_size = self.size_aligner(vertex_size * vertices_count) + 
+            self.size_aligner(INDEX_ELEMENTS_SIZE * indices_count);
+        if self.meshes_region_size - self.meshes_region_last_offset > mesh_size {
+            
+        }
         
     }
 

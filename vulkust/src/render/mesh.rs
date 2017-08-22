@@ -12,7 +12,7 @@ use super::shader::manager::Manager as ShaderManager;
 use super::shader::read_id as read_shader_id;
 use super::texture::manager::Manager as TextureManager;
 
-pub const INDEX_ELEMENTS_SIZE: u64 = 4;
+pub const INDEX_ELEMENTS_SIZE: usize = 4;
 
 pub struct Mesh {
     pub material: Arc<RefCell<Material>>,
