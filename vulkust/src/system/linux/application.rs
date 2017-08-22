@@ -18,7 +18,7 @@ pub struct Application<CoreApp>
 where
     CoreApp: 'static + ApplicationTrait,
 {
-    pub asset_manager: AssetManager,
+    pub asset_manager: Arc<RefCell<AssetManager>>,
     pub connection: *mut xcb::xcb_connection_t,
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,

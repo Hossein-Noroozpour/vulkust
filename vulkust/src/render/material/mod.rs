@@ -25,16 +25,9 @@ pub const POSITION_VERTEX_SIZE: u64 = POSITION_ELEMENT;
 pub const POSITION_NORMAL_VERTEX_SIZE: u64 = POSITION_ELEMENT + NORMAL_ELEMENT;
 pub const POSITION_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + UV_ELEMENT;
 pub const POSITION_NORMAL_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + NORMAL_ELEMENT + UV_ELEMENT;
-pub const WHITE_ID: ShaderId = 0;
-pub const DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID: ShaderId = 2207629967616;
 
 pub trait Material {
-    fn get_vertex_size(&self) -> u64;
-    fn get_vertex_attributes(&self) -> Vec<VertexAttribute>;
-    fn get_shader(&self) -> &Arc<Shader>;
     fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize);
-    fn set_pipeline(&mut self, pipeline: Arc<Pipeline>);
-    fn set_descriptor_set(&mut self, descriptor_set: Arc<DescriptorSet>);
 }
 
 pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {

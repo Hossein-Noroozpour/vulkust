@@ -32,3 +32,27 @@ impl<ID, VAL> Cacher<ID, VAL> where ID: Ord {
         return res;
     }
 }
+
+struct ListNode<T> {
+    pub data: T,
+    child: Option<Box<ListNode<T>>>,
+}
+
+pub struct List<T> {
+    start: Option<Box<ListNode<T>>>,
+}
+
+impl<T> List<T> {
+    pub fn new() -> Self {
+        List {
+            start: None,
+        }
+    }
+
+    fn get_next(&mut self) -> Option<&ListNode<T>> {
+        match self.start {
+            Some(l) => 
+        }
+    }
+}
+

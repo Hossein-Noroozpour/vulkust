@@ -2,10 +2,15 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::ffi::CString;
-use std::ptr::null;
+use std::ptr::{null, null_mut};
 use std::sync::{Arc, Weak};
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
-use super::super::render::shader::Id as ShaderId;
+use super::super::core::asset::manager::Manager as AssetManager;
+use super::super::render::shader::{
+    Id as ShaderId, Shader, BindingStage, ResourceType,
+    shader_id_to_vertex_attributes,
+    shader_id_resources,
+};
 use super::super::render::vertex::Attribute as VertexAttribute;
 use super::super::system::vulkan as vk;
 use super::super::util::Cacher;
@@ -16,23 +21,39 @@ use super::render_pass::RenderPass;
 
 pub struct Layout {
     pub logical_device: Arc<LogicalDevice>,
-    // TODO: make it a different module
     pub descriptor_set_layout: vk::VkDescriptorSetLayout,
     pub vk_data: vk::VkPipelineLayout,
 }
 impl Layout {
-    pub fn new(logical_device: Arc<LogicalDevice>) -> Self {
-        let mut descriptor_set_layout = 0 as vk::VkDescriptorSetLayout;
+    pub fn new(logical_device: Arc<LogicalDevice>, sid: ShaderId) -> Self {
+        let mut descriptor_set_layout = null_mut();
         let mut vk_data = 0 as vk::VkPipelineLayout;
-        let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
-        layout_binding.descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        layout_binding.descriptorCount = 1;
-        layout_binding.stageFlags = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_ALL as u32;
+        let shader_resources = shader_id_resources(sid);
+        let mut layout_bindings = Vec::new();
+        for r in shader_resources {
+            let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
+            layout_binding.descriptorType = match r.2 { 
+                ResourceType::Uniform => vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            };
+            layout_binding.descriptorCount = r.1;
+            layout_binding.stageFlags = 0;
+            for s in r.0 {
+                match s {
+                    BindingStage::Vertex =>
+                        layout_binding.stageFlags |= 
+                            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32,
+                    BindingStage::Fragment =>
+                        layout_binding.stageFlags |= 
+                            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32,
+                }
+            }
+            layout_bindings.push(layout_binding);
+        }
         let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
         descriptor_layout.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptor_layout.bindingCount = 1;
-        descriptor_layout.pBindings = &layout_binding;
+        descriptor_layout.bindingCount = layout_bindings.len() as u32;
+        descriptor_layout.pBindings = layout_bindings.as_ptr();
         vulkan_check!(vk::vkCreateDescriptorSetLayout(
             logical_device.vk_data,
             &descriptor_layout,
@@ -103,24 +124,26 @@ impl Drop for Cache {
 }
 
 pub struct Pipeline {
-    pub layout: Layout,
-    pub descriptor_set: DescriptorSet,
-    pub render_pass: Arc<RenderPass>,
     pub cache: Arc<Cache>,
+    pub descriptor_pool: Arc<DescriptorPool>,
+    pub descriptor_set: DescriptorSet,
+    pub layout: Layout,
+    pub shader: Arc<Shader>,
+    pub render_pass: Arc<RenderPass>,
     pub vk_data: vk::VkPipeline,
 }
 
 impl Pipeline {
-    fn new<CoreApp>(
+    fn new(
+        manager: &Manager, sid: ShaderId
     ) -> Self
-    where
-        CoreApp: CoreAppTrait,
     {
-        let material = material.borrow();
-        let vertex_attrs = material.get_vertex_attributes();
-        let layout = engine.pipeline_layout.as_ref().unwrap();
-        let render_pass = engine.render_pass.as_ref().unwrap();
-        let pipeline_cache = engine.pipeline_cache.as_ref().unwrap();
+        let device = manager.cache.logical_device.clone();
+        let shader = manager.asset_manager.borrow_mut().get_shader(sid, device);
+        let vertex_attrs = shader_id_to_vertex_attributes(sid);
+        let layout = Layout::new(device, sid);
+        let render_pass = manager.render_pass.clone();
+        let pipeline_cache = manager.cache.clone();
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
         input_assembly_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -257,10 +280,11 @@ impl Drop for Pipeline {
 }
 
 pub struct Manager {
-    pub render_pass: Arc<RenderPass>,
-    pub cache: Cache,
-    pub descriptor_pool: DescriptorPool,
+    pub cache: Arc<Cache>,
     pub cached: Cacher<ShaderId, Pipeline>,
+    pub descriptor_pool: Arc<DescriptorPool>,
+    pub render_pass: Arc<RenderPass>,
+    pub asset_manager: Arc<RefCell<AssetManager>>,
 }
 
 impl Manager {
@@ -272,17 +296,18 @@ impl Manager {
         let device = engine.logical_device.as_ref().unwrap().clone();
         Manager {
             render_pass: engine.render_pass.as_ref().unwrap().clone(),
-            cache: Cache::new(device.clone()),
-            descriptor_pool: DescriptorPool::new(device),
+            cache: Arc::new(Cache::new(device.clone())),
+            descriptor_pool: Arc::new(DescriptorPool::new(device)),
             cached: Cacher::new(),
+            asset_manager: engine.os_app.asset_manager.clone(),
         }
     }
 
     pub fn get(&mut self, id: ShaderId) -> Arc<Pipeline> {
-        self.cached.get(id, &|| { self.create_pipeline() } )
+        self.cached.get(id, &|| { self.create_pipeline(id) } )
     }
 
-    fn create_pipeline(&self) -> Pipeline {
-
+    fn create_pipeline(&self, id: ShaderId) -> Pipeline {
+        Pipeline::new(self, id)
     }
 }

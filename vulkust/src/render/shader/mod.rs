@@ -4,7 +4,11 @@ pub mod stage;
 use std::sync::Arc;
 use super::super::system::file::File;
 use super::device::logical::Logical as LogicalDevice;
+use super::vertex::Attribute as VertexAttribute;
 use self::stage::Stage;
+
+pub const WHITE_ID: Id = 0;
+pub const DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID: Id = 2207629967616;
 
 pub trait Shader {
     fn as_two_stage(&self) -> &TwoStage {
@@ -79,4 +83,34 @@ pub const ID_BYTES_COUNT: usize = 6;
 
 pub fn read_id(file: &mut File) -> u64 {
     from_gx3d_id(file.read_bytes(ID_BYTES_COUNT))
+}
+
+pub fn shader_id_to_vertex_attributes(id: Id) -> Vec<VertexAttribute> {
+    match id {
+        WHITE_ID => vec![VertexAttribute::Vec3F32],
+        DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID =>
+            vec![
+                VertexAttribute::Vec3F32, 
+                VertexAttribute::Vec3F32,
+                VertexAttribute::Vec2F32
+            ],
+        id @ _ => { logf!("The Shader Id {} is not expected.", id) },
+    }
+}
+
+pub enum BindingStage {
+    Vertex,
+    Fragment,
+}
+
+pub enum ResourceType {
+    Uniform,
+}
+
+pub fn shader_id_resources(id: Id) -> Vec<(Vec<BindingStage>, u32, ResourceType)> {
+    match id {
+        WHITE_ID => 
+            vec![(vec![BindingStage::Vertex], 1, ResourceType::Uniform)],
+        id @ _ => { logf!("The Shader Id {} is not expected.", id) },
+    }
 }

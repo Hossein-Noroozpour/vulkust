@@ -1,5 +1,7 @@
+#![feature(i128_type)]
 extern crate libc;
 
+use std::collections::LinkedList;
 use std::default::Default;
 use std::mem::{transmute, size_of};
 use std::os::raw::c_void;
@@ -127,88 +129,158 @@ impl Drop for Region {
     }
 }
 
+pub struct MeshBuffer {
+    offset: usize,
+    index_offset: usize,
+    size: usize,
+    vertex_size: usize,
+    index_count: usize,
+    address: *mut c_void,
+    best_alignment: usize,
+    main_buffer: vk::VkBuffer,
+    main_memory: vk::VkDeviceMemory,
+    staging_buffer: vk::VkBuffer,
+    staging_memory: vk::VkDeviceMemory,
+}
+
+pub struct UniformBuffer {
+    offset: usize,
+    size: usize,
+    address: *mut c_void,
+    best_alignment: usize,
+    main_buffer: vk::VkBuffer,
+    main_memory: vk::VkDeviceMemory,
+    staging_buffer: vk::VkBuffer,
+    staging_memory: vk::VkDeviceMemory,
+}
+
+pub struct SceneDynamics {
+    offset: usize,
+    size: usize,
+    address: *mut c_void,
+    best_alignment: usize,
+    main_buffer: vk::VkBuffer,
+    main_memory: vk::VkDeviceMemory,
+    staging_buffer: vk::VkBuffer,
+    staging_memory: vk::VkDeviceMemory,
+    uniform_buffers: LinkedList<Weak<RefCell<UniformBuffer>>>,
+}
+
 pub struct Manager {
-    vk_data: vk::VkBuffer,
-    memory: vk::VkDeviceMemory,
-    vertices_indices: Region,
-    uniforms: Region,
-    uniforms_align: usize,
-    frames_count: usize,
+    size: usize,
+    address: *mut u8,
+    main_buffer: vk::VkBuffer,
+    main_memory: vk::VkDeviceMemory,
+    staging_buffer: vk::VkBuffer,
+    staging_memory: vk::VkDeviceMemory,
+    best_alignment: u64,
+    meshes_region_size: u64,
+    mesh_buffers: LinkedList<Weak<RefCell<MeshBuffer>>>,
+    frames_scene_dynamics: Vec<LinkedList<Weak<RefCell<SceneDynamics>>>>,
 }
 
 impl Manager {
-    fn create(&mut self) {
+    pub fn new(logical_device: Arc<LogicalDevice>, size: usize, meshes_size: usize, frames_count: usize) -> Self {
+        let best_alignment = logical_device.physical_device.get_max_min_alignment() as usize;
+        let mut frames_scene_dynamics = Vec::new();
+        for _ in 0..frames_count {
+            frames_scene_dynamics.push(LinkedList::new());
+        }
+        let mut main_buffer = null_mut();
+        let mut main_memory = null_mut();
+        let mut staging_buffer = null_mut();
+        let mut staging_memory = null_mut();
         let mut buffer_info = vk::VkBufferCreateInfo::default();
         buffer_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_info.size = (self.vertices_indices.size + self.uniforms.size) as vk::VkDeviceSize;
+        buffer_info.size = size as vk::VkDeviceSize;
         buffer_info.usage = vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT as u32 |
             vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT as u32 |
             vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT as u32 |
             vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT as u32;
         vulkan_check!(vk::vkCreateBuffer(
-            self.uniforms.logical_device.vk_data,
+            logical_device.vk_data,
             &buffer_info,
             null(),
-            &mut self.vk_data,
+            &mut main_buffer,
         ));
         let mut mem_reqs = vk::VkMemoryRequirements::default();
         unsafe {
-            vk::vkGetBufferMemoryRequirements(
-                self.uniforms.logical_device.vk_data,
-                self.vk_data,
-                &mut mem_reqs,
-            );
+            vk::vkGetBufferMemoryRequirements(logical_device.vk_data, main_buffer, &mut mem_reqs);
         }
         let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
         mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         mem_alloc.allocationSize = mem_reqs.size;
-        mem_alloc.memoryTypeIndex = self.uniforms
-            .logical_device
+        mem_alloc.memoryTypeIndex = logical_device
             .physical_device
             .get_memory_type_index(
                 mem_reqs.memoryTypeBits,
                 vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32,
             );
         vulkan_check!(vk::vkAllocateMemory(
-            self.uniforms.logical_device.vk_data,
+            logical_device.vk_data,
             &mem_alloc,
             null(),
-            &mut self.memory,
+            &mut main_memory,
         ));
         vulkan_check!(vk::vkBindBufferMemory(
-            self.uniforms.logical_device.vk_data,
-            self.vk_data,
-            self.memory,
+            logical_device.vk_data,
+            main_buffer,
+            main_memory,
             0,
         ));
-    }
-
-    pub fn new(logical_device: Arc<LogicalDevice>, vi_size: usize, u_size: usize, frames_count: usize) -> Self {
-        let alignment = logical_device.physical_device.get_max_min_alignment() as usize;
-        let vertices = Region::new(logical_device.clone(), vi_size);
-        let uniforms = Region::new(logical_device, u_size * frames_count);
-        let mut b = Manager {
-            vk_data: null_mut(),
-            memory: null_mut(),
-            vertices_indices: vertices,
-            uniforms: uniforms,
-            uniforms_align: u_size,
-            frames_count: frames_count,
-        };
-        let flag = alignment - 1;
-        if vi_size & flag != 0 || u_size & flag != 0 {
-            logf!("Buffer sizes must be coefficeint of {}", alignment);
+        buffer_info.usage = vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT as u32;
+        vulkan_check!(vk::vkCreateBuffer(
+            logical_device.vk_data,
+            &buffer_info,
+            null(),
+            &mut staging_buffer,
+        ));
+        unsafe {
+            vk::vkGetBufferMemoryRequirements(logical_device.vk_data, staging_buffer, &mut mem_reqs);
         }
-        b.create();
-        return b;
+        mem_alloc.memoryTypeIndex = logical_device.physical_device.get_memory_type_index(
+            mem_reqs.memoryTypeBits,
+            vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32 |
+                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32,
+        );
+        vulkan_check!(vk::vkAllocateMemory(
+            logical_device.vk_data,
+            &mem_alloc,
+            null(),
+            &staging_memory,
+        ));
+        let mut address = 0;
+        vulkan_check!(vk::vkMapMemory(
+            logical_device.vk_data,
+            staging_memory,
+            0,
+            mem_alloc.allocationSize,
+            0,
+            transmute(&mut address),
+        ));
+        vulkan_check!(vk::vkBindBufferMemory(
+            logical_device.vk_data,
+            staging_buffer,
+            staging_memory,
+            0,
+        ));
+        Manager {
+            size: size,
+            address: address,
+            main_buffer: main_buffer,
+            main_memory: main_memory,
+            staging_buffer: staging_buffer,
+            staging_memory: staging_memory,
+            best_alignment: best_alignment,
+            meshes_region_size: meshes_size,
+            mesh_buffers: LinkedList::new(),
+            frames_scene_dynamics: frames_scene_dynamics,
+        }
     }
 
-    pub fn seek_vi(&mut self, offset: usize) {
-        self.vertices_indices.offset = offset;
-    }
-
-    pub fn seek_u(&mut self, offset: usize) {
-        self.uniforms.offset = offset;
+    pub fn add_mesh_buffer(
+        &mut self, vertices_size: usize, indices_count: usize) -> Arc<RefCell<MeshBuffer>> {
+        
     }
 
     pub fn add_vi(&mut self, data: *const c_void, size: usize) -> (usize, usize) {
