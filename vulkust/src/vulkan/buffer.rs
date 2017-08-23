@@ -132,6 +132,7 @@ impl Drop for Region {
 }
 
 pub struct MeshBuffer {
+    need_refresh: bool,
     offset: usize,
     index_offset: usize,
     size: usize,
@@ -168,6 +169,11 @@ pub struct SceneDynamics {
     uniform_buffers: List<Weak<RefCell<UniformBuffer>>>,
 }
 
+pub struct MeshInfo {
+    front: usize,
+    end: usize,
+}
+
 pub struct Manager {
     main_buffer: vk::VkBuffer,
     main_memory: vk::VkDeviceMemory,
@@ -182,7 +188,7 @@ pub struct Manager {
     meshes_region_last_offset: usize,
     meshes_region_size: usize,
     frames_scene_dynamics_region_size: usize,
-    mesh_buffers: List<Weak<RefCell<MeshBuffer>>>,
+    mesh_buffers: List<(MeshInfo, Weak<RefCell<MeshBuffer>>)>,
     frames_scene_dynamics: Vec<List<Weak<RefCell<SceneDynamics>>>>,
 }
 
@@ -296,10 +302,75 @@ impl Manager {
 
     pub fn add_mesh_buffer(
         &mut self, vertex_size: usize, vertices_count: usize, indices_count: usize) -> Arc<RefCell<MeshBuffer>> {
-        let mesh_size = self.size_aligner(vertex_size * vertices_count) + 
-            self.size_aligner(INDEX_ELEMENTS_SIZE * indices_count);
-        if self.meshes_region_size - self.meshes_region_last_offset > mesh_size {
-            
+        let vertices_size = self.size_aligner(vertex_size * vertices_count);
+        let indices_size = self.size_aligner(INDEX_ELEMENTS_SIZE * indices_count);
+        let mesh_size = vertices_size + indices_size;
+        if self.meshes_region_size - self.meshes_region_last_offset >= mesh_size {
+            let buff = Arc::new(RefCell::new(MeshBuffer {
+                need_refresh: true,
+                offset: self.meshes_region_last_offset,
+                index_offset: self.meshes_region_last_offset + vertices_size,
+                size: mesh_size,
+                vertex_size: vertex_size,
+                indices_count: indices_count,
+                address: unsafe { self.address.offset(self.meshes_region_last_offset) },
+                best_alignment: self.best_alignment,
+                main_buffer: self.main_buffer,
+                main_memory: self.main_memory,
+                staging_buffer: self.staging_buffer,
+                staging_memory: self.staging_memory,
+            }));
+            self.mesh_buffers.add_end((
+                MeshInfo {
+                    front: self.meshes_region_last_offset,
+                    end: self.meshes_region_last_offset + mesh_size,
+                }, 
+                Arc::downgrade(&buff)));
+            self.meshes_region_last_offset += mesh_size;
+            self.meshes_region_last_filled += mesh_size;
+            return buff;
+        }
+        if self.meshes_region_size - self.meshes_region_filled >= mesh_size {
+            let mut offset_free = 0usize;
+            let mut node_buffer = self.mesh_buffers.get_first_node().unwrap();
+            loop {
+                let mesh = node_buffer.data.1.upgrade();
+                match mesh {
+                    Some(n) => {
+                        let offset_free_end = node_buffer.data.0.end;
+                        if offset_free_end - offset_free >= mesh_size {
+                            let buff = Arc::new(RefCell::new(MeshBuffer {
+                                need_refresh: true,
+                                offset: offset_free,
+                                index_offset: offset_free + vertices_size,
+                                size: mesh_size,
+                                vertex_size: vertex_size,
+                                indices_count: indices_count,
+                                address: unsafe { self.address.offset(offset_free) },
+                                best_alignment: self.best_alignment,
+                                main_buffer: self.main_buffer,
+                                main_memory: self.main_memory,
+                                staging_buffer: self.staging_buffer,
+                                staging_memory: self.staging_memory,
+                            }));
+                            node_buffers.add_parent((
+                                MeshInfo {
+                                    front: offset_free,
+                                    end: offset_free + mesh_size,
+                                }, 
+                                Arc::downgrade(&buff)));
+                            self.meshes_region_last_filled += mesh_size;
+                            return buff;
+                        }
+                        offset_free = offset_free_end;
+                    },
+                    None => {
+                        self.meshes_region_last_filled -= (node_buffer.data.0.end - node_buffer.data.0.front);
+                        let next_node = node_buffer.get_child();
+                        match 
+                    },
+                }
+            }
         }
         
     }

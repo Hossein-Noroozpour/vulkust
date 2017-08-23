@@ -87,6 +87,34 @@ impl<T> ListNode<T> {
         }
     }
 
+    pub fn remove(&mut self) -> Option<&mut ListNode<T>> {
+        let parent = self.parent;
+        let child = self.child;
+        if parent != null_mut() {
+            let parent: &mut ListNode<T> = unsafe { transmute(parent) };
+            Box::from_raw(parent.child);
+            parent.child = child;
+            if child != null_mut() {
+                let child: &mut ListNode<T> = unsafe { transmute(child) };
+                child.parent = parent;
+                return Some(child);
+            }
+            return None;
+        }
+        if child != null_mut() {
+            let child: &mut ListNode<T> = unsafe { transmute(child) };
+            Box::from_raw(child.parent);
+            child.parent = parent;
+            if parent != null_mut() {
+                let parent: &mut ListNode<T> = unsafe { transmute(parent) };
+                parent.child = child;
+            }
+            return Some(child);
+        }
+        Box::from_raw(self);
+        return None;
+    }
+
     pub fn remove_child(&mut self) {
         if self.child == null_mut() {
             return;
