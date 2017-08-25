@@ -300,6 +300,12 @@ impl Manager {
             }
     }
 
+    fn 
+
+    pub fn clear(&mut self) {
+
+    }
+
     pub fn add_mesh_buffer(
         &mut self, vertex_size: usize, vertices_count: usize, indices_count: usize) -> Arc<RefCell<MeshBuffer>> {
         let vertices_size = self.size_aligner(vertex_size * vertices_count);
@@ -337,7 +343,7 @@ impl Manager {
                 let mesh = node_buffer.data.1.upgrade();
                 match mesh {
                     Some(n) => {
-                        let offset_free_end = node_buffer.data.0.end;
+                        let offset_free_end = node_buffer.data.0.front;
                         if offset_free_end - offset_free >= mesh_size {
                             let buff = Arc::new(RefCell::new(MeshBuffer {
                                 need_refresh: true,
@@ -362,12 +368,43 @@ impl Manager {
                             self.meshes_region_last_filled += mesh_size;
                             return buff;
                         }
-                        offset_free = offset_free_end;
+                        offset_free = node_buffer.data.0.end;
                     },
                     None => {
-                        self.meshes_region_last_filled -= (node_buffer.data.0.end - node_buffer.data.0.front);
-                        let next_node = node_buffer.get_child();
-                        match 
+                        self.meshes_region_filled -= (node_buffer.data.0.end - node_buffer.data.0.front);
+                        let next_node = node_buffer.remove();
+                        match next_node {
+                            Some(n) => node_buffer = n,
+                            None => {
+                                if self.meshes_region_size - offset_free >= mesh_size {
+                                    let buff = Arc::new(RefCell::new(MeshBuffer {
+                                        need_refresh: true,
+                                        offset: offset_free,
+                                        index_offset: offset_free + vertices_size,
+                                        size: mesh_size,
+                                        vertex_size: vertex_size,
+                                        indices_count: indices_count,
+                                        address: unsafe { self.address.offset(offset_free) },
+                                        best_alignment: self.best_alignment,
+                                        main_buffer: self.main_buffer,
+                                        main_memory: self.main_memory,
+                                        staging_buffer: self.staging_buffer,
+                                        staging_memory: self.staging_memory,
+                                    }));
+                                    node_buffers.add_parent((
+                                        MeshInfo {
+                                            front: offset_free,
+                                            end: offset_free + mesh_size,
+                                        }, 
+                                        Arc::downgrade(&buff)));
+                                    self.meshes_region_last_filled += mesh_size;
+                                    return buff;
+                                } else {
+                                    loge!("Performance warning!");
+
+                                }
+                            },
+                        }
                     },
                 }
             }
