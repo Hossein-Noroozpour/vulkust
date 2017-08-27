@@ -169,7 +169,7 @@ impl Model for RootStaticModel {
     }
 
     fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize) {
-        todo;
+        // todo;
         for m in &mut self.children {
             m.rec_occ(cmd_buff, mat, frame_index);
         }
@@ -231,7 +231,7 @@ impl Model for DynamicModel {
     }
 
     fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize) {
-        todo;
+        // todo;
         for m in &mut self.children {
             m.rec_occ(cmd_buff, mat, frame_index);
         }

@@ -11,6 +11,7 @@ use super::buffer::Manager as BufferManager;
 use super::model::UniformData as MdlUniData;
 use super::pipeline::Pipeline;
 use super::scene::UniformData as ScnUniData;
+use super::shader;
 use super::shader::{read_id, Id as ShaderId, Shader};
 use super::shader::manager::Manager as ShaderManager;
 use super::texture::Texture;
@@ -62,7 +63,7 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
         let offset = file.tell();
         let texture = texture_manager.get(texture_id, file);
         let shader = shader_manager.get(
-            DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID,
+            shader::DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID,
             file,
             logical_device,
         );
@@ -90,35 +91,11 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
 }
 
 impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
-    fn get_vertex_size(&self) -> u64 {
-        return POSITION_NORMAL_UV_VERTEX_SIZE;
-    }
-
-    fn get_vertex_attributes(&self) -> Vec<VertexAttribute> {
-        return vec![
-            VertexAttribute::Vec3F32,
-            VertexAttribute::Vec3F32,
-            VertexAttribute::Vec2F32,
-        ];
-    }
-
-    fn get_shader(&self) -> &Arc<Shader> {
-        &self.shader
-    }
-
     fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
         self.uniforms[frame_index].mvp = mud.mvp;
         self.uniforms[frame_index].transform = mud.m;
         self.uniforms[frame_index].eye_loc = sud.eye_loc;
         self.uniforms[frame_index].sun_dir = sud.sun_dir;
-    }
-
-    fn set_pipeline(&mut self, pipeline: Arc<Pipeline>) {
-        self.pipeline = Some(pipeline);
-    }
-
-    fn set_descriptor_set(&mut self, descriptor_set: Arc<DescriptorSet>) {
-        self.descriptor_set = Some(descriptor_set);
     }
 }
 
@@ -134,7 +111,7 @@ impl White {
         logical_device: Arc<LogicalDevice>,
         shader_manager: &mut ShaderManager,
     ) -> Self {
-        let shader = shader_manager.get(WHITE_ID, file, logical_device);
+        let shader = shader_manager.get(shader::WHITE_ID, file, logical_device);
         White { 
             shader: shader,
             pipeline: None, // TODO
@@ -144,28 +121,8 @@ impl White {
 }
 
 impl Material for White {
-    fn get_vertex_size(&self) -> u64 {
-        return POSITION_VERTEX_SIZE;
-    }
-
-    fn get_vertex_attributes(&self) -> Vec<VertexAttribute> {
-        return vec![VertexAttribute::Vec3F32];
-    }
-
-    fn get_shader(&self) -> &Arc<Shader> {
-        &self.shader
-    }
-
     fn update_uniform(&self, _sud: &ScnUniData, _mud: &MdlUniData, _frame_index: usize) {
         logf!("White shader does not implement this function because this is special!!!");
-    }
-
-    fn set_pipeline(&mut self, pipeline: Arc<Pipeline>) {
-        self.pipeline = Some(pipeline);
-    }
-
-    fn set_descriptor_set(&mut self, descriptor_set: Arc<DescriptorSet>) {
-        self.descriptor_set = Some(descriptor_set);
     }
 }
 

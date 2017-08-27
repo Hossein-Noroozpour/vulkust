@@ -94,7 +94,7 @@ pub fn shader_id_to_vertex_attributes(id: Id) -> Vec<VertexAttribute> {
                 VertexAttribute::Vec3F32,
                 VertexAttribute::Vec2F32
             ],
-        id @ _ => { logf!("The Shader Id {} is not expected.", id) },
+        id @ _ => { logf!("The Shader Id {} is not expected.", id); },
     }
 }
 
@@ -111,6 +111,6 @@ pub fn shader_id_resources(id: Id) -> Vec<(Vec<BindingStage>, u32, ResourceType)
     match id {
         WHITE_ID => 
             vec![(vec![BindingStage::Vertex], 1, ResourceType::Uniform)],
-        id @ _ => { logf!("The Shader Id {} is not expected.", id) },
+        id @ _ => { logf!("The Shader Id {} is not expected.", id); },
     }
 }

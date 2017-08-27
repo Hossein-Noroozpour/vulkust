@@ -1,5 +1,7 @@
 extern crate libc;
 
+use std::cell::RefCell;
+use std::sync::Arc;
 use super::xcb;
 use super::xproto;
 use super::super::super::core::application::ApplicationTrait;
