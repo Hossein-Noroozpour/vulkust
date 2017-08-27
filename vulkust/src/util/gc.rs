@@ -16,6 +16,8 @@ struct MemInfo {
 }
 
 pub struct Gc {
+    front: usize,
+    end: usize,
     size: usize,
     last_offset: usize,
     last_checked: Option<&'static mut ListNode<MemInfo>>,
@@ -24,10 +26,12 @@ pub struct Gc {
 }
 
 impl Gc {
-    pub fn new(size: usize) -> Self {
+    pub fn new(front: usize, size: usize) -> Self {
         Gc {
+            front: front,
+            end: front + size,
             size: size,
-            last_offset: 0,
+            last_offset: front,
             last_checked: None,
             objects_count: 0,
             objects: List::new(),
@@ -37,17 +41,17 @@ impl Gc {
     pub fn clean(&mut self) {
         self.last_checked = None;
         let mut obj = self.objects.get_front();
-        let mut last_offset = 0;
+        self.last_offset = self.front;
         while obj.is_some() {
             let o = obj.unwrap();
             obj = match o.data.pointer.upgrade() {
                 Some(op) => {        
-                    if o.data.front != last_offset {
-                        op.borrow_mut().move_to(last_offset);
-                        o.data.front = last_offset;
-                        o.data.end = last_offset + o.data.size;
+                    if o.data.front != self.last_offset {
+                        op.borrow_mut().move_to(self.last_offset);
+                        o.data.front = self.last_offset;
+                        o.data.end = self.last_offset + o.data.size;
                     }
-                    last_offset = o.data.end;
+                    self.last_offset = o.data.end;
                     o.get_child()
                 },
                 None => {
@@ -65,7 +69,7 @@ impl Gc {
         if self.size < obj_size {
             logf!("The Object you want to allocate is bigger than GC memory!");
         }
-        if self.size - self.last_offset >= obj_size {
+        if self.end - self.last_offset >= obj_size {
             object.borrow_mut().allocate(self.last_offset);
             self.objects.add_end(
                 MemInfo {
@@ -112,7 +116,7 @@ impl Gc {
                 },
             };
             if self.last_checked.is_none() {
-                if self.size - offset_free >= obj_size {
+                if self.end - offset_free >= obj_size {
                     object.borrow_mut().allocate(offset_free);
                     last_checked.add_parent(
                         MemInfo {
@@ -131,7 +135,7 @@ impl Gc {
         }
         loge!("Performance warning, GC called automatically, please do gc cleaning manually for preventing lag in game.");
         self.clean();
-        if self.size - self.last_offset < obj_size {
+        if self.end - self.last_offset < obj_size {
             logf!("Out of GC memory!");
         }
         object.borrow_mut().allocate(self.last_offset);
@@ -144,5 +148,21 @@ impl Gc {
             }
         );
         self.last_offset += obj_size;
+    }
+}
+
+impl GcObject for Gc {
+    fn get_size(&self) -> usize {
+        self.size
+    }
+
+    fn allocate(&mut self, offset: usize) {
+        self.move_to(offset);
+    }
+
+    fn move_to(&mut self, offset: usize) {
+        self.front = offset;
+        self.end = offset + self.front;
+        self.clean();
     }
 }
