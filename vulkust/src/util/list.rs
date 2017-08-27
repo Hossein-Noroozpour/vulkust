@@ -1,5 +1,4 @@
 use std::mem::transmute;
-use std::ptr::null_mut;
 
 pub struct ListNode<T> where T: 'static {
     pub data: T,
@@ -72,44 +71,24 @@ impl<T> ListNode<T> {
     pub fn remove(&mut self) -> Option<&'static mut ListNode<T>> {
         let parent = self.parent;
         let child = self.child;
-        if parent != null_mut() {
-            let parent: &mut ListNode<T> = unsafe { transmute(parent) };
-            Box::from_raw(parent.child);
+        let list = self.list;
+        Box::from_raw(self);
+        if 0usize != unsafe { transmute(parent) } {
             parent.child = child;
-            if child != null_mut() {
-                let child: &mut ListNode<T> = unsafe { transmute(child) };
+            if 0usize == unsafe { transmute(child) } {
+                list.end = parent;
+                return None;
+            } else {
                 child.parent = parent;
                 return Some(child);
             }
-            return None;
         }
-        if child != null_mut() {
-            let child: &mut ListNode<T> = unsafe { transmute(child) };
-            Box::from_raw(child.parent);
+        list.front = child;
+        if 0usize != unsafe { transmute(child) } {
             child.parent = parent;
-            if parent != null_mut() {
-                let parent: &mut ListNode<T> = unsafe { transmute(parent) };
-                parent.child = child;
-            }
             return Some(child);
         }
-        Box::from_raw(self);
         return None;
-    }
-
-    pub fn remove_child(&mut self) {
-        if self.child == null_mut() {
-            return;
-        }
-        let removed_child = self.child;
-        let sptr = unsafe { (*self.child).parent };
-        self.child = unsafe { (*self.child).child };
-        if self.child != null_mut() {
-            unsafe {
-                (*self.child).parent = sptr;
-            }
-        }
-        Box::from_raw(removed_child);
     }
 }
 
@@ -121,20 +100,20 @@ pub struct List<T> where T: 'static {
 impl<T> List<T> where T: 'static {
     pub fn new() -> Self {
         List {
-            front: null_mut(),
-            end: null_mut(),
+            front: unsafe { transmute(0usize) },
+            end: unsafe { transmute(0usize) },
         }
     }
 
     pub fn get_front(&mut self) -> Option<&'static mut ListNode<T>> {
-        if self.front == null_mut() {
+        if 0usize == unsafe { transmute(self.front) } {
             return None;
         }
         Some(unsafe { transmute(self.front) })
     }
 
     pub fn get_end(&mut self) -> Option<&'static mut ListNode<T>> {
-        if self.end == null_mut() {
+        if 0usize == unsafe { transmute(self.end) } {
             return None;
         }
         Some(unsafe { transmute(self.end) })
@@ -142,37 +121,49 @@ impl<T> List<T> where T: 'static {
 
     pub fn add_front(&mut self, data: T) {
         let last_front = self.front;
-        self.front =  Box::into_raw(Box::new(ListNode {
-            data: data,
-            list: unsafe { transmute(self) },
-            child: last_front,
-            parent: null_mut(),
-        }));
-        if last_front != null_mut() {
-            unsafe {
-                (*last_front).parent = self.front;
-            }
+        self.front =  unsafe { 
+            transmute(
+                Box::into_raw(
+                    Box::new(
+                        ListNode {
+                            data: data,
+                            list: transmute(self),
+                            child: last_front,
+                            parent: transmute(0usize),
+                        }
+                    )
+                )
+            )
+        };
+        if 0usize != unsafe { transmute(last_front) } {
+            last_front.parent = unsafe { transmute(self.front) };
         }
-        if self.end == null_mut() {
-            self.end == self.front;
+        if 0usize == unsafe { transmute(self.end) } {
+            self.end = unsafe { transmute(self.front) };
         }
     }
 
     pub fn add_end(&mut self, data: T) {
         let last_end = self.end;
-        self.end =  Box::into_raw(Box::new(ListNode {
-            data: data,
-            list: unsafe { transmute(self) },
-            child: null_mut(),
-            parent: last_end,
-        }));
-        if last_end != null_mut() {
-            unsafe {
-                (*last_end).child = self.end;
-            }
+        self.end =  unsafe { 
+            transmute(
+                Box::into_raw(
+                    Box::new(
+                        ListNode {
+                            data: data,
+                            list: transmute(self),
+                            child: transmute(0usize),
+                            parent: last_end,
+                        }
+                    )
+                )
+            )
+        };
+        if 0usize != unsafe { transmute(last_end) } {
+            last_end.child = unsafe { transmute(self.end) };
         }
-        if self.front == null_mut() {
-            self.front == self.end;
+        if 0usize == unsafe { transmute(self.front) } {
+            self.front = unsafe { transmute(self.end) };
         }
     }
 }
