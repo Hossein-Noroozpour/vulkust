@@ -29,6 +29,7 @@ impl Gc {
             last_offset: 0,
             filled: 0,
             last_id: 0,
+            last_checked: None,
             objects: List::new(),
         }
     }
@@ -55,18 +56,14 @@ impl Gc {
             return;
         }
         if self.size - self.filled >= obj_size {
-            let mut offset_free = 0usize;
-            let mut node_obj = if self.last_checked.is_none() {
+            self.last_checked = if self.last_checked.is_none() {
                 self.objects.get_first_node().unwrap()
-            } else {
-                let lc = self.last_checked.unwrap();
-                offset_free = lc.end;
-                lc
             };
+            let mut offset_free = self.last_checked.as_ref().unwrap().end();
             let starting_id = node_obj.id;
             loop {
                 let obj = node_obj.data.1.upgrade();
-                let mut next_node = match obj {
+                self.last_checked = match obj {
                     Some(o) => {
                         let offset_free_end = node_obj.data.0.front;
                         if offset_free_end - offset_free >= obj_size {
@@ -86,39 +83,31 @@ impl Gc {
                             return;
                         }
                         offset_free = node_buffer.data.0.end;
-                        next_node = node_obj.get_child()
+                        node_obj.get_child()
                     },
                     None => {
                         self.filled -= node_obj.data.0.size;
-                        next_node = node_obj.remove()
+                        node_obj.remove()
                     },
                 };
-                node_obj = match next_node {
+                node_obj = match self.last_checked {
                     Some(n) => n,
                     None => {
                         if self.size - offset_free >= obj_size {
-                            let buff = Arc::new(RefCell::new(MeshBuffer {
-                                need_refresh: true,
-                                offset: offset_free,
-                                index_offset: offset_free + vertices_size,
-                                size: mesh_size,
-                                vertex_size: vertex_size,
-                                indices_count: indices_count,
-                                address: unsafe { self.address.offset(offset_free) },
-                                best_alignment: self.best_alignment,
-                                main_buffer: self.main_buffer,
-                                main_memory: self.main_memory,
-                                staging_buffer: self.staging_buffer,
-                                staging_memory: self.staging_memory,
-                            }));
-                            node_buffers.add_parent((
+                            object.borrow_mut().allocate(offset_free);
+                            node_obj.add_parent(
                                 MeshInfo {
                                     front: offset_free,
-                                    end: offset_free + mesh_size,
-                                }, 
-                                Arc::downgrade(&buff)));
-                            self.meshes_region_last_filled += mesh_size;
-                            return buff;
+                                    end: offset_free + obj_size,
+                                    size: obj_size,
+                                    id: self.last_id,
+                                    pointer: Arc::downgrade(object),
+                                }
+                            );
+                            self.filled += obj_size;
+                            self.last_offset += obj_size;
+                            self.last_id += 1;
+                            return;
                         } else {
                             loge!("Performance warning!");
                             self.collocate_meshes();
