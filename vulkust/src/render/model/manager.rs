@@ -2,8 +2,10 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
+use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
 use super::super::buffer::Manager as BufferManager;
+use super::super::engine::RenderEngine;
 use super::super::texture::manager::Manager as TextureManager;
 use super::super::shader::manager::Manager as ShaderManager;
 use super::{read_model, Model};
@@ -29,14 +31,15 @@ impl Manager {
         }
     }
 
-    pub fn get(
+    pub fn get<CoreApp>(
         &mut self,
         id: u64,
         file: &mut File,
-        buffer_manager: &mut BufferManager,
-        texture_manager: &mut TextureManager,
-        shader_manager: &Arc<RefCell<ShaderManager>>,
-    ) -> Arc<RefCell<Model>> {
+        engine: &mut RenderEngine<CoreApp>,
+    ) -> Arc<RefCell<Model>> 
+    where
+        CoreApp: ApplicationTrait,
+    {
         let w_buffer = buffer_manager.get_id();
         match self.cached.get(&w_buffer) {
             Some(cached) => match cached.get(&id) {

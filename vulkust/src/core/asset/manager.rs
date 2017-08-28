@@ -75,20 +75,15 @@ impl Manager {
         self.texture_manager.get(id, &mut self.file)
     }
 
-    pub fn get_model(
+    pub fn get_model<CoreApp>(
         &mut self,
         id: u64,
-        buffer_manager: &mut BufferManager,
-    ) -> Arc<RefCell<Model>> {
-        let shader_manager = &mut self.shader_manager;
-        let texture_manager = &mut self.texture_manager;
-        self.model_manager.get(
-            id,
-            &mut self.file,
-            buffer_manager,
-            texture_manager,
-            shader_manager,
-        )
+        engine: &mut RenderEngine<CoreApp>,
+    ) -> Arc<RefCell<Model>> 
+    where
+        CoreApp: ApplicationTrait,
+    {
+        self.model_manager.get(id, &mut self.file, engine)
     }
 
     pub fn get_scene<CoreApp>(
