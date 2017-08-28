@@ -1,12 +1,12 @@
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
 use super::super::system::file::File;
+use super::super::util::cell::DebugCell;
 use super::{Audio, Music, Voice};
 
 pub struct Manager {
-    pub cached: BTreeMap<u64, Weak<RefCell<Audio>>>,
+    pub cached: BTreeMap<u64, Weak<DebugCell<Audio>>>,
     pub offsets: Vec<u64>,
 }
 
@@ -26,7 +26,7 @@ impl Manager {
         }
     }
 
-    pub fn get(&mut self, id: u64, file: &mut File) -> Arc<RefCell<Audio>> {
+    pub fn get(&mut self, id: u64, file: &mut File) -> Arc<DebugCell<Audio>> {
         match self.cached.get(&id) {
             Some(res) => match res.upgrade() {
                 Some(res) => {
@@ -46,9 +46,9 @@ impl Manager {
             }
         }
         let audio_type: u64 = file.read_type();
-        let aud: Arc<RefCell<Audio>> = match audio_type {
-            10 => Arc::new(RefCell::new(Music::new(file))),
-            20 => Arc::new(RefCell::new(Voice::new(file))),
+        let aud: Arc<DebugCell<Audio>> = match audio_type {
+            10 => Arc::new(DebugCell::new(Music::new(file))),
+            20 => Arc::new(DebugCell::new(Voice::new(file))),
             _ => {
                 logf!("Uexpected value");
             }

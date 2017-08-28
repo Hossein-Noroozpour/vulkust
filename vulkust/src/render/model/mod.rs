@@ -1,7 +1,7 @@
 pub mod manager;
 
 use std::sync::Arc;
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::default::Default;
 use super::super::math::matrix::Mat4x4;
 use super::super::system::file::File;
@@ -33,7 +33,7 @@ pub trait Model {
         logf!("This struct does not implement child_update_uniform because it is not child.");
     }
     fn get_dynamism(&self) -> Dynamism;
-    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize);
+    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<DebugCell<Material>>, frame_index: usize);
     fn is_static(&self) -> bool {
         return false;
     }
@@ -59,7 +59,7 @@ impl StaticModel {
         model_manager: &mut Manager,
         buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
-        shader_manager: &Arc<RefCell<ShaderManager>>,
+        shader_manager: &Arc<DebugCell<ShaderManager>>,
     ) -> Self {
         let device = buffer_manager.get_device().clone();
         let mesh = Mesh::new(
@@ -99,7 +99,7 @@ impl Model for StaticModel {
         Dynamism::Static
     }
 
-    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize) {
+    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<DebugCell<Material>>, frame_index: usize) {
         for m in &mut self.children {
             m.rec_occ(cmd_buff, mat, frame_index);
         }
@@ -126,7 +126,7 @@ impl RootStaticModel {
         model_manager: &mut Manager,
         buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
-        shader_manager: &Arc<RefCell<ShaderManager>>,
+        shader_manager: &Arc<DebugCell<ShaderManager>>,
     ) -> Self {
         let mesh = OccMesh::new(file, buffer_manager);
         let children_count = file.read_count();
@@ -168,7 +168,7 @@ impl Model for RootStaticModel {
         Dynamism::Static
     }
 
-    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize) {
+    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<DebugCell<Material>>, frame_index: usize) {
         // todo;
         for m in &mut self.children {
             m.rec_occ(cmd_buff, mat, frame_index);
@@ -188,7 +188,7 @@ impl DynamicModel {
         model_manager: &mut Manager,
         buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
-        shader_manager: &Arc<RefCell<ShaderManager>>,
+        shader_manager: &Arc<DebugCell<ShaderManager>>,
     ) -> Self {
         let m = Mat4x4::new_from_file(file);
         let mesh = OccMesh::new(file, buffer_manager);
@@ -230,7 +230,7 @@ impl Model for DynamicModel {
         Dynamism::Dynamic
     }
 
-    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize) {
+    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<DebugCell<Material>>, frame_index: usize) {
         // todo;
         for m in &mut self.children {
             m.rec_occ(cmd_buff, mat, frame_index);
@@ -240,7 +240,7 @@ impl Model for DynamicModel {
 
 pub struct CopyModel {
     pub ud: UniformData,
-    pub sm: Arc<RefCell<Model>>,
+    pub sm: Arc<DebugCell<Model>>,
 }
 
 impl CopyModel {
@@ -249,7 +249,7 @@ impl CopyModel {
         model_manager: &mut Manager,
         buffer_manager: &mut BufferManager,
         texture_manager: &mut TextureManager,
-        shader_manager: &Arc<RefCell<ShaderManager>>,
+        shader_manager: &Arc<DebugCell<ShaderManager>>,
     ) -> Self {
         let m = Mat4x4::new_from_file(file);
         let id = file.read_id();
@@ -279,7 +279,7 @@ impl Model for CopyModel {
         Dynamism::Dynamic
     }
 
-    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<RefCell<Material>>, frame_index: usize) {
+    fn rec_occ(&mut self, cmd_buff: &mut CmdBuff, mat: &Arc<DebugCell<Material>>, frame_index: usize) {
         self.sm.borrow_mut().rec_occ(cmd_buff, mat, frame_index);
     }
 }
@@ -289,10 +289,10 @@ pub fn read_model(
     model_manager: &mut Manager,
     buffer_manager: &mut BufferManager,
     texture_manager: &mut TextureManager,
-    shader_manager: &Arc<RefCell<ShaderManager>>,
-) -> Arc<RefCell<Model>> {
+    shader_manager: &Arc<DebugCell<ShaderManager>>,
+) -> Arc<DebugCell<Model>> {
     return if file.read_bool() {
-        Arc::new(RefCell::new(CopyModel::new(
+        Arc::new(DebugCell::new(CopyModel::new(
             file,
             model_manager,
             buffer_manager,
@@ -300,7 +300,7 @@ pub fn read_model(
             shader_manager,
         )))
     } else if file.read_bool() {
-        Arc::new(RefCell::new(DynamicModel::new(
+        Arc::new(DebugCell::new(DynamicModel::new(
             file,
             model_manager,
             buffer_manager,
@@ -308,7 +308,7 @@ pub fn read_model(
             shader_manager,
         )))
     } else {
-        Arc::new(RefCell::new(RootStaticModel::new(
+        Arc::new(DebugCell::new(RootStaticModel::new(
             file,
             model_manager,
             buffer_manager,
@@ -323,7 +323,7 @@ fn read_boxed_model(
     model_manager: &mut Manager,
     buffer_manager: &mut BufferManager,
     texture_manager: &mut TextureManager,
-    shader_manager: &Arc<RefCell<ShaderManager>>,
+    shader_manager: &Arc<DebugCell<ShaderManager>>,
 ) -> Box<Model> {
     return if file.read_bool() {
         Box::new(CopyModel::new(

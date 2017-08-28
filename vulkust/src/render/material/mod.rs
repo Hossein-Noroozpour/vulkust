@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::default::Default;
 use std::mem::transmute;
 use std::sync::Arc;
@@ -129,16 +129,16 @@ impl Material for White {
 pub fn read_material(
     file: &mut File,
     logical_device: Arc<LogicalDevice>,
-    shader_manager: &Arc<RefCell<ShaderManager>>,
+    shader_manager: &Arc<DebugCell<ShaderManager>>,
     texture_manager: &mut TextureManager,
     buffer_manager: &mut BufferManager
-) -> Arc<RefCell<Material>> {
+) -> Arc<DebugCell<Material>> {
     let shader_id = read_id(file);
     return match shader_id {
         WHITE_ID => {
             logf!("This shader must not be send to material");
         }
-        DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID => Arc::new(RefCell::new(
+        DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID => Arc::new(DebugCell::new(
             DirectionalTexturedSpeculatedNocubeFullshadowOpaque::new(
                 file,
                 logical_device,

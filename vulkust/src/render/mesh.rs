@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::mem::transmute;
 use super::super::math::matrix::Mat4x4;
 use super::super::system::file::File;
@@ -15,7 +15,7 @@ use super::texture::manager::Manager as TextureManager;
 pub const INDEX_ELEMENTS_SIZE: usize = 4;
 
 pub struct Mesh {
-    pub material: Arc<RefCell<Material>>,
+    pub material: Arc<DebugCell<Material>>,
     pub vertex_size: u64,
     pub vertices_range: (usize, usize),
     pub indices_count: u64,
@@ -27,7 +27,7 @@ impl Mesh {
         file: &mut File,
         buffer_manager: &mut BufferManager,
         logical_device: Arc<LogicalDevice>,
-        shader_manager: &Arc<RefCell<ShaderManager>>,
+        shader_manager: &Arc<DebugCell<ShaderManager>>,
         texture_manager: &mut TextureManager,
     ) -> Self {
         #[cfg(mesh_debug)]

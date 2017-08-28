@@ -1,6 +1,6 @@
 pub mod manager;
 
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::default::Default;
 use std::sync::Arc;
 use super::super::audio::Audio;
@@ -28,21 +28,21 @@ pub struct UniformData {
 }
 
 pub trait Scene {
-    fn get_current_camera(&self) -> &Arc<RefCell<Camera<f32>>>;
+    fn get_current_camera(&self) -> &Arc<DebugCell<Camera<f32>>>;
     fn update(&mut self, frame_index: usize);
     fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize);
 }
 
 pub struct BasicScene {
     pub uniform_data: UniformData,
-    pub buffer_manager: Arc<RefCell<BufferManager>>,
+    pub buffer_manager: Arc<DebugCell<BufferManager>>,
     pub descriptor_manager: DescriptorManager,
     pub current_camera: usize,
-    pub cameras: Vec<Arc<RefCell<Camera<f32>>>>,
-    pub audios: Vec<Arc<RefCell<Audio>>>,
-    pub lights: Vec<Arc<RefCell<Light>>>,
-    pub models: Vec<Arc<RefCell<Model>>>,
-    pub occ_material: Arc<RefCell<Material>>,
+    pub cameras: Vec<Arc<DebugCell<Camera<f32>>>>,
+    pub audios: Vec<Arc<DebugCell<Audio>>>,
+    pub lights: Vec<Arc<DebugCell<Light>>>,
+    pub models: Vec<Arc<DebugCell<Model>>>,
+    pub occ_material: Arc<DebugCell<Material>>,
     pub occ_pipeline: Pipeline,
     pub occ_descriptor: Arc<DescriptorSet>,
 }
@@ -79,7 +79,7 @@ impl BasicScene {
         for i in 0..models_count {
             models_ids[i] = file.read_id();
         }
-        let occ_material: Arc<RefCell<Material>> = Arc::new(RefCell::new(White::new(
+        let occ_material: Arc<DebugCell<Material>> = Arc::new(DebugCell::new(White::new(
             file, device.clone(), &mut asset_manager.shader_manager)));
         let mut cameras = Vec::new();
         for i in cameras_ids {
@@ -119,7 +119,7 @@ impl BasicScene {
 }
 
 impl Scene for BasicScene {
-    fn get_current_camera(&self) -> &Arc<RefCell<Camera<f32>>> {
+    fn get_current_camera(&self) -> &Arc<DebugCell<Camera<f32>>> {
         #[cfg(debug_assertions)]
         {
             if self.current_camera >= self.cameras.len() {

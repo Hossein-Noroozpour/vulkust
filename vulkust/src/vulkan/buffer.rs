@@ -166,7 +166,7 @@ pub struct SceneDynamics {
     main_memory: vk::VkDeviceMemory,
     staging_buffer: vk::VkBuffer,
     staging_memory: vk::VkDeviceMemory,
-    uniform_buffers: List<Weak<RefCell<UniformBuffer>>>,
+    uniform_buffers: List<Weak<DebugCell<UniformBuffer>>>,
 }
 
 pub struct MeshInfo {
@@ -188,8 +188,8 @@ pub struct Manager {
     meshes_region_last_offset: usize,
     meshes_region_size: usize,
     frames_scene_dynamics_region_size: usize,
-    mesh_buffers: List<(MeshInfo, Weak<RefCell<MeshBuffer>>)>,
-    frames_scene_dynamics: Vec<List<Weak<RefCell<SceneDynamics>>>>,
+    mesh_buffers: List<(MeshInfo, Weak<DebugCell<MeshBuffer>>)>,
+    frames_scene_dynamics: Vec<List<Weak<DebugCell<SceneDynamics>>>>,
 }
 
 impl Manager {
@@ -367,12 +367,12 @@ impl Manager {
     }
 
     pub fn add_mesh_buffer(
-        &mut self, vertex_size: usize, vertices_count: usize, indices_count: usize) -> Arc<RefCell<MeshBuffer>> {
+        &mut self, vertex_size: usize, vertices_count: usize, indices_count: usize) -> Arc<DebugCell<MeshBuffer>> {
         let vertices_size = self.size_aligner(vertex_size * vertices_count);
         let indices_size = self.size_aligner(INDEX_ELEMENTS_SIZE * indices_count);
         let mesh_size = vertices_size + indices_size;
         if self.meshes_region_size - self.meshes_region_last_offset >= mesh_size {
-            let buff = Arc::new(RefCell::new(MeshBuffer {
+            let buff = Arc::new(DebugCell::new(MeshBuffer {
                 need_refresh: true,
                 offset: self.meshes_region_last_offset,
                 index_offset: self.meshes_region_last_offset + vertices_size,
@@ -405,7 +405,7 @@ impl Manager {
                     Some(n) => {
                         let offset_free_end = node_buffer.data.0.front;
                         if offset_free_end - offset_free >= mesh_size {
-                            let buff = Arc::new(RefCell::new(MeshBuffer {
+                            let buff = Arc::new(DebugCell::new(MeshBuffer {
                                 need_refresh: true,
                                 offset: offset_free,
                                 index_offset: offset_free + vertices_size,
@@ -437,7 +437,7 @@ impl Manager {
                             Some(n) => node_buffer = n,
                             None => {
                                 if self.meshes_region_size - offset_free >= mesh_size {
-                                    let buff = Arc::new(RefCell::new(MeshBuffer {
+                                    let buff = Arc::new(DebugCell::new(MeshBuffer {
                                         need_refresh: true,
                                         offset: offset_free,
                                         index_offset: offset_free + vertices_size,
@@ -465,7 +465,7 @@ impl Manager {
                                     if self.meshes_region_size - self.meshes_region_last_offset < mesh_size {
                                         logf!("Out of buffer memory!");
                                     }
-                                    let buff = Arc::new(RefCell::new(MeshBuffer {
+                                    let buff = Arc::new(DebugCell::new(MeshBuffer {
                                         need_refresh: true,
                                         offset: self.meshes_region_last_offset,
                                         index_offset: self.meshes_region_last_offset + vertices_size,

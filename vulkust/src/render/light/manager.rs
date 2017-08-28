@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
@@ -6,7 +6,7 @@ use super::super::super::system::file::File;
 use super::{Light, Sun};
 
 pub struct Manager {
-    pub cached: BTreeMap<u64, Weak<RefCell<Light>>>,
+    pub cached: BTreeMap<u64, Weak<DebugCell<Light>>>,
     pub offsets: Vec<u64>,
 }
 
@@ -26,7 +26,7 @@ impl Manager {
         }
     }
 
-    pub fn get(&mut self, id: u64, file: &mut File) -> Arc<RefCell<Light>> {
+    pub fn get(&mut self, id: u64, file: &mut File) -> Arc<DebugCell<Light>> {
         match self.cached.get(&id) {
             Some(res) => match res.upgrade() {
                 Some(res) => {
@@ -46,13 +46,13 @@ impl Manager {
             }
         }
         // let light_type: u64 = file.read_type();
-        // let l: Arc<RefCell<Light>> = match light_type {
-        //     10 => Arc::new(RefCell::new(Sun::new(file, os_app))),
-        //     20 => Arc::new(RefCell::new(Lamp::new(file, os_app))),
-        //     30 => Arc::new(RefCell::new(Spot::new(file, os_app))),
+        // let l: Arc<DebugCell<Light>> = match light_type {
+        //     10 => Arc::new(DebugCell::new(Sun::new(file, os_app))),
+        //     20 => Arc::new(DebugCell::new(Lamp::new(file, os_app))),
+        //     30 => Arc::new(DebugCell::new(Spot::new(file, os_app))),
         //     _ => { logf!("Uexpected value"); },
         // };
-        let l: Arc<RefCell<Light>> = Arc::new(RefCell::new(Sun::new(file)));
+        let l: Arc<DebugCell<Light>> = Arc::new(DebugCell::new(Sun::new(file)));
         self.cached.insert(id, Arc::downgrade(&l));
         return l;
     }

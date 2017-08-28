@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
@@ -7,7 +7,7 @@ use super::perspective::Perspective;
 use super::Camera;
 
 pub struct Manager {
-    pub cached: BTreeMap<u64, Weak<RefCell<Camera<f32>>>>,
+    pub cached: BTreeMap<u64, Weak<DebugCell<Camera<f32>>>>,
     pub offsets: Vec<u64>,
 }
 
@@ -27,7 +27,7 @@ impl Manager {
         }
     }
 
-    pub fn get(&mut self, id: u64, file: &mut File, ratio: f32) -> Arc<RefCell<Camera<f32>>> {
+    pub fn get(&mut self, id: u64, file: &mut File, ratio: f32) -> Arc<DebugCell<Camera<f32>>> {
         match self.cached.get(&id) {
             Some(res) => match res.upgrade() {
                 Some(res) => {
@@ -47,7 +47,7 @@ impl Manager {
             }
         }
         let camera = Perspective::new(file, ratio);
-        let camera: Arc<RefCell<Camera<f32>>> = Arc::new(RefCell::new(camera));
+        let camera: Arc<DebugCell<Camera<f32>>> = Arc::new(DebugCell::new(camera));
         self.cached.insert(id, Arc::downgrade(&camera));
         return camera;
     }

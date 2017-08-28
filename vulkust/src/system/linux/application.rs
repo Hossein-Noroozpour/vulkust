@@ -1,6 +1,6 @@
 extern crate libc;
 
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::sync::Arc;
 use super::xcb;
 use super::xproto;
@@ -20,7 +20,7 @@ pub struct Application<CoreApp>
 where
     CoreApp: 'static + ApplicationTrait,
 {
-    pub asset_manager: Arc<RefCell<AssetManager>>,
+    pub asset_manager: Arc<DebugCell<AssetManager>>,
     pub connection: *mut xcb::xcb_connection_t,
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,

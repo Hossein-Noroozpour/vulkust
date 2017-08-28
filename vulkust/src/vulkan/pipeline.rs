@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::ffi::CString;
@@ -284,7 +284,7 @@ pub struct Manager {
     pub cached: Cacher<ShaderId, Pipeline>,
     pub descriptor_pool: Arc<DescriptorPool>,
     pub render_pass: Arc<RenderPass>,
-    pub asset_manager: Arc<RefCell<AssetManager>>,
+    pub asset_manager: Arc<DebugCell<AssetManager>>,
 }
 
 impl Manager {

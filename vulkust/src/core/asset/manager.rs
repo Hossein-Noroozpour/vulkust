@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use super::super::super::audio::manager::Manager as AudioManager;
 use super::super::super::audio::Audio;
 use super::super::super::core::application::ApplicationTrait;
@@ -59,15 +59,15 @@ impl Manager {
         self.shader_manager.get(id, &mut self.file, logical_device)
     }
 
-    pub fn get_camera(&mut self, id: u64, ratio: f32) -> Arc<RefCell<Camera<f32>>> {
+    pub fn get_camera(&mut self, id: u64, ratio: f32) -> Arc<DebugCell<Camera<f32>>> {
         self.camera_manager.get(id, &mut self.file, ratio)
     }
 
-    pub fn get_audio(&mut self, id: u64) -> Arc<RefCell<Audio>> {
+    pub fn get_audio(&mut self, id: u64) -> Arc<DebugCell<Audio>> {
         self.audio_manager.get(id, &mut self.file)
     }
 
-    pub fn get_light(&mut self, id: u64) -> Arc<RefCell<Light>> {
+    pub fn get_light(&mut self, id: u64) -> Arc<DebugCell<Light>> {
         self.light_manager.get(id, &mut self.file)
     }
 
@@ -79,7 +79,7 @@ impl Manager {
         &mut self,
         id: u64,
         engine: &mut RenderEngine<CoreApp>,
-    ) -> Arc<RefCell<Model>> 
+    ) -> Arc<DebugCell<Model>> 
     where
         CoreApp: ApplicationTrait,
     {
@@ -90,7 +90,7 @@ impl Manager {
         &mut self,
         id: u64,
         engine: &mut RenderEngine<CoreApp>,
-    ) -> Arc<RefCell<Scene>>
+    ) -> Arc<DebugCell<Scene>>
     where
         CoreApp: ApplicationTrait,
     {

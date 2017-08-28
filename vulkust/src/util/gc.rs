@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::sync::{Arc, Weak};
 use super::list::{List, ListNode};
 
@@ -12,7 +12,7 @@ struct MemInfo {
     front: usize,
     end: usize,
     size: usize,
-    pointer: Weak<RefCell<GcObject>>,
+    pointer: Weak<DebugCell<GcObject>>,
 }
 
 pub struct Gc {
@@ -63,7 +63,7 @@ impl Gc {
         
     }
 
-    pub fn allocate(&mut self, object: &Arc<RefCell<GcObject>>) {
+    pub fn allocate(&mut self, object: &Arc<DebugCell<GcObject>>) {
         let obj_size = object.borrow().get_size();
         self.objects_count += 1;
         if self.size < obj_size {

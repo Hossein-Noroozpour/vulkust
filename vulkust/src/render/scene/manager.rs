@@ -1,14 +1,14 @@
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
-use super::super::super::system::file::File;
 use super::super::super::core::application::ApplicationTrait;
+use super::super::super::system::file::File;
+use super::super::super::util::cell::DebugCell;
 use super::super::engine::RenderEngine;
 use super::{BasicScene, Scene};
 
 pub struct Manager {
-    pub cached: BTreeMap<u64, Weak<RefCell<Scene>>>,
+    pub cached: BTreeMap<u64, Weak<DebugCell<Scene>>>,
     pub offsets: Vec<u64>,
 }
 
@@ -33,7 +33,7 @@ impl Manager {
         id: u64,
         file: &mut File,
         engine: &mut RenderEngine<CoreApp>,
-    ) -> Arc<RefCell<Scene>>
+    ) -> Arc<DebugCell<Scene>>
     where
         CoreApp: ApplicationTrait,
     {
@@ -57,8 +57,8 @@ impl Manager {
                 logf!("Can not seek to the requested offset.");
             }
         }
-        let scene = RefCell::new(BasicScene::new(file, engine));
-        let scene: Arc<RefCell<Scene>> = Arc::new(scene);
+        let scene = DebugCell::new(BasicScene::new(file, engine));
+        let scene: Arc<DebugCell<Scene>> = Arc::new(scene);
         self.cached.insert(id, Arc::downgrade(&scene));
         return scene;
     }

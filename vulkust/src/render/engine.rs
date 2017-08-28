@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefCell, RefMut};
+use std::cell::{Ref, DebugCell, RefMut};
 use std::sync::Arc;
 
 #[cfg(feature = "d3d12")]
@@ -32,7 +32,7 @@ where
 }
 
 pub struct Basic {
-    pub current_scene: Arc<RefCell<Scene>>,
+    pub current_scene: Arc<DebugCell<Scene>>,
 }
 
 impl Basic {

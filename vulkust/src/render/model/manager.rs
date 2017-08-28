@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::DebugCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
@@ -11,7 +11,7 @@ use super::super::shader::manager::Manager as ShaderManager;
 use super::{read_model, Model};
 
 pub struct Manager {
-    pub cached: BTreeMap<u64, BTreeMap<u64, Weak<RefCell<Model>>>>,
+    pub cached: BTreeMap<u64, BTreeMap<u64, Weak<DebugCell<Model>>>>,
     pub offsets: Vec<u64>,
 }
 
@@ -36,7 +36,7 @@ impl Manager {
         id: u64,
         file: &mut File,
         engine: &mut RenderEngine<CoreApp>,
-    ) -> Arc<RefCell<Model>> 
+    ) -> Arc<DebugCell<Model>> 
     where
         CoreApp: ApplicationTrait,
     {
@@ -64,7 +64,7 @@ impl Manager {
                 logf!("Can not seek to the requested offset.");
             }
         }
-        let l: Arc<RefCell<Model>> =
+        let l: Arc<DebugCell<Model>> =
             read_model(file, self, buffer_manager, texture_manager, shader_manager);
         let mut cached = BTreeMap::new();
         cached.insert(id, Arc::downgrade(&l));
