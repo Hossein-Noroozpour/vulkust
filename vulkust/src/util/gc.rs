@@ -92,7 +92,7 @@ impl Gc {
         for _ in 0..obj_count {
             let obj = last_checked.data.pointer.upgrade();
             self.last_checked = match obj {
-                Some(o) => {
+                Some(_) => {
                     let offset_free_end = last_checked.data.front;
                     if offset_free_end - offset_free >= obj_size {
                         object.borrow_mut().allocate(offset_free);
@@ -118,7 +118,7 @@ impl Gc {
             if self.last_checked.is_none() {
                 if self.end - offset_free >= obj_size {
                     object.borrow_mut().allocate(offset_free);
-                    last_checked.add_parent(
+                    self.objects.add_end(
                         MemInfo {
                             front: offset_free,
                             end: offset_free + obj_size,
@@ -162,7 +162,7 @@ impl GcObject for Gc {
 
     fn move_to(&mut self, offset: usize) {
         self.front = offset;
-        self.end = offset + self.front;
+        self.end = offset + self.size;
         self.clean();
     }
 }
