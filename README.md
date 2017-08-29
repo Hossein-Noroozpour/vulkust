@@ -27,7 +27,7 @@ Measurements are based on the current reaching milestone, not total road-map.
   - Lots of other reasons that lots of other guys have already given.
 - Does it work?
   - If your question point to the current version in the repository, Maybe!
-  - But in the end of each milestones I'm gonna publish it in [crates.io](http://crates.io). (except the first version that was only for name-reserving purpose.)
+  - But in the end of each milestones I'm gonna publish it in [crates.io](https://crates.io). (except the first version that was only for name-reserving purpose.)
 - Examples need a binary file, How can I have one?
   - Yes of course it needs a binary file, Vulkust stores all of its assets in a file and retrieves them in runtime, right now the binaries have some sensitive data, but I'm gonna remove them soon for guys who wants to see how it works.
 - Why you didn't use available crates and developing everything from scratch?
@@ -41,4 +41,4 @@ Measurements are based on the current reaching milestone, not total road-map.
   - I never wanted to add Metal and DirectX12 but because of cross-platformity mission I forced to add them, I hope in near future every platforms support Vulkan and I remove the annoying Metal and DirectX12 parts.
 
 ## License
-You can do whatever you want to do and every consequences is on you, **But** If you used it and it was useful for you, please make an acknowledgment and promotion for this project and me, I'm really need that because I'm currently seeking for a job in the graphic and game-engine fields.
+You can do whatever you want to do and every consequences are on you, **But** If you used it and it was useful for you, please make an acknowledgment and promotion for this project and me, I'm really need that because I'm currently seeking for a job in the graphic and game-engine fields.
