@@ -1,7 +1,5 @@
-#![feature(i128_type)]
 extern crate libc;
 
-use std::collections::LinkedList;
 use std::default::Default;
 use std::mem::{transmute, size_of};
 use std::os::raw::c_void;
@@ -9,195 +7,118 @@ use std::ptr::{null, null_mut};
 use std::sync::Arc;
 use super::super::render::mesh::INDEX_ELEMENTS_SIZE;
 use super::super::system::vulkan as vk;
-use super::super::util::List;
+use super::super::util::cell::DebugCell;
+use super::super::util::gc::{Gc, GcObject};
 use super::command::buffer::Buffer as CmdBuff;
 use super::device::logical::Logical as LogicalDevice;
 
-struct Region {
-    pub logical_device: Arc<LogicalDevice>,
-    pub buffer: vk::VkBuffer,
-    pub memory: vk::VkDeviceMemory,
-    pub alignment: usize,
-    pub start: usize,
-    pub offset: usize,
-    pub size: usize,
+struct BufferGcObject {
+    need_refresh: bool,
+    offset: usize,
+    size: usize,
+    address: *mut u8,
 }
 
-impl Region {
-    pub fn new(logical_device: Arc<LogicalDevice>, size: usize) -> Self {
-        let mut buffer_info = vk::VkBufferCreateInfo::default();
-        buffer_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_info.size = size as vk::VkDeviceSize;
-        buffer_info.usage = vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT as u32;
-        let mut buffer = 0 as vk::VkBuffer;
-        vulkan_check!(vk::vkCreateBuffer(
-            logical_device.vk_data,
-            &buffer_info,
-            null(),
-            &mut buffer,
-        ));
-        let mut mem_reqs = vk::VkMemoryRequirements::default();
-        unsafe {
-            vk::vkGetBufferMemoryRequirements(logical_device.vk_data, buffer, &mut mem_reqs);
-        }
-        let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
-        mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        mem_alloc.allocationSize = mem_reqs.size;
-        mem_alloc.memoryTypeIndex = logical_device.physical_device.get_memory_type_index(
-            mem_reqs.memoryTypeBits,
-            vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32 |
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32,
-        );
-        let mut memory = 0 as vk::VkDeviceMemory;
-        vulkan_check!(vk::vkAllocateMemory(
-            logical_device.vk_data,
-            &mem_alloc,
-            null(),
-            &mut memory,
-        ));
-        let mut start = 0;
-        vulkan_check!(vk::vkMapMemory(
-            logical_device.vk_data,
-            memory,
-            0,
-            mem_alloc.allocationSize,
-            0,
-            transmute(&mut start),
-        ));
-        vulkan_check!(vk::vkBindBufferMemory(
-            logical_device.vk_data,
-            buffer,
-            memory,
-            0,
-        ));
-        let alignment = logical_device.physical_device.get_max_min_alignment() as usize;
-        Region {
-            logical_device: logical_device,
-            buffer: buffer,
-            memory: memory,
-            alignment: alignment,
-            start: start,
-            offset: 0,
-            size: size,
-        }
+impl GcObject for BufferGcObject {
+    fn get_size(&self) -> usize {
+        return self.size;
     }
 
-    pub fn write(&mut self, data: *const c_void, size: usize) -> (usize, usize) {
-        let begin = self.offset;
-        if self.offset + size > self.size {
-            logf!(
-                "{}{} {}{} {}{}",
-                "Your data reached to the maximum size: ",
-                self.size,
-                "please specify a better size for buffer current offset is: ",
-                self.offset,
-                "data you want to write has size: ",
-                size
-            );
-        }
+    fn move_to(&mut self, offset: usize) {
+        let offset_change: isize = (offset as isize) - (self.offset as isize);
+        let new_address = self.address.offset(offset_change);
+        self.offset = offset;
+        self.need_refresh = true;
         unsafe {
-            libc::memcpy(
-                transmute(self.start + self.offset),
-                transmute(data),
-                size as libc::size_t,
-            );
+            libc::memmove(
+                transmute(new_address), 
+                transmute(self.address),
+                self.size as libc::size_t);
         }
-        self.offset += size;
-        let flag = self.alignment - 1;
-        let rem = self.offset & flag;
-        if rem != 0 {
-            self.offset += self.alignment - rem;
-        }
-        (begin, self.offset)
-    }
-
-    pub fn push(&self, cmd: &mut CmdBuff, start: usize, dst: vk::VkBuffer) {
-        let mut regions = vec![vk::VkBufferCopy::default(); 1];
-        regions[0].dstOffset = start as vk::VkDeviceSize;
-        regions[0].size = self.size as vk::VkDeviceSize;
-        cmd.copy_buffer(self.buffer, dst, &regions);
-    }
-}
-
-impl Drop for Region {
-    fn drop(&mut self) {
-        if self.buffer == null_mut() {
-            logf!("Unexpected!");
-        }
-        unsafe {
-            vk::vkDestroyBuffer(self.logical_device.vk_data, self.buffer, null());
-            vk::vkFreeMemory(self.logical_device.vk_data, self.memory, null());
-        }
+        self.address = new_address;
     }
 }
 
 pub struct MeshBuffer {
-    need_refresh: bool,
-    offset: usize,
-    index_offset: usize,
-    size: usize,
+    buffer_gc_obj: BufferGcObject,
     vertex_size: usize,
-    index_count: usize,
-    address: *mut c_void,
-    best_alignment: usize,
-    main_buffer: vk::VkBuffer,
-    main_memory: vk::VkDeviceMemory,
-    staging_buffer: vk::VkBuffer,
-    staging_memory: vk::VkDeviceMemory,
+    vertices_count: usize,
+    vertices_size: usize,
+    vertices_aligned_size: usize,
+    indices_count: usize,
+    indices_size: usize,
+    indices_size_aligned: usize,
+}
+
+impl GcObject for MeshBuffer {
+    fn get_size(&self) -> usize {
+        return self.buffer_gc_obj.size;
+    }
+
+    fn move_to(&mut self, offset: usize) {
+        self.buffer_gc_obj.move_to(offset);
+    }
 }
 
 pub struct UniformBuffer {
-    offset: usize,
+    buffer_gc_obj: BufferGcObject,
     size: usize,
-    address: *mut c_void,
-    best_alignment: usize,
-    main_buffer: vk::VkBuffer,
-    main_memory: vk::VkDeviceMemory,
-    staging_buffer: vk::VkBuffer,
-    staging_memory: vk::VkDeviceMemory,
+}
+
+impl GcObject for UniformBuffer {
+    fn get_size(&self) -> usize {
+        return self.buffer_gc_obj.size;
+    }
+
+    fn move_to(&mut self, offset: usize) {
+        self.buffer_gc_obj.move_to(offset);
+    }
 }
 
 pub struct SceneDynamics {
-    offset: usize,
-    size: usize,
-    address: *mut c_void,
-    best_alignment: usize,
-    main_buffer: vk::VkBuffer,
-    main_memory: vk::VkDeviceMemory,
-    staging_buffer: vk::VkBuffer,
-    staging_memory: vk::VkDeviceMemory,
-    uniform_buffers: List<Weak<DebugCell<UniformBuffer>>>,
+    address: *mut libc::c_void,
+    uniform_buffers: Gc,
 }
 
-pub struct MeshInfo {
-    front: usize,
-    end: usize,
+impl GcObject for SceneDynamics {
+    fn get_size(&self) -> usize {
+        return self.uniform_buffers.get_size();
+    }
+
+    fn move_to(&mut self, offset: usize) {
+        self.uniform_buffers.move_to(offset);
+    }
 }
 
 pub struct Manager {
+    logical_device: Arc<LogicalDevice>,
     main_buffer: vk::VkBuffer,
     main_memory: vk::VkDeviceMemory,
     staging_buffer: vk::VkBuffer,
     staging_memory: vk::VkDeviceMemory,
-    address: *mut u8,
+    address: *mut libc::c_void,
     size: usize,
     best_alignment: usize,
     best_alignment_flag: usize,
     best_alignment_complement: usize,
-    meshes_region_filled: usize,
-    meshes_region_last_offset: usize,
-    meshes_region_size: usize,
-    frames_scene_dynamics_region_size: usize,
-    mesh_buffers: List<(MeshInfo, Weak<DebugCell<MeshBuffer>>)>,
-    frames_scene_dynamics: Vec<List<Weak<DebugCell<SceneDynamics>>>>,
+    meshes_size: usize,
+    meshes: Gc,
+    scenes_dynamics_size: usize,
+    scenes_dynamics: Vec<Gc>,
 }
 
 impl Manager {
-    pub fn new(logical_device: Arc<LogicalDevice>, size: usize, meshes_size: usize, frames_count: usize) -> Self {
+    pub fn new(
+        logical_device: Arc<LogicalDevice>, 
+        meshes_size: usize, 
+        scenes_dynamics_size: usize, 
+        frames_count: usize) -> Self {
         let best_alignment = logical_device.physical_device.get_max_min_alignment() as usize;
-        let mut frames_scene_dynamics = Vec::new();
-        for _ in 0..frames_count {
-            frames_scene_dynamics.push(LinkedList::new());
+        let size = meshes_size + (scenes_dynamics_size * frames_count);
+        let mut meshes = Gc::new(0, meshes_size);
+        let mut scenes_dynamics = Vec::new();
+        for i in 0..frames_count {
+            scenes_dynamics.push(Gc::new(i * scenes_dynamics_size + meshes_size, scenes_dynamics_size));
         }
         let mut main_buffer = null_mut();
         let mut main_memory = null_mut();
@@ -260,9 +181,9 @@ impl Manager {
             logical_device.vk_data,
             &mem_alloc,
             null(),
-            &staging_memory,
+            &mut staging_memory,
         ));
-        let mut address = 0;
+        let mut address = 0 as *mut libc::c_void;
         vulkan_check!(vk::vkMapMemory(
             logical_device.vk_data,
             staging_memory,
@@ -278,6 +199,7 @@ impl Manager {
             0,
         ));
         Manager {
+            logical_device: logical_device, 
             size: size,
             address: address,
             main_buffer: main_buffer,
@@ -285,9 +207,12 @@ impl Manager {
             staging_buffer: staging_buffer,
             staging_memory: staging_memory,
             best_alignment: best_alignment,
-            meshes_region_size: meshes_size,
-            mesh_buffers: List::new(),
-            frames_scene_dynamics: frames_scene_dynamics,
+            best_alignment_flag: best_alignment - 1,
+            best_alignment_complement: !(best_alignment - 1),
+            meshes_size: meshes_size,
+            meshes: meshes,
+            scenes_dynamics_size: scenes_dynamics_size,
+            scenes_dynamics: scenes_dynamics,
         }
     }
 
@@ -300,276 +225,90 @@ impl Manager {
             }
     }
 
-    fn clean_meshes(&mut self) {
-        let mut node_buffer = self.mesh_buffers.get_first_node();
-        if node_buffer.is_none() {
-            self.meshes_region_last_offset = 0;
-            return;
-        }
-        loop {
-            let buff = node_buffer.unwrap();
-            let arcbuff = buff.1.upgrade();
-            let mut end_offset = node_buffer.data.0.end;
-            let next = if arcbuff.is_none() {
-                self.meshes_region_filled -= (end_offset - node_buffer.data.0.front);
-                end_offset = node_buffer.data.0.front;
-                buff.remove()
-            } else {
-                buff.get_child()
-            };
-            if next.is_none() {
-                self.meshes_region_last_offset = end_offset;
-                return;
-            }
-            node_buffer = next;
+    fn clean(&mut self) {
+        self.meshes.clean();
+        let sdc = self.scenes_dynamics.len();
+        for i in 0..sdc {
+            self.scenes_dynamics[i].clean();
         }
     }
 
-    fn collocate_meshes(&mut self) {
-        let mut node_buffer = self.mesh_buffers.get_first_node();
-        self.meshes_region_last_offset = 0;
-        loop {
-            match node_buffer {
-                Some(buff) => {
-                    let pre_front = buff.data.0.front;
-                    let pre_end = buff.data.0.end;
-                    if pre_front == self.meshes_region_last_offset {
-                        self.meshes_region_last_offset = pre_end;
-                        node_buffer = buff.get_child();
-                        continue;
-                    }
-                    let mesh_size = pre_end - pre_front;
-                    buff.data.0.front = self.meshes_region_last_offset;
-                    buff.data.0.end = self.meshes_region_last_offset + mesh_size;
-                    let mut buff = buff.1.upgrade().unwrap().borrow_mut();
-                    unsafe {
-                        libc::memmove(
-                            transmute(self.address.offset(self.meshes_region_last_offset)),
-                            transmute(buff.address),
-                            mesh_size);
-                    }
-                    buff.need_refresh = true;
-                    buff.offset = self.meshes_region_last_offset;
-                    buff.index_offset = self.meshes_region_last_offset + (buff.index_offset - pre_front);
-                    buff.address = self.address.offset(self.meshes_region_last_offset);
-                    self.meshes_region_last_offset += mesh_size;
-                    node_buffer = buff.get_child();
-                    continue;
-                },
-                None => return,
-            }
-        }
-    }
-
-    pub fn gc_meshes(&mut self) {
-        self.clean_meshes();
-        self.collocate_meshes();
-    }
-
-    pub fn add_mesh_buffer(
-        &mut self, vertex_size: usize, vertices_count: usize, indices_count: usize) -> Arc<DebugCell<MeshBuffer>> {
-        let vertices_size = self.size_aligner(vertex_size * vertices_count);
-        let indices_size = self.size_aligner(INDEX_ELEMENTS_SIZE * indices_count);
-        let mesh_size = vertices_size + indices_size;
-        if self.meshes_region_size - self.meshes_region_last_offset >= mesh_size {
-            let buff = Arc::new(DebugCell::new(MeshBuffer {
-                need_refresh: true,
-                offset: self.meshes_region_last_offset,
-                index_offset: self.meshes_region_last_offset + vertices_size,
-                size: mesh_size,
-                vertex_size: vertex_size,
-                indices_count: indices_count,
-                address: unsafe { self.address.offset(self.meshes_region_last_offset) },
-                best_alignment: self.best_alignment,
-                main_buffer: self.main_buffer,
-                main_memory: self.main_memory,
-                staging_buffer: self.staging_buffer,
-                staging_memory: self.staging_memory,
-            }));
-            self.mesh_buffers.add_end((
-                MeshInfo {
-                    front: self.meshes_region_last_offset,
-                    end: self.meshes_region_last_offset + mesh_size,
-                }, 
-                Arc::downgrade(&buff)));
-            self.meshes_region_last_offset += mesh_size;
-            self.meshes_region_last_filled += mesh_size;
-            return buff;
-        }
-        if self.meshes_region_size - self.meshes_region_filled >= mesh_size {
-            let mut offset_free = 0usize;
-            let mut node_buffer = self.mesh_buffers.get_first_node().unwrap();
-            loop {
-                let mesh = node_buffer.data.1.upgrade();
-                match mesh {
-                    Some(n) => {
-                        let offset_free_end = node_buffer.data.0.front;
-                        if offset_free_end - offset_free >= mesh_size {
-                            let buff = Arc::new(DebugCell::new(MeshBuffer {
-                                need_refresh: true,
-                                offset: offset_free,
-                                index_offset: offset_free + vertices_size,
-                                size: mesh_size,
-                                vertex_size: vertex_size,
-                                indices_count: indices_count,
-                                address: unsafe { self.address.offset(offset_free) },
-                                best_alignment: self.best_alignment,
-                                main_buffer: self.main_buffer,
-                                main_memory: self.main_memory,
-                                staging_buffer: self.staging_buffer,
-                                staging_memory: self.staging_memory,
-                            }));
-                            node_buffers.add_parent((
-                                MeshInfo {
-                                    front: offset_free,
-                                    end: offset_free + mesh_size,
-                                }, 
-                                Arc::downgrade(&buff)));
-                            self.meshes_region_last_filled += mesh_size;
-                            return buff;
-                        }
-                        offset_free = node_buffer.data.0.end;
+    pub fn create_mesh(
+        &mut self, 
+        vertex_size: usize, 
+        vertices_count: usize, 
+        indices_count: usize) -> Arc<DebugCell<MeshBuffer>> {
+        let vertices_size = vertices_count * vertex_size;
+        let indices_size = indices_count * INDEX_ELEMENTS_SIZE;
+        let size = vertices_size + indices_size;
+        let mesh = Arc::new(
+            DebugCell::new(
+                MeshBuffer {
+                    buffer_gc_obj: BufferGcObject {
+                        need_refresh: true,
+                        offset: 0,
+                        size: size,
+                        address: 0 as *mut u8,
                     },
-                    None => {
-                        self.meshes_region_filled -= (node_buffer.data.0.end - node_buffer.data.0.front);
-                        let next_node = node_buffer.remove();
-                        match next_node {
-                            Some(n) => node_buffer = n,
-                            None => {
-                                if self.meshes_region_size - offset_free >= mesh_size {
-                                    let buff = Arc::new(DebugCell::new(MeshBuffer {
-                                        need_refresh: true,
-                                        offset: offset_free,
-                                        index_offset: offset_free + vertices_size,
-                                        size: mesh_size,
-                                        vertex_size: vertex_size,
-                                        indices_count: indices_count,
-                                        address: unsafe { self.address.offset(offset_free) },
-                                        best_alignment: self.best_alignment,
-                                        main_buffer: self.main_buffer,
-                                        main_memory: self.main_memory,
-                                        staging_buffer: self.staging_buffer,
-                                        staging_memory: self.staging_memory,
-                                    }));
-                                    node_buffers.add_parent((
-                                        MeshInfo {
-                                            front: offset_free,
-                                            end: offset_free + mesh_size,
-                                        }, 
-                                        Arc::downgrade(&buff)));
-                                    self.meshes_region_last_filled += mesh_size;
-                                    return buff;
-                                } else {
-                                    loge!("Performance warning!");
-                                    self.collocate_meshes();
-                                    if self.meshes_region_size - self.meshes_region_last_offset < mesh_size {
-                                        logf!("Out of buffer memory!");
-                                    }
-                                    let buff = Arc::new(DebugCell::new(MeshBuffer {
-                                        need_refresh: true,
-                                        offset: self.meshes_region_last_offset,
-                                        index_offset: self.meshes_region_last_offset + vertices_size,
-                                        size: mesh_size,
-                                        vertex_size: vertex_size,
-                                        indices_count: indices_count,
-                                        address: unsafe { self.address.offset(self.meshes_region_last_offset) },
-                                        best_alignment: self.best_alignment,
-                                        main_buffer: self.main_buffer,
-                                        main_memory: self.main_memory,
-                                        staging_buffer: self.staging_buffer,
-                                        staging_memory: self.staging_memory,
-                                    }));
-                                    self.mesh_buffers.add_end((
-                                        MeshInfo {
-                                            front: self.meshes_region_last_offset,
-                                            end: self.meshes_region_last_offset + mesh_size,
-                                        }, 
-                                        Arc::downgrade(&buff)));
-                                    self.meshes_region_last_offset += mesh_size;
-                                    self.meshes_region_filled += mesh_size;
-                                    return buff;
-                                }
-                            },
-                        }
-                    },
+                    vertex_size: vertex_size,
+                    vertices_count: vertices_count,
+                    vertices_size: vertices_size,
+                    vertices_aligned_size: self.size_aligner(vertices_size),
+                    indices_count: indices_count,
+                    indices_size: indices_size,
+                    indices_size_aligned: self.size_aligner(indices_size),
                 }
-            }
+            )
+        );
+        let gc_obj: Arc<DebugCell<GcObject>> = mesh.clone();
+        self.meshes.allocate(&gc_obj);
+        return mesh;
+    }
+
+    pub fn create_scene_dynamics(&mut self, size: usize) -> Vec<Arc<DebugCell<SceneDynamics>>> {
+        let frames_count = self.scenes_dynamics.len();
+        let mut res = Vec::new();
+        for i in 0..frames_count {
+            let sd = Arc::new(DebugCell::new(
+                SceneDynamics {
+                    address: self.address,
+                    uniform_buffers: Gc::new(0, size),
+                }
+            ));
+            let gc_obj: Arc<DebugCell<GcObject>> = sd.clone();
+            self.scenes_dynamics[i].allocate(&gc_obj);
+            res.push(sd);
         }
-        
+        return res;
     }
 
-    pub fn add_vi(&mut self, data: *const c_void, size: usize) -> (usize, usize) {
-        self.vertices_indices.write(data, size)
-    }
-
-    pub fn add_u<T>(&mut self, data: &T) -> (Vec<&'static mut T>, Vec<(usize, usize)>) {
-        let (ptrs, rngs) = self.add_u_with_ptr(unsafe { transmute(data) }, size_of::<T>());
-        let mut trefs = vec![unsafe { transmute(ptrs[0]) }; self.frames_count];
-        for i in 1..self.frames_count {
-            trefs[i] = unsafe { transmute(ptrs[i]) };
-        }
-        (trefs, rngs)
-    }
-
-    fn add_u_with_ptr(&mut self, data: *const c_void, size: usize) -> (Vec<*mut c_void>, Vec<(usize, usize)>) {
-        let mut res = vec![(0, 0); self.frames_count];
-        let mut offset = self.uniforms.offset;
-        res[0] = self.uniforms.write(data, size);
-        let last_offset = self.uniforms.offset;
-        for i in 1..self.frames_count {
-            offset += self.uniforms_align;
-            self.seek_u(offset);
-            res[i] = self.uniforms.write(data, size);
-        }
-        self.seek_u(last_offset);
-        let uniforms_start = self.vertices_indices.size;
-        let map_start = self.uniforms.start;
-        let mut ptrs = vec![null_mut(); self.frames_count];
-        for i in 0..self.frames_count {
-            ptrs[i] = unsafe { transmute (res[i].0 + map_start) };
-            res[i].0 += uniforms_start;
-            res[i].1 += uniforms_start;
-        }
-        return (ptrs, res);
-    }
-
-    pub fn update_u(&mut self, data: *const c_void, size: usize, offset: usize) {
-        self.seek_u(offset);
-        let _ = self.uniforms.write(data, size);
-    }
-
-    pub fn push_vi(&self, cmd: &mut CmdBuff) {
-        self.vertices_indices.push(cmd, 0, self.vk_data);
-    }
-
-    pub fn push_u(&self, cmd: &mut CmdBuff, frame_index: usize) {
-        self.uniforms.push(
-            cmd, 
-            self.vertices_indices.size + (self.uniforms_align * frame_index), 
-            self.vk_data);
-    }
-
-    pub fn get_id(&self) -> u64 {
-        self.vk_data as u64
+    fn commit(&mut self) {
+        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
     }
 
     pub fn get_buffer(&self) -> vk::VkBuffer {
-        self.vk_data
+        self.main_buffer
     }
 
     pub fn get_device(&self) -> &Arc<LogicalDevice> {
-        &self.uniforms.logical_device
+        &self.logical_device
     }
 }
 
 impl Drop for Manager {
     fn drop(&mut self) {
-        if self.vk_data == null_mut() {
+        if self.main_buffer == null_mut() {
             return;
         }
         unsafe {
-            vk::vkDestroyBuffer(self.uniforms.logical_device.vk_data, self.vk_data, null());
-            vk::vkFreeMemory(self.uniforms.logical_device.vk_data, self.memory, null());
+            vk::vkDestroyBuffer(self.logical_device.vk_data, self.staging_buffer, null());
+            vk::vkFreeMemory(self.logical_device.vk_data, self.staging_memory, null());
+            vk::vkDestroyBuffer(self.logical_device.vk_data, self.main_buffer, null());
+            vk::vkFreeMemory(self.logical_device.vk_data, self.main_memory, null());
         }
+        self.main_buffer = null_mut();
+        self.main_memory = null_mut();
+        self.staging_buffer = null_mut();
+        self.staging_memory = null_mut();
     }
 }

@@ -1,6 +1,5 @@
 extern crate libc;
 
-use std::cell::DebugCell;
 use std::sync::Arc;
 use super::xcb;
 use super::xproto;
@@ -8,6 +7,7 @@ use super::super::super::core::application::ApplicationTrait;
 use super::super::super::core::event::{Button, Event, Keyboard, Mouse};
 use super::super::super::core::asset::manager::Manager as AssetManager;
 use super::super::super::render::engine::{EngineTrait as RenderEngineTrait, RenderEngine};
+use super::super::super::util::cell::DebugCell;
 use super::super::os::ApplicationTrait as OsApplicationTrait;
 use super::super::file::File;
 
@@ -20,7 +20,7 @@ pub struct Application<CoreApp>
 where
     CoreApp: 'static + ApplicationTrait,
 {
-    pub asset_manager: Arc<DebugCell<AssetManager>>,
+    pub asset_manager: AssetManager,
     pub connection: *mut xcb::xcb_connection_t,
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,

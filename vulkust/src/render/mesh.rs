@@ -1,8 +1,8 @@
 use std::sync::Arc;
-use std::cell::DebugCell;
 use std::mem::transmute;
 use super::super::math::matrix::Mat4x4;
 use super::super::system::file::File;
+use super::super::util::cell::DebugCell;
 use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::material::{read_material, Material};
@@ -27,7 +27,7 @@ impl Mesh {
         file: &mut File,
         buffer_manager: &mut BufferManager,
         logical_device: Arc<LogicalDevice>,
-        shader_manager: &Arc<DebugCell<ShaderManager>>,
+        shader_manager: &mut ShaderManager,
         texture_manager: &mut TextureManager,
     ) -> Self {
         #[cfg(mesh_debug)]

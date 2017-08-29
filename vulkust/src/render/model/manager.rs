@@ -1,9 +1,9 @@
-use std::cell::DebugCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
+use super::super::super::util::cell::DebugCell;
 use super::super::buffer::Manager as BufferManager;
 use super::super::engine::RenderEngine;
 use super::super::texture::manager::Manager as TextureManager;

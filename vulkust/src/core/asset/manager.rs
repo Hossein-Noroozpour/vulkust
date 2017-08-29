@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use std::cell::DebugCell;
 use super::super::super::audio::manager::Manager as AudioManager;
 use super::super::super::audio::Audio;
 use super::super::super::core::application::ApplicationTrait;
@@ -19,6 +18,7 @@ use super::super::super::render::shader::Shader;
 use super::super::super::render::texture::manager::Manager as TextureManager;
 use super::super::super::render::texture::Texture;
 use super::super::super::system::file::File;
+use super::super::super::util::cell::DebugCell;
 
 pub struct Manager {
     pub file: File,

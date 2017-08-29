@@ -1,10 +1,10 @@
 pub mod manager;
 
 use std::sync::Arc;
-use std::cell::DebugCell;
 use std::default::Default;
 use super::super::math::matrix::Mat4x4;
 use super::super::system::file::File;
+use super::super::util::cell::DebugCell;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuff;
 use super::material::Material;

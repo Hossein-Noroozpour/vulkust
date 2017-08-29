@@ -1,10 +1,9 @@
-use std::cell::DebugCell;
 use std::default::Default;
-use std::mem::transmute;
 use std::sync::Arc;
 use super::super::math::matrix::Mat4x4;
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
+use super::super::util::cell::DebugCell;
 use super::device::logical::Logical as LogicalDevice;
 use super::descriptor::Set as DescriptorSet;
 use super::buffer::Manager as BufferManager;
@@ -12,7 +11,7 @@ use super::model::UniformData as MdlUniData;
 use super::pipeline::Pipeline;
 use super::scene::UniformData as ScnUniData;
 use super::shader;
-use super::shader::{read_id, Id as ShaderId, Shader};
+use super::shader::{read_id, Shader};
 use super::shader::manager::Manager as ShaderManager;
 use super::texture::Texture;
 use super::texture::manager::Manager as TextureManager;
@@ -129,7 +128,7 @@ impl Material for White {
 pub fn read_material(
     file: &mut File,
     logical_device: Arc<LogicalDevice>,
-    shader_manager: &Arc<DebugCell<ShaderManager>>,
+    shader_manager: &mut ShaderManager,
     texture_manager: &mut TextureManager,
     buffer_manager: &mut BufferManager
 ) -> Arc<DebugCell<Material>> {

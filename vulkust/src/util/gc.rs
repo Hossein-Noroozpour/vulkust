@@ -1,10 +1,9 @@
-use std::cell::DebugCell;
 use std::sync::{Arc, Weak};
 use super::list::{List, ListNode};
+use super::cell::DebugCell;
 
 pub trait GcObject {
     fn get_size(&self) -> usize;
-    fn allocate(&mut self, offset: usize);
     fn move_to(&mut self, offset: usize);
 } 
 
@@ -70,7 +69,7 @@ impl Gc {
             logf!("The Object you want to allocate is bigger than GC memory!");
         }
         if self.end - self.last_offset >= obj_size {
-            object.borrow_mut().allocate(self.last_offset);
+            object.borrow_mut().move_to(self.last_offset);
             self.objects.add_end(
                 MemInfo {
                     front: self.last_offset,
@@ -95,7 +94,7 @@ impl Gc {
                 Some(_) => {
                     let offset_free_end = last_checked.data.front;
                     if offset_free_end - offset_free >= obj_size {
-                        object.borrow_mut().allocate(offset_free);
+                        object.borrow_mut().move_to(offset_free);
                         last_checked.add_parent(
                             MemInfo {
                                 front: offset_free,
@@ -117,7 +116,7 @@ impl Gc {
             };
             if self.last_checked.is_none() {
                 if self.end - offset_free >= obj_size {
-                    object.borrow_mut().allocate(offset_free);
+                    object.borrow_mut().move_to(offset_free);
                     self.objects.add_end(
                         MemInfo {
                             front: offset_free,
@@ -138,7 +137,7 @@ impl Gc {
         if self.end - self.last_offset < obj_size {
             logf!("Out of GC memory!");
         }
-        object.borrow_mut().allocate(self.last_offset);
+        object.borrow_mut().move_to(self.last_offset);
         self.objects.add_end(
             MemInfo {
                 front: self.last_offset,
@@ -154,10 +153,6 @@ impl Gc {
 impl GcObject for Gc {
     fn get_size(&self) -> usize {
         self.size
-    }
-
-    fn allocate(&mut self, offset: usize) {
-        self.move_to(offset);
     }
 
     fn move_to(&mut self, offset: usize) {

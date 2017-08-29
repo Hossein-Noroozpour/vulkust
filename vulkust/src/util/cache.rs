@@ -1,7 +1,4 @@
 use std::collections::BTreeMap;
-use std::default::Default;
-use std::mem::transmute;
-use std::ptr::{null, null_mut};
 use std::sync::{Arc, Weak};
 
 pub struct Cacher<ID, VAL> where ID: Ord {

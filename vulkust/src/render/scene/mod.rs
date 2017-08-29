@@ -1,6 +1,5 @@
 pub mod manager;
 
-use std::cell::DebugCell;
 use std::default::Default;
 use std::sync::Arc;
 use super::super::audio::Audio;
@@ -9,6 +8,7 @@ use super::super::math::matrix::Mat4x4;
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::super::system::os::ApplicationTrait as OsApp;
+use super::super::util::cell::DebugCell;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuff;
 use super::camera::Camera;

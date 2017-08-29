@@ -1,5 +1,5 @@
-use std::cell::{Ref, DebugCell, RefMut};
 use std::sync::Arc;
+use super::super::util::cell::{DebugCell, DebugCellRefMut, DebugCellRef};
 
 #[cfg(feature = "d3d12")]
 use super::super::d3d12::engine::Engine;
@@ -46,11 +46,11 @@ impl Basic {
         }
     }
 
-    pub fn get_mut_current_scene(&mut self) -> RefMut<Scene + 'static> {
+    pub fn get_mut_current_scene(&mut self) -> DebugCellRefMut<Scene + 'static> {
         self.current_scene.borrow_mut()
     }
 
-    pub fn get_current_scene(&self) -> Ref<Scene + 'static> {
+    pub fn get_current_scene(&self) -> DebugCellRef<Scene + 'static> {
         self.current_scene.borrow()
     }
 
