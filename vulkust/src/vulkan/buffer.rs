@@ -1,8 +1,7 @@
 extern crate libc;
 
 use std::default::Default;
-use std::mem::{transmute, size_of};
-use std::os::raw::c_void;
+use std::mem::transmute;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
 use super::super::render::mesh::INDEX_ELEMENTS_SIZE;
@@ -282,8 +281,23 @@ impl Manager {
         return res;
     }
 
-    fn commit(&mut self) {
-        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+    fn commit_meshes(&self, cmd: &mut CmdBuff) {
+        let mut region = vk::VkBufferCopy::default();
+        region.srcOffset = 0 as vk::VkDeviceSize;
+        region.dstOffset = 0 as vk::VkDeviceSize;
+        region.size = self.scenes_dynamics_size as vk::VkDeviceSize;
+        let regions = vec![region; 1];
+        cmd.copy_buffer(self.staging_buffer, self.main_buffer, &regions);
+    }
+
+    fn commit_scenes_dynamics(&self, frame_number: usize, cmd: &mut CmdBuff) {
+        let start = self.meshes_size + (self.scenes_dynamics_size * frame_number);
+        let mut region = vk::VkBufferCopy::default();
+        region.srcOffset = start as vk::VkDeviceSize;
+        region.dstOffset = start as vk::VkDeviceSize;
+        region.size = self.scenes_dynamics_size as vk::VkDeviceSize;
+        let regions = vec![region; 1];
+        cmd.copy_buffer(self.staging_buffer, self.main_buffer, &regions);
     }
 
     pub fn get_buffer(&self) -> vk::VkBuffer {

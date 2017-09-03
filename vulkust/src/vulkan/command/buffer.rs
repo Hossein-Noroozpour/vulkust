@@ -2,8 +2,7 @@ use std::sync::Arc;
 use std::default::Default;
 use super::super::super::system::vulkan as vk;
 use super::super::descriptor::Set as DescriptorSet;
-use super::super::pipeline::layout::Layout as PipelineLayout;
-use super::super::pipeline::Pipeline;
+use super::super::pipeline::{Pipeline, Layout as PipelineLayout};
 use super::super::fence::Fence;
 use super::pool::Pool;
 
