@@ -1,10 +1,12 @@
-use std::cell::DebugCell;
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::ptr::null;
-use std::sync::{Arc, Weak};
-use super::super::render::shader::Id as ShaderId;
+use std::sync::Arc;
+use super::super::render::shader::{
+    shader_id_resources, Id as ShaderId, ResourceType, BindingStage};
 use super::super::system::vulkan as vk;
+use super::super::util::cache::Cacher;
+use super::super::util::cell::DebugCell;
 use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::pipeline::Layout as PipelineLayout;
@@ -48,25 +50,59 @@ impl Drop for Pool {
 }
 
 pub struct Set {
-    pool: Arc<Pool>,
-    pipeline_layout: Arc<PipelineLayout>,
+    pool: Arc<DebugCell<Pool>>,
+    descriptor_set_layout: vk::VkDescriptorSetLayout,
     pub vk_data: vk::VkDescriptorSet,
 }
 
 impl Set {
     fn new(
-        pool: Arc<Pool>,
-        pipeline_layout: Arc<PipelineLayout>,
-        buffer_info: &vk::VkDescriptorBufferInfo,
+        sid: ShaderId,
+        pool: Arc<DebugCell<Pool>>,
+        buffer_info: vk::VkDescriptorBufferInfo,
     ) -> Self {
+        let logical_device = pool.borrow().logical_device.clone();
+        let shader_resources = shader_id_resources(sid);
+        let mut layout_bindings = Vec::new();
+        for r in shader_resources {
+            let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
+            layout_binding.descriptorType = match r.2 { 
+                ResourceType::Uniform => vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            };
+            layout_binding.descriptorCount = r.1;
+            layout_binding.stageFlags = 0;
+            for s in r.0 {
+                match s {
+                    BindingStage::Vertex =>
+                        layout_binding.stageFlags |= 
+                            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32,
+                    BindingStage::Fragment =>
+                        layout_binding.stageFlags |= 
+                            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32,
+                }
+            }
+            layout_bindings.push(layout_binding);
+        }
+        let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
+        descriptor_layout.sType =
+            vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_layout.bindingCount = layout_bindings.len() as u32;
+        descriptor_layout.pBindings = layout_bindings.as_ptr();
+        let mut descriptor_set_layout = 0 as vk::VkDescriptorSetLayout;
+        vulkan_check!(vk::vkCreateDescriptorSetLayout(
+            logical_device.vk_data,
+            &descriptor_layout,
+            null(),
+            &mut descriptor_set_layout,
+        ));
         let mut alloc_info = vk::VkDescriptorSetAllocateInfo::default();
         alloc_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        alloc_info.descriptorPool = pool.vk_data;
+        alloc_info.descriptorPool = pool.borrow().vk_data;
         alloc_info.descriptorSetCount = 1;
-        alloc_info.pSetLayouts = &(pipeline_layout.descriptor_set_layout);
+        alloc_info.pSetLayouts = &descriptor_set_layout;
         let mut vk_data = 0 as vk::VkDescriptorSet;
         vulkan_check!(vk::vkAllocateDescriptorSets(
-            pool.logical_device.vk_data,
+            logical_device.vk_data,
             &alloc_info,
             &mut vk_data,
         ));
@@ -76,11 +112,11 @@ impl Set {
         write_descriptor_set.descriptorCount = 1;
         write_descriptor_set.descriptorType =
             vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_set.pBufferInfo = buffer_info;
+        write_descriptor_set.pBufferInfo = &buffer_info;
         write_descriptor_set.dstBinding = 0;
         unsafe {
             vk::vkUpdateDescriptorSets(
-                pool.logical_device.vk_data,
+                logical_device.vk_data,
                 1,
                 &write_descriptor_set,
                 0,
@@ -89,44 +125,34 @@ impl Set {
         }
         Set {
             pool: pool,
-            pipeline_layout: pipeline_layout,
+            descriptor_set_layout: descriptor_set_layout,
             vk_data: vk_data,
         }
     }
 }
 
 pub struct Manager {
-    cached: BTreeMap<ShaderId, Weak<Set>>,
-    pool: Arc<Pool>,
-    pipeline_layout: Arc<PipelineLayout>,
-    buffer: vk::VkBuffer,
+    cached: Cacher<ShaderId, Set>,
+    buffer_manager: Arc<DebugCell<BufferManager>>,
+    pool: Arc<DebugCell<Pool>>,
 }
 
 impl Manager {
     pub fn new(
-        buffer_manager: &BufferManager) -> Self {
+        buffer_manager: Arc<DebugCell<BufferManager>>) -> Self {
         Manager {
-            cached: BTreeMap::new(),
-            pool: pool,
-            pipeline_layout: pipeline_layout,
-            buffer: buffer_manager.get_buffer(),
+            cached: Cacher::new(),
+            pool: Arc::new(DebugCell::new(Pool::new(buffer_manager.borrow().get_device().clone()))),
+            buffer_manager: buffer_manager,
         }
     }
 
-    pub fn get(&mut self, id: ShaderId) -> Arc<Set> {
-        match self.cached.get(&id) {
-            Some(res) => match res.upgrade() {
-                Some(res) => {
-                    return res;
-                }
-                None => {}
-            },
-            None => {}
-        }
+    pub fn get(&mut self, id: ShaderId) -> Arc<DebugCell<Set>> {
         let mut buff_info = vk::VkDescriptorBufferInfo::default();
-        buff_info.buffer = self.buffer;
-        let set = Arc::new(Set::new(&self.pool, &self.pipeline_layout, &buff_info));
-        self.cached.insert(id, Arc::downgrade(&set));
-        return set;
+        buff_info.buffer = self.buffer_manager.borrow().get_buffer();
+        let pool = self.pool.clone();
+        self.cached.get(id, & move || {
+            Set::new(id, pool, buff_info)
+        })
     }
 }

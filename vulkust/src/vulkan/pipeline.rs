@@ -13,7 +13,7 @@ use super::super::render::vertex::Attribute as VertexAttribute;
 use super::super::system::vulkan as vk;
 use super::super::util::cache::Cacher;
 use super::super::util::cell::DebugCell;
-use super::descriptor::{Pool as DescriptorPool, Set as DescriptorSet};
+use super::descriptor::Manager as DescriptorManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::engine::Engine;
 use super::render_pass::RenderPass;
@@ -27,38 +27,38 @@ impl Layout {
     pub fn new(logical_device: Arc<LogicalDevice>, sid: ShaderId) -> Self {
         let mut descriptor_set_layout = null_mut();
         let mut vk_data = 0 as vk::VkPipelineLayout;
-        let shader_resources = shader_id_resources(sid);
-        let mut layout_bindings = Vec::new();
-        for r in shader_resources {
-            let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
-            layout_binding.descriptorType = match r.2 { 
-                ResourceType::Uniform => vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            };
-            layout_binding.descriptorCount = r.1;
-            layout_binding.stageFlags = 0;
-            for s in r.0 {
-                match s {
-                    BindingStage::Vertex =>
-                        layout_binding.stageFlags |= 
-                            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32,
-                    BindingStage::Fragment =>
-                        layout_binding.stageFlags |= 
-                            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32,
-                }
-            }
-            layout_bindings.push(layout_binding);
-        }
-        let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
-        descriptor_layout.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptor_layout.bindingCount = layout_bindings.len() as u32;
-        descriptor_layout.pBindings = layout_bindings.as_ptr();
-        vulkan_check!(vk::vkCreateDescriptorSetLayout(
-            logical_device.vk_data,
-            &descriptor_layout,
-            null(),
-            &mut descriptor_set_layout,
-        ));
+        // let shader_resources = shader_id_resources(sid);
+        // let mut layout_bindings = Vec::new();
+        // for r in shader_resources {
+        //     let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
+        //     layout_binding.descriptorType = match r.2 { 
+        //         ResourceType::Uniform => vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        //     };
+        //     layout_binding.descriptorCount = r.1;
+        //     layout_binding.stageFlags = 0;
+        //     for s in r.0 {
+        //         match s {
+        //             BindingStage::Vertex =>
+        //                 layout_binding.stageFlags |= 
+        //                     vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32,
+        //             BindingStage::Fragment =>
+        //                 layout_binding.stageFlags |= 
+        //                     vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32,
+        //         }
+        //     }
+        //     layout_bindings.push(layout_binding);
+        // }
+        // let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
+        // descriptor_layout.sType =
+        //     vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        // descriptor_layout.bindingCount = layout_bindings.len() as u32;
+        // descriptor_layout.pBindings = layout_bindings.as_ptr();
+        // vulkan_check!(vk::vkCreateDescriptorSetLayout(
+        //     logical_device.vk_data,
+        //     &descriptor_layout,
+        //     null(),
+        //     &mut descriptor_set_layout,
+        // ));
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -281,7 +281,7 @@ impl Drop for Pipeline {
 pub struct Manager {
     pub cache: Arc<Cache>,
     pub cached: Cacher<ShaderId, Pipeline>,
-    pub descriptor_pool: Arc<DescriptorPool>,
+    pub descriptor_manager: Arc<DebugCell<DescriptorManager>>,
     pub render_pass: Arc<RenderPass>,
     pub asset_manager: Arc<DebugCell<AssetManager>>,
 }

@@ -16,8 +16,6 @@ use super::fence::Fence;
 use super::framebuffer::Framebuffer;
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::Pool as CmdPool;
-use super::pipeline::layout::Layout;
-use super::pipeline::cache::Cache as PipelineCache;
 use super::synchronizer::semaphore::Semaphore;
 use std::mem::transmute;
 
@@ -62,8 +60,6 @@ where
             framebuffers: Vec::new(),
             graphic_cmd_pool: None,
             transfer_cmd_pool: None,
-            pipeline_layout: None,
-            pipeline_cache: None,
             descriptor_pool: None,
             draw_commands: Vec::new(),
             present_complete_semaphore: None,

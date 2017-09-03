@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
+use super::cell::DebugCell;
 
 pub struct Cacher<ID, VAL> where ID: Ord {
-    cached: BTreeMap<ID, Weak<VAL>>,
+    cached: BTreeMap<ID, Weak<DebugCell<VAL>>>,
 }
 
 impl<ID, VAL> Cacher<ID, VAL> where ID: Ord {
@@ -12,7 +13,7 @@ impl<ID, VAL> Cacher<ID, VAL> where ID: Ord {
         }
     }
 
-    pub fn get<F>(&mut self, id: ID, new: &F) -> Arc<VAL> 
+    pub fn get<F>(&mut self, id: ID, new: &F) -> Arc<DebugCell<VAL>>
     where F: Fn() -> VAL {
         match self.cached.get(&id) {
             Some(res) => match res.upgrade() {
@@ -23,7 +24,7 @@ impl<ID, VAL> Cacher<ID, VAL> where ID: Ord {
             },
             None => {}
         }
-        let res = Arc::new(new());
+        let res = Arc::new(DebugCell::new(new()));
         self.cached.insert(id, Arc::downgrade(&res));
         return res;
     }
