@@ -104,8 +104,6 @@ pub struct Manager {
 
 impl Manager {
     pub fn new(
-        pool: Arc<Pool>,
-        pipeline_layout: Arc<PipelineLayout>,
         buffer_manager: &BufferManager) -> Self {
         Manager {
             cached: BTreeMap::new(),

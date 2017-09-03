@@ -1,9 +1,7 @@
-use std::cell::DebugCell;
-use std::collections::BTreeMap;
 use std::default::Default;
 use std::ffi::CString;
 use std::ptr::{null, null_mut};
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::core::asset::manager::Manager as AssetManager;
 use super::super::render::shader::{
@@ -13,7 +11,8 @@ use super::super::render::shader::{
 };
 use super::super::render::vertex::Attribute as VertexAttribute;
 use super::super::system::vulkan as vk;
-use super::super::util::Cacher;
+use super::super::util::cache::Cacher;
+use super::super::util::cell::DebugCell;
 use super::descriptor::{Pool as DescriptorPool, Set as DescriptorSet};
 use super::device::logical::Logical as LogicalDevice;
 use super::engine::Engine;
