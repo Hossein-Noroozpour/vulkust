@@ -2,16 +2,18 @@ pub mod manager;
 
 use std::sync::Arc;
 use std::default::Default;
+use super::super::core::application::ApplicationTrait;
 use super::super::math::matrix::Mat4x4;
 use super::super::system::file::File;
 use super::super::util::cell::DebugCell;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuff;
+use super::engine::RenderEngine;
 use super::material::Material;
+use super::mesh::{Mesh, OccMesh};
 use super::scene::UniformData as ScUniData;
 use super::shader::manager::Manager as ShaderManager;
 use super::texture::manager::Manager as TextureManager;
-use super::mesh::{Mesh, OccMesh};
 use self::manager::Manager;
 
 #[derive(Default)]
@@ -318,21 +320,13 @@ pub fn read_model(
     };
 }
 
-fn read_boxed_model(
-    file: &mut File,
-    model_manager: &mut Manager,
-    buffer_manager: &mut BufferManager,
-    texture_manager: &mut TextureManager,
-    shader_manager: &Arc<DebugCell<ShaderManager>>,
-) -> Box<Model> {
+fn read_boxed_model<CoreApp>(
+    file: &Arc<DebugCell<File>>,
+    engine: &mut RenderEngine<CoreApp>
+) -> Box<Model> 
+where CoreApp: ApplicationTrait {
     return if file.read_bool() {
-        Box::new(CopyModel::new(
-            file,
-            model_manager,
-            buffer_manager,
-            texture_manager,
-            shader_manager,
-        ))
+        Box::new(CopyModel::new(file, engine))
     } else if file.read_bool() {
         Box::new(DynamicModel::new(
             file,
