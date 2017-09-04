@@ -8,14 +8,11 @@ use super::buffer::{
     Manager as BufferManager,
     MeshBuffer,
 };
-use super::device::logical::Logical as LogicalDevice;
+use super::engine::RenderEngine;
 use super::material::{read_material, Material};
 use super::model::UniformData as MdlUniData;
-use super::engine::RenderEngine;
 use super::scene::UniformData as ScnUniData;
-use super::shader::manager::Manager as ShaderManager;
 use super::shader::{read_id as read_shader_id, get_vertex_size};
-use super::texture::manager::Manager as TextureManager;
 
 pub const INDEX_ELEMENTS_SIZE: usize = 4;
 
@@ -71,11 +68,8 @@ struct OccUniform {
 }
 
 pub struct OccMesh {
-    pub vertices_range: (usize, usize),
-    pub indices_count: u64,
-    pub indices_range: (usize, usize),
-    pub uniforms: Vec<&'static mut OccUniform>,
-    pub uniforms_ranges: Vec<(usize, usize)>,
+    pub buffer: Arc<DebugCell<MeshBuffer>>,
+    pub buffer_manager: Arc<DebugCell<BufferManager>>,
 }
 
 impl OccMesh {
@@ -108,17 +102,9 @@ impl OccMesh {
             unsafe { transmute(vertices_data.as_ptr()) }, vertices_size);
         buffer.borrow_mut().upload_indices(
             unsafe { transmute(indices_data.as_ptr()) }, indices_size);
-        let (uniforms, uniforms_ranges) = buffer_manager.add_u(&OccUniform::default());
         OccMesh {
-            vertices_range: vertices_range,
-            indices_count: indices_count,
-            indices_range: indices_range,
-            uniforms: uniforms,
-            uniforms_ranges: uniforms_ranges,
+            buffer: buffer,
+            buffer_manager: buffer_manager,
         }
-    }
-
-    pub fn update_uniform(&mut self, mud: &MdlUniData, frame_index: usize) {
-        self.uniforms[frame_index].mvp = mud.mvp;
     }
 }
