@@ -2,7 +2,6 @@ use std::sync::Arc;
 use super::super::super::audio::manager::Manager as AudioManager;
 use super::super::super::audio::Audio;
 use super::super::super::core::application::ApplicationTrait;
-use super::super::super::render::buffer::Manager as BufferManager;
 use super::super::super::render::camera::manager::Manager as CameraManager;
 use super::super::super::render::camera::Camera;
 use super::super::super::render::device::logical::Logical as LogicalDevice;
@@ -21,8 +20,8 @@ use super::super::super::system::file::File;
 use super::super::super::util::cell::DebugCell;
 
 pub struct Manager {
-    pub file: File,
-    pub shader_manager: ShaderManager,
+    pub file: Arc<DebugCell<File>>,
+    pub shader_manager: Arc<DebugCell<ShaderManager>>,
     pub camera_manager: CameraManager,
     pub audio_manager: AudioManager,
     pub light_manager: LightManager,
@@ -34,8 +33,8 @@ pub struct Manager {
 impl Manager {
     pub fn new(file: File) -> Self {
         Manager {
-            file: file,
-            shader_manager: ShaderManager::new(),
+            file: Arc::new(DebugCell::new(file)),
+            shader_manager: Arc::new(DebugCell::new(ShaderManager::new())),
             camera_manager: CameraManager::new(),
             audio_manager: AudioManager::new(),
             light_manager: LightManager::new(),

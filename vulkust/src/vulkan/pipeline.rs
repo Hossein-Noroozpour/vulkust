@@ -1,69 +1,43 @@
 use std::default::Default;
 use std::ffi::CString;
-use std::ptr::{null, null_mut};
+use std::ptr::null;
 use std::sync::Arc;
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
-use super::super::core::asset::manager::Manager as AssetManager;
 use super::super::render::shader::{
-    Id as ShaderId, Shader, BindingStage, ResourceType,
+    Id as ShaderId, Shader,
     shader_id_to_vertex_attributes,
-    shader_id_resources,
 };
+use super::super::render::shader::manager::Manager as ShaderManager;
 use super::super::render::vertex::Attribute as VertexAttribute;
 use super::super::system::vulkan as vk;
 use super::super::util::cache::Cacher;
 use super::super::util::cell::DebugCell;
-use super::descriptor::Manager as DescriptorManager;
+use super::descriptor::{
+    Manager as DescriptorManager,
+    Set as DescriptorSet,
+};
 use super::device::logical::Logical as LogicalDevice;
 use super::engine::Engine;
 use super::render_pass::RenderPass;
 
 pub struct Layout {
     pub logical_device: Arc<LogicalDevice>,
-    pub descriptor_set_layout: vk::VkDescriptorSetLayout,
     pub vk_data: vk::VkPipelineLayout,
+    pub descriptor_set: Arc<DebugCell<DescriptorSet>>,
 }
 impl Layout {
-    pub fn new(logical_device: Arc<LogicalDevice>, sid: ShaderId) -> Self {
-        let mut descriptor_set_layout = null_mut();
+    pub fn new(
+        logical_device: Arc<LogicalDevice>, 
+        sid: ShaderId, 
+        descriptor_set: Arc<DebugCell<DescriptorSet>>) -> Self {
         let mut vk_data = 0 as vk::VkPipelineLayout;
-        // let shader_resources = shader_id_resources(sid);
-        // let mut layout_bindings = Vec::new();
-        // for r in shader_resources {
-        //     let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
-        //     layout_binding.descriptorType = match r.2 { 
-        //         ResourceType::Uniform => vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        //     };
-        //     layout_binding.descriptorCount = r.1;
-        //     layout_binding.stageFlags = 0;
-        //     for s in r.0 {
-        //         match s {
-        //             BindingStage::Vertex =>
-        //                 layout_binding.stageFlags |= 
-        //                     vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32,
-        //             BindingStage::Fragment =>
-        //                 layout_binding.stageFlags |= 
-        //                     vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32,
-        //         }
-        //     }
-        //     layout_bindings.push(layout_binding);
-        // }
-        // let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
-        // descriptor_layout.sType =
-        //     vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        // descriptor_layout.bindingCount = layout_bindings.len() as u32;
-        // descriptor_layout.pBindings = layout_bindings.as_ptr();
-        // vulkan_check!(vk::vkCreateDescriptorSetLayout(
-        //     logical_device.vk_data,
-        //     &descriptor_layout,
-        //     null(),
-        //     &mut descriptor_set_layout,
-        // ));
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipeline_layout_create_info.setLayoutCount = 1;
-        pipeline_layout_create_info.pSetLayouts = &descriptor_set_layout;
+        pipeline_layout_create_info.setLayoutCount = 
+            descriptor_set.borrow().layout.len() as u32;
+        pipeline_layout_create_info.pSetLayouts =
+            descriptor_set.borrow().layout.as_ptr();
         vulkan_check!(vk::vkCreatePipelineLayout(
             logical_device.vk_data,
             &pipeline_layout_create_info,
@@ -71,8 +45,8 @@ impl Layout {
             &mut vk_data,
         ));
         Layout {
+            descriptor_set: descriptor_set,
             logical_device: logical_device,
-            descriptor_set_layout: descriptor_set_layout,
             vk_data: vk_data,
         }
     }
@@ -81,11 +55,6 @@ impl Drop for Layout {
     fn drop(&mut self) {
         unsafe {
             vk::vkDestroyPipelineLayout(self.logical_device.vk_data, self.vk_data, null());
-            vk::vkDestroyDescriptorSetLayout(
-                self.logical_device.vk_data,
-                self.descriptor_set_layout,
-                null(),
-            );
         }
     }
 }
@@ -124,23 +93,24 @@ impl Drop for Cache {
 
 pub struct Pipeline {
     pub cache: Arc<Cache>,
-    pub descriptor_pool: Arc<DescriptorPool>,
-    pub descriptor_set: DescriptorSet,
+    pub descriptor_set: Arc<DebugCell<DescriptorSet>>,
     pub layout: Layout,
-    pub shader: Arc<Shader>,
+    pub shader: Arc<DebugCell<Shader>>,
     pub render_pass: Arc<RenderPass>,
     pub vk_data: vk::VkPipeline,
 }
 
 impl Pipeline {
     fn new(
-        manager: &Manager, sid: ShaderId
+        manager: &mut Manager,
+        sid: ShaderId,
     ) -> Self
     {
+        let descriptor_set = manager.descriptor_manager.borrow_mut().get(sid);
         let device = manager.cache.logical_device.clone();
-        let shader = manager.asset_manager.borrow_mut().get_shader(sid, device);
+        let shader = manager.shader_manager.borrow_mut().get(sid, device);
         let vertex_attrs = shader_id_to_vertex_attributes(sid);
-        let layout = Layout::new(device, sid);
+        let layout = Layout::new(device, sid, descriptor_set.clone());
         let render_pass = manager.render_pass.clone();
         let pipeline_cache = manager.cache.clone();
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
@@ -220,8 +190,7 @@ impl Pipeline {
         vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.len() as u32;
         vertex_input_state.pVertexAttributeDescriptions = vertex_attributes.as_ptr();
         let stage_name = CString::new("main").unwrap();
-        let shader = material.get_shader();
-        let stages_count = shader.get_stages_count();
+        let stages_count = shader.borrow().get_stages_count();
         let mut shader_stages = vec![vk::VkPipelineShaderStageCreateInfo::default(); stages_count];
         for i in 0..stages_count {
             shader_stages[i].sType =
@@ -233,7 +202,7 @@ impl Pipeline {
                     logf!("Stage {} is not implemented yet!", n);
                 }
             };
-            shader_stages[i].module = shader.get_stage(i).module;
+            shader_stages[i].module = shader.borrow().get_stage(i).module;
             shader_stages[i].pName = stage_name.as_ptr();
         }
         let mut pipeline_create_info = vk::VkGraphicsPipelineCreateInfo::default();
@@ -262,9 +231,11 @@ impl Pipeline {
             &mut vk_data,
         ));
         Pipeline {
-            layout: layout.clone(),
-            render_pass: render_pass.clone(),
             cache: pipeline_cache.clone(),
+            descriptor_set: descriptor_set,
+            layout: layout,
+            shader: shader,
+            render_pass: render_pass.clone(),
             vk_data: vk_data,
         }
     }
@@ -283,7 +254,7 @@ pub struct Manager {
     pub cached: Cacher<ShaderId, Pipeline>,
     pub descriptor_manager: Arc<DebugCell<DescriptorManager>>,
     pub render_pass: Arc<RenderPass>,
-    pub asset_manager: Arc<DebugCell<AssetManager>>,
+    pub shader_manager: Arc<DebugCell<ShaderManager>>,
 }
 
 impl Manager {
@@ -296,17 +267,18 @@ impl Manager {
         Manager {
             render_pass: engine.render_pass.as_ref().unwrap().clone(),
             cache: Arc::new(Cache::new(device.clone())),
-            descriptor_pool: Arc::new(DescriptorPool::new(device)),
+            descriptor_manager: Arc::new(DebugCell::new(DescriptorManager::new(
+                engine.buffer_manager.as_ref().unwrap().clone()))),
             cached: Cacher::new(),
-            asset_manager: engine.os_app.asset_manager.clone(),
+            shader_manager: engine.os_app.asset_manager.shader_manager.clone(),
         }
     }
 
-    pub fn get(&mut self, id: ShaderId) -> Arc<Pipeline> {
-        self.cached.get(id, &|| { self.create_pipeline(id) } )
+    pub fn get(&mut self, id: ShaderId) -> Arc<DebugCell<Pipeline>> {
+        self.cached.get(id, &|| { self.create_pipeline(id) })
     }
 
-    fn create_pipeline(&self, id: ShaderId) -> Pipeline {
-        Pipeline::new(self, id)
+    fn create_pipeline(&mut self, id: ShaderId) -> Arc<DebugCell<Pipeline>> {
+        Arc::new(DebugCell::new(Pipeline::new(self, id)))
     }
 }

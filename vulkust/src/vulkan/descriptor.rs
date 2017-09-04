@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;
@@ -9,7 +8,6 @@ use super::super::util::cache::Cacher;
 use super::super::util::cell::DebugCell;
 use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
-use super::pipeline::Layout as PipelineLayout;
 
 pub struct Pool {
     pub logical_device: Arc<LogicalDevice>,
@@ -51,7 +49,7 @@ impl Drop for Pool {
 
 pub struct Set {
     pool: Arc<DebugCell<Pool>>,
-    descriptor_set_layout: vk::VkDescriptorSetLayout,
+    pub layout: Vec<vk::VkDescriptorSetLayout>,
     pub vk_data: vk::VkDescriptorSet,
 }
 
@@ -125,7 +123,7 @@ impl Set {
         }
         Set {
             pool: pool,
-            descriptor_set_layout: descriptor_set_layout,
+            layout: vec![descriptor_set_layout; 1],
             vk_data: vk_data,
         }
     }
@@ -152,7 +150,7 @@ impl Manager {
         buff_info.buffer = self.buffer_manager.borrow().get_buffer();
         let pool = self.pool.clone();
         self.cached.get(id, & move || {
-            Set::new(id, pool, buff_info)
+            Arc::new(DebugCell::new(Set::new(id, pool, buff_info)))
         })
     }
 }

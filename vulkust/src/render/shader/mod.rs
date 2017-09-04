@@ -3,6 +3,7 @@ pub mod stage;
 
 use std::sync::Arc;
 use super::super::system::file::File;
+use super::super::util::cell::DebugCell;
 use super::device::logical::Logical as LogicalDevice;
 use super::vertex::Attribute as VertexAttribute;
 use self::stage::Stage;
@@ -26,13 +27,13 @@ pub struct TwoStage {
 }
 
 impl TwoStage {
-    pub fn new(file: &mut File, logical_device: Arc<LogicalDevice>) -> Self {
-        let size: u64 = file.read_type();
+    pub fn new(file: &Arc<DebugCell<File>>, logical_device: Arc<LogicalDevice>) -> Self {
+        let size: u64 = file.borrow_mut().read_type();
         // logi!("shader size is: {}", size);
-        let vertex = file.read_bytes(size as usize);
-        let size: u64 = file.read_type();
+        let vertex = file.borrow_mut().read_bytes(size as usize);
+        let size: u64 = file.borrow_mut().read_type();
         // logi!("shader size is: {}", size);
-        let fragment = file.read_bytes(size as usize);
+        let fragment = file.borrow_mut().read_bytes(size as usize);
         TwoStage {
             vertex: Stage::new(vertex, logical_device.clone()),
             fragment: Stage::new(fragment, logical_device),
@@ -81,8 +82,8 @@ pub fn from_gx3d_id(v: Vec<u8>) -> Id {
 
 pub const ID_BYTES_COUNT: usize = 6;
 
-pub fn read_id(file: &mut File) -> u64 {
-    from_gx3d_id(file.read_bytes(ID_BYTES_COUNT))
+pub fn read_id(file: &Arc<DebugCell<File>>) -> u64 {
+    from_gx3d_id(file.borrow_mut().read_bytes(ID_BYTES_COUNT))
 }
 
 pub fn shader_id_to_vertex_attributes(id: Id) -> Vec<VertexAttribute> {

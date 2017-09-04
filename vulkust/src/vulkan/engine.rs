@@ -1,23 +1,25 @@
 use std::sync::Arc;
-use super::super::render::engine::{Basic as BasicEngine, EngineTrait};
+use std::mem::transmute;
 use super::super::core::application::ApplicationTrait;
 use super::super::core::event::Event;
+use super::super::render::engine::{Basic as BasicEngine, EngineTrait};
 use super::super::system::os::OsApplication;
 use super::super::system::vulkan as vk;
-use super::instance::Instance;
-use super::surface::Surface;
-use super::descriptor::Pool as DescriptorPool;
-use super::device::physical::Physical as PhysicalDevice;
-use super::device::logical::Logical as LogicalDevice;
-use super::swapchain::Swapchain;
-use super::image::view::View as ImageView;
-use super::render_pass::RenderPass;
-use super::fence::Fence;
-use super::framebuffer::Framebuffer;
+use super::super::util::cell::DebugCell;
+use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::Pool as CmdPool;
+use super::device::logical::Logical as LogicalDevice;
+use super::device::physical::Physical as PhysicalDevice;
+use super::fence::Fence;
+use super::framebuffer::Framebuffer;
+use super::image::view::View as ImageView;
+use super::instance::Instance;
+use super::pipeline::Manager as PipelineManager;
+use super::render_pass::RenderPass;
+use super::surface::Surface;
+use super::swapchain::Swapchain;
 use super::synchronizer::semaphore::Semaphore;
-use std::mem::transmute;
 
 pub struct Engine<CoreApp>
 where
@@ -39,6 +41,8 @@ where
     pub present_complete_semaphore: Option<Semaphore>,
     pub render_complete_semaphore: Option<Semaphore>,
     pub wait_fences: Vec<Fence>,
+    pub buffer_manager: Option<Arc<DebugCell<BufferManager>>>,
+    pub pipeline_manager: Option<Arc<DebugCell<PipelineManager>>>,
     pub basic_engine: Option<BasicEngine>,
 }
 
@@ -60,11 +64,12 @@ where
             framebuffers: Vec::new(),
             graphic_cmd_pool: None,
             transfer_cmd_pool: None,
-            descriptor_pool: None,
             draw_commands: Vec::new(),
             present_complete_semaphore: None,
             render_complete_semaphore: None,
             wait_fences: Vec::new(),
+            buffer_manager: None,
+            pipeline_manager: None,
             basic_engine: None,
         }
     }
@@ -100,11 +105,6 @@ where
         let graphic_cmd_pool = Arc::new(CmdPool::new(logical_device.clone()));
         self.graphic_cmd_pool = Some(graphic_cmd_pool.clone());
         self.transfer_cmd_pool = Some(graphic_cmd_pool);
-        let pipeline_layout = Arc::new(Layout::new(logical_device.clone()));
-        self.pipeline_layout = Some(pipeline_layout);
-        let pipeline_cache = Arc::new(PipelineCache::new(logical_device.clone()));
-        self.pipeline_cache = Some(pipeline_cache);
-        self.descriptor_pool = Some(Arc::new(DescriptorPool::new(logical_device.clone())));
         self.present_complete_semaphore = Some(Semaphore::new(logical_device.clone()));
         self.render_complete_semaphore = Some(Semaphore::new(logical_device.clone()));
         for _ in 0..self.framebuffers.len() {
@@ -113,6 +113,14 @@ where
             ));
         }
         // TODO
+        self.buffer_manager = Some(Arc::new(DebugCell::new(BufferManager::new(
+            self.logical_device.as_ref().unwrap().clone(),
+            1024 * 1024,
+            1024 * 1024,
+            self.framebuffers.len()
+        ))));
+        let pipeline_manager = Arc::new(DebugCell::new(PipelineManager::new(self)));
+        self.pipeline_manager = Some(pipeline_manager);
         self.basic_engine = Some(BasicEngine::new(self.os_app));
         self.record();
     }
@@ -302,13 +310,12 @@ where
         self.logical_device.as_ref().unwrap().wait_idle();
         self.basic_engine = None;
         // TODO
+        self.pipeline_manager = None;
+        self.buffer_manager = None;
         self.wait_fences.clear();
         self.render_complete_semaphore = None;
         self.present_complete_semaphore = None;
         self.draw_commands.clear();
-        self.descriptor_pool = None;
-        self.pipeline_cache = None;
-        self.pipeline_layout = None;
         self.transfer_cmd_pool = None;
         self.graphic_cmd_pool = None;
         self.framebuffers.clear();
