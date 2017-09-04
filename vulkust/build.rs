@@ -23,4 +23,5 @@ fn main() {
     println!("cargo:rustc-cfg=mesh_debug");
     println!("cargo:rustc-cfg=material_debug");
     println!("cargo:rustc-cfg=cell_debug");
+    println!("cargo:rustc-cfg=buffer_debug");
 }

@@ -38,6 +38,14 @@ impl GcObject for BufferGcObject {
     }
 }
 
+impl BufferGcObject {
+    fn write(&mut self, offset: usize, data: *const libc::c_void, size: usize) {
+        unsafe {
+            libc::memcpy(transmute(self.address.offset(offset as isize)), data, size as libc::size_t);
+        }
+    }
+}
+
 pub struct MeshBuffer {
     buffer_gc_obj: BufferGcObject,
     vertex_size: usize,
@@ -56,6 +64,28 @@ impl GcObject for MeshBuffer {
 
     fn move_to(&mut self, offset: usize) {
         self.buffer_gc_obj.move_to(offset);
+    }
+}
+
+impl MeshBuffer {
+    pub fn upload_vertices(&mut self, data: *const libc::c_void, length: usize) {
+        #[cfg(buffer_debug)]
+        {   
+            if length > self.vertices_size {
+                logf!("Unexpected size of data.");
+            }
+        }
+        self.buffer_gc_obj.write(0, data, length);
+    }
+
+    pub fn upload_indices(&mut self, data: *const libc::c_void, length: usize) {
+        #[cfg(buffer_debug)]
+        {   
+            if length > self.indices_size {
+                logf!("Unexpected size of data.");
+            }
+        }
+        self.buffer_gc_obj.write(self.vertices_aligned_size, data, length);
     }
 }
 

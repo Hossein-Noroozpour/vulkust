@@ -19,6 +19,7 @@ pub trait Shader {
     fn get_stage(&self, i: usize) -> &Stage;
     fn get_vertex_stage(&self) -> &Stage;
     fn get_fragment_stage(&self) -> &Stage;
+    fn get_vertex_size(&self) -> usize;
 }
 
 pub struct TwoStage {
@@ -84,6 +85,14 @@ pub const ID_BYTES_COUNT: usize = 6;
 
 pub fn read_id(file: &Arc<DebugCell<File>>) -> u64 {
     from_gx3d_id(file.borrow_mut().read_bytes(ID_BYTES_COUNT))
+}
+
+pub fn get_vertex_size(sid: Id) -> usize {
+    match sid {
+        WHITE_ID => 12,
+        DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID => 32,
+        id @ _ => { logf!("The Shader Id {} is not expected.", id); },
+    }
 }
 
 pub fn shader_id_to_vertex_attributes(id: Id) -> Vec<VertexAttribute> {

@@ -1,12 +1,14 @@
 use std::default::Default;
 use std::sync::Arc;
+use super::super::core::application::ApplicationTrait;
 use super::super::math::matrix::Mat4x4;
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::super::util::cell::DebugCell;
+use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::descriptor::Set as DescriptorSet;
-use super::buffer::Manager as BufferManager;
+use super::engine::RenderEngine;
 use super::model::UniformData as MdlUniData;
 use super::pipeline::Pipeline;
 use super::scene::UniformData as ScnUniData;
@@ -28,6 +30,7 @@ pub const POSITION_NORMAL_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + NORMAL_ELEMEN
 
 pub trait Material {
     fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize);
+    fn get_shader(&self) -> &Arc<DebugCell<Shader>>;
 }
 
 pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
@@ -125,13 +128,11 @@ impl Material for White {
     }
 }
 
-pub fn read_material(
-    file: &mut File,
-    logical_device: Arc<LogicalDevice>,
-    shader_manager: &mut ShaderManager,
-    texture_manager: &mut TextureManager,
-    buffer_manager: &mut BufferManager
-) -> Arc<DebugCell<Material>> {
+pub fn read_material<CoreApp>(
+    file: &Arc<DebugCell<File>>,
+    engine: &mut RenderEngine<CoreApp>
+) -> Arc<DebugCell<Material>> 
+where CoreApp: ApplicationTrait {
     let shader_id = read_id(file);
     return match shader_id {
         WHITE_ID => {
