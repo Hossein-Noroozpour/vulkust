@@ -6,15 +6,11 @@ use super::super::core::application::ApplicationTrait;
 use super::super::math::matrix::Mat4x4;
 use super::super::system::file::File;
 use super::super::util::cell::DebugCell;
-use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuff;
 use super::engine::RenderEngine;
 use super::material::Material;
 use super::mesh::{Mesh, OccMesh};
 use super::scene::UniformData as ScUniData;
-use super::shader::manager::Manager as ShaderManager;
-use super::texture::manager::Manager as TextureManager;
-use self::manager::Manager;
 
 #[derive(Default)]
 pub struct UniformData {
@@ -56,31 +52,15 @@ pub struct StaticModel {
 }
 
 impl StaticModel {
-    pub fn new(
-        file: &mut File,
-        model_manager: &mut Manager,
-        buffer_manager: &mut BufferManager,
-        texture_manager: &mut TextureManager,
-        shader_manager: &Arc<DebugCell<ShaderManager>>,
-    ) -> Self {
-        let device = buffer_manager.get_device().clone();
-        let mesh = Mesh::new(
-            file,
-            buffer_manager,
-            device,
-            shader_manager,
-            texture_manager,
-        );
-        let children_count: u64 = file.read_type();
+    pub fn new<CoreApp>(
+        file: &Arc<DebugCell<File>>,
+        engine: &mut RenderEngine<CoreApp>
+    ) -> Self where CoreApp: ApplicationTrait {
+        let mesh = Mesh::new(file, engine);
+        let children_count: u64 = file.borrow_mut().read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
-            children.push(read_boxed_model(
-                file,
-                model_manager,
-                buffer_manager,
-                texture_manager,
-                shader_manager,
-            ));
+            children.push(read_boxed_model(file, engine));
         }
         StaticModel {
             draw_mesh: mesh,
@@ -123,24 +103,15 @@ pub struct RootStaticModel {
 }
 
 impl RootStaticModel {
-    pub fn new(
-        file: &mut File,
-        model_manager: &mut Manager,
-        buffer_manager: &mut BufferManager,
-        texture_manager: &mut TextureManager,
-        shader_manager: &Arc<DebugCell<ShaderManager>>,
-    ) -> Self {
-        let mesh = OccMesh::new(file, buffer_manager);
-        let children_count = file.read_count();
+    pub fn new<CoreApp>(
+        file: &Arc<DebugCell<File>>,
+        engine: &mut RenderEngine<CoreApp>
+    ) -> Self where CoreApp: ApplicationTrait {
+        let mesh = OccMesh::new(file, engine);
+        let children_count = file.borrow_mut().read_count();
         let mut children = Vec::new();
         for _ in 0..children_count {
-            children.push(read_boxed_model(
-                file,
-                model_manager,
-                buffer_manager,
-                texture_manager,
-                shader_manager,
-            ));
+            children.push(read_boxed_model(file, engine));
         }
         RootStaticModel {
             occ_mesh: mesh,
@@ -156,14 +127,12 @@ impl Model for RootStaticModel {
         for &mut c in &mut self.children {
             c.child_update_uniform(sud, &self.ud, frame_index);
         }
-        self.occ_mesh.update_uniform(&self.ud, frame_index);
     }
 
     fn child_update_uniform(&mut self, sud: &ScUniData, pud: &UniformData, frame_index: usize) {
         for &mut c in &mut self.children {
             c.child_update_uniform(sud, pud, frame_index);
         }
-        self.occ_mesh.update_uniform(pud, frame_index);
     }
 
     fn get_dynamism(&self) -> Dynamism {
@@ -185,25 +154,16 @@ pub struct DynamicModel {
 }
 
 impl DynamicModel {
-    pub fn new(
-        file: &mut File,
-        model_manager: &mut Manager,
-        buffer_manager: &mut BufferManager,
-        texture_manager: &mut TextureManager,
-        shader_manager: &Arc<DebugCell<ShaderManager>>,
-    ) -> Self {
+    pub fn new<CoreApp>(
+        file: &Arc<DebugCell<File>>,
+        engine: &mut RenderEngine<CoreApp>
+    ) -> Self where CoreApp: ApplicationTrait {
         let m = Mat4x4::new_from_file(file);
-        let mesh = OccMesh::new(file, buffer_manager);
-        let children_count: u64 = file.read_type();
+        let mesh = OccMesh::new(file, engine);
+        let children_count: u64 = file.borrow_mut().read_type();
         let mut children = Vec::new();
         for _ in 0..children_count {
-            children.push(read_boxed_model(
-                file,
-                model_manager,
-                buffer_manager,
-                texture_manager,
-                shader_manager,
-            ));
+            children.push(read_boxed_model(file, engine));
         }
         let mut ud = UniformData::default();
         ud.m = m;
@@ -221,7 +181,6 @@ impl Model for DynamicModel {
         for &mut c in &mut self.children {
             c.child_update_uniform(sud, &self.ud, frame_index);
         }
-        self.occ_mesh.update_uniform(&self.ud, frame_index);
     }
 
     fn child_update_uniform(&mut self, sud: &ScUniData, _pud: &UniformData, frame_index: usize) {
@@ -246,18 +205,15 @@ pub struct CopyModel {
 }
 
 impl CopyModel {
-    pub fn new(
-        file: &mut File,
-        model_manager: &mut Manager,
-        buffer_manager: &mut BufferManager,
-        texture_manager: &mut TextureManager,
-        shader_manager: &Arc<DebugCell<ShaderManager>>,
-    ) -> Self {
+    pub fn new<CoreApp>(
+        file: &Arc<DebugCell<File>>,
+        engine: &mut RenderEngine<CoreApp>
+    ) -> Self where CoreApp: ApplicationTrait {
         let m = Mat4x4::new_from_file(file);
-        let id = file.read_id();
-        let offset = file.tell();
-        let sm = model_manager.get(id, file, buffer_manager, texture_manager, shader_manager);
-        file.goto(offset);
+        let id = file.borrow_mut().read_id();
+        let offset = file.borrow_mut().tell();
+        let sm = engine.os_app.asset_manager.get_model(id, engine);
+        file.borrow_mut().goto(offset);
         let mut ud = UniformData::default();
         ud.m = m;
         CopyModel {
@@ -286,37 +242,17 @@ impl Model for CopyModel {
     }
 }
 
-pub fn read_model(
-    file: &mut File,
-    model_manager: &mut Manager,
-    buffer_manager: &mut BufferManager,
-    texture_manager: &mut TextureManager,
-    shader_manager: &Arc<DebugCell<ShaderManager>>,
-) -> Arc<DebugCell<Model>> {
-    return if file.read_bool() {
-        Arc::new(DebugCell::new(CopyModel::new(
-            file,
-            model_manager,
-            buffer_manager,
-            texture_manager,
-            shader_manager,
-        )))
-    } else if file.read_bool() {
-        Arc::new(DebugCell::new(DynamicModel::new(
-            file,
-            model_manager,
-            buffer_manager,
-            texture_manager,
-            shader_manager,
-        )))
+pub fn read_model<CoreApp>(
+    file: &Arc<DebugCell<File>>,
+    engine: &mut RenderEngine<CoreApp>
+) -> Arc<DebugCell<Model>>
+where CoreApp: ApplicationTrait {
+    return if file.borrow_mut().read_bool() {
+        Arc::new(DebugCell::new(CopyModel::new(file, engine)))
+    } else if file.borrow_mut().read_bool() {
+        Arc::new(DebugCell::new(DynamicModel::new(file, engine)))
     } else {
-        Arc::new(DebugCell::new(RootStaticModel::new(
-            file,
-            model_manager,
-            buffer_manager,
-            texture_manager,
-            shader_manager,
-        )))
+        Arc::new(DebugCell::new(RootStaticModel::new(file, engine)))
     };
 }
 
@@ -325,23 +261,11 @@ fn read_boxed_model<CoreApp>(
     engine: &mut RenderEngine<CoreApp>
 ) -> Box<Model> 
 where CoreApp: ApplicationTrait {
-    return if file.read_bool() {
+    return if file.borrow_mut().read_bool() {
         Box::new(CopyModel::new(file, engine))
-    } else if file.read_bool() {
-        Box::new(DynamicModel::new(
-            file,
-            model_manager,
-            buffer_manager,
-            texture_manager,
-            shader_manager,
-        ))
+    } else if file.borrow_mut().read_bool() {
+        Box::new(DynamicModel::new(file, engine))
     } else {
-        Box::new(StaticModel::new(
-            file,
-            model_manager,
-            buffer_manager,
-            texture_manager,
-            shader_manager,
-        ))
+        Box::new(StaticModel::new(file, engine))
     };
 }

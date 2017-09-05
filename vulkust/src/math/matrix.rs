@@ -1,7 +1,9 @@
 use std::ops::{Mul, MulAssign};
+use std::sync::Arc;
 use super::number::{Float, Number};
 use super::vector::Vec3;
 use super::super::system::file::File;
+use super::super::util::cell::DebugCell;
 
 #[repr(simd)]
 pub struct SMat4x4D(
@@ -412,11 +414,12 @@ where
         }
     }
 
-    pub fn new_from_file(f: &mut File) -> Self {
+    pub fn new_from_file(f: &Arc<DebugCell<File>>) -> Self {
         let mut data = [[E::new(0.0); 4]; 4];
+        let file = f.borrow_mut();
         for i in 0..4 {
             for j in 0..4 {
-                data[i][j] = f.read_type();
+                data[i][j] = file.read_type();
             }
         }
         Mat4x4 { data: data }

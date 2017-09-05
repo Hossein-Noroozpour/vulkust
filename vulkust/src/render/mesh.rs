@@ -34,7 +34,7 @@ impl Mesh {
         let material = read_material(file, engine);
         #[cfg(mesh_debug)]
         logi!("after material read {}", file.borrow().tell());
-        let vertex_size = material.borrow().get_shader().borrow().get_vertex_size();
+        let vertex_size = material.borrow().get_vertex_size();
         let vertices_count = file.borrow_mut().read_count();
         #[cfg(mesh_debug)]
         logi!("mesh vertices count is: {}", vertices_count);

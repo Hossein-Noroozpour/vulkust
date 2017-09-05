@@ -19,7 +19,6 @@ pub trait Shader {
     fn get_stage(&self, i: usize) -> &Stage;
     fn get_vertex_stage(&self) -> &Stage;
     fn get_fragment_stage(&self) -> &Stage;
-    fn get_vertex_size(&self) -> usize;
 }
 
 pub struct TwoStage {

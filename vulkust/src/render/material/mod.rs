@@ -17,7 +17,6 @@ use super::shader::{read_id, Shader};
 use super::shader::manager::Manager as ShaderManager;
 use super::texture::Texture;
 use super::texture::manager::Manager as TextureManager;
-use super::vertex::Attribute as VertexAttribute;
 
 pub const FLOAT_SIZE: u64 = 4;
 pub const POSITION_ELEMENT: u64 = FLOAT_SIZE * 3;
@@ -31,6 +30,7 @@ pub const POSITION_NORMAL_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + NORMAL_ELEMEN
 pub trait Material {
     fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize);
     fn get_shader(&self) -> &Arc<DebugCell<Shader>>;
+    fn get_vertex_size(&self) -> usize;
 }
 
 pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
@@ -66,7 +66,6 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
         let texture = texture_manager.get(texture_id, file);
         let shader = shader_manager.get(
             shader::DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID,
-            file,
             logical_device,
         );
         file.goto(offset);
