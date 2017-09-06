@@ -1,10 +1,12 @@
 pub mod manager;
 pub mod perspective;
 
+use std::sync::Arc;
 use super::super::math::number::Float;
 use super::super::math::matrix::{Mat3x3, Mat4x4};
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
+use super::super::util::cell::DebugCell;
 
 pub trait Camera<E>
 where
@@ -80,10 +82,10 @@ impl<E> Basic<E>
 where
     E: Float,
 {
-    pub fn new(f: &mut File, ratio: E) -> Self {
+    pub fn new(f: &Arc<DebugCell<File>>, ratio: E) -> Self {
         let p: Vec3<E> = Vec3::new_from_file(f);
         let mut rr: Mat3x3<E> = Mat3x3::rotation(
-            f.read_type(),
+            f.borrow_mut().read_type(),
             &Vec3 {
                 x: E::new(1.0),
                 y: E::new(0.0),
@@ -91,7 +93,7 @@ where
             },
         );
         rr *= &Mat3x3::rotation(
-            f.read_type(),
+            f.borrow_mut().read_type(),
             &Vec3 {
                 x: E::new(0.0),
                 y: E::new(1.0),
@@ -99,7 +101,7 @@ where
             },
         );
         rr *= &Mat3x3::rotation(
-            f.read_type(),
+            f.borrow_mut().read_type(),
             &Vec3 {
                 x: E::new(0.0),
                 y: E::new(0.0),

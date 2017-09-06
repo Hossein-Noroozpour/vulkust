@@ -33,20 +33,22 @@ impl<ID, VAL: ?Sized> Cacher<ID, VAL> where ID: Ord {
 }
 
 pub struct FileCacher<VAL: ?Sized> {
+    file: Arc<DebugCell<File>>,
     cached: Cacher<u64, VAL>,
     offsets: Vec<u64>,
 }
 
 impl<VAL: ?Sized> FileCacher<VAL> {
-    pub fn new() -> Self {
+    pub fn new(file: Arc<DebugCell<File>>) -> Self {
         FileCacher {
+            file: file,
             cached: Cacher::new(),
             offsets: Vec::new(),
         }
     }
 
-    pub fn read_offsets(&mut self, file: &Arc<DebugCell<File>>) {
-        let file = file.borrow_mut();
+    pub fn read_offsets(&mut self) {
+        let file = self.file.borrow_mut();
         let count = file.read_count() as usize;
         self.offsets.resize(count, 0);
         for i in 0..count {
@@ -55,7 +57,7 @@ impl<VAL: ?Sized> FileCacher<VAL> {
     }
 
     pub fn get<F>(
-        &mut self, id: u64, file: &Arc<DebugCell<File>>, new: &F
+        &mut self, id: u64, new: &F
     ) -> Arc<DebugCell<VAL>>
     where F: Fn() -> Arc<DebugCell<VAL>> {
         self.cached.get(id, &|| {
@@ -65,7 +67,7 @@ impl<VAL: ?Sized> FileCacher<VAL> {
                     logf!("Id is is out of the range.");
                 }
                 let offset = self.offsets[id as usize];
-                match file.borrow_mut().seek(SeekFrom::Start(offset)) {
+                match self.file.borrow_mut().seek(SeekFrom::Start(offset)) {
                     Ok(o) => if o < offset {
                         logf!("Seeked offset does not match!");
                     },
@@ -76,9 +78,13 @@ impl<VAL: ?Sized> FileCacher<VAL> {
             }
             #[cfg(not(cacher_debug))] 
             {
-                let _ = file.borrow_mut().seek(SeekFrom::Start(self.offsets[id as usize]));
+                let _ = self.file.borrow_mut().seek(SeekFrom::Start(self.offsets[id as usize]));
             }
             new()
         })
+    }
+
+    pub fn get_file(&self) -> &Arc<DebugCell<File>> {
+        &self.file
     }
 }

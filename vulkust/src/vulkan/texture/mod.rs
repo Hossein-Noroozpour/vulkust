@@ -1,5 +1,4 @@
-// TODO
-#[derive(Debug)]
+
 pub struct Texture2D {}
 
 impl Texture2D {

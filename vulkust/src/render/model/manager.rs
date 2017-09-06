@@ -11,27 +11,26 @@ pub struct Manager {
 }
 
 impl Manager {
-    pub fn new() -> Self {
+    pub fn new(file: Arc<DebugCell<File>>) -> Self {
         Manager {
-            cached: FileCacher::new(),
+            cached: FileCacher::new(file),
         }
     }
 
-    pub fn read_tables(&mut self, file: &Arc<DebugCell<File>>) {
-        self.cached.read_offsets(file);
+    pub fn read_table(&mut self) {
+        self.cached.read_offsets();
     }
 
     pub fn get<CoreApp>(
         &mut self,
         id: u64,
-        file: &Arc<DebugCell<File>>,
         engine: &mut RenderEngine<CoreApp>,
     ) -> Arc<DebugCell<Model>> 
     where
         CoreApp: ApplicationTrait,
     {
-        self.cached.get(id, file, &|| {
-            read_model(file, engine)
+        self.cached.get(id, &|| {
+            read_model(self.cached.get_file(), engine)
         })
     }
 }

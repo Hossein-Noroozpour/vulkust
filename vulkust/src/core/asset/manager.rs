@@ -22,56 +22,57 @@ use super::super::super::util::cell::DebugCell;
 pub struct Manager {
     pub file: Arc<DebugCell<File>>,
     pub shader_manager: Arc<DebugCell<ShaderManager>>,
-    pub camera_manager: CameraManager,
-    pub audio_manager: AudioManager,
-    pub light_manager: LightManager,
-    pub texture_manager: TextureManager,
-    pub model_manager: ModelManager,
-    pub scene_manager: SceneManager,
+    pub camera_manager: Arc<DebugCell<CameraManager>>,
+    pub audio_manager: Arc<DebugCell<AudioManager>>,
+    pub light_manager: Arc<DebugCell<LightManager>>,
+    pub texture_manager: Arc<DebugCell<TextureManager>>,
+    pub model_manager: Arc<DebugCell<ModelManager>>,
+    pub scene_manager: Arc<DebugCell<SceneManager>>,
 }
 
 impl Manager {
     pub fn new(file: File) -> Self {
+        let file = Arc::new(DebugCell::new(file));
         Manager {
-            file: Arc::new(DebugCell::new(file)),
-            shader_manager: Arc::new(DebugCell::new(ShaderManager::new())),
-            camera_manager: CameraManager::new(),
-            audio_manager: AudioManager::new(),
-            light_manager: LightManager::new(),
-            texture_manager: TextureManager::new(),
-            model_manager: ModelManager::new(),
-            scene_manager: SceneManager::new(),
+            file: file.clone(),
+            shader_manager: Arc::new(DebugCell::new(ShaderManager::new(file.clone()))),
+            camera_manager: Arc::new(DebugCell::new(CameraManager::new(file.clone()))),
+            audio_manager: Arc::new(DebugCell::new(AudioManager::new(file.clone()))),
+            light_manager: Arc::new(DebugCell::new(LightManager::new(file.clone()))),
+            texture_manager: Arc::new(DebugCell::new(TextureManager::new(file.clone()))),
+            model_manager: Arc::new(DebugCell::new(ModelManager::new(file.clone()))),
+            scene_manager: Arc::new(DebugCell::new(SceneManager::new(file))),
         }
     }
 
     pub fn initialize(&mut self) {
-        self.shader_manager.read_table(&mut self.file);
-        self.camera_manager.read_table(&mut self.file);
-        self.audio_manager.read_table(&mut self.file);
-        self.light_manager.read_table(&mut self.file);
-        self.texture_manager.read_table(&mut self.file);
-        self.model_manager.read_table(&mut self.file);
-        self.scene_manager.read_table(&mut self.file);
+        self.shader_manager.borrow_mut().read_table();
+        self.camera_manager.borrow_mut().read_table();
+        self.audio_manager.borrow_mut().read_table();
+        self.light_manager.borrow_mut().read_table();
+        self.texture_manager.borrow_mut().read_table();
+        self.model_manager.borrow_mut().read_table();
+        self.scene_manager.borrow_mut().read_table();
+    }
+    
+    pub fn get_shader(&self, id: u64, logical_device: Arc<LogicalDevice>) -> Arc<DebugCell<Shader>> {
+        self.shader_manager.borrow_mut().get(id, logical_device)
     }
 
-    pub fn get_shader(&mut self, id: u64, logical_device: Arc<LogicalDevice>) -> Arc<Shader> {
-        self.shader_manager.get(id, &mut self.file, logical_device)
+    pub fn get_camera(&self, id: u64, ratio: f32) -> Arc<DebugCell<Camera<f32>>> {
+        self.camera_manager.borrow_mut().get(id, ratio)
     }
 
-    pub fn get_camera(&mut self, id: u64, ratio: f32) -> Arc<DebugCell<Camera<f32>>> {
-        self.camera_manager.get(id, &mut self.file, ratio)
+    pub fn get_audio(&self, id: u64) -> Arc<DebugCell<Audio>> {
+        self.audio_manager.borrow_mut().get(id)
     }
 
-    pub fn get_audio(&mut self, id: u64) -> Arc<DebugCell<Audio>> {
-        self.audio_manager.get(id, &mut self.file)
+    pub fn get_light(&self, id: u64) -> Arc<DebugCell<Light>> {
+        self.light_manager.borrow_mut().get(id)
     }
 
-    pub fn get_light(&mut self, id: u64) -> Arc<DebugCell<Light>> {
-        self.light_manager.get(id, &mut self.file)
-    }
-
-    pub fn get_texture(&mut self, id: u64) -> Arc<Texture> {
-        self.texture_manager.get(id, &mut self.file)
+    pub fn get_texture(&mut self, id: u64) -> Arc<DebugCell<Texture>> {
+        self.texture_manager.borrow_mut().get(id)
     }
 
     pub fn get_model<CoreApp>(
@@ -82,7 +83,7 @@ impl Manager {
     where
         CoreApp: ApplicationTrait,
     {
-        self.model_manager.get(id, &mut self.file, engine)
+        self.model_manager.borrow_mut().get(id, engine)
     }
 
     pub fn get_scene<CoreApp>(
@@ -93,6 +94,6 @@ impl Manager {
     where
         CoreApp: ApplicationTrait,
     {
-        self.scene_manager.get(id, &mut self.file, engine)
+        self.scene_manager.borrow_mut().get(id, engine)
     }
 }

@@ -1,7 +1,9 @@
+use std::sync::Arc;
 use super::super::super::math::number::Float;
 use super::super::super::math::matrix::Mat4x4;
 use super::super::super::math::vector::Vec3;
 use super::super::super::system::file::File;
+use super::super::super::util::cell::DebugCell;
 use super::{Basic, Camera};
 
 pub struct Perspective<E>
@@ -20,10 +22,10 @@ impl<E> Perspective<E>
 where
     E: Float,
 {
-    pub fn new(f: &mut File, ratio: E) -> Self {
-        let fov = f.read_type();
-        let near = f.read_type();
-        let far = f.read_type();
+    pub fn new(f: &Arc<DebugCell<File>>, ratio: E) -> Self {
+        let fov = f.borrow_mut().read_type();
+        let near = f.borrow_mut().read_type();
+        let far = f.borrow_mut().read_type();
         let b = Basic::new(f, ratio);
         let p = Mat4x4::pers(fov, b.a, near, far);
         let vp = &p * b.get_view();

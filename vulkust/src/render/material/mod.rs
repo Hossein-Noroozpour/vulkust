@@ -62,8 +62,7 @@ impl Base {
 }
 
 pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
-    shader: Arc<Shader>,
-    texture: Arc<Texture>,
+    texture: Arc<DebugCell<Texture>>,
     base: Base,
     uniform_data: DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform,
 }
@@ -103,7 +102,6 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
         uni.spec_color = speculation_color;
         uni.spec_intensity = speculation_intensity;
         DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
-            shader: shader,
             texture: texture,
             base: Base::new(
                 size_of::<DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform>(),

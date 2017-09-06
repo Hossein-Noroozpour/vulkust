@@ -1,6 +1,8 @@
 pub mod manager;
 
+use std::sync::Arc;
 use super::system::file::File;
+use super::util::cell::DebugCell;
 
 pub trait Audio {
     fn play(&self);
@@ -11,9 +13,9 @@ struct Basic {
 }
 
 impl Basic {
-    pub fn new(file: &mut File) -> Self {
-        let size: u64 = file.read_type();
-        let file_content = file.read_bytes(size as usize);
+    pub fn new(file: &Arc<DebugCell<File>>) -> Self {
+        let size: u64 = file.borrow_mut().read_count();
+        let file_content = file.borrow_mut().read_bytes(size as usize);
         Basic {
             file_content: file_content,
         }
@@ -28,7 +30,7 @@ pub struct Music {
 }
 
 impl Music {
-    pub fn new(file: &mut File) -> Self {
+    pub fn new(file: &Arc<DebugCell<File>>) -> Self {
         Music {
             b: Basic::new(file),
         }
@@ -46,7 +48,7 @@ pub struct Voice {
 }
 
 impl Voice {
-    pub fn new(file: &mut File) -> Self {
+    pub fn new(file: &Arc<DebugCell<File>>) -> Self {
         Voice {
             b: Basic::new(file),
         }

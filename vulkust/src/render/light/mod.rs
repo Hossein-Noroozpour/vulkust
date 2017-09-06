@@ -1,8 +1,10 @@
 pub mod manager;
 
+use std::sync::Arc;
 use super::super::math::matrix::{Mat3x3, Mat4x4};
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
+use super::super::util::cell::DebugCell;
 
 pub trait Light {}
 
@@ -16,18 +18,18 @@ pub struct Sun {
 }
 
 impl Sun {
-    pub fn new(file: &mut File) -> Self {
+    pub fn new(file: &Arc<DebugCell<File>>) -> Self {
         let mut dir = Vec3 {
             x: 1.0,
             y: 0.0,
             z: 0.0,
         };
-        let far = file.read_type();
-        let near = file.read_type();
-        let size = file.read_type();
+        let far = file.borrow_mut().read_type();
+        let near = file.borrow_mut().read_type();
+        let size = file.borrow_mut().read_type();
         let loc = Vec3::new_from_file(file);
         let mut r = Mat3x3::rotation(
-            -file.read_type::<f32>(),
+            -file.borrow_mut().read_type::<f32>(),
             &Vec3 {
                 x: 1.0,
                 y: 0.0,
@@ -35,7 +37,7 @@ impl Sun {
             },
         );
         r *= &Mat3x3::rotation(
-            -file.read_type::<f32>(),
+            -file.borrow_mut().read_type::<f32>(),
             &Vec3 {
                 x: 0.0,
                 y: 1.0,
@@ -43,7 +45,7 @@ impl Sun {
             },
         );
         r *= &Mat3x3::rotation(
-            -file.read_type::<f32>(),
+            -file.borrow_mut().read_type::<f32>(),
             &Vec3 {
                 x: 0.0,
                 y: 0.0,
