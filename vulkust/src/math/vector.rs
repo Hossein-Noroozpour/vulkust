@@ -1,7 +1,9 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::sync::Arc;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 use super::super::objc;
 use super::super::system::file::File;
+use super::super::util::cell::DebugCell;
 use super::number::Number;
 
 #[repr(simd)]
@@ -170,7 +172,8 @@ where
         Vec3 { x: e, y: e, z: e }
     }
 
-    pub fn new_from_file(f: &mut File) -> Self {
+    pub fn new_from_file(f: &Arc<DebugCell<File>>) -> Self {
+        let f = f.borrow_mut();
         Vec3 {
             x: f.read_type(),
             y: f.read_type(),

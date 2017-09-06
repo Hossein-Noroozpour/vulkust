@@ -11,115 +11,7 @@ use super::super::util::gc::{Gc, GcObject};
 use super::command::buffer::Buffer as CmdBuff;
 use super::device::logical::Logical as LogicalDevice;
 
-struct BufferGcObject {
-    need_refresh: bool,
-    offset: usize,
-    size: usize,
-    address: *mut u8,
-}
-
-impl GcObject for BufferGcObject {
-    fn get_size(&self) -> usize {
-        return self.size;
-    }
-
-    fn move_to(&mut self, offset: usize) {
-        let offset_change: isize = (offset as isize) - (self.offset as isize);
-        let new_address = self.address.offset(offset_change);
-        self.offset = offset;
-        self.need_refresh = true;
-        unsafe {
-            libc::memmove(
-                transmute(new_address), 
-                transmute(self.address),
-                self.size as libc::size_t);
-        }
-        self.address = new_address;
-    }
-}
-
-impl BufferGcObject {
-    fn write(&mut self, offset: usize, data: *const libc::c_void, size: usize) {
-        unsafe {
-            libc::memcpy(transmute(self.address.offset(offset as isize)), data, size as libc::size_t);
-        }
-    }
-}
-
-pub struct MeshBuffer {
-    buffer_gc_obj: BufferGcObject,
-    vertex_size: usize,
-    vertices_count: usize,
-    vertices_size: usize,
-    vertices_aligned_size: usize,
-    indices_count: usize,
-    indices_size: usize,
-    indices_size_aligned: usize,
-}
-
-impl GcObject for MeshBuffer {
-    fn get_size(&self) -> usize {
-        return self.buffer_gc_obj.size;
-    }
-
-    fn move_to(&mut self, offset: usize) {
-        self.buffer_gc_obj.move_to(offset);
-    }
-}
-
-impl MeshBuffer {
-    pub fn upload_vertices(&mut self, data: *const libc::c_void, length: usize) {
-        #[cfg(buffer_debug)]
-        {   
-            if length > self.vertices_size {
-                logf!("Unexpected size of data.");
-            }
-        }
-        self.buffer_gc_obj.write(0, data, length);
-    }
-
-    pub fn upload_indices(&mut self, data: *const libc::c_void, length: usize) {
-        #[cfg(buffer_debug)]
-        {   
-            if length > self.indices_size {
-                logf!("Unexpected size of data.");
-            }
-        }
-        self.buffer_gc_obj.write(self.vertices_aligned_size, data, length);
-    }
-}
-
-pub struct UniformBuffer {
-    buffer_gc_obj: BufferGcObject,
-    size: usize,
-}
-
-impl GcObject for UniformBuffer {
-    fn get_size(&self) -> usize {
-        return self.buffer_gc_obj.size;
-    }
-
-    fn move_to(&mut self, offset: usize) {
-        self.buffer_gc_obj.move_to(offset);
-    }
-}
-
-pub struct SceneDynamics {
-    address: *mut libc::c_void,
-    uniform_buffers: Gc,
-}
-
-impl GcObject for SceneDynamics {
-    fn get_size(&self) -> usize {
-        return self.uniform_buffers.get_size();
-    }
-
-    fn move_to(&mut self, offset: usize) {
-        self.uniform_buffers.move_to(offset);
-    }
-}
-
-pub struct Manager {
+struct Buffer {
     logical_device: Arc<LogicalDevice>,
     main_buffer: vk::VkBuffer,
     main_memory: vk::VkDeviceMemory,
@@ -130,25 +22,11 @@ pub struct Manager {
     best_alignment: usize,
     best_alignment_flag: usize,
     best_alignment_complement: usize,
-    meshes_size: usize,
-    meshes: Gc,
-    scenes_dynamics_size: usize,
-    scenes_dynamics: Vec<Gc>,
 }
 
-impl Manager {
-    pub fn new(
-        logical_device: Arc<LogicalDevice>, 
-        meshes_size: usize, 
-        scenes_dynamics_size: usize, 
-        frames_count: usize) -> Self {
+impl Buffer {
+    fn new(logical_device: Arc<LogicalDevice>, size: usize) -> Self {
         let best_alignment = logical_device.physical_device.get_max_min_alignment() as usize;
-        let size = meshes_size + (scenes_dynamics_size * frames_count);
-        let mut meshes = Gc::new(0, meshes_size);
-        let mut scenes_dynamics = Vec::new();
-        for i in 0..frames_count {
-            scenes_dynamics.push(Gc::new(i * scenes_dynamics_size + meshes_size, scenes_dynamics_size));
-        }
         let mut main_buffer = null_mut();
         let mut main_memory = null_mut();
         let mut staging_buffer = null_mut();
@@ -227,7 +105,7 @@ impl Manager {
             staging_memory,
             0,
         ));
-        Manager {
+        Buffer {
             logical_device: logical_device, 
             size: size,
             address: address,
@@ -238,10 +116,6 @@ impl Manager {
             best_alignment: best_alignment,
             best_alignment_flag: best_alignment - 1,
             best_alignment_complement: !(best_alignment - 1),
-            meshes_size: meshes_size,
-            meshes: meshes,
-            scenes_dynamics_size: scenes_dynamics_size,
-            scenes_dynamics: scenes_dynamics,
         }
     }
 
@@ -252,6 +126,191 @@ impl Manager {
             } else {
                 0
             }
+    }
+}
+
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        if self.main_buffer == null_mut() {
+            return;
+        }
+        unsafe {
+            vk::vkDestroyBuffer(self.logical_device.vk_data, self.staging_buffer, null());
+            vk::vkFreeMemory(self.logical_device.vk_data, self.staging_memory, null());
+            vk::vkDestroyBuffer(self.logical_device.vk_data, self.main_buffer, null());
+            vk::vkFreeMemory(self.logical_device.vk_data, self.main_memory, null());
+        }
+        self.main_buffer = null_mut();
+        self.main_memory = null_mut();
+        self.staging_buffer = null_mut();
+        self.staging_memory = null_mut();
+    }
+}
+
+struct BufferGcObject {
+    need_refresh: bool,
+    offset: usize,
+    aligned_size: usize,
+    buffer: Arc<Buffer>,
+}
+
+impl GcObject for BufferGcObject {
+    fn get_size(&self) -> usize {
+        return self.aligned_size;
+    }
+
+    fn move_to(&mut self, offset: usize) {
+        self.need_refresh = true;
+        let new_address = self.buffer.address.offset(offset as isize);
+        let old_address = self.buffer.address.offset(self.offset as isize);
+        unsafe {
+            libc::memmove(
+                transmute(new_address), 
+                transmute(old_address),
+                self.aligned_size as libc::size_t);
+        }
+        self.offset = offset;
+    }
+}
+
+impl BufferGcObject {
+    fn write(&mut self, offset: usize, data: *const libc::c_void, size: usize) {
+        unsafe {
+            libc::memcpy(transmute(self.buffer.address.offset(
+                (self.offset + offset) as isize)), data, size as libc::size_t);
+        }
+    }
+}
+
+pub struct MeshBuffer {
+    buffer_gc_obj: BufferGcObject,
+    vertex_size: usize,
+    vertices_count: usize,
+    vertices_size: usize,
+    vertices_aligned_size: usize,
+    indices_count: usize,
+    indices_size: usize,
+    indices_size_aligned: usize,
+}
+
+impl GcObject for MeshBuffer {
+    fn get_size(&self) -> usize {
+        return self.buffer_gc_obj.aligned_size;
+    }
+
+    fn move_to(&mut self, offset: usize) {
+        self.buffer_gc_obj.move_to(offset);
+    }
+}
+
+impl MeshBuffer {
+    pub fn upload_vertices(&mut self, data: *const libc::c_void, length: usize) {
+        #[cfg(buffer_debug)]
+        {   
+            if length > self.vertices_size {
+                logf!("Unexpected size of data.");
+            }
+        }
+        self.buffer_gc_obj.write(0, data, length);
+    }
+
+    pub fn upload_indices(&mut self, data: *const libc::c_void, length: usize) {
+        #[cfg(buffer_debug)]
+        {   
+            if length > self.indices_size {
+                logf!("Unexpected size of data.");
+            }
+        }
+        self.buffer_gc_obj.write(self.vertices_aligned_size, data, length);
+    }
+}
+
+pub struct UniformBuffer {
+    buffer_gc_obj: BufferGcObject,
+    size: usize,
+}
+
+impl UniformBuffer {
+    pub fn upload(&mut self, data: *const libc::c_void) {
+        self.buffer_gc_obj.write(0, data, self.size);
+    }
+}
+
+impl GcObject for UniformBuffer {
+    fn get_size(&self) -> usize {
+        return self.buffer_gc_obj.aligned_size;
+    }
+
+    fn move_to(&mut self, offset: usize) {
+        self.buffer_gc_obj.move_to(offset);
+    }
+}
+
+pub struct SceneDynamics {
+    buffer: Arc<Buffer>,
+    uniforms: Gc,
+}
+
+impl SceneDynamics {
+    pub fn create_uniform(&mut self, size: usize) -> Arc<DebugCell<UniformBuffer>> {
+        let aligned_size = self.buffer.size_aligner(size);
+        let uniform = Arc::new(
+            DebugCell::new(
+                UniformBuffer {
+                    size: size,
+                    buffer_gc_obj: BufferGcObject {
+                        need_refresh: true,
+                        offset: 0,
+                        aligned_size: aligned_size,
+                        buffer: self.buffer.clone(),
+                    },
+                }
+            )
+        );
+        let gc_obj: Arc<DebugCell<GcObject>> = uniform.clone();
+        self.uniforms.allocate(&gc_obj);
+        return uniform;
+    }
+}
+
+impl GcObject for SceneDynamics {
+    fn get_size(&self) -> usize {
+        return self.uniforms.get_size();
+    }
+
+    fn move_to(&mut self, offset: usize) {
+        self.uniforms.move_to(offset);
+    }
+}
+
+pub struct Manager {
+    buffer: Arc<Buffer>,
+    meshes_size: usize,
+    meshes: Gc,
+    scenes_dynamics_size: usize,
+    scenes_dynamics: Vec<Gc>,
+}
+
+impl Manager {
+    pub fn new(
+        logical_device: Arc<LogicalDevice>,
+        meshes_size: usize, 
+        scenes_dynamics_size: usize, 
+        frames_count: usize) -> Self {
+        let best_alignment = logical_device.physical_device.get_max_min_alignment() as usize;
+        let size = meshes_size + (scenes_dynamics_size * frames_count);
+        let mut meshes = Gc::new(0, meshes_size);
+        let mut scenes_dynamics = Vec::new();
+        for i in 0..frames_count {
+            scenes_dynamics.push(Gc::new(i * scenes_dynamics_size + meshes_size, scenes_dynamics_size));
+        }
+        Manager {
+            buffer: Arc::new(Buffer::new(logical_device, size)),
+            meshes_size: meshes_size,
+            meshes: meshes,
+            scenes_dynamics_size: scenes_dynamics_size,
+            scenes_dynamics: scenes_dynamics,
+        }
     }
 
     fn clean(&mut self) {
@@ -269,23 +328,25 @@ impl Manager {
         indices_count: usize) -> Arc<DebugCell<MeshBuffer>> {
         let vertices_size = vertices_count * vertex_size;
         let indices_size = indices_count * INDEX_ELEMENTS_SIZE;
-        let size = vertices_size + indices_size;
+        let vertices_aligned_size = self.buffer.size_aligner(vertices_size);
+        let indices_size_aligned = self.buffer.size_aligner(indices_size);
+        let size = vertices_aligned_size + indices_size_aligned;
         let mesh = Arc::new(
             DebugCell::new(
                 MeshBuffer {
                     buffer_gc_obj: BufferGcObject {
                         need_refresh: true,
                         offset: 0,
-                        size: size,
-                        address: 0 as *mut u8,
+                        aligned_size: size,
+                        buffer: self.buffer.clone(),
                     },
                     vertex_size: vertex_size,
                     vertices_count: vertices_count,
                     vertices_size: vertices_size,
-                    vertices_aligned_size: self.size_aligner(vertices_size),
+                    vertices_aligned_size: vertices_aligned_size,
                     indices_count: indices_count,
                     indices_size: indices_size,
-                    indices_size_aligned: self.size_aligner(indices_size),
+                    indices_size_aligned: indices_size_aligned,
                 }
             )
         );
@@ -300,8 +361,8 @@ impl Manager {
         for i in 0..frames_count {
             let sd = Arc::new(DebugCell::new(
                 SceneDynamics {
-                    address: self.address,
-                    uniform_buffers: Gc::new(0, size),
+                    buffer: self.buffer.clone(),
+                    uniforms: Gc::new(0, size),
                 }
             ));
             let gc_obj: Arc<DebugCell<GcObject>> = sd.clone();
@@ -317,7 +378,7 @@ impl Manager {
         region.dstOffset = 0 as vk::VkDeviceSize;
         region.size = self.scenes_dynamics_size as vk::VkDeviceSize;
         let regions = vec![region; 1];
-        cmd.copy_buffer(self.staging_buffer, self.main_buffer, &regions);
+        cmd.copy_buffer(self.buffer.staging_buffer, self.buffer.main_buffer, &regions);
     }
 
     fn commit_scenes_dynamics(&self, frame_number: usize, cmd: &mut CmdBuff) {
@@ -327,32 +388,14 @@ impl Manager {
         region.dstOffset = start as vk::VkDeviceSize;
         region.size = self.scenes_dynamics_size as vk::VkDeviceSize;
         let regions = vec![region; 1];
-        cmd.copy_buffer(self.staging_buffer, self.main_buffer, &regions);
+        cmd.copy_buffer(self.buffer.staging_buffer, self.buffer.main_buffer, &regions);
     }
 
     pub fn get_buffer(&self) -> vk::VkBuffer {
-        self.main_buffer
+        self.buffer.main_buffer
     }
 
     pub fn get_device(&self) -> &Arc<LogicalDevice> {
-        &self.logical_device
-    }
-}
-
-impl Drop for Manager {
-    fn drop(&mut self) {
-        if self.main_buffer == null_mut() {
-            return;
-        }
-        unsafe {
-            vk::vkDestroyBuffer(self.logical_device.vk_data, self.staging_buffer, null());
-            vk::vkFreeMemory(self.logical_device.vk_data, self.staging_memory, null());
-            vk::vkDestroyBuffer(self.logical_device.vk_data, self.main_buffer, null());
-            vk::vkFreeMemory(self.logical_device.vk_data, self.main_memory, null());
-        }
-        self.main_buffer = null_mut();
-        self.main_memory = null_mut();
-        self.staging_buffer = null_mut();
-        self.staging_memory = null_mut();
+        &self.buffer.logical_device
     }
 }

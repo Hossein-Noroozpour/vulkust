@@ -239,6 +239,10 @@ impl Pipeline {
             vk_data: vk_data,
         }
     }
+
+    pub fn get_shader(&self) -> &Arc<DebugCell<Shader>> {
+        &self.shader
+    }
 }
 
 impl Drop for Pipeline {

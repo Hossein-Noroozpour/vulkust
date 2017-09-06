@@ -1,22 +1,19 @@
 use std::default::Default;
 use std::sync::Arc;
+use std::mem::{size_of, transmute};
 use super::super::core::application::ApplicationTrait;
 use super::super::math::matrix::Mat4x4;
 use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::super::util::cell::DebugCell;
-use super::buffer::Manager as BufferManager;
-use super::device::logical::Logical as LogicalDevice;
-use super::descriptor::Set as DescriptorSet;
+use super::buffer::{SceneDynamics, UniformBuffer};
 use super::engine::RenderEngine;
 use super::model::UniformData as MdlUniData;
 use super::pipeline::Pipeline;
 use super::scene::UniformData as ScnUniData;
 use super::shader;
-use super::shader::{read_id, Shader};
-use super::shader::manager::Manager as ShaderManager;
+use super::shader::{read_id, Shader, Id as ShaderId};
 use super::texture::Texture;
-use super::texture::manager::Manager as TextureManager;
 
 pub const FLOAT_SIZE: u64 = 4;
 pub const POSITION_ELEMENT: u64 = FLOAT_SIZE * 3;
@@ -28,18 +25,39 @@ pub const POSITION_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + UV_ELEMENT;
 pub const POSITION_NORMAL_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + NORMAL_ELEMENT + UV_ELEMENT;
 
 pub trait Material {
-    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize);
+    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, uniform_buffer: &Arc<DebugCell<UniformBuffer>>);
     fn get_shader(&self) -> &Arc<DebugCell<Shader>>;
     fn get_vertex_size(&self) -> usize;
 }
 
+struct Base {
+    uniforms: Vec<>,
+    pipeline: Arc<DebugCell<Pipeline>>,
+}
+
+impl Base {
+    fn new<CoreApp>(
+        uniform_size: usize,
+        shader_id: ShaderId,
+        scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>,
+        engine: &mut RenderEngine<CoreApp>
+    ) -> Self where CoreApp: ApplicationTrait {
+        let mut uniforms = Vec::new();
+        for sd in scene_dynamics {
+            uniforms.push(sd.borrow_mut().create_uniform(uniform_size));
+        }
+        Base {
+            uniforms: uniforms,
+            pipeline: engine.pipeline_manager.as_mut().unwrap().borrow_mut().get(shader_id),
+        }
+    }
+}
+
 pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
-    pub shader: Arc<Shader>,
-    pub texture: Arc<Texture>,
-    pub uniforms: Vec<&'static mut DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform>,
-    pub uniforms_ranges: Vec<(usize, usize)>,
-    pub pipeline: Option<Arc<Pipeline>>,
-    pub descriptor_set: Option<Arc<DescriptorSet>>,
+    shader: Arc<Shader>,
+    texture: Arc<Texture>,
+    base: Base,
+    uniform_data: DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform,
 }
 
 #[repr(C)]
@@ -54,23 +72,21 @@ struct DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform {
 }
 
 impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
-    pub fn new(
-        file: &mut File,
-        logical_device: Arc<LogicalDevice>,
-        shader_manager: &mut ShaderManager,
-        texture_manager: &mut TextureManager,
-        buffer_manager: &mut BufferManager,
-    ) -> Self {
-        let texture_id = file.read_id();
-        let offset = file.tell();
-        let texture = texture_manager.get(texture_id, file);
-        let shader = shader_manager.get(
+    pub fn new<CoreApp>(
+        file: &Arc<DebugCell<File>>,
+        scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>,
+        engine: &mut RenderEngine<CoreApp>
+    ) -> Self where CoreApp: ApplicationTrait {
+        let texture_id = file.borrow_mut().read_id();
+        let offset = file.borrow_mut().tell();
+        let texture = engine.os_app.asset_manager.get_texture(texture_id);
+        let shader = engine.os_app.asset_manager.get_shader(
             shader::DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID,
-            logical_device,
+            engine.logical_device.as_ref().unwrap().clone(),
         );
-        file.goto(offset);
+        file.borrow_mut().goto(offset);
         let speculation_color = Vec3::new_from_file(file);
-        let speculation_intensity = file.read_type();
+        let speculation_intensity = file.borrow_mut().read_type();
         #[cfg(material_debug)]
         {
             logi!("speculation_color: {:?}", speculation_color);
@@ -79,56 +95,85 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
         let mut uni = DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform::default();
         uni.spec_color = speculation_color;
         uni.spec_intensity = speculation_intensity;
-        let (uniforms, uniforms_ranges) = buffer_manager.add_u(&uni);
         DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
             shader: shader,
             texture: texture,
-            uniforms: uniforms,
-            uniforms_ranges: uniforms_ranges,
-            pipeline: None, // TODO
-            descriptor_set: None, // TODO
+            base: Base::new(
+                size_of::<DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform>(),
+                shader::DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID,
+                scene_dynamics,
+                engine),
+            uniform_data: DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform::default(),
         }
     }
 }
 
 impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
     fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
-        self.uniforms[frame_index].mvp = mud.mvp;
-        self.uniforms[frame_index].transform = mud.m;
-        self.uniforms[frame_index].eye_loc = sud.eye_loc;
-        self.uniforms[frame_index].sun_dir = sud.sun_dir;
+        self.uniform_data.mvp = mud.mvp;
+        self.uniform_data.transform = mud.m;
+        self.uniform_data.eye_loc = sud.eye_loc;
+        self.uniform_data.sun_dir = sud.sun_dir;
+        self.base.uniforms[frame_index].borrow_mut().upload(
+            unsafe { transmute(&self.uniform_data) });
+    }
+
+    fn get_shader(&self) -> &Arc<DebugCell<Shader>> {
+        self.base.pipeline.borrow().get_shader()
+    }
+
+    fn get_vertex_size(&self) -> usize {
+        POSITION_NORMAL_UV_VERTEX_SIZE as usize
     }
 }
 
+#[repr(C)]
+#[derive(Default)]
+struct WhiteUniform {
+    pub mvp: Mat4x4<f32>,
+}
+
 pub struct White {
-    pub shader: Arc<Shader>,
-    pub pipeline: Option<Arc<Pipeline>>,
-    pub descriptor_set: Option<Arc<DescriptorSet>>,
+    uniform_data: WhiteUniform,
+    base: Base,
 }
 
 impl White {
-    pub fn new(
-        file: &mut File,
-        logical_device: Arc<LogicalDevice>,
-        shader_manager: &mut ShaderManager,
-    ) -> Self {
-        let shader = shader_manager.get(shader::WHITE_ID, file, logical_device);
+    pub fn new<CoreApp>(
+        file: &Arc<DebugCell<File>>,
+        scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>,
+        engine: &mut RenderEngine<CoreApp>
+    ) -> Self where CoreApp: ApplicationTrait {
         White { 
-            shader: shader,
-            pipeline: None, // TODO
-            descriptor_set: None, // TODO
+            uniform_data: WhiteUniform::default(),
+            base: Base::new(
+                size_of::<WhiteUniform>(),
+                shader::WHITE_ID,
+                scene_dynamics,
+                engine),
         }
     }
 }
 
 impl Material for White {
-    fn update_uniform(&self, _sud: &ScnUniData, _mud: &MdlUniData, _frame_index: usize) {
-        logf!("White shader does not implement this function because this is special!!!");
+    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
+        self.uniform_data.mvp = mud.mvp;
+        self.base.uniforms[frame_index].borrow_mut().upload(
+            unsafe { transmute(&self.uniform_data) });
+    }
+
+    fn get_shader(&self) -> &Arc<DebugCell<Shader>> {
+        self.base.pipeline.borrow().get_shader()
+    }
+
+    fn get_vertex_size(&self) -> usize {
+        POSITION_VERTEX_SIZE as usize
     }
 }
 
 pub fn read_material<CoreApp>(
     file: &Arc<DebugCell<File>>,
+    scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>,
     engine: &mut RenderEngine<CoreApp>
 ) -> Arc<DebugCell<Material>> 
 where CoreApp: ApplicationTrait {
@@ -140,10 +185,8 @@ where CoreApp: ApplicationTrait {
         DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID => Arc::new(DebugCell::new(
             DirectionalTexturedSpeculatedNocubeFullshadowOpaque::new(
                 file,
-                logical_device,
-                shader_manager,
-                texture_manager,
-                buffer_manager,
+                scene_dynamics,
+                engine,
             ),
         )),
         _ => {

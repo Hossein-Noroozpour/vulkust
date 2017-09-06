@@ -12,6 +12,7 @@ use super::engine::RenderEngine;
 use super::material::{read_material, Material};
 use super::model::UniformData as MdlUniData;
 use super::scene::UniformData as ScnUniData;
+use super::scene::Scene;
 use super::shader::{read_id as read_shader_id, get_vertex_size};
 
 pub const INDEX_ELEMENTS_SIZE: usize = 4;
