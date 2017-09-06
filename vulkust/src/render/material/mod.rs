@@ -25,13 +25,16 @@ pub const POSITION_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + UV_ELEMENT;
 pub const POSITION_NORMAL_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + NORMAL_ELEMENT + UV_ELEMENT;
 
 pub trait Material {
-    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, uniform_buffer: &Arc<DebugCell<UniformBuffer>>);
+    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize);
     fn get_shader(&self) -> &Arc<DebugCell<Shader>>;
     fn get_vertex_size(&self) -> usize;
+    fn init_uniforms(
+        &mut self, scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>);
 }
 
 struct Base {
-    uniforms: Vec<>,
+    uniform_size: usize,
+    uniforms: Vec<Arc<DebugCell<UniformBuffer>>>,
     pipeline: Arc<DebugCell<Pipeline>>,
 }
 
@@ -39,16 +42,21 @@ impl Base {
     fn new<CoreApp>(
         uniform_size: usize,
         shader_id: ShaderId,
-        scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>,
         engine: &mut RenderEngine<CoreApp>
     ) -> Self where CoreApp: ApplicationTrait {
-        let mut uniforms = Vec::new();
-        for sd in scene_dynamics {
-            uniforms.push(sd.borrow_mut().create_uniform(uniform_size));
-        }
         Base {
-            uniforms: uniforms,
+            uniform_size: uniform_size,
+            uniforms: Vec::new(),
             pipeline: engine.pipeline_manager.as_mut().unwrap().borrow_mut().get(shader_id),
+        }
+    }
+
+    fn init_uniforms(
+        &mut self, 
+        scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>) {
+        self.uniforms.clear();
+        for sd in scene_dynamics {
+            self.uniforms.push(sd.borrow_mut().create_uniform(self.uniform_size));
         }
     }
 }
@@ -74,7 +82,6 @@ struct DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform {
 impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
     pub fn new<CoreApp>(
         file: &Arc<DebugCell<File>>,
-        scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>,
         engine: &mut RenderEngine<CoreApp>
     ) -> Self where CoreApp: ApplicationTrait {
         let texture_id = file.borrow_mut().read_id();
@@ -101,8 +108,8 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
             base: Base::new(
                 size_of::<DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform>(),
                 shader::DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID,
-                scene_dynamics,
-                engine),
+                engine
+            ),
             uniform_data: DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform::default(),
         }
     }
@@ -125,6 +132,12 @@ impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
     fn get_vertex_size(&self) -> usize {
         POSITION_NORMAL_UV_VERTEX_SIZE as usize
     }
+
+    fn init_uniforms(
+        &mut self, 
+        scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>) {
+        self.base.init_uniforms(scene_dynamics);
+    }
 }
 
 #[repr(C)]
@@ -141,7 +154,6 @@ pub struct White {
 impl White {
     pub fn new<CoreApp>(
         file: &Arc<DebugCell<File>>,
-        scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>,
         engine: &mut RenderEngine<CoreApp>
     ) -> Self where CoreApp: ApplicationTrait {
         White { 
@@ -149,7 +161,6 @@ impl White {
             base: Base::new(
                 size_of::<WhiteUniform>(),
                 shader::WHITE_ID,
-                scene_dynamics,
                 engine),
         }
     }
@@ -169,11 +180,16 @@ impl Material for White {
     fn get_vertex_size(&self) -> usize {
         POSITION_VERTEX_SIZE as usize
     }
+
+    fn init_uniforms(
+        &mut self, 
+        scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>) {
+        self.base.init_uniforms(scene_dynamics);
+    }
 }
 
 pub fn read_material<CoreApp>(
     file: &Arc<DebugCell<File>>,
-    scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>,
     engine: &mut RenderEngine<CoreApp>
 ) -> Arc<DebugCell<Material>> 
 where CoreApp: ApplicationTrait {
@@ -185,7 +201,6 @@ where CoreApp: ApplicationTrait {
         DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID => Arc::new(DebugCell::new(
             DirectionalTexturedSpeculatedNocubeFullshadowOpaque::new(
                 file,
-                scene_dynamics,
                 engine,
             ),
         )),
