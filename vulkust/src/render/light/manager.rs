@@ -20,8 +20,9 @@ impl Manager {
     }
 
     pub fn get(&mut self, id: u64) -> Arc<DebugCell<Light>> {
+        let file = self.cached.get_file().clone();
         self.cached.get(id, &|| {
-            Arc::new(DebugCell::new(Sun::new(self.cached.get_file())))
+            Arc::new(DebugCell::new(Sun::new(&file)))
         })
     }
 }

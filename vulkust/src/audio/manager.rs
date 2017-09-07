@@ -20,11 +20,12 @@ impl Manager {
     }
 
     pub fn get(&mut self, id: u64) -> Arc<DebugCell<Audio>> {
+        let file = self.cached.get_file().clone();
         self.cached.get(id, &|| {
-            let audio_type: u64 = self.cached.get_file().borrow_mut().read_type();
+            let audio_type: u64 = file.borrow_mut().read_type();
             match audio_type {
-                10 => Arc::new(DebugCell::new(Music::new(self.cached.get_file()))),
-                20 => Arc::new(DebugCell::new(Voice::new(self.cached.get_file()))),
+                10 => Arc::new(DebugCell::new(Music::new(&file))),
+                20 => Arc::new(DebugCell::new(Voice::new(&file))),
                 _ => {
                     logf!("Uexpected value");
                 }

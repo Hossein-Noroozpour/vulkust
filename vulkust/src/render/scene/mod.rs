@@ -2,6 +2,7 @@ pub mod manager;
 
 use std::default::Default;
 use std::sync::Arc;
+use std::mem::transmute;
 use super::super::audio::Audio;
 use super::super::core::application::ApplicationTrait;
 use super::super::math::matrix::Mat4x4;
@@ -9,16 +10,12 @@ use super::super::math::vector::Vec3;
 use super::super::system::file::File;
 use super::super::system::os::ApplicationTrait as OsApp;
 use super::super::util::cell::DebugCell;
-use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuff;
 use super::camera::Camera;
-use super::descriptor::{Manager as DescriptorManager, Set as DescriptorSet};
 use super::engine::RenderEngine;
 use super::light::Light;
 use super::material::{Material, White};
 use super::model::Model;
-use super::pipeline::Pipeline;
-use super::shader;
 
 #[derive(Default)]
 pub struct UniformData {
@@ -35,52 +32,48 @@ pub trait Scene {
 
 pub struct BasicScene {
     pub uniform_data: UniformData,
-    pub buffer_manager: Arc<DebugCell<BufferManager>>,
-    pub descriptor_manager: DescriptorManager,
     pub current_camera: usize,
     pub cameras: Vec<Arc<DebugCell<Camera<f32>>>>,
     pub audios: Vec<Arc<DebugCell<Audio>>>,
     pub lights: Vec<Arc<DebugCell<Light>>>,
     pub models: Vec<Arc<DebugCell<Model>>>,
     pub occ_material: Arc<DebugCell<Material>>,
-    pub occ_pipeline: Pipeline,
-    pub occ_descriptor: Arc<DescriptorSet>,
 }
 
 impl BasicScene {
-    pub fn new<CoreApp>(file: &mut File, engine: &mut RenderEngine<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
-        let device = engine.logical_device.as_ref().unwrap();
-        let window_ratio = engine.os_app.get_window_ratio() as f32;
-        let asset_manager = &mut engine.os_app.asset_manager;
-        let vi_size = file.read_type::<u64>() * 1024;
-        let u_size = file.read_type::<u64>() * 1024;
-        let mut buffer_manager =
-            BufferManager::new(device.clone(), vi_size as usize, u_size as usize, engine.framebuffers.len());
-        let cameras_count = file.read_count() as usize;
+    pub fn new<CoreApp>(
+        file: &Arc<DebugCell<File>>, 
+        engine: &mut RenderEngine<CoreApp>
+    ) -> Self where CoreApp: ApplicationTrait {
+        let engine_ptr: usize = unsafe { transmute(engine) };
+        let engine1: &mut RenderEngine<CoreApp> = unsafe { transmute(engine_ptr) };
+        let engine2: &mut RenderEngine<CoreApp> = unsafe { transmute(engine_ptr) };
+        let window_ratio = engine1.os_app.get_window_ratio() as f32;
+        let morph_meshes_size = file.borrow_mut().read_count() * 1024;
+        let _ = morph_meshes_size;
+        let u_size = file.borrow_mut().read_count() * 1024;
+        let cameras_count = file.borrow_mut().read_count() as usize;
         let mut cameras_ids = vec![0; cameras_count];
         for i in 0..cameras_count {
-            cameras_ids[i] = file.read_id();
+            cameras_ids[i] = file.borrow_mut().read_id();
         }
-        let audios_count = file.read_count() as usize;
+        let audios_count = file.borrow_mut().read_count() as usize;
         let mut audios_ids = vec![0; audios_count];
         for i in 0..audios_count {
-            audios_ids[i] = file.read_id();
+            audios_ids[i] = file.borrow_mut().read_id();
         }
-        let lights_count = file.read_count() as usize;
+        let lights_count = file.borrow_mut().read_count() as usize;
         let mut lights_ids = vec![0; lights_count];
         for i in 0..lights_count {
-            lights_ids[i] = file.read_id();
+            lights_ids[i] = file.borrow_mut().read_id();
         }
-        let models_count = file.read_count() as usize;
+        let models_count = file.borrow_mut().read_count() as usize;
         let mut models_ids = vec![0; models_count];
         for i in 0..models_count {
-            models_ids[i] = file.read_id();
+            models_ids[i] = file.borrow_mut().read_id();
         }
-        let occ_material: Arc<DebugCell<Material>> = Arc::new(DebugCell::new(White::new(
-            file, device.clone(), &mut asset_manager.shader_manager)));
+        let occ_material: Arc<DebugCell<Material>> = Arc::new(DebugCell::new(White::new(engine1)));
+        let asset_manager = &mut engine1.os_app.asset_manager;
         let mut cameras = Vec::new();
         for i in cameras_ids {
             cameras.push(asset_manager.get_camera(i, window_ratio));
@@ -95,25 +88,16 @@ impl BasicScene {
         }
         let mut models = Vec::new();
         for i in models_ids {
-            models.push(asset_manager.get_model(i, &mut buffer_manager));
+            models.push(asset_manager.get_model(i, engine2));
         }
-        let _ = device;
-        let occ_pipeline = Pipeline::new(&engine.os_app.render_engine, &occ_material);
-        let des_pool = engine.descriptor_pool.as_ref().unwrap().clone();
-        let mut descriptor_manager = DescriptorManager::new(des_pool, occ_pipeline.layout.clone(), &buffer_manager);
-        let occ_descriptor = descriptor_manager.get(shader::WHITE_ID);
         BasicScene {
             uniform_data: UniformData::default(),
-            buffer_manager: buffer_manager,
-            descriptor_manager: descriptor_manager,
             current_camera: 0,
             cameras: cameras,
             audios: audios,
             lights: lights,
             models: models,
             occ_material: occ_material,
-            occ_pipeline: occ_pipeline,
-            occ_descriptor: occ_descriptor,
         }
     }
 }
@@ -150,7 +134,6 @@ impl Scene for BasicScene {
     }
 
     fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize) {
-        self.buffer_manager.push_u(cmd_buff, frame_index);
         // cmd_buff.bind_descriptor_set(self.)
         // shader (descriptor, pipeline)
         // material the descriptor offseting

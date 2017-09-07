@@ -1,65 +1,40 @@
-use std::collections::BTreeMap;
-use std::sync::{Arc, Weak};
-use std::io::{Seek, SeekFrom};
+use std::sync::Arc;
+use std::mem::transmute;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
+use super::super::super::util::cache::FileCacher;
 use super::super::super::util::cell::DebugCell;
 use super::super::engine::RenderEngine;
 use super::{BasicScene, Scene};
 
 pub struct Manager {
-    pub cached: BTreeMap<u64, Weak<DebugCell<Scene>>>,
-    pub offsets: Vec<u64>,
+    pub cached: FileCacher<Scene>,
 }
 
 impl Manager {
-    pub fn new() -> Self {
+    pub fn new(file: Arc<DebugCell<File>>) -> Self {
         Manager {
-            cached: BTreeMap::new(),
-            offsets: Vec::new(),
+            cached: FileCacher::new(file),
         }
     }
 
-    pub fn read_table(&mut self, file: &mut File) {
-        let count = file.read_count();
-        self.offsets.resize(count as usize, 0);
-        for i in 0..count as usize {
-            self.offsets[i] = file.read_offset();
-        }
+    pub fn read_table(&mut self) {
+        self.cached.read_offsets()
     }
 
     pub fn get<CoreApp>(
         &mut self,
         id: u64,
-        file: &mut File,
         engine: &mut RenderEngine<CoreApp>,
     ) -> Arc<DebugCell<Scene>>
     where
         CoreApp: ApplicationTrait,
     {
-        match self.cached.get(&id) {
-            Some(res) => match res.upgrade() {
-                Some(res) => {
-                    return res;
-                }
-                None => {}
-            },
-            None => {}
-        }
-        let offset = self.offsets[id as usize];
-        #[cfg(scene_import_debug)]
-        logi!("scene with id {} has offset {}", id, offset);
-        match file.seek(SeekFrom::Start(offset)) {
-            Ok(o) => if o < offset {
-                logf!("Seeked offset does not match!");
-            },
-            _ => {
-                logf!("Can not seek to the requested offset.");
-            }
-        }
-        let scene = DebugCell::new(BasicScene::new(file, engine));
-        let scene: Arc<DebugCell<Scene>> = Arc::new(scene);
-        self.cached.insert(id, Arc::downgrade(&scene));
-        return scene;
+        let file = self.cached.get_file().clone();
+        let engine: usize = unsafe { transmute(engine) };
+        self.cached.get(id, &|| {
+            let engine: &mut RenderEngine<CoreApp> = unsafe { transmute(engine) };
+            Arc::new(DebugCell::new(BasicScene::new(&file, engine)))
+        })
     }
 }

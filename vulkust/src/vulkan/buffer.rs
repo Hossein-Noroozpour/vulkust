@@ -161,8 +161,8 @@ impl GcObject for BufferGcObject {
 
     fn move_to(&mut self, offset: usize) {
         self.need_refresh = true;
-        let new_address = self.buffer.address.offset(offset as isize);
-        let old_address = self.buffer.address.offset(self.offset as isize);
+        let new_address = unsafe { self.buffer.address.offset(offset as isize) };
+        let old_address = unsafe { self.buffer.address.offset(self.offset as isize) };
         unsafe {
             libc::memmove(
                 transmute(new_address), 

@@ -21,7 +21,7 @@ pub struct Gc {
     last_offset: usize,
     last_checked: Option<&'static mut ListNode<MemInfo>>,
     objects_count: usize,
-    objects: List<MemInfo>,
+    objects: List,
 }
 
 impl Gc {
@@ -39,7 +39,7 @@ impl Gc {
 
     pub fn clean(&mut self) {
         self.last_checked = None;
-        let mut obj = self.objects.get_front();
+        let mut obj = self.objects.get_front::<MemInfo>();
         self.last_offset = self.front;
         while obj.is_some() {
             let o = obj.unwrap();

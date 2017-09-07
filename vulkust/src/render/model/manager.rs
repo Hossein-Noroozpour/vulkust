@@ -1,3 +1,4 @@
+use std::mem::transmute;
 use std::sync::Arc;
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::system::file::File;
@@ -29,8 +30,11 @@ impl Manager {
     where
         CoreApp: ApplicationTrait,
     {
+        let file = self.cached.get_file().clone();
+        let engine: usize = unsafe { transmute(engine) };
         self.cached.get(id, &|| {
-            read_model(self.cached.get_file(), engine)
+            let engine: &mut RenderEngine<CoreApp> = unsafe { transmute(engine) };
+            read_model(&file, engine)
         })
     }
 }

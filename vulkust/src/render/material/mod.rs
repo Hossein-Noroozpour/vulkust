@@ -12,7 +12,7 @@ use super::model::UniformData as MdlUniData;
 use super::pipeline::Pipeline;
 use super::scene::UniformData as ScnUniData;
 use super::shader;
-use super::shader::{read_id, Shader, Id as ShaderId};
+use super::shader::{read_id, Id as ShaderId};
 use super::texture::Texture;
 
 pub const FLOAT_SIZE: u64 = 4;
@@ -25,8 +25,8 @@ pub const POSITION_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + UV_ELEMENT;
 pub const POSITION_NORMAL_UV_VERTEX_SIZE: u64 = POSITION_ELEMENT + NORMAL_ELEMENT + UV_ELEMENT;
 
 pub trait Material {
-    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize);
-    fn get_shader(&self) -> &Arc<DebugCell<Shader>>;
+    fn update_uniform(&mut self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize);
+    fn get_pipeline(&self) -> &Arc<DebugCell<Pipeline>>;
     fn get_vertex_size(&self) -> usize;
     fn init_uniforms(
         &mut self, scene_dynamics: &Vec<Arc<DebugCell<SceneDynamics>>>);
@@ -114,7 +114,7 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
 }
 
 impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
-    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
+    fn update_uniform(&mut self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
         self.uniform_data.mvp = mud.mvp;
         self.uniform_data.transform = mud.m;
         self.uniform_data.eye_loc = sud.eye_loc;
@@ -123,8 +123,8 @@ impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
             unsafe { transmute(&self.uniform_data) });
     }
 
-    fn get_shader(&self) -> &Arc<DebugCell<Shader>> {
-        self.base.pipeline.borrow().get_shader()
+    fn get_pipeline(&self) -> &Arc<DebugCell<Pipeline>> {
+        &self.base.pipeline
     }
 
     fn get_vertex_size(&self) -> usize {
@@ -151,7 +151,6 @@ pub struct White {
 
 impl White {
     pub fn new<CoreApp>(
-        file: &Arc<DebugCell<File>>,
         engine: &mut RenderEngine<CoreApp>
     ) -> Self where CoreApp: ApplicationTrait {
         White { 
@@ -165,14 +164,14 @@ impl White {
 }
 
 impl Material for White {
-    fn update_uniform(&self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
+    fn update_uniform(&mut self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
         self.uniform_data.mvp = mud.mvp;
         self.base.uniforms[frame_index].borrow_mut().upload(
             unsafe { transmute(&self.uniform_data) });
     }
 
-    fn get_shader(&self) -> &Arc<DebugCell<Shader>> {
-        self.base.pipeline.borrow().get_shader()
+    fn get_pipeline(&self) -> &Arc<DebugCell<Pipeline>> {
+        &self.base.pipeline
     }
 
     fn get_vertex_size(&self) -> usize {

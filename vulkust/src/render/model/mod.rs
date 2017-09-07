@@ -71,8 +71,9 @@ impl StaticModel {
 
 impl Model for StaticModel {
     fn child_update_uniform(&mut self, sud: &ScUniData, pud: &UniformData, frame_index: usize) {
-        for &mut c in &mut self.children {
-            c.child_update_uniform(sud, pud, frame_index);
+        let count = self.children.len();
+        for i in 0..count {
+            self.children[i].child_update_uniform(sud, pud, frame_index);
         }
         self.draw_mesh.update_uniform(sud, pud, frame_index);
     }
@@ -124,14 +125,16 @@ impl RootStaticModel {
 impl Model for RootStaticModel {
     fn parent_update_uniform(&mut self, sud: &ScUniData, frame_index: usize) {
         self.ud.mvp = sud.vp;
-        for &mut c in &mut self.children {
-            c.child_update_uniform(sud, &self.ud, frame_index);
+        let count = self.children.len();
+        for i in 0..count {
+            self.children[i].child_update_uniform(sud, &self.ud, frame_index);
         }
     }
 
     fn child_update_uniform(&mut self, sud: &ScUniData, pud: &UniformData, frame_index: usize) {
-        for &mut c in &mut self.children {
-            c.child_update_uniform(sud, pud, frame_index);
+        let count = self.children.len();
+        for i in 0..count {
+            self.children[i].child_update_uniform(sud, pud, frame_index);
         }
     }
 
@@ -178,8 +181,9 @@ impl DynamicModel {
 impl Model for DynamicModel {
     fn parent_update_uniform(&mut self, sud: &ScUniData, frame_index: usize) {
         self.ud.mvp = &sud.vp * &self.ud.m;
-        for &mut c in &mut self.children {
-            c.child_update_uniform(sud, &self.ud, frame_index);
+        let count = self.children.len();
+        for i in 0..count {
+            self.children[i].child_update_uniform(sud, &self.ud, frame_index);
         }
     }
 
@@ -212,7 +216,8 @@ impl CopyModel {
         let m = Mat4x4::new_from_file(file);
         let id = file.borrow_mut().read_id();
         let offset = file.borrow_mut().tell();
-        let sm = engine.os_app.asset_manager.get_model(id, engine);
+        let model_manager = engine.os_app.asset_manager.model_manager.clone();
+        let sm = unsafe { model_manager.untraced_mut_ref().get(id, engine) };
         file.borrow_mut().goto(offset);
         let mut ud = UniformData::default();
         ud.m = m;

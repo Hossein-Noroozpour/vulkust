@@ -21,8 +21,9 @@ impl Manager {
     }
 
     pub fn get(&mut self, id: u64, ratio: f32) -> Arc<DebugCell<Camera<f32>>> {
+        let file = self.cached.get_file().clone();
         self.cached.get(id, &|| {
-            Arc::new(DebugCell::new(Perspective::new(self.cached.get_file(), ratio)))
+            Arc::new(DebugCell::new(Perspective::new(&file, ratio)))
         })
     }
 }

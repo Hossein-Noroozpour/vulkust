@@ -173,7 +173,7 @@ where
     }
 
     pub fn new_from_file(f: &Arc<DebugCell<File>>) -> Self {
-        let f = f.borrow_mut();
+        let mut f = f.borrow_mut();
         Vec3 {
             x: f.read_type(),
             y: f.read_type(),
