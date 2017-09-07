@@ -1,4 +1,3 @@
-extern crate libc;
 #[cfg(not(feature = "no-vulkan-debug"))]
 use std::ffi::CStr;
 use std::ffi::CString;

@@ -85,17 +85,17 @@ impl Gc {
         if self.last_checked.is_none() {
             self.last_checked = self.objects.get_front();
         }
-        let mut last_checked = self.last_checked.as_ref().unwrap();
-        let mut offset_free = last_checked.data.front;
+        // let mut last_checked = self.last_checked.as_ref().unwrap();
+        let mut offset_free = self.last_checked.as_ref().unwrap().data.front;
         let obj_count = self.objects_count;
         for _ in 0..obj_count {
-            let obj = last_checked.data.pointer.upgrade();
+            let obj = self.last_checked.as_ref().unwrap().data.pointer.upgrade();
             self.last_checked = match obj {
                 Some(_) => {
-                    let offset_free_end = last_checked.data.front;
+                    let offset_free_end = self.last_checked.as_ref().unwrap().data.front;
                     if offset_free_end - offset_free >= obj_size {
                         object.borrow_mut().move_to(offset_free);
-                        last_checked.add_parent(
+                        self.last_checked.as_mut().unwrap().add_parent(
                             MemInfo {
                                 front: offset_free,
                                 end: offset_free + obj_size,
@@ -103,15 +103,15 @@ impl Gc {
                                 pointer: Arc::downgrade(object),
                             }
                         );
-                        self.last_checked = last_checked.get_child();
+                        self.last_checked = self.last_checked.as_mut().unwrap().get_child();
                         return;
                     }
-                    offset_free = last_checked.data.end;
-                    last_checked.get_child()
+                    offset_free = self.last_checked.as_ref().unwrap().data.end;
+                    self.last_checked.as_mut().unwrap().get_child()
                 },
                 None => {
                     self.objects_count -= 1;
-                    last_checked.remove()
+                    self.last_checked.as_mut().unwrap().remove()
                 },
             };
             if self.last_checked.is_none() {
@@ -130,7 +130,6 @@ impl Gc {
                 }
                 self.last_checked = self.objects.get_front();
             }
-            last_checked = self.last_checked.as_ref().unwrap();
         }
         loge!("Performance warning, GC called automatically, please do gc cleaning manually for preventing lag in game.");
         self.clean();

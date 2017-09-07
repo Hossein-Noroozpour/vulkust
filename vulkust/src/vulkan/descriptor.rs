@@ -138,9 +138,10 @@ pub struct Manager {
 impl Manager {
     pub fn new(
         buffer_manager: Arc<DebugCell<BufferManager>>) -> Self {
+        let pool = Arc::new(DebugCell::new(Pool::new(buffer_manager.borrow().get_device().clone())));
         Manager {
             cached: Cacher::new(),
-            pool: Arc::new(DebugCell::new(Pool::new(buffer_manager.borrow().get_device().clone()))),
+            pool: pool,
             buffer_manager: buffer_manager,
         }
     }
@@ -150,7 +151,7 @@ impl Manager {
         buff_info.buffer = self.buffer_manager.borrow().get_buffer();
         let pool = self.pool.clone();
         self.cached.get(id, & move || {
-            Arc::new(DebugCell::new(Set::new(id, pool, buff_info)))
+            Arc::new(DebugCell::new(Set::new(id, pool.clone(), buff_info)))
         })
     }
 }

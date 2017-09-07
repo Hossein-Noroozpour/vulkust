@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
-use std::sync::{Arc, Weak};
 use std::io::{Seek, SeekFrom};
+use std::mem::transmute;
+use std::sync::{Arc, Weak};
 use super::super::system::file::File;
 use super::cell::DebugCell;
 
@@ -48,7 +49,7 @@ impl<VAL: ?Sized> FileCacher<VAL> {
     }
 
     pub fn read_offsets(&mut self) {
-        let file = self.file.borrow_mut();
+        let mut file = self.file.borrow_mut();
         let count = file.read_count() as usize;
         self.offsets.resize(count, 0);
         for i in 0..count {
@@ -56,18 +57,21 @@ impl<VAL: ?Sized> FileCacher<VAL> {
         }
     }
 
-    pub fn get<F>(
-        &mut self, id: u64, new: &F
+    pub fn get<'a, F>(
+        &'a mut self, id: u64, new: &F
     ) -> Arc<DebugCell<VAL>>
     where F: Fn() -> Arc<DebugCell<VAL>> {
+        let self_ptr: &'static usize = unsafe { transmute(&self) };
+        let self2 = *self_ptr;
         self.cached.get(id, &|| {
+            let self2: &'a mut FileCacher<VAL> = unsafe { transmute(self2) };
             #[cfg(cacher_debug)]
             {
-                if id as usize > self.offsets.len() {
+                if id as usize > self2.offsets.len() {
                     logf!("Id is is out of the range.");
                 }
-                let offset = self.offsets[id as usize];
-                match self.file.borrow_mut().seek(SeekFrom::Start(offset)) {
+                let offset = self2.offsets[id as usize];
+                match self2.file.borrow_mut().seek(SeekFrom::Start(offset)) {
                     Ok(o) => if o < offset {
                         logf!("Seeked offset does not match!");
                     },
@@ -78,7 +82,7 @@ impl<VAL: ?Sized> FileCacher<VAL> {
             }
             #[cfg(not(cacher_debug))] 
             {
-                let _ = self.file.borrow_mut().seek(SeekFrom::Start(self.offsets[id as usize]));
+                let _ = self2.file.borrow_mut().seek(SeekFrom::Start(self2.offsets[id as usize])).unwrap();
             }
             new()
         })

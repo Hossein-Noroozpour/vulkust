@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::mem::transmute;
 use std::sync::Arc;
 use std::io::{Seek, SeekFrom};
 use super::super::super::system::file::File;
@@ -33,15 +34,18 @@ impl Manager {
         }
     }
 
-    pub fn get(
-        &mut self,
+    pub fn get<'a>(
+        &'a mut self,
         id: u64,
         logical_device: Arc<LogicalDevice>,
     ) -> Arc<DebugCell<Shader>> {
+        let self_ptr: &'static usize = unsafe { transmute(&self) };
+        let self2 = *self_ptr;
         self.cached.get(id, &|| {
-                match self.offsets.get(&id) {
+                let self2: &'a mut Manager = unsafe { transmute(self2) };
+                match self2.offsets.get(&id) {
                     Some(offset) => {
-                        match self.file.borrow_mut().seek(SeekFrom::Start(*offset)) {
+                        match self2.file.borrow_mut().seek(SeekFrom::Start(*offset)) {
                             Ok(o) => if o < *offset {
                                 logf!("Seeked offset does not match!");
                             },
@@ -54,7 +58,7 @@ impl Manager {
                         logf!("Requested shader {} does not exist.", id);
                     }
                 };
-                Arc::new(DebugCell::new(TwoStage::new(&self.file, logical_device))) 
+                Arc::new(DebugCell::new(TwoStage::new(&self2.file, logical_device.clone()))) 
             }
         )
     }

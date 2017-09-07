@@ -23,7 +23,7 @@ impl<T: 'static> ListNode<T> {
     }
 
     pub fn add_child(&mut self, data: T) {
-        let self_ptr = unsafe { transmute(self) };
+        let self_ptr: &'static usize = unsafe { transmute(&self) };
         let grand_child = self.child;
         self.child = unsafe { 
             transmute(
@@ -33,7 +33,7 @@ impl<T: 'static> ListNode<T> {
                             data: data,
                             list: self.list,
                             child: grand_child,
-                            parent: self_ptr,
+                            parent: *self_ptr,
                         }
                     )
                 )
@@ -49,6 +49,7 @@ impl<T: 'static> ListNode<T> {
     }
 
     pub fn add_parent(&mut self, data: T) {
+        let self_ptr: &'static usize = unsafe { transmute(&self) };
         let grand_parent = self.parent;
         self.parent = unsafe { 
             transmute(
@@ -57,7 +58,7 @@ impl<T: 'static> ListNode<T> {
                         ListNode {
                             data: data,
                             list: self.list,
-                            child: transmute(self),
+                            child: *self_ptr,
                             parent: grand_parent,
                         }
                     )
@@ -128,6 +129,7 @@ impl List {
     }
 
     pub fn add_front<T: 'static>(&mut self, data: T) {
+        let self_ptr: &'static usize = unsafe { transmute(&self) };
         let last_front = self.front;
         self.front =  unsafe { 
             transmute(
@@ -135,7 +137,7 @@ impl List {
                     Box::new(
                         ListNode {
                             data: data,
-                            list: transmute(self),
+                            list: *self_ptr,
                             child: last_front,
                             parent: 0,
                         }
@@ -153,6 +155,7 @@ impl List {
     }
 
     pub fn add_end<T: 'static>(&mut self, data: T) {
+        let self_ptr: &'static usize = unsafe { transmute(&self) };
         let last_end = self.end;
         self.end =  unsafe { 
             transmute(
@@ -160,7 +163,7 @@ impl List {
                     Box::new(
                         ListNode {
                             data: data,
-                            list: transmute(self),
+                            list: *self_ptr,
                             child: 0,
                             parent: last_end,
                         }

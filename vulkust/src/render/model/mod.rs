@@ -24,10 +24,10 @@ pub enum Dynamism {
 }
 
 pub trait Model {
-    fn parent_update_uniform(&mut self, sud: &ScUniData, frame_index: usize) {
+    fn parent_update_uniform(&mut self, _sud: &ScUniData, _frame_index: usize) {
         logf!("This struct does not implement parent_update_uniform because it is not parent.");
     }
-    fn child_update_uniform(&mut self, sud: &ScUniData, pud: &UniformData, frame_index: usize) {
+    fn child_update_uniform(&mut self, _sud: &ScUniData, _pud: &UniformData, _frame_index: usize) {
         logf!("This struct does not implement child_update_uniform because it is not child.");
     }
     fn get_dynamism(&self) -> Dynamism;

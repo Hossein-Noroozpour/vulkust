@@ -86,10 +86,6 @@ impl DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
         let texture_id = file.borrow_mut().read_id();
         let offset = file.borrow_mut().tell();
         let texture = engine.os_app.asset_manager.get_texture(texture_id);
-        let shader = engine.os_app.asset_manager.get_shader(
-            shader::DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID,
-            engine.logical_device.as_ref().unwrap().clone(),
-        );
         file.borrow_mut().goto(offset);
         let speculation_color = Vec3::new_from_file(file);
         let speculation_intensity = file.borrow_mut().read_type();
@@ -164,7 +160,7 @@ impl White {
 }
 
 impl Material for White {
-    fn update_uniform(&mut self, sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
+    fn update_uniform(&mut self, _sud: &ScnUniData, mud: &MdlUniData, frame_index: usize) {
         self.uniform_data.mvp = mud.mvp;
         self.base.uniforms[frame_index].borrow_mut().upload(
             unsafe { transmute(&self.uniform_data) });
@@ -192,10 +188,10 @@ pub fn read_material<CoreApp>(
 where CoreApp: ApplicationTrait {
     let shader_id = read_id(file);
     return match shader_id {
-        WHITE_ID => {
+        shader::WHITE_ID => {
             logf!("This shader must not be send to material");
         }
-        DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID => Arc::new(DebugCell::new(
+        shader::DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID => Arc::new(DebugCell::new(
             DirectionalTexturedSpeculatedNocubeFullshadowOpaque::new(
                 file,
                 engine,

@@ -1,5 +1,6 @@
 use std::default::Default;
 use std::ffi::CString;
+use std::mem::transmute;
 use std::ptr::null;
 use std::sync::Arc;
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
@@ -27,8 +28,7 @@ pub struct Layout {
 }
 impl Layout {
     pub fn new(
-        logical_device: Arc<LogicalDevice>, 
-        sid: ShaderId, 
+        logical_device: Arc<LogicalDevice>,
         descriptor_set: Arc<DebugCell<DescriptorSet>>) -> Self {
         let mut vk_data = 0 as vk::VkPipelineLayout;
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
@@ -108,9 +108,9 @@ impl Pipeline {
     {
         let descriptor_set = manager.descriptor_manager.borrow_mut().get(sid);
         let device = manager.cache.logical_device.clone();
-        let shader = manager.shader_manager.borrow_mut().get(sid, device);
+        let shader = manager.shader_manager.borrow_mut().get(sid, device.clone());
         let vertex_attrs = shader_id_to_vertex_attributes(sid);
-        let layout = Layout::new(device, sid, descriptor_set.clone());
+        let layout = Layout::new(device, descriptor_set.clone());
         let render_pass = manager.render_pass.clone();
         let pipeline_cache = manager.cache.clone();
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
@@ -278,8 +278,13 @@ impl Manager {
         }
     }
 
-    pub fn get(&mut self, id: ShaderId) -> Arc<DebugCell<Pipeline>> {
-        self.cached.get(id, &|| { self.create_pipeline(id) })
+    pub fn get<'a>(&'a mut self, id: ShaderId) -> Arc<DebugCell<Pipeline>> {
+        let self_ptr: &'static usize = unsafe { transmute(&self) };
+        let self2 = *self_ptr;
+        self.cached.get(id, &|| { 
+            let self2: &'a mut Manager = unsafe { transmute(self2) };
+            self2.create_pipeline(id) 
+        })
     }
 
     fn create_pipeline(&mut self, id: ShaderId) -> Arc<DebugCell<Pipeline>> {

@@ -1,6 +1,3 @@
-#[cfg(target_os = "windows")]
-extern crate winapi;
-
 use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;

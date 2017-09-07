@@ -297,9 +297,8 @@ impl Manager {
         meshes_size: usize, 
         scenes_dynamics_size: usize, 
         frames_count: usize) -> Self {
-        let best_alignment = logical_device.physical_device.get_max_min_alignment() as usize;
         let size = meshes_size + (scenes_dynamics_size * frames_count);
-        let mut meshes = Gc::new(0, meshes_size);
+        let meshes = Gc::new(0, meshes_size);
         let mut scenes_dynamics = Vec::new();
         for i in 0..frames_count {
             scenes_dynamics.push(Gc::new(i * scenes_dynamics_size + meshes_size, scenes_dynamics_size));
