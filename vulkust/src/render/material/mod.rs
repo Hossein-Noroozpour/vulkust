@@ -69,7 +69,7 @@ pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
 
 #[repr(C)]
 #[derive(Default)]
-struct DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform {
+pub struct DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform {
     pub mvp: Mat4x4<f32>,
     pub transform: Mat4x4<f32>,
     pub eye_loc: Vec3<f32>,
@@ -136,7 +136,7 @@ impl Material for DirectionalTexturedSpeculatedNocubeFullshadowOpaque {
 
 #[repr(C)]
 #[derive(Default)]
-struct WhiteUniform {
+pub struct WhiteUniform {
     pub mvp: Mat4x4<f32>,
 }
 

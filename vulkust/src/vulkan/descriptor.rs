@@ -2,7 +2,12 @@ use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;
 use super::super::render::shader::{
-    shader_id_resources, Id as ShaderId, ResourceType, BindingStage};
+    BindingStage,
+    Id as ShaderId, 
+    ResourceType, 
+    shader_id_resources,
+    shader_uniform_size, 
+};
 use super::super::system::vulkan as vk;
 use super::super::util::cache::Cacher;
 use super::super::util::cell::DebugCell;
@@ -147,10 +152,12 @@ impl Manager {
     }
 
     pub fn get(&mut self, id: ShaderId) -> Arc<DebugCell<Set>> {
-        let mut buff_info = vk::VkDescriptorBufferInfo::default();
-        buff_info.buffer = self.buffer_manager.borrow().get_buffer();
+        let buffer = self.buffer_manager.borrow().get_buffer();
         let pool = self.pool.clone();
-        self.cached.get(id, & move || {
+        self.cached.get(id, &|| {
+            let mut buff_info = vk::VkDescriptorBufferInfo::default();
+            buff_info.buffer = buffer;
+            buff_info.range = shader_uniform_size(id) as vk::VkDeviceSize;
             Arc::new(DebugCell::new(Set::new(id, pool.clone(), buff_info)))
         })
     }

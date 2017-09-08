@@ -2,10 +2,12 @@ pub mod manager;
 pub mod stage;
 
 use std::sync::Arc;
+use std::mem::size_of;
 use super::super::system::file::File;
 use super::super::util::cell::DebugCell;
 use super::device::logical::Logical as LogicalDevice;
 use super::vertex::Attribute as VertexAttribute;
+use super::material;
 use self::stage::Stage;
 
 pub const WHITE_ID: Id = 0;
@@ -120,6 +122,20 @@ pub fn shader_id_resources(id: Id) -> Vec<(Vec<BindingStage>, u32, ResourceType)
     match id {
         WHITE_ID => 
             vec![(vec![BindingStage::Vertex], 1, ResourceType::Uniform)],
+        DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID => {
+            loge!("this is temporary");
+            vec![(vec![BindingStage::Vertex], 1, ResourceType::Uniform)]
+        }, // ONLY FOR NOW 
+        id @ _ => { logf!("The Shader Id {} is not expected.", id); },
+    }
+}
+
+pub fn shader_uniform_size(id: Id) -> usize {
+    match id {
+        WHITE_ID => 
+            size_of::<material::WhiteUniform>(),
+        DIRECTIONAL_TEXTURED_SPECULATED_NOCUBE_FULLSHADOW_OPAQUE_ID => 
+            size_of::<material::DirectionalTexturedSpeculatedNocubeFullshadowOpaqueUniform>(),
         id @ _ => { logf!("The Shader Id {} is not expected.", id); },
     }
 }
