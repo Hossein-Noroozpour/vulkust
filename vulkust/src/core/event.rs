@@ -1,3 +1,5 @@
+use super::object::{Id, Object, create_id};
+
 #[derive(Debug, Copy, Clone)]
 pub enum Mouse {
     Left,
@@ -86,9 +88,30 @@ pub enum Button {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum Event {
+pub enum Type {
     MouseMove { delta_x: f64, delta_y: f64 },
     Press { button: Button },
     Release { button: Button },
     WindowSize { w: f64, h: f64 },
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Event {
+    id: Id,
+    pub event_type: Type,
+}
+
+impl Event {
+    fn new(event_type: Type) -> Self {
+        Event {
+            id: create_id(),
+            event_type
+        }
+    }
+}
+
+impl Object for Event {
+    fn get_id(&self) -> Id {
+        self.id
+    }
 }

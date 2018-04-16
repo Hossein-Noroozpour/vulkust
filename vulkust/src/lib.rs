@@ -1,4 +1,5 @@
 #![feature(repr_simd)]
+#![feature(integer_atomics)]
 
 #[cfg(appleos)]
 #[macro_use]
@@ -6,17 +7,14 @@ pub extern crate objc;
 
 #[macro_use]
 pub mod macros;
-pub mod audio;
+// pub mod audio;
 pub mod core;
-pub mod math;
-#[cfg(metal)]
-#[macro_use]
-pub mod metal;
+// pub mod math;
 pub mod render;
-pub mod sync;
+// pub mod sync;
 pub mod system;
-#[macro_use]
-pub mod util;
-#[cfg(vulkan)]
-#[macro_use]
-pub mod vulkan;
+// #[macro_use]
+// pub mod util;
+// #[cfg(vulkan)]
+// #[macro_use]
+// pub mod vulkan;

@@ -1,17 +1,11 @@
-use super::super::render::engine::RenderEngine;
-use super::super::system::os::OsApplication;
+use super::super::render::renderer::Renderer;
+use super::super::system::application::Application as SysApp;
 use super::event::Event;
-
-pub trait ApplicationTrait: Sized {
-    fn new() -> Self;
-    fn initialize(
-        &mut self,
-        _o: &'static mut OsApplication<Self>,
-        _r: &'static mut RenderEngine<Self>,
-    ) -> bool {
-        return true;
-    }
-    fn on_event(&mut self, _e: Event) {}
-    fn update(&mut self) -> bool;
+use std::sync::{Arc, RwLock,};
+pub trait ApplicationTrait {
+    fn set_system_application(&mut self, app: Arc<RwLock<SysApp>>);
+    fn set_renderer(&mut self, renderer: Arc<RwLock<Renderer>>);
+    fn on_event(&self, e: Event);
+    fn update(&mut self);
     fn terminate(&mut self);
 }

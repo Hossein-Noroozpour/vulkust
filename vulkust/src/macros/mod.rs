@@ -1,11 +1,14 @@
 #[macro_export]
-#[cfg(not(target_os = "android"))]
-macro_rules! start {
+#[cfg(desktop_os)]
+macro_rules! vulkust_start {
     ($App:ident) => {
         fn main() {
             use vulkust::system::application::Application as SysApp;
-            let mut app = Box::new(SysApp::<$App>::new());
-            app.run();
+            use vulkust::core::application::ApplicationTrait as CoreAppTrait;
+            let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
+            let sys_app = Arc::new(RwLock::new(SysApp::new(core_app.clone())));
+            core_app.write().unwrap().set_system_application(sys_app.clone());
+            sys_app.read().unwrap().run();
         }
     };
 }

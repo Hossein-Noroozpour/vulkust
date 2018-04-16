@@ -5,6 +5,9 @@ authors = ["Hossein Noroozpour (Thany Hulixer) <hossein.noroozpour@gmail.com>"]
 description = "Vulakn based game engine"
 license = "MIT"
 build = "build.rs"
+readme = "../README.md"
+keywords = ["game", "engine", "vulkan"]
+categories = ["game-engines"]
 
 [features]
 fullscreen = []
