@@ -3,21 +3,33 @@
 // use std::os::raw::c_void as std_void;
 // use std::mem::transmute;
 use std::sync::{Arc, RwLock};
-use super::super::core::application::ApplicationTrait as CoreApp;
+use super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::render::renderer::Renderer;
+#[cfg(target_os = "android")]
+use super::android::application::Application as OsApp;
+#[cfg(target_os = "linux")]
+use super::linux::application::Application as OsApp;
+#[cfg(target_os = "macos")]
+use super::mac::application::Application as OsApp;
+#[cfg(target_os = "windows")]
+use super::windows::application::Application as OsApp;
 // use super::super::render::engine::{EngineTrait as RenderEngineTrait, RenderEngine};
 // use super::os::{ApplicationTrait as OsApplicationTrait, OsApplication};
 
 pub struct Application {
     // os_app: *mut OsApplication<CoreApp>,
     // render_engine: *mut RenderEngine<CoreApp>,
-    pub core_app: Arc<RwLock<CoreApp>>,
+    pub core_app: Arc<RwLock<CoreAppTrait>>,
+    pub os_app: OsApp,
 }
 
 impl Application {
     #[cfg(desktop_os)]
-    pub fn new(core_app: Arc<RwLock<CoreApp>>) -> Self {
+    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
+        let os_app = OsApp::new(core_app.clone());
         Application {
             core_app,
+            os_app,
         }
     }
 
@@ -56,13 +68,7 @@ impl Application {
 
     #[cfg(desktop_os)]
     pub fn run(&self) {
-        // unsafe { (*self.render_engine).initialize() };
-        // unsafe {
-        //     (*self.core_app).initialize(transmute(self.os_app), transmute(self.render_engine))
-        // };
-        // unsafe { (*self.os_app).execute() };
-        // unsafe { (*self.core_app).terminate() };
-        // unsafe { (*self.render_engine).terminate() };
+        self.os_app.execute();
     }
 }
 

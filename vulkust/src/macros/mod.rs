@@ -31,41 +31,41 @@ macro_rules! start {
 }
 
 #[macro_export]
-#[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
-macro_rules! logi {
+#[cfg(desktop_os)]
+macro_rules! vxlogi {
     ($fmt:expr) => {
-        print!("Vulkust Information MSG in file: {} line: {} ", file!(), line!());
-        println!($fmt);
+        let s = format!("Vulkust information message in file: {} line: {} {}", file!(), line!(), $fmt);
+        println!("{}", s);
     };
     ($fmt:expr, $($arg:tt)*) => {
-        print!("Vulkust Information MSG in file: {} line: {} ", file!(), line!());
-        println!($fmt, $($arg)*);
+        let s = format!("Vulkust information message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*));
+        println!("{}", s);
     };
 }
 
 #[macro_export]
-#[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
-macro_rules! loge {
+#[cfg(desktop_os)]
+macro_rules! vxloge {
     ($fmt:expr) => {
-        print!("Vulkust Error MSG in file: {} line: {} ", file!(), line!());
-        println!($fmt);
+        let s = format!("Vulkust error message in file: {} line: {} {}", file!(), line!(), $fmt);
+        eprintln!("{}", s);
     };
     ($fmt:expr, $($arg:tt)*) => {
-        print!("Vulkust Error MSG in file: {} line: {} ", file!(), line!());
-        println!($fmt, $($arg)*);
+        let s = format!("Vulkust error message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*));
+        eprintln!("{}", s);
     };
 }
 
 #[macro_export]
-#[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
-macro_rules! logf {
+#[cfg(desktop_os)]
+macro_rules! vxlogf {
     ($fmt:expr) => {
-        print!("Vulkust Fatal MSG in file: {} line: {} ", file!(), line!());
-        panic!($fmt);
+        let s = format!("Vulkust fatal message in file: {} line: {} {}", file!(), line!(), $fmt);
+        panic!("{}", s);
     };
     ($fmt:expr, $($arg:tt)*) => {
-        print!("Vulkust Fatal MSG in file: {} line: {} ", file!(), line!());
-        panic!($fmt, $($arg)*);
+        let s = format!("Vulkust fatal message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*));
+        panic!("{}", s);
     };
 }
 

@@ -1,8 +1,6 @@
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-
-pub type Id = u64;
-
+use super::types::Id;
 pub trait Object {
     fn get_id(&self) -> Id;
 }

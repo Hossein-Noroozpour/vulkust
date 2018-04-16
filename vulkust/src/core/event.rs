@@ -1,4 +1,5 @@
-use super::object::{Id, Object, create_id};
+use super::object::{Object, create_id};
+use super::types::Id;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Mouse {
@@ -102,7 +103,7 @@ pub struct Event {
 }
 
 impl Event {
-    fn new(event_type: Type) -> Self {
+    pub fn new(event_type: Type) -> Self {
         Event {
             id: create_id(),
             event_type
