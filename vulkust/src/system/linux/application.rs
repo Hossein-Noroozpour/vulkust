@@ -3,33 +3,24 @@ extern crate libc;
 use super::xcb;
 use super::xproto;
 use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
-use super::super::super::core::types::Real;
-use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::core::event::{Button, Event, Type as EventType, Keyboard, Mouse};
 // use super::super::super::core::asset::manager::Manager as AssetManager;
-use super::super::super::render::renderer::Renderer;
 // use super::super::file::File;
 
 use std::ptr::null_mut;
-use std::os::raw::{c_int, c_uint,};
+use std::os::raw::c_int;
 use std::mem::transmute;
 use std::ffi::CString;
-use std::sync::{Arc, RwLock,};
 
 pub struct Application {
     pub connection: *mut xcb::xcb_connection_t,
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,
     pub atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t,
-    pub core_app: Arc<RwLock<CoreAppTrait>>,
-    pub renderer: Arc<RwLock<Renderer>>,
-    pub is_running: bool,
-    pub mouse_previous_state: (Real, Real),
-    pub window_aspects: (Real, Real),
 }
 
 impl Application {
-    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
+    pub fn new() -> Self {
         let mut scr = 0 as c_int;
         let connection: *mut xcb::xcb_connection_t = unsafe { 
             xcb::xcb_connect(null_mut(), &mut scr) 
@@ -113,26 +104,12 @@ impl Application {
         unsafe {
             xcb::xcb_map_window(connection, window);
         }
-        let renderer = Arc::new(RwLock::new(Renderer::new(core_app.clone())));
         Application {
             connection,
             screen,
             window,
             atom_wm_delete_window,
-            core_app,
-            renderer,
-            is_running: true,
-            mouse_previous_state,
-            window_aspects,
         }
-    }
-
-    pub fn set_core_app(&mut self, c: Arc<RwLock<CoreAppTrait>>) {
-        self.core_app = c;
-    }
-    
-    pub fn set_renderer(&mut self, r: Arc<RwLock<Renderer>>) {
-        self.renderer = r;
     }
 
     pub fn get_mouse_position(&self) -> (f64, f64) {
@@ -152,24 +129,25 @@ impl Application {
         unsafe { (*self.screen).width_in_pixels as f64 / (*self.screen).height_in_pixels as f64 }
     }
 
-    pub fn execute(&self) {
+    pub fn finalize(&self) {
         unsafe {
             xcb::xcb_flush(self.connection);
         }
-        while self.is_running {
-            loop {
-                let event = unsafe { xcb::xcb_poll_for_event(self.connection) };
-                if event == null_mut() {
-                    break;
-                }
-                // self.handle_event(event);
-                unsafe {
-                    libc::free(transmute(event));
-                }
+    }
+
+    pub fn fetch_events(&self) -> Vec<Event> {
+        let mut events = Vec::new();
+        loop {
+            let event = unsafe { xcb::xcb_poll_for_event(self.connection) };
+            if event == null_mut() {
+                break;
             }
-            self.core_app.write().unwrap().update();
-            self.renderer.write().unwrap().update();
+            // events.push(self.translate(event));
+            unsafe {
+                libc::free(transmute(event));
+            }
         }
+        return events;
     }
 
     // fn handle_event(&self, e: *mut xcb::xcb_generic_event_t) {

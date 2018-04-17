@@ -4,7 +4,9 @@
 // use std::mem::transmute;
 use std::sync::{Arc, RwLock};
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
 use super::super::render::renderer::Renderer;
+use super::super::core::types::Real;
 #[cfg(target_os = "android")]
 use super::android::application::Application as OsApp;
 #[cfg(target_os = "linux")]
@@ -13,23 +15,46 @@ use super::linux::application::Application as OsApp;
 use super::mac::application::Application as OsApp;
 #[cfg(target_os = "windows")]
 use super::windows::application::Application as OsApp;
-// use super::super::render::engine::{EngineTrait as RenderEngineTrait, RenderEngine};
-// use super::os::{ApplicationTrait as OsApplicationTrait, OsApplication};
+
+pub struct MouseInfo {
+    pub x: Real,
+    pub y: Real,
+}
+
+pub struct WindowInfo {
+    pub width: Real,
+    pub height: Real,
+    pub ratio: Real,
+}
 
 pub struct Application {
-    // os_app: *mut OsApplication<CoreApp>,
-    // render_engine: *mut RenderEngine<CoreApp>,
-    pub core_app: Arc<RwLock<CoreAppTrait>>,
-    pub os_app: OsApp,
+    core_app: Arc<RwLock<CoreAppTrait>>,
+    renderer: Arc<RwLock<Renderer>>,
+    os_app: OsApp,
+    mouse_info: MouseInfo,
+    window_info: WindowInfo,
 }
 
 impl Application {
     #[cfg(desktop_os)]
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
-        let os_app = OsApp::new(core_app.clone());
+        let os_app = OsApp::new();
+        let renderer = Arc::new(RwLock::new(Renderer::new(core_app.clone())));
+        let mouse_info = MouseInfo {
+            x: 0.0,
+            y: 0.0,
+        };
+        let window_info = WindowInfo {
+            width: DEFAULT_WINDOW_WIDTH,
+            height: DEFAULT_WINDOW_HEIGHT,
+            ratio: DEFAULT_WINDOW_WIDTH / DEFAULT_WINDOW_HEIGHT,
+        };
         Application {
             core_app,
+            renderer,
             os_app,
+            mouse_info,
+            window_info,
         }
     }
 
@@ -68,7 +93,10 @@ impl Application {
 
     #[cfg(desktop_os)]
     pub fn run(&self) {
-        self.os_app.execute();
+        self.os_app.finalize();
+        loop {
+            self.os_app.fetch_events();
+        }
     }
 }
 
