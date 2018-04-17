@@ -4,13 +4,20 @@
 // use std::mem::transmute;
 use std::sync::{Arc, RwLock};
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
-use super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
-use super::super::render::renderer::Renderer;
+use super::super::core::constants::{
+    DEFAULT_WINDOW_HEIGHT, 
+    DEFAULT_WINDOW_WIDTH,
+};
+use super::super::core::event::{
+    Event,
+    Type as EventType,
+};
+use super::super::render::engine::Engine as RenderEngine;
 use super::super::core::types::Real;
 #[cfg(target_os = "android")]
 use super::android::application::Application as OsApp;
 #[cfg(target_os = "linux")]
-use super::linux::application::Application as OsApp;
+pub use super::linux::application::Application as OsApp;
 #[cfg(target_os = "macos")]
 use super::mac::application::Application as OsApp;
 #[cfg(target_os = "windows")]
@@ -29,7 +36,7 @@ pub struct WindowInfo {
 
 pub struct Application {
     core_app: Arc<RwLock<CoreAppTrait>>,
-    renderer: Arc<RwLock<Renderer>>,
+    renderer: Arc<RwLock<RenderEngine>>,
     os_app: OsApp,
     mouse_info: MouseInfo,
     window_info: WindowInfo,
@@ -39,7 +46,7 @@ impl Application {
     #[cfg(desktop_os)]
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
         let os_app = OsApp::new();
-        let renderer = Arc::new(RwLock::new(Renderer::new(core_app.clone())));
+        let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone())));
         let mouse_info = MouseInfo {
             x: 0.0,
             y: 0.0,
@@ -94,8 +101,21 @@ impl Application {
     #[cfg(desktop_os)]
     pub fn run(&self) {
         self.os_app.finalize();
-        loop {
-            self.os_app.fetch_events();
+        'main_loop: loop {
+            let events = self.os_app.fetch_events();
+            for e in events {
+                match e.event_type {
+                    EventType::Quit => {
+                        // todo
+                        // terminate core
+                        // terminate renderer
+                        // terminate audio engine
+                        // terminate physic engine
+                        break 'main_loop
+                    },
+                    _ => (),
+                }
+            }
         }
     }
 }

@@ -3,12 +3,23 @@ extern crate libc;
 use super::xcb;
 use super::xproto;
 use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
-use super::super::super::core::event::{Button, Event, Type as EventType, Keyboard, Mouse};
+use super::super::super::core::event::{
+    Button, 
+    Event, 
+    Type as EventType, 
+    Keyboard, 
+    Mouse,
+    Window,
+};
+use super::super::super::core::types::Real;
 // use super::super::super::core::asset::manager::Manager as AssetManager;
 // use super::super::file::File;
 
 use std::ptr::null_mut;
-use std::os::raw::c_int;
+use std::os::raw::{
+    c_int,
+    c_uint
+};
 use std::mem::transmute;
 use std::ffi::CString;
 
@@ -138,125 +149,124 @@ impl Application {
     pub fn fetch_events(&self) -> Vec<Event> {
         let mut events = Vec::new();
         loop {
-            let event = unsafe { xcb::xcb_poll_for_event(self.connection) };
-            if event == null_mut() {
+            let xcb_event = unsafe { xcb::xcb_poll_for_event(self.connection) };
+            if xcb_event == null_mut() {
                 break;
             }
-            // events.push(self.translate(event));
+            let event = self.translate(xcb_event);
+            if event.is_some() {
+                events.push(Event::new(event.unwrap()));
+            }
             unsafe {
-                libc::free(transmute(event));
+                libc::free(transmute(xcb_event));
             }
         }
         return events;
     }
 
-    // fn handle_event(&self, e: *mut xcb::xcb_generic_event_t) {
-    //     unsafe {
-    //         if (xproto::XCB_DESTROY_NOTIFY as u8 == ((*e).response_type & 0x7f)) ||
-    //             ((xproto::XCB_CLIENT_MESSAGE as u8 == ((*e).response_type & 0x7f)) &&
-    //                 ((*transmute::<
-    //                     *mut xcb::xcb_generic_event_t,
-    //                     *mut xcb::xcb_client_message_event_t,
-    //                 >(e)).data
-    //                     .data[0] == (*self.atom_wm_delete_window).atom))
-    //         {
-    //             self.is_running = false;
-    //         }
-    //     }
-    //     match unsafe { (*e).response_type as c_uint & 0x7F } {
-    //         xproto::XCB_CLIENT_MESSAGE => {
-    //             let client_msg: &mut xcb::xcb_client_message_event_t = unsafe { transmute(e) };
-    //             if client_msg.data.data[0] == unsafe { (*self.atom_wm_delete_window).atom } {
-    //                 self.is_running = false;
-    //             }
-    //         }
-    //         xproto::XCB_MOTION_NOTIFY => {
-    //             let pos = self.get_mouse_position();
-    //             let e = EventType::MouseMove {
-    //                 delta_x: pos.0 - self.mouse_previous_state.0,
-    //                 delta_y: self.mouse_previous_state.1 - pos.1,
-    //             };
-    //             self.mouse_previous_state = pos;
-    //             self.core_app.read().unwrap().on_event(Event::new(e));
-    //         }
-    //         xproto::XCB_BUTTON_PRESS => {
-    //             let press: &mut xcb::xcb_button_press_event_t = unsafe { transmute(e) };
-    //             let m: xcb::xcb_button_index_t = unsafe { transmute(press.detail as u32) };
-    //             let m = match m {
-    //                 xcb::xcb_button_index_t::XCB_BUTTON_INDEX_1 => Mouse::Left,
-    //                 xcb::xcb_button_index_t::XCB_BUTTON_INDEX_2 => Mouse::Middle,
-    //                 xcb::xcb_button_index_t::XCB_BUTTON_INDEX_3 => Mouse::Right,
-    //                 _ => {
-    //                     vxloge!("Unknown mouse button pressed.");
-    //                     Mouse::Left
-    //                 }
-    //             };
-    //             let e = EventType::Press {
-    //                 button: Button::Mouse(m),
-    //             };
-    //             self.core_app.read().unwrap().on_event(Event::new(e));
-    //         }
-    //         xproto::XCB_BUTTON_RELEASE => {
-    //             let release: &mut xcb::xcb_button_release_event_t = unsafe { transmute(e) };
-    //             let m: xcb::xcb_button_index_t = unsafe { transmute(release.detail as u32) };
-    //             let m = match m {
-    //                 xcb::xcb_button_index_t::XCB_BUTTON_INDEX_1 => Mouse::Left,
-    //                 xcb::xcb_button_index_t::XCB_BUTTON_INDEX_2 => Mouse::Middle,
-    //                 xcb::xcb_button_index_t::XCB_BUTTON_INDEX_3 => Mouse::Right,
-    //                 _ => {
-    //                     vxloge!("Unknown mouse button pressed.");
-    //                     Mouse::Left
-    //                 }
-    //             };
-    //             let e = EventType::Release {
-    //                 button: Button::Mouse(m),
-    //             };
-    //             self.core_app.read().unwrap().on_event(Event::new(e));
-    //         }
-    //         a @ xproto::XCB_KEY_PRESS | a @ xproto::XCB_KEY_RELEASE => {
-    //             let key_event: &xcb::xcb_key_release_event_t = unsafe { transmute(e) };
-    //             let b = Button::Keyboard(match key_event.detail {
-    //                 xproto::KEY_W => Keyboard::W,
-    //                 xproto::KEY_S => Keyboard::S,
-    //                 xproto::KEY_A => Keyboard::A,
-    //                 xproto::KEY_D => Keyboard::D,
-    //                 // xproto::KEY_P => { Keyboard::P },
-    //                 xproto::KEY_F1 => Keyboard::Function(1),
-    //                 k @ _ => {
-    //                     vxlogi!("Unknown key: {:?} presse", k);
-    //                     Keyboard::W
-    //                 }
-    //             });
-    //             let e = if a == xproto::XCB_KEY_RELEASE {
-    //                 EventType::Release { button: b }
-    //             } else {
-    //                 EventType::Press { button: b }
-    //             };
-    //             self.core_app.read().unwrap().on_event(Event::new(e));
-    //         }
-    //         xproto::XCB_DESTROY_NOTIFY => {
-    //             self.is_running = false;
-    //         }
-    //         xproto::XCB_CONFIGURE_NOTIFY => {
-    //             let cfg_event: &xcb::xcb_configure_notify_event_t = unsafe { transmute(e) };
-    //             if cfg_event.width as Real != self.window_aspects.0 ||
-    //                 cfg_event.height as Real != self.window_aspects.1
-    //             {
-    //                 if cfg_event.width > 0 && cfg_event.height > 0 {
-    //                     self.window_aspects.0 = cfg_event.width as Real;
-    //                     self.window_aspects.1 = cfg_event.height as Real;
-    //                     let e = EventType::WindowSize {
-    //                         w: self.window_aspects.0 as f64,
-    //                         h: self.window_aspects.1 as f64,
-    //                     };
-    //                     self.renderer.read().unwrap().on_event(Event::new(e));
-    //                     self.core_app.read().unwrap().on_event(Event::new(e));
-    //                 }
-    //             }
-    //         }
-    //         c @ _ => {
-    //             vxlogi!("Uncontrolled event: {:?}", c);
-    //         }
-    //     }
-    // }
+    fn translate(&self, e: *mut xcb::xcb_generic_event_t) -> Option<EventType> {
+        unsafe {
+            if (xproto::XCB_DESTROY_NOTIFY as u8 == ((*e).response_type & 0x7f)) ||
+                ((xproto::XCB_CLIENT_MESSAGE as u8 == ((*e).response_type & 0x7f)) &&
+                    ((*transmute::<
+                        *mut xcb::xcb_generic_event_t,
+                        *mut xcb::xcb_client_message_event_t,
+                    >(e)).data
+                        .data[0] == (*self.atom_wm_delete_window).atom))
+            {
+                return Some(EventType::Quit);
+            }
+        }
+        match unsafe { (*e).response_type as c_uint & 0x7F } {
+            xproto::XCB_CLIENT_MESSAGE => {
+                let client_msg: &mut xcb::xcb_client_message_event_t = unsafe { transmute(e) };
+                if client_msg.data.data[0] == unsafe { (*self.atom_wm_delete_window).atom } {
+                    return Some(EventType::Quit);
+                }
+            }
+            xproto::XCB_MOTION_NOTIFY => {
+                let pos = self.get_mouse_position();
+                return Some(EventType::MouseMove {
+                    delta_x: pos.0,
+                    delta_y: pos.1,
+                });
+            }
+            xproto::XCB_BUTTON_PRESS => {
+                let press: &mut xcb::xcb_button_press_event_t = unsafe { transmute(e) };
+                let m: xcb::xcb_button_index_t = unsafe { transmute(press.detail as u32) };
+                let m = match m {
+                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_1 => Mouse::Left,
+                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_2 => Mouse::Middle,
+                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_3 => Mouse::Right,
+                    _ => {
+                        vxlogi!("Unknown mouse button pressed.");
+                        Mouse::Left
+                    }
+                };
+                return Some(EventType::Press {
+                    button: Button::Mouse(m),
+                });
+            }
+            xproto::XCB_BUTTON_RELEASE => {
+                let release: &mut xcb::xcb_button_release_event_t = unsafe { transmute(e) };
+                let m: xcb::xcb_button_index_t = unsafe { transmute(release.detail as u32) };
+                let m = match m {
+                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_1 => Mouse::Left,
+                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_2 => Mouse::Middle,
+                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_3 => Mouse::Right,
+                    _ => {
+                        vxloge!("Unknown mouse button pressed.");
+                        Mouse::Left
+                    }
+                };
+                return Some(EventType::Release {
+                    button: Button::Mouse(m),
+                });
+            }
+            a @ xproto::XCB_KEY_PRESS | a @ xproto::XCB_KEY_RELEASE => {
+                let key_event: &xcb::xcb_key_release_event_t = unsafe { transmute(e) };
+                let b = Button::Keyboard(match key_event.detail {
+                    xproto::KEY_W => Keyboard::W,
+                    xproto::KEY_S => Keyboard::S,
+                    xproto::KEY_A => Keyboard::A,
+                    xproto::KEY_D => Keyboard::D,
+                    // xproto::KEY_P => { Keyboard::P },
+                    xproto::KEY_F1 => Keyboard::Function(1),
+                    k @ _ => {
+                        vxlogi!("Unknown key: {:?} presse", k);
+                        Keyboard::W
+                    }
+                });
+                return Some(if a == xproto::XCB_KEY_RELEASE {
+                    EventType::Release { button: b }
+                } else {
+                    EventType::Press { button: b }
+                });
+            }
+            xproto::XCB_DESTROY_NOTIFY => {
+                return Some(EventType::Quit);
+            }
+            xproto::XCB_CONFIGURE_NOTIFY => {
+                let cfg_event: &xcb::xcb_configure_notify_event_t = unsafe { transmute(e) };
+                // if cfg_event.width as Real != self.window_aspects.0 ||
+                //     cfg_event.height as Real != self.window_aspects.1
+                // {
+                if cfg_event.width > 0 && cfg_event.height > 0 {
+                    return Some(EventType::Window(Window::SizeChange {
+                        w: cfg_event.width as Real,
+                        h: cfg_event.height as Real,
+                        ratio: (cfg_event.width as Real) / (cfg_event.height as Real),
+                        pre_w: 0.0,
+                        pre_h: 0.0,
+                        pre_ratio: 0.0,
+                    }));
+                }
+                // }
+            }
+            c @ _ => {
+                vxlogi!("Uncontrolled event: {:?}", c);
+            }
+        }
+        return None;
+    }
 }

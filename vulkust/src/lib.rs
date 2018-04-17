@@ -15,6 +15,5 @@ pub mod render;
 pub mod system;
 // #[macro_use]
 // pub mod util;
-// #[cfg(vulkan)]
 // #[macro_use]
-// pub mod vulkan;
+pub mod vulkan;

@@ -1,64 +1,25 @@
-use std::sync::Arc;
-use super::super::util::cell::{DebugCell, DebugCellRefMut, DebugCellRef};
+// use super::super::vulkan::engine::Engine as AbstractEngine;
 
-#[cfg(feature = "d3d12")]
-use super::super::d3d12::engine::Engine;
-#[cfg(any(feature = "metal", target_os = "macos"))]
-use super::super::metal::engine::Engine;
-#[cfg(all(not(feature = "metal"), not(feature = "d3d12"), not(target_os = "macos")))]
-use super::super::vulkan::engine::Engine;
-
-use super::super::core::application::ApplicationTrait;
+use super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::core::event::Event;
-use super::super::system::os::OsApplication;
-use super::command::buffer::Buffer as CmdBuff;
-use super::scene::Scene;
+use super::super::system::application::OsApp;
 
-pub type RenderEngine<CoreApp> = Engine<CoreApp>;
+// use super::command::buffer::Buffer as CmdBuff;
+// use super::scene::Scene;
+use std::sync::{Arc, RwLock,};
 
-pub trait EngineTrait<CoreApp>
-where
-    CoreApp: ApplicationTrait,
-{
-    fn new() -> Self;
-    fn set_core_app(&mut self, c: &'static mut CoreApp);
-    fn set_os_app(&mut self, o: &'static mut OsApplication<CoreApp>);
-    fn initialize(&mut self);
-    fn on_event(&mut self, e: Event);
-    fn update(&mut self);
-    fn terminate(&mut self);
-    fn get_basic(&self) -> &Basic;
-    fn get_mut_basic(&mut self) -> &mut Basic;
+pub struct Engine {
+    core_app: Arc<RwLock<CoreAppTrait>>
 }
 
-pub struct Basic {
-    pub current_scene: Arc<DebugCell<Scene>>,
-}
-
-impl Basic {
-    pub fn new<CoreApp>(os_app: &mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: ApplicationTrait,
-    {
-        let engine = &mut os_app.render_engine;
-        Basic {
-            current_scene: os_app.asset_manager.get_scene(0, *engine),
+impl Engine {
+    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
+        Engine {
+            core_app,
         }
     }
 
-    pub fn get_mut_current_scene(&mut self) -> DebugCellRefMut<Scene + 'static> {
-        self.current_scene.borrow_mut()
-    }
+    pub fn update(&mut self) {}
 
-    pub fn get_current_scene(&self) -> DebugCellRef<Scene + 'static> {
-        self.current_scene.borrow()
-    }
-
-    pub fn update(&mut self, frame_index: usize) {
-        self.current_scene.borrow_mut().update(frame_index);
-    }
-
-    pub fn record(&mut self, cmd_buff: &mut CmdBuff, frame_index: usize) {
-        self.current_scene.borrow_mut().record(cmd_buff, frame_index);
-    }
+    pub fn on_event(&self, _e: Event) {}
 }

@@ -2,48 +2,42 @@ use std::sync::Arc;
 use std::mem::transmute;
 use super::super::core::application::ApplicationTrait;
 use super::super::core::event::Event;
-use super::super::render::engine::{Basic as BasicEngine, EngineTrait};
-use super::super::system::os::OsApplication;
-use super::super::system::vulkan as vk;
-use super::super::util::cell::DebugCell;
-use super::buffer::Manager as BufferManager;
-use super::command::buffer::Buffer as CmdBuffer;
-use super::command::pool::Pool as CmdPool;
-use super::device::logical::Logical as LogicalDevice;
-use super::device::physical::Physical as PhysicalDevice;
-use super::fence::Fence;
-use super::framebuffer::Framebuffer;
-use super::image::view::View as ImageView;
-use super::instance::Instance;
-use super::pipeline::Manager as PipelineManager;
-use super::render_pass::RenderPass;
-use super::surface::Surface;
-use super::swapchain::Swapchain;
-use super::synchronizer::semaphore::Semaphore;
+// use super::super::system::os::OsApplication;
+// use super::super::system::vulkan as vk;
+// use super::super::util::cell::DebugCell;
+// use super::buffer::Manager as BufferManager;
+// use super::command::buffer::Buffer as CmdBuffer;
+// use super::command::pool::Pool as CmdPool;
+// use super::device::logical::Logical as LogicalDevice;
+// use super::device::physical::Physical as PhysicalDevice;
+// use super::fence::Fence;
+// use super::framebuffer::Framebuffer;
+// use super::image::view::View as ImageView;
+// use super::instance::Instance;
+// use super::pipeline::Manager as PipelineManager;
+// use super::render_pass::RenderPass;
+// use super::surface::Surface;
+// use super::swapchain::Swapchain;
+// use super::synchronizer::semaphore::Semaphore;
 
-pub struct Engine<CoreApp>
-where
-    CoreApp: 'static + ApplicationTrait,
-{
-    pub core_app: &'static mut CoreApp,
-    pub os_app: &'static mut OsApplication<CoreApp>,
+pub struct Engine {
     pub instance: Arc<Instance>,
-    pub surface: Option<Arc<Surface>>,
-    pub physical_device: Option<Arc<PhysicalDevice>>,
-    pub logical_device: Option<Arc<LogicalDevice>>,
-    pub swapchain: Option<Arc<Swapchain>>,
-    pub depth_stencil_image_view: Option<Arc<ImageView>>,
-    pub render_pass: Option<Arc<RenderPass>>,
-    pub framebuffers: Vec<Arc<Framebuffer>>,
-    pub graphic_cmd_pool: Option<Arc<CmdPool>>,
-    pub transfer_cmd_pool: Option<Arc<CmdPool>>,
-    pub draw_commands: Vec<CmdBuffer>,
-    pub present_complete_semaphore: Option<Semaphore>,
-    pub render_complete_semaphore: Option<Semaphore>,
-    pub wait_fences: Vec<Fence>,
-    pub buffer_manager: Option<Arc<DebugCell<BufferManager>>>,
-    pub pipeline_manager: Option<Arc<DebugCell<PipelineManager>>>,
-    pub basic_engine: Option<BasicEngine>,
+    // pub surface: Option<Arc<Surface>>,
+    // pub physical_device: Option<Arc<PhysicalDevice>>,
+    // pub logical_device: Option<Arc<LogicalDevice>>,
+    // pub swapchain: Option<Arc<Swapchain>>,
+    // pub depth_stencil_image_view: Option<Arc<ImageView>>,
+    // pub render_pass: Option<Arc<RenderPass>>,
+    // pub framebuffers: Vec<Arc<Framebuffer>>,
+    // pub graphic_cmd_pool: Option<Arc<CmdPool>>,
+    // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
+    // pub draw_commands: Vec<CmdBuffer>,
+    // pub present_complete_semaphore: Option<Semaphore>,
+    // pub render_complete_semaphore: Option<Semaphore>,
+    // pub wait_fences: Vec<Fence>,
+    // pub buffer_manager: Option<Arc<DebugCell<BufferManager>>>,
+    // pub pipeline_manager: Option<Arc<DebugCell<PipelineManager>>>,
+    // pub basic_engine: Option<BasicEngine>,
 }
 
 impl<CoreApp> EngineTrait<CoreApp> for Engine<CoreApp>

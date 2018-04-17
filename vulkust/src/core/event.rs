@@ -1,5 +1,5 @@
 use super::object::{Object, create_id};
-use super::types::Id;
+use super::types::{Id, Real};
 
 #[derive(Debug, Copy, Clone)]
 pub enum Mouse {
@@ -89,11 +89,17 @@ pub enum Button {
 }
 
 #[derive(Debug, Copy, Clone)]
+pub enum Window {
+    SizeChange { w: Real, h: Real, ratio: Real, pre_w: Real, pre_h: Real, pre_ratio: Real },
+}
+
+#[derive(Debug, Copy, Clone)]
 pub enum Type {
     MouseMove { delta_x: f64, delta_y: f64 },
     Press { button: Button },
     Release { button: Button },
-    WindowSize { w: f64, h: f64 },
+    Window(Window),
+    Quit,
 }
 
 #[derive(Debug, Copy, Clone)]
