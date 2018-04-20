@@ -2,19 +2,13 @@
 // extern crate libc;
 // use std::os::raw::c_void as std_void;
 // use std::mem::transmute;
-use std::sync::{Arc, RwLock};
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
-use super::super::core::constants::{
-    DEFAULT_WINDOW_HEIGHT, 
-    DEFAULT_WINDOW_WIDTH,
-};
-use super::super::core::event::{
-    Event,
-    Type as EventType,
-};
-use super::super::render::engine::Engine as RenderEngine;
+use super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
+use super::super::core::event::{Event, Type as EventType};
 use super::super::core::types::Real;
+use super::super::render::engine::Engine as RenderEngine;
 use super::os::application::Application as OsApp;
+use std::sync::{Arc, RwLock};
 
 pub struct MouseInfo {
     pub x: Real,
@@ -40,10 +34,7 @@ impl Application {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
         let os_app = OsApp::new();
         let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
-        let mouse_info = MouseInfo {
-            x: 0.0,
-            y: 0.0,
-        };
+        let mouse_info = MouseInfo { x: 0.0, y: 0.0 };
         let window_info = WindowInfo {
             width: DEFAULT_WINDOW_WIDTH,
             height: DEFAULT_WINDOW_HEIGHT,
@@ -104,8 +95,8 @@ impl Application {
                         // terminate renderer
                         // terminate audio engine
                         // terminate physic engine
-                        break 'main_loop
-                    },
+                        break 'main_loop;
+                    }
                     _ => (),
                 }
             }

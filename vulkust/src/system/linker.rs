@@ -15,7 +15,7 @@ macro_rules! make_link {
         ]
     ) => (
         pub struct $struct_name {
-            
+            concat_idents!($function_name, _ptr): Option<$function_type>,
         }
     )
 }
@@ -24,10 +24,7 @@ impl Linker {
     pub fn new(library_name: &str) -> Self {
         let cs = CString::new(library_name).unwrap();
         Linker {
-            link: 
-                unsafe { 
-                    libc::dlopen(cs.as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL)
-                },
+            link: unsafe { libc::dlopen(cs.as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL) },
         }
     }
 

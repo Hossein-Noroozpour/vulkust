@@ -2,11 +2,11 @@
 extern crate vulkust;
 
 use vulkust::core::application::ApplicationTrait as CoreAppTrait;
-use vulkust::system::application::Application as SysApp;
-use vulkust::render::engine::Engine as RenderEngine;
 use vulkust::core::event::Event;
+use vulkust::render::engine::Engine as RenderEngine;
+use vulkust::system::application::Application as SysApp;
 
-use std::sync::{Arc, RwLock,};
+use std::sync::{Arc, RwLock};
 
 struct MyGame {
     x: u64,
@@ -14,14 +14,11 @@ struct MyGame {
 
 impl MyGame {
     pub fn new() -> Self {
-        MyGame {
-            x: 0,
-        }
+        MyGame { x: 0 }
     }
 }
 
 impl CoreAppTrait for MyGame {
-
     fn set_system_application(&mut self, _app: Arc<RwLock<SysApp>>) {}
 
     fn set_renderer(&mut self, _renderer: Arc<RwLock<RenderEngine>>) {}

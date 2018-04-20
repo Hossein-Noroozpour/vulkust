@@ -3,5 +3,4 @@ fn main() {
     println!("cargo:rustc-cfg=desktop_os");
     #[cfg(any(target_os = "ios", target_os = "macos"))]
     println!("cargo:rustc-cfg=apple_os");
-    
 }

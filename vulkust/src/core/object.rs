@@ -1,6 +1,6 @@
+use super::types::Id;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use super::types::Id;
 pub trait Object {
     fn get_id(&self) -> Id;
 }

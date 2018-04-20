@@ -1,27 +1,17 @@
 extern crate libc;
 
+use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
+use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
+use super::super::super::core::types::Real;
 use super::xcb;
 use super::xproto;
-use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
-use super::super::super::core::event::{
-    Button, 
-    Event, 
-    Type as EventType, 
-    Keyboard, 
-    Mouse,
-    Window,
-};
-use super::super::super::core::types::Real;
 // use super::super::super::core::asset::manager::Manager as AssetManager;
 // use super::super::file::File;
 
-use std::ptr::null_mut;
-use std::os::raw::{
-    c_int,
-    c_uint
-};
-use std::mem::transmute;
 use std::ffi::CString;
+use std::mem::transmute;
+use std::os::raw::{c_int, c_uint};
+use std::ptr::null_mut;
 
 pub struct Application {
     pub connection: *mut xcb::xcb_connection_t,
@@ -33,9 +23,8 @@ pub struct Application {
 impl Application {
     pub fn new() -> Self {
         let mut scr = 0 as c_int;
-        let connection: *mut xcb::xcb_connection_t = unsafe { 
-            xcb::xcb_connect(null_mut(), &mut scr) 
-        };
+        let connection: *mut xcb::xcb_connection_t =
+            unsafe { xcb::xcb_connect(null_mut(), &mut scr) };
         if connection == null_mut() {
             vxlogf!("Could not find a compatible Vulkan ICD!");
         }
@@ -50,25 +39,30 @@ impl Application {
         let window: xcb::xcb_window_t = unsafe { transmute(xcb::xcb_generate_id(connection)) };
         let mut value_list = vec![0u32; 32];
         value_list[0] = unsafe { (*screen).black_pixel };
-        value_list[1] = xcb::xcb_event_mask_t::XCB_EVENT_MASK_KEY_RELEASE as u32 |
-            xcb::xcb_event_mask_t::XCB_EVENT_MASK_KEY_PRESS as u32 |
-            xcb::xcb_event_mask_t::XCB_EVENT_MASK_EXPOSURE as u32 |
-            xcb::xcb_event_mask_t::XCB_EVENT_MASK_STRUCTURE_NOTIFY as u32 |
-            xcb::xcb_event_mask_t::XCB_EVENT_MASK_POINTER_MOTION as u32 |
-            xcb::xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_PRESS as u32 |
-            xcb::xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_RELEASE as u32;
+        value_list[1] = xcb::xcb_event_mask_t::XCB_EVENT_MASK_KEY_RELEASE as u32
+            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_KEY_PRESS as u32
+            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_EXPOSURE as u32
+            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_STRUCTURE_NOTIFY as u32
+            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_POINTER_MOTION as u32
+            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_PRESS as u32
+            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_RELEASE as u32;
         let value_mask =
-            xcb::xcb_cw_t::XCB_CW_BACK_PIXEL as u32 | 
-            xcb::xcb_cw_t::XCB_CW_EVENT_MASK as u32;
+            xcb::xcb_cw_t::XCB_CW_BACK_PIXEL as u32 | xcb::xcb_cw_t::XCB_CW_EVENT_MASK as u32;
         unsafe {
             xcb::xcb_create_window(
-                connection, xcb::XCB_COPY_FROM_PARENT as u8,
-                window, (*screen).root, 
-                0, 0, 
-                DEFAULT_WINDOW_WIDTH as u16, DEFAULT_WINDOW_HEIGHT as u16, 
+                connection,
+                xcb::XCB_COPY_FROM_PARENT as u8,
+                window,
+                (*screen).root,
+                0,
+                0,
+                DEFAULT_WINDOW_WIDTH as u16,
+                DEFAULT_WINDOW_HEIGHT as u16,
                 0,
                 xcb::xcb_window_class_t::XCB_WINDOW_CLASS_INPUT_OUTPUT as u16,
-                (*screen).root_visual, value_mask, value_list.as_ptr(),
+                (*screen).root_visual,
+                value_mask,
+                value_list.as_ptr(),
             );
         }
         /* Magic code that will send notification when window is destroyed */
@@ -77,11 +71,8 @@ impl Application {
         let reply = unsafe { xcb::xcb_intern_atom_reply(connection, cookie, null_mut()) };
         let cs = CString::new("WM_DELETE_WINDOW".to_string().into_bytes()).unwrap();
         let cookie2 = unsafe { xcb::xcb_intern_atom(connection, 0, 16, cs.as_ptr()) };
-        let atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t = unsafe { 
-            xcb::xcb_intern_atom_reply(
-                connection, cookie2, null_mut()
-            )
-        };
+        let atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t =
+            unsafe { xcb::xcb_intern_atom_reply(connection, cookie2, null_mut()) };
         let mouse_previous_state = (0.0, 0.0);
         let window_aspects = (DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
         unsafe {
@@ -166,12 +157,13 @@ impl Application {
 
     fn translate(&self, e: *mut xcb::xcb_generic_event_t) -> Option<EventType> {
         unsafe {
-            if (xproto::XCB_DESTROY_NOTIFY as u8 == ((*e).response_type & 0x7f)) ||
-                ((xproto::XCB_CLIENT_MESSAGE as u8 == ((*e).response_type & 0x7f)) &&
-                    ((*transmute::<
+            if (xproto::XCB_DESTROY_NOTIFY as u8 == ((*e).response_type & 0x7f))
+                || ((xproto::XCB_CLIENT_MESSAGE as u8 == ((*e).response_type & 0x7f))
+                    && ((*transmute::<
                         *mut xcb::xcb_generic_event_t,
                         *mut xcb::xcb_client_message_event_t,
-                    >(e)).data
+                    >(e))
+                        .data
                         .data[0] == (*self.atom_wm_delete_window).atom))
             {
                 return Some(EventType::Quit);

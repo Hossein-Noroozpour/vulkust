@@ -6311,8 +6311,8 @@ fn bindgen_test_layout_xcb_setup_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_setup_request_t)).authorization_protocol_name_len as *const _ as
-                usize
+            &(*(0 as *const xcb_setup_request_t)).authorization_protocol_name_len as *const _
+                as usize
         },
         6usize,
         concat!(
@@ -6324,8 +6324,8 @@ fn bindgen_test_layout_xcb_setup_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_setup_request_t)).authorization_protocol_data_len as *const _ as
-                usize
+            &(*(0 as *const xcb_setup_request_t)).authorization_protocol_data_len as *const _
+                as usize
         },
         8usize,
         concat!(
@@ -10889,8 +10889,8 @@ fn bindgen_test_layout_xcb_change_window_attributes_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_window_attributes_request_t)).major_opcode as *const _ as
-                usize
+            &(*(0 as *const xcb_change_window_attributes_request_t)).major_opcode as *const _
+                as usize
         },
         0usize,
         concat!(
@@ -11240,8 +11240,8 @@ fn bindgen_test_layout_xcb_get_window_attributes_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_get_window_attributes_reply_t)).map_is_installed as *const _ as
-                usize
+            &(*(0 as *const xcb_get_window_attributes_reply_t)).map_is_installed as *const _
+                as usize
         },
         25usize,
         concat!(
@@ -11265,8 +11265,8 @@ fn bindgen_test_layout_xcb_get_window_attributes_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_get_window_attributes_reply_t)).override_redirect as *const _ as
-                usize
+            &(*(0 as *const xcb_get_window_attributes_reply_t)).override_redirect as *const _
+                as usize
         },
         27usize,
         concat!(
@@ -11314,8 +11314,8 @@ fn bindgen_test_layout_xcb_get_window_attributes_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_get_window_attributes_reply_t)).do_not_propagate_mask as
-                *const _ as usize
+            &(*(0 as *const xcb_get_window_attributes_reply_t)).do_not_propagate_mask as *const _
+                as usize
         },
         40usize,
         concat!(
@@ -14673,8 +14673,8 @@ fn bindgen_test_layout_xcb_change_active_pointer_grab_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_active_pointer_grab_request_t)).major_opcode as *const _ as
-                usize
+            &(*(0 as *const xcb_change_active_pointer_grab_request_t)).major_opcode as *const _
+                as usize
         },
         0usize,
         concat!(
@@ -14734,8 +14734,8 @@ fn bindgen_test_layout_xcb_change_active_pointer_grab_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_active_pointer_grab_request_t)).event_mask as *const _ as
-                usize
+            &(*(0 as *const xcb_change_active_pointer_grab_request_t)).event_mask as *const _
+                as usize
         },
         12usize,
         concat!(
@@ -18371,8 +18371,8 @@ fn bindgen_test_layout_xcb_list_fonts_with_info_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_list_fonts_with_info_reply_t)).min_char_or_byte2 as *const _ as
-                usize
+            &(*(0 as *const xcb_list_fonts_with_info_reply_t)).min_char_or_byte2 as *const _
+                as usize
         },
         40usize,
         concat!(
@@ -18384,8 +18384,8 @@ fn bindgen_test_layout_xcb_list_fonts_with_info_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_list_fonts_with_info_reply_t)).max_char_or_byte2 as *const _ as
-                usize
+            &(*(0 as *const xcb_list_fonts_with_info_reply_t)).max_char_or_byte2 as *const _
+                as usize
         },
         42usize,
         concat!(
@@ -22013,8 +22013,8 @@ fn bindgen_test_layout_xcb_list_installed_colormaps_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_list_installed_colormaps_request_t)).major_opcode as *const _ as
-                usize
+            &(*(0 as *const xcb_list_installed_colormaps_request_t)).major_opcode as *const _
+                as usize
         },
         0usize,
         concat!(
@@ -22096,8 +22096,8 @@ fn bindgen_test_layout_xcb_list_installed_colormaps_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_list_installed_colormaps_reply_t)).response_type as *const _ as
-                usize
+            &(*(0 as *const xcb_list_installed_colormaps_reply_t)).response_type as *const _
+                as usize
         },
         0usize,
         concat!(
@@ -25280,8 +25280,8 @@ fn bindgen_test_layout_xcb_change_keyboard_mapping_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_keyboard_mapping_request_t)).major_opcode as *const _ as
-                usize
+            &(*(0 as *const xcb_change_keyboard_mapping_request_t)).major_opcode as *const _
+                as usize
         },
         0usize,
         concat!(
@@ -25293,8 +25293,8 @@ fn bindgen_test_layout_xcb_change_keyboard_mapping_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_keyboard_mapping_request_t)).keycode_count as *const _ as
-                usize
+            &(*(0 as *const xcb_change_keyboard_mapping_request_t)).keycode_count as *const _
+                as usize
         },
         1usize,
         concat!(
@@ -25318,8 +25318,8 @@ fn bindgen_test_layout_xcb_change_keyboard_mapping_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_keyboard_mapping_request_t)).first_keycode as *const _ as
-                usize
+            &(*(0 as *const xcb_change_keyboard_mapping_request_t)).first_keycode as *const _
+                as usize
         },
         4usize,
         concat!(
@@ -25331,8 +25331,8 @@ fn bindgen_test_layout_xcb_change_keyboard_mapping_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_keyboard_mapping_request_t)).keysyms_per_keycode as
-                *const _ as usize
+            &(*(0 as *const xcb_change_keyboard_mapping_request_t)).keysyms_per_keycode as *const _
+                as usize
         },
         5usize,
         concat!(
@@ -25520,8 +25520,8 @@ fn bindgen_test_layout_xcb_get_keyboard_mapping_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_get_keyboard_mapping_reply_t)).keysyms_per_keycode as *const _ as
-                usize
+            &(*(0 as *const xcb_get_keyboard_mapping_reply_t)).keysyms_per_keycode as *const _
+                as usize
         },
         1usize,
         concat!(
@@ -25620,8 +25620,8 @@ fn bindgen_test_layout_xcb_change_keyboard_control_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_keyboard_control_request_t)).major_opcode as *const _ as
-                usize
+            &(*(0 as *const xcb_change_keyboard_control_request_t)).major_opcode as *const _
+                as usize
         },
         0usize,
         concat!(
@@ -25815,8 +25815,8 @@ fn bindgen_test_layout_xcb_get_keyboard_control_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_get_keyboard_control_reply_t)).global_auto_repeat as *const _ as
-                usize
+            &(*(0 as *const xcb_get_keyboard_control_reply_t)).global_auto_repeat as *const _
+                as usize
         },
         1usize,
         concat!(
@@ -25858,8 +25858,8 @@ fn bindgen_test_layout_xcb_get_keyboard_control_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_get_keyboard_control_reply_t)).key_click_percent as *const _ as
-                usize
+            &(*(0 as *const xcb_get_keyboard_control_reply_t)).key_click_percent as *const _
+                as usize
         },
         12usize,
         concat!(
@@ -26054,8 +26054,8 @@ fn bindgen_test_layout_xcb_change_pointer_control_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_pointer_control_request_t)).acceleration_numerator as
-                *const _ as usize
+            &(*(0 as *const xcb_change_pointer_control_request_t)).acceleration_numerator
+                as *const _ as usize
         },
         4usize,
         concat!(
@@ -26067,8 +26067,8 @@ fn bindgen_test_layout_xcb_change_pointer_control_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_pointer_control_request_t)).acceleration_denominator as
-                *const _ as usize
+            &(*(0 as *const xcb_change_pointer_control_request_t)).acceleration_denominator
+                as *const _ as usize
         },
         6usize,
         concat!(
@@ -26092,8 +26092,8 @@ fn bindgen_test_layout_xcb_change_pointer_control_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_change_pointer_control_request_t)).do_acceleration as *const _ as
-                usize
+            &(*(0 as *const xcb_change_pointer_control_request_t)).do_acceleration as *const _
+                as usize
         },
         10usize,
         concat!(
@@ -26285,8 +26285,8 @@ fn bindgen_test_layout_xcb_get_pointer_control_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_get_pointer_control_reply_t)).acceleration_numerator as *const _ as
-                usize
+            &(*(0 as *const xcb_get_pointer_control_reply_t)).acceleration_numerator as *const _
+                as usize
         },
         8usize,
         concat!(
@@ -26298,8 +26298,8 @@ fn bindgen_test_layout_xcb_get_pointer_control_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_get_pointer_control_reply_t)).acceleration_denominator as
-                *const _ as usize
+            &(*(0 as *const xcb_get_pointer_control_reply_t)).acceleration_denominator as *const _
+                as usize
         },
         10usize,
         concat!(
@@ -27852,8 +27852,8 @@ fn bindgen_test_layout_xcb_set_modifier_mapping_request_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_set_modifier_mapping_request_t)).keycodes_per_modifier as
-                *const _ as usize
+            &(*(0 as *const xcb_set_modifier_mapping_request_t)).keycodes_per_modifier as *const _
+                as usize
         },
         1usize,
         concat!(
@@ -28086,8 +28086,8 @@ fn bindgen_test_layout_xcb_get_modifier_mapping_reply_t() {
     );
     assert_eq!(
         unsafe {
-            &(*(0 as *const xcb_get_modifier_mapping_reply_t)).keycodes_per_modifier as *const _ as
-                usize
+            &(*(0 as *const xcb_get_modifier_mapping_reply_t)).keycodes_per_modifier as *const _
+                as usize
         },
         1usize,
         concat!(

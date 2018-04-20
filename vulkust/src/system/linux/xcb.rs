@@ -24,8 +24,7 @@ pub type __off_t = ::std::os::raw::c_long;
 pub type __off64_t = ::std::os::raw::c_long;
 pub type __pid_t = ::std::os::raw::c_int;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct __fsid_t {
     pub __val: [::std::os::raw::c_int; 2usize],
 }
@@ -102,8 +101,7 @@ pub type register_t = ::std::os::raw::c_long;
 pub type __sig_atomic_t = ::std::os::raw::c_int;
 pub const XCB_COPY_FROM_PARENT: u64 = 0;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct __sigset_t {
     pub __val: [::std::os::raw::c_ulong; 16usize],
 }
@@ -114,8 +112,7 @@ impl ::std::default::Default for __sigset_t {
 }
 pub type sigset_t = __sigset_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct timespec {
     pub tv_sec: __time_t,
     pub tv_nsec: __syscall_slong_t,
@@ -126,8 +123,7 @@ impl ::std::default::Default for timespec {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct timeval {
     pub tv_sec: __time_t,
     pub tv_usec: __suseconds_t,
@@ -140,8 +136,7 @@ impl ::std::default::Default for timeval {
 pub type suseconds_t = __suseconds_t;
 pub type __fd_mask = ::std::os::raw::c_long;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct fd_set {
     pub __fds_bits: [__fd_mask; 16usize],
 }
@@ -182,8 +177,7 @@ impl ::std::default::Default for pthread_attr_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct __pthread_internal_list {
     pub __prev: *mut __pthread_internal_list,
     pub __next: *mut __pthread_internal_list,
@@ -224,8 +218,7 @@ impl ::std::default::Default for pthread_mutex_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct __pthread_mutex_s {
     pub __lock: ::std::os::raw::c_int,
     pub __count: ::std::os::raw::c_uint,
@@ -242,8 +235,7 @@ impl ::std::default::Default for __pthread_mutex_s {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct pthread_mutexattr_t {
     pub _bindgen_data_: [u32; 1usize],
 }
@@ -292,8 +284,7 @@ impl ::std::default::Default for pthread_cond_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Struct_Unnamed1 {
     pub __lock: ::std::os::raw::c_int,
     pub __futex: ::std::os::raw::c_uint,
@@ -310,8 +301,7 @@ impl ::std::default::Default for Struct_Unnamed1 {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct pthread_condattr_t {
     pub _bindgen_data_: [u32; 1usize],
 }
@@ -362,8 +352,7 @@ impl ::std::default::Default for pthread_rwlock_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Struct_Unnamed2 {
     pub __lock: ::std::os::raw::c_int,
     pub __nr_readers: ::std::os::raw::c_uint,
@@ -384,8 +373,7 @@ impl ::std::default::Default for Struct_Unnamed2 {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct pthread_rwlockattr_t {
     pub _bindgen_data_: [u64; 1usize],
 }
@@ -406,8 +394,7 @@ impl ::std::default::Default for pthread_rwlockattr_t {
 }
 pub type pthread_spinlock_t = ::std::os::raw::c_int;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct pthread_barrier_t {
     pub _bindgen_data_: [u64; 4usize],
 }
@@ -427,8 +414,7 @@ impl ::std::default::Default for pthread_barrier_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct pthread_barrierattr_t {
     pub _bindgen_data_: [u32; 1usize],
 }
@@ -472,8 +458,7 @@ pub type uintptr_t = usize;
 pub type intmax_t = ::std::os::raw::c_long;
 pub type uintmax_t = ::std::os::raw::c_ulong;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct iovec {
     pub iov_base: *mut ::std::os::raw::c_void,
     pub iov_len: size_t,
@@ -484,8 +469,7 @@ impl ::std::default::Default for iovec {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct sched_param {
     pub __sched_priority: ::std::os::raw::c_int,
 }
@@ -495,8 +479,7 @@ impl ::std::default::Default for sched_param {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct __sched_param {
     pub __sched_priority: ::std::os::raw::c_int,
 }
@@ -507,8 +490,7 @@ impl ::std::default::Default for __sched_param {
 }
 pub type __cpu_mask = ::std::os::raw::c_ulong;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct cpu_set_t {
     pub __bits: [__cpu_mask; 16usize],
 }
@@ -518,8 +500,7 @@ impl ::std::default::Default for cpu_set_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct tm {
     pub tm_sec: ::std::os::raw::c_int,
     pub tm_min: ::std::os::raw::c_int,
@@ -539,8 +520,7 @@ impl ::std::default::Default for tm {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct itimerspec {
     pub it_interval: timespec,
     pub it_value: timespec,
@@ -550,11 +530,12 @@ impl ::std::default::Default for itimerspec {
         unsafe { ::std::mem::zeroed() }
     }
 }
-pub enum sigevent { }
-pub enum __locale_data { }
+pub enum sigevent {
+}
+pub enum __locale_data {
+}
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct __locale_struct {
     pub __locales: [*mut __locale_data; 13usize],
     pub __ctype_b: *const ::std::os::raw::c_ushort,
@@ -638,8 +619,7 @@ pub enum Enum_Unnamed10 {
     PTHREAD_PROCESS_SHARED = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct _pthread_cleanup_buffer {
     pub __routine: ::std::option::Option<unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void)>,
     pub __arg: *mut ::std::os::raw::c_void,
@@ -666,8 +646,7 @@ pub enum Enum_Unnamed12 {
     PTHREAD_CANCEL_ASYNCHRONOUS = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct __pthread_unwind_buf_t {
     pub __cancel_jmp_buf: [Struct_Unnamed13; 1usize],
     pub __pad: [*mut ::std::os::raw::c_void; 4usize],
@@ -678,8 +657,7 @@ impl ::std::default::Default for __pthread_unwind_buf_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Struct_Unnamed13 {
     pub __cancel_jmp_buf: __jmp_buf,
     pub __mask_was_saved: ::std::os::raw::c_int,
@@ -690,8 +668,7 @@ impl ::std::default::Default for Struct_Unnamed13 {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct __pthread_cleanup_frame {
     pub __cancel_routine:
         ::std::option::Option<unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void)>,
@@ -704,11 +681,12 @@ impl ::std::default::Default for __pthread_cleanup_frame {
         unsafe { ::std::mem::zeroed() }
     }
 }
-pub enum __jmp_buf_tag { }
-pub enum xcb_connection_t { }
+pub enum __jmp_buf_tag {
+}
+pub enum xcb_connection_t {
+}
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_generic_iterator_t {
     pub data: *mut ::std::os::raw::c_void,
     pub rem: ::std::os::raw::c_int,
@@ -720,8 +698,7 @@ impl ::std::default::Default for xcb_generic_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_generic_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -734,8 +711,7 @@ impl ::std::default::Default for xcb_generic_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_generic_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -749,8 +725,7 @@ impl ::std::default::Default for xcb_generic_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_ge_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -767,8 +742,7 @@ impl ::std::default::Default for xcb_ge_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_generic_error_t {
     pub response_type: uint8_t,
     pub error_code: uint8_t,
@@ -786,8 +760,7 @@ impl ::std::default::Default for xcb_generic_error_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_void_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -797,8 +770,7 @@ impl ::std::default::Default for xcb_void_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_char2b_t {
     pub byte1: uint8_t,
     pub byte2: uint8_t,
@@ -809,8 +781,7 @@ impl ::std::default::Default for xcb_char2b_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_char2b_iterator_t {
     pub data: *mut xcb_char2b_t,
     pub rem: ::std::os::raw::c_int,
@@ -823,8 +794,7 @@ impl ::std::default::Default for xcb_char2b_iterator_t {
 }
 pub type xcb_window_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_window_iterator_t {
     pub data: *mut xcb_window_t,
     pub rem: ::std::os::raw::c_int,
@@ -837,8 +807,7 @@ impl ::std::default::Default for xcb_window_iterator_t {
 }
 pub type xcb_pixmap_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_pixmap_iterator_t {
     pub data: *mut xcb_pixmap_t,
     pub rem: ::std::os::raw::c_int,
@@ -851,8 +820,7 @@ impl ::std::default::Default for xcb_pixmap_iterator_t {
 }
 pub type xcb_cursor_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_cursor_iterator_t {
     pub data: *mut xcb_cursor_t,
     pub rem: ::std::os::raw::c_int,
@@ -865,8 +833,7 @@ impl ::std::default::Default for xcb_cursor_iterator_t {
 }
 pub type xcb_font_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_font_iterator_t {
     pub data: *mut xcb_font_t,
     pub rem: ::std::os::raw::c_int,
@@ -879,8 +846,7 @@ impl ::std::default::Default for xcb_font_iterator_t {
 }
 pub type xcb_gcontext_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_gcontext_iterator_t {
     pub data: *mut xcb_gcontext_t,
     pub rem: ::std::os::raw::c_int,
@@ -893,8 +859,7 @@ impl ::std::default::Default for xcb_gcontext_iterator_t {
 }
 pub type xcb_colormap_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_colormap_iterator_t {
     pub data: *mut xcb_colormap_t,
     pub rem: ::std::os::raw::c_int,
@@ -907,8 +872,7 @@ impl ::std::default::Default for xcb_colormap_iterator_t {
 }
 pub type xcb_atom_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_atom_iterator_t {
     pub data: *mut xcb_atom_t,
     pub rem: ::std::os::raw::c_int,
@@ -921,8 +885,7 @@ impl ::std::default::Default for xcb_atom_iterator_t {
 }
 pub type xcb_drawable_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_drawable_iterator_t {
     pub data: *mut xcb_drawable_t,
     pub rem: ::std::os::raw::c_int,
@@ -935,8 +898,7 @@ impl ::std::default::Default for xcb_drawable_iterator_t {
 }
 pub type xcb_fontable_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_fontable_iterator_t {
     pub data: *mut xcb_fontable_t,
     pub rem: ::std::os::raw::c_int,
@@ -949,8 +911,7 @@ impl ::std::default::Default for xcb_fontable_iterator_t {
 }
 pub type xcb_visualid_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_visualid_iterator_t {
     pub data: *mut xcb_visualid_t,
     pub rem: ::std::os::raw::c_int,
@@ -963,8 +924,7 @@ impl ::std::default::Default for xcb_visualid_iterator_t {
 }
 pub type xcb_timestamp_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_timestamp_iterator_t {
     pub data: *mut xcb_timestamp_t,
     pub rem: ::std::os::raw::c_int,
@@ -977,8 +937,7 @@ impl ::std::default::Default for xcb_timestamp_iterator_t {
 }
 pub type xcb_keysym_t = uint32_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_keysym_iterator_t {
     pub data: *mut xcb_keysym_t,
     pub rem: ::std::os::raw::c_int,
@@ -991,8 +950,7 @@ impl ::std::default::Default for xcb_keysym_iterator_t {
 }
 pub type xcb_keycode_t = uint8_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_keycode_iterator_t {
     pub data: *mut xcb_keycode_t,
     pub rem: ::std::os::raw::c_int,
@@ -1005,8 +963,7 @@ impl ::std::default::Default for xcb_keycode_iterator_t {
 }
 pub type xcb_button_t = uint8_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_button_iterator_t {
     pub data: *mut xcb_button_t,
     pub rem: ::std::os::raw::c_int,
@@ -1018,8 +975,7 @@ impl ::std::default::Default for xcb_button_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_point_t {
     pub x: int16_t,
     pub y: int16_t,
@@ -1030,8 +986,7 @@ impl ::std::default::Default for xcb_point_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_point_iterator_t {
     pub data: *mut xcb_point_t,
     pub rem: ::std::os::raw::c_int,
@@ -1043,8 +998,7 @@ impl ::std::default::Default for xcb_point_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_rectangle_t {
     pub x: int16_t,
     pub y: int16_t,
@@ -1057,8 +1011,7 @@ impl ::std::default::Default for xcb_rectangle_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_rectangle_iterator_t {
     pub data: *mut xcb_rectangle_t,
     pub rem: ::std::os::raw::c_int,
@@ -1070,8 +1023,7 @@ impl ::std::default::Default for xcb_rectangle_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_arc_t {
     pub x: int16_t,
     pub y: int16_t,
@@ -1086,8 +1038,7 @@ impl ::std::default::Default for xcb_arc_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_arc_iterator_t {
     pub data: *mut xcb_arc_t,
     pub rem: ::std::os::raw::c_int,
@@ -1099,8 +1050,7 @@ impl ::std::default::Default for xcb_arc_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_format_t {
     pub depth: uint8_t,
     pub bits_per_pixel: uint8_t,
@@ -1113,8 +1063,7 @@ impl ::std::default::Default for xcb_format_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_format_iterator_t {
     pub data: *mut xcb_format_t,
     pub rem: ::std::os::raw::c_int,
@@ -1137,8 +1086,7 @@ pub enum xcb_visual_class_t {
     XCB_VISUAL_CLASS_DIRECT_COLOR = 5,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_visualtype_t {
     pub visual_id: xcb_visualid_t,
     pub _class: uint8_t,
@@ -1155,8 +1103,7 @@ impl ::std::default::Default for xcb_visualtype_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_visualtype_iterator_t {
     pub data: *mut xcb_visualtype_t,
     pub rem: ::std::os::raw::c_int,
@@ -1168,8 +1115,7 @@ impl ::std::default::Default for xcb_visualtype_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_depth_t {
     pub depth: uint8_t,
     pub pad0: uint8_t,
@@ -1182,8 +1128,7 @@ impl ::std::default::Default for xcb_depth_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_depth_iterator_t {
     pub data: *mut xcb_depth_t,
     pub rem: ::std::os::raw::c_int,
@@ -1234,8 +1179,7 @@ pub enum xcb_backing_store_t {
     XCB_BACKING_STORE_ALWAYS = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_screen_t {
     pub root: xcb_window_t,
     pub default_colormap: xcb_colormap_t,
@@ -1260,8 +1204,7 @@ impl ::std::default::Default for xcb_screen_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_screen_iterator_t {
     pub data: *mut xcb_screen_t,
     pub rem: ::std::os::raw::c_int,
@@ -1273,8 +1216,7 @@ impl ::std::default::Default for xcb_screen_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_setup_request_t {
     pub byte_order: uint8_t,
     pub pad0: uint8_t,
@@ -1290,8 +1232,7 @@ impl ::std::default::Default for xcb_setup_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_setup_request_iterator_t {
     pub data: *mut xcb_setup_request_t,
     pub rem: ::std::os::raw::c_int,
@@ -1303,8 +1244,7 @@ impl ::std::default::Default for xcb_setup_request_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_setup_failed_t {
     pub status: uint8_t,
     pub reason_len: uint8_t,
@@ -1318,8 +1258,7 @@ impl ::std::default::Default for xcb_setup_failed_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_setup_failed_iterator_t {
     pub data: *mut xcb_setup_failed_t,
     pub rem: ::std::os::raw::c_int,
@@ -1331,8 +1270,7 @@ impl ::std::default::Default for xcb_setup_failed_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_setup_authenticate_t {
     pub status: uint8_t,
     pub pad0: [uint8_t; 5usize],
@@ -1344,8 +1282,7 @@ impl ::std::default::Default for xcb_setup_authenticate_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_setup_authenticate_iterator_t {
     pub data: *mut xcb_setup_authenticate_t,
     pub rem: ::std::os::raw::c_int,
@@ -1364,8 +1301,7 @@ pub enum xcb_image_order_t {
     XCB_IMAGE_ORDER_MSB_FIRST = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_setup_t {
     pub status: uint8_t,
     pub pad0: uint8_t,
@@ -1394,8 +1330,7 @@ impl ::std::default::Default for xcb_setup_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_setup_iterator_t {
     pub data: *mut xcb_setup_t,
     pub rem: ::std::os::raw::c_int,
@@ -1445,8 +1380,7 @@ pub enum xcb_window_enum_t {
     XCB_WINDOW_NONE = 0,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_key_press_event_t {
     pub response_type: uint8_t,
     pub detail: xcb_keycode_t,
@@ -1481,8 +1415,7 @@ pub enum xcb_button_mask_t {
     XCB_BUTTON_MASK_ANY = 32768,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_button_press_event_t {
     pub response_type: uint8_t,
     pub detail: xcb_button_t,
@@ -1513,8 +1446,7 @@ pub enum xcb_motion_t {
     XCB_MOTION_HINT = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_motion_notify_event_t {
     pub response_type: uint8_t,
     pub detail: uint8_t,
@@ -1559,8 +1491,7 @@ pub enum xcb_notify_mode_t {
     XCB_NOTIFY_MODE_WHILE_GRABBED = 3,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_enter_notify_event_t {
     pub response_type: uint8_t,
     pub detail: uint8_t,
@@ -1584,8 +1515,7 @@ impl ::std::default::Default for xcb_enter_notify_event_t {
 }
 pub type xcb_leave_notify_event_t = xcb_enter_notify_event_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_focus_in_event_t {
     pub response_type: uint8_t,
     pub detail: uint8_t,
@@ -1601,8 +1531,7 @@ impl ::std::default::Default for xcb_focus_in_event_t {
 }
 pub type xcb_focus_out_event_t = xcb_focus_in_event_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_keymap_notify_event_t {
     pub response_type: uint8_t,
     pub keys: [uint8_t; 31usize],
@@ -1613,8 +1542,7 @@ impl ::std::default::Default for xcb_keymap_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_expose_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1633,8 +1561,7 @@ impl ::std::default::Default for xcb_expose_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_graphics_exposure_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1655,8 +1582,7 @@ impl ::std::default::Default for xcb_graphics_exposure_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_no_exposure_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1680,8 +1606,7 @@ pub enum xcb_visibility_t {
     XCB_VISIBILITY_FULLY_OBSCURED = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_visibility_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1696,8 +1621,7 @@ impl ::std::default::Default for xcb_visibility_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_create_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1718,8 +1642,7 @@ impl ::std::default::Default for xcb_create_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_destroy_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1733,8 +1656,7 @@ impl ::std::default::Default for xcb_destroy_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_unmap_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1750,8 +1672,7 @@ impl ::std::default::Default for xcb_unmap_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_map_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1767,8 +1688,7 @@ impl ::std::default::Default for xcb_map_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_map_request_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1782,8 +1702,7 @@ impl ::std::default::Default for xcb_map_request_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_reparent_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1802,8 +1721,7 @@ impl ::std::default::Default for xcb_reparent_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_configure_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1825,8 +1743,7 @@ impl ::std::default::Default for xcb_configure_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_configure_request_event_t {
     pub response_type: uint8_t,
     pub stack_mode: uint8_t,
@@ -1847,8 +1764,7 @@ impl ::std::default::Default for xcb_configure_request_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_gravity_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1864,8 +1780,7 @@ impl ::std::default::Default for xcb_gravity_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_resize_request_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1887,8 +1802,7 @@ pub enum xcb_place_t {
     XCB_PLACE_ON_BOTTOM = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_circulate_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1913,8 +1827,7 @@ pub enum xcb_property_t {
     XCB_PROPERTY_DELETE = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_property_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -1931,8 +1844,7 @@ impl ::std::default::Default for xcb_property_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_selection_clear_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2028,8 +1940,7 @@ pub enum xcb_atom_enum_t {
     XCB_ATOM_WM_TRANSIENT_FOR = 68,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_selection_request_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2047,8 +1958,7 @@ impl ::std::default::Default for xcb_selection_request_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_selection_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2078,8 +1988,7 @@ pub enum xcb_colormap_enum_t {
     XCB_COLORMAP_NONE = 0,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_colormap_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2096,8 +2005,7 @@ impl ::std::default::Default for xcb_colormap_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_client_message_data_t {
     pub data: [u32; 5usize],
 }
@@ -2107,8 +2015,7 @@ impl ::std::default::Default for xcb_client_message_data_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_client_message_data_iterator_t {
     pub data: *mut xcb_client_message_data_t,
     pub rem: ::std::os::raw::c_int,
@@ -2120,8 +2027,7 @@ impl ::std::default::Default for xcb_client_message_data_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_client_message_event_t {
     pub response_type: uint8_t,
     pub format: uint8_t,
@@ -2144,8 +2050,7 @@ pub enum xcb_mapping_t {
     XCB_MAPPING_POINTER = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_mapping_notify_event_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2161,8 +2066,7 @@ impl ::std::default::Default for xcb_mapping_notify_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_ge_generic_event_t {
     pub response_type: uint8_t,
     pub extension: uint8_t,
@@ -2178,8 +2082,7 @@ impl ::std::default::Default for xcb_ge_generic_event_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_request_error_t {
     pub response_type: uint8_t,
     pub error_code: uint8_t,
@@ -2195,8 +2098,7 @@ impl ::std::default::Default for xcb_request_error_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_value_error_t {
     pub response_type: uint8_t,
     pub error_code: uint8_t,
@@ -2279,8 +2181,7 @@ pub enum xcb_gravity_t {
     XCB_GRAVITY_STATIC = 10,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_create_window_request_t {
     pub major_opcode: uint8_t,
     pub depth: uint8_t,
@@ -2302,8 +2203,7 @@ impl ::std::default::Default for xcb_create_window_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_change_window_attributes_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2325,8 +2225,7 @@ pub enum xcb_map_state_t {
     XCB_MAP_STATE_VIEWABLE = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_window_attributes_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -2336,8 +2235,7 @@ impl ::std::default::Default for xcb_get_window_attributes_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_window_attributes_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2350,8 +2248,7 @@ impl ::std::default::Default for xcb_get_window_attributes_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_window_attributes_reply_t {
     pub response_type: uint8_t,
     pub backing_store: uint8_t,
@@ -2379,8 +2276,7 @@ impl ::std::default::Default for xcb_get_window_attributes_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_destroy_window_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2393,8 +2289,7 @@ impl ::std::default::Default for xcb_destroy_window_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_destroy_subwindows_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2414,8 +2309,7 @@ pub enum xcb_set_mode_t {
     XCB_SET_MODE_DELETE = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_change_save_set_request_t {
     pub major_opcode: uint8_t,
     pub mode: uint8_t,
@@ -2428,8 +2322,7 @@ impl ::std::default::Default for xcb_change_save_set_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_reparent_window_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2445,8 +2338,7 @@ impl ::std::default::Default for xcb_reparent_window_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_map_window_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2459,8 +2351,7 @@ impl ::std::default::Default for xcb_map_window_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_map_subwindows_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2473,8 +2364,7 @@ impl ::std::default::Default for xcb_map_subwindows_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_unmap_window_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2487,8 +2377,7 @@ impl ::std::default::Default for xcb_unmap_window_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_unmap_subwindows_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2523,8 +2412,7 @@ pub enum xcb_stack_mode_t {
     XCB_STACK_MODE_OPPOSITE = 4,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_configure_window_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2546,8 +2434,7 @@ pub enum xcb_circulate_t {
     XCB_CIRCULATE_LOWER_HIGHEST = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_circulate_window_request_t {
     pub major_opcode: uint8_t,
     pub direction: uint8_t,
@@ -2560,8 +2447,7 @@ impl ::std::default::Default for xcb_circulate_window_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_geometry_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -2571,8 +2457,7 @@ impl ::std::default::Default for xcb_get_geometry_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_geometry_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2585,8 +2470,7 @@ impl ::std::default::Default for xcb_get_geometry_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_geometry_reply_t {
     pub response_type: uint8_t,
     pub depth: uint8_t,
@@ -2606,8 +2490,7 @@ impl ::std::default::Default for xcb_get_geometry_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_tree_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -2617,8 +2500,7 @@ impl ::std::default::Default for xcb_query_tree_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_tree_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2631,8 +2513,7 @@ impl ::std::default::Default for xcb_query_tree_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_tree_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2649,8 +2530,7 @@ impl ::std::default::Default for xcb_query_tree_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_intern_atom_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -2660,8 +2540,7 @@ impl ::std::default::Default for xcb_intern_atom_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_intern_atom_request_t {
     pub major_opcode: uint8_t,
     pub only_if_exists: uint8_t,
@@ -2675,8 +2554,7 @@ impl ::std::default::Default for xcb_intern_atom_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_intern_atom_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2690,8 +2568,7 @@ impl ::std::default::Default for xcb_intern_atom_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_atom_name_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -2701,8 +2578,7 @@ impl ::std::default::Default for xcb_get_atom_name_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_atom_name_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2715,8 +2591,7 @@ impl ::std::default::Default for xcb_get_atom_name_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_atom_name_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2739,8 +2614,7 @@ pub enum xcb_prop_mode_t {
     XCB_PROP_MODE_APPEND = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_change_property_request_t {
     pub major_opcode: uint8_t,
     pub mode: uint8_t,
@@ -2758,8 +2632,7 @@ impl ::std::default::Default for xcb_change_property_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_delete_property_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2779,8 +2652,7 @@ pub enum xcb_get_property_type_t {
     XCB_GET_PROPERTY_TYPE_ANY = 0,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_property_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -2790,8 +2662,7 @@ impl ::std::default::Default for xcb_get_property_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_property_request_t {
     pub major_opcode: uint8_t,
     pub _delete: uint8_t,
@@ -2808,8 +2679,7 @@ impl ::std::default::Default for xcb_get_property_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_property_reply_t {
     pub response_type: uint8_t,
     pub format: uint8_t,
@@ -2826,8 +2696,7 @@ impl ::std::default::Default for xcb_get_property_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_properties_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -2837,8 +2706,7 @@ impl ::std::default::Default for xcb_list_properties_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_properties_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2851,8 +2719,7 @@ impl ::std::default::Default for xcb_list_properties_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_properties_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2867,8 +2734,7 @@ impl ::std::default::Default for xcb_list_properties_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_selection_owner_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2883,8 +2749,7 @@ impl ::std::default::Default for xcb_set_selection_owner_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_selection_owner_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -2894,8 +2759,7 @@ impl ::std::default::Default for xcb_get_selection_owner_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_selection_owner_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2908,8 +2772,7 @@ impl ::std::default::Default for xcb_get_selection_owner_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_selection_owner_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -2923,8 +2786,7 @@ impl ::std::default::Default for xcb_get_selection_owner_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_convert_selection_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -2948,8 +2810,7 @@ pub enum xcb_send_event_dest_t {
     XCB_SEND_EVENT_DEST_ITEM_FOCUS = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_send_event_request_t {
     pub major_opcode: uint8_t,
     pub propagate: uint8_t,
@@ -2987,8 +2848,7 @@ pub enum xcb_cursor_enum_t {
     XCB_CURSOR_NONE = 0,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_grab_pointer_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -2998,8 +2858,7 @@ impl ::std::default::Default for xcb_grab_pointer_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_grab_pointer_request_t {
     pub major_opcode: uint8_t,
     pub owner_events: uint8_t,
@@ -3018,8 +2877,7 @@ impl ::std::default::Default for xcb_grab_pointer_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_grab_pointer_reply_t {
     pub response_type: uint8_t,
     pub status: uint8_t,
@@ -3032,8 +2890,7 @@ impl ::std::default::Default for xcb_grab_pointer_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_ungrab_pointer_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3057,8 +2914,7 @@ pub enum xcb_button_index_t {
     XCB_BUTTON_INDEX_5 = 5,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_grab_button_request_t {
     pub major_opcode: uint8_t,
     pub owner_events: uint8_t,
@@ -3079,8 +2935,7 @@ impl ::std::default::Default for xcb_grab_button_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_ungrab_button_request_t {
     pub major_opcode: uint8_t,
     pub button: uint8_t,
@@ -3095,8 +2950,7 @@ impl ::std::default::Default for xcb_ungrab_button_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_change_active_pointer_grab_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3112,8 +2966,7 @@ impl ::std::default::Default for xcb_change_active_pointer_grab_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_grab_keyboard_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3123,8 +2976,7 @@ impl ::std::default::Default for xcb_grab_keyboard_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_grab_keyboard_request_t {
     pub major_opcode: uint8_t,
     pub owner_events: uint8_t,
@@ -3141,8 +2993,7 @@ impl ::std::default::Default for xcb_grab_keyboard_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_grab_keyboard_reply_t {
     pub response_type: uint8_t,
     pub status: uint8_t,
@@ -3155,8 +3006,7 @@ impl ::std::default::Default for xcb_grab_keyboard_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_ungrab_keyboard_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3175,8 +3025,7 @@ pub enum xcb_grab_t {
     XCB_GRAB_ANY = 0,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_grab_key_request_t {
     pub major_opcode: uint8_t,
     pub owner_events: uint8_t,
@@ -3194,8 +3043,7 @@ impl ::std::default::Default for xcb_grab_key_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_ungrab_key_request_t {
     pub major_opcode: uint8_t,
     pub key: xcb_keycode_t,
@@ -3223,8 +3071,7 @@ pub enum xcb_allow_t {
     XCB_ALLOW_SYNC_BOTH = 7,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_allow_events_request_t {
     pub major_opcode: uint8_t,
     pub mode: uint8_t,
@@ -3237,8 +3084,7 @@ impl ::std::default::Default for xcb_allow_events_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_grab_server_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3250,8 +3096,7 @@ impl ::std::default::Default for xcb_grab_server_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_ungrab_server_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3263,8 +3108,7 @@ impl ::std::default::Default for xcb_ungrab_server_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_pointer_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3274,8 +3118,7 @@ impl ::std::default::Default for xcb_query_pointer_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_pointer_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3309,8 +3152,7 @@ impl ::std::default::Default for xcb_query_pointer_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_timecoord_t {
     pub time: xcb_timestamp_t,
     pub x: int16_t,
@@ -3322,8 +3164,7 @@ impl ::std::default::Default for xcb_timecoord_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_timecoord_iterator_t {
     pub data: *mut xcb_timecoord_t,
     pub rem: ::std::os::raw::c_int,
@@ -3335,8 +3176,7 @@ impl ::std::default::Default for xcb_timecoord_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_motion_events_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3346,8 +3186,7 @@ impl ::std::default::Default for xcb_get_motion_events_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_motion_events_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3362,8 +3201,7 @@ impl ::std::default::Default for xcb_get_motion_events_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_motion_events_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -3378,8 +3216,7 @@ impl ::std::default::Default for xcb_get_motion_events_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_translate_coordinates_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3389,8 +3226,7 @@ impl ::std::default::Default for xcb_translate_coordinates_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_translate_coordinates_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3406,8 +3242,7 @@ impl ::std::default::Default for xcb_translate_coordinates_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_translate_coordinates_reply_t {
     pub response_type: uint8_t,
     pub same_screen: uint8_t,
@@ -3423,8 +3258,7 @@ impl ::std::default::Default for xcb_translate_coordinates_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_warp_pointer_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3453,8 +3287,7 @@ pub enum xcb_input_focus_t {
     XCB_INPUT_FOCUS_FOLLOW_KEYBOARD = 3,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_input_focus_request_t {
     pub major_opcode: uint8_t,
     pub revert_to: uint8_t,
@@ -3468,8 +3301,7 @@ impl ::std::default::Default for xcb_set_input_focus_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_input_focus_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3479,8 +3311,7 @@ impl ::std::default::Default for xcb_get_input_focus_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_input_focus_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3492,8 +3323,7 @@ impl ::std::default::Default for xcb_get_input_focus_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_input_focus_reply_t {
     pub response_type: uint8_t,
     pub revert_to: uint8_t,
@@ -3507,8 +3337,7 @@ impl ::std::default::Default for xcb_get_input_focus_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_keymap_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3518,8 +3347,7 @@ impl ::std::default::Default for xcb_query_keymap_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_keymap_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3531,8 +3359,7 @@ impl ::std::default::Default for xcb_query_keymap_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_keymap_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -3546,8 +3373,7 @@ impl ::std::default::Default for xcb_query_keymap_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_open_font_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3562,8 +3388,7 @@ impl ::std::default::Default for xcb_open_font_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_close_font_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3583,8 +3408,7 @@ pub enum xcb_font_draw_t {
     XCB_FONT_DRAW_RIGHT_TO_LEFT = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_fontprop_t {
     pub name: xcb_atom_t,
     pub value: uint32_t,
@@ -3595,8 +3419,7 @@ impl ::std::default::Default for xcb_fontprop_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_fontprop_iterator_t {
     pub data: *mut xcb_fontprop_t,
     pub rem: ::std::os::raw::c_int,
@@ -3608,8 +3431,7 @@ impl ::std::default::Default for xcb_fontprop_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_charinfo_t {
     pub left_side_bearing: int16_t,
     pub right_side_bearing: int16_t,
@@ -3624,8 +3446,7 @@ impl ::std::default::Default for xcb_charinfo_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_charinfo_iterator_t {
     pub data: *mut xcb_charinfo_t,
     pub rem: ::std::os::raw::c_int,
@@ -3637,8 +3458,7 @@ impl ::std::default::Default for xcb_charinfo_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_font_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3648,8 +3468,7 @@ impl ::std::default::Default for xcb_query_font_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_font_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3662,8 +3481,7 @@ impl ::std::default::Default for xcb_query_font_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_font_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -3691,8 +3509,7 @@ impl ::std::default::Default for xcb_query_font_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_text_extents_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3702,8 +3519,7 @@ impl ::std::default::Default for xcb_query_text_extents_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_text_extents_request_t {
     pub major_opcode: uint8_t,
     pub odd_length: uint8_t,
@@ -3716,8 +3532,7 @@ impl ::std::default::Default for xcb_query_text_extents_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_text_extents_reply_t {
     pub response_type: uint8_t,
     pub draw_direction: uint8_t,
@@ -3737,8 +3552,7 @@ impl ::std::default::Default for xcb_query_text_extents_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_str_t {
     pub name_len: uint8_t,
 }
@@ -3748,8 +3562,7 @@ impl ::std::default::Default for xcb_str_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_str_iterator_t {
     pub data: *mut xcb_str_t,
     pub rem: ::std::os::raw::c_int,
@@ -3761,8 +3574,7 @@ impl ::std::default::Default for xcb_str_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_fonts_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3772,8 +3584,7 @@ impl ::std::default::Default for xcb_list_fonts_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_fonts_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3787,8 +3598,7 @@ impl ::std::default::Default for xcb_list_fonts_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_fonts_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -3803,8 +3613,7 @@ impl ::std::default::Default for xcb_list_fonts_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_fonts_with_info_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3814,8 +3623,7 @@ impl ::std::default::Default for xcb_list_fonts_with_info_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_fonts_with_info_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3829,8 +3637,7 @@ impl ::std::default::Default for xcb_list_fonts_with_info_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_fonts_with_info_reply_t {
     pub response_type: uint8_t,
     pub name_len: uint8_t,
@@ -3858,8 +3665,7 @@ impl ::std::default::Default for xcb_list_fonts_with_info_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_font_path_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3873,8 +3679,7 @@ impl ::std::default::Default for xcb_set_font_path_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_font_path_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -3884,8 +3689,7 @@ impl ::std::default::Default for xcb_get_font_path_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_font_path_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -3897,8 +3701,7 @@ impl ::std::default::Default for xcb_get_font_path_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_font_path_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -3913,8 +3716,7 @@ impl ::std::default::Default for xcb_get_font_path_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_create_pixmap_request_t {
     pub major_opcode: uint8_t,
     pub depth: uint8_t,
@@ -3930,8 +3732,7 @@ impl ::std::default::Default for xcb_create_pixmap_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_free_pixmap_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4048,8 +3849,7 @@ pub enum xcb_arc_mode_t {
     XCB_ARC_MODE_PIE_SLICE = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_create_gc_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4064,8 +3864,7 @@ impl ::std::default::Default for xcb_create_gc_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_change_gc_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4079,8 +3878,7 @@ impl ::std::default::Default for xcb_change_gc_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_copy_gc_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4095,8 +3893,7 @@ impl ::std::default::Default for xcb_copy_gc_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_dashes_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4120,8 +3917,7 @@ pub enum xcb_clip_ordering_t {
     XCB_CLIP_ORDERING_YX_BANDED = 3,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_clip_rectangles_request_t {
     pub major_opcode: uint8_t,
     pub ordering: uint8_t,
@@ -4136,8 +3932,7 @@ impl ::std::default::Default for xcb_set_clip_rectangles_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_free_gc_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4150,8 +3945,7 @@ impl ::std::default::Default for xcb_free_gc_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_clear_area_request_t {
     pub major_opcode: uint8_t,
     pub exposures: uint8_t,
@@ -4168,8 +3962,7 @@ impl ::std::default::Default for xcb_clear_area_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_copy_area_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4190,8 +3983,7 @@ impl ::std::default::Default for xcb_copy_area_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_copy_plane_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4220,8 +4012,7 @@ pub enum xcb_coord_mode_t {
     XCB_COORD_MODE_PREVIOUS = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_poly_point_request_t {
     pub major_opcode: uint8_t,
     pub coordinate_mode: uint8_t,
@@ -4235,8 +4026,7 @@ impl ::std::default::Default for xcb_poly_point_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_poly_line_request_t {
     pub major_opcode: uint8_t,
     pub coordinate_mode: uint8_t,
@@ -4250,8 +4040,7 @@ impl ::std::default::Default for xcb_poly_line_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_segment_t {
     pub x1: int16_t,
     pub y1: int16_t,
@@ -4264,8 +4053,7 @@ impl ::std::default::Default for xcb_segment_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_segment_iterator_t {
     pub data: *mut xcb_segment_t,
     pub rem: ::std::os::raw::c_int,
@@ -4277,8 +4065,7 @@ impl ::std::default::Default for xcb_segment_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_poly_segment_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4292,8 +4079,7 @@ impl ::std::default::Default for xcb_poly_segment_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_poly_rectangle_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4307,8 +4093,7 @@ impl ::std::default::Default for xcb_poly_rectangle_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_poly_arc_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4330,8 +4115,7 @@ pub enum xcb_poly_shape_t {
     XCB_POLY_SHAPE_CONVEX = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_fill_poly_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4348,8 +4132,7 @@ impl ::std::default::Default for xcb_fill_poly_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_poly_fill_rectangle_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4363,8 +4146,7 @@ impl ::std::default::Default for xcb_poly_fill_rectangle_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_poly_fill_arc_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4386,8 +4168,7 @@ pub enum xcb_image_format_t {
     XCB_IMAGE_FORMAT_Z_PIXMAP = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_put_image_request_t {
     pub major_opcode: uint8_t,
     pub format: uint8_t,
@@ -4408,8 +4189,7 @@ impl ::std::default::Default for xcb_put_image_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_image_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -4419,8 +4199,7 @@ impl ::std::default::Default for xcb_get_image_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_image_request_t {
     pub major_opcode: uint8_t,
     pub format: uint8_t,
@@ -4438,8 +4217,7 @@ impl ::std::default::Default for xcb_get_image_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_image_reply_t {
     pub response_type: uint8_t,
     pub depth: uint8_t,
@@ -4454,8 +4232,7 @@ impl ::std::default::Default for xcb_get_image_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_poly_text_8_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4471,8 +4248,7 @@ impl ::std::default::Default for xcb_poly_text_8_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_poly_text_16_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4488,8 +4264,7 @@ impl ::std::default::Default for xcb_poly_text_16_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_image_text_8_request_t {
     pub major_opcode: uint8_t,
     pub string_len: uint8_t,
@@ -4505,8 +4280,7 @@ impl ::std::default::Default for xcb_image_text_8_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_image_text_16_request_t {
     pub major_opcode: uint8_t,
     pub string_len: uint8_t,
@@ -4529,8 +4303,7 @@ pub enum xcb_colormap_alloc_t {
     XCB_COLORMAP_ALLOC_ALL = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_create_colormap_request_t {
     pub major_opcode: uint8_t,
     pub alloc: uint8_t,
@@ -4545,8 +4318,7 @@ impl ::std::default::Default for xcb_create_colormap_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_free_colormap_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4559,8 +4331,7 @@ impl ::std::default::Default for xcb_free_colormap_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_copy_colormap_and_free_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4574,8 +4345,7 @@ impl ::std::default::Default for xcb_copy_colormap_and_free_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_install_colormap_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4588,8 +4358,7 @@ impl ::std::default::Default for xcb_install_colormap_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_uninstall_colormap_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4602,8 +4371,7 @@ impl ::std::default::Default for xcb_uninstall_colormap_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_installed_colormaps_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -4613,8 +4381,7 @@ impl ::std::default::Default for xcb_list_installed_colormaps_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_installed_colormaps_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4627,8 +4394,7 @@ impl ::std::default::Default for xcb_list_installed_colormaps_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_installed_colormaps_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -4643,8 +4409,7 @@ impl ::std::default::Default for xcb_list_installed_colormaps_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_color_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -4654,8 +4419,7 @@ impl ::std::default::Default for xcb_alloc_color_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_color_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4672,8 +4436,7 @@ impl ::std::default::Default for xcb_alloc_color_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_color_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -4691,8 +4454,7 @@ impl ::std::default::Default for xcb_alloc_color_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_named_color_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -4702,8 +4464,7 @@ impl ::std::default::Default for xcb_alloc_named_color_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_named_color_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4718,8 +4479,7 @@ impl ::std::default::Default for xcb_alloc_named_color_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_named_color_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -4739,8 +4499,7 @@ impl ::std::default::Default for xcb_alloc_named_color_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_color_cells_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -4750,8 +4509,7 @@ impl ::std::default::Default for xcb_alloc_color_cells_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_color_cells_request_t {
     pub major_opcode: uint8_t,
     pub contiguous: uint8_t,
@@ -4766,8 +4524,7 @@ impl ::std::default::Default for xcb_alloc_color_cells_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_color_cells_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -4783,8 +4540,7 @@ impl ::std::default::Default for xcb_alloc_color_cells_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_color_planes_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -4794,8 +4550,7 @@ impl ::std::default::Default for xcb_alloc_color_planes_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_color_planes_request_t {
     pub major_opcode: uint8_t,
     pub contiguous: uint8_t,
@@ -4812,8 +4567,7 @@ impl ::std::default::Default for xcb_alloc_color_planes_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_alloc_color_planes_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -4832,8 +4586,7 @@ impl ::std::default::Default for xcb_alloc_color_planes_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_free_colors_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4855,8 +4608,7 @@ pub enum xcb_color_flag_t {
     XCB_COLOR_FLAG_BLUE = 4,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_coloritem_t {
     pub pixel: uint32_t,
     pub red: uint16_t,
@@ -4871,8 +4623,7 @@ impl ::std::default::Default for xcb_coloritem_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_coloritem_iterator_t {
     pub data: *mut xcb_coloritem_t,
     pub rem: ::std::os::raw::c_int,
@@ -4884,8 +4635,7 @@ impl ::std::default::Default for xcb_coloritem_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_store_colors_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4898,8 +4648,7 @@ impl ::std::default::Default for xcb_store_colors_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_store_named_color_request_t {
     pub major_opcode: uint8_t,
     pub flags: uint8_t,
@@ -4915,8 +4664,7 @@ impl ::std::default::Default for xcb_store_named_color_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_rgb_t {
     pub red: uint16_t,
     pub green: uint16_t,
@@ -4929,8 +4677,7 @@ impl ::std::default::Default for xcb_rgb_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_rgb_iterator_t {
     pub data: *mut xcb_rgb_t,
     pub rem: ::std::os::raw::c_int,
@@ -4942,8 +4689,7 @@ impl ::std::default::Default for xcb_rgb_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_colors_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -4953,8 +4699,7 @@ impl ::std::default::Default for xcb_query_colors_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_colors_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -4967,8 +4712,7 @@ impl ::std::default::Default for xcb_query_colors_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_colors_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -4983,8 +4727,7 @@ impl ::std::default::Default for xcb_query_colors_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_lookup_color_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -4994,8 +4737,7 @@ impl ::std::default::Default for xcb_lookup_color_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_lookup_color_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5010,8 +4752,7 @@ impl ::std::default::Default for xcb_lookup_color_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_lookup_color_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -5036,8 +4777,7 @@ pub enum xcb_pixmap_enum_t {
     XCB_PIXMAP_NONE = 0,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_create_cursor_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5066,8 +4806,7 @@ pub enum xcb_font_enum_t {
     XCB_FONT_NONE = 0,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_create_glyph_cursor_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5090,8 +4829,7 @@ impl ::std::default::Default for xcb_create_glyph_cursor_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_free_cursor_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5104,8 +4842,7 @@ impl ::std::default::Default for xcb_free_cursor_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_recolor_cursor_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5132,8 +4869,7 @@ pub enum xcb_query_shape_of_t {
     XCB_QUERY_SHAPE_OF_FASTEST_STIPPLE = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_best_size_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5143,8 +4879,7 @@ impl ::std::default::Default for xcb_query_best_size_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_best_size_request_t {
     pub major_opcode: uint8_t,
     pub _class: uint8_t,
@@ -5159,8 +4894,7 @@ impl ::std::default::Default for xcb_query_best_size_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_best_size_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -5175,8 +4909,7 @@ impl ::std::default::Default for xcb_query_best_size_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_extension_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5186,8 +4919,7 @@ impl ::std::default::Default for xcb_query_extension_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_extension_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5201,8 +4933,7 @@ impl ::std::default::Default for xcb_query_extension_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_query_extension_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -5219,8 +4950,7 @@ impl ::std::default::Default for xcb_query_extension_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_extensions_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5230,8 +4960,7 @@ impl ::std::default::Default for xcb_list_extensions_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_extensions_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5243,8 +4972,7 @@ impl ::std::default::Default for xcb_list_extensions_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_extensions_reply_t {
     pub response_type: uint8_t,
     pub names_len: uint8_t,
@@ -5258,8 +4986,7 @@ impl ::std::default::Default for xcb_list_extensions_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_change_keyboard_mapping_request_t {
     pub major_opcode: uint8_t,
     pub keycode_count: uint8_t,
@@ -5274,8 +5001,7 @@ impl ::std::default::Default for xcb_change_keyboard_mapping_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_keyboard_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5285,8 +5011,7 @@ impl ::std::default::Default for xcb_get_keyboard_mapping_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_keyboard_mapping_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5300,8 +5025,7 @@ impl ::std::default::Default for xcb_get_keyboard_mapping_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_keyboard_mapping_reply_t {
     pub response_type: uint8_t,
     pub keysyms_per_keycode: uint8_t,
@@ -5343,8 +5067,7 @@ pub enum xcb_auto_repeat_mode_t {
     XCB_AUTO_REPEAT_MODE_DEFAULT = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_change_keyboard_control_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5357,8 +5080,7 @@ impl ::std::default::Default for xcb_change_keyboard_control_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_keyboard_control_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5368,8 +5090,7 @@ impl ::std::default::Default for xcb_get_keyboard_control_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_keyboard_control_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5381,8 +5102,7 @@ impl ::std::default::Default for xcb_get_keyboard_control_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_keyboard_control_reply_t {
     pub response_type: uint8_t,
     pub global_auto_repeat: uint8_t,
@@ -5402,8 +5122,7 @@ impl ::std::default::Default for xcb_get_keyboard_control_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_bell_request_t {
     pub major_opcode: uint8_t,
     pub percent: int8_t,
@@ -5415,8 +5134,7 @@ impl ::std::default::Default for xcb_bell_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_change_pointer_control_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5433,8 +5151,7 @@ impl ::std::default::Default for xcb_change_pointer_control_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_pointer_control_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5444,8 +5161,7 @@ impl ::std::default::Default for xcb_get_pointer_control_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_pointer_control_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5457,8 +5173,7 @@ impl ::std::default::Default for xcb_get_pointer_control_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_pointer_control_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -5491,8 +5206,7 @@ pub enum xcb_exposures_t {
     XCB_EXPOSURES_DEFAULT = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_screen_saver_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5508,8 +5222,7 @@ impl ::std::default::Default for xcb_set_screen_saver_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_screen_saver_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5519,8 +5232,7 @@ impl ::std::default::Default for xcb_get_screen_saver_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_screen_saver_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5532,8 +5244,7 @@ impl ::std::default::Default for xcb_get_screen_saver_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_screen_saver_reply_t {
     pub response_type: uint8_t,
     pub pad0: uint8_t,
@@ -5568,8 +5279,7 @@ pub enum xcb_family_t {
     XCB_FAMILY_INTERNET_6 = 6,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_change_hosts_request_t {
     pub major_opcode: uint8_t,
     pub mode: uint8_t,
@@ -5584,8 +5294,7 @@ impl ::std::default::Default for xcb_change_hosts_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_host_t {
     pub family: uint8_t,
     pub pad0: uint8_t,
@@ -5597,8 +5306,7 @@ impl ::std::default::Default for xcb_host_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_host_iterator_t {
     pub data: *mut xcb_host_t,
     pub rem: ::std::os::raw::c_int,
@@ -5610,8 +5318,7 @@ impl ::std::default::Default for xcb_host_iterator_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_hosts_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5621,8 +5328,7 @@ impl ::std::default::Default for xcb_list_hosts_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_hosts_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5634,8 +5340,7 @@ impl ::std::default::Default for xcb_list_hosts_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_list_hosts_reply_t {
     pub response_type: uint8_t,
     pub mode: uint8_t,
@@ -5657,8 +5362,7 @@ pub enum xcb_access_control_t {
     XCB_ACCESS_CONTROL_ENABLE = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_access_control_request_t {
     pub major_opcode: uint8_t,
     pub mode: uint8_t,
@@ -5678,8 +5382,7 @@ pub enum xcb_close_down_t {
     XCB_CLOSE_DOWN_RETAIN_TEMPORARY = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_close_down_mode_request_t {
     pub major_opcode: uint8_t,
     pub mode: uint8_t,
@@ -5697,8 +5400,7 @@ pub enum xcb_kill_t {
     XCB_KILL_ALL_TEMPORARY = 0,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_kill_client_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5711,8 +5413,7 @@ impl ::std::default::Default for xcb_kill_client_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_rotate_properties_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5734,8 +5435,7 @@ pub enum xcb_screen_saver_t {
     XCB_SCREEN_SAVER_ACTIVE = 1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_force_screen_saver_request_t {
     pub major_opcode: uint8_t,
     pub mode: uint8_t,
@@ -5755,8 +5455,7 @@ pub enum xcb_mapping_status_t {
     XCB_MAPPING_STATUS_FAILURE = 2,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_pointer_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5766,8 +5465,7 @@ impl ::std::default::Default for xcb_set_pointer_mapping_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_pointer_mapping_request_t {
     pub major_opcode: uint8_t,
     pub map_len: uint8_t,
@@ -5779,8 +5477,7 @@ impl ::std::default::Default for xcb_set_pointer_mapping_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_pointer_mapping_reply_t {
     pub response_type: uint8_t,
     pub status: uint8_t,
@@ -5793,8 +5490,7 @@ impl ::std::default::Default for xcb_set_pointer_mapping_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_pointer_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5804,8 +5500,7 @@ impl ::std::default::Default for xcb_get_pointer_mapping_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_pointer_mapping_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5817,8 +5512,7 @@ impl ::std::default::Default for xcb_get_pointer_mapping_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_pointer_mapping_reply_t {
     pub response_type: uint8_t,
     pub map_len: uint8_t,
@@ -5845,8 +5539,7 @@ pub enum xcb_map_index_t {
     XCB_MAP_INDEX_5 = 7,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_modifier_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5856,8 +5549,7 @@ impl ::std::default::Default for xcb_set_modifier_mapping_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_modifier_mapping_request_t {
     pub major_opcode: uint8_t,
     pub keycodes_per_modifier: uint8_t,
@@ -5869,8 +5561,7 @@ impl ::std::default::Default for xcb_set_modifier_mapping_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_set_modifier_mapping_reply_t {
     pub response_type: uint8_t,
     pub status: uint8_t,
@@ -5883,8 +5574,7 @@ impl ::std::default::Default for xcb_set_modifier_mapping_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_modifier_mapping_cookie_t {
     pub sequence: ::std::os::raw::c_uint,
 }
@@ -5894,8 +5584,7 @@ impl ::std::default::Default for xcb_get_modifier_mapping_cookie_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_modifier_mapping_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5907,8 +5596,7 @@ impl ::std::default::Default for xcb_get_modifier_mapping_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_get_modifier_mapping_reply_t {
     pub response_type: uint8_t,
     pub keycodes_per_modifier: uint8_t,
@@ -5922,8 +5610,7 @@ impl ::std::default::Default for xcb_get_modifier_mapping_reply_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_no_operation_request_t {
     pub major_opcode: uint8_t,
     pub pad0: uint8_t,
@@ -5935,8 +5622,7 @@ impl ::std::default::Default for xcb_no_operation_request_t {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct xcb_auth_info_t {
     pub namelen: ::std::os::raw::c_int,
     pub name: *mut ::std::os::raw::c_char,
@@ -5948,9 +5634,11 @@ impl ::std::default::Default for xcb_auth_info_t {
         unsafe { ::std::mem::zeroed() }
     }
 }
-pub enum xcb_special_event { }
+pub enum xcb_special_event {
+}
 pub type xcb_special_event_t = xcb_special_event;
-pub enum xcb_extension_t { }
+pub enum xcb_extension_t {
+}
 extern "C" {
     pub static mut __tzname: [*mut ::std::os::raw::c_char; 2usize];
     pub static mut __daylight: ::std::os::raw::c_int;
@@ -6091,8 +5779,7 @@ extern "C" {
         __newthread: *mut pthread_t,
         __attr: *const pthread_attr_t,
         __start_routine: ::std::option::Option<
-            unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void)
-                -> *mut ::std::os::raw::c_void,
+            unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void) -> *mut ::std::os::raw::c_void,
         >,
         __arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;

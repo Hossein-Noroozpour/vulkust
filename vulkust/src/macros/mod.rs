@@ -3,11 +3,14 @@
 macro_rules! vulkust_start {
     ($App:ident) => {
         fn main() {
-            use vulkust::system::application::Application as SysApp;
             use vulkust::core::application::ApplicationTrait as CoreAppTrait;
+            use vulkust::system::application::Application as SysApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let sys_app = Arc::new(RwLock::new(SysApp::new(core_app.clone())));
-            core_app.write().unwrap().set_system_application(sys_app.clone());
+            core_app
+                .write()
+                .unwrap()
+                .set_system_application(sys_app.clone());
             sys_app.read().unwrap().run();
         }
     };
@@ -19,13 +22,18 @@ macro_rules! start {
     ($App:ident) => {
         #[allow(dead_code, non_snake_case)]
         #[no_mangle]
-        pub unsafe extern fn ANativeActivity_onCreate(
+        pub unsafe extern "C" fn ANativeActivity_onCreate(
             activity: *mut vulkust::system::android::activity::ANativeActivity,
             saved_state: *mut std::os::raw::c_void,
-            saved_state_size: usize) {
+            saved_state_size: usize,
+        ) {
             use std::mem::transmute;
             use vulkust::system::application::Application as SysApp;
-            SysApp::<$App>::new(activity, transmute(saved_state), transmute(saved_state_size));
+            SysApp::<$App>::new(
+                activity,
+                transmute(saved_state),
+                transmute(saved_state_size),
+            );
         }
     };
 }

@@ -1,5 +1,7 @@
 use super::vulkan::*;
 
-pub struct Linker {
-
+macro_rules! vkl {
+    ($()$) => {};
 }
+
+pub struct Linker {}

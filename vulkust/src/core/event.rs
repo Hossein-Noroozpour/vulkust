@@ -1,4 +1,4 @@
-use super::object::{Object, create_id};
+use super::object::{create_id, Object};
 use super::types::{Id, Real};
 
 #[derive(Debug, Copy, Clone)]
@@ -90,7 +90,14 @@ pub enum Button {
 
 #[derive(Debug, Copy, Clone)]
 pub enum Window {
-    SizeChange { w: Real, h: Real, ratio: Real, pre_w: Real, pre_h: Real, pre_ratio: Real },
+    SizeChange {
+        w: Real,
+        h: Real,
+        ratio: Real,
+        pre_w: Real,
+        pre_h: Real,
+        pre_ratio: Real,
+    },
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -112,7 +119,7 @@ impl Event {
     pub fn new(event_type: Type) -> Self {
         Event {
             id: create_id(),
-            event_type
+            event_type,
         }
     }
 }

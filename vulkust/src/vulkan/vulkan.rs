@@ -4,15 +4,10 @@
 extern crate winapi;
 
 use super::super::system::os;
-use std::os::raw::{
-    c_char, c_int, 
-    c_long, c_longlong, 
-    c_short, c_uchar, 
-    c_uint, c_ulong, 
-    c_ushort, c_void
-};
-use std::mem::{transmute, zeroed};
 use std::default::Default;
+use std::mem::{transmute, zeroed};
+use std::os::raw::{c_char, c_int, c_long, c_longlong, c_short, c_uchar, c_uint, c_ulong, c_ushort,
+                   c_void};
 
 pub type ptrdiff_t = isize;
 pub type size_t = usize;
@@ -3436,10 +3431,8 @@ pub type PFN_vkCreateInstance = unsafe extern "C" fn(
     pAllocator: *const VkAllocationCallbacks,
     pInstance: *mut VkInstance,
 ) -> VkResult;
-pub type PFN_vkDestroyInstance = unsafe extern "C" fn(
-    instance: VkInstance,
-    pAllocator: *const VkAllocationCallbacks,
-);
+pub type PFN_vkDestroyInstance =
+    unsafe extern "C" fn(instance: VkInstance, pAllocator: *const VkAllocationCallbacks);
 pub type PFN_vkEnumeratePhysicalDevices =
     unsafe extern "C" fn(
         instance: VkInstance,
@@ -3483,23 +3476,18 @@ pub type PFN_vkGetPhysicalDeviceMemoryProperties =
         physicalDevice: VkPhysicalDevice,
         pMemoryProperties: *mut VkPhysicalDeviceMemoryProperties,
     );
-pub type PFN_vkGetInstanceProcAddr = unsafe extern "C" fn(
-    instance: VkInstance,
-    pName: *const c_char,
-)
-    -> PFN_vkVoidFunction;
-pub type PFN_vkGetDeviceProcAddr = unsafe extern "C" fn(device: VkDevice, pName: *const c_char)
-    -> PFN_vkVoidFunction;
+pub type PFN_vkGetInstanceProcAddr =
+    unsafe extern "C" fn(instance: VkInstance, pName: *const c_char) -> PFN_vkVoidFunction;
+pub type PFN_vkGetDeviceProcAddr =
+    unsafe extern "C" fn(device: VkDevice, pName: *const c_char) -> PFN_vkVoidFunction;
 pub type PFN_vkCreateDevice = unsafe extern "C" fn(
     physicalDevice: VkPhysicalDevice,
     pCreateInfo: *const VkDeviceCreateInfo,
     pAllocator: *const VkAllocationCallbacks,
     pDevice: *mut VkDevice,
 ) -> VkResult;
-pub type PFN_vkDestroyDevice = unsafe extern "C" fn(
-    device: VkDevice,
-    pAllocator: *const VkAllocationCallbacks,
-);
+pub type PFN_vkDestroyDevice =
+    unsafe extern "C" fn(device: VkDevice, pAllocator: *const VkAllocationCallbacks);
 pub type PFN_vkEnumerateInstanceExtensionProperties =
     unsafe extern "C" fn(
         pLayerName: *const c_char,
@@ -3633,13 +3621,10 @@ pub type PFN_vkDestroyFence = unsafe extern "C" fn(
     fence: VkFence,
     pAllocator: *const VkAllocationCallbacks,
 );
-pub type PFN_vkResetFences = unsafe extern "C" fn(
-    device: VkDevice,
-    fenceCount: uint32_t,
-    pFences: *const VkFence,
-) -> VkResult;
-pub type PFN_vkGetFenceStatus = extern "C" fn(device: VkDevice, fence: VkFence)
-    -> VkResult;
+pub type PFN_vkResetFences =
+    unsafe extern "C" fn(device: VkDevice, fenceCount: uint32_t, pFences: *const VkFence)
+        -> VkResult;
+pub type PFN_vkGetFenceStatus = extern "C" fn(device: VkDevice, fence: VkFence) -> VkResult;
 pub type PFN_vkWaitForFences = unsafe extern "C" fn(
     device: VkDevice,
     fenceCount: uint32_t,
@@ -3669,8 +3654,7 @@ pub type PFN_vkDestroyEvent = unsafe extern "C" fn(
     event: VkEvent,
     pAllocator: *const VkAllocationCallbacks,
 );
-pub type PFN_vkGetEventStatus = extern "C" fn(device: VkDevice, event: VkEvent)
-    -> VkResult;
+pub type PFN_vkGetEventStatus = extern "C" fn(device: VkDevice, event: VkEvent) -> VkResult;
 pub type PFN_vkSetEvent = extern "C" fn(device: VkDevice, event: VkEvent) -> VkResult;
 pub type PFN_vkResetEvent = extern "C" fn(device: VkDevice, event: VkEvent) -> VkResult;
 pub type PFN_vkCreateQueryPool = unsafe extern "C" fn(
@@ -3903,11 +3887,8 @@ pub type PFN_vkDestroyRenderPass = unsafe extern "C" fn(
     renderPass: VkRenderPass,
     pAllocator: *const VkAllocationCallbacks,
 );
-pub type PFN_vkGetRenderAreaGranularity = unsafe extern "C" fn(
-    device: VkDevice,
-    renderPass: VkRenderPass,
-    pGranularity: *mut VkExtent2D,
-);
+pub type PFN_vkGetRenderAreaGranularity =
+    unsafe extern "C" fn(device: VkDevice, renderPass: VkRenderPass, pGranularity: *mut VkExtent2D);
 pub type PFN_vkCreateCommandPool =
     unsafe extern "C" fn(
         device: VkDevice,
@@ -3920,11 +3901,9 @@ pub type PFN_vkDestroyCommandPool = unsafe extern "C" fn(
     commandPool: VkCommandPool,
     pAllocator: *const VkAllocationCallbacks,
 );
-pub type PFN_vkResetCommandPool = extern "C" fn(
-    device: VkDevice,
-    commandPool: VkCommandPool,
-    flags: VkCommandPoolResetFlags,
-) -> VkResult;
+pub type PFN_vkResetCommandPool =
+    extern "C" fn(device: VkDevice, commandPool: VkCommandPool, flags: VkCommandPoolResetFlags)
+        -> VkResult;
 pub type PFN_vkAllocateCommandBuffers =
     unsafe extern "C" fn(
         device: VkDevice,
@@ -3942,12 +3921,9 @@ pub type PFN_vkBeginCommandBuffer =
         commandBuffer: VkCommandBuffer,
         pBeginInfo: *const VkCommandBufferBeginInfo,
     ) -> VkResult;
-pub type PFN_vkEndCommandBuffer = extern "C" fn(commandBuffer: VkCommandBuffer)
-    -> VkResult;
-pub type PFN_vkResetCommandBuffer = extern "C" fn(
-    commandBuffer: VkCommandBuffer,
-    flags: VkCommandBufferResetFlags,
-) -> VkResult;
+pub type PFN_vkEndCommandBuffer = extern "C" fn(commandBuffer: VkCommandBuffer) -> VkResult;
+pub type PFN_vkResetCommandBuffer =
+    extern "C" fn(commandBuffer: VkCommandBuffer, flags: VkCommandBufferResetFlags) -> VkResult;
 pub type PFN_vkCmdBindPipeline = extern "C" fn(
     commandBuffer: VkCommandBuffer,
     pipelineBindPoint: VkPipelineBindPoint,
@@ -3972,15 +3948,10 @@ pub type PFN_vkCmdSetDepthBias = extern "C" fn(
     depthBiasClamp: f32,
     depthBiasSlopeFactor: f32,
 );
-pub type PFN_vkCmdSetBlendConstants = extern "C" fn(
-    commandBuffer: VkCommandBuffer,
-    blendConstants: *mut f32,
-);
-pub type PFN_vkCmdSetDepthBounds = extern "C" fn(
-    commandBuffer: VkCommandBuffer,
-    minDepthBounds: f32,
-    maxDepthBounds: f32,
-);
+pub type PFN_vkCmdSetBlendConstants =
+    extern "C" fn(commandBuffer: VkCommandBuffer, blendConstants: *mut f32);
+pub type PFN_vkCmdSetDepthBounds =
+    extern "C" fn(commandBuffer: VkCommandBuffer, minDepthBounds: f32, maxDepthBounds: f32);
 pub type PFN_vkCmdSetStencilCompareMask = extern "C" fn(
     commandBuffer: VkCommandBuffer,
     faceMask: VkStencilFaceFlags,
@@ -4049,17 +4020,10 @@ pub type PFN_vkCmdDrawIndexedIndirect = extern "C" fn(
     drawCount: uint32_t,
     stride: uint32_t,
 );
-pub type PFN_vkCmdDispatch = extern "C" fn(
-    commandBuffer: VkCommandBuffer,
-    x: uint32_t,
-    y: uint32_t,
-    z: uint32_t,
-);
-pub type PFN_vkCmdDispatchIndirect = extern "C" fn(
-    commandBuffer: VkCommandBuffer,
-    buffer: VkBuffer,
-    offset: VkDeviceSize,
-);
+pub type PFN_vkCmdDispatch =
+    extern "C" fn(commandBuffer: VkCommandBuffer, x: uint32_t, y: uint32_t, z: uint32_t);
+pub type PFN_vkCmdDispatchIndirect =
+    extern "C" fn(commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize);
 pub type PFN_vkCmdCopyBuffer = unsafe extern "C" fn(
     commandBuffer: VkCommandBuffer,
     srcBuffer: VkBuffer,
@@ -4149,16 +4113,10 @@ pub type PFN_vkCmdResolveImage = unsafe extern "C" fn(
     regionCount: uint32_t,
     pRegions: *const VkImageResolve,
 );
-pub type PFN_vkCmdSetEvent = extern "C" fn(
-    commandBuffer: VkCommandBuffer,
-    event: VkEvent,
-    stageMask: VkPipelineStageFlags,
-);
-pub type PFN_vkCmdResetEvent = extern "C" fn(
-    commandBuffer: VkCommandBuffer,
-    event: VkEvent,
-    stageMask: VkPipelineStageFlags,
-);
+pub type PFN_vkCmdSetEvent =
+    extern "C" fn(commandBuffer: VkCommandBuffer, event: VkEvent, stageMask: VkPipelineStageFlags);
+pub type PFN_vkCmdResetEvent =
+    extern "C" fn(commandBuffer: VkCommandBuffer, event: VkEvent, stageMask: VkPipelineStageFlags);
 pub type PFN_vkCmdWaitEvents =
     unsafe extern "C" fn(
         commandBuffer: VkCommandBuffer,
@@ -4192,11 +4150,8 @@ pub type PFN_vkCmdBeginQuery = extern "C" fn(
     query: uint32_t,
     flags: VkQueryControlFlags,
 );
-pub type PFN_vkCmdEndQuery = extern "C" fn(
-    commandBuffer: VkCommandBuffer,
-    queryPool: VkQueryPool,
-    query: uint32_t,
-);
+pub type PFN_vkCmdEndQuery =
+    extern "C" fn(commandBuffer: VkCommandBuffer, queryPool: VkQueryPool, query: uint32_t);
 pub type PFN_vkCmdResetQueryPool = extern "C" fn(
     commandBuffer: VkCommandBuffer,
     queryPool: VkQueryPool,
@@ -4233,10 +4188,8 @@ pub type PFN_vkCmdBeginRenderPass =
         pRenderPassBegin: *const VkRenderPassBeginInfo,
         contents: VkSubpassContents,
     );
-pub type PFN_vkCmdNextSubpass = extern "C" fn(
-    commandBuffer: VkCommandBuffer,
-    contents: VkSubpassContents,
-);
+pub type PFN_vkCmdNextSubpass =
+    extern "C" fn(commandBuffer: VkCommandBuffer, contents: VkSubpassContents);
 pub type PFN_vkCmdEndRenderPass = extern "C" fn(commandBuffer: VkCommandBuffer);
 pub type PFN_vkCmdExecuteCommands = unsafe extern "C" fn(
     commandBuffer: VkCommandBuffer,
@@ -4452,10 +4405,8 @@ pub type PFN_vkAcquireNextImageKHR = unsafe extern "C" fn(
     fence: VkFence,
     pImageIndex: *mut uint32_t,
 ) -> VkResult;
-pub type PFN_vkQueuePresentKHR = unsafe extern "C" fn(
-    queue: VkQueue,
-    pPresentInfo: *const VkPresentInfoKHR,
-) -> VkResult;
+pub type PFN_vkQueuePresentKHR =
+    unsafe extern "C" fn(queue: VkQueue, pPresentInfo: *const VkPresentInfoKHR) -> VkResult;
 
 pub enum VkDisplayKHR_T {}
 
