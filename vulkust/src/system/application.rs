@@ -14,14 +14,7 @@ use super::super::core::event::{
 };
 use super::super::render::engine::Engine as RenderEngine;
 use super::super::core::types::Real;
-#[cfg(target_os = "android")]
-use super::android::application::Application as OsApp;
-#[cfg(target_os = "linux")]
-pub use super::linux::application::Application as OsApp;
-#[cfg(target_os = "macos")]
-use super::mac::application::Application as OsApp;
-#[cfg(target_os = "windows")]
-use super::windows::application::Application as OsApp;
+use super::os::application::Application as OsApp;
 
 pub struct MouseInfo {
     pub x: Real,
@@ -46,7 +39,7 @@ impl Application {
     #[cfg(desktop_os)]
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
         let os_app = OsApp::new();
-        let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone())));
+        let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
         let mouse_info = MouseInfo {
             x: 0.0,
             y: 0.0,
