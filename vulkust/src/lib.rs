@@ -1,5 +1,6 @@
 #![feature(repr_simd)]
 #![feature(integer_atomics)]
+#![feature(stmt_expr_attributes)] 
 
 #[cfg(appleos)]
 #[macro_use]
@@ -13,7 +14,5 @@ pub mod core;
 pub mod render;
 // pub mod sync;
 pub mod system;
-// #[macro_use]
-// pub mod util;
 // #[macro_use]
 pub mod vulkan;

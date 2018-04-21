@@ -67,13 +67,11 @@ macro_rules! vxloge {
 #[macro_export]
 #[cfg(desktop_os)]
 macro_rules! vxlogf {
-    ($fmt:expr) => {
-        let s = format!("Vulkust fatal message in file: {} line: {} {}", file!(), line!(), $fmt);
-        panic!("{}", s);
-    };
+    ($fmt:expr) => (
+        panic!("{}", format!("Vulkust fatal message in file: {} line: {} {}", file!(), line!(), $fmt));
+    );
     ($fmt:expr, $($arg:tt)*) => {
-        let s = format!("Vulkust fatal message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*));
-        panic!("{}", s);
+        panic!("{}", format!("Vulkust fatal message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*)));
     };
 }
 
@@ -130,4 +128,14 @@ macro_rules! logf {
             $crate::system::android::log::Priority::Fatal, &s);
         panic!("Terminated!");
     };
+}
+
+#[macro_export]
+macro_rules! vxunwrap {
+    ($e:expr) => (
+        match $e {
+            Some(v) => v,
+            None => vxlogf!("Unwrap failed!"),
+        }
+    )
 }

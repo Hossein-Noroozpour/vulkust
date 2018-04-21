@@ -9,7 +9,7 @@ pub mod engine;
 // pub mod fence;
 // pub mod framebuffer;
 // pub mod image;
-// pub mod instance;
+pub mod instance;
 pub mod linker;
 // pub mod memory;
 // pub mod pipeline;
