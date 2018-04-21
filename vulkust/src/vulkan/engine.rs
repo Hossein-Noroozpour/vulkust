@@ -3,6 +3,7 @@
 // use super::super::core::application::ApplicationTrait;
 // use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
+use super::linker::Linker;
 // use super::super::system::vulkan as vk;
 // use super::super::util::cell::DebugCell;
 // use super::buffer::Manager as BufferManager;
@@ -42,6 +43,7 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(os_app: &OsApp) -> Self {
+        let linker = Linker::new();
         Engine {
         //     core_app: unsafe { transmute(0usize) },
         //     os_app: unsafe { transmute(0usize) },
