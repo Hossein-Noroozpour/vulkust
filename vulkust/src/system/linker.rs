@@ -1,8 +1,8 @@
 #[cfg(target_os = "linux")]
 extern crate libc;
 use std::ffi::CString;
-use std::ptr::null_mut;
 use std::mem::transmute_copy;
+use std::ptr::null_mut;
 
 #[cfg(target_os = "linux")]
 pub struct Linker {
@@ -29,13 +29,16 @@ impl Linker {
         unsafe { libc::dlsym(self.link, cs.as_ptr()) }
     }
 
-    pub fn get_function<F>(&self, name: &str) -> Option<F> where F: Sized {
+    pub fn get_function<F>(&self, name: &str) -> Option<F>
+    where
+        F: Sized,
+    {
         let f = self.get_fun_ptr(name);
-        if f == null_mut() { 
+        if f == null_mut() {
             return None;
         } else {
-            unsafe { 
-                return Some(transmute_copy(&f)); 
+            unsafe {
+                return Some(transmute_copy(&f));
             }
         }
     }
