@@ -1,4 +1,4 @@
-use super::super::system::vulkan as vk;
+use super::vulkan as vk;
 use super::synchronizer::semaphore::Semaphore;
 use super::device::logical::Logical as LogicalDevice;
 use std::ptr::{null, null_mut};
@@ -29,17 +29,19 @@ impl Swapchain {
             }
         }
         if best_surface_format.format as u32 != vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM as u32 {
-            logi!("VK_FORMAT_R8G8B8A8_UNORM not found in the surface.");
-            best_surface_format = surface_formats[0];
             if best_surface_format.format as u32 == vk::VkFormat::VK_FORMAT_UNDEFINED as u32 {
                 best_surface_format.format = vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
+            } else {
+                vxlogi!("VK_FORMAT_R8G8B8A8_UNORM not found in the surface.");
+                best_surface_format = surface_formats[0];
+                vxlogi!("The specified format is {:?}", best_surface_format);
             }
         }
-        logi!("The specified format is {:?}", best_surface_format);
         let mut swapchain_images_count = surface_caps.minImageCount + 1;
         if surface_caps.maxImageCount > 0 && swapchain_images_count > surface_caps.maxImageCount {
             swapchain_images_count = surface_caps.maxImageCount;
         }
+        vxlogi!("Swapchain images count: {:?}", swapchain_images_count);
         let mut image_usage = vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32;
         let mut format_props = vk::VkFormatProperties::default();
         unsafe {
@@ -54,6 +56,10 @@ impl Swapchain {
         {
             image_usage |= vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT as u32;
         }
+        let queue_family_indices = [
+            logical_device.physical_device.graphics_queue_node_index,
+            logical_device.physical_device.present_queue_node_index,
+        ];
         let mut swapchain_create_info = vk::VkSwapchainCreateInfoKHR::default();
         swapchain_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -63,10 +69,15 @@ impl Swapchain {
         swapchain_create_info.imageColorSpace = best_surface_format.colorSpace;
         swapchain_create_info.imageExtent = surface_caps.currentExtent;
         swapchain_create_info.imageUsage = image_usage;
-        swapchain_create_info.preTransform =
-            vk::VkSurfaceTransformFlagBitsKHR::VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+        swapchain_create_info.preTransform = surface_caps.currentTransform;
         swapchain_create_info.imageArrayLayers = 1;
-        swapchain_create_info.imageSharingMode = vk::VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+        if queue_family_indices[0] != queue_family_indices[1] {
+            swapchain_create_info.imageSharingMode = vk::VkSharingMode::VK_SHARING_MODE_CONCURRENT;
+            swapchain_create_info.queueFamilyIndexCount = 2;
+            swapchain_create_info.pQueueFamilyIndices = queue_family_indices.as_ptr();
+        } else {
+            swapchain_create_info.imageSharingMode = vk::VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+        }
         swapchain_create_info.presentMode = vk::VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
         swapchain_create_info.clipped = 1 as vk::VkBool32;
         if ((surface_caps.supportedCompositeAlpha as u32) &
@@ -100,7 +111,7 @@ impl Swapchain {
             swapchain_create_info.compositeAlpha =
                 vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR;
         } else {
-            logf!("Error composite is unknown.");
+            vxlogf!("Error composite is unknown.");
         }
         let mut vk_data = 0 as vk::VkSwapchainKHR;
         vulkan_check!(vk::vkCreateSwapchainKHR(

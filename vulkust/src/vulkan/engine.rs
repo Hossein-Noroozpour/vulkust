@@ -17,7 +17,7 @@ use super::instance::Instance;
 // use super::pipeline::Manager as PipelineManager;
 // use super::render_pass::RenderPass;
 use super::surface::Surface;
-// use super::swapchain::Swapchain;
+use super::swapchain::Swapchain;
 // use super::synchronizer::semaphore::Semaphore;
 
 pub struct Engine {
@@ -25,7 +25,7 @@ pub struct Engine {
     pub surface: Arc<Surface>,
     pub physical_device: Arc<PhysicalDevice>,
     pub logical_device: Arc<LogicalDevice>,
-    // pub swapchain: Option<Arc<Swapchain>>,
+    pub swapchain: Arc<Swapchain>,
     // pub depth_stencil_image_view: Option<Arc<ImageView>>,
     // pub render_pass: Option<Arc<RenderPass>>,
     // pub framebuffers: Vec<Arc<Framebuffer>>,

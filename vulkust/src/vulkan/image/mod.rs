@@ -1,6 +1,6 @@
 pub mod view;
 
-use super::super::system::vulkan as vk;
+use super::vulkan as vk;
 use super::device::logical::Logical as LogicalDevice;
 use super::memory::allocate_with_requirements;
 
