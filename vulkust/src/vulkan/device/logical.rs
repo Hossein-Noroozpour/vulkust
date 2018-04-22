@@ -1,10 +1,9 @@
-use std::sync::Arc;
-use std::ptr::null;
-use std::default::Default;
-use std::collections::HashSet;
-use super::super::super::system::vulkan as vk;
+use super::super::super::core::string::{cstrings_to_ptrs, strings_to_cstrings};
+use super::super::vulkan as vk;
 use super::physical::Physical;
-use super::super::super::util::string::{cstrings_to_ptrs, strings_to_cstrings};
+use std::collections::HashSet;
+use std::ptr::null;
+use std::sync::Arc;
 
 pub struct Logical {
     pub physical_device: Arc<Physical>,
@@ -13,7 +12,7 @@ pub struct Logical {
 }
 
 impl Logical {
-    pub fn new(physical_device: Arc<Physical>) -> Self {
+    pub fn new(physical_device: &Arc<Physical>) -> Self {
         let mut device_extensions = Vec::new();
         device_extensions.push("VK_KHR_swapchain".to_string());
         let device_extensions = strings_to_cstrings(device_extensions);
@@ -59,7 +58,7 @@ impl Logical {
             );
         }
         Logical {
-            physical_device: physical_device,
+            physical_device: physical_device.clone(),
             vk_data: vk_data,
             vk_graphic_queue: vk_graphic_queue,
         }

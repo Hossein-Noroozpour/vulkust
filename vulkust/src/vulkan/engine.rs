@@ -8,7 +8,7 @@ use super::super::system::os::application::Application as OsApp;
 // use super::buffer::Manager as BufferManager;
 // use super::command::buffer::Buffer as CmdBuffer;
 // use super::command::pool::Pool as CmdPool;
-// use super::device::logical::Logical as LogicalDevice;
+use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 // use super::fence::Fence;
 // use super::framebuffer::Framebuffer;
@@ -24,7 +24,7 @@ pub struct Engine {
     pub instance: Arc<Instance>,
     pub surface: Arc<Surface>,
     pub physical_device: Arc<PhysicalDevice>,
-    // pub logical_device: Option<Arc<LogicalDevice>>,
+    pub logical_device: Arc<LogicalDevice>,
     // pub swapchain: Option<Arc<Swapchain>>,
     // pub depth_stencil_image_view: Option<Arc<ImageView>>,
     // pub render_pass: Option<Arc<RenderPass>>,
@@ -45,13 +45,15 @@ impl Engine {
         let instance = Arc::new(Instance::new());
         let surface = Arc::new(Surface::new(&instance, os_app));
         let physical_device = Arc::new(PhysicalDevice::new(&surface));
+        let logical_device = Arc::new(LogicalDevice::new(&physical_device));
+
         Engine {
             //     core_app: unsafe { transmute(0usize) },
             //     os_app: unsafe { transmute(0usize) },
             instance,
             surface,
             physical_device,
-            //     logical_device: None,
+            logical_device,
             //     swapchain: None,
             //     depth_stencil_image_view: None,
             //     render_pass: None,
