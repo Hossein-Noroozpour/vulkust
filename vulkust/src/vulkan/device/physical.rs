@@ -46,18 +46,18 @@ impl Physical {
 
     fn find_device(surface: &Arc<Surface>) -> (vk::VkPhysicalDevice, u32, u32, u32, u32) {
         let devices = Self::enumerate_devices(surface.instance.vk_data);
-        for device in devices {
-            if Self::device_is_discrete(device) {
-                match Self::fetch_queues(device) {
-                    Some((g, t, c, p)) => return (device, g, t, c, p),
+        for device in &devices {
+            if Self::device_is_discrete(*device) {
+                match Self::fetch_queues(*device, surface) {
+                    Some((g, t, c, p)) => return (*device, g, t, c, p),
                     None => {}
                 }
             }
         }
-        for device in devices {
-            if !Self::device_is_discrete(device) {
-                match Self::fetch_queues(device) {
-                    Some((g, t, c, p)) => return (device, g, t, c, p),
+        for device in &devices {
+            if !Self::device_is_discrete(*device) {
+                match Self::fetch_queues(*device, surface) {
+                    Some((g, t, c, p)) => return (*device, g, t, c, p),
                     None => {}
                 }
             }
@@ -94,30 +94,96 @@ impl Physical {
         devices
     }
 
-    fn fetch_queues(device: vk::VkPhysicalDevice) -> Option<(u32, u32, u32, u32)> {
+    fn fetch_queues(device: vk::VkPhysicalDevice, surface: &Arc<Surface>) -> Option<(u32, u32, u32, u32)> {
         let queue_family_properties = Self::get_device_queue_family_properties(device);
         if queue_family_properties.len() == 0 {
             return None;
         }
-        let mut supports_present = vec![false; queue_family_properties.len()];
-        None
-    }
+        let mut graphics_queue_node_index = u32::max_value();
+        let mut transfer_queue_node_index = u32::max_value();
+        let mut compute_queue_node_index = u32::max_value();
+        let mut present_queue_node_index = u32::max_value();
+        let mut temp_queue_node_index = u32::max_value();
 
-    fn choose_best_device(
-        devices: &Vec<vk::VkPhysicalDevice>,
-        surface: &Arc<Surface>,
-    ) -> (vk::VkPhysicalDevice, u32, u32, u32, u32) {
-        for d in devices {
-            let score = Self::score_device(*d, surface);
-            if score.score > highest_score.score {
-                highest_score = score;
-                device = *d;
+        for i in 0..(queue_family_properties.len() as u32) {
+            let ref queue_family = queue_family_properties[i as usize];
+            if queue_family.queueCount > 0 && (queue_family.queueFlags as u32 & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32) != 0 {
+                graphics_queue_node_index = i;
+                break;
             }
         }
-        if highest_score.score < 0 {
-            vxlogf!("No appropriate device have been found!");
+
+        if graphics_queue_node_index == u32::max_value() {
+            return None;
         }
-        return (device, highest_score);
+
+        for i in 0..(queue_family_properties.len() as u32) {
+            let mut b = 0 as vk::VkBool32;
+            unsafe {
+                vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
+            }
+            let ref queue_family = queue_family_properties[i as usize];
+            if b != 0 && queue_family.queueCount > 0 {
+                present_queue_node_index = i;
+                break;
+            }
+        }
+
+        if present_queue_node_index == u32::max_value() {
+            return None;
+        }
+
+        for i in 0..(queue_family_properties.len() as u32) {
+            let ref queue_family = queue_family_properties[i as usize];
+            if queue_family.queueCount > 0 && (queue_family.queueFlags as u32 & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32) != 0 {
+                if i == graphics_queue_node_index || i == present_queue_node_index {
+                    temp_queue_node_index = i;
+                    continue;
+                } else {
+                    compute_queue_node_index = i;
+                    break;
+                }
+            }
+        }
+
+        if compute_queue_node_index == u32::max_value() {
+            if temp_queue_node_index == u32::max_value() {
+                return None;
+            } else {
+                compute_queue_node_index = temp_queue_node_index;
+            }
+        }
+
+        temp_queue_node_index = u32::max_value();
+
+        for i in 0..(queue_family_properties.len() as u32) {
+            let ref queue_family = queue_family_properties[i as usize];
+            if queue_family.queueCount > 0 && (queue_family.queueFlags as u32 & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32) != 0 {
+                if i == graphics_queue_node_index || 
+                    i == present_queue_node_index ||
+                    i == compute_queue_node_index {
+                    temp_queue_node_index = i;
+                    continue;
+                } else {
+                    transfer_queue_node_index = i;
+                    break;
+                }
+            }
+        }
+
+        if transfer_queue_node_index == u32::max_value() {
+            if temp_queue_node_index == u32::max_value() {
+                return None;
+            } else {
+                transfer_queue_node_index = temp_queue_node_index;
+            }
+        }
+
+        return Some((
+            graphics_queue_node_index,
+            transfer_queue_node_index,
+            compute_queue_node_index,
+            present_queue_node_index));
     }
 
     fn get_device_queue_family_properties(
@@ -143,115 +209,6 @@ impl Physical {
 
     pub fn get_queue_family_properties(&self) -> Vec<vk::VkQueueFamilyProperties> {
         Self::get_device_queue_family_properties(self.vk_data)
-    }
-
-    fn score_device(device: vk::VkPhysicalDevice, surface: &Arc<Surface>) -> ScoreIndices {
-        let mut score_indices = ScoreIndices {
-            score: -1,
-            graphics_queue_node_index: u32::max_value(),
-            transfer_queue_node_index: u32::max_value(),
-            compute_queue_node_index: u32::max_value(),
-            present_queue_node_index: u32::max_value(),
-        };
-        let queue_family_properties = Self::get_device_queue_family_properties(device);
-        if queue_family_properties.len() == 0 {
-            return score_indices;
-        }
-        let mut supports_present = vec![false; queue_family_properties.len()];
-        use std::ffi::CString;
-        let vk_proc_name = CString::new("vkGetPhysicalDeviceSurfaceSupportKHR").unwrap();
-        let vk_get_physical_device_surface_support_khr:
-            vk::PFN_vkGetPhysicalDeviceSurfaceSupportKHR = unsafe { transmute(
-                vk::vkGetInstanceProcAddr(
-                    surface.instance.vk_data, vk_proc_name.as_ptr()))};
-        // let pfn
-        for i in 0..(queue_family_properties.len() as u32) {
-            let mut b = 0 as vk::VkBool32;
-            unsafe {
-                vk_get_physical_device_surface_support_khr(device, i, surface.vk_data, &mut b);
-                // vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
-            }
-            if b != 0 {
-                supports_present[i as usize] = true;
-            }
-        }
-        for i in 0..queue_family_properties.len() {
-            if ((queue_family_properties[i].queueFlags as u32)
-                & (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0
-                && ((queue_family_properties[i].queueFlags as u32)
-                    & (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0
-                && ((queue_family_properties[i].queueFlags as u32)
-                    & (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0
-                && supports_present[i]
-            {
-                score_indices.score = 100;
-                score_indices.graphics_queue_node_index = i as u32;
-                score_indices.transfer_queue_node_index = i as u32;
-                score_indices.compute_queue_node_index = i as u32;
-                score_indices.present_queue_node_index = i as u32;
-                return score_indices;
-            }
-            if ((queue_family_properties[i].queueFlags as u32)
-                & (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0
-            {
-                score_indices.graphics_queue_node_index = i as u32;
-            }
-            if ((queue_family_properties[i].queueFlags as u32)
-                & (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0
-            {
-                score_indices.transfer_queue_node_index = i as u32;
-            }
-            if ((queue_family_properties[i].queueFlags as u32)
-                & (vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)) != 0
-            {
-                score_indices.compute_queue_node_index = i as u32;
-            }
-            if supports_present[i] {
-                score_indices.present_queue_node_index = i as u32;
-            }
-        }
-        for i in 0..queue_family_properties.len() {
-            if ((queue_family_properties[i].queueFlags as u32)
-                & (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0
-                && ((queue_family_properties[i].queueFlags as u32)
-                    & (vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)) != 0
-                && supports_present[i]
-            {
-                if score_indices.compute_queue_node_index != u32::max_value() {
-                    score_indices.score = 90;
-                } else {
-                    score_indices.score = 50;
-                }
-                score_indices.graphics_queue_node_index = i as u32;
-                score_indices.transfer_queue_node_index = i as u32;
-                score_indices.present_queue_node_index = i as u32;
-                return score_indices;
-            }
-        }
-        for i in 0..queue_family_properties.len() {
-            if ((queue_family_properties[i].queueFlags as u32)
-                & (vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)) != 0
-                && supports_present[i]
-            {
-                if score_indices.compute_queue_node_index != u32::max_value() {
-                    if score_indices.transfer_queue_node_index != u32::max_value() {
-                        score_indices.score = 80;
-                    } else {
-                        score_indices.score = 30;
-                    }
-                } else {
-                    if score_indices.transfer_queue_node_index != u32::max_value() {
-                        score_indices.score = 40;
-                    } else {
-                        score_indices.score = 25;
-                    }
-                }
-                score_indices.graphics_queue_node_index = i as u32;
-                score_indices.present_queue_node_index = i as u32;
-                return score_indices;
-            }
-        }
-        vxlogf!("Separate graphics and presenting queues are not supported yet!");
     }
 
     pub fn get_supported_depth_format(&self) -> vk::VkFormat {
