@@ -9,6 +9,8 @@ pub struct Logical {
     pub physical_device: Arc<Physical>,
     pub vk_data: vk::VkDevice,
     pub vk_graphic_queue: vk::VkQueue,
+    pub vk_compute_queue: vk::VkQueue,
+    pub vk_present_queue: vk::VkQueue,
 }
 
 impl Logical {
@@ -57,10 +59,30 @@ impl Logical {
                 &mut vk_graphic_queue,
             );
         }
+        let mut vk_compute_queue = 0 as vk::VkQueue;
+        unsafe {
+            vk::vkGetDeviceQueue(
+                vk_data,
+                physical_device.compute_queue_node_index,
+                0,
+                &mut vk_compute_queue,
+            );
+        }
+        let mut vk_present_queue = 0 as vk::VkQueue;
+        unsafe {
+            vk::vkGetDeviceQueue(
+                vk_data,
+                physical_device.present_queue_node_index,
+                0,
+                &mut vk_present_queue,
+            );
+        }
         Logical {
             physical_device: physical_device.clone(),
-            vk_data: vk_data,
-            vk_graphic_queue: vk_graphic_queue,
+            vk_data,
+            vk_graphic_queue,
+            vk_compute_queue,
+            vk_present_queue,
         }
     }
     pub fn wait_idle(&self) {

@@ -16,19 +16,15 @@ pub struct Physical {
     pub properties: vk::VkPhysicalDeviceProperties,
 }
 
-#[derive(Debug, Clone, Copy)]
-struct ScoreIndices {
-    score: i32,
-    graphics_queue_node_index: u32,
-    transfer_queue_node_index: u32,
-    compute_queue_node_index: u32,
-    present_queue_node_index: u32,
-}
-
 impl Physical {
     pub fn new(surface: &Arc<Surface>) -> Self {
-        let devices = Self::enumerate_devices(surface.instance.vk_data);
-        let (vk_data, si) = Self::choose_best_device(&devices, &surface);
+        let (
+            vk_data,
+            graphics_queue_node_index,
+            transfer_queue_node_index,
+            compute_queue_node_index,
+            present_queue_node_index,
+        ) = Self::find_device(surface);
         let mut memory_properties = vk::VkPhysicalDeviceMemoryProperties::default();
         let mut properties = vk::VkPhysicalDeviceProperties::default();
         unsafe {
@@ -37,15 +33,49 @@ impl Physical {
         }
         let physical = Physical {
             surface: surface.clone(),
-            graphics_queue_node_index: si.graphics_queue_node_index,
-            transfer_queue_node_index: si.transfer_queue_node_index,
-            compute_queue_node_index: si.compute_queue_node_index,
-            present_queue_node_index: si.present_queue_node_index,
-            vk_data: vk_data,
-            memory_properties: memory_properties,
-            properties: properties,
+            graphics_queue_node_index,
+            transfer_queue_node_index,
+            compute_queue_node_index,
+            present_queue_node_index,
+            vk_data,
+            memory_properties,
+            properties,
         };
         physical
+    }
+
+    fn find_device(surface: &Arc<Surface>) -> (vk::VkPhysicalDevice, u32, u32, u32, u32) {
+        let devices = Self::enumerate_devices(surface.instance.vk_data);
+        for device in devices {
+            if Self::device_is_discrete(device) {
+                match Self::fetch_queues(device) {
+                    Some((g, t, c, p)) => return (device, g, t, c, p),
+                    None => {}
+                }
+            }
+        }
+        for device in devices {
+            if !Self::device_is_discrete(device) {
+                match Self::fetch_queues(device) {
+                    Some((g, t, c, p)) => return (device, g, t, c, p),
+                    None => {}
+                }
+            }
+        }
+        vxlogf!("Required device not found!");
+    }
+
+    fn get_properties(device: vk::VkPhysicalDevice) -> vk::VkPhysicalDeviceProperties {
+        let mut properties = vk::VkPhysicalDeviceProperties::default();
+        unsafe {
+            vk::vkGetPhysicalDeviceProperties(device, &mut properties);
+        }
+        properties
+    }
+
+    fn device_is_discrete(device: vk::VkPhysicalDevice) -> bool {
+        Self::get_properties(device).deviceType as u32
+            == vk::VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU as u32
     }
 
     fn enumerate_devices(vk_instance: vk::VkInstance) -> Vec<vk::VkPhysicalDevice> {
@@ -64,21 +94,19 @@ impl Physical {
         devices
     }
 
+    fn fetch_queues(device: vk::VkPhysicalDevice) -> Option<(u32, u32, u32, u32)> {
+        let queue_family_properties = Self::get_device_queue_family_properties(device);
+        if queue_family_properties.len() == 0 {
+            return None;
+        }
+        let mut supports_present = vec![false; queue_family_properties.len()];
+        None
+    }
+
     fn choose_best_device(
         devices: &Vec<vk::VkPhysicalDevice>,
         surface: &Arc<Surface>,
-    ) -> (vk::VkPhysicalDevice, ScoreIndices) {
-        let mut highest_score = ScoreIndices {
-            score: -1,
-            graphics_queue_node_index: u32::max_value(),
-            transfer_queue_node_index: u32::max_value(),
-            compute_queue_node_index: u32::max_value(),
-            present_queue_node_index: u32::max_value(),
-        };
-        // if devices.len() == 1 {
-        //     return (devices[0], 1);
-        // }
-        let mut device: vk::VkPhysicalDevice = null_mut();
+    ) -> (vk::VkPhysicalDevice, u32, u32, u32, u32) {
         for d in devices {
             let score = Self::score_device(*d, surface);
             if score.score > highest_score.score {
