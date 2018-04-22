@@ -128,10 +128,10 @@ macro_rules! logf {
 
 #[macro_export]
 macro_rules! vxunwrap {
-    ($e:expr) => (
+    ($e:expr) => {
         match $e {
             Some(v) => v,
             None => vxlogf!("Unwrap failed!"),
         }
-    )
+    };
 }

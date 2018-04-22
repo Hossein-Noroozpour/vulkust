@@ -8,13 +8,11 @@ use vulkust::system::application::Application as SysApp;
 
 use std::sync::{Arc, RwLock};
 
-struct MyGame {
-    x: u64,
-}
+struct MyGame {}
 
 impl MyGame {
     pub fn new() -> Self {
-        MyGame { x: 0 }
+        MyGame {}
     }
 }
 

@@ -1,6 +1,6 @@
 #![feature(repr_simd)]
 #![feature(integer_atomics)]
-#![feature(stmt_expr_attributes)] 
+#![feature(stmt_expr_attributes)]
 
 #[cfg(appleos)]
 #[macro_use]

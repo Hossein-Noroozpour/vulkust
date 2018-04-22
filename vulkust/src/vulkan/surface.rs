@@ -1,10 +1,9 @@
+use super::super::system::os::application::Application as OsApp;
+use super::instance::Instance;
+use super::vulkan as vk;
 use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;
-use super::super::system::vulkan as vk;
-use super::super::system::os::OsApplication;
-use super::super::core::application::ApplicationTrait as CoreAppTrait;
-use super::instance::Instance;
 
 pub struct Surface {
     pub instance: Arc<Instance>,
@@ -36,28 +35,26 @@ impl Surface {
             vk_data: vk_data,
         }
     }
+
     #[cfg(target_os = "linux")]
-    pub fn new<CoreApp>(instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: CoreAppTrait,
-    {
+    pub fn new(instance: &Arc<Instance>, os_app: &OsApp) -> Self {
         let mut vk_surface = 0 as vk::VkSurfaceKHR;
         let mut create_info = vk::VkXcbSurfaceCreateInfoKHR::default();
         create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-        create_info.window = unsafe { (*os_app).window };
-        create_info.connection = unsafe { (*os_app).connection };
+        create_info.window = os_app.window;
+        create_info.connection = os_app.connection;
         vulkan_check!(vk::vkCreateXcbSurfaceKHR(
             instance.vk_data,
             &create_info,
             null(),
             &mut vk_surface,
         ));
-        logi!("vk surface {:?}", vk_surface);
         Surface {
-            instance: instance,
+            instance: instance.clone(),
             vk_data: vk_surface,
         }
     }
+
     #[cfg(target_os = "windows")]
     pub fn new<CoreApp>(instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
     where
@@ -85,7 +82,6 @@ impl Surface {
 impl Drop for Surface {
     fn drop(&mut self) {
         unsafe {
-            logi!("terminated {:?}", self.vk_data);
             vk::vkDestroySurfaceKHR(self.instance.vk_data, self.vk_data, null());
         }
     }

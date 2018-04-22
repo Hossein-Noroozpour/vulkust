@@ -1,38 +1,24 @@
+use std::default::Default;
 use std::ffi::CString;
 use std::ptr::null;
-use std::default::Default;
 
-use super::vulkan as vk;
 use super::super::core::string::cstrings_to_ptrs;
+use super::vulkan as vk;
 
 #[cfg(debug_mode)]
 mod debug {
-    use std::os::raw::{
-        c_char, 
-        c_void,
-    };
+    use std::ffi::{CStr, CString};
     use std::mem::transmute;
-    use std::ptr::{
-        null,
-        null_mut,
-    };
-    use std::ffi::{
-        CStr,
-        CString,
-    };
-    
+    use std::os::raw::{c_char, c_void};
+    use std::ptr::{null, null_mut};
+
     use super::vk;
 
-    use super::super::super::core::string::{
-        slice_to_string, 
-        strings_to_cstrings
-    };
+    use super::super::super::core::string::{slice_to_string, strings_to_cstrings};
 
     pub fn get_function(vk_instance: vk::VkInstance, s: &str) -> vk::PFN_vkVoidFunction {
         let n = CString::new(s).unwrap();
-        let proc_addr = unsafe { 
-            vk::vkGetInstanceProcAddr(vk_instance, n.as_ptr()) 
-        };
+        let proc_addr = unsafe { vk::vkGetInstanceProcAddr(vk_instance, n.as_ptr()) };
         if proc_addr == unsafe { transmute(0usize) } {
             vxlogf!("Function pointer not found");
         }
@@ -49,18 +35,18 @@ mod debug {
             report_callback_create_info.sType =
                 vk::VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
             report_callback_create_info.flags =
-                (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32) |
-                    (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32) |
-                    (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32) |
-                    (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32) |
-                    (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32) as
-                        vk::VkDebugReportFlagsEXT;
+                (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32)
+                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32)
+                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT
+                        as u32)
+                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32)
+                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32)
+                        as vk::VkDebugReportFlagsEXT;
             report_callback_create_info.pfnCallback = vulkan_debug_callback;
             report_callback_create_info.pUserData = null_mut();
             let mut vk_debug_callback = 0 as vk::VkDebugReportCallbackEXT;
-            let create_debug_report_callback: vk::PFN_vkCreateDebugReportCallbackEXT = unsafe {
-                transmute(get_function(vk_instance, "vkCreateDebugReportCallbackEXT"))
-            };
+            let create_debug_report_callback: vk::PFN_vkCreateDebugReportCallbackEXT =
+                unsafe { transmute(get_function(vk_instance, "vkCreateDebugReportCallbackEXT")) };
             vulkan_check!(create_debug_report_callback(
                 vk_instance,
                 &report_callback_create_info,
@@ -73,15 +59,10 @@ mod debug {
         }
 
         pub fn terminate(&mut self, vk_instance: vk::VkInstance) {
-            let destroy_debug_report_callback: vk::PFN_vkDestroyDebugReportCallbackEXT = unsafe {
-                transmute(get_function(vk_instance, "vkDestroyDebugReportCallbackEXT"))
-            };
+            let destroy_debug_report_callback: vk::PFN_vkDestroyDebugReportCallbackEXT =
+                unsafe { transmute(get_function(vk_instance, "vkDestroyDebugReportCallbackEXT")) };
             unsafe {
-                destroy_debug_report_callback(
-                    vk_instance,
-                    self.vk_data,
-                    null()
-                );
+                destroy_debug_report_callback(vk_instance, self.vk_data, null());
             }
             self.vk_data = 0 as vk::VkDebugReportCallbackEXT;
         }
@@ -112,8 +93,9 @@ mod debug {
         if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32) != 0 {
             flg += "warn, ";
         }
-        if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32) !=
-            0
+        if flags
+            & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
+            != 0
         {
             flg += "performance, ";
         }
@@ -125,7 +107,7 @@ mod debug {
         }
         vxlogi!(
             "flag: {}, obj_type: {}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: \
-            {:?}, msg : {:?}, user_data {:?}",
+             {:?}, msg : {:?}, user_data {:?}",
             flg,
             obj_type,
             src_obj,
@@ -165,7 +147,6 @@ mod debug {
         strings_to_cstrings(layers_names)
     }
 
-    
 }
 
 #[cfg(not(debug_mode))]
@@ -173,9 +154,7 @@ mod debug {
     use super::vk;
     use std::ffi::CString;
 
-    pub struct Debugger {
-
-    }
+    pub struct Debugger {}
 
     impl Debugger {
         pub fn new(_vk_instance: vk::VkInstance) -> Self {

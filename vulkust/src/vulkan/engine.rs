@@ -9,21 +9,21 @@ use super::super::system::os::application::Application as OsApp;
 // use super::command::buffer::Buffer as CmdBuffer;
 // use super::command::pool::Pool as CmdPool;
 // use super::device::logical::Logical as LogicalDevice;
-// use super::device::physical::Physical as PhysicalDevice;
+use super::device::physical::Physical as PhysicalDevice;
 // use super::fence::Fence;
 // use super::framebuffer::Framebuffer;
 // use super::image::view::View as ImageView;
 use super::instance::Instance;
 // use super::pipeline::Manager as PipelineManager;
 // use super::render_pass::RenderPass;
-// use super::surface::Surface;
+use super::surface::Surface;
 // use super::swapchain::Swapchain;
 // use super::synchronizer::semaphore::Semaphore;
 
 pub struct Engine {
     pub instance: Arc<Instance>,
-    // pub surface: Option<Arc<Surface>>,
-    // pub physical_device: Option<Arc<PhysicalDevice>>,
+    pub surface: Arc<Surface>,
+    pub physical_device: Arc<PhysicalDevice>,
     // pub logical_device: Option<Arc<LogicalDevice>>,
     // pub swapchain: Option<Arc<Swapchain>>,
     // pub depth_stencil_image_view: Option<Arc<ImageView>>,
@@ -42,28 +42,29 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(os_app: &OsApp) -> Self {
-        let instance = Instance::new();
-        let instance = Arc::new(instance);
+        let instance = Arc::new(Instance::new());
+        let surface = Arc::new(Surface::new(&instance, os_app));
+        let physical_device = Arc::new(PhysicalDevice::new(&surface));
         Engine {
-        //     core_app: unsafe { transmute(0usize) },
-        //     os_app: unsafe { transmute(0usize) },
+            //     core_app: unsafe { transmute(0usize) },
+            //     os_app: unsafe { transmute(0usize) },
             instance,
-        //     surface: None,
-        //     physical_device: None,
-        //     logical_device: None,
-        //     swapchain: None,
-        //     depth_stencil_image_view: None,
-        //     render_pass: None,
-        //     framebuffers: Vec::new(),
-        //     graphic_cmd_pool: None,
-        //     transfer_cmd_pool: None,
-        //     draw_commands: Vec::new(),
-        //     present_complete_semaphore: None,
-        //     render_complete_semaphore: None,
-        //     wait_fences: Vec::new(),
-        //     buffer_manager: None,
-        //     pipeline_manager: None,
-        //     basic_engine: None,
+            surface,
+            physical_device,
+            //     logical_device: None,
+            //     swapchain: None,
+            //     depth_stencil_image_view: None,
+            //     render_pass: None,
+            //     framebuffers: Vec::new(),
+            //     graphic_cmd_pool: None,
+            //     transfer_cmd_pool: None,
+            //     draw_commands: Vec::new(),
+            //     present_complete_semaphore: None,
+            //     render_complete_semaphore: None,
+            //     wait_fences: Vec::new(),
+            //     buffer_manager: None,
+            //     pipeline_manager: None,
+            //     basic_engine: None,
         }
     }
 
