@@ -1,35 +1,50 @@
 use std::ffi::CString;
 use std::ptr::null;
 use std::default::Default;
-use std::mem::zeroed;
-use std::mem::transmute;
 
 use super::vulkan as vk;
-use super::linker::Linker;
 use super::super::core::string::cstrings_to_ptrs;
 
 #[cfg(debug_mode)]
 mod debug {
-    use std::os::raw::{c_char, c_void};
+    use std::os::raw::{
+        c_char, 
+        c_void,
+    };
     use std::mem::transmute;
-    use std::ptr::null_mut;
-    use std::ffi::CStr;
-    use std::ptr::null;
+    use std::ptr::{
+        null,
+        null_mut,
+    };
+    use std::ffi::{
+        CStr,
+        CString,
+    };
     
-    use super::super::vulkan as vk;
+    use super::vk;
 
     use super::super::super::core::string::{
-        cstrings_to_ptrs, 
         slice_to_string, 
         strings_to_cstrings
     };
+
+    pub fn get_function(vk_instance: vk::VkInstance, s: &str) -> vk::PFN_vkVoidFunction {
+        let n = CString::new(s).unwrap();
+        let proc_addr = unsafe { 
+            vk::vkGetInstanceProcAddr(vk_instance, n.as_ptr()) 
+        };
+        if proc_addr == unsafe { transmute(0usize) } {
+            vxlogf!("Function pointer not found");
+        }
+        return proc_addr;
+    }
 
     pub struct Debugger {
         vk_data: vk::VkDebugReportCallbackEXT,
     }
 
     impl Debugger {
-        fn new(vk_instance: vk::VkInstance, linker: &mut super::Linker) -> Self {
+        pub fn new(vk_instance: vk::VkInstance) -> Self {
             let mut report_callback_create_info = vk::VkDebugReportCallbackCreateInfoEXT::default();
             report_callback_create_info.sType =
                 vk::VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
@@ -43,7 +58,10 @@ mod debug {
             report_callback_create_info.pfnCallback = vulkan_debug_callback;
             report_callback_create_info.pUserData = null_mut();
             let mut vk_debug_callback = 0 as vk::VkDebugReportCallbackEXT;
-            vulkan_check!(linker.create_debug_report_callback_ext(
+            let create_debug_report_callback: vk::PFN_vkCreateDebugReportCallbackEXT = unsafe {
+                transmute(get_function(vk_instance, "vkCreateDebugReportCallbackEXT"))
+            };
+            vulkan_check!(create_debug_report_callback(
                 vk_instance,
                 &report_callback_create_info,
                 null(),
@@ -54,8 +72,26 @@ mod debug {
             }
         }
 
-        pub fn terminate(&mut self, vk_instance: vk::VkInstance, linker: &mut super::Linker) {
+        pub fn terminate(&mut self, vk_instance: vk::VkInstance) {
+            let destroy_debug_report_callback: vk::PFN_vkDestroyDebugReportCallbackEXT = unsafe {
+                transmute(get_function(vk_instance, "vkDestroyDebugReportCallbackEXT"))
+            };
+            unsafe {
+                destroy_debug_report_callback(
+                    vk_instance,
+                    self.vk_data,
+                    null()
+                );
+            }
+            self.vk_data = 0 as vk::VkDebugReportCallbackEXT;
+        }
+    }
 
+    impl Drop for Debugger {
+        fn drop(&mut self) {
+            if self.vk_data != null_mut() {
+                vxlogf!("Unexpected drop of debugger.");
+            }
         }
     }
 
@@ -88,7 +124,7 @@ mod debug {
             flg += "debug, ";
         }
         vxlogi!(
-            "flag: {}, obj_type: {:?}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: \
+            "flag: {}, obj_type: {}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: \
             {:?}, msg : {:?}, user_data {:?}",
             flg,
             obj_type,
@@ -102,12 +138,16 @@ mod debug {
         0u32
     }
 
-    pub fn enumerate_layers(linker: &mut super::Linker) -> Vec<super::CString> {
+    pub fn enumerate_layers() -> Vec<CString> {
         let mut layer_count = 0u32;
-        linker.enumerate_instance_layer_properties(&mut layer_count, null_mut());
+        unsafe {
+            vk::vkEnumerateInstanceLayerProperties(&mut layer_count, null_mut());
+        }
         vxlogi!("Number of layers found is: {}", layer_count);
         let mut available_layers = vec![vk::VkLayerProperties::default(); layer_count as usize];
-        linker.enumerate_instance_layer_properties(&mut layer_count, available_layers.as_mut_ptr());
+        unsafe {
+            vk::vkEnumerateInstanceLayerProperties(&mut layer_count, available_layers.as_mut_ptr());
+        }
         let mut layers_names = Vec::new();
         for i in 0..available_layers.len() {
             let name = slice_to_string(&available_layers[i].layerName);
@@ -130,22 +170,24 @@ mod debug {
 
 #[cfg(not(debug_mode))]
 mod debug {
+    use super::vk;
+    use std::ffi::CString;
+
     pub struct Debugger {
 
     }
 
     impl Debugger {
-        pub fn new(linker: &mut Linker) {
-
+        pub fn new(_vk_instance: vk::VkInstance) -> Self {
+            Debugger {}
         }
-        pub fn terminate(&mut self, _vk_instance: vk::VkInstance, _linker: &mut Linker) {}
+
+        pub fn terminate(&mut self, _vk_instance: vk::VkInstance) {}
     }
 
-    pub fn enumerate_layers() -> Vec<super::CString> {
+    pub fn enumerate_layers() -> Vec<CString> {
         Vec::new()
     }
-
-    fn set_report_callback(_instance: &mut super::Instance) {}
 }
 
 pub struct Instance {
@@ -154,7 +196,7 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(linker: &mut Linker) -> Self {
+    pub fn new() -> Self {
         let application_name = CString::new("Vulkust App").unwrap();
         let engine_name = CString::new("Vulkust").unwrap();
         let mut application_info = vk::VkApplicationInfo::default();
@@ -181,46 +223,31 @@ impl Instance {
         let mut instance_create_info = vk::VkInstanceCreateInfo::default();
         instance_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
-        let layers_names = debug::enumerate_layers(linker);
+        let layers_names = debug::enumerate_layers();
         let vulkan_layers = cstrings_to_ptrs(&layers_names);
         instance_create_info.enabledLayerCount = vulkan_layers.len() as u32;
         instance_create_info.ppEnabledLayerNames = vulkan_layers.as_ptr();
         instance_create_info.enabledExtensionCount = vulkan_extensions.len() as u32;
         instance_create_info.ppEnabledExtensionNames = vulkan_extensions.as_ptr();
         let mut vk_instance = 0 as vk::VkInstance;
-        vulkan_check!(linker.create_instance(
+        vulkan_check!(vk::vkCreateInstance(
             &instance_create_info,
             null(),
             &mut vk_instance,
         ));
-
-        let mut instance = Instance {
+        Instance {
             vk_data: vk_instance,
-            debugger: debug::Debugger::new(vk_instance, linker),
-        };
-        return instance;
-    }
-
-    fn get_function(&self, s: &str, linker: &mut Linker) -> vk::PFN_vkVoidFunction {
-        let n = CString::new(s).unwrap();
-        let proc_addr = linker.get_instance_proc_addr(self.vk_data, n.as_ptr());
-        if proc_addr == unsafe { transmute(0usize) } {
-            vxlogf!("Function pointer not found");
+            debugger: debug::Debugger::new(vk_instance),
         }
-        return proc_addr;
     }
-
-    pub fn terminate(&mut self, linker: &mut Linker) {
-        self.debugger.terminate(self.vk_data, linker);
-        linker.destroy_instance(self.vk_data, null());
-        self.vk_data = 0 as vk::VkInstance;
-    } 
 }
 
 impl Drop for Instance {
     fn drop(&mut self) {
-        if self.vk_data != 0 {
-            vxlogf!("Instance is not terminated");
+        self.debugger.terminate(self.vk_data);
+        unsafe {
+            vk::vkDestroyInstance(self.vk_data, null());
         }
+        self.vk_data = 0 as vk::VkInstance;
     }
 }

@@ -42,12 +42,10 @@ macro_rules! start {
 #[cfg(desktop_os)]
 macro_rules! vxlogi {
     ($fmt:expr) => {
-        let s = format!("Vulkust information message in file: {} line: {} {}", file!(), line!(), $fmt);
-        println!("{}", s);
+        println!("{}", format!("Vulkust information message in file: {} line: {} {}", file!(), line!(), $fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        let s = format!("Vulkust information message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*));
-        println!("{}", s);
+        println!("{}", format!("Vulkust information message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*)));
     };
 }
 
@@ -55,12 +53,10 @@ macro_rules! vxlogi {
 #[cfg(desktop_os)]
 macro_rules! vxloge {
     ($fmt:expr) => {
-        let s = format!("Vulkust error message in file: {} line: {} {}", file!(), line!(), $fmt);
-        eprintln!("{}", s);
+        eprintln!("{}", format!("Vulkust error message in file: {} line: {} {}", file!(), line!(), $fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        let s = format!("Vulkust error message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*));
-        eprintln!("{}", s);
+        eprintln!("{}", format!("Vulkust error message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*)));
     };
 }
 

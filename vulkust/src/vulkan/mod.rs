@@ -10,7 +10,6 @@ pub mod engine;
 // pub mod framebuffer;
 // pub mod image;
 pub mod instance;
-pub mod linker;
 // pub mod memory;
 // pub mod pipeline;
 // pub mod render_pass;

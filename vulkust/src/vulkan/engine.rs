@@ -1,9 +1,8 @@
-// use std::sync::Arc;
+use std::sync::Arc;
 // use std::mem::transmute;
 // use super::super::core::application::ApplicationTrait;
 // use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
-use super::linker::Linker;
 // use super::super::system::vulkan as vk;
 // use super::super::util::cell::DebugCell;
 // use super::buffer::Manager as BufferManager;
@@ -14,7 +13,7 @@ use super::linker::Linker;
 // use super::fence::Fence;
 // use super::framebuffer::Framebuffer;
 // use super::image::view::View as ImageView;
-// use super::instance::Instance;
+use super::instance::Instance;
 // use super::pipeline::Manager as PipelineManager;
 // use super::render_pass::RenderPass;
 // use super::surface::Surface;
@@ -22,7 +21,7 @@ use super::linker::Linker;
 // use super::synchronizer::semaphore::Semaphore;
 
 pub struct Engine {
-    // pub instance: Arc<Instance>,
+    pub instance: Arc<Instance>,
     // pub surface: Option<Arc<Surface>>,
     // pub physical_device: Option<Arc<PhysicalDevice>>,
     // pub logical_device: Option<Arc<LogicalDevice>>,
@@ -43,11 +42,12 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(os_app: &OsApp) -> Self {
-        let linker = Linker::new();
+        let instance = Instance::new();
+        let instance = Arc::new(instance);
         Engine {
         //     core_app: unsafe { transmute(0usize) },
         //     os_app: unsafe { transmute(0usize) },
-        //     instance: Arc::new(Instance::new()),
+            instance,
         //     surface: None,
         //     physical_device: None,
         //     logical_device: None,

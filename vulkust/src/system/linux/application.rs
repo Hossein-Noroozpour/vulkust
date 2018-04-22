@@ -73,8 +73,6 @@ impl Application {
         let cookie2 = unsafe { xcb::xcb_intern_atom(connection, 0, 16, cs.as_ptr()) };
         let atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t =
             unsafe { xcb::xcb_intern_atom_reply(connection, cookie2, null_mut()) };
-        let mouse_previous_state = (0.0, 0.0);
-        let window_aspects = (DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
         unsafe {
             xcb::xcb_change_property(
                 connection,
