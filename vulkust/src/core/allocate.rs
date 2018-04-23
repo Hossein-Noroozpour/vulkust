@@ -63,10 +63,15 @@ impl Object for Bag {
     }
 }
 
-struct List {
-    pub preceding: Option<Arc<RwLock<List>>>,
+struct ListNode {
+    pub preceding: Option<Arc<RwLock<ListNode>>>,
     pub start: Weak<RwLock<Object>>,
-    pub suceeding: Option<Arc<RwLock<List>>>,
+    pub suceeding: Option<Arc<RwLock<ListNode>>>,
+}
+
+struct List {
+    pub starting: Option<OArc<RwLock<ListNode>>>,
+    pub ending: Option<Arc<RwLock<ListNode>>>,
 }
 
 pub struct Container {
@@ -77,7 +82,7 @@ pub struct Container {
     free_space: isize,
     tailing_space: isize,
     objects_count: isize,
-    objects: BTreeMap<isize, BTreeMap<isize, Arc<RwLock<List>>>>,
+    objects: BTreeMap<isize, BTreeMap<isize, Arc<RwLock<ListNode>>>>,
     starting_object: Option<Arc<RwLock<Object>>>,
     ending_object: Option<Arc<RwLock<Object>>>,
     container: Option<Arc<RwLock<Allocator>>>,
@@ -87,7 +92,7 @@ impl Container {
     pub fn new(front: isize, size: isize) -> Self {
         let starting_object: Arc<RwLock<Object>> = Arc::new(RwLock::new(Bag::new(front, 0)));
         let ending_object: Arc<RwLock<Object>> = Arc::new(RwLock::new(Bag::new(front + size, 0)));
-        let range = Arc::new(RwLock::new(List {
+        let range = Arc::new(RwLock::new(ListNode {
             preceding: None,
             start: Arc::downgrade(&starting_object),
             suceeding: None,
