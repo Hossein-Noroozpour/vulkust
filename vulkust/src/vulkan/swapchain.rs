@@ -1,8 +1,8 @@
-use super::vulkan as vk;
-use super::synchronizer::semaphore::Semaphore;
 use super::device::logical::Logical as LogicalDevice;
-use std::ptr::{null, null_mut};
 use super::image::view::View as ImageView;
+use super::synchronizer::semaphore::Semaphore;
+use super::vulkan as vk;
+use std::ptr::{null, null_mut};
 use std::sync::Arc;
 
 pub enum NextImageResult {
@@ -51,8 +51,8 @@ impl Swapchain {
                 &mut format_props,
             );
         };
-        if ((format_props.optimalTilingFeatures as u32) &
-            (vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_BLIT_DST_BIT as u32)) != 0
+        if ((format_props.optimalTilingFeatures as u32)
+            & (vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_BLIT_DST_BIT as u32)) != 0
         {
             image_usage |= vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT as u32;
         }
@@ -80,33 +80,33 @@ impl Swapchain {
         }
         swapchain_create_info.presentMode = vk::VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
         swapchain_create_info.clipped = 1 as vk::VkBool32;
-        if ((surface_caps.supportedCompositeAlpha as u32) &
-            (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR as u32)) !=
-            0
+        if ((surface_caps.supportedCompositeAlpha as u32)
+            & (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR as u32))
+            != 0
         {
             swapchain_create_info.compositeAlpha =
                 vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        } else if ((surface_caps.supportedCompositeAlpha as u32) &
-            (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR as u32)) !=
-            0
+        } else if ((surface_caps.supportedCompositeAlpha as u32)
+            & (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR as u32))
+            != 0
         {
             swapchain_create_info.compositeAlpha =
                 vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
-        } else if ((surface_caps.supportedCompositeAlpha as u32) &
-            (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR as
-                u32)) != 0
+        } else if ((surface_caps.supportedCompositeAlpha as u32)
+            & (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR as u32))
+            != 0
         {
             swapchain_create_info.compositeAlpha =
                 vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
-        } else if ((surface_caps.supportedCompositeAlpha as u32) &
-            (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR as
-                u32)) != 0
+        } else if ((surface_caps.supportedCompositeAlpha as u32)
+            & (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR as u32))
+            != 0
         {
             swapchain_create_info.compositeAlpha =
                 vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR;
-        } else if ((surface_caps.supportedCompositeAlpha as u32) &
-            (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR as
-                u32)) != 0
+        } else if ((surface_caps.supportedCompositeAlpha as u32)
+            & (vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR as u32))
+            != 0
         {
             swapchain_create_info.compositeAlpha =
                 vk::VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR;

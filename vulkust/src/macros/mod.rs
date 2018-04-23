@@ -135,3 +135,17 @@ macro_rules! vxunwrap {
         }
     };
 }
+
+#[macro_export]
+macro_rules! vxunimplemented {
+    () => {
+        vxlogf!("Not implemented")
+    };
+}
+
+#[macro_export]
+macro_rules! vxunexpected {
+    () => {
+        vxlogf!("Unexpected")
+    };
+}

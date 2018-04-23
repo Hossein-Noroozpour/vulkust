@@ -94,7 +94,10 @@ impl Physical {
         devices
     }
 
-    fn fetch_queues(device: vk::VkPhysicalDevice, surface: &Arc<Surface>) -> Option<(u32, u32, u32, u32)> {
+    fn fetch_queues(
+        device: vk::VkPhysicalDevice,
+        surface: &Arc<Surface>,
+    ) -> Option<(u32, u32, u32, u32)> {
         let queue_family_properties = Self::get_device_queue_family_properties(device);
         if queue_family_properties.len() == 0 {
             return None;
@@ -107,7 +110,10 @@ impl Physical {
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            if queue_family.queueCount > 0 && (queue_family.queueFlags as u32 & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32) != 0 {
+            if queue_family.queueCount > 0
+                && (queue_family.queueFlags as u32
+                    & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32) != 0
+            {
                 graphics_queue_node_index = i;
                 break;
             }
@@ -135,7 +141,10 @@ impl Physical {
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            if queue_family.queueCount > 0 && (queue_family.queueFlags as u32 & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32) != 0 {
+            if queue_family.queueCount > 0
+                && (queue_family.queueFlags as u32
+                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32) != 0
+            {
                 if i == graphics_queue_node_index || i == present_queue_node_index {
                     temp_queue_node_index = i;
                     continue;
@@ -158,10 +167,13 @@ impl Physical {
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            if queue_family.queueCount > 0 && (queue_family.queueFlags as u32 & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32) != 0 {
-                if i == graphics_queue_node_index || 
-                    i == present_queue_node_index ||
-                    i == compute_queue_node_index {
+            if queue_family.queueCount > 0
+                && (queue_family.queueFlags as u32
+                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32) != 0
+            {
+                if i == graphics_queue_node_index || i == present_queue_node_index
+                    || i == compute_queue_node_index
+                {
                     temp_queue_node_index = i;
                     continue;
                 } else {
@@ -183,7 +195,8 @@ impl Physical {
             graphics_queue_node_index,
             transfer_queue_node_index,
             compute_queue_node_index,
-            present_queue_node_index));
+            present_queue_node_index,
+        ));
     }
 
     fn get_device_queue_family_properties(

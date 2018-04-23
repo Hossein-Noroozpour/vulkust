@@ -1,12 +1,12 @@
 pub mod view;
 
-use super::vulkan as vk;
 use super::device::logical::Logical as LogicalDevice;
 use super::memory::allocate_with_requirements;
+use super::vulkan as vk;
 
 //use std::default::Default;
-use std::sync::Arc;
 use std::ptr::null;
+use std::sync::Arc;
 
 pub struct Image {
     pub logical_device: Arc<LogicalDevice>,
