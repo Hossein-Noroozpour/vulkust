@@ -70,7 +70,7 @@ struct ListNode {
 }
 
 struct List {
-    pub starting: Option<OArc<RwLock<ListNode>>>,
+    pub starting: Option<Arc<RwLock<ListNode>>>,
     pub ending: Option<Arc<RwLock<ListNode>>>,
 }
 
