@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 
+use super::list::{List, Node};
+
 pub trait Object: Drop {
     fn size(&self) -> isize;
     fn place(
@@ -63,15 +65,30 @@ impl Object for Bag {
     }
 }
 
-struct ListNode {
-    pub preceding: Option<Arc<RwLock<ListNode>>>,
-    pub start: Weak<RwLock<Object>>,
-    pub suceeding: Option<Arc<RwLock<ListNode>>>,
+struct FakeBag {}
+
+impl FakeBag {
+    pub fn new() -> Self {
+        FakeBag {}
+    }
 }
 
-struct List {
-    pub starting: Option<Arc<RwLock<ListNode>>>,
-    pub ending: Option<Arc<RwLock<ListNode>>>,
+impl Drop for FakeBag {
+    fn drop(&mut self) {}
+}
+
+impl Object for FakeBag {
+    fn size(&self) -> isize {
+        0
+    }
+
+    fn place(
+        &mut self,
+        _suceeding_range_size: isize,
+        _offset: isize,
+        _allocator: Arc<RwLock<Allocator>>,
+    ) {
+    }
 }
 
 pub struct Container {
@@ -81,26 +98,25 @@ pub struct Container {
     size: isize,
     free_space: isize,
     tailing_space: isize,
-    objects_count: isize,
-    objects: BTreeMap<isize, BTreeMap<isize, Arc<RwLock<ListNode>>>>,
+    suceeding_range_size: isize,
+    objects: List<Weak<RwLock<Object>>>,
+    space_offset_node: BTreeMap<isize, BTreeMap<isize, Arc<RwLock<Node<Weak<RwLock<Object>>>>>>>,
     starting_object: Option<Arc<RwLock<Object>>>,
     ending_object: Option<Arc<RwLock<Object>>>,
-    container: Option<Arc<RwLock<Allocator>>>,
+    allocator: Option<Arc<RwLock<Allocator>>>,
 }
 
 impl Container {
     pub fn new(front: isize, size: isize) -> Self {
-        let starting_object: Arc<RwLock<Object>> = Arc::new(RwLock::new(Bag::new(front, 0)));
-        let ending_object: Arc<RwLock<Object>> = Arc::new(RwLock::new(Bag::new(front + size, 0)));
-        let range = Arc::new(RwLock::new(ListNode {
-            preceding: None,
-            start: Arc::downgrade(&starting_object),
-            suceeding: None,
-        }));
-        let ranges = BTreeMap::new();
-        ranges.insert(front, range);
-        let objects = BTreeMap::new();
-        objects.insert(size, ranges);
+        let starting_object: Arc<RwLock<Object>> = Arc::new(RwLock::new(FakeBag::new()));
+        let ending_object: Arc<RwLock<Object>> = Arc::new(RwLock::new(FakeBag::new()));
+        let mut objects = List::new();
+        objects.append(Arc::downgrade(&starting_object));
+        objects.append(Arc::downgrade(&ending_object));
+        let offsets = BTreeMap::new();
+        offsets.insert(front, vxunwrap!(objects.front()));
+        let space_offset_node = BTreeMap::new();
+        space_offset_node.insert(size, offsets);
         Container {
             itself: None,
             front,
@@ -108,17 +124,25 @@ impl Container {
             size,
             free_space: size,
             tailing_space: size,
-            objects_count: 0,
+            suceeding_range_size: 0,
             objects,
+            space_offset_node,
             starting_object: Some(starting_object),
             ending_object: Some(ending_object),
-            container: None,
+            allocator: None,
         }
     }
 }
 
 impl Drop for Container {
-    fn drop(&mut self) {}
+    fn drop(&mut self) {
+        match self.allocator {
+            Some(allocator) => {
+                vxunwrap!(allocator.read()).deallocate(self.suceeding_range_size, self.end)
+            }
+            None => (),
+        }
+    }
 }
 
 impl Object for Container {
@@ -130,8 +154,26 @@ impl Object for Container {
         &mut self,
         suceeding_range_size: isize,
         offset: isize,
-        container: Arc<RwLock<Allocator>>,
+        allocator: Arc<RwLock<Allocator>>,
     ) {
+        self.suceeding_range_size = suceeding_range_size;
+        let translate = offset - self.front;
+        self.front = offset;
+        let mut space_offset_node = BTreeMap::new();
+        for (space, offset_node) in &self.space_offset_node {
+            let mut tree = BTreeMap::new();
+            for (offset, node) in offset_node {
+                let offset = offset + translate;
+                vxunwrap!(vxunwrap!(vxunwrap!(node.read()).value.upgrade()).write()).place(
+                    space,
+                    offset,
+                    vxunwrap!(self.itself),
+                );
+                tree.insert(offset, node);
+            }
+            space_offset_node.insert(space, tree);
+        }
+        self.space_offset_node = space_offset_node;
         vxunimplemented!();
     }
 }
