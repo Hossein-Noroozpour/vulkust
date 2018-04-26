@@ -5,6 +5,8 @@ use super::list::{List, Node};
 
 pub trait Object: Drop {
     fn size(&self) -> isize;
+    fn suceeding_size(&self) -> isize;
+    fn set_suceeding_size(&mut self, isize);
     fn place(
         &mut self,
         suceeding_range_size: isize,
@@ -52,6 +54,14 @@ impl Object for Bag {
         self.size
     }
 
+    fn suceeding_size(&self) -> isize {
+        self.suceeding_range_size
+    }
+
+    fn set_suceeding_size(&mut self, size: isize) {
+        self.suceeding_range_size = size;
+    }
+
     fn place(
         &mut self,
         suceeding_range_size: isize,
@@ -81,6 +91,12 @@ impl Object for FakeBag {
     fn size(&self) -> isize {
         0
     }
+
+    fn suceeding_size(&self) -> isize {
+        0
+    }
+
+    fn set_suceeding_size(&mut self, _size: isize) {}
 
     fn place(
         &mut self,
@@ -136,6 +152,11 @@ impl Container {
 
 impl Drop for Container {
     fn drop(&mut self) {
+        self.space_offset_node.clear();
+        self.objects.clear();
+        self.starting_object = None;
+        self.ending_object = None;
+        self.itself = None;
         match self.allocator {
             Some(allocator) => {
                 vxunwrap!(allocator.read()).deallocate(self.suceeding_range_size, self.end)
@@ -148,6 +169,14 @@ impl Drop for Container {
 impl Object for Container {
     fn size(&self) -> isize {
         self.size
+    }
+
+    fn suceeding_size(&self) -> isize {
+        self.suceeding_range_size
+    }
+
+    fn set_suceeding_size(&mut self, size: isize) {
+        self.suceeding_range_size = size;
     }
 
     fn place(
@@ -169,18 +198,28 @@ impl Object for Container {
                     offset,
                     vxunwrap!(self.itself),
                 );
-                tree.insert(offset, node);
+                tree.insert(offset, *node);
             }
-            space_offset_node.insert(space, tree);
+            space_offset_node.insert(*space, tree);
         }
         self.space_offset_node = space_offset_node;
-        vxunimplemented!();
     }
 }
 
 impl Allocator for Container {
+    // possibility of dead lock in here! if happened I gonna manage it
     fn increase_size(&mut self, size: isize) {
-        vxunimplemented!()
+        let n = vxunwrap!(vxunwrap!(self.objects.back()).read());
+        let n = vxunwrap!(vxunwrap!(n.previous()).read());
+        let space = vxunwrap!(n.value.read()).suceeding_size();
+        let new_space = space + size;
+        vxunwrap!(n.value.write()).set_suceeding_size(new_space);
+        self.space_offset_node.insert(
+            new_space, vxunwrap!(self.space_offset_node.remove(space)));
+        self.end += size;
+        self.size += size;
+        self.free_space += size;
+        self.tailing_space += size;
     }
 
     fn initialize(&mut self, itself: Weak<RwLock<Allocator>>) {

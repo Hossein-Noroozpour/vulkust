@@ -14,6 +14,10 @@ impl<T> Node<T> {
             suceeding: None,
         }
     }
+
+    pub fn previous(&self) -> Option<Arc<RwLock<Node<T>>>> {
+        self.preceding
+    }
 }
 
 pub struct List<T> {
@@ -63,9 +67,25 @@ impl<T> List<T> {
         self.starting
     }
 
+    pub fn back(&self) -> Option<Arc<RwLock<Node<T>>>> {
+        self.ending
+    }
+
     pub fn clear(&mut self) {
+        let mut cn = self.starting;
+        while cn.is_some() {
+            let n = vxunwrap!(vxunwrap!(cn).write());
+            n.preceding = None;
+            cn = n.suceeding;
+        }
         self.starting = None;
         self.ending = None;
         self.count = 0;
+    }
+}
+
+impl<T> Drop for List<T> {
+    fn drop(&mut self) {
+        self.clear();
     }
 }
