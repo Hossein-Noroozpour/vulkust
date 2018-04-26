@@ -32,10 +32,10 @@ pub struct Bag {
 }
 
 impl Bag {
-    pub fn new(front: isize, size: isize) -> Self {
+    pub fn new(size: isize) -> Self {
         Bag {
-            front,
-            end: front + size,
+            front: 0,
+            end: size,
             size,
             suceeding_range_size: 0,
             allocator: None,
@@ -75,11 +75,15 @@ impl Object for Bag {
     }
 }
 
-struct FakeBag {}
+struct FakeBag {
+    suceeding_range_size: isize,
+}
 
 impl FakeBag {
     pub fn new() -> Self {
-        FakeBag {}
+        FakeBag {
+            suceeding_range_size: 0,
+        }
     }
 }
 
@@ -93,17 +97,20 @@ impl Object for FakeBag {
     }
 
     fn suceeding_size(&self) -> isize {
-        0
+        self.suceeding_range_size
     }
 
-    fn set_suceeding_size(&mut self, _size: isize) {}
+    fn set_suceeding_size(&mut self, size: isize) {
+        self.suceeding_range_size = size;
+    }
 
     fn place(
         &mut self,
-        _suceeding_range_size: isize,
+        suceeding_range_size: isize,
         _offset: isize,
         _allocator: Arc<RwLock<Allocator>>,
     ) {
+        self.suceeding_range_size = suceeding_range_size;
     }
 }
 
