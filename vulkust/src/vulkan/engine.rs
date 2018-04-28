@@ -46,6 +46,7 @@ impl Engine {
         let surface = Arc::new(Surface::new(&instance, os_app));
         let physical_device = Arc::new(PhysicalDevice::new(&surface));
         let logical_device = Arc::new(LogicalDevice::new(&physical_device));
+        let swapchain = Arc::new(Swapchain::new(&logical_device));
 
         Engine {
             //     core_app: unsafe { transmute(0usize) },
@@ -54,7 +55,7 @@ impl Engine {
             surface,
             physical_device,
             logical_device,
-            //     swapchain: None,
+            swapchain,
             //     depth_stencil_image_view: None,
             //     render_pass: None,
             //     framebuffers: Vec::new(),

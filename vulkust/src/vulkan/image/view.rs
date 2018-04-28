@@ -1,5 +1,5 @@
-use super::super::super::system::vulkan as vk;
 use super::super::device::logical::Logical as LogicalDevice;
+use super::super::vulkan as vk;
 use super::Image;
 use std::default::Default;
 use std::ptr::null;

@@ -1,8 +1,8 @@
-use std::sync::Arc;
-use std::ptr::null;
-use std::default::Default;
-use super::super::super::system::vulkan as vk;
 use super::super::device::logical::Logical as LogicalDevice;
+use super::super::vulkan as vk;
+use std::default::Default;
+use std::ptr::null;
+use std::sync::Arc;
 pub struct Semaphore {
     pub logical_device: Arc<LogicalDevice>,
     pub vk_data: vk::VkSemaphore,

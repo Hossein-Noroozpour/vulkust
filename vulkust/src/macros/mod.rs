@@ -137,6 +137,16 @@ macro_rules! vxunwrap {
 }
 
 #[macro_export]
+macro_rules! vxresult {
+    ($e:expr) => {
+        match $e {
+            Ok(v) => v,
+            Err(e) => vxlogf!("Unwrap failed! {:?}", e),
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! vxunimplemented {
     () => {
         vxlogf!("Not implemented")

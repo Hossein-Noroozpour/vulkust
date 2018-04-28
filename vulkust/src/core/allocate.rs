@@ -2,10 +2,7 @@ use std::sync::{Arc, RwLock, Weak};
 
 pub trait Object {
     fn size(&self) -> isize;
-    fn place(
-        &mut self,
-        offset: isize,
-    );
+    fn place(&mut self, offset: isize);
 }
 
 pub trait Allocator {
@@ -82,11 +79,13 @@ impl Allocator for Container {
     }
 
     fn allocate(&mut self, obj: Arc<RwLock<Object>>) {
-        let obj_size = vxunwrap!(obj.read()).size();
+        let obj_size = vxresult!(obj.read()).size();
         if obj_size > self.free_space {
-            vxlogf!("Out of space, you probably forget to increase the size or cleaning the allocator.");
+            vxlogf!(
+                "Out of space, you probably forget to increase the size or cleaning the allocator."
+            );
         }
-        vxunwrap!(obj.write()).place(self.free_offset);
+        vxresult!(obj.write()).place(self.free_offset);
         self.objects.push(Arc::downgrade(&obj));
         self.free_offset += obj_size;
         self.free_space -= obj_size;
@@ -96,15 +95,15 @@ impl Allocator for Container {
         let mut objects = Vec::new();
         self.free_offset = self.offset;
         self.free_space = self.size;
-        for obj in self.objects {
+        for obj in &self.objects {
             match obj.upgrade() {
                 Some(obj) => {
-                    let size = vxunwrap!(obj.read()).size();
-                    vxunwrap!(obj.write()).place(self.free_offset);
+                    let size = vxresult!(obj.read()).size();
+                    vxresult!(obj.write()).place(self.free_offset);
                     objects.push(Arc::downgrade(&obj));
                     self.free_offset += size;
                     self.free_space -= size;
-                },
+                }
                 None => continue,
             }
         }

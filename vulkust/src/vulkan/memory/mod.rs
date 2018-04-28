@@ -1,5 +1,5 @@
 use super::device::logical::Logical as LogicalDevice;
-use super::super::system::vulkan as vk;
+use super::vulkan as vk;
 
 use std::ptr::null;
 use std::sync::Arc;
@@ -15,10 +15,10 @@ pub fn allocate_with_requirements(
     let mut type_bits = mem_req_s.memoryTypeBits;
     let mut memory_type_not_found = true;
     for index in 0..memory_prop.memoryTypeCount {
-        if (type_bits & 1) == 1 &&
-            ((memory_prop.memoryTypes[index as usize].propertyFlags as u32) &
-                (vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32)) !=
-                0
+        if (type_bits & 1) == 1
+            && ((memory_prop.memoryTypes[index as usize].propertyFlags as u32)
+                & (vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32))
+                != 0
         {
             mem_alloc.memoryTypeIndex = index;
             memory_type_not_found = false;
@@ -27,7 +27,7 @@ pub fn allocate_with_requirements(
         type_bits >>= 1;
     }
     if memory_type_not_found {
-        logf!("Error memory type not found.");
+        vxlogf!("Error memory type not found.");
     }
     let mut memory = 0 as vk::VkDeviceMemory;
     vulkan_check!(vk::vkAllocateMemory(
