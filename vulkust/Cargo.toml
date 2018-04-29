@@ -15,6 +15,9 @@ fullscreen = []
 [dependencies]
 libc = "*"
 bitflags = "*"
+image = "*"
+cgmath = "*"
+gltf = { version = "*", features = ["extras", "names"] }
 
 [target.'cfg(any(target_os = "windows"))'.dependencies]
 winapi = "*"
