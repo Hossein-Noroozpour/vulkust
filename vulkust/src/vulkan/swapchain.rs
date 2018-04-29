@@ -22,20 +22,24 @@ impl Swapchain {
         let surface_caps = logical_device.physical_device.get_surface_capabilities();
         let surface_formats = logical_device.physical_device.get_surface_formats();
         let mut best_surface_format = vk::VkSurfaceFormatKHR::default();
-        for format in surface_formats.clone() {
+        for format in &surface_formats {
             if format.format as u32 == vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM as u32 {
-                best_surface_format = format;
+                best_surface_format = *format;
                 break;
             }
         }
-        if best_surface_format.format as u32 != vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM as u32 {
-            if best_surface_format.format as u32 == vk::VkFormat::VK_FORMAT_UNDEFINED as u32 {
-                best_surface_format.format = vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
-            } else {
-                vxlogi!("VK_FORMAT_R8G8B8A8_UNORM not found in the surface.");
-                best_surface_format = surface_formats[0];
-                vxlogi!("The specified format is {:?}", best_surface_format);
+        for format in &surface_formats {
+            if format.format as u32 == vk::VkFormat::VK_FORMAT_B8G8R8A8_UNORM as u32 {
+                best_surface_format = *format;
+                break;
             }
+        }
+        if best_surface_format.format as u32 != vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM as u32
+            && best_surface_format.format as u32 != vk::VkFormat::VK_FORMAT_B8G8R8A8_UNORM as u32
+        {
+            vxlogi!("VK_FORMAT_R8G8B8A8_UNORM not found in the surface.");
+            best_surface_format = surface_formats[0];
+            vxlogi!("The specified format is {:?}", best_surface_format);
         }
         let mut swapchain_images_count = surface_caps.minImageCount + 1;
         if surface_caps.maxImageCount > 0 && swapchain_images_count > surface_caps.maxImageCount {
@@ -149,6 +153,7 @@ impl Swapchain {
             vk_data: vk_data,
         }
     }
+
     pub fn get_next_image_index(&self, sem: &Semaphore) -> NextImageResult {
         let mut image_index = 0u32;
         let res = unsafe {

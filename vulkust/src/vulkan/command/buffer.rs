@@ -1,9 +1,9 @@
-use std::sync::Arc;
+use super::super::vulkan as vk;
 use std::default::Default;
-use super::super::super::system::vulkan as vk;
-use super::super::descriptor::Set as DescriptorSet;
-use super::super::pipeline::{Pipeline, Layout as PipelineLayout};
-use super::super::fence::Fence;
+use std::sync::Arc;
+// use super::super::descriptor::Set as DescriptorSet;
+// use super::super::pipeline::{Pipeline, Layout as PipelineLayout};
+// use super::super::fence::Fence;
 use super::pool::Pool;
 
 pub struct Buffer {
@@ -33,7 +33,10 @@ impl Buffer {
             vk_data: vk_data,
         }
     }
-    pub fn begin_render_pass_with_info(&mut self, render_pass_begin_info: vk::VkRenderPassBeginInfo) {
+    pub fn begin_render_pass_with_info(
+        &mut self,
+        render_pass_begin_info: vk::VkRenderPassBeginInfo,
+    ) {
         unsafe {
             vk::vkCmdBeginRenderPass(
                 self.vk_data,
@@ -70,21 +73,21 @@ impl Buffer {
         }
     }
 
-    pub fn flush(&mut self) {;
-        let fence = Fence::new(self.pool.logical_device.clone());
-        vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
-        let mut submit_info = vk::VkSubmitInfo::default();
-        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &self.vk_data;
-        vulkan_check!(vk::vkQueueSubmit(
-            self.pool.logical_device.vk_graphic_queue,
-            1,
-            &submit_info,
-            fence.vk_data,
-        ));
-        fence.wait();
-    }
+    // pub fn flush(&mut self) {;
+    //     let fence = Fence::new(self.pool.logical_device.clone());
+    //     vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
+    //     let mut submit_info = vk::VkSubmitInfo::default();
+    //     submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    //     submit_info.commandBufferCount = 1;
+    //     submit_info.pCommandBuffers = &self.vk_data;
+    //     vulkan_check!(vk::vkQueueSubmit(
+    //         self.pool.logical_device.vk_graphic_queue,
+    //         1,
+    //         &submit_info,
+    //         fence.vk_data,
+    //     ));
+    //     fence.wait();
+    // }
 
     pub fn end_render_pass(&mut self) {
         unsafe {
@@ -96,23 +99,23 @@ impl Buffer {
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
     }
 
-    pub fn bind_descriptor_set(&mut self, pl: &Arc<PipelineLayout>, ds: &Arc<DescriptorSet>, offset: usize) {
-        let offset = offset as u32;
-        let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
-        unsafe {
-            vk::vkCmdBindDescriptorSets(
-                self.vk_data, bind_point, pl.vk_data, 0, 1, &(ds.vk_data), 1, &offset);
-        }
-    }
+    // pub fn bind_descriptor_set(&mut self, pl: &Arc<PipelineLayout>, ds: &Arc<DescriptorSet>, offset: usize) {
+    //     let offset = offset as u32;
+    //     let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+    //     unsafe {
+    //         vk::vkCmdBindDescriptorSets(
+    //             self.vk_data, bind_point, pl.vk_data, 0, 1, &(ds.vk_data), 1, &offset);
+    //     }
+    // }
 
-    pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
-        let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
-        unsafe {
-            vk::vkCmdBindPipeline(
-                self.vk_data, bind_point, p.vk_data,
-            );
-        }
-    }
+    // pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
+    //     let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+    //     unsafe {
+    //         vk::vkCmdBindPipeline(
+    //             self.vk_data, bind_point, p.vk_data,
+    //         );
+    //     }
+    // }
 }
 
 impl Drop for Buffer {
