@@ -20,7 +20,6 @@ bitflags! {
     }
 }
 
-
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
 pub enum AAssetMode {

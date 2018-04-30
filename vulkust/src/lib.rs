@@ -5,8 +5,13 @@
 #[cfg(appleos)]
 #[macro_use]
 pub extern crate objc;
+
+#[macro_use]
+pub extern crate bitflags;
+
 pub extern crate cgmath as math;
 pub extern crate image;
+pub extern crate libc;
 
 #[macro_use]
 pub mod macros;

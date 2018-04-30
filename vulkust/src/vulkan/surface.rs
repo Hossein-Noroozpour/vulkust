@@ -12,27 +12,21 @@ pub struct Surface {
 
 impl Surface {
     #[cfg(target_os = "android")]
-    pub fn new<CoreApp>(instance: Arc<Instance>, os_app: *mut OsApplication<CoreApp>) -> Self
-    where
-        CoreApp: CoreAppTrait,
-    {
-        loge!("Reached {:?}", os_app);
+    pub fn new(instance: &Arc<Instance>, os_app: &OsApp) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let mut create_info = vk::VkAndroidSurfaceCreateInfoKHR::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-        create_info.window = unsafe { (*os_app).window };
-        loge!("{:?}.{:?}", os_app, create_info.window);
+        create_info.window = unsafe { os_app.window };
         vulkan_check!(vk::vkCreateAndroidSurfaceKHR(
             instance.vk_data,
             &create_info,
             null(),
             &mut vk_data,
         ));
-        loge!("Reached");
         Surface {
-            instance: instance,
-            vk_data: vk_data,
+            instance: instance.clone(),
+            vk_data,
         }
     }
 

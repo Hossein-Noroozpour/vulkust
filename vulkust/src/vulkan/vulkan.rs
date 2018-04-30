@@ -4790,8 +4790,6 @@ pub type PFN_vkDebugReportMessageEXT = unsafe extern "C" fn(
     pMessage: *const c_char,
 );
 
-#[cfg(target_os = "android")]
-use super::android::window::ANativeWindow;
 pub const VK_KHR_ANDROID_SURFACE_SPEC_VERSION: u32 = 6u32;
 pub const VK_KHR_ANDROID_SURFACE_EXTENSION_NAME: &'static str = "VK_KHR_android_surface";
 type VkAndroidSurfaceCreateFlagsKHR = VkFlags;
@@ -4802,7 +4800,7 @@ pub struct VkAndroidSurfaceCreateInfoKHR {
     pub structure_type: VkStructureType,
     pub pointer_next: *const c_void,
     pub flags: VkAndroidSurfaceCreateFlagsKHR,
-    pub window: *mut ANativeWindow,
+    pub window: *mut os::window::ANativeWindow,
 }
 #[cfg(target_os = "android")]
 impl Default for VkAndroidSurfaceCreateInfoKHR {

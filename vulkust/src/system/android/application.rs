@@ -1,56 +1,35 @@
-extern crate libc;
-use std;
-use std::mem::transmute;
-use std::ptr::null_mut;
-use self::libc::{c_void, size_t};
 use super::super::super::core::application::ApplicationTrait;
-use super::super::super::core::asset::manager::Manager as AssetManager;
-use super::super::super::render::engine::{EngineTrait as RenderEngineTrait, RenderEngine};
-use super::super::file::File;
-use super::super::os::ApplicationTrait as OsApplicationTrait;
+use super::super::super::libc::{c_int, c_void, size_t};
 use super::activity::ANativeActivity;
 use super::glue;
 use super::glue::{AndroidApp, AndroidPollSource, AppCmd};
-use super::window::ANativeWindow;
 use super::looper::ALooper_pollAll;
+use super::window::ANativeWindow;
+use std;
+use std::mem::transmute;
+use std::ptr::null_mut;
 
-#[derive(Clone, Copy)]
-pub struct Args {
-    pub activity: *mut ANativeActivity,
-    pub saved_state: *mut c_void,
-    pub saved_state_size: size_t,
-}
-pub struct Application<CoreApp>
-where
-    CoreApp: ApplicationTrait,
-{
-    pub asset_manager: AssetManager,
-    pub core_app: *mut CoreApp,
-    pub render_engine: *mut RenderEngine<CoreApp>,
+pub struct Application {
     pub window: *mut ANativeWindow,
     pub window_initialized: bool,
-    pub args: Args,
+    activity: *mut ANativeActivity,
+    saved_state: *mut c_void,
+    saved_state_size: size_t,
 }
 
-impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
-where
-    CoreApp: ApplicationTrait,
-{
-    fn new(args: *const std::os::raw::c_void) -> Self {
-        let args: *mut Args = unsafe { transmute(args) };
-        let args = unsafe { (*args).clone() };
-        let activity = args.activity;
-        logi!("Creating: {:?}", activity);
+impl Application {
+    fn new(
+        activity: *mut ANativeActivity,
+        saved_state: *mut c_void,
+        saved_state_size: size_t,
+    ) -> Self {
+        vxlogi!("Creating: {:?}", activity);
         let app = Application {
-            asset_manager: AssetManager::new(File::new(
-                &"data.gx3d".to_string(),
-                unsafe { (*activity).assetManager },
-            )),
-            core_app: null_mut(),
-            render_engine: null_mut(),
             window: null_mut(),
             window_initialized: false,
-            args: args,
+            activity,
+            saved_state,
+            saved_state_size,
         };
         unsafe {
             (*(*activity).callbacks).onDestroy = glue::on_destroy;
@@ -69,39 +48,22 @@ where
         }
         app
     }
-    fn set_core_app(&mut self, c: *mut CoreApp) {
-        self.core_app = c;
-    }
-    fn set_rnd_eng(&mut self, r: *mut RenderEngine<CoreApp>) {
-        self.render_engine = r;
-    }
+
     fn initialize(&mut self) -> bool {
         unsafe {
-            (*self.args.activity).instance = glue::android_app_create::<CoreApp>(
-                self.args.activity,
-                self.args.saved_state,
-                self.args.saved_state_size,
-                transmute((*self.render_engine).os_app),
-            )
+            (*activity).instance =
+                glue::android_app_create(activity, saved_state, saved_state_size);
         }
         self.asset_manager.initialize();
         return true;
     }
-    fn execute(&mut self) -> bool {
-        return true;
-    }
-}
 
-impl<CoreApp> Application<CoreApp>
-where
-    CoreApp: ApplicationTrait,
-{
     pub fn main(&mut self, android_app: *mut AndroidApp) {
         logi!("I'm in");
         unsafe {
-            (*android_app).on_app_cmd = handle_cmd::<CoreApp>;
+            (*android_app).on_app_cmd = handle_cmd;
         }
-        let mut events = 0 as libc::c_int;
+        let mut events = 0 as c_int;
         let mut source = 0 as *mut AndroidPollSource;
         while unsafe { (*android_app).destroy_requested } == 0 {
             if unsafe {
@@ -149,19 +111,13 @@ where
         }
     }
 }
-unsafe extern "C" fn handle_cmd<CoreApp>(android_app: *mut AndroidApp, cmd: i32)
-where
-    CoreApp: ApplicationTrait,
-{
-    let app: *mut Application<CoreApp> = transmute((*android_app).user_data);
+unsafe extern "C" fn handle_cmd(android_app: *mut AndroidApp, cmd: i32) {
+    let app: *mut Application = transmute((*android_app).user_data);
     (*app).handle_cmd(android_app, cmd);
 }
 
-impl<CoreApp> Drop for Application<CoreApp>
-where
-    CoreApp: ApplicationTrait,
-{
+impl Drop for Application {
     fn drop(&mut self) {
-        loge!("Error unexpected deletion of Os Application.");
+        vxloge!("Error unexpected deletion of Os Application.");
     }
 }

@@ -1,6 +1,6 @@
-use std::os::raw::c_void;
 use std::default::Default;
 use std::mem::zeroed;
+use std::os::raw::c_void;
 
 use super::rect::ARect;
 

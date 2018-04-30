@@ -27,13 +27,22 @@ macro_rules! start {
             saved_state: *mut std::os::raw::c_void,
             saved_state_size: usize,
         ) {
-            use std::mem::transmute;
+            use vulkust::core::application::ApplicationTrait as CoreAppTrait;
             use vulkust::system::application::Application as SysApp;
-            SysApp::<$App>::new(
+            let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
+            let sys_app = Arc::new(RwLock::new(SysApp::new(
+                core_app.clone(),
                 activity,
-                transmute(saved_state),
-                transmute(saved_state_size),
-            );
+                saved_state,
+                saved_state_size,
+            )));
+            let sys_app_clone = sys_app.clone();
+            sys_app.write().unwrap().start(sys_app_clone);
+            core_app
+                .write()
+                .unwrap()
+                .set_system_application(sys_app.clone());
+            sys_app.read().unwrap().run();
         }
     };
 }

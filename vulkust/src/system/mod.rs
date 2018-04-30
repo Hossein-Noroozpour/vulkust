@@ -1,5 +1,7 @@
-// #[cfg(target_os = "android")]
-// pub mod android;
+#[cfg(target_os = "android")]
+pub mod android;
+#[cfg(target_os = "android")]
+pub use self::android as os;
 #[cfg(target_os = "linux")]
 pub mod linux;
 #[cfg(target_os = "linux")]

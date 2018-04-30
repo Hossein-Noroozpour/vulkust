@@ -3,13 +3,11 @@ use self::libc::{c_int, c_void};
 
 pub type ALooper = c_void;
 
-
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
 pub enum ALooperPrepare {
     AllowNonCallbacks = 1,
 }
-
 
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
@@ -30,8 +28,8 @@ pub enum ALooperEvent {
     Invalid = 16,
 }
 
-pub type ALooperCallbackFunc = unsafe extern "C" fn(fd: c_int, events: c_int, data: *mut c_void)
-    -> c_int;
+pub type ALooperCallbackFunc =
+    unsafe extern "C" fn(fd: c_int, events: c_int, data: *mut c_void) -> c_int;
 
 #[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
 extern "C" {

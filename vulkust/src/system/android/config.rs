@@ -1,5 +1,5 @@
-use std::os::raw::c_char;
 use super::asset::AAssetManager;
+use std::os::raw::c_char;
 
 pub enum AConfiguration {}
 
@@ -180,14 +180,18 @@ impl Debug for AConfiguration {
             AConfiguration_getCountry(self, country.as_mut_ptr());
         }
         write!(
-            f, "\nAConfiguration {{\n    mcc : {:?}\n    mnc : {:?}\n    lang : {}{}\
-            \n    cnt : {}{}\n    orientation : {:?}\n    touch : {:?}\n    dens : {:?}\
-            \n    keys : {:?}\n    nav : {:?}\n    keysHid : {:?}\n    navHid : {:?}\
-            \n    sdk : {:?}\n    size : {:?}\n    long : {:?}\n    modeType : {:?}\
-            \n    modeNight : {:?}\n}}",
-            unsafe {AConfiguration_getMcc(self) },
-            unsafe {AConfiguration_getMnc(self) },
-            lang[0] as char, lang[1] as char, country[0] as char, country[1] as char,
+            f,
+            "\nAConfiguration {{\n    mcc : {:?}\n    mnc : {:?}\n    lang : {}{}\
+             \n    cnt : {}{}\n    orientation : {:?}\n    touch : {:?}\n    dens : {:?}\
+             \n    keys : {:?}\n    nav : {:?}\n    keysHid : {:?}\n    navHid : {:?}\
+             \n    sdk : {:?}\n    size : {:?}\n    long : {:?}\n    modeType : {:?}\
+             \n    modeNight : {:?}\n}}",
+            unsafe { AConfiguration_getMcc(self) },
+            unsafe { AConfiguration_getMnc(self) },
+            lang[0] as char,
+            lang[1] as char,
+            country[0] as char,
+            country[1] as char,
             unsafe { AConfiguration_getOrientation(self) },
             unsafe { AConfiguration_getTouchscreen(self) },
             unsafe { AConfiguration_getDensity(self) },

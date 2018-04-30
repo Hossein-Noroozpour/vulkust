@@ -1,10 +1,10 @@
 #![allow(non_camel_case_types, non_upper_case_globals, non_snake_case)]
 extern crate libc;
 use self::libc::{c_char, c_int, c_void};
-use super::jni::{jobject, JNIEnv, JavaVM};
 use super::asset::AAssetManager;
-use super::rect::ARect;
 use super::input::AInputQueue;
+use super::jni::{jobject, JNIEnv, JavaVM};
+use super::rect::ARect;
 use super::window::ANativeWindow;
 
 #[repr(C)]
@@ -23,23 +23,15 @@ pub struct ANativeActivity {
 }
 
 type activity_receiver = unsafe extern "C" fn(activity: *mut ANativeActivity);
-type activity_size_receiver = unsafe extern "C" fn(
-    activity: *mut ANativeActivity,
-    size: *mut usize,
-) -> *mut c_void;
+type activity_size_receiver =
+    unsafe extern "C" fn(activity: *mut ANativeActivity, size: *mut usize) -> *mut c_void;
 type activity_int_receiver = unsafe extern "C" fn(activity: *mut ANativeActivity, hasFocus: c_int);
-type activity_window_receiver = unsafe extern "C" fn(
-    activity: *mut ANativeActivity,
-    window: *mut ANativeWindow,
-);
-type activity_input_receiver = unsafe extern "C" fn(
-    activity: *mut ANativeActivity,
-    queue: *mut AInputQueue,
-);
-type activity_rect_receiver = unsafe extern "C" fn(
-    activity: *mut ANativeActivity,
-    rect: *const ARect,
-);
+type activity_window_receiver =
+    unsafe extern "C" fn(activity: *mut ANativeActivity, window: *mut ANativeWindow);
+type activity_input_receiver =
+    unsafe extern "C" fn(activity: *mut ANativeActivity, queue: *mut AInputQueue);
+type activity_rect_receiver =
+    unsafe extern "C" fn(activity: *mut ANativeActivity, rect: *const ARect);
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]

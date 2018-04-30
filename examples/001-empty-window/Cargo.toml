@@ -3,7 +3,7 @@ name = "simple-game"
 version = "0.1.0"
 authors = ["Hossein Noroozpour (Thany Hulixer) <hossein.noroozpour@gmail.com>"]
 description = "A simple game made by Vulkust game engine"
-license = "GPL-1.0"
+license = "MIT"
 
 [features]
 log = []
@@ -12,9 +12,6 @@ intensive-debug = ["log"]
 
 [dependencies]
 vulkust = { path = "../../vulkust" }
-
-[profile.release]
-lto = true
 
 # [lib]
 # name = "vulkust"

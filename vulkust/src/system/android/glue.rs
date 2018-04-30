@@ -1,14 +1,14 @@
 extern crate libc;
-use std::ptr;
-use std::mem::{size_of, transmute, zeroed};
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
-use super::config;
-use super::looper;
 use super::activity;
-use super::input;
-use super::window;
-use super::rect;
 use super::application::Application;
+use super::config;
+use super::input;
+use super::looper;
+use super::rect;
+use super::window;
+use std::mem::{size_of, transmute, zeroed};
+use std::ptr;
 
 #[repr(C)]
 #[derive(Debug, Clone)]
@@ -304,15 +304,12 @@ where
     }
 }
 
-pub unsafe extern "C" fn android_app_create<CoreApp>(
+pub unsafe extern "C" fn android_app_create(
     activity: *mut activity::ANativeActivity,
     saved_state: *mut libc::c_void,
     saved_state_size: libc::size_t,
     user_data: *mut libc::c_void,
-) -> *mut libc::c_void
-where
-    CoreApp: CoreAppTrait,
-{
+) -> *mut libc::c_void {
     let mut android_app: *mut AndroidApp = transmute(libc::malloc(size_of::<AndroidApp>()));
     libc::memset(transmute(android_app), 0, size_of::<AndroidApp>());
     (*android_app).on_input_event = default_on_input_event;

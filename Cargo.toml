@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "examples/001-empty-window",
+    "examples/002-android-empty-window",
     "vulkust",
 ]

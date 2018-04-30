@@ -39,6 +39,4 @@ pub fn allocate_with_requirements(
     memory
 }
 
-pub struct Manager {
-    
-}
+pub struct Manager {}

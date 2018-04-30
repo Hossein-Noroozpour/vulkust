@@ -1,11 +1,8 @@
-// #[cfg(target_os = "android")]
-// extern crate libc;
-// use std::os::raw::c_void as std_void;
-// use std::mem::transmute;
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
 use super::super::core::event::{Event, Type as EventType};
 use super::super::core::types::Real;
+use super::super::libc;
 use super::super::render::engine::Engine as RenderEngine;
 use super::os::application::Application as OsApp;
 use std::sync::{Arc, RwLock};
@@ -30,9 +27,24 @@ pub struct Application {
 }
 
 impl Application {
-    #[cfg(desktop_os)]
+    #[cfg(not(target_os = "android"))]
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
         let os_app = OsApp::new();
+        return Application::set(core_app, os_app);
+    }
+
+    #[cfg(target_os = "android")]
+    pub fn new(
+        core_app: Arc<RwLock<CoreAppTrait>>,
+        activity: *mut super::os::activity::ANativeActivity,
+        saved_state: *mut libc::c_void,
+        saved_state_size: libc::size_t,
+    ) {
+        let os_app = OsApp::new(activity, saved_state, saved_state_size);
+        return Application::set(core_app, os_app);
+    }
+
+    fn set(core_app: Arc<RwLock<CoreAppTrait>>, os_app: OsApp) -> Self {
         let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
         let mouse_info = MouseInfo { x: 0.0, y: 0.0 };
         let window_info = WindowInfo {
@@ -49,40 +61,7 @@ impl Application {
         }
     }
 
-    #[cfg(target_os = "android")]
-    pub fn new(
-        activity: *mut super::android::activity::ANativeActivity,
-        saved_state: *mut libc::c_void,
-        saved_state_size: libc::size_t,
-    ) {
-        use super::android::application::Args;
-        use std::mem::transmute;
-        let args = Args {
-            activity: activity,
-            saved_state: saved_state,
-            saved_state_size: saved_state_size,
-        };
-        let _ = Self::set(unsafe { transmute(&args) });
-    }
-
-    // fn set(args: *const std_void) -> Self {
-    //     let os_app = Box::into_raw(Box::new(OsApplication::<CoreApp>::new(args)));
-    //     let render_engine = Box::into_raw(Box::new(RenderEngine::<CoreApp>::new()));
-    //     let core_app = Box::into_raw(Box::new(CoreApp::new()));
-    //     unsafe { (*os_app).set_core_app(transmute(core_app)) };
-    //     unsafe { (*os_app).set_rnd_eng(transmute(render_engine)) };
-    //     unsafe { (*render_engine).set_os_app(transmute(os_app)) };
-    //     unsafe { (*render_engine).set_core_app(transmute(core_app)) };
-    //     unsafe { (*os_app).initialize() };
-    //     //logi!("{:?}     {:?}", os_app, render_engine);
-    //     Application {
-    //         os_app: os_app,
-    //         render_engine: render_engine,
-    //         core_app: core_app,
-    //     }
-    // }
-
-    #[cfg(desktop_os)]
+    #[cfg(not(target_os = "android"))]
     pub fn run(&self) {
         self.os_app.finalize();
         'main_loop: loop {
