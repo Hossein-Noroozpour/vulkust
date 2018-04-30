@@ -4,3 +4,6 @@ members = [
     "examples/002-android-empty-window",
     "vulkust",
 ]
+
+[profile.release]
+lto = true

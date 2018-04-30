@@ -39,7 +39,7 @@ impl Application {
         activity: *mut super::os::activity::ANativeActivity,
         saved_state: *mut libc::c_void,
         saved_state_size: libc::size_t,
-    ) {
+    ) -> Self {
         let os_app = OsApp::new(activity, saved_state, saved_state_size);
         return Application::set(core_app, os_app);
     }
@@ -59,6 +59,11 @@ impl Application {
             mouse_info,
             window_info,
         }
+    }
+
+    #[cfg(target_os = "android")]
+    pub fn initialize(&mut self, itself: Arc<RwLock<Application>>) {
+        self.os_app.initialize(itself);
     }
 
     #[cfg(not(target_os = "android"))]

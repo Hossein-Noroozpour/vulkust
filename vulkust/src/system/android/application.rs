@@ -1,5 +1,6 @@
 use super::super::super::core::application::ApplicationTrait;
 use super::super::super::libc::{c_int, c_void, size_t};
+use super::super::application::Application as SysApp;
 use super::activity::ANativeActivity;
 use super::glue;
 use super::glue::{AndroidApp, AndroidPollSource, AppCmd};
@@ -8,6 +9,7 @@ use super::window::ANativeWindow;
 use std;
 use std::mem::transmute;
 use std::ptr::null_mut;
+use std::sync::{Arc, RwLock};
 
 pub struct Application {
     pub window: *mut ANativeWindow,
@@ -18,7 +20,7 @@ pub struct Application {
 }
 
 impl Application {
-    fn new(
+    pub fn new(
         activity: *mut ANativeActivity,
         saved_state: *mut c_void,
         saved_state_size: size_t,
@@ -49,17 +51,19 @@ impl Application {
         app
     }
 
-    fn initialize(&mut self) -> bool {
+    pub fn initialize(&mut self, itself: Arc<RwLock<SysApp>>) {
         unsafe {
-            (*activity).instance =
-                glue::android_app_create(activity, saved_state, saved_state_size);
+            (*(self.activity)).instance = glue::android_app_create(
+                self.activity,
+                self.saved_state,
+                self.saved_state_size,
+                itself,
+            );
         }
-        self.asset_manager.initialize();
-        return true;
     }
 
     pub fn main(&mut self, android_app: *mut AndroidApp) {
-        logi!("I'm in");
+        vxlogi!("I'm in");
         unsafe {
             (*android_app).on_app_cmd = handle_cmd;
         }
@@ -81,32 +85,27 @@ impl Application {
                     }
                 }
                 if self.window_initialized {
-                    unsafe {
-                        (*self.render_engine).update();
-                    }
+                    vxlogf!("update engine.");
                 }
             }
         }
-        loge!("Unexpected flow.");
+        vxloge!("Unexpected flow.");
     }
     fn handle_cmd(&mut self, app: *mut AndroidApp, cmd: i32) {
         match unsafe { transmute::<i8, AppCmd>(cmd as i8) } {
             AppCmd::InitWindow => {
-                logi!("Window has been shown!");
+                vxlogi!("Window has been shown!");
                 self.window_initialized = true;
                 self.window = unsafe { (*app).window };
-                loge!("{:?}", self.window);
-                unsafe { (*self.render_engine).initialize() };
-                unsafe {
-                    (*self.core_app).initialize((*self.render_engine).os_app, self.render_engine)
-                };
+                vxloge!("{:?}", self.window);
+                vxlogf!("initialize engine and core app in here.");
             }
             AppCmd::TermWindow => {
-                logi!("Window has been terminated!");
+                vxlogi!("Window has been terminated!");
             }
             c @ _ => {
                 let _ = c;
-                logi!("event {:?} not handled in app {:?} ", c, app);
+                vxlogi!("event {:?} not handled in app {:?} ", c, app);
             }
         }
     }

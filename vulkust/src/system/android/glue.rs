@@ -1,5 +1,6 @@
-extern crate libc;
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::super::libc;
+use super::super::application::Application as SysApp;
 use super::activity;
 use super::application::Application;
 use super::config;
@@ -9,6 +10,7 @@ use super::rect;
 use super::window;
 use std::mem::{size_of, transmute, zeroed};
 use std::ptr;
+use std::sync::{Arc, RwLock};
 
 #[repr(C)]
 #[derive(Debug, Clone)]
@@ -55,6 +57,7 @@ pub struct AndroidApp {
     pub pending_input_queue: *mut input::AInputQueue,
     pub pending_window: *mut window::ANativeWindow,
     pub pending_content_rect: rect::ARect,
+    pub sys_app: Option<Arc<RwLock<SysApp>>>,
 }
 
 impl Drop for AndroidApp {
@@ -263,10 +266,7 @@ unsafe extern "C" fn process_cmd(app: *mut AndroidApp, source: *mut AndroidPollS
     android_app_post_exec_cmd(app, transmute(cmd));
 }
 
-extern "C" fn android_app_entry<CoreApp>(param: *mut libc::c_void) -> *mut libc::c_void
-where
-    CoreApp: CoreAppTrait,
-{
+extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
     unsafe {
         let android_app: *mut AndroidApp = transmute(param);
         (*android_app).config = config::AConfiguration_new();
@@ -296,7 +296,7 @@ where
         libc::pthread_cond_broadcast(&mut ((*android_app).cond));
         libc::pthread_mutex_unlock(&mut (*android_app).mutex);
         {
-            let app: *mut Application<CoreApp> = transmute((*android_app).user_data);
+            let app: *mut Application = transmute((*android_app).user_data);
             (*app).main(android_app);
         }
         android_app_destroy(android_app);
@@ -308,13 +308,13 @@ pub unsafe extern "C" fn android_app_create(
     activity: *mut activity::ANativeActivity,
     saved_state: *mut libc::c_void,
     saved_state_size: libc::size_t,
-    user_data: *mut libc::c_void,
+    sys_app: Arc<RwLock<SysApp>>,
 ) -> *mut libc::c_void {
     let mut android_app: *mut AndroidApp = transmute(libc::malloc(size_of::<AndroidApp>()));
     libc::memset(transmute(android_app), 0, size_of::<AndroidApp>());
     (*android_app).on_input_event = default_on_input_event;
     (*android_app).activity = activity;
-    (*android_app).user_data = user_data;
+    (*android_app).sys_app = Some(sys_app);
     libc::pthread_mutex_init(&mut (*android_app).mutex, ptr::null_mut());
     libc::pthread_cond_init(&mut (*android_app).cond, ptr::null_mut());
     if saved_state != ptr::null_mut() {
@@ -334,7 +334,7 @@ pub unsafe extern "C" fn android_app_create(
     libc::pthread_create(
         &mut (*android_app).thread,
         &attr,
-        android_app_entry::<CoreApp>,
+        android_app_entry,
         transmute(android_app),
     );
     libc::pthread_mutex_lock(&mut (*android_app).mutex);

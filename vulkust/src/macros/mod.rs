@@ -1,5 +1,5 @@
+#[cfg(not(target_os = "android"))]
 #[macro_export]
-#[cfg(desktop_os)]
 macro_rules! vulkust_start {
     ($App:ident) => {
         fn main() {
@@ -16,16 +16,16 @@ macro_rules! vulkust_start {
     };
 }
 
-#[macro_export]
 #[cfg(target_os = "android")]
-macro_rules! start {
+#[macro_export]
+macro_rules! vulkust_start {
     ($App:ident) => {
         #[allow(dead_code, non_snake_case)]
         #[no_mangle]
         pub unsafe extern "C" fn ANativeActivity_onCreate(
             activity: *mut vulkust::system::android::activity::ANativeActivity,
-            saved_state: *mut std::os::raw::c_void,
-            saved_state_size: usize,
+            saved_state: *mut vulkust::libc::c_void,
+            saved_state_size: vulkust::libc::size_t,
         ) {
             use vulkust::core::application::ApplicationTrait as CoreAppTrait;
             use vulkust::system::application::Application as SysApp;
@@ -37,12 +37,7 @@ macro_rules! start {
                 saved_state_size,
             )));
             let sys_app_clone = sys_app.clone();
-            sys_app.write().unwrap().start(sys_app_clone);
-            core_app
-                .write()
-                .unwrap()
-                .set_system_application(sys_app.clone());
-            sys_app.read().unwrap().run();
+            sys_app.write().unwrap().initialize(sys_app_clone);
         }
     };
 }
