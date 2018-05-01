@@ -5,7 +5,7 @@ use std::ptr::null;
 use super::super::core::string::cstrings_to_ptrs;
 use super::vulkan as vk;
 
-#[cfg(debug_mode)]
+#[cfg(debug_assertions)]
 mod debug {
     use std::ffi::{CStr, CString};
     use std::mem::transmute;
@@ -149,7 +149,7 @@ mod debug {
 
 }
 
-#[cfg(not(debug_mode))]
+#[cfg(not(debug_assertions))]
 mod debug {
     use super::vk;
     use std::ffi::CString;
@@ -192,12 +192,12 @@ impl Instance {
         let vk_platform_surface_ext = CString::new("VK_KHR_xcb_surface").unwrap();
         #[cfg(target_os = "android")]
         let vk_platform_surface_ext = CString::new("VK_KHR_android_surface").unwrap();
-        #[cfg(debug_mode)]
+        #[cfg(debug_assertions)]
         let vk_ext_debug_report_ext = CString::new("VK_EXT_debug_report").unwrap();
         let mut vulkan_extensions = Vec::new();
         vulkan_extensions.push(vk_khr_surface_ext.as_ptr());
         vulkan_extensions.push(vk_platform_surface_ext.as_ptr());
-        #[cfg(debug_mode)]
+        #[cfg(debug_assertions)]
         vulkan_extensions.push(vk_ext_debug_report_ext.as_ptr());
         let mut instance_create_info = vk::VkInstanceCreateInfo::default();
         instance_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

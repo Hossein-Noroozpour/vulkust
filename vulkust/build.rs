@@ -1,15 +1,27 @@
+use std::env;
+
 fn main() {
-    #[cfg(
-        all(
-            any(target_os = "linux", target_os = "macos", target_os = "windows"),
-            not(target_os = "android")
-        )
-    )]
-    println!("cargo:rustc-cfg=desktop_os");
-    #[cfg(any(target_os = "ios", target_os = "macos"))]
-    println!("cargo:rustc-cfg=apple_os");
-    #[cfg(debug_assertions)]
-    println!("cargo:rustc-cfg=debug_mode");
-    #[cfg(any(target_os = "linux", target_os = "ios", target_os = "macos", target_os = "android"))]
-    println!("cargo:rustc-cfg=in_unix");
+    let target = env::var("TARGET").unwrap();
+    let mut in_macos = false;
+    let mut in_android = false;
+    let mut in_linux = false;
+    let mut in_windows = false;
+    if target.contains("darwin") {
+        in_macos = true;
+    } else if target.contains("android") {
+        in_android = true;
+    } else if target.contains("linux") {
+        in_linux = true;
+    } else if target.contains("windows") {
+        in_windows = true;
+    }
+    if !(in_macos || in_android || in_linux || in_windows) {
+        panic!("Unsupported platform!");
+    }
+    if in_linux || in_windows || in_macos {
+        println!("cargo:rustc-cfg=desktop_os");
+    }
+    if in_linux || in_macos || in_android {
+        println!("cargo:rustc-cfg=unix_based_os");
+    }
 }

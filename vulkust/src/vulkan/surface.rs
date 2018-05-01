@@ -3,7 +3,7 @@ use super::instance::Instance;
 use super::vulkan as vk;
 use std::default::Default;
 use std::ptr::null;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 pub struct Surface {
     pub instance: Arc<Instance>,
@@ -12,12 +12,12 @@ pub struct Surface {
 
 impl Surface {
     #[cfg(target_os = "android")]
-    pub fn new(instance: &Arc<Instance>, os_app: &OsApp) -> Self {
+    pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let mut create_info = vk::VkAndroidSurfaceCreateInfoKHR::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-        create_info.window = unsafe { os_app.window };
+        create_info.window = vxresult!(os_app.read()).window;
         vulkan_check!(vk::vkCreateAndroidSurfaceKHR(
             instance.vk_data,
             &create_info,
@@ -31,7 +31,7 @@ impl Surface {
     }
 
     #[cfg(target_os = "linux")]
-    pub fn new(instance: &Arc<Instance>, os_app: &OsApp) -> Self {
+    pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_surface = 0 as vk::VkSurfaceKHR;
         let mut create_info = vk::VkXcbSurfaceCreateInfoKHR::default();
         create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;

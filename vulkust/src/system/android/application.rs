@@ -25,7 +25,6 @@ impl Application {
         saved_state: *mut c_void,
         saved_state_size: size_t,
     ) -> Self {
-        vxlogi!("Creating: {:?}", activity);
         let app = Application {
             window: null_mut(),
             window_initialized: false,
@@ -51,7 +50,7 @@ impl Application {
         app
     }
 
-    pub fn initialize(&mut self, itself: Arc<RwLock<SysApp>>) {
+    pub fn initialize(&self, itself: Arc<RwLock<Application>>) {
         unsafe {
             (*(self.activity)).instance = glue::android_app_create(
                 self.activity,
@@ -111,8 +110,7 @@ impl Application {
     }
 }
 unsafe extern "C" fn handle_cmd(android_app: *mut AndroidApp, cmd: i32) {
-    let app: *mut Application = transmute((*android_app).user_data);
-    (*app).handle_cmd(android_app, cmd);
+    vxresult!(vxunwrap!((*android_app).os_app).write()).handle_cmd(android_app, cmd);
 }
 
 impl Drop for Application {

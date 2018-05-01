@@ -3,8 +3,8 @@
 macro_rules! vulkust_start {
     ($App:ident) => {
         fn main() {
-            use vulkust::core::application::ApplicationTrait as CoreAppTrait;
-            use vulkust::system::application::Application as SysApp;
+            use $crate::core::application::ApplicationTrait as CoreAppTrait;
+            use $crate::system::application::Application as SysApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let sys_app = Arc::new(RwLock::new(SysApp::new(core_app.clone())));
             core_app
@@ -23,12 +23,12 @@ macro_rules! vulkust_start {
         #[allow(dead_code, non_snake_case)]
         #[no_mangle]
         pub unsafe extern "C" fn ANativeActivity_onCreate(
-            activity: *mut vulkust::system::android::activity::ANativeActivity,
-            saved_state: *mut vulkust::libc::c_void,
-            saved_state_size: vulkust::libc::size_t,
+            activity: *mut $crate::system::android::activity::ANativeActivity,
+            saved_state: *mut $crate::libc::c_void,
+            saved_state_size: $crate::libc::size_t,
         ) {
-            use vulkust::core::application::ApplicationTrait as CoreAppTrait;
-            use vulkust::system::application::Application as SysApp;
+            use $crate::core::application::ApplicationTrait as CoreAppTrait;
+            use $crate::system::application::Application as SysApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let sys_app = Arc::new(RwLock::new(SysApp::new(
                 core_app.clone(),
@@ -42,8 +42,8 @@ macro_rules! vulkust_start {
     };
 }
 
+#[cfg(not(target_os = "android"))]
 #[macro_export]
-#[cfg(desktop_os)]
 macro_rules! vxlogi {
     ($fmt:expr) => {
         println!("{}", format!("Vulkust information message in file: {} line: {} {}", file!(), line!(), $fmt));
@@ -53,8 +53,8 @@ macro_rules! vxlogi {
     };
 }
 
+#[cfg(not(target_os = "android"))]
 #[macro_export]
-#[cfg(desktop_os)]
 macro_rules! vxloge {
     ($fmt:expr) => {
         eprintln!("{}", format!("Vulkust error message in file: {} line: {} {}", file!(), line!(), $fmt));
@@ -64,8 +64,8 @@ macro_rules! vxloge {
     };
 }
 
+#[cfg(not(target_os = "android"))]
 #[macro_export]
-#[cfg(desktop_os)]
 macro_rules! vxlogf {
     ($fmt:expr) => (
         panic!("{}", format!("Vulkust fatal message in file: {} line: {} {}", file!(), line!(), $fmt));
@@ -75,65 +75,60 @@ macro_rules! vxlogf {
     };
 }
 
-#[macro_export]
 #[cfg(target_os = "android")]
-macro_rules! logi {
+#[macro_export]
+macro_rules! vxlogi {
     ($fmt:expr) => {
-        let s = format!(
-            "Vulkust Information MSG in file: {} line: {} {}", file!(), line!(), format!($fmt));
         $crate::system::android::log::print(
-            $crate::system::android::log::Priority::Info, &s);
+            $crate::system::android::log::Priority::Info, &format!(
+            "Vulkust Information MSG in file: {} line: {} {}", file!(), line!(), format!($fmt)));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        let s = format!(
+        $crate::system::android::log::print(
+            $crate::system::android::log::Priority::Info, &format!(
             "Vulkust Information MSG in file: {} line: {} {}", file!(), line!(),
-            format!($fmt, $($arg)*));
-        $crate::system::android::log::print(
-            $crate::system::android::log::Priority::Info, &s);
+            format!($fmt, $($arg)*)));
     };
 }
 
-#[macro_export]
 #[cfg(target_os = "android")]
-macro_rules! loge {
+#[macro_export]
+macro_rules! vxloge {
     ($fmt:expr) => {
-        let s = format!(
-            "Vulkust Error MSG in file: {} line: {} {}", file!(), line!(), format!($fmt));
         $crate::system::android::log::print(
-            $crate::system::android::log::Priority::Error, &s);
+            $crate::system::android::log::Priority::Error, &format!(
+            "Vulkust Error MSG in file: {} line: {} {}", file!(), line!(), format!($fmt)));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        let s = format!(
+        $crate::system::android::log::print(
+            $crate::system::android::log::Priority::Error, &format!(
             "Vulkust Error MSG in file: {} line: {} {}", file!(), line!(),
-            format!($fmt, $($arg)*));
-        $crate::system::android::log::print(
-            $crate::system::android::log::Priority::Error, &s);
+            format!($fmt, $($arg)*)));
     };
 }
 
-#[macro_export]
 #[cfg(target_os = "android")]
-macro_rules! logf {
-    ($fmt:expr) => {
-        let s = format!(
-            "Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(), format!($fmt));
+#[macro_export]
+macro_rules! vxlogf {
+    ($fmt:expr) => ({
         $crate::system::android::log::print(
-            $crate::system::android::log::Priority::Fatal, &s);
+            $crate::system::android::log::Priority::Fatal, &format!(
+            "Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(), format!($fmt)));
         panic!("Terminated!");
-    };
-    ($fmt:expr, $($arg:tt)*) => {
-        let s = format!("Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(),
-            format!($fmt, $($arg)*));
+    });
+    ($fmt:expr, $($arg:tt)*) => ({
         $crate::system::android::log::print(
-            $crate::system::android::log::Priority::Fatal, &s);
+            $crate::system::android::log::Priority::Fatal, 
+            &format!("Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(),
+            format!($fmt, $($arg)*)));
         panic!("Terminated!");
-    };
+    });
 }
 
 #[macro_export]
 macro_rules! vxunwrap {
     ($e:expr) => {
-        match $e {
+        match &$e {
             Some(v) => v,
             None => vxlogf!("Unwrap failed!"),
         }

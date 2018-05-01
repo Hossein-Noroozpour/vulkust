@@ -13,7 +13,7 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &OsApp) -> Self {
+    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let gapi_engine = GraphicApiEngine::new(os_app);
         Engine {
             gapi_engine,

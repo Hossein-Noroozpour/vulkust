@@ -42,7 +42,7 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn new(os_app: &OsApp) -> Self {
+    pub fn new(os_app: &Arc<RwLock<OsApp>>) -> Self {
         let instance = Arc::new(Instance::new());
         let surface = Arc::new(Surface::new(&instance, os_app));
         let physical_device = Arc::new(PhysicalDevice::new(&surface));
