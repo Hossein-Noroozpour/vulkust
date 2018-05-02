@@ -59,6 +59,7 @@ pub struct AndroidApp {
     pub pending_content_rect: rect::ARect,
     pub sys_app: Option<Arc<RwLock<SysApp>>>,
     pub os_app: Option<Arc<RwLock<OsApp>>>,
+    pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
 }
 
 impl Drop for AndroidApp {
@@ -296,7 +297,8 @@ extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
         (*android_app).running = 1;
         libc::pthread_cond_broadcast(&mut ((*android_app).cond));
         libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-        vxresult!(vxunwrap!((*android_app).os_app).write()).main(android_app);
+        vxresult!(vxunwrap!((*android_app).os_app).read()).main(android_app);
+        vxresult!(vxunwrap!((*android_app).sys_app).read()).run();
         android_app_destroy(android_app);
         ptr::null_mut()
     }
@@ -307,12 +309,14 @@ pub unsafe extern "C" fn android_app_create(
     saved_state: *mut libc::c_void,
     saved_state_size: libc::size_t,
     os_app: Arc<RwLock<OsApp>>,
+    core_app: Arc<RwLock<CoreAppTrait>>,
 ) -> *mut libc::c_void {
     let mut android_app: *mut AndroidApp = transmute(libc::malloc(size_of::<AndroidApp>()));
     libc::memset(transmute(android_app), 0, size_of::<AndroidApp>());
     (*android_app).on_input_event = default_on_input_event;
     (*android_app).activity = activity;
     (*android_app).os_app = Some(os_app);
+    (*android_app).core_app = Some(core_app);
     libc::pthread_mutex_init(&mut (*android_app).mutex, ptr::null_mut());
     libc::pthread_cond_init(&mut (*android_app).cond, ptr::null_mut());
     if saved_state != ptr::null_mut() {
@@ -410,6 +414,9 @@ unsafe extern "C" fn android_app_free(android_app: *mut AndroidApp) {
     libc::close((*android_app).msg_write_fd);
     libc::pthread_cond_destroy(&mut (*android_app).cond);
     libc::pthread_mutex_destroy(&mut (*android_app).mutex);
+    (*android_app).os_app = None;
+    (*android_app).sys_app = None;
+    (*android_app).core_app = None;
     libc::free(transmute(android_app));
 }
 

@@ -97,12 +97,9 @@ impl Application {
                 cs.as_bytes_with_nul().len() as u32,
                 transmute(cs.as_ptr()),
             );
-        }
-        unsafe {
             libc::free(transmute(reply));
-        }
-        unsafe {
             xcb::xcb_map_window(connection, window);
+            xcb::xcb_flush(connection);
         }
         Application {
             connection,
@@ -127,12 +124,6 @@ impl Application {
 
     pub fn get_window_ratio(&self) -> f64 {
         unsafe { (*self.screen).width_in_pixels as f64 / (*self.screen).height_in_pixels as f64 }
-    }
-
-    pub fn finalize(&self) {
-        unsafe {
-            xcb::xcb_flush(self.connection);
-        }
     }
 
     pub fn fetch_events(&self) -> Vec<Event> {

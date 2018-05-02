@@ -46,6 +46,7 @@ impl Physical {
 
     fn find_device(surface: &Arc<Surface>) -> (vk::VkPhysicalDevice, u32, u32, u32, u32) {
         let devices = Self::enumerate_devices(surface.instance.vk_data);
+        vxlogi!("Number of physical devices is: {}", devices.len());
         for device in &devices {
             if Self::device_is_discrete(*device) {
                 match Self::fetch_queues(*device, surface) {
@@ -185,7 +186,7 @@ impl Physical {
 
         if transfer_queue_node_index == u32::max_value() {
             if temp_queue_node_index == u32::max_value() {
-                return None;
+                transfer_queue_node_index = graphics_queue_node_index;
             } else {
                 transfer_queue_node_index = temp_queue_node_index;
             }

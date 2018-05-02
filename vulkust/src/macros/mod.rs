@@ -5,8 +5,10 @@ macro_rules! vulkust_start {
         fn main() {
             use $crate::core::application::ApplicationTrait as CoreAppTrait;
             use $crate::system::application::Application as SysApp;
+            use $crate::system::os::application::Application as OsApp;
+            let os_app = Arc::new(RwLock::new(OsApp::new()));
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
-            let sys_app = Arc::new(RwLock::new(SysApp::new(core_app.clone())));
+            let sys_app = Arc::new(RwLock::new(SysApp::new(core_app.clone(), os_app)));
             core_app
                 .write()
                 .unwrap()
@@ -28,16 +30,15 @@ macro_rules! vulkust_start {
             saved_state_size: $crate::libc::size_t,
         ) {
             use $crate::core::application::ApplicationTrait as CoreAppTrait;
-            use $crate::system::application::Application as SysApp;
+            use $crate::system::os::application::Application as OsApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
-            let sys_app = Arc::new(RwLock::new(SysApp::new(
-                core_app.clone(),
+            let os_app = Arc::new(RwLock::new(OsApp::new(
                 activity,
                 saved_state,
                 saved_state_size,
             )));
-            let sys_app_clone = sys_app.clone();
-            sys_app.write().unwrap().initialize(sys_app_clone);
+            let os_app_clone = os_app.clone();
+            vxresult!(os_app.read()).initialize(os_app_clone, core_app);
         }
     };
 }
@@ -118,7 +119,7 @@ macro_rules! vxlogf {
     });
     ($fmt:expr, $($arg:tt)*) => ({
         $crate::system::android::log::print(
-            $crate::system::android::log::Priority::Fatal, 
+            $crate::system::android::log::Priority::Fatal,
             &format!("Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(),
             format!($fmt, $($arg)*)));
         panic!("Terminated!");

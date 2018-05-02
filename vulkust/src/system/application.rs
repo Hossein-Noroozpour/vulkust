@@ -27,30 +27,7 @@ pub struct Application {
 }
 
 impl Application {
-    #[cfg(not(target_os = "android"))]
-    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
-        let os_app = Arc::new(RwLock::new(OsApp::new()));
-        return Application::set(core_app, os_app);
-    }
-
-    #[cfg(target_os = "android")]
-    pub fn new(
-        core_app: Arc<RwLock<CoreAppTrait>>,
-        activity: *mut super::os::activity::ANativeActivity,
-        saved_state: *mut libc::c_void,
-        saved_state_size: libc::size_t,
-    ) -> Self {
-        let os_app = Arc::new(RwLock::new(OsApp::new(
-            activity,
-            saved_state,
-            saved_state_size,
-        )));
-        let os_app_clone = os_app.clone();
-        vxresult!(os_app.read()).initialize(os_app_clone);
-        return Application::set(core_app, os_app);
-    }
-
-    fn set(core_app: Arc<RwLock<CoreAppTrait>>, os_app: Arc<RwLock<OsApp>>) -> Self {
+    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: Arc<RwLock<OsApp>>) -> Self {
         let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
         let mouse_info = MouseInfo { x: 0.0, y: 0.0 };
         let window_info = WindowInfo {
@@ -67,17 +44,14 @@ impl Application {
         }
     }
 
-    #[cfg(target_os = "android")]
     pub fn initialize(&mut self, itself: Arc<RwLock<Application>>) {
         // self.os_app.initialize(itself);
         vxunimplemented!();
     }
 
-    #[cfg(not(target_os = "android"))]
     pub fn run(&self) {
-        self.os_app.finalize();
         'main_loop: loop {
-            let events = self.os_app.fetch_events();
+            let events = vxresult!(self.os_app.read()).fetch_events();
             for e in events {
                 match e.event_type {
                     EventType::Quit => {
