@@ -1,4 +1,4 @@
-#[cfg(not(target_os = "android"))]
+#[cfg(desktop_os)]
 #[macro_export]
 macro_rules! vulkust_start {
     ($App:ident) => {
@@ -157,5 +157,12 @@ macro_rules! vxunimplemented {
 macro_rules! vxunexpected {
     () => {
         vxlogf!("Unexpected")
+    };
+}
+
+#[macro_export]
+macro_rules! vxtodo {
+    () => {
+        vxlogf!("TODO")
     };
 }

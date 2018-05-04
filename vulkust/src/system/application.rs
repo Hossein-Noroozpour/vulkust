@@ -44,11 +44,6 @@ impl Application {
         }
     }
 
-    pub fn initialize(&mut self, itself: Arc<RwLock<Application>>) {
-        // self.os_app.initialize(itself);
-        vxunimplemented!();
-    }
-
     pub fn run(&self) {
         'main_loop: loop {
             let events = vxresult!(self.os_app.read()).fetch_events();
@@ -68,29 +63,3 @@ impl Application {
         }
     }
 }
-
-// impl<CoreApp> Drop for Application<CoreApp>
-// where
-//     CoreApp: ApplicationTrait,
-// {
-//     #[cfg(not(target_os = "android"))]
-//     fn drop(&mut self) {
-//         logi!("Main system application got deleted.");
-//         unsafe {
-//             Box::from_raw(self.core_app);
-//         }
-//         unsafe {
-//             Box::from_raw(self.render_engine);
-//         }
-//         unsafe {
-//             Box::from_raw(self.os_app);
-//         }
-//     }
-//     #[cfg(target_os = "android")]
-//     fn drop(&mut self) {
-//         logi!("Main system application got deleted.");
-//         let _ = self.core_app;
-//         let _ = self.render_engine;
-//         let _ = self.os_app;
-//     }
-// }

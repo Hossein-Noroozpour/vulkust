@@ -1,8 +1,11 @@
+pub mod app_kit;
+pub mod core_graphics;
+pub mod core_video;
 pub mod dispatch;
-pub mod kit;
-pub mod model_io;
-pub mod util;
 pub mod foundation;
+pub mod model_io;
+pub mod quartz_core;
+pub mod util;
 
 use std;
 use std::os::raw::{c_char, c_void};
@@ -18,15 +21,11 @@ use super::super::objc::declare::ClassDecl;
 pub type NSInteger = i32;
 #[cfg(target_pointer_width = "32")]
 pub type NSUInteger = u32;
-#[cfg(target_pointer_width = "32")]
-pub type CGFloat = f32;
 
 #[cfg(target_pointer_width = "64")]
 pub type NSInteger = i64;
 #[cfg(target_pointer_width = "64")]
 pub type NSUInteger = u64;
-#[cfg(target_pointer_width = "64")]
-pub type CGFloat = f64;
 
 pub type Id = *mut Object;
 
@@ -658,11 +657,6 @@ extern "C" {
     // pub static NSDefaultRunLoopMode: mtl::Id;
 }
 
-#[link(name = "AppKit", kind = "framework")]
-extern "C" {
-    // pub static NSImageHintCTM: Id;
-}
-
 // Rustified ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // functions --------------------------------------------------------------------------------------
 
@@ -670,7 +664,7 @@ pub fn get_class(s: &str) -> &Class {
     match Class::get(s) {
         Some(c) => c,
         None => {
-            logf!("Class: {:?} does not exist.", s);
+            vxlogf!("Class: {:?} does not exist.", s);
         }
     }
 }
@@ -679,7 +673,7 @@ pub fn get_instance(s: &str) -> Id {
     let c = match Class::get(s) {
         Some(c) => c,
         None => {
-            logf!("Class: {:?} does not exist.", s);
+            vxlogf!("Class: {:?} does not exist.", s);
         }
     };
     let r: Id = unsafe { msg_send![c, alloc] };
@@ -691,7 +685,7 @@ pub fn dec_class(s: &str, c: &Class) -> ClassDecl {
     match ClassDecl::new(s, c) {
         Some(c) => c,
         None => {
-            logf!("Can not create class {} with super class {:?}.", s, c);
+            vxlogf!("Can not create class {} with super class {:?}.", s, c);
         }
     }
 }
@@ -700,13 +694,13 @@ pub fn dec_class_s(s: &str, c: &str) -> ClassDecl {
     let c = match Class::get(c) {
         Some(c) => c,
         None => {
-            logf!("Class: {} does not exist.", c);
+            vxlogf!("Class: {} does not exist.", c);
         }
     };
     match ClassDecl::new(s, c) {
         Some(c) => c,
         None => {
-            logf!("Can not create class {} with super class {:?}.", s, c);
+            vxlogf!("Can not create class {} with super class {:?}.", s, c);
         }
     }
 }
@@ -724,7 +718,7 @@ pub fn alloc(s: &str) -> Id {
     let c = match Class::get(s) {
         Some(c) => c,
         None => {
-            logf!("Class: {:?} does not exist.", s);
+            vxlogf!("Class: {:?} does not exist.", s);
         }
     };
     unsafe { msg_send![c, alloc] }

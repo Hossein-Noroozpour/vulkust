@@ -3,10 +3,13 @@ use std::env;
 fn main() {
     let target = env::var("TARGET").unwrap();
     let mut in_macos = false;
+    let mut in_ios = false;
     let mut in_android = false;
     let mut in_linux = false;
     let mut in_windows = false;
-    if target.contains("darwin") {
+    if target.contains("ios") {
+        in_ios = true;
+    } else if target.contains("darwin") {
         in_macos = true;
     } else if target.contains("android") {
         in_android = true;
@@ -15,13 +18,16 @@ fn main() {
     } else if target.contains("windows") {
         in_windows = true;
     }
-    if !(in_macos || in_android || in_linux || in_windows) {
+    if !(in_macos || in_android || in_ios || in_linux || in_windows) {
         panic!("Unsupported platform!");
+    }
+    if in_macos || in_ios {
+        println!("cargo:rustc-cfg=apple_os");
     }
     if in_linux || in_windows || in_macos {
         println!("cargo:rustc-cfg=desktop_os");
     }
-    if in_linux || in_macos || in_android {
+    if in_linux || in_ios || in_macos || in_android {
         println!("cargo:rustc-cfg=unix_based_os");
     }
 }

@@ -2,7 +2,7 @@
 #![feature(integer_atomics)]
 #![feature(stmt_expr_attributes)]
 
-#[cfg(appleos)]
+#[cfg(apple_os)]
 #[macro_use]
 pub extern crate objc;
 
