@@ -5,54 +5,41 @@ use super::game_view_controller;
 use std::mem::transmute;
 use std::os::raw::c_void;
 use std::ptr::null_mut;
+use std::sync::{Arc, RwLock};
 
 pub struct Application {
-    pub ns_app: apple::Id,
+    pub app: apple::Id,
     pub app_dlg: apple::Id,
-    pub gvc: apple::Id,
-    pub ns_view: apple::Id,
-    pub ns_autopool: apple::NsAutoReleasePool,
+    pub view: apple::Id,
+    pub auto_release_pool: apple::NsAutoReleasePool,
 }
 
 impl Application {
-    fn new() -> Self {
-        let ns_autopool = apple::NsAutoReleasePool::new();
+    pub fn new() -> Self {
+        let auto_release_pool = apple::NsAutoReleasePool::new();
         app_delegate::register();
         game_view::register();
         game_view_controller::register();
-        let ns_app = apple::get_class("NSApplication");
-        let ns_app: apple::Id = unsafe { msg_send![ns_app, sharedApplication] };
+        let app = apple::get_class("NSApplication");
+        let app: apple::Id = unsafe { msg_send![app, sharedApplication] };
         let app_dlg = app_delegate::create_instance();
-        unsafe {
-            let _: () = msg_send![app_delegate, initialize];
-        }
-        let view: apple::Id = unsafe { msg_send![self.game_view_controller, view] };
-        unsafe {
-            let _: () = msg_send![view, setDelegate:self.game_view_controller];
-        }
+        let view: apple::Id = unsafe {
+            let _: () = msg_send![app_dlg, initialize];
+            let _: () = msg_send![app, setDelegate:app_dlg];
+            *(*app_dlg).get_ivar(app_delegate::VIEW_VAR_NAME)
+        };
         Application {
-            ns_application,
-            app_delegate,
-            game_view_controller,
-            ns_view,
-            ns_autorelease_pool,
+            app,
+            app_dlg,
+            view,
+            auto_release_pool,
         }
     }
-    fn set_core_app(&mut self, c: *mut CoreApp) {
-        self.core_app = c;
-    }
-    fn set_rnd_eng(&mut self, r: *mut RenderEngine<CoreApp>) {
-        self.render_engine = r;
-    }
-    fn execute(&mut self) -> bool {
+
+    pub fn initialize(&self, itself: Arc<RwLock<Application>>) -> bool {
         unsafe {
-            let _: () = msg_send![self.game_view_controller, metalViewDidLoad];
-            let _: () = msg_send![self.ns_application, setDelegate:self.app_delegate];
-            let _: () = msg_send![self.ns_application, run];
+            let _: () = msg_send![self.app, run];
         }
         true
-    }
-    fn get_mouse_position(&mut self) -> (f64, f64) {
-        logf!("Unimplemented!");
     }
 }

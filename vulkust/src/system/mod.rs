@@ -12,7 +12,7 @@ pub use self::linux as os;
 pub mod macos;
 #[cfg(target_os = "macos")]
 pub use self::macos as os;
-pub mod application;
+// pub mod application;
 pub mod linker;
 // pub mod file;
 // pub mod os;

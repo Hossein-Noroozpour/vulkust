@@ -1,6 +1,5 @@
 use super::super::super::objc::runtime::{Class, Object, Sel, BOOL, YES};
 use super::super::apple;
-use std::mem::transmute;
 
 pub const CLASS_NAME: &str = "GameView";
 pub const SUPER_CLASS_NAME: &str = "NSView";
@@ -11,7 +10,7 @@ extern "C" fn wants_update_layer(this: &mut Object, _cmd: Sel) -> BOOL {
 }
 
 //+ (Class) layerClass
-extern "C" fn layer_class(cls: &mut Class, _cmd: Sel) -> Class {
+extern "C" fn layer_class(_cls: &mut Class, _cmd: Sel) -> &'static Class {
     unsafe { msg_send![apple::get_class("CAMetalLayer"), class] }
 }
 
@@ -21,7 +20,11 @@ extern "C" fn make_backing_layer(this: &mut Object, _cmd: Sel) -> apple::Id {
     let size = apple::core_graphics::make_size(1.0, 1.0);
     let view_scale: apple::core_graphics::CGSize =
         unsafe { msg_send![this, convertSizeToBacking: size] };
-    let contents_scale = min(view_scale.width, view_scale.height);
+    let contents_scale = if view_scale.width < view_scale.height {
+        view_scale.width
+    } else {
+        view_scale.height
+    };
     let _: () = unsafe { msg_send![layer, setContentsScale: contents_scale] };
     return layer;
 }
@@ -32,12 +35,24 @@ extern "C" fn accepts_first_responder(this: &mut Object, _cmd: Sel) -> BOOL {
 }
 
 pub fn register() {
-    let mut self_class = mtl::dec_class_s(CLASS_NAME, SUPER_CLASS_NAME);
+    let mut self_class = apple::dec_class_s(CLASS_NAME, SUPER_CLASS_NAME);
     unsafe {
-        self_class.add_method(sel!(wantsUpdateLayer), wants_update_layer);
-        self_class.add_class_method(sel!(layerClass), layer_class);
-        self_class.add_method(sel!(makeBackingLayer), make_backing_layer);
-        self_class.add_method(sel!(acceptsFirstResponder), accepts_first_responder);
+        self_class.add_method(
+            sel!(wantsUpdateLayer),
+            wants_update_layer as extern "C" fn (&mut Object, Sel) -> BOOL);
+        self_class.add_class_method(
+            sel!(layerClass), 
+            layer_class as extern "C" fn (&mut Class, Sel) -> &'static Class);
+        self_class.add_method(
+            sel!(makeBackingLayer), 
+            make_backing_layer as extern "C" fn (&mut Object, Sel) -> apple::Id);
+        self_class.add_method(
+            sel!(acceptsFirstResponder), 
+            accepts_first_responder as extern "C" fn (&mut Object, Sel) -> BOOL);
     }
     self_class.register();
+}
+
+pub fn create_instance() -> apple::Id {
+    apple::get_instance(CLASS_NAME)
 }

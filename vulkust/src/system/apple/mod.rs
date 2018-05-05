@@ -7,9 +7,10 @@ pub mod model_io;
 pub mod quartz_core;
 pub mod util;
 
-pub use super::super::objc;
+use super::super::objc;
 use super::super::objc::declare::ClassDecl;
-pub use super::super::objc::runtime::{Class, Object, NO, YES};
+use super::super::objc::runtime::{Class, Object, NO, YES};
+
 use std;
 use std::ffi::CStr;
 use std::mem::transmute;
@@ -72,16 +73,16 @@ impl ClearColor {
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct NSSize {
-    pub width: CGFloat,
-    pub height: CGFloat,
+    pub width: core_graphics::CGFloat,
+    pub height: core_graphics::CGFloat,
 }
 
 unsafe impl objc::Encode for NSSize {
     fn encode() -> objc::Encoding {
         let encoding = format!(
             "{{CGSize={}{}}}",
-            CGFloat::encode().as_str(),
-            CGFloat::encode().as_str()
+            core_graphics::CGFloat::encode().as_str(),
+            core_graphics::CGFloat::encode().as_str()
         );
         unsafe { objc::Encoding::from_str(&encoding) }
     }
@@ -90,16 +91,16 @@ unsafe impl objc::Encode for NSSize {
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct NSPoint {
-    pub x: CGFloat,
-    pub y: CGFloat,
+    pub x: core_graphics::CGFloat,
+    pub y: core_graphics::CGFloat,
 }
 
 unsafe impl objc::Encode for NSPoint {
     fn encode() -> objc::Encoding {
         let encoding = format!(
             "{{CGPoint={}{}}}",
-            CGFloat::encode().as_str(),
-            CGFloat::encode().as_str()
+            core_graphics::CGFloat::encode().as_str(),
+            core_graphics::CGFloat::encode().as_str()
         );
         unsafe { objc::Encoding::from_str(&encoding) }
     }
@@ -124,7 +125,9 @@ unsafe impl objc::Encode for NSRect {
 }
 
 impl NSRect {
-    pub fn new(x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat) -> Self {
+    pub fn new(
+        x: core_graphics::CGFloat, y: core_graphics::CGFloat, 
+        w: core_graphics::CGFloat, h: core_graphics::CGFloat) -> Self {
         NSRect {
             origin: NSPoint { x: x, y: y },
             size: NSSize {
@@ -150,7 +153,7 @@ impl NSString {
                 s,
                 initWithBytes:string_ptr
                 length:string.len()
-                encoding:NS_UTF8_STRING_ENCODING]
+                encoding:NsStringEncoding::NS_UTF8_STRING_ENCODING]
         };
         NSString { s: s }
     }
@@ -162,7 +165,7 @@ impl std::fmt::Display for NSString {
             return write!(f, "");
         }
         let ptr: *const c_char =
-            unsafe { msg_send![self.s, cStringUsingEncoding: NS_UTF8_STRING_ENCODING] };
+            unsafe { msg_send![self.s, cStringUsingEncoding:NsStringEncoding::NS_UTF8_STRING_ENCODING] };
         let string = unsafe { CStr::from_ptr(ptr) }
             .to_string_lossy()
             .into_owned();
@@ -353,22 +356,22 @@ bitflags! {
 bitflags! {
     pub struct ResourceOptions: NSUInteger {
         const RESOURCE_CPU_CACHE_MODE_DEFAULT_CACHE =
-            CPU_CACHE_MODE_DEFAULT_CACHE.bits << RESOURCE_CPU_CACHE_MODE_SHIFT;
+            CPUCacheMode::CPU_CACHE_MODE_DEFAULT_CACHE.bits << RESOURCE_CPU_CACHE_MODE_SHIFT;
         const RESOURCE_CPU_CACHE_MODE_WRITE_COMBINED =
-            CPU_CACHE_MODE_WRITE_COMBINED.bits << RESOURCE_CPU_CACHE_MODE_SHIFT;
+            CPUCacheMode::CPU_CACHE_MODE_WRITE_COMBINED.bits << RESOURCE_CPU_CACHE_MODE_SHIFT;
         const RESOURCE_STORAGE_MODE_SHARED =
-            STORAGE_MODE_SHARED.bits << RESOURCE_STORAGE_MODE_SHIFT;
+            StorageMode::STORAGE_MODE_SHARED.bits << RESOURCE_STORAGE_MODE_SHIFT;
         const RESOURCE_STORAGE_MODE_MANAGED =
-            STORAGE_MODE_MANAGED.bits << RESOURCE_STORAGE_MODE_SHIFT;
+            StorageMode::STORAGE_MODE_MANAGED.bits << RESOURCE_STORAGE_MODE_SHIFT;
         const RESOURCE_STORAGE_MODE_PRIVATE =
-            STORAGE_MODE_PRIVATE.bits << RESOURCE_STORAGE_MODE_SHIFT;
+            StorageMode::STORAGE_MODE_PRIVATE.bits << RESOURCE_STORAGE_MODE_SHIFT;
         const RESOURCE_STORAGE_MODE_MEMORYLESS =
-            STORAGE_MODE_MEMORYLESS.bits << RESOURCE_STORAGE_MODE_SHIFT;
+            StorageMode::STORAGE_MODE_MEMORYLESS.bits << RESOURCE_STORAGE_MODE_SHIFT;
         const RESOURCE_HAZARD_TRACKING_MODE_UNTRACKED = 0x1 << RESOURCE_HAZARD_TRACKING_MODE_SHIFT;
         const RESOURCE_OPTION_CPU_CACHE_MODE_DEFAULT =
-            RESOURCE_CPU_CACHE_MODE_DEFAULT_CACHE.bits;
+            Self::RESOURCE_CPU_CACHE_MODE_DEFAULT_CACHE.bits;
         const RESOURCE_OPTION_CPU_CACHE_MODE_WRITE_COMBINED =
-            RESOURCE_CPU_CACHE_MODE_WRITE_COMBINED.bits;
+            Self::RESOURCE_CPU_CACHE_MODE_WRITE_COMBINED.bits;
     }
 }
 
@@ -629,7 +632,7 @@ bitflags! {
         const NS_WINDOWS_CP1250_STRING_ENCODING = 15;
         const NS_ISO2022JP_STRING_ENCODING = 21;
         const NS_MACOS_ROMAN_STRING_ENCODING = 30;
-        const NS_UTF16_STRING_ENCODING = NS_UNICODE_STRING_ENCODING.bits;
+        const NS_UTF16_STRING_ENCODING = Self::NS_UNICODE_STRING_ENCODING.bits;
         const NS_UTF16_BIG_ENDIAN_STRING_ENCODING = 0x90000100;
         const NS_UTF16_LITTLE_ENDIAN_STRING_ENCODING = 0x94000100;
         const NS_UTF32_STRING_ENCODING = 0x8c000100;

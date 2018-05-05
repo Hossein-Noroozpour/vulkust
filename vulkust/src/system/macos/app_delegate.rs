@@ -1,13 +1,15 @@
 use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
 use super::super::super::objc::runtime::{Object, Sel, BOOL, YES};
 use super::super::apple;
-use super::game_view_controller as gvc;
+use super::game_view;
+use super::game_view_controller;
 use std::mem::transmute;
 
 pub const CLASS_NAME: &str = "AppDelegate";
 pub const SUPER_CLASS_NAME: &str = "NSObject";
 pub const WINDOW_VAR_NAME: &str = "window";
-pub const APP_VAR_NAME: &str = "vukust_os_app";
+pub const VIEW_VAR_NAME: &str = "view";
+pub const CONTROLLER_VAR_NAME: &str = "controller";
 
 #[cfg(debug_assertions)]
 fn create_frame() -> apple::NSRect {
@@ -24,11 +26,12 @@ fn create_frame() -> apple::NSRect {
 extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     vxlogi!("I'm initialized.");
     let frame = create_frame();
-    let style_mask = (apple::NS_TITLED_WINDOW_MASK | apple::NS_CLOSABLE_WINDOW_MASK
-        | apple::NS_RESIZABLE_WINDOW_MASK
-        | apple::NS_MINIATURIZABLE_WINDOW_MASK)
+    let style_mask = (apple::NsWindowStyleMask::NS_TITLED_WINDOW_MASK
+        | apple::NsWindowStyleMask::NS_CLOSABLE_WINDOW_MASK
+        | apple::NsWindowStyleMask::NS_RESIZABLE_WINDOW_MASK
+        | apple::NsWindowStyleMask::NS_MINIATURIZABLE_WINDOW_MASK)
         .bits() as apple::NSUInteger;
-    let backing = apple::NS_BACKING_STORE_BUFFERED;
+    let backing = apple::NsBackingStoreType::NS_BACKING_STORE_BUFFERED;
     let window: apple::Id = unsafe {
         msg_send![apple::alloc("NSWindow"),
         initWithContentRect:frame styleMask:style_mask backing:backing defer:YES]
@@ -36,22 +39,18 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     unsafe {
         let _: () = msg_send![window, center];
     }
-    let ns_view: apple::Id = unsafe { msg_send![window, contentView] };
+    let view = game_view::create_instance();
+    let gvc = game_view_controller::create_instance();
     unsafe {
-        (*app).metal_view = metal_view;
+        this.set_ivar(WINDOW_VAR_NAME, window);
+        this.set_ivar(VIEW_VAR_NAME, view);
+        this.set_ivar(CONTROLLER_VAR_NAME, gvc);
     }
-    let clear_color = apple::ClearColor::new(0.05, 0.05, 0.05, 1.0);
-    let pixel_format = apple::PIXEL_FORMAT_BGRA8_UNORM;
-    let depth_stencil_format = apple::PIXEL_FORMAT_DEPTH32_FLOAT;
     unsafe {
-        let _: () = msg_send![metal_view, setClearColor: clear_color];
-        let _: () = msg_send![metal_view, setColorPixelFormat: pixel_format];
-        let _: () = msg_send![metal_view, setDepthStencilPixelFormat: depth_stencil_format];
-        let _: () = msg_send![metal_view, setDelegate: game_view];
-        let _: () = msg_send![game_view, setView: metal_view];
-        let _: () = msg_send![window, setContentView: metal_view];
-        let _: () = msg_send![window, setContentViewController: game_view];
-        let _: () = msg_send![game_view, viewDidLoad];
+        let _: () = msg_send![gvc, setView:view];
+        let _: () = msg_send![window, setContentView:view];
+        let _: () = msg_send![window, setContentViewController:gvc];
+        let _: () = msg_send![gvc, gameViewDidLoad];
     }
 }
 
@@ -80,7 +79,8 @@ pub fn register() {
     let ns_object_class = apple::get_class(SUPER_CLASS_NAME);
     let mut app_delegate_class = apple::dec_class(CLASS_NAME, ns_object_class);
     app_delegate_class.add_ivar::<apple::Id>(WINDOW_VAR_NAME);
-    app_delegate_class.add_ivar::<apple::NSUInteger>(APP_VAR_NAME);
+    app_delegate_class.add_ivar::<apple::Id>(VIEW_VAR_NAME);
+    app_delegate_class.add_ivar::<apple::Id>(CONTROLLER_VAR_NAME);
 
     unsafe {
         app_delegate_class.add_method(

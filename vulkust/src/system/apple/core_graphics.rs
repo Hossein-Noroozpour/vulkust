@@ -1,3 +1,5 @@
+use super::super::super::objc;
+
 #[cfg(target_pointer_width = "32")]
 pub type CGFloat = f32;
 #[cfg(target_pointer_width = "64")]

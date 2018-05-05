@@ -1,6 +1,6 @@
-use super::super::super::libc;
+use std::os::raw::c_void;
 
-pub type CVDisplayLinkRef = *mut libc::c_void;
+pub type CVDisplayLinkRef = *mut c_void;
 pub type CVReturn = i32;
 pub type CVOptionFlags = u64;
 
@@ -32,13 +32,13 @@ pub struct CVTimeStamp {
     reserved: u64,
 }
 
-type CVDisplayLinkOutputCallback = extern "C" fn(
+pub type CVDisplayLinkOutputCallback = extern "C" fn(
     display_link: CVDisplayLinkRef,
     in_now: *const CVTimeStamp,
     in_output_time: *const CVTimeStamp,
     flags_in: CVOptionFlags,
     flags_out: *mut CVOptionFlags,
-    display_link_context: *mut libc::c_void,
+    display_link_context: *mut c_void,
 ) -> CVReturn;
 
 pub const KCVReturnSuccess: CVReturn = 0;
@@ -49,7 +49,7 @@ extern "C" {
     pub fn CVDisplayLinkSetOutputCallback(
         d: CVDisplayLinkRef,
         callback: CVDisplayLinkOutputCallback,
-        user_data: *mut libc::c_void,
+        user_data: *mut c_void,
     ) -> CVReturn;
     pub fn CVDisplayLinkStart(d: CVDisplayLinkRef) -> CVReturn;
     pub fn CVDisplayLinkRelease(d: CVDisplayLinkRef);
