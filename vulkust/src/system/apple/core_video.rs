@@ -40,7 +40,9 @@ type CVDisplayLinkOutputCallback =
         in_output_time: *const CVTimeStamp, 
         flags_in: CVOptionFlags,
         flags_out: *mut CVOptionFlags, 
-        display_link_context: *mut libc::c_void);
+        display_link_context: *mut libc::c_void) -> CVReturn;
+
+pub const KCVReturnSuccess: CVReturn = 0;
 
 #[link(name = "CoreVideo", kind = "framework")]
 extern "C" {
@@ -49,4 +51,6 @@ extern "C" {
         d: CVDisplayLinkRef, 
         callback: CVDisplayLinkOutputCallback, 
         user_data: *mut libc::c_void) -> CVReturn;
+    pub fn CVDisplayLinkStart(d: CVDisplayLinkRef) -> CVReturn;
+    pub fn CVDisplayLinkRelease(d: CVDisplayLinkRef);
 }

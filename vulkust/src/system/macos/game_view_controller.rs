@@ -7,15 +7,29 @@ use super::super::apple;
 pub const CLASS_NAME: &str = "GameViewController";
 pub const SUPER_CLASS_NAME: &str = "NSViewController";
 
+extern "C" fn display_link_callback(
+    _display_link: apple::core_video::CVDisplayLinkRef, 
+    _in_now: *const apple::core_video::CVTimeStamp, 
+    _in_output_time: *const apple::core_video::CVTimeStamp, 
+    _flags_in: apple::core_video::CVOptionFlags,
+    _flags_out: *mut apple::core_video::CVOptionFlags, 
+    _display_link_context: *mut libc::c_void) -> apple::core_video::CVReturn {
+    apple::core_video::KCVReturnSuccess
+}
+
 //- (void)gameViewDidLoad
 extern "C" fn game_view_did_load(this: &mut Object, _cmd: Sel) {
     let _: () = unsafe { msg_send![this, viewDidLoad] };
     let view: apple::Id = unsafe { msg_send![this, view] };
     let _: () = unsafe { msg_send![this, setWantsLayer:YES] };
     vxtodo!(); // initialize sys app in here
-    CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
-    CVDisplayLinkSetOutputCallback(_displayLink, &DisplayLinkCallback, _mvkExample);
-    CVDisplayLinkStart(_displayLink);
+    let mut display_link = apple::core_video::CVDisplayLinkRef;
+    unsafe {
+        apple::core_video::CVDisplayLinkCreateWithActiveCGDisplays(&mut display_link);
+        apple::core_video::CVDisplayLinkSetOutputCallback(
+            display_link, &DisplayLinkCallback, _mvkExample);
+        apple::core_video::CVDisplayLinkStart(_displayLink);
+    }
 }
 
 // Called whenever view changes orientation or layout is changed
