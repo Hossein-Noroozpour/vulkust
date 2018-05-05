@@ -1,19 +1,24 @@
-use std::mem::transmute;
+use super::super::super::core::application::ApplicationTrait;
 use super::super::super::objc::runtime::{Object, Sel};
 use super::super::super::render::engine::RenderEngine;
-use super::super::super::core::application::ApplicationTrait;
 use super::super::apple;
+use std::mem::transmute;
+use std::os::raw::c_void;
 
 pub const CLASS_NAME: &str = "GameViewController";
 pub const SUPER_CLASS_NAME: &str = "NSViewController";
+pub const DISPLAY_LINK_VAR_NAME: &str = "display_link";
+pub const CORE_APP_VAR_NAME: &str = "core_app";
 
 extern "C" fn display_link_callback(
-    _display_link: apple::core_video::CVDisplayLinkRef, 
-    _in_now: *const apple::core_video::CVTimeStamp, 
-    _in_output_time: *const apple::core_video::CVTimeStamp, 
+    _display_link: apple::core_video::CVDisplayLinkRef,
+    _in_now: *const apple::core_video::CVTimeStamp,
+    _in_output_time: *const apple::core_video::CVTimeStamp,
     _flags_in: apple::core_video::CVOptionFlags,
-    _flags_out: *mut apple::core_video::CVOptionFlags, 
-    _display_link_context: *mut libc::c_void) -> apple::core_video::CVReturn {
+    _flags_out: *mut apple::core_video::CVOptionFlags,
+    _display_link_context: *mut libc::c_void,
+) -> apple::core_video::CVReturn {
+    vxtodo!(); // render frame in here
     apple::core_video::KCVReturnSuccess
 }
 
@@ -21,23 +26,20 @@ extern "C" fn display_link_callback(
 extern "C" fn game_view_did_load(this: &mut Object, _cmd: Sel) {
     let _: () = unsafe { msg_send![this, viewDidLoad] };
     let view: apple::Id = unsafe { msg_send![this, view] };
-    let _: () = unsafe { msg_send![this, setWantsLayer:YES] };
+    let _: () = unsafe { msg_send![this, setWantsLayer: YES] };
     vxtodo!(); // initialize sys app in here
     let mut display_link = apple::core_video::CVDisplayLinkRef;
     unsafe {
         apple::core_video::CVDisplayLinkCreateWithActiveCGDisplays(&mut display_link);
-        apple::core_video::CVDisplayLinkSetOutputCallback(
-            display_link, &DisplayLinkCallback, _mvkExample);
-        apple::core_video::CVDisplayLinkStart(_displayLink);
+        vxtodo!(); // pass sys app persistant pointer in here
+        apple::core_video::CVDisplayLinkSetOutputCallback(display_link, &display_link_callback, 0);
+        apple::core_video::CVDisplayLinkStart(display_link);
     }
 }
 
-// Called whenever view changes orientation or layout is changed
-// - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
-extern "C" fn mtl_view<CoreApp>(this: &mut Object, _cmd: Sel, view: apple::Id, _size: apple::NSSize)
-where
-    CoreApp: ApplicationTrait,
-{
+// -(void) dealloc
+extern "C" fn dealloc(this: &mut Object, _cmd: Sel) {
+    apple::core_video::CVDisplayLinkRelease(display_link);
     let bounds: apple::NSRect = unsafe { msg_send![view, bounds] };
     let app: *mut App<CoreApp> =
         unsafe { transmute(*(*this).get_ivar::<apple::NSUInteger>(APP_VAR_NAME)) };
@@ -46,12 +48,8 @@ where
     }
 }
 
-// Called whenever the view needs to render
-// - (void)drawInMTKView:(nonnull MTKView *)view
-extern "C" fn draw_in_mtk_view<CoreApp>(this: &mut Object, _cmd: Sel, _view: apple::Id)
-where
-    CoreApp: ApplicationTrait,
-{
+//-(void) keyDown:(NSEvent*) theEvent
+extern "C" fn key_down(this: &mut Object, _cmd: Sel, _event: apple::Id) {
     let release_pool = apple::NsAutoReleasePool::new();
     let app: &mut App<CoreApp> =
         unsafe { transmute(*this.get_ivar::<apple::NSUInteger>(APP_VAR_NAME)) };
@@ -90,7 +88,11 @@ extern "C" fn get_depth_stencil_pixel_format(this: &mut Object, _cmd: Sel) -> ap
 }
 
 // - (void) setDepthStencilPixelFormat: (MTLPixelFormat) pixelFormat
-extern "C" fn set_depth_stencil_pixel_format(this: &mut Object, _cmd: Sel, frmt: apple::NSUInteger) {
+extern "C" fn set_depth_stencil_pixel_format(
+    this: &mut Object,
+    _cmd: Sel,
+    frmt: apple::NSUInteger,
+) {
     let view: apple::Id = unsafe { msg_send![this, view] };
     unsafe {
         let _: () = msg_send![view, setDepthStencilPixelFormat: frmt];
@@ -122,14 +124,13 @@ where
     CoreApp: ApplicationTrait,
 {
     let mut self_class = apple::dec_class_s(CLASS_NAME, SUPER_CLASS_NAME);
+    self_class.add_ivar::<c_void>(DISPLAY_LINK_VAR_NAME);
+    self_class.add_ivar::<c_void>(CORE_APP_VAR_NAME);
     self_class.add_ivar::<apple::Id>(DEVICE_VAR_NAME);
     self_class.add_ivar::<apple::NSUInteger>(APP_VAR_NAME);
 
     unsafe {
-        self_class.add_method(
-            sel!(metalViewDidLoad),
-            metal_view_did_load::<CoreApp> as extern "C" fn(&mut Object, Sel),
-        );
+        self_class.add_method(sel!(gameViewDidLoad), game_view_did_load);
         self_class.add_method(
             sel!(mtkView:drawableSizeWillChange:),
             mtl_view::<CoreApp> as extern "C" fn(&mut Object, Sel, apple::Id, apple::NSSize),

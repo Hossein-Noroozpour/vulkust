@@ -1,10 +1,10 @@
-use std::ptr::null_mut;
-use std::os::raw::c_void;
-use std::mem::transmute;
 use super::super::apple;
 use super::app_delegate;
 use super::game_view;
 use super::game_view_controller;
+use std::mem::transmute;
+use std::os::raw::c_void;
+use std::ptr::null_mut;
 
 pub struct Application {
     pub ns_app: apple::Id,
@@ -14,8 +14,7 @@ pub struct Application {
     pub ns_autopool: apple::NsAutoReleasePool,
 }
 
-impl Application
-{
+impl Application {
     fn new() -> Self {
         let ns_autopool = apple::NsAutoReleasePool::new();
         app_delegate::register();
@@ -27,9 +26,7 @@ impl Application
         unsafe {
             let _: () = msg_send![app_delegate, initialize];
         }
-        let view: apple::Id = unsafe { 
-            msg_send![self.game_view_controller, view]
-        };
+        let view: apple::Id = unsafe { msg_send![self.game_view_controller, view] };
         unsafe {
             let _: () = msg_send![view, setDelegate:self.game_view_controller];
         }

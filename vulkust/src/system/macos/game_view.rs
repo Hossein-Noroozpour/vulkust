@@ -1,6 +1,6 @@
-use std::mem::transmute;
-use super::super::super::objc::runtime::{BOOL, Class, Object, Sel, YES};
+use super::super::super::objc::runtime::{Class, Object, Sel, BOOL, YES};
 use super::super::apple;
+use std::mem::transmute;
 
 pub const CLASS_NAME: &str = "GameView";
 pub const SUPER_CLASS_NAME: &str = "NSView";
@@ -12,20 +12,17 @@ extern "C" fn wants_update_layer(this: &mut Object, _cmd: Sel) -> BOOL {
 
 //+ (Class) layerClass
 extern "C" fn layer_class(cls: &mut Class, _cmd: Sel) -> Class {
-    unsafe {
-        msg_send![apple::get_class("CAMetalLayer"), class]
-    }
+    unsafe { msg_send![apple::get_class("CAMetalLayer"), class] }
 }
 
 // -(CALayer*) makeBackingLayer
 extern "C" fn make_backing_layer(this: &mut Object, _cmd: Sel) -> apple::Id {
     let layer: apple::Id = unsafe { msg_send![apple::get_class("CAMetalLayer"), layer] };
     let size = apple::core_graphics::make_size(1.0, 1.0);
-    let view_scale: apple::core_graphics::CGSize = unsafe { 
-        msg_send![this, convertSizeToBacking:size] 
-    };
+    let view_scale: apple::core_graphics::CGSize =
+        unsafe { msg_send![this, convertSizeToBacking: size] };
     let contents_scale = min(view_scale.width, view_scale.height);
-    let _: () = unsafe { msg_send![layer, setContentsScale:contents_scale] };
+    let _: () = unsafe { msg_send![layer, setContentsScale: contents_scale] };
     return layer;
 }
 

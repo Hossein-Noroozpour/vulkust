@@ -3,7 +3,6 @@ pub type CGFloat = f32;
 #[cfg(target_pointer_width = "64")]
 pub type CGFloat = f64;
 
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct CGSize {

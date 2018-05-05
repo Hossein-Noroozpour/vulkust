@@ -6,8 +6,7 @@ pub type CVOptionFlags = u64;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default)]
-pub struct CVSMPTETime
-{
+pub struct CVSMPTETime {
     subframes: i16,
     subframe_divisor: i16,
     counter: u32,
@@ -33,14 +32,14 @@ pub struct CVTimeStamp {
     reserved: u64,
 }
 
-type CVDisplayLinkOutputCallback = 
-    extern "C" fn (
-        display_link: CVDisplayLinkRef, 
-        in_now: *const CVTimeStamp, 
-        in_output_time: *const CVTimeStamp, 
-        flags_in: CVOptionFlags,
-        flags_out: *mut CVOptionFlags, 
-        display_link_context: *mut libc::c_void) -> CVReturn;
+type CVDisplayLinkOutputCallback = extern "C" fn(
+    display_link: CVDisplayLinkRef,
+    in_now: *const CVTimeStamp,
+    in_output_time: *const CVTimeStamp,
+    flags_in: CVOptionFlags,
+    flags_out: *mut CVOptionFlags,
+    display_link_context: *mut libc::c_void,
+) -> CVReturn;
 
 pub const KCVReturnSuccess: CVReturn = 0;
 
@@ -48,9 +47,10 @@ pub const KCVReturnSuccess: CVReturn = 0;
 extern "C" {
     pub fn CVDisplayLinkCreateWithActiveCGDisplays(d: *mut CVDisplayLinkRef) -> CVReturn;
     pub fn CVDisplayLinkSetOutputCallback(
-        d: CVDisplayLinkRef, 
-        callback: CVDisplayLinkOutputCallback, 
-        user_data: *mut libc::c_void) -> CVReturn;
+        d: CVDisplayLinkRef,
+        callback: CVDisplayLinkOutputCallback,
+        user_data: *mut libc::c_void,
+    ) -> CVReturn;
     pub fn CVDisplayLinkStart(d: CVDisplayLinkRef) -> CVReturn;
     pub fn CVDisplayLinkRelease(d: CVDisplayLinkRef);
 }

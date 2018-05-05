@@ -1,11 +1,8 @@
-use std::mem::transmute;
-use super::super::super::core::constants::{
-    DEFAULT_WINDOW_WIDTH,
-    DEFAULT_WINDOW_HEIGHT,
-};
+use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
 use super::super::super::objc::runtime::{Object, Sel, BOOL, YES};
 use super::super::apple;
 use super::game_view_controller as gvc;
+use std::mem::transmute;
 
 pub const CLASS_NAME: &str = "AppDelegate";
 pub const SUPER_CLASS_NAME: &str = "NSObject";
@@ -14,10 +11,7 @@ pub const APP_VAR_NAME: &str = "vukust_os_app";
 
 #[cfg(debug_assertions)]
 fn create_frame() -> apple::NSRect {
-    apple::NSRect::new(
-        0.0, 0.0,
-        DEFAULT_WINDOW_WIDTH,
-        DEFAULT_WINDOW_HEIGHT)
+    apple::NSRect::new(0.0, 0.0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
 }
 
 #[cfg(not(debug_assertions))]
@@ -30,11 +24,9 @@ fn create_frame() -> apple::NSRect {
 extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     vxlogi!("I'm initialized.");
     let frame = create_frame();
-    let style_mask = (
-        apple::NS_TITLED_WINDOW_MASK | 
-        apple::NS_CLOSABLE_WINDOW_MASK |
-        apple::NS_RESIZABLE_WINDOW_MASK |
-        apple::NS_MINIATURIZABLE_WINDOW_MASK)
+    let style_mask = (apple::NS_TITLED_WINDOW_MASK | apple::NS_CLOSABLE_WINDOW_MASK
+        | apple::NS_RESIZABLE_WINDOW_MASK
+        | apple::NS_MINIATURIZABLE_WINDOW_MASK)
         .bits() as apple::NSUInteger;
     let backing = apple::NS_BACKING_STORE_BUFFERED;
     let window: apple::Id = unsafe {
@@ -44,8 +36,7 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     unsafe {
         let _: () = msg_send![window, center];
     }
-    let ns_view: apple::Id =
-        unsafe { msg_send![window, contentView] };
+    let ns_view: apple::Id = unsafe { msg_send![window, contentView] };
     unsafe {
         (*app).metal_view = metal_view;
     }
@@ -110,8 +101,8 @@ pub fn register() {
         );
         app_delegate_class.add_method(
             sel!(applicationShouldTerminateAfterLastWindowClosed:),
-            application_should_terminate_after_last_window_closed as
-                extern "C" fn(&Object, Sel, apple::Id) -> BOOL,
+            application_should_terminate_after_last_window_closed
+                as extern "C" fn(&Object, Sel, apple::Id) -> BOOL,
         );
     }
     app_delegate_class.register();

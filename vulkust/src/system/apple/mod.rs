@@ -7,13 +7,13 @@ pub mod model_io;
 pub mod quartz_core;
 pub mod util;
 
+pub use super::super::objc;
+use super::super::objc::declare::ClassDecl;
+pub use super::super::objc::runtime::{Class, Object, NO, YES};
 use std;
-use std::os::raw::{c_char, c_void};
 use std::ffi::CStr;
 use std::mem::transmute;
-pub use super::super::objc;
-pub use super::super::objc::runtime::{Class, Object, NO, YES};
-use super::super::objc::declare::ClassDecl;
+use std::os::raw::{c_char, c_void};
 
 // types ------------------------------------------------------------------------------------------
 
@@ -215,10 +215,10 @@ impl NSError {
         let res = NSString {
             s: unsafe { msg_send![self.err, localizedFailureReason] },
         };
-        format!("NSError(localizedDescription({}), ", des) +
-            &format!("localizedRecoveryOptions({}), ", rec) +
-            &format!("localizedRecoverySuggestion({}), ", sug) +
-            &format!("localizedFailureReason({}))", res)
+        format!("NSError(localizedDescription({}), ", des)
+            + &format!("localizedRecoveryOptions({}), ", rec)
+            + &format!("localizedRecoverySuggestion({}), ", sug)
+            + &format!("localizedFailureReason({}))", res)
     }
     pub fn as_ptr(&mut self) -> IdPtr {
         IdPtr { id: &mut self.err }
@@ -245,7 +245,6 @@ impl std::fmt::Display for NSError {
         write!(f, "{}", self.to_string())
     }
 }
-
 
 // TODO: remove auto release pool in future.
 // impl Drop for NSString {
