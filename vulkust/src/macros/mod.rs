@@ -3,13 +3,13 @@
 macro_rules! vulkust_start {
     ($App:ident) => {
         fn main() {
-            // use $crate::core::application::ApplicationTrait as CoreAppTrait;
+            use $crate::core::application::ApplicationTrait as CoreAppTrait;
             // use $crate::system::application::Application as SysApp;
             use $crate::system::os::application::Application as OsApp;
-            let os_app = Arc::new(RwLock::new(OsApp::new()));
+            let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
+            let os_app = Arc::new(RwLock::new(OsApp::new(core_app)));
             let os_app_clone = os_app.clone();
             vxresult!(os_app.read()).initialize(os_app_clone);
-            // let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             // let sys_app = Arc::new(RwLock::new(SysApp::new(core_app.clone(), os_app)));
             // core_app
             //     .write()

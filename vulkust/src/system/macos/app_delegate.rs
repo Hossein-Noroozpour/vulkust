@@ -4,12 +4,14 @@ use super::super::apple;
 use super::game_view;
 use super::game_view_controller;
 use std::mem::transmute;
+use std::os::raw::c_void;
 
 pub const CLASS_NAME: &str = "AppDelegate";
 pub const SUPER_CLASS_NAME: &str = "NSObject";
 pub const WINDOW_VAR_NAME: &str = "window";
 pub const VIEW_VAR_NAME: &str = "view";
 pub const CONTROLLER_VAR_NAME: &str = "controller";
+pub const APP_VAR_NAME: &str = "os_app";
 
 #[cfg(debug_assertions)]
 fn create_frame() -> apple::NSRect {
@@ -39,17 +41,17 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     unsafe {
         let _: () = msg_send![window, center];
     }
-    let view = game_view::create_instance();
+    let view = game_view::create_instance(frame);
     let gvc = game_view_controller::create_instance();
     unsafe {
+        let os_app: *mut c_void = *this.get_ivar(APP_VAR_NAME);
+        gvc.set_ivar(game_view_controller::APP_VAR_NAME, os_app);
         this.set_ivar(WINDOW_VAR_NAME, window);
         this.set_ivar(VIEW_VAR_NAME, view);
         this.set_ivar(CONTROLLER_VAR_NAME, gvc);
-    }
-    unsafe {
-        let _: () = msg_send![gvc, setView:view];
-        let _: () = msg_send![window, setContentView:view];
-        let _: () = msg_send![window, setContentViewController:gvc];
+        let _: () = msg_send![gvc, setView: view];
+        let _: () = msg_send![window, setContentView: view];
+        let _: () = msg_send![window, setContentViewController: gvc];
         let _: () = msg_send![gvc, gameViewDidLoad];
     }
 }
@@ -81,6 +83,7 @@ pub fn register() {
     app_delegate_class.add_ivar::<apple::Id>(WINDOW_VAR_NAME);
     app_delegate_class.add_ivar::<apple::Id>(VIEW_VAR_NAME);
     app_delegate_class.add_ivar::<apple::Id>(CONTROLLER_VAR_NAME);
+    app_delegate_class.add_ivar::<*mut c_void>(APP_VAR_NAME);
 
     unsafe {
         app_delegate_class.add_method(

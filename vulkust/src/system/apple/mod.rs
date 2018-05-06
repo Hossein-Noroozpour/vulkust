@@ -28,7 +28,7 @@ pub type NSInteger = i64;
 #[cfg(target_pointer_width = "64")]
 pub type NSUInteger = u64;
 
-pub type Id = *mut Object;
+pub type Id = &'static mut Object;
 
 // const ------------------------------------------------------------------------------------------
 
@@ -126,8 +126,11 @@ unsafe impl objc::Encode for NSRect {
 
 impl NSRect {
     pub fn new(
-        x: core_graphics::CGFloat, y: core_graphics::CGFloat, 
-        w: core_graphics::CGFloat, h: core_graphics::CGFloat) -> Self {
+        x: core_graphics::CGFloat,
+        y: core_graphics::CGFloat,
+        w: core_graphics::CGFloat,
+        h: core_graphics::CGFloat,
+    ) -> Self {
         NSRect {
             origin: NSPoint { x: x, y: y },
             size: NSSize {
@@ -164,8 +167,12 @@ impl std::fmt::Display for NSString {
         if self.s == 0 as Id {
             return write!(f, "");
         }
-        let ptr: *const c_char =
-            unsafe { msg_send![self.s, cStringUsingEncoding:NsStringEncoding::NS_UTF8_STRING_ENCODING] };
+        let ptr: *const c_char = unsafe {
+            msg_send![
+                self.s,
+                cStringUsingEncoding: NsStringEncoding::NS_UTF8_STRING_ENCODING
+            ]
+        };
         let string = unsafe { CStr::from_ptr(ptr) }
             .to_string_lossy()
             .into_owned();

@@ -18,8 +18,7 @@ pub mod macros;
 // pub mod audio;
 pub mod core;
 // pub mod math;
-// pub mod render;
+pub mod render;
 // pub mod sync;
 pub mod system;
-// #[macro_use]
-// pub mod vulkan;
+pub mod vulkan;

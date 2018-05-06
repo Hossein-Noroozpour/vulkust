@@ -39,20 +39,25 @@ pub fn register() {
     unsafe {
         self_class.add_method(
             sel!(wantsUpdateLayer),
-            wants_update_layer as extern "C" fn (&mut Object, Sel) -> BOOL);
+            wants_update_layer as extern "C" fn(&mut Object, Sel) -> BOOL,
+        );
         self_class.add_class_method(
-            sel!(layerClass), 
-            layer_class as extern "C" fn (&mut Class, Sel) -> &'static Class);
+            sel!(layerClass),
+            layer_class as extern "C" fn(&mut Class, Sel) -> &'static Class,
+        );
         self_class.add_method(
-            sel!(makeBackingLayer), 
-            make_backing_layer as extern "C" fn (&mut Object, Sel) -> apple::Id);
+            sel!(makeBackingLayer),
+            make_backing_layer as extern "C" fn(&mut Object, Sel) -> apple::Id,
+        );
         self_class.add_method(
-            sel!(acceptsFirstResponder), 
-            accepts_first_responder as extern "C" fn (&mut Object, Sel) -> BOOL);
+            sel!(acceptsFirstResponder),
+            accepts_first_responder as extern "C" fn(&mut Object, Sel) -> BOOL,
+        );
     }
     self_class.register();
 }
 
-pub fn create_instance() -> apple::Id {
-    apple::get_instance(CLASS_NAME)
+pub fn create_instance(frame: apple::NSRect) -> apple::Id {
+    let cls = apple::get_class(CLASS_NAME);
+    unsafe { msg_send![cls, initWithFrame: frame] }
 }
