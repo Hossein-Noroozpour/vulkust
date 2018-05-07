@@ -45,7 +45,7 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     let gvc = game_view_controller::create_instance();
     unsafe {
         let os_app: *mut c_void = *this.get_ivar(APP_VAR_NAME);
-        gvc.set_ivar(game_view_controller::APP_VAR_NAME, os_app);
+        (*gvc).set_ivar(game_view_controller::APP_VAR_NAME, os_app);
         this.set_ivar(WINDOW_VAR_NAME, window);
         this.set_ivar(VIEW_VAR_NAME, view);
         this.set_ivar(CONTROLLER_VAR_NAME, gvc);

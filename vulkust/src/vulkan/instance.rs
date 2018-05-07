@@ -192,6 +192,10 @@ impl Instance {
         let vk_platform_surface_ext = CString::new("VK_KHR_xcb_surface").unwrap();
         #[cfg(target_os = "android")]
         let vk_platform_surface_ext = CString::new("VK_KHR_android_surface").unwrap();
+        #[cfg(target_os = "macos")]
+        let vk_platform_surface_ext = CString::new("VK_MVK_macos_surface").unwrap();
+        #[cfg(target_os = "ios")]
+        let vk_platform_surface_ext = CString::new("VK_MVK_ios_surface").unwrap();
         #[cfg(debug_assertions)]
         let vk_ext_debug_report_ext = CString::new("VK_EXT_debug_report").unwrap();
         let mut vulkan_extensions = Vec::new();

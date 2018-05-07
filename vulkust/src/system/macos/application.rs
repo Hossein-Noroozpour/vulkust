@@ -1,7 +1,6 @@
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::apple;
-use super::super::application::Application as SysApp;
 use super::app_delegate;
 use super::game_view;
 use super::game_view_controller;
@@ -15,7 +14,7 @@ pub struct Application {
     pub app_dlg: apple::Id,
     pub auto_release_pool: Option<apple::NsAutoReleasePool>,
     pub core_app: Arc<RwLock<CoreAppTrait>>,
-    pub render_engine: Arc<RwLock<RenderEngine>>,
+    pub render_engine: Option<Arc<RwLock<RenderEngine>>>,
 }
 
 impl Application {
@@ -27,7 +26,8 @@ impl Application {
         let app = apple::get_class("NSApplication");
         let app: apple::Id = unsafe { msg_send![app, sharedApplication] };
         let app_dlg = app_delegate::create_instance();
-        let render_engine = Arc::new(RwLock::new(RenderEngine::new(&core_app)));
+        // let render_engine = Arc::new(RwLock::new(RenderEngine::new(&core_app)));
+        let render_engine = None;
         Application {
             app,
             app_dlg,
@@ -38,20 +38,24 @@ impl Application {
     }
 
     pub fn initialize(&self, itself: Arc<RwLock<Application>>) {
-        let itself_ptr = Box::into_raw(Box::new(itself.clone()));
         unsafe {
-            self.app_dlg
+            let itself_ptr: *mut c_void = transmute(Box::into_raw(Box::new(itself.clone())));
+            (*self.app_dlg)
                 .set_ivar(app_delegate::APP_VAR_NAME, itself_ptr);
             let _: () = msg_send![self.app_dlg, initialize];
             let _: () = msg_send![self.app, setDelegate:self.app_dlg];
         };
-        vxresult!(self.render_engine.write()).initilize(&itself);
-        vxresult!(self.core_app.write()).initilize(&itself, &self.render_engine);
+        // vxresult!(self.render_engine.write()).initilize(&itself);
+        // vxresult!(self.core_app.write()).initilize(&itself, &self.render_engine);
         unsafe {
-            let gvc: apple::Id = *self.app_dlg.get_ivar(app_delegate::CONTROLLER_VAR_NAME);
+            let gvc: apple::Id = *(*self.app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME);
             let _: () = msg_send![gvc, startLinkDisplay];
             let _: () = msg_send![self.app, run];
         }
+    }
+
+    pub fn update(&self) {
+        vxlogi!("reached");
     }
 }
 

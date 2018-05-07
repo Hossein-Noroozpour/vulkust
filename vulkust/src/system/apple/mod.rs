@@ -28,7 +28,7 @@ pub type NSInteger = i64;
 #[cfg(target_pointer_width = "64")]
 pub type NSUInteger = u64;
 
-pub type Id = &'static mut Object;
+pub type Id = *mut Object;
 
 // const ------------------------------------------------------------------------------------------
 

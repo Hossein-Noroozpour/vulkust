@@ -59,5 +59,6 @@ pub fn register() {
 
 pub fn create_instance(frame: apple::NSRect) -> apple::Id {
     let cls = apple::get_class(CLASS_NAME);
-    unsafe { msg_send![cls, initWithFrame: frame] }
+    let obj: apple::Id = unsafe { msg_send![cls, alloc] };
+    unsafe { msg_send![obj, initWithFrame: frame] }
 }

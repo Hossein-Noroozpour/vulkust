@@ -20,7 +20,7 @@ extern "C" fn display_link_callback(
     display_link_context: *mut c_void,
 ) -> apple::core_video::CVReturn {
     let os_app: &Arc<RwLock<OsApp>> = unsafe { transmute(display_link_context) };
-    vxresult(os_app.read()).update();
+    vxresult!(os_app.read()).update();
     apple::core_video::KCVReturnSuccess
 }
 
