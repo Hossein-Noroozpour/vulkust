@@ -1,4 +1,5 @@
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::super::objc::runtime::YES;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::apple;
 use super::app_delegate;
@@ -8,7 +9,6 @@ use std::mem::transmute;
 use std::os::raw::c_void;
 use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
-use super::super::super::objc::runtime::YES;
 
 pub struct Application {
     pub app: apple::Id,
@@ -41,8 +41,7 @@ impl Application {
     pub fn initialize(&self, itself: Arc<RwLock<Application>>) {
         unsafe {
             let itself_ptr: *mut c_void = transmute(Box::into_raw(Box::new(itself.clone())));
-            (*self.app_dlg)
-                .set_ivar(app_delegate::APP_VAR_NAME, itself_ptr);
+            (*self.app_dlg).set_ivar(app_delegate::APP_VAR_NAME, itself_ptr);
             let _: () = msg_send![self.app_dlg, initialize];
             let _: () = msg_send![self.app, setDelegate:self.app_dlg];
         };
@@ -51,9 +50,9 @@ impl Application {
         unsafe {
             let gvc: apple::Id = *(*self.app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME);
             let _: () = msg_send![gvc, startLinkDisplay];
-            let _: () = msg_send![self.app, activateIgnoringOtherApps:YES];
+            let _: () = msg_send![self.app, activateIgnoringOtherApps: YES];
             let _: () = msg_send![self.app, run];
-        vxlogi!("reached");
+            vxlogi!("reached");
         }
     }
 

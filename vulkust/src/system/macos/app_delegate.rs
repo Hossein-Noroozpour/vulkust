@@ -1,7 +1,5 @@
 use super::super::super::core::constants::{
-    DEFAULT_WINDOW_HEIGHT, 
-    DEFAULT_WINDOW_WIDTH,
-    APPLICATION_NAME
+    APPLICATION_NAME, DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH,
 };
 use super::super::super::objc::runtime::{Object, Sel, BOOL, YES};
 use super::super::apple;
@@ -57,8 +55,8 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
         let _: () = msg_send![gvc, setView: view];
         let _: () = msg_send![window, setContentView: view];
         let _: () = msg_send![window, setContentViewController: gvc];
-        let _: () = msg_send![window, setTitle:title];
-        let _: () = msg_send![window, makeKeyAndOrderFront:apple::NIL];
+        let _: () = msg_send![window, setTitle: title];
+        let _: () = msg_send![window, makeKeyAndOrderFront: apple::NIL];
         let _: () = msg_send![window, makeKeyWindow];
         let _: () = msg_send![gvc, gameViewDidLoad];
     }

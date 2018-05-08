@@ -6,8 +6,7 @@ use std::os::raw::{c_char, c_long, c_ulong, c_void};
 
 type size_t = usize;
 
-pub enum dispatch_object_s {
-}
+pub enum dispatch_object_s {}
 pub type dispatch_block_t = *mut c_void;
 pub type dispatch_function_t = extern "C" fn(*mut c_void);
 pub type dispatch_semaphore_t = *mut dispatch_object_s;

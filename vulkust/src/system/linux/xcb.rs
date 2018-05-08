@@ -530,10 +530,8 @@ impl ::std::default::Default for itimerspec {
         unsafe { ::std::mem::zeroed() }
     }
 }
-pub enum sigevent {
-}
-pub enum __locale_data {
-}
+pub enum sigevent {}
+pub enum __locale_data {}
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct __locale_struct {
@@ -681,10 +679,8 @@ impl ::std::default::Default for __pthread_cleanup_frame {
         unsafe { ::std::mem::zeroed() }
     }
 }
-pub enum __jmp_buf_tag {
-}
-pub enum xcb_connection_t {
-}
+pub enum __jmp_buf_tag {}
+pub enum xcb_connection_t {}
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct xcb_generic_iterator_t {
@@ -5634,11 +5630,9 @@ impl ::std::default::Default for xcb_auth_info_t {
         unsafe { ::std::mem::zeroed() }
     }
 }
-pub enum xcb_special_event {
-}
+pub enum xcb_special_event {}
 pub type xcb_special_event_t = xcb_special_event;
-pub enum xcb_extension_t {
-}
+pub enum xcb_extension_t {}
 extern "C" {
     pub static mut __tzname: [*mut ::std::os::raw::c_char; 2usize];
     pub static mut __daylight: ::std::os::raw::c_int;
