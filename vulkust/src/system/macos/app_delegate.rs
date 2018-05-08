@@ -1,4 +1,8 @@
-use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
+use super::super::super::core::constants::{
+    DEFAULT_WINDOW_HEIGHT, 
+    DEFAULT_WINDOW_WIDTH,
+    APPLICATION_NAME
+};
 use super::super::super::objc::runtime::{Object, Sel, BOOL, YES};
 use super::super::apple;
 use super::game_view;
@@ -43,6 +47,7 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     }
     let view = game_view::create_instance(frame);
     let gvc = game_view_controller::create_instance();
+    let title = apple::NSString::new(APPLICATION_NAME);
     unsafe {
         let os_app: *mut c_void = *this.get_ivar(APP_VAR_NAME);
         (*gvc).set_ivar(game_view_controller::APP_VAR_NAME, os_app);
@@ -52,6 +57,9 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
         let _: () = msg_send![gvc, setView: view];
         let _: () = msg_send![window, setContentView: view];
         let _: () = msg_send![window, setContentViewController: gvc];
+        let _: () = msg_send![window, setTitle:title];
+        let _: () = msg_send![window, makeKeyAndOrderFront:apple::NIL];
+        let _: () = msg_send![window, makeKeyWindow];
         let _: () = msg_send![gvc, gameViewDidLoad];
     }
 }

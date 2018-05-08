@@ -8,6 +8,7 @@ use std::mem::transmute;
 use std::os::raw::c_void;
 use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
+use super::super::super::objc::runtime::YES;
 
 pub struct Application {
     pub app: apple::Id,
@@ -50,12 +51,14 @@ impl Application {
         unsafe {
             let gvc: apple::Id = *(*self.app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME);
             let _: () = msg_send![gvc, startLinkDisplay];
+            let _: () = msg_send![self.app, activateIgnoringOtherApps:YES];
             let _: () = msg_send![self.app, run];
+        vxlogi!("reached");
         }
     }
 
     pub fn update(&self) {
-        vxlogi!("reached");
+        // vxlogi!("reached");
     }
 }
 
