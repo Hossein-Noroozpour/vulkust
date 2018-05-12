@@ -1,4 +1,4 @@
-#[cfg(desktop_os)]
+#[cfg(not(target_os = "android"))]
 #[macro_export]
 macro_rules! vulkust_start {
     ($App:ident) => {

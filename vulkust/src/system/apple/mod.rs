@@ -1,3 +1,4 @@
+#[cfg(not(target_os = "ios"))]
 pub mod app_kit;
 pub mod core_graphics;
 pub mod core_video;
