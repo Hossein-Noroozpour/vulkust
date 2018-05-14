@@ -41,7 +41,7 @@ pub type CVDisplayLinkOutputCallback = extern "C" fn(
     display_link_context: *mut c_void,
 ) -> CVReturn;
 
-pub const KCVReturnSuccess: CVReturn = 0;
+pub const KCVRETURN_SUCCESS: CVReturn = 0;
 
 #[link(name = "CoreVideo", kind = "framework")]
 extern "C" {

@@ -6,6 +6,8 @@ pub mod dispatch;
 pub mod foundation;
 pub mod model_io;
 pub mod quartz_core;
+#[cfg(target_os = "ios")]
+pub mod ui_kit;
 pub mod util;
 
 use super::super::objc;
@@ -16,6 +18,7 @@ use std;
 use std::ffi::CStr;
 use std::mem::transmute;
 use std::os::raw::{c_char, c_void};
+use std::ptr::null_mut;
 
 // types ------------------------------------------------------------------------------------------
 
@@ -160,6 +163,10 @@ impl NSString {
                 encoding:NsStringEncoding::NS_UTF8_STRING_ENCODING]
         };
         NSString { s: s }
+    }
+
+    pub fn nil() -> Self {
+        NSString { s: null_mut() }
     }
 }
 

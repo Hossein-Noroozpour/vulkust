@@ -1,12 +1,12 @@
 [package]
-name = "camera-controlling"
+name = "ios-empty-window"
 version = "0.1.0"
 authors = ["Hossein Noroozpour <Hossein.Noroozpour@GMail.com>"]
-description = "A simple game demonsterating camera use"
-license = "GPL-1.0"
+description = "A simple empty window for ios"
+license = "MIT"
 
 [dependencies]
 vulkust = { path = "../../vulkust" }
 
-[profile.release]
-lto = true
+[lib]
+crate-type = ["staticlib"]
