@@ -3,8 +3,8 @@ use super::super::super::objc::runtime::YES;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::apple;
 use super::app_delegate;
-// use super::game_view;
-// use super::game_view_controller;
+use super::game_view;
+use super::game_view_controller;
 use std::mem::transmute;
 use std::os::raw::{c_char, c_int, c_void};
 use std::ptr::null_mut;
@@ -22,8 +22,8 @@ impl Application {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
         let auto_release_pool = Some(apple::NsAutoReleasePool::new());
         app_delegate::register();
-        // game_view::register();
-        // game_view_controller::register();
+        game_view::register();
+        game_view_controller::register();
         // let app = apple::get_class("NSApplication");
         // let app: apple::Id = unsafe { msg_send![app, sharedApplication] };
         // let app_dlg = app_delegate::create_instance();
@@ -39,10 +39,11 @@ impl Application {
     }
 
     pub fn initialize(
-        &self, 
+        &self,
         argc: c_int,
-        argv: *mut *mut c_char, 
-        itself: Arc<RwLock<Application>>) {
+        argv: *mut *mut c_char,
+        itself: Arc<RwLock<Application>>,
+    ) {
         //     unsafe {
         //         let itself_ptr: *mut c_void = transmute(Box::into_raw(Box::new(itself.clone())));
         //         (*self.app_dlg).set_ivar(app_delegate::APP_VAR_NAME, itself_ptr);
@@ -52,22 +53,23 @@ impl Application {
         //     // vxresult!(self.render_engine.write()).initilize(&itself);
         //     // vxresult!(self.core_app.write()).initilize(&itself, &self.render_engine);
         unsafe {
-
-        //         let gvc: apple::Id = *(*self.app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME);
-        //         let _: () = msg_send![gvc, startLinkDisplay];
-        //         let _: () = msg_send![self.app, activateIgnoringOtherApps: YES];
-        //         let _: () = msg_send![self.app, run];
-        //         vxlogi!("reached");
+            //         let gvc: apple::Id = *(*self.app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME);
+            //         let _: () = msg_send![gvc, startLinkDisplay];
+            //         let _: () = msg_send![self.app, activateIgnoringOtherApps: YES];
+            //         let _: () = msg_send![self.app, run];
+            //         vxlogi!("reached");
             apple::ui_kit::UIApplicationMain(
-                argc, argv,
+                argc,
+                argv,
                 apple::NSString::nil(),
-                apple::NSString::new(app_delegate::CLASS_NAME));
+                apple::NSString::new(app_delegate::CLASS_NAME),
+            );
         }
     }
 
-    // pub fn update(&self) {
-    //     // vxlogi!("reached");
-    // }
+    pub fn update(&self) {
+        vxlogi!("reached");
+    }
 }
 
 impl Drop for Application {

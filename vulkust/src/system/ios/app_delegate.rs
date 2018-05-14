@@ -3,63 +3,16 @@ use super::super::super::core::constants::{
 };
 use super::super::super::objc::runtime::{Class, Object, Sel, BOOL, YES};
 use super::super::apple;
-// use super::game_view;
-// use super::game_view_controller;
+use super::game_view;
+use super::game_view_controller;
 use std::mem::transmute;
 use std::os::raw::c_void;
 
 pub const CLASS_NAME: &str = "AppDelegate";
 pub const SUPER_CLASS_NAME: &str = "UIResponder";
-pub const WINDOW_VAR_NAME: &str = "window";
-// pub const VIEW_VAR_NAME: &str = "view";
-// pub const CONTROLLER_VAR_NAME: &str = "controller";
-// pub const APP_VAR_NAME: &str = "os_app";
-
-// #[cfg(debug_assertions)]
-// fn create_frame() -> apple::NSRect {
-//     apple::NSRect::new(0.0, 0.0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
-// }
-
-// #[cfg(not(debug_assertions))]
-// fn create_frame() -> apple::NSRect {
-//     let main_screen: apple::Id = unsafe { msg_send![apple::get_class("NSScreen"), mainScreen] };
-//     let frame: apple::NSRect = unsafe { msg_send![main_screen, frame] };
-//     apple::NSRect::new(0.0, 0.0, frame.size.width, frame.size.height)
-// }
-
-
-
-// let frame = create_frame();
-// let style_mask = (apple::NsWindowStyleMask::NS_TITLED_WINDOW_MASK
-//     | apple::NsWindowStyleMask::NS_CLOSABLE_WINDOW_MASK
-//     | apple::NsWindowStyleMask::NS_RESIZABLE_WINDOW_MASK
-//     | apple::NsWindowStyleMask::NS_MINIATURIZABLE_WINDOW_MASK)
-//     .bits() as apple::NSUInteger;
-// let backing = apple::NsBackingStoreType::NS_BACKING_STORE_BUFFERED;
-// let window: apple::Id = unsafe {
-//     msg_send![apple::alloc("NSWindow"),
-//     initWithContentRect:frame styleMask:style_mask backing:backing defer:YES]
-// };
-// unsafe {
-//     let _: () = msg_send![window, center];
-// }
-// let view = game_view::create_instance(frame);
-// let gvc = game_view_controller::create_instance();
-// let title = apple::NSString::new(APPLICATION_NAME);
-// unsafe {
-//     let os_app: *mut c_void = *this.get_ivar(APP_VAR_NAME);
-//     (*gvc).set_ivar(game_view_controller::APP_VAR_NAME, os_app);
-//     this.set_ivar(WINDOW_VAR_NAME, window);
-//     this.set_ivar(VIEW_VAR_NAME, view);
-//     this.set_ivar(CONTROLLER_VAR_NAME, gvc);
-//     let _: () = msg_send![gvc, setView: view];
-//     let _: () = msg_send![window, setContentView: view];
-//     let _: () = msg_send![window, setContentViewController: gvc];
-//     let _: () = msg_send![window, setTitle: title];
-//     let _: () = msg_send![window, makeKeyAndOrderFront: apple::NIL];
-//     let _: () = msg_send![window, makeKeyWindow];
-//     let _: () = msg_send![gvc, gameViewDidLoad];
-// }
+pub const VIEW_VAR_NAME: &str = "view";
+pub const CONTROLLER_VAR_NAME: &str = "controller";
+pub const APP_VAR_NAME: &str = "os_app";
 
 extern "C" fn application_will_finish_launching(this: &Object, _cmd: Sel, _n: apple::Id) {
     vxlogi!("Reached");
@@ -69,16 +22,16 @@ extern "C" fn application_did_finish_launching(this: &mut Object, _cmd: Sel, _n:
     vxlogi!("Reached");
     let main_screen: apple::Id = unsafe { msg_send![apple::get_class("UIScreen"), mainScreen] };
     let frame: apple::NSRect = unsafe { msg_send![main_screen, bounds] };
-    let window: apple::Id = unsafe {
-        msg_send![apple::alloc("UIWindow"), initWithFrame:frame]
-    };
+    let view = game_view::create_instance(frame);
+    let gvc = game_view_controller::create_instance();
     unsafe {
-        this.set_ivar(WINDOW_VAR_NAME, window);
-    }
-//   MainViewController *viewController = [[MainViewController alloc] init];
-//   self.window.rootViewController = viewController;
-    unsafe { 
-        let _: () = msg_send![window, makeKeyAndVisible];
+        this.set_ivar(VIEW_VAR_NAME, view);
+        this.set_ivar(CONTROLLER_VAR_NAME, gvc);
+        let _: () = msg_send![gvc, setView: view];
+        let _: () = msg_send![view, setRootViewController: gvc];
+        let _: () = msg_send![view, makeKeyWindow];
+        let _: () = msg_send![gvc, gameViewDidLoad];
+        let _: () = msg_send![view, makeKeyAndVisible];
     }
 }
 
@@ -98,10 +51,9 @@ extern "C" fn application_should_terminate_after_last_window_closed(
 pub fn register() {
     let ns_object_class = apple::get_class(SUPER_CLASS_NAME);
     let mut app_delegate_class = apple::dec_class(CLASS_NAME, ns_object_class);
-    app_delegate_class.add_ivar::<apple::Id>(WINDOW_VAR_NAME);
-    // app_delegate_class.add_ivar::<apple::Id>(VIEW_VAR_NAME);
-    // app_delegate_class.add_ivar::<apple::Id>(CONTROLLER_VAR_NAME);
-    // app_delegate_class.add_ivar::<*mut c_void>(APP_VAR_NAME);
+    app_delegate_class.add_ivar::<apple::Id>(VIEW_VAR_NAME);
+    app_delegate_class.add_ivar::<apple::Id>(CONTROLLER_VAR_NAME);
+    app_delegate_class.add_ivar::<*mut c_void>(APP_VAR_NAME);
 
     unsafe {
         app_delegate_class.add_method(

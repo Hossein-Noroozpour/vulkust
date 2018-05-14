@@ -1,8 +1,4 @@
-use std::os::raw::{
-    c_int,
-    c_void,
-    c_char,
-};
+use std::os::raw::{c_char, c_int, c_void};
 
 use super::NSString;
 

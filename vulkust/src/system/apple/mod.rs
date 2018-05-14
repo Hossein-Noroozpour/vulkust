@@ -671,7 +671,7 @@ extern "C" {
 
 #[link(name = "Foundation", kind = "framework")]
 extern "C" {
-    // pub static NSDefaultRunLoopMode: mtl::Id;
+    pub static NSDefaultRunLoopMode: Id;
 }
 
 // Rustified ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
