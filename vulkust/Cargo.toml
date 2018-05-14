@@ -15,9 +15,9 @@ fullscreen = []
 [dependencies]
 libc = "*"
 bitflags = "*"
-image = "*"
-cgmath = "*"
-gltf = { version = "*", features = ["extras", "names"] }
+# image = "*"
+# cgmath = "*"
+# gltf = { version = "*", features = ["extras", "names"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = "*"
@@ -28,6 +28,6 @@ gdi32-sys = "*"
 [target.'cfg(any(target_os = "ios", target_os = "macos"))'.dependencies]
 # This feautres are for debug mode remove them in future
 objc = { version = "*", features = ["exception", "verify_message"] }
-block = "*"
+# block = "*"
 
 [build-dependencies]
