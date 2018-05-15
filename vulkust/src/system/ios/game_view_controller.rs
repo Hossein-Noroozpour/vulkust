@@ -11,12 +11,12 @@ pub const SUPER_CLASS_NAME: &str = "UIViewController";
 pub const DISPLAY_LINK_VAR_NAME: &str = "display_link";
 pub const APP_VAR_NAME: &str = "os_app";
 
-static mut RENDER_SEL: Option<Sel> = None;
-
 // -(void) renderFrame
-extern "C" fn render_frame(this: &mut Object, _cmd: Sel) {
+extern "C" fn render_frame(this: &mut Object, _cmd: Sel, _sender: apple::Id) {
     vxlogi!("Reached");
 }
+
+static mut render_sel: Option<Sel> = None;
 
 //- (void)viewDidLoad
 extern "C" fn game_view_did_load(this: &mut Object, _cmd: Sel) {
@@ -28,14 +28,8 @@ extern "C" fn game_view_did_load(this: &mut Object, _cmd: Sel) {
     let _: () = unsafe { msg_send![view, setContentScaleFactor: native_scale] };
     let display_link: apple::Id = unsafe {
         let this: apple::Id = transmute_copy(this);
-        vxlogi!("111111111111111");
-        vxlogi!("111111111111111");
-        vxlogi!("111111111111111");
-        vxlogi!("111111111111111");
-        vxlogi!("111111111111111");
-        vxlogi!("111111111111111");
         msg_send![ apple::get_class("CADisplayLink"), 
-            displayLinkWithTarget:this selector:*vxunwrap!(RENDER_SEL) ]
+            displayLinkWithTarget:this selector:*vxunwrap!(render_sel)]
     };
     unsafe {
         this.set_ivar(DISPLAY_LINK_VAR_NAME, display_link);
@@ -52,12 +46,13 @@ pub fn register() {
     let mut self_class = apple::dec_class_s(CLASS_NAME, SUPER_CLASS_NAME);
     self_class.add_ivar::<apple::Id>(DISPLAY_LINK_VAR_NAME);
     self_class.add_ivar::<*mut c_void>(APP_VAR_NAME);
-    let s = sel!(renderFrame);
     unsafe {
-        RENDER_SEL = Some(s);
-    }
-    unsafe {
-        self_class.add_method(s, render_frame as extern "C" fn(&mut Object, Sel));
+        let s = sel!(renderFrame:);
+        render_sel = Some(s);
+        self_class.add_method(
+            s,
+            render_frame as extern "C" fn(&mut Object, Sel, apple::Id),
+        );
         self_class.add_method(
             sel!(gameViewDidLoad),
             game_view_did_load as extern "C" fn(&mut Object, Sel),

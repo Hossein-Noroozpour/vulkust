@@ -14,6 +14,7 @@ assets/
 *.rs.bk
 *.txt
 *.iml
+rls/
 *.spv
 .DS_Store
 *.gx3d
