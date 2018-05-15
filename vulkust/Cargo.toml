@@ -13,8 +13,6 @@ categories = ["game-engines"]
 fullscreen = []
 
 [dependencies]
-libc = "*"
-bitflags = "*"
 # image = "*"
 # cgmath = "*"
 # gltf = { version = "*", features = ["extras", "names"] }
@@ -25,9 +23,11 @@ kernel32-sys = "*"
 user32-sys = "*"
 gdi32-sys = "*"
 
-[target.'cfg(any(target_os = "ios", target_os = "macos"))'.dependencies]
+[target.'cfg(target_os = "macos")'.dependencies]
 # This feautres are for debug mode remove them in future
 objc = { version = "*", features = ["exception", "verify_message"] }
+bitflags = "*"
+libc = "*"
 # block = "*"
 
 [build-dependencies]

@@ -2,7 +2,7 @@
 pub mod android;
 #[cfg(target_os = "android")]
 pub use self::android as os;
-#[cfg(apple_os)]
+#[cfg(target_os = "macos")]
 pub mod apple;
 #[cfg(target_os = "ios")]
 pub mod ios;
@@ -16,7 +16,7 @@ pub use self::linux as os;
 pub mod macos;
 #[cfg(target_os = "macos")]
 pub use self::macos as os;
-pub mod linker;
+// pub mod linker;
 // pub mod file;
 // pub mod os;
 // #[cfg(vulkan)]

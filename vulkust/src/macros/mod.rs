@@ -51,16 +51,15 @@ macro_rules! vulkust_start {
     ($App:ident) => {
         #[allow(dead_code)]
         #[no_mangle]
-        pub unsafe extern "C" fn vulkust_main(
-            argc: ::std::os::raw::c_int,
-            argv: *mut *mut ::std::os::raw::c_char,
-        ) {
+        pub extern "C" fn vulkust_allocate() -> *mut ::std::os::raw::c_void {
+            use std::mem::transmute;
             use $crate::core::application::ApplicationTrait as CoreAppTrait;
             use $crate::system::os::application::Application as OsApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let os_app = Arc::new(RwLock::new(OsApp::new(core_app)));
             let os_app_clone = os_app.clone();
-            vxresult!(os_app.read()).initialize(argc, argv, os_app_clone);
+            vxresult!(os_app.write()).set_itself(os_app_clone);
+            unsafe { transmute(Box::into_raw(Box::new(os_app))) }
         }
     };
 }

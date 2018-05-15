@@ -2,15 +2,17 @@
 #![feature(integer_atomics)]
 #![feature(stmt_expr_attributes)]
 
-#[cfg(apple_os)]
+#[cfg(target_os = "macos")]
 #[macro_use]
 pub extern crate objc;
 
+#[cfg(target_os = "macos")]
 #[macro_use]
 pub extern crate bitflags;
 
 // pub extern crate cgmath as math;
 // pub extern crate image;
+#[cfg(target_os = "macos")]
 pub extern crate libc;
 
 #[macro_use]
