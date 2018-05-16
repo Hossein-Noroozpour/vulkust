@@ -2,13 +2,13 @@ use super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
 // pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
-
 // use super::command::buffer::Buffer as CmdBuff;
 // use super::scene::Scene;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Weak};
 
 pub struct Engine {
     // gapi_engine: GraphicApiEngine,
+    os_app: Weak<RwLock<OsApp>>,
     core_app: Arc<RwLock<CoreAppTrait>>,
 }
 
@@ -17,6 +17,7 @@ impl Engine {
         // let gapi_engine = GraphicApiEngine::new(os_app);
         Engine {
             // gapi_engine,
+            os_app: Arc::downgrade(os_app),
             core_app,
         }
     }

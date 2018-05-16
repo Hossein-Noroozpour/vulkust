@@ -8,7 +8,7 @@ macro_rules! vulkust_start {
             use $crate::system::os::application::Application as OsApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let os_app = Arc::new(RwLock::new(OsApp::new(core_app)));
-            let os_app_clone = os_app.clone();
+            let os_app_clone = Arc::downgrade(&os_app);
             vxresult!(os_app.read()).initialize(os_app_clone);
             // let sys_app = Arc::new(RwLock::new(SysApp::new(core_app.clone(), os_app)));
             // core_app
@@ -49,7 +49,6 @@ macro_rules! vulkust_start {
 #[macro_export]
 macro_rules! vulkust_start {
     ($App:ident) => {
-        #[allow(dead_code)]
         #[no_mangle]
         pub extern "C" fn vulkust_allocate() -> *mut ::std::os::raw::c_void {
             use std::mem::transmute;
@@ -57,7 +56,7 @@ macro_rules! vulkust_start {
             use $crate::system::os::application::Application as OsApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let os_app = Arc::new(RwLock::new(OsApp::new(core_app)));
-            let os_app_clone = os_app.clone();
+            let os_app_clone = Arc::downgrade(&os_app);
             vxresult!(os_app.write()).set_itself(os_app_clone);
             unsafe { transmute(Box::into_raw(Box::new(os_app))) }
         }
