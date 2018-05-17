@@ -22,7 +22,7 @@ use super::swapchain::Swapchain;
 
 pub struct Engine {
     pub instance: Arc<Instance>,
-    // pub surface: Arc<Surface>,
+    pub surface: Arc<Surface>,
     // pub physical_device: Arc<PhysicalDevice>,
     // pub logical_device: Arc<LogicalDevice>,
     // pub swapchain: Arc<Swapchain>,
@@ -44,7 +44,7 @@ pub struct Engine {
 impl Engine {
     pub fn new(os_app: &Arc<RwLock<OsApp>>) -> Self {
         let instance = Arc::new(Instance::new());
-        // let surface = Arc::new(Surface::new(&instance, os_app));
+        let surface = Arc::new(Surface::new(&instance, os_app));
         // let physical_device = Arc::new(PhysicalDevice::new(&surface));
         // let logical_device = Arc::new(LogicalDevice::new(&physical_device));
         // let swapchain = Arc::new(Swapchain::new(&logical_device));
@@ -56,7 +56,7 @@ impl Engine {
             //     core_app: unsafe { transmute(0usize) },
             //     os_app: unsafe { transmute(0usize) },
             instance,
-            // surface,
+            surface,
             // physical_device,
             // logical_device,
             // swapchain,

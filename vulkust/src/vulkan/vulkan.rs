@@ -276,6 +276,8 @@ pub enum VkStructureType {
     VK_STRUCTURE_TYPE_MIR_SURFACE_CREATE_INFO_KHR = 1000007000,
     VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR = 1000008000,
     VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR = 1000009000,
+    VK_STRUCTURE_TYPE_IOS_SURFACE_CREATE_INFO_MVK = 1000122000,
+    VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK = 1000123000,
     VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT = 1000011000,
     VK_STRUCTURE_TYPE_RANGE_SIZE = 49,
     VK_STRUCTURE_TYPE_MAX_ENUM = 2147483647,
@@ -4794,6 +4796,7 @@ pub type PFN_vkDebugReportMessageEXT = unsafe extern "C" fn(
 pub const VK_KHR_ANDROID_SURFACE_SPEC_VERSION: u32 = 6u32;
 pub const VK_KHR_ANDROID_SURFACE_EXTENSION_NAME: &'static str = "VK_KHR_android_surface";
 type VkAndroidSurfaceCreateFlagsKHR = VkFlags;
+
 #[cfg(target_os = "android")]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -4809,11 +4812,37 @@ impl Default for VkAndroidSurfaceCreateInfoKHR {
         unsafe { zeroed() }
     }
 }
+
 #[cfg(target_os = "android")]
 pub type PFN_VkCreateAndroidSurfaceKhr =
     unsafe extern "C" fn(
         instance: VkInstance,
         p_create_info: *const VkAndroidSurfaceCreateInfoKHR,
+        p_allocator: *const VkAllocationCallbacks,
+        p_surface: *mut VkSurfaceKHR,
+    ) -> VkResult;
+
+type VkIOSSurfaceCreateFlagsMVK = VkFlags;
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct VkIOSSurfaceCreateInfoMVK {
+    pub structure_type: VkStructureType,
+    pub pointer_next: *const c_void,
+    pub flags: VkIOSSurfaceCreateFlagsMVK,
+    pub view: *mut c_void,
+}
+
+impl Default for VkIOSSurfaceCreateInfoMVK {
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
+}
+
+pub type PFN_VkCreateIOSSurfaceMVK =
+    unsafe extern "C" fn(
+        instance: VkInstance,
+        p_create_info: *const VkIOSSurfaceCreateInfoMVK,
         p_allocator: *const VkAllocationCallbacks,
         p_surface: *mut VkSurfaceKHR,
     ) -> VkResult;
@@ -5729,6 +5758,12 @@ extern "C" {
         pLayerPrefix: *const c_char,
         pMessage: *const c_char,
     );
+    pub fn vkCreateIOSSurfaceMVK(
+        instance: VkInstance,
+        p_create_info: *const VkIOSSurfaceCreateInfoMVK,
+        p_allocator: *const VkAllocationCallbacks,
+        p_surface: *mut VkSurfaceKHR,
+    ) -> VkResult;
     #[cfg(target_os = "android")]
     pub fn vkCreateAndroidSurfaceKHR(
         instance: VkInstance,

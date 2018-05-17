@@ -11,6 +11,26 @@ pub struct Surface {
 }
 
 impl Surface {
+    #[cfg(target_os = "ios")]
+    pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
+        let mut vk_data = 0 as vk::VkSurfaceKHR;
+        let os_app = vxresult!(os_app.read());
+        let mut create_info = vk::VkIOSSurfaceCreateInfoMVK::default();
+        create_info.structure_type =
+            vk::VkStructureType::VK_STRUCTURE_TYPE_IOS_SURFACE_CREATE_INFO_MVK;
+        create_info.view = os_app.view;
+        vulkan_check!(vk::vkCreateIOSSurfaceMVK(
+            instance.vk_data,
+            &create_info,
+            null(),
+            &mut vk_data,
+        ));
+        Surface {
+            instance: instance.clone(),
+            vk_data,
+        }
+    }
+
     #[cfg(target_os = "android")]
     pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;

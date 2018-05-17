@@ -1,8 +1,8 @@
-use super::super::super::libc;
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
 use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
 use super::super::super::core::types::Real;
+use super::super::super::libc;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::xcb;
 use super::xproto;
