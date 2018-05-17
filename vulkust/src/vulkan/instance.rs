@@ -1,12 +1,13 @@
 use std::default::Default;
 use std::ffi::CString;
-use std::ptr::null;
+use std::ptr::{null, null_mut};
 
-use super::super::core::string::cstrings_to_ptrs;
+use super::super::core::string::{cstrings_to_ptrs, slice_to_string, strings_to_cstrings};
 use super::vulkan as vk;
 
 #[cfg(debug_assertions)]
 mod debug {
+    use std::collections::BTreeMap;
     use std::ffi::{CStr, CString};
     use std::mem::transmute;
     use std::os::raw::{c_char, c_void};
@@ -26,11 +27,14 @@ mod debug {
     }
 
     pub struct Debugger {
-        vk_data: vk::VkDebugReportCallbackEXT,
+        vk_data: Option<vk::VkDebugReportCallbackEXT>,
     }
 
     impl Debugger {
         pub fn new(vk_instance: vk::VkInstance) -> Self {
+            if !super::contain_extension("VK_EXT_debug_report") {
+                return Debugger { vk_data: None };
+            }
             let mut report_callback_create_info = vk::VkDebugReportCallbackCreateInfoEXT::default();
             report_callback_create_info.sType =
                 vk::VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
@@ -54,29 +58,32 @@ mod debug {
                 &mut vk_debug_callback,
             ));
             Debugger {
-                vk_data: vk_debug_callback,
+                vk_data: Some(vk_debug_callback),
             }
         }
 
         pub fn terminate(&mut self, vk_instance: vk::VkInstance) {
+            if self.vk_data.is_none() {
+                return;
+            }
             let destroy_debug_report_callback: vk::PFN_vkDestroyDebugReportCallbackEXT =
                 unsafe { transmute(get_function(vk_instance, "vkDestroyDebugReportCallbackEXT")) };
             unsafe {
-                destroy_debug_report_callback(vk_instance, self.vk_data, null());
+                destroy_debug_report_callback(vk_instance, *vxunwrap!(self.vk_data), null());
             }
-            self.vk_data = 0 as vk::VkDebugReportCallbackEXT;
+            self.vk_data = None;
         }
     }
 
     impl Drop for Debugger {
         fn drop(&mut self) {
-            if self.vk_data != null_mut() {
+            if self.vk_data.is_some() {
                 vxlogf!("Unexpected drop of debugger.");
             }
         }
     }
 
-    unsafe extern "C" fn vulkan_debug_callback(
+    extern "C" fn vulkan_debug_callback(
         flags: vk::VkDebugReportFlagsEXT,
         obj_type: vk::VkDebugReportObjectTypeEXT,
         src_obj: u64,
@@ -113,8 +120,8 @@ mod debug {
             src_obj,
             location,
             msg_code,
-            CStr::from_ptr(layer_prefix).to_str(),
-            CStr::from_ptr(msg).to_str(),
+            unsafe { CStr::from_ptr(layer_prefix).to_str() },
+            unsafe { CStr::from_ptr(msg).to_str() },
             user_data
         );
         0u32
@@ -130,20 +137,54 @@ mod debug {
         unsafe {
             vk::vkEnumerateInstanceLayerProperties(&mut layer_count, available_layers.as_mut_ptr());
         }
-        let mut layers_names = Vec::new();
+        let mut found_layers = BTreeMap::new();
         for i in 0..available_layers.len() {
             let name = slice_to_string(&available_layers[i].layerName);
             let des = slice_to_string(&available_layers[i].description);
             vxlogi!("Layer {} with des: {} found.", name, des);
+            found_layers.insert(name, true);
         }
-        layers_names.push("VK_LAYER_GOOGLE_threading".to_string());
-        // layers_names.push("VK_LAYER_LUNARG_api_dump".to_string());
-        layers_names.push("VK_LAYER_LUNARG_parameter_validation".to_string());
-        layers_names.push("VK_LAYER_LUNARG_object_tracker".to_string());
-        layers_names.push("VK_LAYER_LUNARG_core_validation".to_string());
-        // layers_names.push("VK_LAYER_LUNARG_image".to_string());
-        // layers_names.push("VK_LAYER_LUNARG_swapchain".to_string());
-        layers_names.push("VK_LAYER_GOOGLE_unique_objects".to_string());
+        let mut layers_names = Vec::new();
+        let layer_name = "VK_LAYER_GOOGLE_threading".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
+        let layer_name = "MoltenVK".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
+        // let layer_name = "VK_LAYER_LUNARG_api_dump".to_string();
+        // if found_layers.contains_key(&layer_name] {
+        //     layers_names.push(layer_name);
+        // }
+        let layer_name = "VK_LAYER_LUNARG_parameter_validation".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
+        let layer_name = "VK_LAYER_LUNARG_object_tracker".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
+        let layer_name = "VK_LAYER_GOOGLE_threading".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
+        let layer_name = "VK_LAYER_LUNARG_core_validation".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
+        let layer_name = "VK_LAYER_LUNARG_image".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
+        let layer_name = "VK_LAYER_LUNARG_swapchain".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
+        let layer_name = "VK_LAYER_GOOGLE_unique_objects".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
         strings_to_cstrings(layers_names)
     }
 
@@ -169,6 +210,67 @@ mod debug {
     }
 }
 
+fn get_all_extensions() -> Vec<vk::VkExtensionProperties> {
+    let mut count = 0u32;
+    unsafe {
+        vulkan_check!(vk::vkEnumerateInstanceExtensionProperties(
+            null(),
+            &mut count,
+            null_mut()
+        ));
+    }
+    let mut properties = vec![vk::VkExtensionProperties::default(); count as usize];
+    unsafe {
+        vulkan_check!(vk::vkEnumerateInstanceExtensionProperties(
+            null(),
+            &mut count,
+            properties.as_mut_ptr()
+        ));
+    }
+    properties
+}
+
+fn enumerate_extensions() -> Vec<CString> {
+    let properties = get_all_extensions();
+    let mut extensions = Vec::new();
+    for p in properties {
+        let name = slice_to_string(&p.extensionName);
+        let name: &str = &name;
+        match name {
+            "VK_KHR_surface"
+            | "VK_KHR_win32_surface"
+            | "VK_KHR_xcb_surface"
+            | "VK_KHR_android_surface"
+            | "VK_MVK_macos_surface"
+            | "VK_MVK_ios_surface"
+            | "VK_MVK_moltenvk" => {
+                vxlogi!("Extension importing {}", name);
+                extensions.push(name.to_string());
+            }
+            #[cfg(debug_assertions)]
+            "VK_EXT_debug_report" => {
+                vxlogi!("Extension importing {}", name);
+                extensions.push(name.to_string());
+            }
+            _ => {
+                vxlogi!("Extension '{}' found", name);
+            }
+        }
+    }
+    strings_to_cstrings(extensions)
+}
+
+fn contain_extension(s: &str) -> bool {
+    let properties = get_all_extensions();
+    for p in properties {
+        let name = slice_to_string(&p.extensionName);
+        if name == s {
+            return true;
+        }
+    }
+    return false;
+}
+
 pub struct Instance {
     pub vk_data: vk::VkInstance,
     debugger: debug::Debugger,
@@ -185,29 +287,13 @@ impl Instance {
         application_info.pApplicationName = application_name.as_ptr();
         application_info.pEngineName = engine_name.as_ptr();
         application_info.engineVersion = vk::vkMakeVersion(0, 1, 0);
-        let vk_khr_surface_ext = CString::new("VK_KHR_surface").unwrap();
-        #[cfg(target_os = "windows")]
-        let vk_platform_surface_ext = CString::new("VK_KHR_win32_surface").unwrap();
-        #[cfg(target_os = "linux")]
-        let vk_platform_surface_ext = CString::new("VK_KHR_xcb_surface").unwrap();
-        #[cfg(target_os = "android")]
-        let vk_platform_surface_ext = CString::new("VK_KHR_android_surface").unwrap();
-        #[cfg(target_os = "macos")]
-        let vk_platform_surface_ext = CString::new("VK_MVK_macos_surface").unwrap();
-        #[cfg(target_os = "ios")]
-        let vk_platform_surface_ext = CString::new("VK_MVK_ios_surface").unwrap();
-        #[cfg(debug_assertions)]
-        let vk_ext_debug_report_ext = CString::new("VK_EXT_debug_report").unwrap();
-        let mut vulkan_extensions = Vec::new();
-        vulkan_extensions.push(vk_khr_surface_ext.as_ptr());
-        vulkan_extensions.push(vk_platform_surface_ext.as_ptr());
-        #[cfg(debug_assertions)]
-        vulkan_extensions.push(vk_ext_debug_report_ext.as_ptr());
+        let layers_names = debug::enumerate_layers();
+        let vulkan_layers = cstrings_to_ptrs(&layers_names);
+        let vulkan_extensions = enumerate_extensions();
+        let vulkan_extensions = cstrings_to_ptrs(&vulkan_extensions);
         let mut instance_create_info = vk::VkInstanceCreateInfo::default();
         instance_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
-        let layers_names = debug::enumerate_layers();
-        let vulkan_layers = cstrings_to_ptrs(&layers_names);
         instance_create_info.enabledLayerCount = vulkan_layers.len() as u32;
         instance_create_info.ppEnabledLayerNames = vulkan_layers.as_ptr();
         instance_create_info.enabledExtensionCount = vulkan_extensions.len() as u32;

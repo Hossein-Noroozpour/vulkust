@@ -6,8 +6,9 @@ extern crate winapi;
 use super::super::system::os;
 use std::default::Default;
 use std::mem::{transmute, zeroed};
-use std::os::raw::{c_char, c_int, c_long, c_longlong, c_short, c_uchar, c_uint, c_ulong, c_ushort,
-                   c_void};
+use std::os::raw::{
+    c_char, c_int, c_long, c_longlong, c_short, c_uchar, c_uint, c_ulong, c_ushort, c_void,
+};
 
 pub type ptrdiff_t = isize;
 pub type size_t = usize;
@@ -1856,7 +1857,7 @@ impl Default for VkDeviceCreateInfo {
 #[repr(C)]
 #[derive(Copy)]
 pub struct VkExtensionProperties {
-    pub extensionName: [c_char; 256usize],
+    pub extensionName: [u8; 256usize],
     pub specVersion: uint32_t,
 }
 

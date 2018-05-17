@@ -49,6 +49,7 @@ macro_rules! vulkust_start {
 #[macro_export]
 macro_rules! vulkust_start {
     ($App:ident) => {
+        #[allow(dead_code)]
         #[no_mangle]
         pub extern "C" fn vulkust_allocate() -> *mut ::std::os::raw::c_void {
             use std::mem::transmute;
