@@ -12,7 +12,7 @@ pub extern crate bitflags;
 
 // pub extern crate cgmath as math;
 // pub extern crate image;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 pub extern crate libc;
 
 #[macro_use]

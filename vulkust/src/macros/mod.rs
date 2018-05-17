@@ -9,7 +9,9 @@ macro_rules! vulkust_start {
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let os_app = Arc::new(RwLock::new(OsApp::new(core_app)));
             let os_app_clone = Arc::downgrade(&os_app);
-            vxresult!(os_app.read()).initialize(os_app_clone);
+            vxresult!(os_app.write()).set_itself(os_app_clone);
+            vxresult!(os_app.write()).initialize();
+            vxresult!(os_app.read()).run();
             // let sys_app = Arc::new(RwLock::new(SysApp::new(core_app.clone(), os_app)));
             // core_app
             //     .write()

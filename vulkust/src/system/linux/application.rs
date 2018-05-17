@@ -1,8 +1,9 @@
-extern crate libc;
-
+use super::super::super::libc;
+use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
 use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
 use super::super::super::core::types::Real;
+use super::super::super::render::engine::Engine as RenderEngine;
 use super::xcb;
 use super::xproto;
 // use super::super::super::core::asset::manager::Manager as AssetManager;
@@ -12,8 +13,12 @@ use std::ffi::CString;
 use std::mem::transmute;
 use std::os::raw::{c_int, c_uint};
 use std::ptr::null_mut;
+use std::sync::{Arc, RwLock, Weak};
 
 pub struct Application {
+    pub itself: Option<Weak<RwLock<Application>>>,
+    pub renderer: Option<Arc<RwLock<RenderEngine>>>,
+    pub core_app: Arc<RwLock<CoreAppTrait>>,
     pub connection: *mut xcb::xcb_connection_t,
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,
@@ -21,7 +26,7 @@ pub struct Application {
 }
 
 impl Application {
-    pub fn new() -> Self {
+    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
         let mut scr = 0 as c_int;
         let connection: *mut xcb::xcb_connection_t =
             unsafe { xcb::xcb_connect(null_mut(), &mut scr) };
@@ -102,10 +107,44 @@ impl Application {
             xcb::xcb_flush(connection);
         }
         Application {
+            itself: None,
+            renderer: None,
+            core_app,
             connection,
             screen,
             window,
             atom_wm_delete_window,
+        }
+    }
+
+    pub fn set_itself(&mut self, itself: Weak<RwLock<Application>>) {
+        self.itself = Some(itself);
+    }
+
+    pub fn initialize(&mut self) {
+        let itself = vxunwrap!(self.itself).upgrade();
+        let itself = vxunwrap!(itself);
+        let core_app = self.core_app.clone();
+        let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app, &itself)));
+        self.renderer = Some(renderer);
+    }
+
+    pub fn run(&self) {
+        'main_loop: loop {
+            let events = self.fetch_events();
+            for e in events {
+                match e.event_type {
+                    EventType::Quit => {
+                        // todo
+                        // terminate core
+                        // terminate renderer
+                        // terminate audio engine
+                        // terminate physic engine
+                        break 'main_loop;
+                    }
+                    _ => (),
+                }
+            }
         }
     }
 
