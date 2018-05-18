@@ -1,38 +1,32 @@
-extern crate winapi;
-extern crate kernel32;
-extern crate user32;
-extern crate gdi32;
-use super::super::super::core::application::ApplicationTrait;
-use super::super::super::core::asset::manager::Manager as AssetManager;
-use super::super::super::render::engine::{EngineTrait, RenderEngine};
+use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::super::core::constants;
+// use super::super::super::core::asset::manager::Manager as AssetManager;
+use super::super::super::render::engine::RenderEngine;
 use super::super::super::util::string::string_to_cwstring;
-use super::super::os::ApplicationTrait as OsApplicationTrait;
 use super::super::file::File;
-
+use std::sync::{
+    Arc,
+    RwLock,
+    Weak,
+};
 use std::ptr::{null, null_mut};
 use std::mem::{size_of, transmute, zeroed};
 use std::os::raw::c_void;
 
-pub struct Application<CoreApp>
-where
-    CoreApp: 'static + ApplicationTrait,
-{
-    pub asset_manager: AssetManager,
-    pub h_instance: winapi::minwindef::HINSTANCE,
-    pub h_window: winapi::windef::HWND,
-    pub core_app: &'static mut CoreApp,
-    pub render_engine: &'static mut RenderEngine<CoreApp>,
+pub struct Application {
+    // pub asset_manager: AssetManager,
+    pub instance: winapi::minwindef::HINSTANCE,
+    pub window: winapi::windef::HWND,
+    pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
+    pub renderer: Option<Arc<RwLock<RenderEngine>>>,
 }
 
-unsafe extern "system" fn process_callback<CoreApp>(
+unsafe extern fn process_callback(
     hwnd: winapi::windef::HWND,
     msg: winapi::minwindef::UINT,
     w_param: winapi::minwindef::WPARAM,
     l_param: winapi::minwindef::LPARAM,
-) -> winapi::minwindef::LRESULT
-where
-    CoreApp: 'static + ApplicationTrait,
-{
+) -> winapi::minwindef::LRESULT {
     let mut os_app = user32::GetWindowLongPtrW(hwnd, winapi::winuser::GWLP_USERDATA);
     if winapi::winuser::WM_CREATE == msg {
         let ref create_structure: &mut winapi::winuser::CREATESTRUCTW = transmute(l_param);
@@ -40,32 +34,24 @@ where
         user32::SetWindowLongPtrW(hwnd, winapi::winuser::GWLP_USERDATA, os_app);
     }
     if os_app == 0 {
-        loge!("Unexpected message for nullptr sys app uMsg is: {}", msg);
+        vxloge!("Unexpected message for nullptr sys app uMsg is: {}", msg);
         return user32::DefWindowProcW(hwnd, msg, w_param, l_param);
     }
-    let ref mut os_app: &mut Application<CoreApp> = transmute(os_app);
+    let ref mut os_app: &Arc<Application = transmute(os_app);
     return os_app.handle_message(hwnd, msg, w_param, l_param);
 }
 
-impl<CoreApp> OsApplicationTrait<CoreApp> for Application<CoreApp>
-where
-    CoreApp: 'static + ApplicationTrait,
-{
-    fn new(_args: *const c_void) -> Self {
-        let application_name = string_to_cwstring("Gearoenix Nu-Frag Game Engine");
-        let file = File::new(&"data.gx3d".to_string());
-        let mut this = Application {
-            asset_manager: AssetManager::new(file),
-            h_instance: unsafe { kernel32::GetModuleHandleA(null()) },
-            h_window: null_mut(),
-            core_app: unsafe { transmute(0usize) },
-            render_engine: unsafe { transmute(0usize) },
-        };
+impl Application {
+    fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
+        let application_name = string_to_cwstring("Gearoenix Vulkust Game Engine");
+        // let file = File::new(&"data.gx3d".to_string());
+        // let asset_manager = AssetManager::new(file);
+        let instance = unsafe { kernel32::GetModuleHandleA(null()) };
         let mut wnd_class: winapi::winuser::WNDCLASSEXW = unsafe { zeroed() };
         wnd_class.cbSize = size_of::<winapi::winuser::WNDCLASSEXW>() as u32;
         wnd_class.style = winapi::winuser::CS_HREDRAW | winapi::winuser::CS_VREDRAW;
-        wnd_class.lpfnWndProc = Some(process_callback::<CoreApp>);
-        wnd_class.hInstance = this.h_instance;
+        wnd_class.lpfnWndProc = Some(process_callback);
+        wnd_class.hInstance = instance;
         wnd_class.hIcon = unsafe {
             user32::LoadIconW(
                 0 as winapi::minwindef::HINSTANCE,
@@ -88,25 +74,25 @@ where
             )
         };
         if unsafe { user32::RegisterClassExW(&wnd_class) } == 0 as _ {
-            logf!("Could not register window class!");
+            vxlogf!("Could not register window class!");
         }
         let mut window_rect: winapi::windef::RECT = unsafe { zeroed() };
-        #[cfg(not(feature = "fullscreen"))]
+        #[cfg(debug_assertions)]
         {
-            window_rect.right = 1000;
-            window_rect.bottom = 700;
+            window_rect.right = constants::DEFAULT_WINDOW_WIDTH;
+            window_rect.bottom = constants::DEFAULT_WINDOW_HEIGHT;
         }
-        #[cfg(not(feature = "fullscreen"))]
+        #[cfg(debug_assertions)]
         let dwex_style = winapi::winuser::WS_EX_APPWINDOW | winapi::winuser::WS_EX_WINDOWEDGE;
-        #[cfg(not(feature = "fullscreen"))]
+        #[cfg(debug_assertions)]
         let dw_style = winapi::winuser::WS_OVERLAPPEDWINDOW | winapi::winuser::WS_CLIPSIBLINGS |
             winapi::winuser::WS_CLIPCHILDREN;
-        #[cfg(feature = "fullscreen")]
+        #[cfg(not(debug_assertions))]
         let dwex_style = winapi::winuser::WS_EX_APPWINDOW;
-        #[cfg(feature = "fullscreen")]
+        #[cfg(not(debug_assertions))]
         let dw_style = winapi::winuser::WS_POPUP | winapi::winuser::WS_CLIPSIBLINGS |
             winapi::winuser::WS_CLIPCHILDREN;
-        #[cfg(feature = "fullscreen")]
+        #[cfg(not(debug_assertions))]
         {
             let screen_width = unsafe { user32::GetSystemMetrics(winapi::winuser::SM_CXSCREEN) };
             let screen_height = unsafe { user32::GetSystemMetrics(winapi::winuser::SM_CYSCREEN) };
@@ -118,15 +104,15 @@ where
             dm_screen_settings.dmFields = winapi::wingdi::DM_BITSPERPEL |
                 winapi::wingdi::DM_PELSWIDTH |
                 winapi::wingdi::DM_PELSHEIGHT;
-            if screen_width != default_window_width!() &&
-                screen_height != default_window_height!()
+            if screen_width != constants::DEFAULT_WINDOW_WIDTH &&
+                screen_height != constants::DEFAULT_WINDOW_HEIGHT
             {
                 if user32::ChangeDisplaySettingsW(
                     &dm_screen_settings,
                     winapi::winuser::CDS_FULLSCREEN,
                 ) != winapi::winuser::DISP_CHANGE_SUCCESSFUL
                 {
-                    logf!("Fullscreen Mode not supported!");
+                    vxlogf!("Fullscreen Mode not supported!");
                 }
             }
             window_rect.right = screen_width;
@@ -140,7 +126,7 @@ where
                 dwex_style,
             );
         }
-        this.h_window = unsafe {
+        window = unsafe {
             user32::CreateWindowExW(
                 0,
                 application_name.as_ptr(),
@@ -152,14 +138,14 @@ where
                 window_rect.bottom - window_rect.top,
                 null_mut(),
                 null_mut(),
-                this.h_instance,
+                instance,
                 transmute(&mut this),
             )
         };
-        if this.h_window == null_mut() {
-            logf!("Could not create window!");
+        if window == null_mut() {
+            vxlogf!("Could not create window!");
         }
-        #[cfg(feature = "fullscreen")]
+        #[cfg(not(debug_assertions))]
         {
             let x =
                 (user32::GetSystemMetrics(winapi::winuser::SM_CXSCREEN) - window_rect.right) / 2;
@@ -176,16 +162,16 @@ where
             );
         }
         unsafe {
-            user32::ShowWindow(this.h_window, winapi::winuser::SW_SHOW);
+            user32::ShowWindow(window, winapi::winuser::SW_SHOW);
         }
         unsafe {
-            user32::SetForegroundWindow(this.h_window);
+            user32::SetForegroundWindow(window);
         }
         unsafe {
-            user32::SetFocus(this.h_window);
+            user32::SetFocus(window);
         }
         unsafe {
-            user32::UpdateWindow(this.h_window);
+            user32::UpdateWindow(window);
         }
         this
     }
@@ -239,12 +225,7 @@ where
         // TODO
         1.7
     }
-}
 
-impl<CoreApp> Application<CoreApp>
-where
-    CoreApp: ApplicationTrait,
-{
     fn handle_message(
         &mut self,
         hwnd: winapi::windef::HWND,
