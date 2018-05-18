@@ -56,7 +56,12 @@ impl Application {
     pub fn run(&self) {
         unsafe {
             {
+                let os_app = vxresult!(vxunwrap!(self.renderer).read()).os_app.upgrade();
+                let os_app = Box::into_raw(Box::new(vxunwrap!(os_app).clone()));
+                let os_app: *mut c_void = transmute(os_app);
+                (*self.app_dlg).set_ivar(app_delegate::APP_VAR_NAME, os_app);
                 let gvc: apple::Id = *(*self.app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME);
+                (*gvc).set_ivar(game_view_controller::APP_VAR_NAME, os_app);
                 let _: () = msg_send![gvc, startLinkDisplay];
             }
             let _: () = msg_send![self.app, activateIgnoringOtherApps: YES];

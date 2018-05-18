@@ -23,9 +23,9 @@ use super::swapchain::Swapchain;
 pub struct Engine {
     pub instance: Arc<Instance>,
     pub surface: Arc<Surface>,
-    // pub physical_device: Arc<PhysicalDevice>,
-    // pub logical_device: Arc<LogicalDevice>,
-    // pub swapchain: Arc<Swapchain>,
+    pub physical_device: Arc<PhysicalDevice>,
+    pub logical_device: Arc<LogicalDevice>,
+    pub swapchain: Arc<Swapchain>,
     // pub depth_stencil_image_view: Option<Arc<ImageView>>,
     // pub render_pass: Option<Arc<RenderPass>>,
     // pub framebuffers: Vec<Arc<Framebuffer>>,
@@ -45,9 +45,9 @@ impl Engine {
     pub fn new(os_app: &Arc<RwLock<OsApp>>) -> Self {
         let instance = Arc::new(Instance::new());
         let surface = Arc::new(Surface::new(&instance, os_app));
-        // let physical_device = Arc::new(PhysicalDevice::new(&surface));
-        // let logical_device = Arc::new(LogicalDevice::new(&physical_device));
-        // let swapchain = Arc::new(Swapchain::new(&logical_device));
+        let physical_device = Arc::new(PhysicalDevice::new(&surface));
+        let logical_device = Arc::new(LogicalDevice::new(&physical_device));
+        let swapchain = Arc::new(Swapchain::new(&logical_device));
         // let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(&logical_device)));
         // let graphic_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Graphic, 0));
         // let compute_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Compute, 0));
@@ -57,9 +57,9 @@ impl Engine {
             //     os_app: unsafe { transmute(0usize) },
             instance,
             surface,
-            // physical_device,
-            // logical_device,
-            // swapchain,
+            physical_device,
+            logical_device,
+            swapchain,
             //     depth_stencil_image_view: None,
             //     render_pass: None,
             //     framebuffers: Vec::new(),

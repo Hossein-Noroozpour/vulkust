@@ -7,9 +7,9 @@ pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
 use std::sync::{Arc, RwLock, Weak};
 
 pub struct Engine {
-    gapi_engine: GraphicApiEngine,
-    os_app: Weak<RwLock<OsApp>>,
-    core_app: Arc<RwLock<CoreAppTrait>>,
+    pub gapi_engine: GraphicApiEngine,
+    pub os_app: Weak<RwLock<OsApp>>,
+    pub core_app: Arc<RwLock<CoreAppTrait>>,
 }
 
 impl Engine {
