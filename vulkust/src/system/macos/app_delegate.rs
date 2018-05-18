@@ -5,8 +5,8 @@ use super::super::super::objc::runtime::{Object, Sel, BOOL, YES};
 use super::super::apple;
 use super::game_view;
 use super::game_view_controller;
-use std::mem::transmute;
 use std::os::raw::c_void;
+use std::ptr::null_mut;
 
 pub const CLASS_NAME: &str = "AppDelegate";
 pub const SUPER_CLASS_NAME: &str = "NSObject";
@@ -46,8 +46,9 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     let view = game_view::create_instance(frame);
     let gvc = game_view_controller::create_instance();
     let title = apple::NSString::new(APPLICATION_NAME);
+    let os_app: *mut c_void = null_mut();
     unsafe {
-        let os_app: *mut c_void = *this.get_ivar(APP_VAR_NAME);
+        this.set_ivar(APP_VAR_NAME, os_app);
         (*gvc).set_ivar(game_view_controller::APP_VAR_NAME, os_app);
         this.set_ivar(WINDOW_VAR_NAME, window);
         this.set_ivar(VIEW_VAR_NAME, view);
@@ -62,7 +63,7 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     }
 }
 
-extern "C" fn application_will_finish_launching(this: &Object, _cmd: Sel, _n: apple::Id) {
+extern "C" fn application_will_finish_launching(_this: &Object, _cmd: Sel, _n: apple::Id) {
     vxlogi!("Reached");
 }
 

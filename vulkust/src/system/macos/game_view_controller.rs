@@ -21,7 +21,7 @@ extern "C" fn display_link_callback(
 ) -> apple::core_video::CVReturn {
     let os_app: &Arc<RwLock<OsApp>> = unsafe { transmute(display_link_context) };
     vxresult!(os_app.read()).update();
-    apple::core_video::KCVReturnSuccess
+    apple::core_video::KCVRETURN_SUCCESS
 }
 
 //- (void)gameViewDidLoad
@@ -34,13 +34,6 @@ extern "C" fn game_view_did_load(this: &mut Object, _cmd: Sel) {
         apple::core_video::CVDisplayLinkCreateWithActiveCGDisplays(&mut display_link);
         let display_link_var: *mut c_void = transmute(display_link);
         this.set_ivar(DISPLAY_LINK_VAR_NAME, display_link_var);
-        let os_app = *this.get_ivar(APP_VAR_NAME);
-        apple::core_video::CVDisplayLinkSetOutputCallback(
-            display_link,
-            display_link_callback,
-            os_app,
-        );
-        apple::core_video::CVDisplayLinkStart(display_link);
     }
 }
 
@@ -48,6 +41,12 @@ extern "C" fn start_link_display(this: &mut Object, _cmd: Sel) {
     unsafe {
         let display_link: *mut c_void = *this.get_ivar(DISPLAY_LINK_VAR_NAME);
         let display_link: apple::core_video::CVDisplayLinkRef = transmute(display_link);
+        let os_app: *mut c_void = *this.get_ivar(APP_VAR_NAME);
+        apple::core_video::CVDisplayLinkSetOutputCallback(
+            display_link,
+            display_link_callback,
+            os_app,
+        );
         apple::core_video::CVDisplayLinkStart(display_link);
     }
 }

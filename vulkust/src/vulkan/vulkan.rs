@@ -4830,7 +4830,7 @@ pub struct VkIOSSurfaceCreateInfoMVK {
     pub structure_type: VkStructureType,
     pub pointer_next: *const c_void,
     pub flags: VkIOSSurfaceCreateFlagsMVK,
-    pub view: *mut c_void,
+    pub view: *const c_void,
 }
 
 impl Default for VkIOSSurfaceCreateInfoMVK {
@@ -4843,6 +4843,31 @@ pub type PFN_VkCreateIOSSurfaceMVK =
     unsafe extern "C" fn(
         instance: VkInstance,
         p_create_info: *const VkIOSSurfaceCreateInfoMVK,
+        p_allocator: *const VkAllocationCallbacks,
+        p_surface: *mut VkSurfaceKHR,
+    ) -> VkResult;
+
+type VkMacOSSurfaceCreateFlagsMVK = VkFlags;
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct VkMacOSSurfaceCreateInfoMVK {
+    pub structure_type: VkStructureType,
+    pub pointer_next: *const c_void,
+    pub flags: VkMacOSSurfaceCreateFlagsMVK,
+    pub view: *const c_void,
+}
+
+impl Default for VkMacOSSurfaceCreateInfoMVK {
+    fn default() -> Self {
+        unsafe { zeroed() }
+    }
+}
+
+pub type PFN_VkCreateMacOSSurfaceMVK =
+    unsafe extern "C" fn(
+        instance: VkInstance,
+        p_create_info: *const VkMacOSSurfaceCreateInfoMVK,
         p_allocator: *const VkAllocationCallbacks,
         p_surface: *mut VkSurfaceKHR,
     ) -> VkResult;
@@ -4890,6 +4915,7 @@ impl Default for VkWin32SurfaceCreateInfoKHR {
 #[cfg_attr(target_os = "linux", link(name = "vulkan", kind = "dylib"))]
 #[cfg_attr(target_os = "windows", link(name = "vulkan-1", kind = "dylib"))]
 #[cfg_attr(target_os = "android", link(name = "vulkan", kind = "dylib"))]
+#[cfg_attr(target_os = "macos", link(name = "MoltenVK", kind = "dylib"))]
 extern "C" {
     pub fn vkCreateInstance(
         pCreateInfo: *const VkInstanceCreateInfo,
@@ -5758,9 +5784,17 @@ extern "C" {
         pLayerPrefix: *const c_char,
         pMessage: *const c_char,
     );
+    #[cfg(target_os = "ios")]
     pub fn vkCreateIOSSurfaceMVK(
         instance: VkInstance,
         p_create_info: *const VkIOSSurfaceCreateInfoMVK,
+        p_allocator: *const VkAllocationCallbacks,
+        p_surface: *mut VkSurfaceKHR,
+    ) -> VkResult;
+    #[cfg(target_os = "macos")]
+    pub fn vkCreateMacOSSurfaceMVK(
+        instance: VkInstance,
+        p_create_info: *const VkMacOSSurfaceCreateInfoMVK,
         p_allocator: *const VkAllocationCallbacks,
         p_surface: *mut VkSurfaceKHR,
     ) -> VkResult;

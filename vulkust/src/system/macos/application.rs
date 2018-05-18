@@ -13,9 +13,11 @@ use std::sync::{Arc, RwLock};
 pub struct Application {
     pub app: apple::Id,
     pub app_dlg: apple::Id,
+    pub controller: apple::Id,
     pub auto_release_pool: Option<apple::NsAutoReleasePool>,
-    pub core_app: Arc<RwLock<CoreAppTrait>>,
-    pub render_engine: Option<Arc<RwLock<RenderEngine>>>,
+    pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
+    pub renderer: Option<Arc<RwLock<RenderEngine>>>,
+    pub view: *mut c_void,
 }
 
 impl Application {
@@ -27,29 +29,36 @@ impl Application {
         let app = apple::get_class("NSApplication");
         let app: apple::Id = unsafe { msg_send![app, sharedApplication] };
         let app_dlg = app_delegate::create_instance();
-        // let render_engine = Arc::new(RwLock::new(RenderEngine::new(&core_app)));
-        let render_engine = None;
+        let view = unsafe {
+            let _: () = msg_send![app_dlg, initialize];
+            let _: () = msg_send![app, setDelegate: app_dlg];
+            let view: apple::Id = *(*app_dlg).get_ivar(app_delegate::VIEW_VAR_NAME);
+            transmute(view)
+        };
+        let controller = unsafe { *(*app_dlg).get_ivar(app_delegate::VIEW_VAR_NAME) };
+        let renderer = None;
+        let core_app = Some(core_app);
         Application {
             app,
             app_dlg,
             auto_release_pool,
             core_app,
-            render_engine,
+            renderer,
+            view,
+            controller,
         }
     }
 
-    pub fn initialize(&self, itself: Arc<RwLock<Application>>) {
+    pub fn set_renderer(&mut self, renderer: Arc<RwLock<RenderEngine>>) {
+        self.renderer = Some(renderer);
+    }
+
+    pub fn run(&self) {
         unsafe {
-            let itself_ptr: *mut c_void = transmute(Box::into_raw(Box::new(itself.clone())));
-            (*self.app_dlg).set_ivar(app_delegate::APP_VAR_NAME, itself_ptr);
-            let _: () = msg_send![self.app_dlg, initialize];
-            let _: () = msg_send![self.app, setDelegate:self.app_dlg];
-        };
-        // vxresult!(self.render_engine.write()).initilize(&itself);
-        // vxresult!(self.core_app.write()).initilize(&itself, &self.render_engine);
-        unsafe {
-            let gvc: apple::Id = *(*self.app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME);
-            let _: () = msg_send![gvc, startLinkDisplay];
+            {
+                let gvc: apple::Id = *(*self.app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME);
+                let _: () = msg_send![gvc, startLinkDisplay];
+            }
             let _: () = msg_send![self.app, activateIgnoringOtherApps: YES];
             let _: () = msg_send![self.app, run];
             vxlogi!("reached");

@@ -27,3 +27,11 @@ toolchains
 /toolchains
 toolchains/
 /toolchains/
+*.dylib
+*.a
+*.so
+*.framework
+*.apk
+*.ipa
+*.app
+*.exe

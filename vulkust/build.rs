@@ -30,4 +30,8 @@ fn main() {
     if in_linux || in_ios || in_macos || in_android {
         println!("cargo:rustc-cfg=unix_based_os");
     }
+    if in_macos {
+        let vulkan_sdk = env::var("VULKAN_SDK").unwrap();
+        println!("cargo:rustc-link-search=native={}/macOS/lib", vulkan_sdk);
+    }
 }
