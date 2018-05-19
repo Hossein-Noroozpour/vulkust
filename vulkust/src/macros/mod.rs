@@ -11,12 +11,6 @@ macro_rules! vulkust_start {
             let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app, &os_app)));
             vxresult!(os_app.write()).set_renderer(renderer);
             vxresult!(os_app.read()).run();
-            // let sys_app = Arc::new(RwLock::new(SysApp::new(core_app.clone(), os_app)));
-            // core_app
-            //     .write()
-            //     .unwrap()
-            //     .set_system_application(sys_app.clone());
-            // sys_app.read().unwrap().run();
         }
     };
 }
@@ -33,15 +27,10 @@ macro_rules! vulkust_start {
             saved_state_size: $crate::libc::size_t,
         ) {
             use $crate::core::application::ApplicationTrait as CoreAppTrait;
-            use $crate::system::os::application::Application as OsApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
-            let os_app = Arc::new(RwLock::new(OsApp::new(
-                activity,
-                saved_state,
-                saved_state_size,
-            )));
-            let os_app_clone = os_app.clone();
-            vxresult!(os_app.read()).initialize(os_app_clone, core_app);
+            use $crate::system::android::glue::android_app_create(
+                activity, saved_state, saved_state_size, core_app
+            );
         }
     };
 }

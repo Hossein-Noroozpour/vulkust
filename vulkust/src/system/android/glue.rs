@@ -1,6 +1,5 @@
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::libc;
-use super::super::application::Application as SysApp;
 use super::super::os::application::Application as OsApp;
 use super::activity;
 use super::application::Application;
@@ -57,7 +56,6 @@ pub struct AndroidApp {
     pub pending_input_queue: *mut input::AInputQueue,
     pub pending_window: *mut window::ANativeWindow,
     pub pending_content_rect: rect::ARect,
-    pub sys_app: Option<Arc<RwLock<SysApp>>>,
     pub os_app: Option<Arc<RwLock<OsApp>>>,
     pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
 }
@@ -304,49 +302,69 @@ extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
     }
 }
 
-pub unsafe extern "C" fn android_app_create(
+pub fn android_app_create(
     activity: *mut activity::ANativeActivity,
     saved_state: *mut libc::c_void,
     saved_state_size: libc::size_t,
-    os_app: Arc<RwLock<OsApp>>,
     core_app: Arc<RwLock<CoreAppTrait>>,
-) -> *mut libc::c_void {
-    let mut android_app: *mut AndroidApp = transmute(libc::malloc(size_of::<AndroidApp>()));
-    libc::memset(transmute(android_app), 0, size_of::<AndroidApp>());
-    (*android_app).on_input_event = default_on_input_event;
-    (*android_app).activity = activity;
-    (*android_app).os_app = Some(os_app);
-    (*android_app).core_app = Some(core_app);
-    libc::pthread_mutex_init(&mut (*android_app).mutex, ptr::null_mut());
-    libc::pthread_cond_init(&mut (*android_app).cond, ptr::null_mut());
+) {
+    unsafe {
+        (*(*activity).callbacks).onDestroy = on_destroy;
+        (*(*activity).callbacks).onStart = on_start;
+        (*(*activity).callbacks).onResume = on_resume;
+        (*(*activity).callbacks).onSaveInstanceState = on_save_instance_state;
+        (*(*activity).callbacks).onPause = on_pause;
+        (*(*activity).callbacks).onStop = on_stop;
+        (*(*activity).callbacks).onConfigurationChanged = on_configuration_changed;
+        (*(*activity).callbacks).onLowMemory = on_low_memory;
+        (*(*activity).callbacks).onWindowFocusChanged = on_window_focus_changed;
+        (*(*activity).callbacks).onNativeWindowCreated = on_native_window_created;
+        (*(*activity).callbacks).onNativeWindowDestroyed = on_native_window_destroyed;
+        (*(*activity).callbacks).onInputQueueCreated = on_input_queue_created;
+        (*(*activity).callbacks).onInputQueueDestroyed = on_input_queue_destroyed;
+    }
+    let mut android_app: AndroidApp = unsafe { zeroed() };
+    let android_app = Box::into_raw(Box::new(android_app));
+    let android_app: &'static mut AndroidApp = unsafe { transmute(android_app) };
+    android_app.on_input_event = default_on_input_event;
+    android_app.activity = activity;
+    android_app.core_app = Some(core_app);
+    unsafe {
+        libc::pthread_mutex_init(&mut android_app.mutex, ptr::null_mut());
+        libc::pthread_cond_init(&mut android_app.cond, ptr::null_mut());
+    }
     if saved_state != ptr::null_mut() {
-        (*android_app).saved_state = libc::malloc(saved_state_size);
-        (*android_app).saved_state_size = saved_state_size;
-        libc::memcpy((*android_app).saved_state, saved_state, saved_state_size);
+        android_app.saved_state_size = saved_state_size;
+        android_app.saved_state = unsafe { libc::malloc(saved_state_size); }
+        unsafe { libc::memcpy(android_app.saved_state, saved_state, saved_state_size); }
     }
     let mut msg_pipe_fds = [0 as libc::c_int, 2];
-    if libc::pipe(msg_pipe_fds.as_mut_ptr()) != 0 {
+    if unsafe { libc::pipe(msg_pipe_fds.as_mut_ptr()) } != 0 {
         vxlogf!("Could not create pipe!");
     }
-    (*android_app).msg_read_fd = msg_pipe_fds[0];
-    (*android_app).msg_write_fd = msg_pipe_fds[1];
-    let mut attr: libc::pthread_attr_t = zeroed();
-    libc::pthread_attr_init(&mut attr);
-    libc::pthread_attr_setdetachstate(&mut attr, libc::PTHREAD_CREATE_DETACHED);
-    libc::pthread_create(
-        &mut (*android_app).thread,
-        &attr,
-        android_app_entry,
-        transmute(android_app),
-    );
-    libc::pthread_mutex_lock(&mut (*android_app).mutex);
-    //    vxloge!("locked");
-    while (*android_app).running != 1 {
-        libc::pthread_cond_wait(&mut (*android_app).cond, &mut (*android_app).mutex);
+    android_app.msg_read_fd = msg_pipe_fds[0];
+    android_app.msg_write_fd = msg_pipe_fds[1];
+    let mut attr: libc::pthread_attr_t = unsafe { zeroed() };
+    unsafe {
+        libc::pthread_attr_init(&mut attr);
+        libc::pthread_attr_setdetachstate(&mut attr, libc::PTHREAD_CREATE_DETACHED);
+        libc::pthread_create(
+            &mut android_app.thread,
+            &attr,
+            android_app_entry,
+            transmute(android_app),
+        );
+        libc::pthread_mutex_lock(&mut (*android_app).mutex);
     }
-    libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-    //    vxloge!("unlocked");
-    return transmute(android_app);
+    while android_app.running != 1 {
+        unsafe { 
+            libc::pthread_cond_wait(&mut android_app.cond, &mut android_app.mutex);
+        }
+    }
+    unsafe { 
+        libc::pthread_mutex_unlock(&mut android_app.mutex);
+        (*activity).instance = transmute(android_app); 
+    }
 }
 
 unsafe extern "C" fn android_app_write_cmd(android_app: *mut AndroidApp, cmd: i8) {

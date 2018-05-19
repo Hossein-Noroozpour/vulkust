@@ -16,9 +16,8 @@ use std::ptr::null_mut;
 use std::sync::{Arc, RwLock, Weak};
 
 pub struct Application {
-    pub itself: Option<Weak<RwLock<Application>>>,
     pub renderer: Option<Arc<RwLock<RenderEngine>>>,
-    pub core_app: Arc<RwLock<CoreAppTrait>>,
+    pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
     pub connection: *mut xcb::xcb_connection_t,
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,
@@ -107,9 +106,8 @@ impl Application {
             xcb::xcb_flush(connection);
         }
         Application {
-            itself: None,
             renderer: None,
-            core_app,
+            core_app: Some(core_app),
             connection,
             screen,
             window,
@@ -117,15 +115,7 @@ impl Application {
         }
     }
 
-    pub fn set_itself(&mut self, itself: Weak<RwLock<Application>>) {
-        self.itself = Some(itself);
-    }
-
-    pub fn initialize(&mut self) {
-        let itself = vxunwrap!(self.itself).upgrade();
-        let itself = vxunwrap!(itself);
-        let core_app = self.core_app.clone();
-        let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app, &itself)));
+    pub fn set_renderer(&mut self, renderer: Arc<RwLock<RenderEngine>>) {
         self.renderer = Some(renderer);
     }
 

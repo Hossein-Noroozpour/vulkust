@@ -24,7 +24,7 @@ extern crate gdi32;
 
 // pub extern crate cgmath as math;
 // pub extern crate image;
-#[cfg(any(target_os = "macos", target_os = "linux"))]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "android"))]
 pub extern crate libc;
 
 #[macro_use]

@@ -23,14 +23,14 @@ kernel32-sys = "*"
 user32-sys = "*"
 gdi32-sys = "*"
 
-[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))'.dependencies]
 libc = "*"
+
+[target.'cfg(any(target_os = "android", target_os = "macos"))'.dependencies]
+bitflags = "*"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # This feautres are for debug mode remove them in future
 objc = { version = "*", features = ["exception", "verify_message"] }
-bitflags = "*"
-libc = "*"
-# block = "*"
 
 [build-dependencies]
