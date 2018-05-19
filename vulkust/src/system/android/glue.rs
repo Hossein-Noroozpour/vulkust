@@ -1,5 +1,6 @@
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::libc;
+use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::os::application::Application as OsApp;
 use super::activity;
 use super::application::Application;
@@ -8,7 +9,7 @@ use super::input;
 use super::looper;
 use super::rect;
 use super::window;
-use std::mem::{size_of, transmute, zeroed};
+use std::mem::{size_of, transmute, transmute_copy, zeroed};
 use std::ptr;
 use std::sync::{Arc, RwLock};
 
@@ -29,7 +30,7 @@ impl Drop for AndroidPollSource {
 #[repr(C)]
 #[derive(Clone)]
 pub struct AndroidApp {
-    pub on_app_cmd: unsafe extern "C" fn(app: *mut AndroidApp, cmd: i32),
+    pub on_app_cmd: extern "C" fn(app: &'static mut AndroidApp, cmd: i32),
     pub on_input_event:
         unsafe extern "C" fn(app: *mut AndroidApp, event: *mut input::AInputEvent) -> i32,
     pub activity: *mut activity::ANativeActivity,
@@ -57,7 +58,6 @@ pub struct AndroidApp {
     pub pending_window: *mut window::ANativeWindow,
     pub pending_content_rect: rect::ARect,
     pub os_app: Option<Arc<RwLock<OsApp>>>,
-    pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
 }
 
 impl Drop for AndroidApp {
@@ -261,14 +261,14 @@ unsafe extern "C" fn process_cmd(app: *mut AndroidApp, source: *mut AndroidPollS
     let cmd = android_app_read_cmd(app);
     android_app_pre_exec_cmd(app, transmute(cmd));
     if (*app).on_app_cmd != transmute(0usize) {
-        ((*app).on_app_cmd)(app, cmd as i32);
+        ((*app).on_app_cmd)(transmute(app), cmd as i32);
     }
     android_app_post_exec_cmd(app, transmute(cmd));
 }
 
 extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
     unsafe {
-        let android_app: *mut AndroidApp = transmute(param);
+        let android_app: &'static mut AndroidApp = transmute(param);
         (*android_app).config = config::AConfiguration_new();
         config::AConfiguration_fromAssetManager(
             (*android_app).config,
@@ -295,8 +295,14 @@ extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
         (*android_app).running = 1;
         libc::pthread_cond_broadcast(&mut ((*android_app).cond));
         libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-        vxresult!(vxunwrap!((*android_app).os_app).read()).main(android_app);
-        vxresult!(vxunwrap!((*android_app).sys_app).read()).run();
+        {
+            let os_app = vxunwrap!(android_app.os_app);
+            vxresult!(os_app.read()).initialize();
+            let core_app = vxunwrap!(vxresult!(os_app.read()).core_app).clone();
+            let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app, os_app)));
+            vxresult!(os_app.write()).set_renderer(renderer);
+            vxresult!(os_app.read()).run();
+        }
         android_app_destroy(android_app);
         ptr::null_mut()
     }
@@ -323,20 +329,25 @@ pub fn android_app_create(
         (*(*activity).callbacks).onInputQueueCreated = on_input_queue_created;
         (*(*activity).callbacks).onInputQueueDestroyed = on_input_queue_destroyed;
     }
-    let mut android_app: AndroidApp = unsafe { zeroed() };
+    let android_app: AndroidApp = unsafe { zeroed() };
     let android_app = Box::into_raw(Box::new(android_app));
     let android_app: &'static mut AndroidApp = unsafe { transmute(android_app) };
     android_app.on_input_event = default_on_input_event;
     android_app.activity = activity;
-    android_app.core_app = Some(core_app);
+    let os_app = Arc::new(RwLock::new(OsApp::new(core_app, unsafe {
+        transmute_copy(android_app)
+    })));
+    android_app.os_app = Some(os_app);
     unsafe {
         libc::pthread_mutex_init(&mut android_app.mutex, ptr::null_mut());
         libc::pthread_cond_init(&mut android_app.cond, ptr::null_mut());
     }
     if saved_state != ptr::null_mut() {
         android_app.saved_state_size = saved_state_size;
-        android_app.saved_state = unsafe { libc::malloc(saved_state_size); }
-        unsafe { libc::memcpy(android_app.saved_state, saved_state, saved_state_size); }
+        android_app.saved_state = unsafe { libc::malloc(saved_state_size) };
+        unsafe {
+            libc::memcpy(android_app.saved_state, saved_state, saved_state_size);
+        }
     }
     let mut msg_pipe_fds = [0 as libc::c_int, 2];
     if unsafe { libc::pipe(msg_pipe_fds.as_mut_ptr()) } != 0 {
@@ -352,18 +363,18 @@ pub fn android_app_create(
             &mut android_app.thread,
             &attr,
             android_app_entry,
-            transmute(android_app),
+            transmute_copy(android_app),
         );
-        libc::pthread_mutex_lock(&mut (*android_app).mutex);
+        libc::pthread_mutex_lock(&mut android_app.mutex);
     }
     while android_app.running != 1 {
-        unsafe { 
+        unsafe {
             libc::pthread_cond_wait(&mut android_app.cond, &mut android_app.mutex);
         }
     }
-    unsafe { 
+    unsafe {
         libc::pthread_mutex_unlock(&mut android_app.mutex);
-        (*activity).instance = transmute(android_app); 
+        (*activity).instance = transmute(android_app);
     }
 }
 
@@ -433,8 +444,6 @@ unsafe extern "C" fn android_app_free(android_app: *mut AndroidApp) {
     libc::pthread_cond_destroy(&mut (*android_app).cond);
     libc::pthread_mutex_destroy(&mut (*android_app).mutex);
     (*android_app).os_app = None;
-    (*android_app).sys_app = None;
-    (*android_app).core_app = None;
     libc::free(transmute(android_app));
 }
 
@@ -457,7 +466,7 @@ pub unsafe extern "C" fn on_save_instance_state(
     activity: *mut activity::ANativeActivity,
     out_len: *mut libc::size_t,
 ) -> *mut libc::c_void {
-    let mut android_app: *mut AndroidApp = transmute((*activity).instance);
+    let android_app: *mut AndroidApp = transmute((*activity).instance);
     let mut saved_state: *mut libc::c_void = ptr::null_mut();
     vxlogi!("SaveInstanceState: {:?}", activity);
     libc::pthread_mutex_lock(&mut (*android_app).mutex);

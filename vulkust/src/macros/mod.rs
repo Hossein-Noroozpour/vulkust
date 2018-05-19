@@ -28,8 +28,11 @@ macro_rules! vulkust_start {
         ) {
             use $crate::core::application::ApplicationTrait as CoreAppTrait;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
-            use $crate::system::android::glue::android_app_create(
-                activity, saved_state, saved_state_size, core_app
+            $crate::system::android::glue::android_app_create(
+                activity,
+                saved_state,
+                saved_state_size,
+                core_app,
             );
         }
     };

@@ -6,7 +6,7 @@
 #[macro_use]
 pub extern crate objc;
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "android"))]
 #[macro_use]
 pub extern crate bitflags;
 
