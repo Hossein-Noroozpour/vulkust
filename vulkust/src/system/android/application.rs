@@ -1,7 +1,6 @@
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
 use super::super::super::libc::{c_int, c_void, size_t};
-use super::super::application::Application as SysApp;
 use super::activity::ANativeActivity;
 use super::glue;
 use super::glue::{AndroidApp, AndroidPollSource, AppCmd};
@@ -13,11 +12,7 @@ use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
 
 pub struct Application {
-    pub window: Arc<RwLock<Option<*mut ANativeWindow>>>,
-    activity: *mut ANativeActivity,
-    saved_state: *mut c_void,
-    saved_state_size: size_t,
-    events: Arc<RwLock<Vec<Event>>>,
+
 }
 
 impl Application {
@@ -33,21 +28,7 @@ impl Application {
             saved_state_size,
             events: Arc::new(RwLock::new(Vec::new())),
         };
-        unsafe {
-            (*(*activity).callbacks).onDestroy = glue::on_destroy;
-            (*(*activity).callbacks).onStart = glue::on_start;
-            (*(*activity).callbacks).onResume = glue::on_resume;
-            (*(*activity).callbacks).onSaveInstanceState = glue::on_save_instance_state;
-            (*(*activity).callbacks).onPause = glue::on_pause;
-            (*(*activity).callbacks).onStop = glue::on_stop;
-            (*(*activity).callbacks).onConfigurationChanged = glue::on_configuration_changed;
-            (*(*activity).callbacks).onLowMemory = glue::on_low_memory;
-            (*(*activity).callbacks).onWindowFocusChanged = glue::on_window_focus_changed;
-            (*(*activity).callbacks).onNativeWindowCreated = glue::on_native_window_created;
-            (*(*activity).callbacks).onNativeWindowDestroyed = glue::on_native_window_destroyed;
-            (*(*activity).callbacks).onInputQueueCreated = glue::on_input_queue_created;
-            (*(*activity).callbacks).onInputQueueDestroyed = glue::on_input_queue_destroyed;
-        }
+        
         app
     }
 
