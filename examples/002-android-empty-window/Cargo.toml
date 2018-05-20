@@ -9,4 +9,4 @@ license = "MIT"
 vulkust = { path = "../../vulkust" }
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["staticlib"]

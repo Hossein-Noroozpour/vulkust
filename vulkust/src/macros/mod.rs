@@ -19,9 +19,9 @@ macro_rules! vulkust_start {
 #[macro_export]
 macro_rules! vulkust_start {
     ($App:ident) => {
-        #[allow(dead_code, non_snake_case)]
+        #[allow(dead_code)]
         #[no_mangle]
-        pub unsafe extern "C" fn ANativeActivity_onCreate(
+        pub unsafe extern "C" fn vulkust_on_create(
             activity: *mut $crate::system::android::activity::ANativeActivity,
             saved_state: *mut $crate::libc::c_void,
             saved_state_size: $crate::libc::size_t,
