@@ -1,7 +1,6 @@
 use super::super::surface::Surface;
 use super::super::vulkan as vk;
 use std::cmp::max;
-use std::mem::transmute;
 use std::ptr::null_mut;
 use std::sync::Arc;
 

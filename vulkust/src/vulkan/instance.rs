@@ -41,8 +41,7 @@ mod debug {
             report_callback_create_info.flags =
                 (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32)
                     | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32)
-                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT
-                        as u32)
+                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
                     | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32)
                     | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32)
                         as vk::VkDebugReportFlagsEXT;
@@ -51,12 +50,14 @@ mod debug {
             let mut vk_debug_callback = 0 as vk::VkDebugReportCallbackEXT;
             let create_debug_report_callback: vk::PFN_vkCreateDebugReportCallbackEXT =
                 unsafe { transmute(get_function(vk_instance, "vkCreateDebugReportCallbackEXT")) };
+        vxloge!("Reached");
             vulkan_check!(create_debug_report_callback(
                 vk_instance,
                 &report_callback_create_info,
                 null(),
                 &mut vk_debug_callback,
             ));
+        vxloge!("Reached");
             Debugger {
                 vk_data: Some(vk_debug_callback),
             }
@@ -83,7 +84,7 @@ mod debug {
         }
     }
 
-    extern "C" fn vulkan_debug_callback(
+    unsafe extern "C" fn vulkan_debug_callback(
         flags: vk::VkDebugReportFlagsEXT,
         obj_type: vk::VkDebugReportObjectTypeEXT,
         src_obj: u64,
@@ -93,37 +94,38 @@ mod debug {
         msg: *const c_char,
         user_data: *mut c_void,
     ) -> u32 {
-        let mut flg = String::new();
-        if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32) != 0 {
-            flg += "info, ";
-        }
-        if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32) != 0 {
-            flg += "warn, ";
-        }
-        if flags
-            & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
-            != 0
-        {
-            flg += "performance, ";
-        }
-        if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32) != 0 {
-            flg += "error, ";
-        }
-        if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32) != 0 {
-            flg += "debug, ";
-        }
-        vxlogi!(
-            "flag: {}, obj_type: {}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: \
-             {:?}, msg : {:?}, user_data {:?}",
-            flg,
-            obj_type,
-            src_obj,
-            location,
-            msg_code,
-            unsafe { CStr::from_ptr(layer_prefix).to_str() },
-            unsafe { CStr::from_ptr(msg).to_str() },
-            user_data
-        );
+        // let mut flg = String::new();
+        // if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32) != 0 {
+        //     flg += "info, ";
+        // }
+        // if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32) != 0 {
+        //     flg += "warn, ";
+        // }
+        // if flags
+        //     & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
+        //     != 0
+        // {
+        //     flg += "performance, ";
+        // }
+        // if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32) != 0 {
+        //     flg += "error, ";
+        // }
+        // if flags & (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32) != 0 {
+        //     flg += "debug, ";
+        // }
+        // vxlogi!(
+        //     "flag: {}, obj_type: {}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: \
+        //      {:?}, msg : {:?}, user_data {:?}",
+        //     flg,
+        //     obj_type,
+        //     src_obj,
+        //     location,
+        //     msg_code,
+        //     unsafe { CStr::from_ptr(layer_prefix).to_str() },
+        //     unsafe { CStr::from_ptr(msg).to_str() },
+        //     user_data
+        // );
+        vxloge!("Reached");
         0u32
     }
 
@@ -304,6 +306,7 @@ impl Instance {
             null(),
             &mut vk_instance,
         ));
+        vxloge!("Reached");        
         Instance {
             vk_data: vk_instance,
             debugger: debug::Debugger::new(vk_instance),
