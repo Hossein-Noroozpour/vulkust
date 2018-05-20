@@ -29,7 +29,7 @@ impl Drop for AndroidPollSource {
 #[repr(C)]
 #[derive(Clone)]
 pub struct AndroidApp {
-    pub on_app_cmd: extern fn(app: *mut AndroidApp, cmd: i32),
+    pub on_app_cmd: extern "C" fn(app: *mut AndroidApp, cmd: i32),
     pub on_input_event:
         unsafe extern "C" fn(app: *mut AndroidApp, event: *mut input::AInputEvent) -> i32,
     pub activity: *mut activity::ANativeActivity,
@@ -328,9 +328,7 @@ pub fn android_app_create(
         (*(*activity).callbacks).onInputQueueCreated = on_input_queue_created;
         (*(*activity).callbacks).onInputQueueDestroyed = on_input_queue_destroyed;
     }
-    let android_app: *mut AndroidApp = unsafe {
-        transmute(libc::malloc(size_of::<AndroidApp>()))
-    };
+    let android_app: *mut AndroidApp = unsafe { transmute(libc::malloc(size_of::<AndroidApp>())) };
     unsafe {
         libc::memset(transmute(android_app), 0, size_of::<AndroidApp>());
         (*android_app).on_input_event = default_on_input_event;

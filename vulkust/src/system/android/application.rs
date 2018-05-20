@@ -17,7 +17,9 @@ pub struct Application {
 
 impl Application {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, and_app: *mut AndroidApp) -> Self {
-        unsafe { (*and_app).on_app_cmd = handle_cmd; }
+        unsafe {
+            (*and_app).on_app_cmd = handle_cmd;
+        }
         Application {
             core_app: Some(core_app),
             renderer: None,
@@ -72,10 +74,11 @@ impl Application {
     pub fn fetch_events(&self) -> Vec<Event> {
         let mut events = 0 as c_int;
         let mut source = 0 as *mut AndroidPollSource;
-        while unsafe { 
-            (*self.and_app).destroy_requested == 0 &&
-            ALooper_pollAll(0, null_mut(), &mut events, transmute(&mut source)) >= 0 } && 
-            source != null_mut() {
+        while unsafe {
+            (*self.and_app).destroy_requested == 0
+                && ALooper_pollAll(0, null_mut(), &mut events, transmute(&mut source)) >= 0
+        } && source != null_mut()
+        {
             unsafe {
                 ((*source).process)(self.and_app, source);
             }
@@ -86,7 +89,7 @@ impl Application {
     }
 }
 
-extern fn handle_cmd(android_app: *mut AndroidApp, cmd: i32) {
+extern "C" fn handle_cmd(android_app: *mut AndroidApp, cmd: i32) {
     unsafe {
         vxresult!(vxunwrap!((*android_app).os_app).read()).handle_cmd(cmd);
     }

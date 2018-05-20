@@ -53,22 +53,18 @@ impl Surface {
 
     #[cfg(target_os = "android")]
     pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
-        vxloge!("Reached");
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let os_app = vxresult!(os_app.read());
         let mut create_info = vk::VkAndroidSurfaceCreateInfoKHR::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-        vxloge!("Reached");
         create_info.window = unsafe { (*os_app.and_app).window };
-        vxloge!("Reached");
         vulkan_check!(vk::vkCreateAndroidSurfaceKHR(
             instance.vk_data,
             &create_info,
             null(),
             &mut vk_data,
         ));
-        vxloge!("Reached");
         Surface {
             instance: instance.clone(),
             vk_data,
