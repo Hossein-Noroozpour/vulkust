@@ -12,7 +12,7 @@ pub mod util;
 
 use super::super::objc;
 use super::super::objc::declare::ClassDecl;
-use super::super::objc::runtime::{Class, Object, NO, YES};
+use super::super::objc::runtime::{Class, Object};
 
 use std;
 use std::ffi::CStr;

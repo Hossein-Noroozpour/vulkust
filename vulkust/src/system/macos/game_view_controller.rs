@@ -3,7 +3,6 @@ use super::super::apple;
 use super::application::Application as OsApp;
 use std::mem::transmute;
 use std::os::raw::c_void;
-use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
 
 pub const CLASS_NAME: &str = "GameViewController";

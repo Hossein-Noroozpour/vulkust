@@ -7,7 +7,6 @@ use super::game_view;
 use super::game_view_controller;
 use std::mem::transmute;
 use std::os::raw::c_void;
-use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
 
 pub struct Application {

@@ -5,7 +5,7 @@ pub const CLASS_NAME: &str = "GameView";
 pub const SUPER_CLASS_NAME: &str = "NSView";
 
 //- (BOOL) wantsUpdateLayer
-extern "C" fn wants_update_layer(this: &mut Object, _cmd: Sel) -> BOOL {
+extern "C" fn wants_update_layer(_this: &mut Object, _cmd: Sel) -> BOOL {
     YES
 }
 
@@ -30,7 +30,7 @@ extern "C" fn make_backing_layer(this: &mut Object, _cmd: Sel) -> apple::Id {
 }
 
 // -(BOOL) acceptsFirstResponder { return YES; }
-extern "C" fn accepts_first_responder(this: &mut Object, _cmd: Sel) -> BOOL {
+extern "C" fn accepts_first_responder(_this: &mut Object, _cmd: Sel) -> BOOL {
     YES
 }
 

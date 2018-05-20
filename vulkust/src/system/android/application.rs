@@ -53,7 +53,9 @@ impl Application {
     }
 
     pub fn run(&self) {
-        vxloge!("Reached");
+        loop {
+            let _ = self.fetch_events();
+        }
     }
 
     fn handle_cmd(&self, cmd: i32) {

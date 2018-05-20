@@ -3,7 +3,6 @@
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
-use super::super::system::os;
 use std::default::Default;
 use std::mem::{transmute, zeroed};
 use std::os::raw::{
@@ -4795,25 +4794,24 @@ pub type PFN_vkDebugReportMessageEXT = unsafe extern "C" fn(
 
 pub const VK_KHR_ANDROID_SURFACE_SPEC_VERSION: u32 = 6u32;
 pub const VK_KHR_ANDROID_SURFACE_EXTENSION_NAME: &'static str = "VK_KHR_android_surface";
+
 type VkAndroidSurfaceCreateFlagsKHR = VkFlags;
 
-#[cfg(target_os = "android")]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct VkAndroidSurfaceCreateInfoKHR {
     pub structure_type: VkStructureType,
     pub pointer_next: *const c_void,
     pub flags: VkAndroidSurfaceCreateFlagsKHR,
-    pub window: *mut os::window::ANativeWindow,
+    pub window: *mut c_void,
 }
-#[cfg(target_os = "android")]
+
 impl Default for VkAndroidSurfaceCreateInfoKHR {
     fn default() -> Self {
         unsafe { zeroed() }
     }
 }
 
-#[cfg(target_os = "android")]
 pub type PFN_VkCreateAndroidSurfaceKhr =
     unsafe extern "C" fn(
         instance: VkInstance,
