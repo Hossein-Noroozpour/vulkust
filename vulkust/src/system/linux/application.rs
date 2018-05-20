@@ -73,6 +73,9 @@ impl Application {
         let cs = CString::new("WM_PROTOCOLS".to_string().into_bytes()).unwrap();
         let cookie = unsafe { xcb::xcb_intern_atom(connection, 1, 12, cs.as_ptr()) };
         let reply = unsafe { xcb::xcb_intern_atom_reply(connection, cookie, null_mut()) };
+        if reply == null_mut() {
+            vxlogf!("Reply is null.");
+        }
         let cs = CString::new("WM_DELETE_WINDOW".to_string().into_bytes()).unwrap();
         let cookie2 = unsafe { xcb::xcb_intern_atom(connection, 0, 16, cs.as_ptr()) };
         let atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t =
