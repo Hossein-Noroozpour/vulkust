@@ -26,64 +26,6 @@ mod debug {
         return proc_addr;
     }
 
-    pub struct Debugger {
-        vk_data: Option<vk::VkDebugReportCallbackEXT>,
-    }
-
-    impl Debugger {
-        pub fn new(vk_instance: vk::VkInstance) -> Self {
-            if !super::contain_extension("VK_EXT_debug_report") {
-                return Debugger { vk_data: None };
-            }
-            let mut report_callback_create_info = vk::VkDebugReportCallbackCreateInfoEXT::default();
-            report_callback_create_info.sType =
-                vk::VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-            report_callback_create_info.flags =
-                (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32)
-                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32)
-                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
-                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32)
-                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32)
-                        as vk::VkDebugReportFlagsEXT;
-            report_callback_create_info.pfnCallback = vulkan_debug_callback;
-            report_callback_create_info.pUserData = null_mut();
-            let mut vk_debug_callback = 0 as vk::VkDebugReportCallbackEXT;
-            let create_debug_report_callback: vk::PFN_vkCreateDebugReportCallbackEXT =
-                unsafe { transmute(get_function(vk_instance, "vkCreateDebugReportCallbackEXT")) };
-        vxloge!("Reached");
-            vulkan_check!(create_debug_report_callback(
-                vk_instance,
-                &report_callback_create_info,
-                null(),
-                &mut vk_debug_callback,
-            ));
-        vxloge!("Reached");
-            Debugger {
-                vk_data: Some(vk_debug_callback),
-            }
-        }
-
-        pub fn terminate(&mut self, vk_instance: vk::VkInstance) {
-            if self.vk_data.is_none() {
-                return;
-            }
-            let destroy_debug_report_callback: vk::PFN_vkDestroyDebugReportCallbackEXT =
-                unsafe { transmute(get_function(vk_instance, "vkDestroyDebugReportCallbackEXT")) };
-            unsafe {
-                destroy_debug_report_callback(vk_instance, *vxunwrap!(self.vk_data), null());
-            }
-            self.vk_data = None;
-        }
-    }
-
-    impl Drop for Debugger {
-        fn drop(&mut self) {
-            if self.vk_data.is_some() {
-                vxlogf!("Unexpected drop of debugger.");
-            }
-        }
-    }
-
     unsafe extern "C" fn vulkan_debug_callback(
         flags: vk::VkDebugReportFlagsEXT,
         obj_type: vk::VkDebugReportObjectTypeEXT,
@@ -129,6 +71,65 @@ mod debug {
         0u32
     }
 
+    pub struct Debugger {
+        vk_data: Option<vk::VkDebugReportCallbackEXT>,
+    }
+
+    impl Debugger {
+        pub fn new(vk_instance: vk::VkInstance) -> Self {
+            if !super::contain_extension("VK_EXT_debug_report") {
+                return Debugger { vk_data: None };
+            }
+            let mut report_callback_create_info = vk::VkDebugReportCallbackCreateInfoEXT::default();
+            report_callback_create_info.sType =
+                vk::VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+            report_callback_create_info.flags =
+                (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_INFORMATION_BIT_EXT as u32)
+                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_WARNING_BIT_EXT as u32)
+                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT as u32)
+                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT as u32)
+                    | (vk::VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_DEBUG_BIT_EXT as u32)
+                        as vk::VkDebugReportFlagsEXT;
+            report_callback_create_info.pfnCallback = vulkan_debug_callback;
+            report_callback_create_info.pUserData = null_mut();
+            let mut vk_debug_callback = 0 as vk::VkDebugReportCallbackEXT;
+            let create_debug_report_callback: vk::PFN_vkCreateDebugReportCallbackEXT =
+                unsafe { transmute(get_function(vk_instance, "vkCreateDebugReportCallbackEXT")) };
+        vxloge!("Reached");
+            vulkan_check!(create_debug_report_callback(
+                vk_instance,
+                &report_callback_create_info,
+                null(),
+                &mut vk_debug_callback,
+            ));
+        vxloge!("Reached");
+            Debugger {
+                vk_data: Some(vk_debug_callback),
+                // vk_data: None,
+            }
+        }
+
+        pub fn terminate(&mut self, vk_instance: vk::VkInstance) {
+            if self.vk_data.is_none() {
+                return;
+            }
+            let destroy_debug_report_callback: vk::PFN_vkDestroyDebugReportCallbackEXT =
+                unsafe { transmute(get_function(vk_instance, "vkDestroyDebugReportCallbackEXT")) };
+            unsafe {
+                destroy_debug_report_callback(vk_instance, *vxunwrap!(self.vk_data), null());
+            }
+            self.vk_data = None;
+        }
+    }
+
+    impl Drop for Debugger {
+        fn drop(&mut self) {
+            if self.vk_data.is_some() {
+                vxlogf!("Unexpected drop of debugger.");
+            }
+        }
+    }
+
     pub fn enumerate_layers() -> Vec<CString> {
         let mut layer_count = 0u32;
         unsafe {
@@ -155,10 +156,10 @@ mod debug {
         if found_layers.contains_key(&layer_name) {
             layers_names.push(layer_name);
         }
-        // let layer_name = "VK_LAYER_LUNARG_api_dump".to_string();
-        // if found_layers.contains_key(&layer_name] {
-        //     layers_names.push(layer_name);
-        // }
+        let layer_name = "VK_LAYER_LUNARG_api_dump".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
         let layer_name = "VK_LAYER_LUNARG_parameter_validation".to_string();
         if found_layers.contains_key(&layer_name) {
             layers_names.push(layer_name);
@@ -232,7 +233,7 @@ fn get_all_extensions() -> Vec<vk::VkExtensionProperties> {
     properties
 }
 
-fn enumerate_extensions() -> Vec<CString> {
+fn enumerate_extensions() -> Vec<String> {
     let properties = get_all_extensions();
     let mut extensions = Vec::new();
     for p in properties {
@@ -259,7 +260,7 @@ fn enumerate_extensions() -> Vec<CString> {
             }
         }
     }
-    strings_to_cstrings(extensions)
+    extensions
 }
 
 fn contain_extension(s: &str) -> bool {
@@ -280,22 +281,23 @@ pub struct Instance {
 
 impl Instance {
     pub fn new() -> Self {
-        let application_name = CString::new("Vulkust App").unwrap();
-        let engine_name = CString::new("Vulkust").unwrap();
-        let mut application_info = vk::VkApplicationInfo::default();
-        application_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        application_info.apiVersion = vk::vkMakeVersion(1, 0, 21);
-        application_info.applicationVersion = vk::vkMakeVersion(0, 1, 0);
-        application_info.pApplicationName = application_name.as_ptr();
-        application_info.pEngineName = engine_name.as_ptr();
-        application_info.engineVersion = vk::vkMakeVersion(0, 1, 0);
-        let layers_names = debug::enumerate_layers();
-        let vulkan_layers = cstrings_to_ptrs(&layers_names);
+        // let application_name = CString::new("Vulkust App").unwrap();
+        // let engine_name = CString::new("Vulkust").unwrap();
+        // let mut application_info = vk::VkApplicationInfo::default();
+        // application_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        // application_info.apiVersion = vk::vkMakeVersion(1, 0, 0);
+        // application_info.applicationVersion = vk::vkMakeVersion(0, 1, 0);
+        // application_info.pApplicationName = application_name.as_ptr();
+        // application_info.pEngineName = engine_name.as_ptr();
+        // application_info.engineVersion = vk::vkMakeVersion(0, 1, 0);
+        let vulkan_layers = debug::enumerate_layers();
+        let vulkan_layers = cstrings_to_ptrs(&vulkan_layers);
         let vulkan_extensions = enumerate_extensions();
+        let vulkan_extensions = strings_to_cstrings(vulkan_extensions);
         let vulkan_extensions = cstrings_to_ptrs(&vulkan_extensions);
         let mut instance_create_info = vk::VkInstanceCreateInfo::default();
         instance_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        instance_create_info.pApplicationInfo = &application_info;
+        // instance_create_info.pApplicationInfo = &application_info;
         instance_create_info.enabledLayerCount = vulkan_layers.len() as u32;
         instance_create_info.ppEnabledLayerNames = vulkan_layers.as_ptr();
         instance_create_info.enabledExtensionCount = vulkan_extensions.len() as u32;
@@ -306,7 +308,7 @@ impl Instance {
             null(),
             &mut vk_instance,
         ));
-        vxloge!("Reached");        
+        vxloge!("Reached");      
         Instance {
             vk_data: vk_instance,
             debugger: debug::Debugger::new(vk_instance),
