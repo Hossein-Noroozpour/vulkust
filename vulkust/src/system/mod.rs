@@ -16,8 +16,9 @@ pub use self::linux as os;
 pub mod macos;
 #[cfg(target_os = "macos")]
 pub use self::macos as os;
+#[cfg(target_os = "windows")]
+pub mod windows;
+#[cfg(target_os = "windows")]
+pub use self::windows as os;
 // pub mod linker;
 // pub mod file;
-// pub mod os;
-// #[cfg(vulkan)]
-// pub mod vulkan;

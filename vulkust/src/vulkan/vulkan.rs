@@ -4899,8 +4899,8 @@ pub struct VkWin32SurfaceCreateInfoKHR {
     pub sType: VkStructureType,
     pub pNext: *const c_void,
     pub flags: VkWin32SurfaceCreateFlagsKHR,
-    pub hinstance: winapi::minwindef::HINSTANCE,
-    pub hwnd: winapi::windef::HWND,
+    pub hinstance: winapi::shared::minwindef::HINSTANCE,
+    pub hwnd: winapi::shared::windef::HWND,
 }
 
 #[cfg(target_os = "windows")]

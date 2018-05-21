@@ -13,15 +13,6 @@ pub extern crate bitflags;
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
-#[cfg(target_os = "windows")]
-extern crate kernel32;
-
-#[cfg(target_os = "windows")]
-extern crate user32;
-
-#[cfg(target_os = "windows")]
-extern crate gdi32;
-
 // pub extern crate cgmath as math;
 // pub extern crate image;
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "android"))]

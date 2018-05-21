@@ -8,6 +8,8 @@ macro_rules! vulkust_start {
             use $crate::system::os::application::Application as OsApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let os_app = Arc::new(RwLock::new(OsApp::new(core_app.clone())));
+            let os_app_weak = Arc::downgrade(&os_app);
+            vxresult!(os_app.write()).set_itself(os_app_weak);
             let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app, &os_app)));
             vxresult!(os_app.write()).set_renderer(renderer);
             vxresult!(os_app.read()).run();
