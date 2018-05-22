@@ -106,16 +106,53 @@ impl Physical {
         let mut transfer_queue_node_index = u32::max_value();
         let mut compute_queue_node_index = u32::max_value();
         let mut present_queue_node_index = u32::max_value();
-        let mut temp_queue_node_index = u32::max_value();
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            if queue_family.queueCount > 0
+            let mut b = 0 as vk::VkBool32;
+            unsafe {
+                vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
+            }
+            if queue_family.queueCount > 0 
+                && b != 0
                 && (queue_family.queueFlags as u32
                     & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32) != 0
+                && (queue_family.queueFlags as u32
+                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32) != 0
+                && (queue_family.queueFlags as u32
+                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32) != 0
+            {
+                return Some((
+                    i,
+                    i,
+                    i,
+                    i,
+                ));
+            }
+        }
+
+        for i in 0..(queue_family_properties.len() as u32) {
+            let ref queue_family = queue_family_properties[i as usize];
+            let mut b = 0 as vk::VkBool32;
+            unsafe {
+                vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
+            }
+            if queue_family.queueCount > 0 
+                && b != 0
+                && (queue_family.queueFlags as u32
+                    & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32) != 0
+                && (queue_family.queueFlags as u32
+                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32) != 0
             {
                 graphics_queue_node_index = i;
-                break;
+                compute_queue_node_index = i;
+                present_queue_node_index = i;
+            }
+            if queue_family.queueCount > 0
+                && (queue_family.queueFlags as u32
+                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32) != 0
+            {
+                transfer_queue_node_index = i;
             }
         }
 
@@ -123,72 +160,8 @@ impl Physical {
             return None;
         }
 
-        for i in 0..(queue_family_properties.len() as u32) {
-            let mut b = 0 as vk::VkBool32;
-            unsafe {
-                vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
-            }
-            let ref queue_family = queue_family_properties[i as usize];
-            if b != 0 && queue_family.queueCount > 0 {
-                present_queue_node_index = i;
-                break;
-            }
-        }
-
-        if present_queue_node_index == u32::max_value() {
-            return None;
-        }
-
-        for i in 0..(queue_family_properties.len() as u32) {
-            let ref queue_family = queue_family_properties[i as usize];
-            if queue_family.queueCount > 0
-                && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32) != 0
-            {
-                if i == graphics_queue_node_index || i == present_queue_node_index {
-                    temp_queue_node_index = i;
-                    continue;
-                } else {
-                    compute_queue_node_index = i;
-                    break;
-                }
-            }
-        }
-
-        if compute_queue_node_index == u32::max_value() {
-            if temp_queue_node_index == u32::max_value() {
-                return None;
-            } else {
-                compute_queue_node_index = temp_queue_node_index;
-            }
-        }
-
-        temp_queue_node_index = u32::max_value();
-
-        for i in 0..(queue_family_properties.len() as u32) {
-            let ref queue_family = queue_family_properties[i as usize];
-            if queue_family.queueCount > 0
-                && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32) != 0
-            {
-                if i == graphics_queue_node_index || i == present_queue_node_index
-                    || i == compute_queue_node_index
-                {
-                    temp_queue_node_index = i;
-                    continue;
-                } else {
-                    transfer_queue_node_index = i;
-                    break;
-                }
-            }
-        }
-
         if transfer_queue_node_index == u32::max_value() {
-            if temp_queue_node_index == u32::max_value() {
-                transfer_queue_node_index = graphics_queue_node_index;
-            } else {
-                transfer_queue_node_index = temp_queue_node_index;
-            }
+            transfer_queue_node_index = graphics_queue_node_index;
         }
 
         return Some((

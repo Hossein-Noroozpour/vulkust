@@ -22,7 +22,9 @@ impl Engine {
         }
     }
 
-    pub fn update(&mut self) {}
+    pub fn update(&mut self) {
+        self.gapi_engine.update();
+    }
 
     pub fn on_event(&self, _e: Event) {}
 }

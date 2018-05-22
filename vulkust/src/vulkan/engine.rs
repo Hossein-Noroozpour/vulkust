@@ -18,7 +18,7 @@ use super::pipeline::Manager as PipelineManager;
 // use super::render_pass::RenderPass;
 use super::surface::Surface;
 use super::swapchain::Swapchain;
-// use super::synchronizer::semaphore::Semaphore;
+use super::synchronizer::semaphore::Semaphore;
 
 pub struct Engine {
     pub instance: Arc<Instance>,
@@ -26,15 +26,15 @@ pub struct Engine {
     pub physical_device: Arc<PhysicalDevice>,
     pub logical_device: Arc<LogicalDevice>,
     pub swapchain: Arc<Swapchain>,
+    pub present_complete_semaphore: Arc<Semaphore>,
+    pub render_complete_semaphore: Arc<Semaphore>,
+    pub graphic_cmd_pool: Arc<CmdPool>,
+    pub compute_cmd_pool: Arc<CmdPool>,
     // pub depth_stencil_image_view: Option<Arc<ImageView>>,
     // pub render_pass: Option<Arc<RenderPass>>,
     // pub framebuffers: Vec<Arc<Framebuffer>>,
-    // pub graphic_cmd_pool: Arc<CmdPool>,
-    // pub compute_cmd_pool: Arc<CmdPool>,
     // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
     // pub draw_commands: Vec<CmdBuffer>,
-    // pub present_complete_semaphore: Option<Semaphore>,
-    // pub render_complete_semaphore: Option<Semaphore>,
     // pub wait_fences: Vec<Fence>,
     // pub buffer_manager: Option<Arc<DebugCell<BufferManager>>>,
     // pub pipeline_manager: Arc<RwLock<PipelineManager>>,
@@ -48,9 +48,11 @@ impl Engine {
         let physical_device = Arc::new(PhysicalDevice::new(&surface));
         let logical_device = Arc::new(LogicalDevice::new(&physical_device));
         let swapchain = Arc::new(Swapchain::new(&logical_device));
+        let present_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
+        let render_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
+        let graphic_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Graphic, 0));
+        let compute_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Compute, 0));
         // let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(&logical_device)));
-        // let graphic_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Graphic, 0));
-        // let compute_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Compute, 0));
 
         Engine {
             //     core_app: unsafe { transmute(0usize) },
@@ -60,15 +62,15 @@ impl Engine {
             physical_device,
             logical_device,
             swapchain,
+            present_complete_semaphore,
+            render_complete_semaphore,
+            graphic_cmd_pool,
+            compute_cmd_pool,
             //     depth_stencil_image_view: None,
             //     render_pass: None,
             //     framebuffers: Vec::new(),
-            // graphic_cmd_pool,
-            // compute_cmd_pool,
             //     transfer_cmd_pool: None,
             //     draw_commands: Vec::new(),
-            //     present_complete_semaphore: None,
-            //     render_complete_semaphore: None,
             //     wait_fences: Vec::new(),
             //     buffer_manager: None,
             // pipeline_manager,
@@ -136,7 +138,7 @@ impl Engine {
     //     }
     // }
 
-    // fn update(&mut self) {
+    pub fn update(&mut self) {
     //     // let vk_device = self.logical_device.as_ref().unwrap().vk_data;
     //     // let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
     //     // let current_buffer = match self.swapchain
@@ -206,7 +208,7 @@ impl Engine {
     //     //     self.logical_device.as_ref().unwrap().vk_graphic_queue,
     //     //     &present_info,
     //     // ));
-    // }
+    }
 
     // fn terminate(&mut self) {
     //     self.clean();
