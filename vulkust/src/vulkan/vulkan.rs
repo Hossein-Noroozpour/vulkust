@@ -4880,8 +4880,8 @@ pub struct VkXcbSurfaceCreateInfoKHR {
     pub sType: VkStructureType,
     pub pNext: *const ::std::os::raw::c_void,
     pub flags: VkXcbSurfaceCreateFlagsKHR,
-    pub connection: *mut os::xcb::xcb_connection_t,
-    pub window: os::xcb::xcb_window_t,
+    pub connection: *mut super::super::system::os::xcb::xcb_connection_t,
+    pub window: super::super::system::os::xcb::xcb_window_t,
 }
 #[cfg(target_os = "linux")]
 impl Default for VkXcbSurfaceCreateInfoKHR {

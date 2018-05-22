@@ -13,7 +13,7 @@ use std::ffi::CString;
 use std::mem::transmute;
 use std::os::raw::{c_int, c_uint};
 use std::ptr::null_mut;
-use std::sync::{Arc, RwLock, Weak};
+use std::sync::{Arc, RwLock};
 
 pub struct Application {
     pub renderer: Option<Arc<RwLock<RenderEngine>>>,
@@ -117,6 +117,8 @@ impl Application {
             atom_wm_delete_window,
         }
     }
+
+    pub fn initialize(_itself: &Arc<RwLock<Application>>) {}
 
     pub fn set_renderer(&mut self, renderer: Arc<RwLock<RenderEngine>>) {
         self.renderer = Some(renderer);

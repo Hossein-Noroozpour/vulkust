@@ -48,6 +48,8 @@ impl Application {
         }
     }
 
+    pub fn initialize(_itself: &Arc<RwLock<Application>>) {}
+
     pub fn set_renderer(&mut self, renderer: Arc<RwLock<RenderEngine>>) {
         self.renderer = Some(renderer);
     }

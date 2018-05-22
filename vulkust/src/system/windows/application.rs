@@ -49,8 +49,7 @@ impl Application {
         }
     }
 
-    pub fn set_itself(&mut self, itself: Weak<RwLock<Application>>) {
-        let itself = itself.upgrade();
+    pub fn initialize(itself: &Arc<RwLock<Application>>) {
         let application_name = string_to_cwstring("Gearoenix Vulkust Game Engine");
         let instance = unsafe { winapi::um::libloaderapi::GetModuleHandleA(null()) };
         let mut wnd_class: winapi::um::winuser::WNDCLASSEXW = unsafe { zeroed() };
@@ -143,7 +142,7 @@ impl Application {
                 null_mut(),
                 null_mut(),
                 instance,
-                transmute(Box::into_raw(Box::new(itself))),
+                transmute(Box::into_raw(Box::new(itself.clone()))),
             )
         };
         if window == null_mut() {
@@ -177,8 +176,9 @@ impl Application {
         unsafe {
             winapi::um::winuser::UpdateWindow(window);
         }
-        self.instance = instance;
-        self.window = window;
+        let itself = vxunwrap!(itself.write());
+        itself.instance = instance;
+        itself.window = window;
     }
 
     pub fn set_renderer(&mut self, r: Arc<RwLock<RenderEngine>>) {
