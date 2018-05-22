@@ -6,7 +6,7 @@ use super::super::system::os::application::Application as OsApp;
 // use super::super::system::vulkan as vk;
 // use super::super::util::cell::DebugCell;
 // use super::buffer::Manager as BufferManager;
-// use super::command::buffer::Buffer as CmdBuffer;
+use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
@@ -29,12 +29,11 @@ pub struct Engine {
     pub present_complete_semaphore: Arc<Semaphore>,
     pub render_complete_semaphore: Arc<Semaphore>,
     pub graphic_cmd_pool: Arc<CmdPool>,
-    pub compute_cmd_pool: Arc<CmdPool>,
+    pub draw_commands: Vec<CmdBuffer>,
     // pub depth_stencil_image_view: Option<Arc<ImageView>>,
     // pub render_pass: Option<Arc<RenderPass>>,
     // pub framebuffers: Vec<Arc<Framebuffer>>,
     // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
-    // pub draw_commands: Vec<CmdBuffer>,
     // pub wait_fences: Vec<Fence>,
     // pub buffer_manager: Option<Arc<DebugCell<BufferManager>>>,
     // pub pipeline_manager: Arc<RwLock<PipelineManager>>,
@@ -51,7 +50,12 @@ impl Engine {
         let present_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let render_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let graphic_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Graphic, 0));
-        let compute_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Compute, 0));
+        let mut draw_commands = Vec::new();
+        for _ in 0..swapchain.image_views.len() {
+            let draw_command = CmdBuffer::new(graphic_cmd_pool.clone());
+            draw_commands.push(draw_command);
+        }
+        draw_commands.shrink_to_fit();
         // let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(&logical_device)));
 
         Engine {
@@ -65,12 +69,11 @@ impl Engine {
             present_complete_semaphore,
             render_complete_semaphore,
             graphic_cmd_pool,
-            compute_cmd_pool,
+            draw_commands,
             //     depth_stencil_image_view: None,
             //     render_pass: None,
             //     framebuffers: Vec::new(),
             //     transfer_cmd_pool: None,
-            //     draw_commands: Vec::new(),
             //     wait_fences: Vec::new(),
             //     buffer_manager: None,
             // pipeline_manager,

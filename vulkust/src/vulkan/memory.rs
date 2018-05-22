@@ -3,6 +3,7 @@ use super::vulkan as vk;
 
 use std::ptr::null;
 use std::sync::Arc;
+use std::collections::BTreeMap;
 
 pub fn allocate_with_requirements(
     logical_device: &Arc<LogicalDevice>,
@@ -39,4 +40,27 @@ pub fn allocate_with_requirements(
     memory
 }
 
-pub struct Manager {}
+pub struct Memory {
+
+}
+
+struct RootMemory {}
+
+pub struct Manager {
+    logical_device: Arc<LogicalDevice>,
+    memories: BTreeMap<u32, RootMemory>,
+}
+
+impl Manager {
+    pub fn mew(logical_device: Arc<LogicalDevice>) -> Self {
+        Manager {
+            logical_device,
+            memories: BTreeMap::new(),
+        }
+    }
+
+    pub fn allocate(&mut self, mem_req: &vk::VkMemoryRequirements) -> Memory {
+        vxunimplemented!();
+        Memory {}
+    }
+}

@@ -1922,7 +1922,6 @@ pub struct VkMemoryAllocateInfo {
     pub pNext: *const c_void,
     pub allocationSize: VkDeviceSize,
     pub memoryTypeIndex: uint32_t,
-    _bindgen_padding_0_: [u8; 4usize],
 }
 
 impl Default for VkMemoryAllocateInfo {
@@ -1953,7 +1952,6 @@ pub struct VkMemoryRequirements {
     pub size: VkDeviceSize,
     pub alignment: VkDeviceSize,
     pub memoryTypeBits: uint32_t,
-    _bindgen_padding_0_: [u8; 4usize],
 }
 
 impl Default for VkMemoryRequirements {
