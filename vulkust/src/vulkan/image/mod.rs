@@ -1,18 +1,20 @@
 pub mod view;
 
 use super::device::logical::Logical as LogicalDevice;
-use super::memory::{Manager as MemeoryManager, Memory};
+use super::memory::{
+    Location as MemeoryLocation,
+    Manager as MemeoryManager, 
+    Memory, 
+};
 use super::vulkan as vk;
 
-//use std::default::Default;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 pub struct Image {
     pub logical_device: Arc<LogicalDevice>,
     pub vk_data: vk::VkImage,
-    //    pub vk_format: VkFormat,
-    pub memory: Arc<RwLock<MemeoryManager>>,
+    pub memory: Option<Arc<RwLock<Memory>>>,
 }
 
 impl Image {
@@ -28,43 +30,45 @@ impl Image {
             null(),
             &mut vk_data,
         ));
-        let mut mem_requirements = vk::VkMemoryRequirements::default();
+        let mut mem_reqs = vk::VkMemoryRequirements::default();
         unsafe {
             vk::vkGetImageMemoryRequirements(
                 logical_device.vk_data,
                 vk_data,
-                &mut mem_requirements,
+                &mut mem_reqs,
             );
         }
-        let memory = allocate_with_requirements(&logical_device, mem_requirements);
-        vulkan_check!(vk::vkBindImageMemory(
-            logical_device.vk_data,
-            vk_data,
-            memory,
-            0,
-        ));
+        let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemeoryLocation::GPU);
+        {
+            let memory_r = vxresult!(memory.read());
+            let root_memory = vxresult!(memory_r.root_memory.read());
+            vulkan_check!(vk::vkBindImageMemory(
+                logical_device.vk_data,
+                vk_data,
+                root_memory.vk_data,
+                memory_r.info.offset as vk::VkDeviceSize,
+            ));
+        }
         Image {
-            logical_device: logical_device,
-            vk_data: vk_data,
-            vk_mem: memory,
+            logical_device,
+            vk_data,
+            memory: Some(memory),
         }
     }
+
     pub fn new_with_vk_data(logical_device: Arc<LogicalDevice>, vk_image: vk::VkImage) -> Self {
         Image {
-            logical_device: logical_device,
+            logical_device,
             vk_data: vk_image,
-            vk_mem: 0 as vk::VkDeviceMemory,
+            memory: None,
         }
     }
 }
 
 impl Drop for Image {
     fn drop(&mut self) {
-        unsafe {
-            if self.vk_mem != 0 as vk::VkDeviceMemory {
-                vk::vkDestroyImage(self.logical_device.vk_data, self.vk_data, null());
-            }
-            vk::vkFreeMemory(self.logical_device.vk_data, self.vk_mem, null());
+        if self.memory.is_some() {
+            unsafe { vk::vkDestroyImage(self.logical_device.vk_data, self.vk_data, null()); }
         }
     }
 }

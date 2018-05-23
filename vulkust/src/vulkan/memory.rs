@@ -43,6 +43,7 @@ impl Object for Memory {
 }
 
 pub struct RootMemory {
+    pub logical_device: Arc<LogicalDevice>,
     pub manager: Weak<RwLock<Manager>>,
     itself: Option<Weak<RwLock<RootMemory>>>,
     pub vk_data: vk::VkDeviceMemory,
@@ -69,6 +70,7 @@ impl RootMemory {
             &mut vk_data,
         ));
         RootMemory {
+            logical_device: logical_device.clone(),
             vk_data,
             manager,
             itself: None,
@@ -87,6 +89,12 @@ impl RootMemory {
 
     pub fn set_itself(&mut self, itself: Weak<RwLock<RootMemory>>) {
         self.itself = Some(itself);
+    }
+}
+
+impl Drop for RootMemory {
+    fn drop(&mut self) {
+        unsafe { vk::vkFreeMemory(self.logical_device.vk_data, self.vk_data, null()); }
     }
 }
 
