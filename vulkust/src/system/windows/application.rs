@@ -1,15 +1,11 @@
-use super::super::super::winapi;
 use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::core::constants;
-use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::super::core::string::string_to_cwstring;
-use std::sync::{
-    Arc,
-    RwLock,
-    Weak,
-};
-use std::ptr::{null, null_mut};
+use super::super::super::render::engine::Engine as RenderEngine;
+use super::super::super::winapi;
 use std::mem::{size_of, transmute, zeroed};
+use std::ptr::{null, null_mut};
+use std::sync::{Arc, RwLock, Weak};
 
 pub struct Application {
     pub instance: winapi::shared::minwindef::HINSTANCE,
@@ -24,11 +20,19 @@ extern "system" fn process_callback(
     w_param: winapi::shared::minwindef::WPARAM,
     l_param: winapi::shared::minwindef::LPARAM,
 ) -> winapi::shared::minwindef::LRESULT {
-    let mut os_app = unsafe { winapi::um::winuser::GetWindowLongPtrW(hwnd, winapi::um::winuser::GWLP_USERDATA) };
+    let mut os_app =
+        unsafe { winapi::um::winuser::GetWindowLongPtrW(hwnd, winapi::um::winuser::GWLP_USERDATA) };
     if winapi::um::winuser::WM_CREATE == msg {
-        let ref create_structure: &mut winapi::um::winuser::CREATESTRUCTW = unsafe { transmute(l_param) };
+        let ref create_structure: &mut winapi::um::winuser::CREATESTRUCTW =
+            unsafe { transmute(l_param) };
         os_app = unsafe { transmute(create_structure.lpCreateParams) };
-        unsafe { winapi::um::winuser::SetWindowLongPtrW(hwnd, winapi::um::winuser::GWLP_USERDATA, os_app); }
+        unsafe {
+            winapi::um::winuser::SetWindowLongPtrW(
+                hwnd,
+                winapi::um::winuser::GWLP_USERDATA,
+                os_app,
+            );
+        }
     }
     if os_app == 0 {
         vxloge!("Unexpected message for nullptr sys app uMsg is: {}", msg);
@@ -69,8 +73,11 @@ impl Application {
                 winapi::um::winuser::IDC_ARROW,
             )
         };
-        wnd_class.hbrBackground =
-            unsafe { winapi::um::wingdi::GetStockObject(winapi::um::wingdi::BLACK_BRUSH as winapi::ctypes::c_int) } as winapi::shared::windef::HBRUSH;
+        wnd_class.hbrBackground = unsafe {
+            winapi::um::wingdi::GetStockObject(
+                winapi::um::wingdi::BLACK_BRUSH as winapi::ctypes::c_int,
+            )
+        } as winapi::shared::windef::HBRUSH;
         wnd_class.lpszClassName = application_name.as_ptr();
         wnd_class.hIconSm = unsafe {
             winapi::um::winuser::LoadIconW(
@@ -88,33 +95,39 @@ impl Application {
             window_rect.bottom = constants::DEFAULT_WINDOW_HEIGHT as winapi::um::winnt::LONG;
         }
         #[cfg(debug_assertions)]
-        let dwex_style = winapi::um::winuser::WS_EX_APPWINDOW | winapi::um::winuser::WS_EX_WINDOWEDGE;
+        let dwex_style =
+            winapi::um::winuser::WS_EX_APPWINDOW | winapi::um::winuser::WS_EX_WINDOWEDGE;
         #[cfg(debug_assertions)]
-        let dw_style = winapi::um::winuser::WS_OVERLAPPEDWINDOW | winapi::um::winuser::WS_CLIPSIBLINGS |
-            winapi::um::winuser::WS_CLIPCHILDREN;
+        let dw_style = winapi::um::winuser::WS_OVERLAPPEDWINDOW
+            | winapi::um::winuser::WS_CLIPSIBLINGS
+            | winapi::um::winuser::WS_CLIPCHILDREN;
         #[cfg(not(debug_assertions))]
         let dwex_style = winapi::um::winuser::WS_EX_APPWINDOW;
         #[cfg(not(debug_assertions))]
-        let dw_style = winapi::um::winuser::WS_POPUP | winapi::um::winuser::WS_CLIPSIBLINGS |
-            winapi::um::winuser::WS_CLIPCHILDREN;
+        let dw_style = winapi::um::winuser::WS_POPUP | winapi::um::winuser::WS_CLIPSIBLINGS
+            | winapi::um::winuser::WS_CLIPCHILDREN;
         #[cfg(not(debug_assertions))]
         {
-            let screen_width = unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN) };
-            let screen_height = unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN) };
+            let screen_width =
+                unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN) };
+            let screen_height =
+                unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN) };
             let mut dm_screen_settings: winapi::um::wingdi::DEVMODEW = unsafe { zeroed() };
             dm_screen_settings.dmSize = size_of::<winapi::um::wingdi::DEVMODEW>();
             dm_screen_settings.dmPelsWidth = screen_width;
             dm_screen_settings.dmPelsHeight = screen_height;
             dm_screen_settings.dmBitsPerPel = 32;
-            dm_screen_settings.dmFields = winapi::um::wingdi::DM_BITSPERPEL |
-                winapi::um::wingdi::DM_PELSWIDTH |
-                winapi::um::wingdi::DM_PELSHEIGHT;
-            if screen_width != constants::DEFAULT_WINDOW_WIDTH &&
-                screen_height != constants::DEFAULT_WINDOW_HEIGHT {
+            dm_screen_settings.dmFields = winapi::um::wingdi::DM_BITSPERPEL
+                | winapi::um::wingdi::DM_PELSWIDTH
+                | winapi::um::wingdi::DM_PELSHEIGHT;
+            if screen_width != constants::DEFAULT_WINDOW_WIDTH
+                && screen_height != constants::DEFAULT_WINDOW_HEIGHT
+            {
                 if winapi::um::winuser::ChangeDisplaySettingsW(
                     &dm_screen_settings,
                     winapi::um::winuser::CDS_FULLSCREEN,
-                ) != winapi::um::winuser::DISP_CHANGE_SUCCESSFUL {
+                ) != winapi::um::winuser::DISP_CHANGE_SUCCESSFUL
+                {
                     vxlogf!("Fullscreen Mode not supported!");
                 }
             }
@@ -134,7 +147,8 @@ impl Application {
                 0,
                 application_name.as_ptr(),
                 application_name.as_ptr(),
-                dw_style | winapi::um::winuser::WS_CLIPSIBLINGS | winapi::um::winuser::WS_CLIPCHILDREN,
+                dw_style | winapi::um::winuser::WS_CLIPSIBLINGS
+                    | winapi::um::winuser::WS_CLIPCHILDREN,
                 0,
                 0,
                 window_rect.right - window_rect.left,
@@ -150,10 +164,10 @@ impl Application {
         }
         #[cfg(not(debug_assertions))]
         {
-            let x =
-                (winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN) - window_rect.right) / 2;
-            let y =
-                (winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN) - window_rect.bottom) / 2;
+            let x = (winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN)
+                - window_rect.right) / 2;
+            let y = (winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN)
+                - window_rect.bottom) / 2;
             winapi::um::winuser::SetWindowPos(
                 window,
                 0,

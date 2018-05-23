@@ -2,19 +2,20 @@ use std::sync::{Arc, RwLock, Weak};
 
 pub trait Object {
     fn size(&self) -> isize;
+    fn offset(&self) -> isize;
     fn place(&mut self, offset: isize);
 }
 
 pub trait Allocator {
     fn increase_size(&mut self, size: isize);
-    fn allocate(&mut self, obj: Arc<RwLock<Object>>);
+    fn allocate(&mut self, obj: &Arc<RwLock<Object>>);
     fn clean(&mut self);
 }
 
 pub struct Memory {
-    offset: isize,
-    end: isize,
-    size: isize,
+    pub offset: isize,
+    pub end: isize,
+    pub size: isize,
 }
 
 impl Memory {
@@ -32,6 +33,10 @@ impl Object for Memory {
         self.size
     }
 
+    fn offset(&self) -> isize {
+        self.offset
+    }
+
     fn place(&mut self, offset: isize) {
         self.offset = offset;
         self.end = self.size + offset;
@@ -39,12 +44,12 @@ impl Object for Memory {
 }
 
 pub struct Container {
-    offset: isize,
-    end: isize,
-    size: isize,
-    free_offset: isize,
-    free_space: isize,
-    objects: Vec<Weak<RwLock<Object>>>,
+    pub offset: isize,
+    pub end: isize,
+    pub size: isize,
+    pub free_offset: isize,
+    pub free_space: isize,
+    pub objects: Vec<Weak<RwLock<Object>>>,
 }
 
 impl Container {
@@ -65,6 +70,10 @@ impl Object for Container {
         self.size
     }
 
+    fn offset(&self) -> isize {
+        self.offset
+    }
+
     fn place(&mut self, offset: isize) {
         self.offset = offset;
         self.clean();
@@ -78,7 +87,7 @@ impl Allocator for Container {
         self.free_space += size;
     }
 
-    fn allocate(&mut self, obj: Arc<RwLock<Object>>) {
+    fn allocate(&mut self, obj: &Arc<RwLock<Object>>) {
         let obj_size = vxresult!(obj.read()).size();
         if obj_size > self.free_space {
             vxlogf!(
@@ -86,7 +95,7 @@ impl Allocator for Container {
             );
         }
         vxresult!(obj.write()).place(self.free_offset);
-        self.objects.push(Arc::downgrade(&obj));
+        self.objects.push(Arc::downgrade(obj));
         self.free_offset += obj_size;
         self.free_space -= obj_size;
     }
@@ -99,7 +108,10 @@ impl Allocator for Container {
             match obj.upgrade() {
                 Some(obj) => {
                     let size = vxresult!(obj.read()).size();
-                    vxresult!(obj.write()).place(self.free_offset);
+                    let offset = vxresult!(obj.read()).offset();
+                    if offset != self.free_offset {
+                        vxresult!(obj.write()).place(self.free_offset);
+                    }
                     objects.push(Arc::downgrade(&obj));
                     self.free_offset += size;
                     self.free_space -= size;

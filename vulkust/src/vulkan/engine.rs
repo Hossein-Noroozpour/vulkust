@@ -14,7 +14,8 @@ use super::device::physical::Physical as PhysicalDevice;
 // use super::framebuffer::Framebuffer;
 // use super::image::view::View as ImageView;
 use super::instance::Instance;
-use super::pipeline::Manager as PipelineManager;
+use super::memory::Manager as MemoryManager;
+// use super::pipeline::Manager as PipelineManager;
 // use super::render_pass::RenderPass;
 use super::surface::Surface;
 use super::swapchain::Swapchain;
@@ -30,6 +31,7 @@ pub struct Engine {
     pub render_complete_semaphore: Arc<Semaphore>,
     pub graphic_cmd_pool: Arc<CmdPool>,
     pub draw_commands: Vec<CmdBuffer>,
+    pub memory_mgr: Arc<RwLock<MemoryManager>>,
     // pub depth_stencil_image_view: Option<Arc<ImageView>>,
     // pub render_pass: Option<Arc<RenderPass>>,
     // pub framebuffers: Vec<Arc<Framebuffer>>,
@@ -56,6 +58,9 @@ impl Engine {
             draw_commands.push(draw_command);
         }
         draw_commands.shrink_to_fit();
+        let memory_mgr = Arc::new(RwLock::new(MemoryManager::new(&logical_device)));
+        let memory_mgr_w = Arc::downgrade(&memory_mgr);
+        vxresult!(memory_mgr.write()).set_itself(memory_mgr_w);
         // let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(&logical_device)));
 
         Engine {
@@ -70,6 +75,7 @@ impl Engine {
             render_complete_semaphore,
             graphic_cmd_pool,
             draw_commands,
+            memory_mgr,
             //     depth_stencil_image_view: None,
             //     render_pass: None,
             //     framebuffers: Vec::new(),
@@ -142,75 +148,75 @@ impl Engine {
     // }
 
     pub fn update(&mut self) {
-    //     // let vk_device = self.logical_device.as_ref().unwrap().vk_data;
-    //     // let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
-    //     // let current_buffer = match self.swapchain
-    //     //     .as_ref()
-    //     //     .unwrap()
-    //     //     .get_next_image_index(present_complete_semaphore)
-    //     // {
-    //     //     NextImageResult::Next(c) => c,
-    //     //     NextImageResult::NeedsRefresh => {
-    //     //         unsafe {
-    //     //             (*(*self.os_app).render_engine).reinitialize();
-    //     //         }
-    //     //         return;
-    //     //     }
-    //     // } as usize;
-    //     // let uniform_data = {
-    //     //     let current_scene = self.basic_engine.as_ref().unwrap().current_scene.borrow();
-    //     //     let current_camera = current_scene.get_current_camera().borrow();
-    //     //     UniformData {
-    //     //         projection: current_camera.get_view_projection().clone(),
-    //     //         view: Mat4x4::ident(),
-    //     //         model: Mat4x4::ident(),
-    //     //     }
-    //     // };
-    //     // self.uniform
-    //     //     .as_ref()
-    //     //     .unwrap()
-    //     //     .update(unsafe { transmute(&uniform_data) });
-    //     // vulkan_check!(vk::vkWaitForFences(
-    //     //     vk_device,
-    //     //     1,
-    //     //     &(self.wait_fences[current_buffer].vk_data),
-    //     //     1u32,
-    //     //     u64::max_value(),
-    //     // ));
-    //     // vulkan_check!(vk::vkResetFences(
-    //     //     vk_device,
-    //     //     1,
-    //     //     &(self.wait_fences[current_buffer].vk_data),
-    //     // ));
-    //     // let wait_stage_mask =
-    //     //     vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
-    //     // let mut submit_info = vk::VkSubmitInfo::default();
-    //     // submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    //     // submit_info.pWaitDstStageMask = &wait_stage_mask;
-    //     // submit_info.pWaitSemaphores = &(self.present_complete_semaphore.as_ref().unwrap().vk_data);
-    //     // submit_info.waitSemaphoreCount = 1;
-    //     // submit_info.pSignalSemaphores = &(self.render_complete_semaphore.as_ref().unwrap().vk_data);
-    //     // submit_info.signalSemaphoreCount = 1;
-    //     // submit_info.pCommandBuffers = &(self.draw_commands[current_buffer].vk_data);
-    //     // submit_info.commandBufferCount = 1;
-    //     // vulkan_check!(vk::vkQueueSubmit(
-    //     //     self.logical_device.as_ref().unwrap().vk_graphic_queue,
-    //     //     1,
-    //     //     &submit_info,
-    //     //     self.wait_fences[current_buffer].vk_data,
-    //     // ));
-    //     // let image_index = current_buffer as u32;
-    //     // let mut present_info = vk::VkPresentInfoKHR::default();
-    //     // present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    //     // present_info.swapchainCount = 1;
-    //     // present_info.pSwapchains = &(self.swapchain.as_ref().unwrap().vk_data);
-    //     // present_info.pImageIndices = &image_index;
-    //     // present_info.pWaitSemaphores = &(self.render_complete_semaphore.as_ref().unwrap().vk_data);
-    //     // present_info.waitSemaphoreCount = 1;
-    //     // vulkan_check!(vk::vkQueuePresentKHR(
-    //     //     self.logical_device.as_ref().unwrap().vk_graphic_queue,
-    //     //     &present_info,
-    //     // ));
+        //     // let vk_device = self.logical_device.as_ref().unwrap().vk_data;
+        //     // let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
+        //     // let current_buffer = match self.swapchain
+        //     //     .as_ref()
+        //     //     .unwrap()
+        //     //     .get_next_image_index(present_complete_semaphore)
+        //     // {
+        //     //     NextImageResult::Next(c) => c,
+        //     //     NextImageResult::NeedsRefresh => {
+        //     //         unsafe {
+        //     //             (*(*self.os_app).render_engine).reinitialize();
+        //     //         }
+        //     //         return;
+        //     //     }
+        //     // } as usize;
+        //     // let uniform_data = {
+        //     //     let current_scene = self.basic_engine.as_ref().unwrap().current_scene.borrow();
+        //     //     let current_camera = current_scene.get_current_camera().borrow();
+        //     //     UniformData {
+        //     //         projection: current_camera.get_view_projection().clone(),
+        //     //         view: Mat4x4::ident(),
+        //     //         model: Mat4x4::ident(),
+        //     //     }
+        //     // };
+        //     // self.uniform
+        //     //     .as_ref()
+        //     //     .unwrap()
+        //     //     .update(unsafe { transmute(&uniform_data) });
+        //     // vulkan_check!(vk::vkWaitForFences(
+        //     //     vk_device,
+        //     //     1,
+        //     //     &(self.wait_fences[current_buffer].vk_data),
+        //     //     1u32,
+        //     //     u64::max_value(),
+        //     // ));
+        //     // vulkan_check!(vk::vkResetFences(
+        //     //     vk_device,
+        //     //     1,
+        //     //     &(self.wait_fences[current_buffer].vk_data),
+        //     // ));
+        //     // let wait_stage_mask =
+        //     //     vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+        //     // let mut submit_info = vk::VkSubmitInfo::default();
+        //     // submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        //     // submit_info.pWaitDstStageMask = &wait_stage_mask;
+        //     // submit_info.pWaitSemaphores = &(self.present_complete_semaphore.as_ref().unwrap().vk_data);
+        //     // submit_info.waitSemaphoreCount = 1;
+        //     // submit_info.pSignalSemaphores = &(self.render_complete_semaphore.as_ref().unwrap().vk_data);
+        //     // submit_info.signalSemaphoreCount = 1;
+        //     // submit_info.pCommandBuffers = &(self.draw_commands[current_buffer].vk_data);
+        //     // submit_info.commandBufferCount = 1;
+        //     // vulkan_check!(vk::vkQueueSubmit(
+        //     //     self.logical_device.as_ref().unwrap().vk_graphic_queue,
+        //     //     1,
+        //     //     &submit_info,
+        //     //     self.wait_fences[current_buffer].vk_data,
+        //     // ));
+        //     // let image_index = current_buffer as u32;
+        //     // let mut present_info = vk::VkPresentInfoKHR::default();
+        //     // present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        //     // present_info.swapchainCount = 1;
+        //     // present_info.pSwapchains = &(self.swapchain.as_ref().unwrap().vk_data);
+        //     // present_info.pImageIndices = &image_index;
+        //     // present_info.pWaitSemaphores = &(self.render_complete_semaphore.as_ref().unwrap().vk_data);
+        //     // present_info.waitSemaphoreCount = 1;
+        //     // vulkan_check!(vk::vkQueuePresentKHR(
+        //     //     self.logical_device.as_ref().unwrap().vk_graphic_queue,
+        //     //     &present_info,
+        //     // ));
     }
 
     // fn terminate(&mut self) {

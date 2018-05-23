@@ -113,8 +113,7 @@ impl Physical {
             unsafe {
                 vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
             }
-            if queue_family.queueCount > 0 
-                && b != 0
+            if queue_family.queueCount > 0 && b != 0
                 && (queue_family.queueFlags as u32
                     & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32) != 0
                 && (queue_family.queueFlags as u32
@@ -122,12 +121,7 @@ impl Physical {
                 && (queue_family.queueFlags as u32
                     & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32) != 0
             {
-                return Some((
-                    i,
-                    i,
-                    i,
-                    i,
-                ));
+                return Some((i, i, i, i));
             }
         }
 
@@ -137,8 +131,7 @@ impl Physical {
             unsafe {
                 vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
             }
-            if queue_family.queueCount > 0 
-                && b != 0
+            if queue_family.queueCount > 0 && b != 0
                 && (queue_family.queueFlags as u32
                     & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32) != 0
                 && (queue_family.queueFlags as u32

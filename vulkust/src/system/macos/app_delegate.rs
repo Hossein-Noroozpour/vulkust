@@ -1,6 +1,5 @@
-use super::super::super::core::constants::{
-    APPLICATION_NAME, DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH,
-};
+use super::super::super::core::constants::{APPLICATION_NAME, DEFAULT_WINDOW_HEIGHT,
+                                           DEFAULT_WINDOW_WIDTH};
 use super::super::super::objc::runtime::{Object, Sel, BOOL, YES};
 use super::super::apple;
 use super::game_view;

@@ -5,9 +5,8 @@ extern crate winapi;
 
 use std::default::Default;
 use std::mem::{transmute, zeroed};
-use std::os::raw::{
-    c_char, c_int, c_long, c_longlong, c_short, c_uchar, c_uint, c_ulong, c_ushort, c_void,
-};
+use std::os::raw::{c_char, c_int, c_long, c_longlong, c_short, c_uchar, c_uint, c_ulong, c_ushort,
+                   c_void};
 
 pub type ptrdiff_t = isize;
 pub type size_t = usize;

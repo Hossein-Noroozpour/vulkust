@@ -1,50 +1,94 @@
+use super::super::core::allocate as alc;
+use super::super::core::allocate::{Allocator, Object};
 use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
 
+use std::collections::BTreeMap;
 use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
-use std::collections::BTreeMap;
-
-pub fn allocate_with_requirements(
-    logical_device: &Arc<LogicalDevice>,
-    mem_req_s: vk::VkMemoryRequirements,
-) -> vk::VkDeviceMemory {
-    let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
-    mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    mem_alloc.allocationSize = mem_req_s.size;
-    let ref memory_prop = logical_device.physical_device.memory_properties;
-    let mut type_bits = mem_req_s.memoryTypeBits;
-    let mut memory_type_not_found = true;
-    for index in 0..memory_prop.memoryTypeCount {
-        if (type_bits & 1) == 1
-            && ((memory_prop.memoryTypes[index as usize].propertyFlags as u32)
-                & (vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32))
-                != 0
-        {
-            mem_alloc.memoryTypeIndex = index;
-            memory_type_not_found = false;
-            break;
-        }
-        type_bits >>= 1;
-    }
-    if memory_type_not_found {
-        vxlogf!("Error memory type not found.");
-    }
-    let mut memory = 0 as vk::VkDeviceMemory;
-    vulkan_check!(vk::vkAllocateMemory(
-        logical_device.vk_data,
-        &mem_alloc,
-        null(),
-        &mut memory,
-    ));
-    memory
-}
 
 pub struct Memory {
-
+    pub info: alc::Memory,
+    pub manager: Arc<RwLock<Manager>>,
+    pub root_memory: Arc<RwLock<RootMemory>>,
 }
 
-struct RootMemory {}
+impl Memory {
+    pub fn new(
+        size: vk::VkDeviceSize,
+        manager: Arc<RwLock<Manager>>,
+        root_memory: Arc<RwLock<RootMemory>>,
+    ) -> Self {
+        let info = alc::Memory::new(size as isize);
+        Memory {
+            info,
+            manager,
+            root_memory,
+        }
+    }
+}
+
+impl Object for Memory {
+    fn size(&self) -> isize {
+        self.info.size()
+    }
+
+    fn offset(&self) -> isize {
+        self.info.offset()
+    }
+
+    fn place(&mut self, offset: isize) {
+        self.info.place(offset);
+    }
+}
+
+pub struct RootMemory {
+    pub manager: Weak<RwLock<Manager>>,
+    itself: Option<Weak<RwLock<RootMemory>>>,
+    pub vk_data: vk::VkDeviceMemory,
+    pub container: alc::Container,
+}
+
+const DEFAULT_MEMORY_SIZE: vk::VkDeviceSize = 128 * 1024 * 1024;
+
+impl RootMemory {
+    pub fn new(
+        type_index: u32,
+        manager: Weak<RwLock<Manager>>,
+        logical_device: &Arc<LogicalDevice>,
+    ) -> Self {
+        let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
+        mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        mem_alloc.allocationSize = DEFAULT_MEMORY_SIZE;
+        mem_alloc.memoryTypeIndex = type_index;
+        let mut vk_data = 0 as vk::VkDeviceMemory;
+        vulkan_check!(vk::vkAllocateMemory(
+            logical_device.vk_data,
+            &mem_alloc,
+            null(),
+            &mut vk_data,
+        ));
+        RootMemory {
+            vk_data,
+            manager,
+            itself: None,
+            container: alc::Container::new(DEFAULT_MEMORY_SIZE as isize),
+        }
+    }
+
+    pub fn allocate(&mut self, size: vk::VkDeviceSize) -> Arc<RwLock<Memory>> {
+        let manager = vxunwrap_o!(self.manager.upgrade());
+        let itself = vxunwrap_o!(vxunwrap!(self.itself).upgrade());
+        let memory = Arc::new(RwLock::new(Memory::new(size, manager, itself)));
+        let obj: Arc<RwLock<Object>> = memory.clone();
+        self.container.allocate(&obj);
+        return memory;
+    }
+
+    pub fn set_itself(&mut self, itself: Weak<RwLock<RootMemory>>) {
+        self.itself = Some(itself);
+    }
+}
 
 pub enum Location {
     CPU,
@@ -54,28 +98,29 @@ pub enum Location {
 pub struct Manager {
     logical_device: Arc<LogicalDevice>,
     itself: Option<Weak<RwLock<Manager>>>,
-    memories: BTreeMap<u32, RootMemory>,
+    root_memories: BTreeMap<u32, Arc<RwLock<RootMemory>>>,
 }
 
 impl Manager {
-    pub fn mew(logical_device: Arc<LogicalDevice>) -> Self {
+    pub fn new(logical_device: &Arc<LogicalDevice>) -> Self {
         Manager {
-            logical_device,
+            logical_device: logical_device.clone(),
             itself: None,
-            memories: BTreeMap::new(),
+            root_memories: BTreeMap::new(),
         }
     }
 
     pub fn get_memory_type_index(&self, mem_req: &vk::VkMemoryRequirements, l: Location) -> u32 {
         let l = match l {
-            CPU => vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            GPU => vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+            Location::CPU => vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            Location::GPU => vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
         } as u32;
         let ref memory_prop = self.logical_device.physical_device.memory_properties;
         let mut type_bits = mem_req.memoryTypeBits;
         for index in 0..memory_prop.memoryTypeCount {
-            if (type_bits & 1) == 1 && 
-                ((memory_prop.memoryTypes[index as usize].propertyFlags as u32) & l) != 0 {
+            if (type_bits & 1) == 1
+                && ((memory_prop.memoryTypes[index as usize].propertyFlags as u32) & l) != 0
+            {
                 return index;
             }
             type_bits >>= 1;
@@ -87,16 +132,25 @@ impl Manager {
         self.itself = Some(itself);
     }
 
-    pub fn allocate(&mut self, mem_req: &vk::VkMemoryRequirements, location: Location) -> Memory {
+    pub fn allocate(
+        &mut self,
+        mem_req: &vk::VkMemoryRequirements,
+        location: Location,
+    ) -> Arc<RwLock<Memory>> {
         let memory_type_index = self.get_memory_type_index(mem_req, location);
-        let root_memory = self.memories.get(&memory_type_index);
-        if root_memory.is_some() {
-            let root_memory = vxunwrap!(root_memory);
-            root_memory.allocate()
-        } else {
-
+        if let Some(root_memory) = self.root_memories.get_mut(&memory_type_index) {
+            return vxresult!(root_memory.write()).allocate(mem_req.size);
         }
-        vxunimplemented!();
-        Memory {}
+        let itself = vxunwrap!(self.itself).clone();
+        let root_memory = RootMemory::new(memory_type_index, itself, &self.logical_device);
+        let root_memory = Arc::new(RwLock::new(root_memory));
+        let root_memory_w = Arc::downgrade(&root_memory);
+        let allocated = {
+            let mut root_memory_wl = vxresult!(root_memory.write());
+            root_memory_wl.set_itself(root_memory_w);
+            root_memory_wl.allocate(mem_req.size)
+        };
+        self.root_memories.insert(memory_type_index, root_memory);
+        return allocated;
     }
 }
