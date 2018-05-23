@@ -7,7 +7,7 @@ An experimental tiny engine for **Vulkan in Rust**.
 <br>
 
 ## Missions
- 1. Safty
+ 1. Safety
  1. Performance
  2. Fast development
  3. Small executable binary file
@@ -36,7 +36,7 @@ Measurements are based on the current reaching milestone, not total road-map.
   - Yes of course it needs a binary file, Vulkust stores all of its assets in a file and retrieves them in runtime, right now the binaries have some sensitive data, but I'm gonna remove them soon for guys who wants to see how it works.
 - Why you didn't use available crates and developing everything from scratch?
   - Because I like it this way!
-  - There is lots of prestigious crates out there (e.g: [Vulkano](https://github.com/vulkano-rs/vulkano), [GFX-RS](https://github.com/gfx-rs/gfx) and [etc](https://github.com/rust-unofficial/awesome-rust#graphics)) but I didn't like to add them because of missions.
+  - There are lots of prestigious crates out there (e.g: [Vulkano](https://github.com/vulkano-rs/vulkano), [GFX-RS](https://github.com/gfx-rs/gfx) and [etc](https://github.com/rust-unofficial/awesome-rust#graphics)) but I didn't like to add them because of missions.
   - This is not a strict rule e.g I will use an available video and audio decoder crates, whenever I reach to implementation of audio and video part.
 
 
