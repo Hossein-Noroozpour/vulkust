@@ -1,49 +1,54 @@
 pub mod view;
 
 use super::device::logical::Logical as LogicalDevice;
+use super::memory::{Manager as MemeoryManager, Memory};
 use super::vulkan as vk;
 
 //use std::default::Default;
 use std::ptr::null;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 pub struct Image {
     pub logical_device: Arc<LogicalDevice>,
     pub vk_data: vk::VkImage,
     //    pub vk_format: VkFormat,
-    pub vk_mem: vk::VkDeviceMemory,
+    pub memory: Arc<RwLock<MemeoryManager>>,
 }
 
 impl Image {
-    // pub fn new_with_info(logical_device: Arc<LogicalDevice>, info: &vk::VkImageCreateInfo) -> Self {
-    //     let mut vk_data = 0 as vk::VkImage;
-    //     vulkan_check!(vk::vkCreateImage(
-    //         logical_device.vk_data,
-    //         info,
-    //         null(),
-    //         &mut vk_data,
-    //     ));
-    //     let mut mem_requirements = vk::VkMemoryRequirements::default();
-    //     unsafe {
-    //         vk::vkGetImageMemoryRequirements(
-    //             logical_device.vk_data,
-    //             vk_data,
-    //             &mut mem_requirements,
-    //         );
-    //     }
-    //     let memory = allocate_with_requirements(&logical_device, mem_requirements);
-    //     vulkan_check!(vk::vkBindImageMemory(
-    //         logical_device.vk_data,
-    //         vk_data,
-    //         memory,
-    //         0,
-    //     ));
-    //     Image {
-    //         logical_device: logical_device,
-    //         vk_data: vk_data,
-    //         vk_mem: memory,
-    //     }
-    // }
+    pub fn new_with_info(
+        logical_device: Arc<LogicalDevice>,
+        info: &vk::VkImageCreateInfo,
+        memory_mgr: &Arc<RwLock<MemeoryManager>>,
+    ) -> Self {
+        let mut vk_data = 0 as vk::VkImage;
+        vulkan_check!(vk::vkCreateImage(
+            logical_device.vk_data,
+            info,
+            null(),
+            &mut vk_data,
+        ));
+        let mut mem_requirements = vk::VkMemoryRequirements::default();
+        unsafe {
+            vk::vkGetImageMemoryRequirements(
+                logical_device.vk_data,
+                vk_data,
+                &mut mem_requirements,
+            );
+        }
+        let memory = allocate_with_requirements(&logical_device, mem_requirements);
+        vulkan_check!(vk::vkBindImageMemory(
+            logical_device.vk_data,
+            vk_data,
+            memory,
+            0,
+        ));
+        Image {
+            logical_device: logical_device,
+            vk_data: vk_data,
+            vk_mem: memory,
+        }
+    }
     pub fn new_with_vk_data(logical_device: Arc<LogicalDevice>, vk_image: vk::VkImage) -> Self {
         Image {
             logical_device: logical_device,
