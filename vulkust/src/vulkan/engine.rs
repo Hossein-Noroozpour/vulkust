@@ -16,7 +16,7 @@ use super::image::view::View as ImageView;
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
 // use super::pipeline::Manager as PipelineManager;
-// use super::render_pass::RenderPass;
+use super::render_pass::RenderPass;
 use super::surface::Surface;
 use super::swapchain::Swapchain;
 use super::synchronizer::semaphore::Semaphore;
@@ -33,7 +33,7 @@ pub struct Engine {
     pub draw_commands: Vec<CmdBuffer>,
     pub memory_mgr: Arc<RwLock<MemoryManager>>,
     pub depth_stencil_image_view: Arc<ImageView>,
-    // pub render_pass: Option<Arc<RenderPass>>,
+    pub render_pass: Arc<RenderPass>,
     // pub framebuffers: Vec<Arc<Framebuffer>>,
     // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
     // pub wait_fences: Vec<Fence>,
@@ -63,6 +63,7 @@ impl Engine {
         vxresult!(memory_mgr.write()).set_itself(memory_mgr_w);
         let depth_stencil_image_view = Arc::new(ImageView::new_depth_stencil(
             logical_device.clone(), &memory_mgr));
+        let render_pass = Arc::new(RenderPass::new(&swapchain));
         // let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(&logical_device)));
 
         Engine {
@@ -79,7 +80,7 @@ impl Engine {
             draw_commands,
             memory_mgr,
             depth_stencil_image_view,
-            //     render_pass: None,
+            render_pass,
             //     framebuffers: Vec::new(),
             //     transfer_cmd_pool: None,
             //     wait_fences: Vec::new(),

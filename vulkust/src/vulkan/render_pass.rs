@@ -1,14 +1,15 @@
-use super::super::system::vulkan as vk;
+use super::vulkan as vk;
 use super::swapchain::Swapchain;
 use std::sync::Arc;
-use std::default::Default;
 use std::ptr::null;
+
 pub struct RenderPass {
     pub swapchain: Arc<Swapchain>,
     pub vk_data: vk::VkRenderPass,
 }
+
 impl RenderPass {
-    pub fn new(swapchain: Arc<Swapchain>) -> Self {
+    pub fn new(swapchain: &Arc<Swapchain>) -> Self {
         let mut attachment_descriptions = vec![vk::VkAttachmentDescription::default(); 2];
         attachment_descriptions[0].format = swapchain.surface_format.format;
         attachment_descriptions[0].samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
@@ -88,8 +89,8 @@ impl RenderPass {
             &mut vk_data,
         ));
         RenderPass {
-            swapchain: swapchain,
-            vk_data: vk_data,
+            swapchain: swapchain.clone(),
+            vk_data,
         }
     }
 }

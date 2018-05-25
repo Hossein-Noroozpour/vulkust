@@ -12,7 +12,7 @@ pub mod image;
 pub mod instance;
 pub mod memory;
 pub mod pipeline;
-// pub mod render_pass;
+pub mod render_pass;
 // pub mod shader;
 pub mod surface;
 pub mod swapchain;
