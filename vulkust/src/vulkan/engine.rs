@@ -12,7 +12,7 @@ use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 // use super::fence::Fence;
 // use super::framebuffer::Framebuffer;
-// use super::image::view::View as ImageView;
+use super::image::view::View as ImageView;
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
 // use super::pipeline::Manager as PipelineManager;
@@ -32,7 +32,7 @@ pub struct Engine {
     pub graphic_cmd_pool: Arc<CmdPool>,
     pub draw_commands: Vec<CmdBuffer>,
     pub memory_mgr: Arc<RwLock<MemoryManager>>,
-    // pub depth_stencil_image_view: Option<Arc<ImageView>>,
+    pub depth_stencil_image_view: Arc<ImageView>,
     // pub render_pass: Option<Arc<RenderPass>>,
     // pub framebuffers: Vec<Arc<Framebuffer>>,
     // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
@@ -61,6 +61,8 @@ impl Engine {
         let memory_mgr = Arc::new(RwLock::new(MemoryManager::new(&logical_device)));
         let memory_mgr_w = Arc::downgrade(&memory_mgr);
         vxresult!(memory_mgr.write()).set_itself(memory_mgr_w);
+        let depth_stencil_image_view = Arc::new(ImageView::new_depth_stencil(
+            logical_device.clone(), &memory_mgr));
         // let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(&logical_device)));
 
         Engine {
@@ -76,7 +78,7 @@ impl Engine {
             graphic_cmd_pool,
             draw_commands,
             memory_mgr,
-            //     depth_stencil_image_view: None,
+            depth_stencil_image_view,
             //     render_pass: None,
             //     framebuffers: Vec::new(),
             //     transfer_cmd_pool: None,

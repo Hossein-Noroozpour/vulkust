@@ -120,8 +120,8 @@ impl Manager {
 
     pub fn get_memory_type_index(&self, mem_req: &vk::VkMemoryRequirements, l: Location) -> u32 {
         let l = match l {
-            Location::CPU => vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            Location::GPU => vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+            Location::GPU => vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            Location::CPU => vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
         } as u32;
         let ref memory_prop = self.logical_device.physical_device.memory_properties;
         let mut type_bits = mem_req.memoryTypeBits;
