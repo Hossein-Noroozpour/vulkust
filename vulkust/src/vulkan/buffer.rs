@@ -1,4 +1,4 @@
-extern crate libc;
+use libc;
 
 use std::default::Default;
 use std::mem::transmute;

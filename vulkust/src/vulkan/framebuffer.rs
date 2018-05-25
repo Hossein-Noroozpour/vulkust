@@ -1,10 +1,9 @@
 use super::image::view::View;
 use super::render_pass::RenderPass;
-use super::super::system::vulkan as vk;
+use super::vulkan as vk;
 
 use std::ptr::null;
 use std::sync::Arc;
-use std::default::Default;
 
 pub struct Framebuffer {
     pub color_buffer: Arc<View>,
