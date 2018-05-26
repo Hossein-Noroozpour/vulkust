@@ -1,13 +1,9 @@
 use libc;
 
-use std::default::Default;
 use std::mem::transmute;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
-use super::super::render::mesh::INDEX_ELEMENTS_SIZE;
-use super::super::system::vulkan as vk;
-use super::super::util::cell::DebugCell;
-use super::super::util::gc::{Gc, GcObject};
+use super::vulkan as vk;
 use super::command::buffer::Buffer as CmdBuff;
 use super::device::logical::Logical as LogicalDevice;
 
