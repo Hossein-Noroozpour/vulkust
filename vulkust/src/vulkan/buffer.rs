@@ -321,7 +321,7 @@ impl Manager {
         let static_uploader_buffer;
         let mut dynamic_buffers = Vec::new();
         for i in 0..frames_count {
-            dynamic_buffers.push(Gc::new(i * scenes_dynamics_size + meshes_size, scenes_dynamics_size));
+            dynamic_buffers.push( Gc::new(i * scenes_dynamics_size + meshes_size, scenes_dynamics_size));
         }
         dynamic_buffers.shrink_to_fit();
         Manager {
