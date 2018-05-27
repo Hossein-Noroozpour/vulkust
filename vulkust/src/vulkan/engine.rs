@@ -5,7 +5,7 @@ use std::sync::{Arc, RwLock};
 use super::super::system::os::application::Application as OsApp;
 // use super::super::system::vulkan as vk;
 // use super::super::util::cell::DebugCell;
-// use super::buffer::Manager as BufferManager;
+use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
 use super::device::logical::Logical as LogicalDevice;
@@ -36,9 +36,9 @@ pub struct Engine {
     pub render_pass: Arc<RenderPass>,
     pub pipeline_manager: Arc<RwLock<PipelineManager>>,
     pub framebuffers: Vec<Arc<Framebuffer>>,
+    pub buffer_manager: Arc<RwLock<BufferManager>>,
     // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
     // pub wait_fences: Vec<Fence>,
-    // pub buffer_manager: Option<Arc<DebugCell<BufferManager>>>,
     // pub basic_engine: Option<BasicEngine>,
 }
 
@@ -74,6 +74,13 @@ impl Engine {
             )));
         }
         framebuffers.shrink_to_fit();
+        let buffer_manager = Arc::new(RwLock::new(BufferManager::new(
+            &memory_mgr,
+            1028,
+            1028,
+            1028,
+            swapchain.image_views.len() as isize,
+        )));
         Engine {
             //     core_app: unsafe { transmute(0usize) },
             //     os_app: unsafe { transmute(0usize) },
@@ -91,9 +98,9 @@ impl Engine {
             render_pass,
             pipeline_manager,
             framebuffers,
+            buffer_manager,
             //     transfer_cmd_pool: None,
             //     wait_fences: Vec::new(),
-            //     buffer_manager: None,
             //     basic_engine: None,
         }
     }
