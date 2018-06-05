@@ -137,7 +137,6 @@ pub struct Manager {
     pub static_buffer: Arc<RwLock<Buffer>>,
     pub static_uploader_buffer: Arc<RwLock<Buffer>>,
     pub dynamic_buffers: Vec<Arc<RwLock<Buffer>>>,
-    pub dynamic_uploader_buffers: Vec<Arc<RwLock<Buffer>>>,
 }
 
 impl Manager {
@@ -160,13 +159,10 @@ impl Manager {
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
         let mut dynamic_buffers = Vec::new();
-        let mut dynamic_uploader_buffers = Vec::new();
         for _ in 0..frames_count {
-            dynamic_buffers.push(gpu_buffer.allocate(dynamics_size));
-            dynamic_uploader_buffers.push(cpu_buffer.allocate(dynamics_size));
+            dynamic_buffers.push(cpu_buffer.allocate(dynamics_size));
         }
         dynamic_buffers.shrink_to_fit();
-        dynamic_uploader_buffers.shrink_to_fit();
         Manager {
             alignment,
             cpu_buffer,
@@ -174,7 +170,6 @@ impl Manager {
             static_buffer,
             static_uploader_buffer,
             dynamic_buffers,
-            dynamic_uploader_buffers,
         }
     }
 }
