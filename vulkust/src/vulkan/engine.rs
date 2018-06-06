@@ -76,6 +76,7 @@ impl Engine {
         framebuffers.shrink_to_fit();
         let buffer_manager = Arc::new(RwLock::new(BufferManager::new(
             &memory_mgr,
+            &graphic_cmd_pool,
             1028,
             1028,
             1028,
@@ -166,6 +167,7 @@ impl Engine {
     // }
 
     pub fn update(&mut self) {
+        vxresult!(self.buffer_manager.write()).update();
         //     // let vk_device = self.logical_device.as_ref().unwrap().vk_data;
         //     // let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
         //     // let current_buffer = match self.swapchain

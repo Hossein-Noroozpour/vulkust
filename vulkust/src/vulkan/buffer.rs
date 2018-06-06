@@ -1,5 +1,8 @@
+use libc;
 use super::super::core::allocate as alc;
 use super::super::core::allocate::{Allocator, Object};
+use super::command::pool::Pool as CmdPool;
+use super::command::buffer::Buffer as CmdBuffer;
 use super::memory::{
     Manager as MemoryManager, 
     Location as MemoryLocation, 
@@ -8,6 +11,8 @@ use super::memory::{
 use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
+use std::os::raw::c_void;
+use std::mem::transmute;
 
 pub struct Buffer {
     pub memory_offset: isize,
@@ -130,18 +135,34 @@ impl RootBuffer {
     }
 }
 
+pub struct StaticBuffer {
+    pub buffer: Arc<RwLock<Buffer>>,
+}
+
+impl StaticBuffer {
+    pub fn new(buffer: Arc<RwLock<Buffer>>) -> Self {
+        StaticBuffer {
+            buffer,
+        }
+    }
+}
+
 pub struct Manager {
     pub alignment: isize,
     pub cpu_buffer: RootBuffer,
     pub gpu_buffer: RootBuffer,
+    pub cpu_memory_mapped_ptr: isize,
     pub static_buffer: Arc<RwLock<Buffer>>,
     pub static_uploader_buffer: Arc<RwLock<Buffer>>,
     pub dynamic_buffers: Vec<Arc<RwLock<Buffer>>>,
+    pub copy_ranges: Vec<vk::VkBufferCopy>,
+    pub cmd_pool: Arc<CmdPool>,
 }
 
 impl Manager {
     pub fn new(
         memmgr: &Arc<RwLock<MemoryManager>>,
+        cmd_pool: &Arc<CmdPool>,
         static_size: isize,
         static_uploader_size: isize,
         dynamics_size: isize, 
@@ -158,18 +179,75 @@ impl Manager {
             frames_dynamics_size + static_size, Location::GPU, memmgr);
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
+        let vk_memory = vxresult!(cpu_buffer.memory.read()).vk_data;
+        let vk_device = vxresult!(memmgr.read()).logical_device.vk_data;
+        let memory_size = {
+            let cpu_memory = vxresult!(cpu_buffer.memory.read());
+            let size = vxresult!(cpu_memory.root_memory.read()).container.size;
+            size
+        };
+        let cpu_memory_mapped_ptr = unsafe {
+            let mut data_ptr = 0 as *mut c_void;
+            vulkan_check!(vk::vkMapMemory(
+                vk_device,
+                vk_memory,
+                0, memory_size as u64,
+                0,
+                &mut data_ptr
+            ));
+            transmute(data_ptr)
+        };
         let mut dynamic_buffers = Vec::new();
         for _ in 0..frames_count {
             dynamic_buffers.push(cpu_buffer.allocate(dynamics_size));
         }
         dynamic_buffers.shrink_to_fit();
+        let copy_ranges = Vec::new();
+        let cmd_pool = cmd_pool.clone();
         Manager {
             alignment,
             cpu_buffer,
             gpu_buffer,
+            cpu_memory_mapped_ptr,
             static_buffer,
             static_uploader_buffer,
             dynamic_buffers,
+            copy_ranges,
+            cmd_pool,
         }
+    }
+
+    pub fn create_static_buffer(&mut self, actual_size: isize, data: *const c_void) -> StaticBuffer {
+        let size = alc::align(actual_size, self.alignment);
+        let buffer = vxresult!(self.static_buffer.write()).allocate(size);
+        let upbuffer = vxresult!(self.static_uploader_buffer.write()).allocate(size);
+        let upbuffer = vxresult!(upbuffer.read());
+        let mut off = upbuffer.memory_offset;
+        off += upbuffer.info.offset;
+        off += self.cpu_memory_mapped_ptr;
+        unsafe {
+            let ptr = transmute(off);
+            libc::memcpy(ptr, transmute(data), actual_size as usize);
+        }
+        let mut range = vk::VkBufferCopy::default();
+        range.srcOffset = upbuffer.info.offset as vk::VkDeviceSize;
+        range.dstOffset = vxresult!(buffer.read()).info.offset as vk::VkDeviceSize;
+        range.size = size as vk::VkDeviceSize;
+        self.copy_ranges.push(range);
+        StaticBuffer::new(buffer)
+    }
+
+    pub fn update(&mut self) {
+        if self.copy_ranges.len() == 0 {
+            return;
+        }
+        let mut cmd = CmdBuffer::new(self.cmd_pool.clone());
+        cmd.copy_buffer(
+            self.cpu_buffer.vk_data,
+            self.gpu_buffer.vk_data,
+            &self.copy_ranges,
+        );
+        self.copy_ranges.clear();
+        cmd.flush();
     }
 }

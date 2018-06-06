@@ -2,6 +2,8 @@
 #![feature(integer_atomics)]
 #![feature(stmt_expr_attributes)]
 
+pub extern crate libc;
+
 #[cfg(target_os = "macos")]
 #[macro_use]
 pub extern crate objc;
@@ -15,8 +17,6 @@ extern crate winapi;
 
 // pub extern crate cgmath as math;
 // pub extern crate image;
-#[cfg(any(target_os = "macos", target_os = "linux", target_os = "android"))]
-pub extern crate libc;
 
 #[macro_use]
 pub mod macros;

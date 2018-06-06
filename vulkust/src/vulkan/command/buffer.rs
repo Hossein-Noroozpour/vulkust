@@ -3,7 +3,7 @@ use std::default::Default;
 use std::sync::Arc;
 // use super::super::descriptor::Set as DescriptorSet;
 // use super::super::pipeline::{Pipeline, Layout as PipelineLayout};
-// use super::super::fence::Fence;
+use super::super::synchronizer::fence::Fence;
 use super::pool::Pool;
 
 pub struct Buffer {
@@ -73,21 +73,21 @@ impl Buffer {
         }
     }
 
-    // pub fn flush(&mut self) {;
-    //     let fence = Fence::new(self.pool.logical_device.clone());
-    //     vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
-    //     let mut submit_info = vk::VkSubmitInfo::default();
-    //     submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    //     submit_info.commandBufferCount = 1;
-    //     submit_info.pCommandBuffers = &self.vk_data;
-    //     vulkan_check!(vk::vkQueueSubmit(
-    //         self.pool.logical_device.vk_graphic_queue,
-    //         1,
-    //         &submit_info,
-    //         fence.vk_data,
-    //     ));
-    //     fence.wait();
-    // }
+    pub fn flush(&mut self) {;
+        let fence = Fence::new(self.pool.logical_device.clone());
+        vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
+        let mut submit_info = vk::VkSubmitInfo::default();
+        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &self.vk_data;
+        vulkan_check!(vk::vkQueueSubmit(
+            self.pool.logical_device.vk_graphic_queue,
+            1,
+            &submit_info,
+            fence.vk_data,
+        ));
+        fence.wait();
+    }
 
     pub fn end_render_pass(&mut self) {
         unsafe {

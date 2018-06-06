@@ -16,12 +16,10 @@ fullscreen = []
 # image = "*"
 # cgmath = "*"
 # gltf = { version = "*", features = ["extras", "names"] }
+libc = "*"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser"] }
-
-[target.'cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))'.dependencies]
-libc = "*"
 
 [target.'cfg(any(target_os = "android", target_os = "macos"))'.dependencies]
 bitflags = "*"

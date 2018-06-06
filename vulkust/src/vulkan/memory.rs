@@ -9,6 +9,7 @@ use std::sync::{Arc, RwLock, Weak};
 
 pub struct Memory {
     pub info: alc::Memory,
+    pub vk_data: vk::VkDeviceMemory,
     pub manager: Arc<RwLock<Manager>>,
     pub root_memory: Arc<RwLock<RootMemory>>,
 }
@@ -16,12 +17,14 @@ pub struct Memory {
 impl Memory {
     pub fn new(
         size: vk::VkDeviceSize,
+        vk_data: vk::VkDeviceMemory,
         manager: Arc<RwLock<Manager>>,
         root_memory: Arc<RwLock<RootMemory>>,
     ) -> Self {
         let info = alc::Memory::new(size as isize);
         Memory {
             info,
+            vk_data,
             manager,
             root_memory,
         }
@@ -81,7 +84,7 @@ impl RootMemory {
     pub fn allocate(&mut self, size: vk::VkDeviceSize) -> Arc<RwLock<Memory>> {
         let manager = vxunwrap_o!(self.manager.upgrade());
         let itself = vxunwrap_o!(vxunwrap!(self.itself).upgrade());
-        let memory = Arc::new(RwLock::new(Memory::new(size, manager, itself)));
+        let memory = Arc::new(RwLock::new(Memory::new(size, self.vk_data, manager, itself)));
         let obj: Arc<RwLock<Object>> = memory.clone();
         self.container.allocate(&obj);
         return memory;
