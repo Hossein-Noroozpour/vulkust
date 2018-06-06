@@ -72,6 +72,7 @@ impl Application {
     }
 
     pub fn update(&self) {
+        vxresult!(vxunwrap!(self.renderer).write()).update();
         // vxlogi!("reached");
     }
 }

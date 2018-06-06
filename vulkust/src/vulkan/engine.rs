@@ -1,11 +1,14 @@
 use std::sync::{Arc, RwLock};
-// use std::mem::transmute;
+use std::mem::transmute;
 // use super::super::core::application::ApplicationTrait;
 // use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
 // use super::super::system::vulkan as vk;
 // use super::super::util::cell::DebugCell;
-use super::buffer::Manager as BufferManager;
+use super::buffer::{
+    Manager as BufferManager,
+    StaticBuffer,
+};
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
 use super::device::logical::Logical as LogicalDevice;
@@ -40,6 +43,10 @@ pub struct Engine {
     // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
     // pub wait_fences: Vec<Fence>,
     // pub basic_engine: Option<BasicEngine>,
+    //----------------------------------------------------------------------------------------------
+    pub vertex_buffer: StaticBuffer,
+    pub index_buffer: StaticBuffer,
+    //----------------------------------------------------------------------------------------------
 }
 
 impl Engine {
@@ -74,14 +81,31 @@ impl Engine {
             )));
         }
         framebuffers.shrink_to_fit();
-        let buffer_manager = Arc::new(RwLock::new(BufferManager::new(
+        let mut buffer_manager = BufferManager::new(
             &memory_mgr,
             &graphic_cmd_pool,
             1028,
             1028,
             1028,
             swapchain.image_views.len() as isize,
-        )));
+        );
+        // -----------------------------------------------------------------------------------------
+        let vertices = [
+            1.0f32, 1.0f32, 0.0f32, 1.0f32, 0.0f32, 0.0f32,
+			-1.0f32, 1.0f32, 0.0f32, 0.0f32, 1.0f32, 0.0f32,
+			0.0f32, -1.0f32, 0.0f32, 0.0f32, 0.0f32, 1.0f32
+        ];
+        let vertices_size = vertices.len() * 4;
+        let vertex_buffer = buffer_manager.create_static_buffer(
+            vertices_size as isize, unsafe { transmute(vertices.as_ptr()) }
+        );
+        let indices = [0u32, 1, 2];
+        let indices_size = indices.len() * 4;
+        let index_buffer = buffer_manager.create_static_buffer(
+            indices_size as isize, unsafe { transmute(indices.as_ptr()) }
+        );
+        //------------------------------------------------------------------------------------------
+        let buffer_manager = Arc::new(RwLock::new(buffer_manager));
         Engine {
             //     core_app: unsafe { transmute(0usize) },
             //     os_app: unsafe { transmute(0usize) },
@@ -103,6 +127,10 @@ impl Engine {
             //     transfer_cmd_pool: None,
             //     wait_fences: Vec::new(),
             //     basic_engine: None,
+            //--------------------------------------------------------------------------------------
+            vertex_buffer,
+            index_buffer,
+            //--------------------------------------------------------------------------------------
         }
     }
 
