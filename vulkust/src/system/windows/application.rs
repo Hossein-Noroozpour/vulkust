@@ -104,7 +104,8 @@ impl Application {
         #[cfg(not(debug_assertions))]
         let dwex_style = winapi::um::winuser::WS_EX_APPWINDOW;
         #[cfg(not(debug_assertions))]
-        let dw_style = winapi::um::winuser::WS_POPUP | winapi::um::winuser::WS_CLIPSIBLINGS
+        let dw_style = winapi::um::winuser::WS_POPUP
+            | winapi::um::winuser::WS_CLIPSIBLINGS
             | winapi::um::winuser::WS_CLIPCHILDREN;
         #[cfg(not(debug_assertions))]
         {
@@ -147,7 +148,8 @@ impl Application {
                 0,
                 application_name.as_ptr(),
                 application_name.as_ptr(),
-                dw_style | winapi::um::winuser::WS_CLIPSIBLINGS
+                dw_style
+                    | winapi::um::winuser::WS_CLIPSIBLINGS
                     | winapi::um::winuser::WS_CLIPCHILDREN,
                 0,
                 0,

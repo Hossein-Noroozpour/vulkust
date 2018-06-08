@@ -73,7 +73,7 @@ impl Buffer {
         }
     }
 
-    pub fn flush(&mut self) {;
+    pub fn flush(&mut self) {
         let fence = Fence::new(self.pool.logical_device.clone());
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
         let mut submit_info = vk::VkSubmitInfo::default();

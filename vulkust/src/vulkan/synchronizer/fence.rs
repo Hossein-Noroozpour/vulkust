@@ -1,8 +1,8 @@
-use super::super::vulkan as vk;
 use super::super::device::logical::Logical as LogicalDevice;
-use std::sync::Arc;
+use super::super::vulkan as vk;
 use std::default::Default;
 use std::ptr::null;
+use std::sync::Arc;
 
 pub struct Fence {
     pub logical_device: Arc<LogicalDevice>,

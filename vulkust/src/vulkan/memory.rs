@@ -84,7 +84,12 @@ impl RootMemory {
     pub fn allocate(&mut self, size: vk::VkDeviceSize) -> Arc<RwLock<Memory>> {
         let manager = vxunwrap_o!(self.manager.upgrade());
         let itself = vxunwrap_o!(vxunwrap!(self.itself).upgrade());
-        let memory = Arc::new(RwLock::new(Memory::new(size, self.vk_data, manager, itself)));
+        let memory = Arc::new(RwLock::new(Memory::new(
+            size,
+            self.vk_data,
+            manager,
+            itself,
+        )));
         let obj: Arc<RwLock<Object>> = memory.clone();
         self.container.allocate(&obj);
         return memory;
@@ -97,7 +102,9 @@ impl RootMemory {
 
 impl Drop for RootMemory {
     fn drop(&mut self) {
-        unsafe { vk::vkFreeMemory(self.logical_device.vk_data, self.vk_data, null()); }
+        unsafe {
+            vk::vkFreeMemory(self.logical_device.vk_data, self.vk_data, null());
+        }
     }
 }
 
@@ -123,11 +130,13 @@ impl Manager {
 
     pub fn get_memory_type_index(&self, mem_req: &vk::VkMemoryRequirements, l: Location) -> u32 {
         let l = match l {
-            Location::GPU => 
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32,
-            Location::CPU => 
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32 |
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32,
+            Location::GPU => {
+                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32
+            }
+            Location::CPU => {
+                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32
+                    | vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32
+            }
         };
         let ref memory_prop = self.logical_device.physical_device.memory_properties;
         let mut type_bits = mem_req.memoryTypeBits;

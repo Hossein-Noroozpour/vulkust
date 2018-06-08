@@ -35,8 +35,10 @@ fn msg_send_fn<R: Any>(obj: Id, _: Sel) -> (Imp, Id) {
         fn objc_msgSend_stret();
     }
     let type_id = TypeId::of::<R>();
-    let msg_fn = if mem::size_of::<R>() <= 4 || type_id == TypeId::of::<i64>()
-        || type_id == TypeId::of::<u64>() || type_id == TypeId::of::<f64>()
+    let msg_fn = if mem::size_of::<R>() <= 4
+        || type_id == TypeId::of::<i64>()
+        || type_id == TypeId::of::<u64>()
+        || type_id == TypeId::of::<f64>()
     {
         objc_msgSend
     } else {

@@ -12,7 +12,10 @@ pub struct View {
 }
 
 impl View {
-    pub fn new_depth_stencil(logical_device: Arc<LogicalDevice>, memory_mgr: &Arc<RwLock<MemeoryManager>>) -> Self {
+    pub fn new_depth_stencil(
+        logical_device: Arc<LogicalDevice>,
+        memory_mgr: &Arc<RwLock<MemeoryManager>>,
+    ) -> Self {
         let depth_format = logical_device.physical_device.get_supported_depth_format();
         let surface_caps = logical_device.physical_device.get_surface_capabilities();
         let mut image_info = vk::VkImageCreateInfo::default();
@@ -26,10 +29,15 @@ impl View {
         image_info.arrayLayers = 1;
         image_info.samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         image_info.tiling = vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
-        image_info.usage = vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
+        image_info.usage = vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+            as u32
             | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT as u32;
         image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-        let image = Arc::new(Image::new_with_info(logical_device.clone(), &image_info, memory_mgr));
+        let image = Arc::new(Image::new_with_info(
+            logical_device.clone(),
+            &image_info,
+            memory_mgr,
+        ));
         let mut depth_stencil_view_info = vk::VkImageViewCreateInfo::default();
         depth_stencil_view_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

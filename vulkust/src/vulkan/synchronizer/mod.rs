@@ -1,2 +1,2 @@
-pub mod semaphore;
 pub mod fence;
+pub mod semaphore;

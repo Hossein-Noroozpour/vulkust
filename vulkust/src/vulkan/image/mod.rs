@@ -1,11 +1,7 @@
 pub mod view;
 
 use super::device::logical::Logical as LogicalDevice;
-use super::memory::{
-    Location as MemeoryLocation,
-    Manager as MemeoryManager, 
-    Memory, 
-};
+use super::memory::{Location as MemeoryLocation, Manager as MemeoryManager, Memory};
 use super::vulkan as vk;
 
 use std::ptr::null;
@@ -32,11 +28,7 @@ impl Image {
         ));
         let mut mem_reqs = vk::VkMemoryRequirements::default();
         unsafe {
-            vk::vkGetImageMemoryRequirements(
-                logical_device.vk_data,
-                vk_data,
-                &mut mem_reqs,
-            );
+            vk::vkGetImageMemoryRequirements(logical_device.vk_data, vk_data, &mut mem_reqs);
         }
         let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemeoryLocation::GPU);
         {
@@ -68,7 +60,9 @@ impl Image {
 impl Drop for Image {
     fn drop(&mut self) {
         if self.memory.is_some() {
-            unsafe { vk::vkDestroyImage(self.logical_device.vk_data, self.vk_data, null()); }
+            unsafe {
+                vk::vkDestroyImage(self.logical_device.vk_data, self.vk_data, null());
+            }
         }
     }
 }

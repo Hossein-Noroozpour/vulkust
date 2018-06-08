@@ -1,7 +1,7 @@
-use super::vulkan as vk;
 use super::swapchain::Swapchain;
-use std::sync::Arc;
+use super::vulkan as vk;
 use std::ptr::null;
+use std::sync::Arc;
 
 pub struct RenderPass {
     pub swapchain: Arc<Swapchain>,
@@ -56,9 +56,9 @@ impl RenderPass {
         dependencies[0].dstStageMask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
         dependencies[0].srcAccessMask = vk::VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT as u32;
-        dependencies[0].dstAccessMask = vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as
-            u32 |
-            vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
+        dependencies[0].dstAccessMask = vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT
+            as u32
+            | vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
         dependencies[0].dependencyFlags =
             vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;
         dependencies[1].dstSubpass = vk::VK_SUBPASS_EXTERNAL;
@@ -66,9 +66,9 @@ impl RenderPass {
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
         dependencies[1].dstStageMask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT as u32;
-        dependencies[1].srcAccessMask = vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT as
-            u32 |
-            vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
+        dependencies[1].srcAccessMask = vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT
+            as u32
+            | vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
         dependencies[1].dstAccessMask = vk::VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT as u32;
         dependencies[1].dependencyFlags =
             vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;

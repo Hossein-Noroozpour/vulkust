@@ -1,18 +1,14 @@
-use libc;
 use super::super::core::allocate as alc;
 use super::super::core::allocate::{Allocator, Object};
-use super::command::pool::Pool as CmdPool;
 use super::command::buffer::Buffer as CmdBuffer;
-use super::memory::{
-    Manager as MemoryManager, 
-    Location as MemoryLocation, 
-    Memory
-};
+use super::command::pool::Pool as CmdPool;
+use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
 use super::vulkan as vk;
+use libc;
+use std::mem::transmute;
+use std::os::raw::c_void;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
-use std::os::raw::c_void;
-use std::mem::transmute;
 
 pub struct Buffer {
     pub memory_offset: isize,
@@ -82,14 +78,16 @@ impl RootBuffer {
     pub fn new(size: isize, location: Location, memmgr: &Arc<RwLock<MemoryManager>>) -> Self {
         let (memloc, usage) = match location {
             Location::CPU => (
-                MemoryLocation::CPU, 
-                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT as u32),
+                MemoryLocation::CPU,
+                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT as u32,
+            ),
             Location::GPU => (
                 MemoryLocation::GPU,
-                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT as u32 |
-                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT as u32 |
-                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT as u32 |
-                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT as u32),
+                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT as u32
+                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT as u32
+                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT as u32
+                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT as u32,
+            ),
         };
         let mut buffer_info = vk::VkBufferCreateInfo::default();
         let logical_device = vxresult!(memmgr.read()).logical_device.clone();
@@ -141,9 +139,18 @@ pub struct StaticBuffer {
 
 impl StaticBuffer {
     pub fn new(buffer: Arc<RwLock<Buffer>>) -> Self {
-        StaticBuffer {
-            buffer,
-        }
+        StaticBuffer { buffer }
+    }
+}
+
+pub struct DynamicBuffer {
+    pub buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
+    pub frame: Arc<RwLock<u32>>,
+}
+
+impl DynamicBuffer {
+    pub fn new(buffers: Vec<(Arc<RwLock<Buffer>>, isize)>, frame: Arc<RwLock<u32>>) -> Self {
+        DynamicBuffer { buffers, frame }
     }
 }
 
@@ -165,18 +172,24 @@ impl Manager {
         cmd_pool: &Arc<CmdPool>,
         static_size: isize,
         static_uploader_size: isize,
-        dynamics_size: isize, 
-        frames_count: isize) -> Self {
+        dynamics_size: isize,
+        frames_count: isize,
+    ) -> Self {
         let alignment = vxresult!(memmgr.read())
-            .logical_device.physical_device.get_max_min_alignment() as isize;
+            .logical_device
+            .physical_device
+            .get_max_min_alignment() as isize;
         let static_size = alc::align(static_size, alignment);
         let static_uploader_size = alc::align(static_uploader_size, alignment);
         let dynamics_size = alc::align(dynamics_size, alignment);
         let frames_dynamics_size = dynamics_size * frames_count;
         let mut cpu_buffer = RootBuffer::new(
-            frames_dynamics_size + static_uploader_size, Location::CPU, memmgr);
-        let mut gpu_buffer = RootBuffer::new(
-            frames_dynamics_size + static_size, Location::GPU, memmgr);
+            frames_dynamics_size + static_uploader_size,
+            Location::CPU,
+            memmgr,
+        );
+        let mut gpu_buffer =
+            RootBuffer::new(frames_dynamics_size + static_size, Location::GPU, memmgr);
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
         let vk_memory = vxresult!(cpu_buffer.memory.read()).vk_data;
@@ -191,7 +204,8 @@ impl Manager {
             vulkan_check!(vk::vkMapMemory(
                 vk_device,
                 vk_memory,
-                0, memory_size as u64,
+                0,
+                memory_size as u64,
                 0,
                 &mut data_ptr
             ));
@@ -217,7 +231,11 @@ impl Manager {
         }
     }
 
-    pub fn create_static_buffer(&mut self, actual_size: isize, data: *const c_void) -> StaticBuffer {
+    pub fn create_static_buffer(
+        &mut self,
+        actual_size: isize,
+        data: *const c_void,
+    ) -> StaticBuffer {
         let size = alc::align(actual_size, self.alignment);
         let buffer = vxresult!(self.static_buffer.write()).allocate(size);
         let upbuffer = vxresult!(self.static_uploader_buffer.write()).allocate(size);
@@ -236,6 +254,8 @@ impl Manager {
         self.copy_ranges.push(range);
         StaticBuffer::new(buffer)
     }
+
+    pub fn create_dynamic_buffer(&mut self, actual_size: isize) -> DynamicBuffer {}
 
     pub fn update(&mut self) {
         if self.copy_ranges.len() == 0 {
