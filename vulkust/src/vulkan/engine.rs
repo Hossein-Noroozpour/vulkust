@@ -5,7 +5,7 @@ use std::sync::{Arc, RwLock};
 use super::super::system::os::application::Application as OsApp;
 // use super::super::system::vulkan as vk;
 // use super::super::util::cell::DebugCell;
-use super::buffer::{Manager as BufferManager, StaticBuffer};
+use super::buffer::{DynamicBuffer, Manager as BufferManager, StaticBuffer};
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
 use super::device::logical::Logical as LogicalDevice;
@@ -20,6 +20,10 @@ use super::render_pass::RenderPass;
 use super::surface::Surface;
 use super::swapchain::Swapchain;
 use super::synchronizer::semaphore::Semaphore;
+
+const UNIFORM: [f32; 16] = [
+    1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+];
 
 pub struct Engine {
     pub instance: Arc<Instance>,
@@ -44,6 +48,7 @@ pub struct Engine {
     //----------------------------------------------------------------------------------------------
     pub vertex_buffer: StaticBuffer,
     pub index_buffer: StaticBuffer,
+    pub uniform_buffer: DynamicBuffer,
     //----------------------------------------------------------------------------------------------
 }
 
@@ -105,6 +110,8 @@ impl Engine {
         let index_buffer = buffer_manager.create_static_buffer(indices_size as isize, unsafe {
             transmute(indices.as_ptr())
         });
+        let uniform_size = (UNIFORM.len() * 4) as isize;
+        let uniform_buffer = buffer_manager.create_dynamic_buffer(uniform_size);
         //------------------------------------------------------------------------------------------
         let buffer_manager = Arc::new(RwLock::new(buffer_manager));
         Engine {
@@ -132,6 +139,7 @@ impl Engine {
             //--------------------------------------------------------------------------------------
             vertex_buffer,
             index_buffer,
+            uniform_buffer,
             //--------------------------------------------------------------------------------------
         }
     }
@@ -202,6 +210,8 @@ impl Engine {
             *frame_number += 1;
             *frame_number %= self.framebuffers.len() as u32;
         }
+        self.uniform_buffer
+            .update(unsafe { transmute(UNIFORM.as_ptr()) });
         vxresult!(self.buffer_manager.write()).update();
         //     // let vk_device = self.logical_device.as_ref().unwrap().vk_data;
         //     // let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();

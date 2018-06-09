@@ -146,13 +146,26 @@ impl StaticBuffer {
 pub struct DynamicBuffer {
     pub buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
     pub frame_number: Arc<RwLock<u32>>,
+    pub actual_size: isize,
 }
 
 impl DynamicBuffer {
-    pub fn new(buffers: Vec<(Arc<RwLock<Buffer>>, isize)>, frame_number: Arc<RwLock<u32>>) -> Self {
+    pub fn new(
+        buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
+        frame_number: Arc<RwLock<u32>>,
+        actual_size: isize,
+    ) -> Self {
         DynamicBuffer {
             buffers,
             frame_number,
+            actual_size,
+        }
+    }
+
+    pub fn update(&mut self, data: *const c_void) {
+        let ptr = self.buffers[*vxresult!(self.frame_number.read()) as usize].1;
+        unsafe {
+            libc::memcpy(transmute(ptr), transmute(data), self.actual_size as usize);
         }
     }
 }
@@ -274,7 +287,7 @@ impl Manager {
             buffers.push((buffer, ptr));
         }
         buffers.shrink_to_fit();
-        DynamicBuffer::new(buffers, self.frame_number.clone())
+        DynamicBuffer::new(buffers, self.frame_number.clone(), actual_size)
     }
 
     pub fn update(&mut self) {
