@@ -145,12 +145,15 @@ impl StaticBuffer {
 
 pub struct DynamicBuffer {
     pub buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
-    pub frame: Arc<RwLock<u32>>,
+    pub frame_number: Arc<RwLock<u32>>,
 }
 
 impl DynamicBuffer {
-    pub fn new(buffers: Vec<(Arc<RwLock<Buffer>>, isize)>, frame: Arc<RwLock<u32>>) -> Self {
-        DynamicBuffer { buffers, frame }
+    pub fn new(buffers: Vec<(Arc<RwLock<Buffer>>, isize)>, frame_number: Arc<RwLock<u32>>) -> Self {
+        DynamicBuffer {
+            buffers,
+            frame_number,
+        }
     }
 }
 
@@ -163,6 +166,7 @@ pub struct Manager {
     pub static_uploader_buffer: Arc<RwLock<Buffer>>,
     pub dynamic_buffers: Vec<Arc<RwLock<Buffer>>>,
     pub copy_ranges: Vec<vk::VkBufferCopy>,
+    pub frame_number: Arc<RwLock<u32>>,
     pub cmd_pool: Arc<CmdPool>,
 }
 
@@ -170,6 +174,7 @@ impl Manager {
     pub fn new(
         memmgr: &Arc<RwLock<MemoryManager>>,
         cmd_pool: &Arc<CmdPool>,
+        frame_number: &Arc<RwLock<u32>>,
         static_size: isize,
         static_uploader_size: isize,
         dynamics_size: isize,
@@ -218,6 +223,7 @@ impl Manager {
         dynamic_buffers.shrink_to_fit();
         let copy_ranges = Vec::new();
         let cmd_pool = cmd_pool.clone();
+        let frame_number = frame_number.clone();
         Manager {
             alignment,
             cpu_buffer,
@@ -228,6 +234,7 @@ impl Manager {
             dynamic_buffers,
             copy_ranges,
             cmd_pool,
+            frame_number,
         }
     }
 
@@ -255,7 +262,20 @@ impl Manager {
         StaticBuffer::new(buffer)
     }
 
-    pub fn create_dynamic_buffer(&mut self, actual_size: isize) -> DynamicBuffer {}
+    pub fn create_dynamic_buffer(&mut self, actual_size: isize) -> DynamicBuffer {
+        let size = alc::align(actual_size, self.alignment);
+        let mut buffers = Vec::new();
+        for dynamic_buffer in &self.dynamic_buffers {
+            let buffer = vxresult!(dynamic_buffer.write()).allocate(size);
+            let ptr = {
+                let buffer = vxresult!(buffer.read());
+                buffer.memory_offset + buffer.info.offset + self.cpu_memory_mapped_ptr
+            };
+            buffers.push((buffer, ptr));
+        }
+        buffers.shrink_to_fit();
+        DynamicBuffer::new(buffers, self.frame_number.clone())
+    }
 
     pub fn update(&mut self) {
         if self.copy_ranges.len() == 0 {

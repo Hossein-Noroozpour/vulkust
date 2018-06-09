@@ -36,6 +36,7 @@ pub struct Engine {
     pub render_pass: Arc<RenderPass>,
     pub pipeline_manager: Arc<RwLock<PipelineManager>>,
     pub framebuffers: Vec<Arc<Framebuffer>>,
+    pub frame_number: Arc<RwLock<u32>>,
     pub buffer_manager: Arc<RwLock<BufferManager>>,
     // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
     // pub wait_fences: Vec<Fence>,
@@ -80,9 +81,11 @@ impl Engine {
             )));
         }
         framebuffers.shrink_to_fit();
+        let frame_number = Arc::new(RwLock::new(0));
         let mut buffer_manager = BufferManager::new(
             &memory_mgr,
             &graphic_cmd_pool,
+            &frame_number,
             1028,
             1028,
             1028,
@@ -121,6 +124,7 @@ impl Engine {
             render_pass,
             pipeline_manager,
             framebuffers,
+            frame_number,
             buffer_manager,
             //     transfer_cmd_pool: None,
             //     wait_fences: Vec::new(),
@@ -193,6 +197,11 @@ impl Engine {
     // }
 
     pub fn update(&mut self) {
+        {
+            let mut frame_number = vxresult!(self.frame_number.write());
+            *frame_number += 1;
+            *frame_number %= self.framebuffers.len() as u32;
+        }
         vxresult!(self.buffer_manager.write()).update();
         //     // let vk_device = self.logical_device.as_ref().unwrap().vk_data;
         //     // let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
