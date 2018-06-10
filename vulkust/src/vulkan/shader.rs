@@ -1,15 +1,19 @@
 use std::mem::transmute;
 use std::sync::Arc;
 use std::ptr::null;
-use super::super::super::system::vulkan as vk;
-use super::super::device::logical::Logical as LogicalDevice;
+use super::vulkan as vk;
+use super::device::logical::Logical as LogicalDevice;
 
-pub struct Stage {
+pub struct Module {
     pub logical_device: Arc<LogicalDevice>,
     pub module: vk::VkShaderModule,
 }
 
-impl Stage {
+impl Module {
+    pub fn new(file_name: String, logical_device: Arc<LogicalDevice>) -> Self {
+        vxunimplemented!();
+    }
+
     pub fn new(data: Vec<u8>, logical_device: Arc<LogicalDevice>) -> Self {
         let mut module_create_info = vk::VkShaderModuleCreateInfo::default();
         module_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -22,14 +26,14 @@ impl Stage {
             null(),
             &mut shader_module,
         ));
-        Stage {
+        Module {
             logical_device: logical_device,
             module: shader_module,
         }
     }
 }
 
-impl Drop for Stage {
+impl Drop for Module {
     fn drop(&mut self) {
         unsafe {
             vk::vkDestroyShaderModule(self.logical_device.vk_data, self.module, null());
