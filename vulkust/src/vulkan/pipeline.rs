@@ -1,15 +1,12 @@
-use std::ffi::CString;
-use std::mem::transmute;
-use std::ptr::null;
-use std::sync::{Arc, RwLock};
-use super::vulkan as vk;
-use super::descriptor::{
-    Manager as DescriptorManager,
-    Set as DescriptorSet,
-};
+use super::buffer::Manager as BufferManager;
+use super::descriptor::{Manager as DescriptorManager, Set as DescriptorSet};
 use super::device::logical::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
 use super::shader::Module;
+use super::vulkan as vk;
+use std::ffi::CString;
+use std::ptr::null;
+use std::sync::{Arc, RwLock};
 
 pub struct Layout {
     pub logical_device: Arc<LogicalDevice>,
@@ -18,18 +15,13 @@ pub struct Layout {
 }
 
 impl Layout {
-    pub fn new(
-        logical_device: Arc<LogicalDevice>,
-        descriptor_set: Arc<DescriptorSet>,
-    ) -> Self {
+    pub fn new(logical_device: Arc<LogicalDevice>, descriptor_set: Arc<DescriptorSet>) -> Self {
         let mut vk_data = 0 as vk::VkPipelineLayout;
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipeline_layout_create_info.setLayoutCount =
-            descriptor_set.layout.len() as u32;
-        pipeline_layout_create_info.pSetLayouts =
-            descriptor_set.layout.as_ptr();
+        pipeline_layout_create_info.setLayoutCount = descriptor_set.layout.len() as u32;
+        pipeline_layout_create_info.pSetLayouts = descriptor_set.layout.as_ptr();
         vulkan_check!(vk::vkCreatePipelineLayout(
             logical_device.vk_data,
             &pipeline_layout_create_info,
@@ -88,7 +80,7 @@ pub struct Pipeline {
     pub cache: Arc<Cache>,
     pub descriptor_set: Arc<DescriptorSet>,
     pub layout: Layout,
-    pub shader: Arc<(Module, Module)>,
+    pub shader: Vec<Module>,
     pub render_pass: Arc<RenderPass>,
     pub vk_data: vk::VkPipeline,
 }
@@ -98,13 +90,14 @@ impl Pipeline {
         descriptor_set: Arc<DescriptorSet>,
         render_pass: Arc<RenderPass>,
         cache: Arc<Cache>,
-    ) -> Self
-    {
+    ) -> Self {
         let device = descriptor_set.pool.logical_device.clone();
-        let vertex_shader = Module::new("tri.spv".to_string(), device.clone());
-        let fragment_shader = Module::new("tri.spf".to_string(), device.clone());
-        let shader = (vertex_shader, fragment_shader);
-        let layout = Layout::new(device, descriptor_set.clone());
+        let vertex_shader =
+            Module::new_with_file("shaders/main.vert.spv".to_string(), device.clone());
+        let fragment_shader =
+            Module::new_with_file("shaders/main.frag.spv".to_string(), device.clone());
+        let shader = vec![vertex_shader, fragment_shader];
+        let layout = Layout::new(device.clone(), descriptor_set.clone());
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
         input_assembly_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -156,10 +149,9 @@ impl Pipeline {
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisample_state.rasterizationSamples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         let mut vertex_input_binding = vk::VkVertexInputBindingDescription::default();
-        vertex_input_binding.stride = 0;
+        vertex_input_binding.stride = 24; // temporary
         vertex_input_binding.inputRate = vk::VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
-        let mut vertex_attributes =
-            vec![vk::VkVertexInputAttributeDescription::default(); 2];
+        let mut vertex_attributes = vec![vk::VkVertexInputAttributeDescription::default(); 2];
         vertex_attributes[0].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
         vertex_attributes[1].location = 1;
         vertex_attributes[1].offset = 12;
@@ -172,7 +164,7 @@ impl Pipeline {
         vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.len() as u32;
         vertex_input_state.pVertexAttributeDescriptions = vertex_attributes.as_ptr();
         let stage_name = CString::new("main").unwrap();
-        let stages_count = shader.borrow().get_stages_count();
+        let stages_count = shader.len();
         let mut shader_stages = vec![vk::VkPipelineShaderStageCreateInfo::default(); stages_count];
         for i in 0..stages_count {
             shader_stages[i].sType =
@@ -181,10 +173,10 @@ impl Pipeline {
                 0 => vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
                 1 => vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
                 n @ _ => {
-                    logf!("Stage {} is not implemented yet!", n);
+                    vxlogf!("Stage {} is not implemented yet!", n);
                 }
             };
-            shader_stages[i].module = shader.borrow().get_stage(i).module;
+            shader_stages[i].module = shader[i].vk_data;
             shader_stages[i].pName = stage_name.as_ptr();
         }
         let mut pipeline_create_info = vk::VkGraphicsPipelineCreateInfo::default();
@@ -205,25 +197,21 @@ impl Pipeline {
         pipeline_create_info.pDynamicState = &dynamic_state;
         let mut vk_data = 0 as vk::VkPipeline;
         vulkan_check!(vk::vkCreateGraphicsPipelines(
-            pipeline_cache.logical_device.vk_data,
-            pipeline_cache.vk_data,
+            device.vk_data,
+            cache.vk_data,
             1,
             &pipeline_create_info,
             null(),
             &mut vk_data,
         ));
         Pipeline {
-            cache: pipeline_cache.clone(),
+            cache,
             descriptor_set: descriptor_set,
             layout: layout,
-            shader: shader,
+            shader,
             render_pass: render_pass.clone(),
             vk_data: vk_data,
         }
-    }
-
-    pub fn get_shader(&self) -> &Arc<RwLock<Shader>> {
-        &self.shader
     }
 }
 
@@ -238,19 +226,32 @@ impl Drop for Pipeline {
 pub struct Manager {
     pub cache: Arc<Cache>,
     pub main_pipeline: Arc<Pipeline>,
-    pub descriptor_manager: Arc<RwLock<DescriptorManager>>,
+    pub descriptor_manager: Arc<DescriptorManager>,
     pub render_pass: Arc<RenderPass>,
 }
 
 impl Manager {
-    pub fn new(logical_device: &Arc<LogicalDevice>) -> Self {
+    pub fn new(
+        logical_device: &Arc<LogicalDevice>,
+        buffer_manager: &Arc<RwLock<BufferManager>>,
+        render_pass: &Arc<RenderPass>,
+    ) -> Self {
+        let cache = Arc::new(Cache::new(logical_device));
+        let descriptor_manager = Arc::new(DescriptorManager::new(
+            buffer_manager.clone(),
+            logical_device.clone(),
+        ));
+        let main_pipeline = Arc::new(Pipeline::new(
+            descriptor_manager.main_set.clone(),
+            render_pass.clone(),
+            cache.clone(),
+        ));
+        let render_pass = render_pass.clone();
         Manager {
-            // render_pass: engine.render_pass.as_ref().unwrap().clone(),
-            cache: Arc::new(Cache::new(logical_device)),
-            // descriptor_manager: Arc::new(RwLock::new(DescriptorManager::new(
-            // engine.buffer_manager.as_ref().unwrap().clone()))),
-            // cached: Cacher::new(),
-            // shader_manager: engine.os_app.asset_manager.shader_manager.clone(),
+            render_pass,
+            cache,
+            descriptor_manager,
+            main_pipeline,
         }
     }
 

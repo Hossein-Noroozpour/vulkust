@@ -76,7 +76,6 @@ impl Engine {
             &memory_mgr,
         ));
         let render_pass = Arc::new(RenderPass::new(&swapchain));
-        let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(&logical_device)));
         let mut framebuffers = Vec::new();
         for v in &swapchain.image_views {
             framebuffers.push(Arc::new(Framebuffer::new(
@@ -114,6 +113,11 @@ impl Engine {
         let uniform_buffer = buffer_manager.create_dynamic_buffer(uniform_size);
         //------------------------------------------------------------------------------------------
         let buffer_manager = Arc::new(RwLock::new(buffer_manager));
+        let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(
+            &logical_device,
+            &buffer_manager,
+            &render_pass,
+        )));
         Engine {
             //     core_app: unsafe { transmute(0usize) },
             //     os_app: unsafe { transmute(0usize) },

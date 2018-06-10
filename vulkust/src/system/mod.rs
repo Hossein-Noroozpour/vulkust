@@ -21,4 +21,4 @@ pub mod windows;
 #[cfg(target_os = "windows")]
 pub use self::windows as os;
 // pub mod linker;
-// pub mod file;
+pub mod file;

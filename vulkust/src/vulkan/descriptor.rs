@@ -1,8 +1,8 @@
-use std::ptr::null;
-use std::sync::{Arc, RwLock};
-use super::vulkan as vk;
 use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
+use super::vulkan as vk;
+use std::ptr::null;
+use std::sync::{Arc, RwLock};
 
 pub struct Pool {
     pub logical_device: Arc<LogicalDevice>,
@@ -49,10 +49,7 @@ pub struct Set {
 }
 
 impl Set {
-    fn new(
-        pool: Arc<Pool>,
-        buffer_info: vk::VkDescriptorBufferInfo,
-    ) -> Self {
+    fn new(pool: Arc<Pool>, buffer_info: vk::VkDescriptorBufferInfo) -> Self {
         let logical_device = pool.logical_device.clone();
         let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
         layout_binding.descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -91,13 +88,7 @@ impl Set {
         write_descriptor_set.pBufferInfo = &buffer_info;
         write_descriptor_set.dstBinding = 0;
         unsafe {
-            vk::vkUpdateDescriptorSets(
-                logical_device.vk_data,
-                1,
-                &write_descriptor_set,
-                0,
-                null(),
-            );
+            vk::vkUpdateDescriptorSets(logical_device.vk_data, 1, &write_descriptor_set, 0, null());
         }
         Set {
             pool: pool,
@@ -108,7 +99,7 @@ impl Set {
 }
 
 pub struct Manager {
-    pub main_set: Set,
+    pub main_set: Arc<Set>,
     pub buffer_manager: Arc<RwLock<BufferManager>>,
     pub pool: Arc<Pool>,
 }
@@ -123,7 +114,7 @@ impl Manager {
         let mut buff_info = vk::VkDescriptorBufferInfo::default();
         buff_info.buffer = buffer;
         buff_info.range = 64; // temporary
-        let main_set = Set::new(pool.clone(), buff_info);
+        let main_set = Arc::new(Set::new(pool.clone(), buff_info));
         Manager {
             main_set,
             pool,

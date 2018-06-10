@@ -79,7 +79,10 @@ impl RootBuffer {
         let (memloc, usage) = match location {
             Location::CPU => (
                 MemoryLocation::CPU,
-                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT as u32,
+                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT as u32
+                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT as u32
+                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT as u32
+                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT as u32,
             ),
             Location::GPU => (
                 MemoryLocation::GPU,
