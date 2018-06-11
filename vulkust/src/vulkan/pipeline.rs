@@ -92,10 +92,8 @@ impl Pipeline {
         cache: Arc<Cache>,
     ) -> Self {
         let device = descriptor_set.pool.logical_device.clone();
-        let vertex_shader =
-            Module::new_with_file("shaders/main.vert.spv".to_string(), device.clone());
-        let fragment_shader =
-            Module::new_with_file("shaders/main.frag.spv".to_string(), device.clone());
+        let vertex_shader = Module::new_with_file("shaders/main.vert.spv", device.clone());
+        let fragment_shader = Module::new_with_file("shaders/main.frag.spv", device.clone());
         let shader = vec![vertex_shader, fragment_shader];
         let layout = Layout::new(device.clone(), descriptor_set.clone());
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();

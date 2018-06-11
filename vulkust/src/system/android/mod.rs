@@ -2,6 +2,7 @@ pub mod activity;
 pub mod application;
 pub mod asset;
 pub mod config;
+pub mod file;
 pub mod glue;
 pub mod input;
 pub mod jni;

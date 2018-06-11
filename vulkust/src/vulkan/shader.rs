@@ -12,7 +12,7 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn new_with_file(file_name: String, logical_device: Arc<LogicalDevice>) -> Self {
+    pub fn new_with_file(file_name: &str, logical_device: Arc<LogicalDevice>) -> Self {
         let mut file = vxresult!(File::open(file_name));
         let mut data = Vec::new();
         let _ = vxresult!(file.read_to_end(&mut data));

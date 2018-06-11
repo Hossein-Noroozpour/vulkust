@@ -2,6 +2,7 @@ use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
 use super::super::super::libc::c_int;
 use super::super::super::render::engine::Engine as RenderEngine;
+use super::file::AASSET_MANAGER;
 use super::glue::{AndroidApp, AndroidPollSource, AppCmd};
 use super::looper::ALooper_pollAll;
 use std::mem::transmute;
@@ -19,6 +20,7 @@ impl Application {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, and_app: *mut AndroidApp) -> Self {
         unsafe {
             (*and_app).on_app_cmd = handle_cmd;
+            AASSET_MANAGER = transmute((*(*and_app).activity).assetManager);
         }
         Application {
             core_app: Some(core_app),
@@ -55,6 +57,7 @@ impl Application {
     pub fn run(&self) {
         loop {
             let _ = self.fetch_events();
+            vxresult!(vxunwrap!(self.renderer).write()).update();
         }
     }
 
