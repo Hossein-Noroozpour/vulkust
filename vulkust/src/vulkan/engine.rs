@@ -119,8 +119,8 @@ impl Engine {
             &render_pass,
         )));
         Engine {
-            //     core_app: unsafe { transmute(0usize) },
-            //     os_app: unsafe { transmute(0usize) },
+            // core_app: unsafe { transmute(0usize) },
+            // os_app: unsafe { transmute(0usize) },
             instance,
             surface,
             physical_device,
@@ -137,7 +137,6 @@ impl Engine {
             framebuffers,
             frame_number,
             buffer_manager,
-            //     transfer_cmd_pool: None,
             //     wait_fences: Vec::new(),
             //     basic_engine: None,
             //--------------------------------------------------------------------------------------
@@ -147,57 +146,6 @@ impl Engine {
             //--------------------------------------------------------------------------------------
         }
     }
-
-    // fn set_core_app(&mut self, c: &'static mut CoreApp) {
-    //     // self.core_app = c;
-    // }
-
-    // fn set_os_app(&mut self, o: &'static mut OsApplication<CoreApp>) {
-    //     self.os_app = o;
-    // }
-
-    // fn initialize(&mut self) {
-    //     let surface = Arc::new(Surface::new(self.instance.clone(), self.os_app));
-    //     self.surface = Some(surface.clone());
-    //     let physical_device = Arc::new(PhysicalDevice::new(surface.clone()));
-    //     self.physical_device = Some(physical_device.clone());
-    //     let logical_device = Arc::new(LogicalDevice::new(physical_device.clone()));
-    //     self.logical_device = Some(logical_device.clone()); // Beacause of shader stage
-    //     let swapchain = Arc::new(Swapchain::new(logical_device.clone()));
-    //     self.swapchain = Some(swapchain.clone());
-    //     let depth_stencil = Arc::new(ImageView::new_depth_stencil(logical_device.clone()));
-    //     self.depth_stencil_image_view = Some(depth_stencil.clone());
-    //     let render_pass = Arc::new(RenderPass::new(swapchain.clone()));
-    //     self.render_pass = Some(render_pass.clone());
-    //     for v in swapchain.image_views.clone() {
-    //         self.framebuffers.push(Arc::new(Framebuffer::new(
-    //             v.clone(),
-    //             depth_stencil.clone(),
-    //             render_pass.clone(),
-    //         )));
-    //     }
-    //     let graphic_cmd_pool = Arc::new(CmdPool::new(logical_device.clone()));
-    //     self.graphic_cmd_pool = Some(graphic_cmd_pool.clone());
-    //     self.transfer_cmd_pool = Some(graphic_cmd_pool);
-    //     self.present_complete_semaphore = Some(Semaphore::new(logical_device.clone()));
-    //     self.render_complete_semaphore = Some(Semaphore::new(logical_device.clone()));
-    //     for _ in 0..self.framebuffers.len() {
-    //         self.wait_fences.push(Fence::new_signaled(
-    //             self.logical_device.as_ref().unwrap().clone(),
-    //         ));
-    //     }
-    //     // TODO
-    //     self.buffer_manager = Some(Arc::new(DebugCell::new(BufferManager::new(
-    //         self.logical_device.as_ref().unwrap().clone(),
-    //         1024 * 1024,
-    //         1024 * 1024,
-    //         self.framebuffers.len()
-    //     ))));
-    //     let pipeline_manager = Arc::new(DebugCell::new(PipelineManager::new(self)));
-    //     self.pipeline_manager = Some(pipeline_manager);
-    //     self.basic_engine = Some(BasicEngine::new(self.os_app));
-    //     self.record();
-    // }
 
     // fn on_event(&mut self, e: Event) {
     //     match e {

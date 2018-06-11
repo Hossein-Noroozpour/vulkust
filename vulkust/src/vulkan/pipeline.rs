@@ -254,17 +254,4 @@ impl Manager {
             main_pipeline,
         }
     }
-
-    // pub fn get<'a>(&'a mut self, id: ShaderId) -> Arc<RwLock<Pipeline>> {
-    //     let self_ptr: &'static usize = unsafe { transmute(&self) };
-    //     let self2 = *self_ptr;
-    //     self.cached.get(id, &|| {
-    //         let self2: &'a mut Manager = unsafe { transmute(self2) };
-    //         self2.create_pipeline(id)
-    //     })
-    // }
-
-    // fn create_pipeline(&mut self, id: ShaderId) -> Arc<RwLock<Pipeline>> {
-    //     Arc::new(RwLock::new(Pipeline::new(self, id)))
-    // }
 }
