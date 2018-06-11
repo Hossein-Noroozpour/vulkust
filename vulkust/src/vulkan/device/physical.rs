@@ -268,8 +268,11 @@ impl Physical {
                 ),
             ),
             max(
-                limits.optimalBufferCopyOffsetAlignment,
-                limits.optimalBufferCopyRowPitchAlignment,
+                max(
+                    limits.optimalBufferCopyOffsetAlignment,
+                    limits.optimalBufferCopyRowPitchAlignment,
+                ),
+                limits.bufferImageGranularity,
             ),
         )
     }

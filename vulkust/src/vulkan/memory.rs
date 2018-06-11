@@ -9,6 +9,7 @@ use std::sync::{Arc, RwLock, Weak};
 
 pub struct Memory {
     pub info: alc::Memory,
+    pub size: vk::VkDeviceSize,
     pub vk_data: vk::VkDeviceMemory,
     pub manager: Arc<RwLock<Manager>>,
     pub root_memory: Arc<RwLock<RootMemory>>,
@@ -16,14 +17,17 @@ pub struct Memory {
 
 impl Memory {
     pub fn new(
-        size: vk::VkDeviceSize,
+        size: isize,
+        actual_size: vk::VkDeviceSize,
         vk_data: vk::VkDeviceMemory,
         manager: Arc<RwLock<Manager>>,
         root_memory: Arc<RwLock<RootMemory>>,
     ) -> Self {
-        let info = alc::Memory::new(size as isize);
+        let info = alc::Memory::new(size);
+        let size = actual_size;
         Memory {
             info,
+            size,
             vk_data,
             manager,
             root_memory,
@@ -46,6 +50,7 @@ impl Object for Memory {
 }
 
 pub struct RootMemory {
+    pub alignment: isize,
     pub logical_device: Arc<LogicalDevice>,
     pub manager: Weak<RwLock<Manager>>,
     itself: Option<Weak<RwLock<RootMemory>>>,
@@ -61,6 +66,7 @@ impl RootMemory {
         manager: Weak<RwLock<Manager>>,
         logical_device: &Arc<LogicalDevice>,
     ) -> Self {
+        let alignment = logical_device.physical_device.get_max_min_alignment() as isize * 4;
         let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
         mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         mem_alloc.allocationSize = DEFAULT_MEMORY_SIZE;
@@ -73,6 +79,7 @@ impl RootMemory {
             &mut vk_data,
         ));
         RootMemory {
+            alignment,
             logical_device: logical_device.clone(),
             vk_data,
             manager,
@@ -82,10 +89,12 @@ impl RootMemory {
     }
 
     pub fn allocate(&mut self, size: vk::VkDeviceSize) -> Arc<RwLock<Memory>> {
+        let aligned_size = alc::align(size as isize, self.alignment);
         let manager = vxunwrap_o!(self.manager.upgrade());
         let itself = vxunwrap_o!(vxunwrap!(self.itself).upgrade());
         let memory = Arc::new(RwLock::new(Memory::new(
-            size,
+            aligned_size,
+            size as vk::VkDeviceSize,
             self.vk_data,
             manager,
             itself,
