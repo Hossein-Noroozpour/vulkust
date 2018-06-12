@@ -154,7 +154,7 @@ impl Swapchain {
         }
     }
 
-    pub fn get_next_image_index(&self, sem: &Semaphore) -> NextImageResult {
+    pub fn get_next_image_index(&self, sem: &Arc<Semaphore>) -> NextImageResult {
         let mut image_index = 0u32;
         let res = unsafe {
             vk::vkAcquireNextImageKHR(

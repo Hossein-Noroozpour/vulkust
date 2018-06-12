@@ -33,6 +33,13 @@ impl Buffer {
             vk_data: vk_data,
         }
     }
+
+    pub fn begin(&mut self) {
+        let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
+        cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        vulkan_check!(vk::vkBeginCommandBuffer(self.vk_data, &cmd_buf_info));
+    }
+
     pub fn begin_render_pass_with_info(
         &mut self,
         render_pass_begin_info: vk::VkRenderPassBeginInfo,

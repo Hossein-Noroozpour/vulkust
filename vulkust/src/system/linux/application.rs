@@ -140,6 +140,7 @@ impl Application {
                     _ => (),
                 }
             }
+            vxresult!(vxunwrap!(self.renderer).write()).update();
         }
     }
 

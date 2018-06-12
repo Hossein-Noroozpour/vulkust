@@ -12,7 +12,7 @@ pub struct Pool {
 impl Pool {
     pub fn new(logical_device: Arc<LogicalDevice>) -> Self {
         let mut type_counts = [vk::VkDescriptorPoolSize::default(); 1];
-        type_counts[0].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        type_counts[0].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         type_counts[0].descriptorCount = 1;
         let mut descriptor_pool_info = vk::VkDescriptorPoolCreateInfo::default();
         descriptor_pool_info.sType =
@@ -52,7 +52,7 @@ impl Set {
     fn new(pool: Arc<Pool>, buffer_info: vk::VkDescriptorBufferInfo) -> Self {
         let logical_device = pool.logical_device.clone();
         let mut layout_binding = vk::VkDescriptorSetLayoutBinding::default();
-        layout_binding.descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        layout_binding.descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         layout_binding.descriptorCount = 1;
         layout_binding.stageFlags = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32;
         let layout_bindings = vec![layout_binding];
@@ -84,7 +84,7 @@ impl Set {
         write_descriptor_set.dstSet = vk_data;
         write_descriptor_set.descriptorCount = 1;
         write_descriptor_set.descriptorType =
-            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         write_descriptor_set.pBufferInfo = &buffer_info;
         write_descriptor_set.dstBinding = 0;
         unsafe {

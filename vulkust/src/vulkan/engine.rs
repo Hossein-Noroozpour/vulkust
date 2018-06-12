@@ -9,7 +9,7 @@ use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
-// use super::fence::Fence;
+use super::synchronizer::fence::Fence;
 use super::framebuffer::Framebuffer;
 use super::image::view::View as ImageView;
 use super::instance::Instance;
@@ -17,7 +17,7 @@ use super::memory::Manager as MemoryManager;
 use super::pipeline::Manager as PipelineManager;
 use super::render_pass::RenderPass;
 use super::surface::Surface;
-use super::swapchain::Swapchain;
+use super::swapchain::{Swapchain, NextImageResult};
 use super::synchronizer::semaphore::Semaphore;
 
 const INDICES: [u32; 3] = [0, 1, 2];
@@ -43,8 +43,8 @@ pub struct Engine {
     pub framebuffers: Vec<Arc<Framebuffer>>,
     pub frame_number: Arc<RwLock<u32>>,
     pub buffer_manager: Arc<RwLock<BufferManager>>,
+    pub wait_fences: Vec<Fence>,
     // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
-    // pub wait_fences: Vec<Fence>,
     // pub basic_engine: Option<BasicEngine>,
     //----------------------------------------------------------------------------------------------
     pub vertex_buffer: StaticBuffer,
@@ -64,11 +64,16 @@ impl Engine {
         let render_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let graphic_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Graphic, 0));
         let mut draw_commands = Vec::new();
+        let mut wait_fences = Vec::new();
         for _ in 0..swapchain.image_views.len() {
             let draw_command = CmdBuffer::new(graphic_cmd_pool.clone());
             draw_commands.push(draw_command);
+            wait_fences.push(Fence::new_signaled(
+                logical_device.clone()
+            ));
         }
         draw_commands.shrink_to_fit();
+        wait_fences.shrink_to_fit();
         let memory_mgr = Arc::new(RwLock::new(MemoryManager::new(&logical_device)));
         let memory_mgr_w = Arc::downgrade(&memory_mgr);
         vxresult!(memory_mgr.write()).set_itself(memory_mgr_w);
@@ -137,7 +142,7 @@ impl Engine {
             framebuffers,
             frame_number,
             buffer_manager,
-            //     wait_fences: Vec::new(),
+            wait_fences,
             //     basic_engine: None,
             //--------------------------------------------------------------------------------------
             vertex_buffer,
@@ -157,83 +162,59 @@ impl Engine {
     // }
 
     pub fn update(&mut self) {
-        {
-            let mut frame_number = vxresult!(self.frame_number.write());
-            *frame_number += 1;
-            *frame_number %= self.framebuffers.len() as u32;
-        }
+        let current_buffer = match self.swapchain.get_next_image_index(
+            &self.present_complete_semaphore) {
+            NextImageResult::Next(c) => c,
+            NextImageResult::NeedsRefresh => {
+                vxunimplemented!();
+            }
+        } as usize;
+        vulkan_check!(vk::vkWaitForFences(
+            self.logical_device.vk_data,
+            1,
+            &self.wait_fences[current_buffer].vk_data,
+            1,
+            u64::max_value(),
+        ));
+        vulkan_check!(vk::vkResetFences(
+            self.logical_device.vk_data,
+            1,
+            &self.wait_fences[current_buffer].vk_data,
+        ));
+        *vxresult!(self.frame_number.write()) = current_buffer as u32;
+        self.record();
         self.uniform_buffer
             .update(unsafe { transmute(UNIFORM.as_ptr()) });
         vxresult!(self.buffer_manager.write()).update();
-        //     // let vk_device = self.logical_device.as_ref().unwrap().vk_data;
-        //     // let present_complete_semaphore = self.present_complete_semaphore.as_ref().unwrap();
-        //     // let current_buffer = match self.swapchain
-        //     //     .as_ref()
-        //     //     .unwrap()
-        //     //     .get_next_image_index(present_complete_semaphore)
-        //     // {
-        //     //     NextImageResult::Next(c) => c,
-        //     //     NextImageResult::NeedsRefresh => {
-        //     //         unsafe {
-        //     //             (*(*self.os_app).render_engine).reinitialize();
-        //     //         }
-        //     //         return;
-        //     //     }
-        //     // } as usize;
-        //     // let uniform_data = {
-        //     //     let current_scene = self.basic_engine.as_ref().unwrap().current_scene.borrow();
-        //     //     let current_camera = current_scene.get_current_camera().borrow();
-        //     //     UniformData {
-        //     //         projection: current_camera.get_view_projection().clone(),
-        //     //         view: Mat4x4::ident(),
-        //     //         model: Mat4x4::ident(),
-        //     //     }
-        //     // };
-        //     // self.uniform
-        //     //     .as_ref()
-        //     //     .unwrap()
-        //     //     .update(unsafe { transmute(&uniform_data) });
-        //     // vulkan_check!(vk::vkWaitForFences(
-        //     //     vk_device,
-        //     //     1,
-        //     //     &(self.wait_fences[current_buffer].vk_data),
-        //     //     1u32,
-        //     //     u64::max_value(),
-        //     // ));
-        //     // vulkan_check!(vk::vkResetFences(
-        //     //     vk_device,
-        //     //     1,
-        //     //     &(self.wait_fences[current_buffer].vk_data),
-        //     // ));
-        //     // let wait_stage_mask =
-        //     //     vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
-        //     // let mut submit_info = vk::VkSubmitInfo::default();
-        //     // submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        //     // submit_info.pWaitDstStageMask = &wait_stage_mask;
-        //     // submit_info.pWaitSemaphores = &(self.present_complete_semaphore.as_ref().unwrap().vk_data);
-        //     // submit_info.waitSemaphoreCount = 1;
-        //     // submit_info.pSignalSemaphores = &(self.render_complete_semaphore.as_ref().unwrap().vk_data);
-        //     // submit_info.signalSemaphoreCount = 1;
-        //     // submit_info.pCommandBuffers = &(self.draw_commands[current_buffer].vk_data);
-        //     // submit_info.commandBufferCount = 1;
-        //     // vulkan_check!(vk::vkQueueSubmit(
-        //     //     self.logical_device.as_ref().unwrap().vk_graphic_queue,
-        //     //     1,
-        //     //     &submit_info,
-        //     //     self.wait_fences[current_buffer].vk_data,
-        //     // ));
-        //     // let image_index = current_buffer as u32;
-        //     // let mut present_info = vk::VkPresentInfoKHR::default();
-        //     // present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        //     // present_info.swapchainCount = 1;
-        //     // present_info.pSwapchains = &(self.swapchain.as_ref().unwrap().vk_data);
-        //     // present_info.pImageIndices = &image_index;
-        //     // present_info.pWaitSemaphores = &(self.render_complete_semaphore.as_ref().unwrap().vk_data);
-        //     // present_info.waitSemaphoreCount = 1;
-        //     // vulkan_check!(vk::vkQueuePresentKHR(
-        //     //     self.logical_device.as_ref().unwrap().vk_graphic_queue,
-        //     //     &present_info,
-        //     // ));
+        let wait_stage_mask =
+            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+        let mut submit_info = vk::VkSubmitInfo::default();
+        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.pWaitDstStageMask = &wait_stage_mask;
+        submit_info.pWaitSemaphores = &self.present_complete_semaphore.vk_data;
+        submit_info.waitSemaphoreCount = 1;
+        submit_info.pSignalSemaphores = &self.render_complete_semaphore.vk_data;
+        submit_info.signalSemaphoreCount = 1;
+        submit_info.pCommandBuffers = &self.draw_commands[current_buffer].vk_data;
+        submit_info.commandBufferCount = 1;
+        vulkan_check!(vk::vkQueueSubmit(
+            self.logical_device.vk_graphic_queue,
+            1,
+            &submit_info,
+            self.wait_fences[current_buffer].vk_data,
+        ));
+        let image_index = current_buffer as u32;
+        let mut present_info = vk::VkPresentInfoKHR::default();
+        present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        present_info.swapchainCount = 1;
+        present_info.pSwapchains = &self.swapchain.vk_data;
+        present_info.pImageIndices = &image_index;
+        present_info.pWaitSemaphores = &self.render_complete_semaphore.vk_data;
+        present_info.waitSemaphoreCount = 1;
+        vulkan_check!(vk::vkQueuePresentKHR(
+            self.logical_device.vk_graphic_queue,
+            &present_info,
+        ));
     }
 
     // fn terminate(&mut self) {
@@ -268,6 +249,7 @@ impl Engine {
         render_pass_begin_info.framebuffer = self.framebuffers[frame_number].vk_data;
         let draw_command = &mut self.draw_commands[frame_number];
         draw_command.reset();
+        draw_command.begin();
         draw_command.begin_render_pass_with_info(render_pass_begin_info);
         let mut viewport = vk::VkViewport::default();
         viewport.x = 0.0;
@@ -332,4 +314,10 @@ impl Engine {
     //     }
     //     self.reinitialize();
     // }
+}
+
+impl Drop for Engine {
+    fn drop(&mut self) {
+        self.logical_device.wait_idle();
+    }
 }
