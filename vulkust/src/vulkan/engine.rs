@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 // use super::super::core::application::ApplicationTrait;
 // use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
-use super::super::system::vulkan as vk;
+use super::vulkan as vk;
 use super::buffer::{DynamicBuffer, Manager as BufferManager, StaticBuffer};
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
@@ -19,6 +19,8 @@ use super::render_pass::RenderPass;
 use super::surface::Surface;
 use super::swapchain::Swapchain;
 use super::synchronizer::semaphore::Semaphore;
+
+const INDICES: [u32; 3] = [0, 1, 2];
 
 const UNIFORM: [f32; 16] = [
     1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
@@ -89,9 +91,9 @@ impl Engine {
             &memory_mgr,
             &graphic_cmd_pool,
             &frame_number,
-            1028,
-            1028,
-            1028,
+            4 * 1028,
+            4 * 1028,
+            4 * 1028,
             swapchain.image_views.len() as isize,
         );
         // -----------------------------------------------------------------------------------------
@@ -103,10 +105,9 @@ impl Engine {
         let vertex_buffer = buffer_manager.create_static_buffer(vertices_size as isize, unsafe {
             transmute(vertices.as_ptr())
         });
-        let indices = [0u32, 1, 2];
-        let indices_size = indices.len() * 4;
+        let indices_size = INDICES.len() * 4;
         let index_buffer = buffer_manager.create_static_buffer(indices_size as isize, unsafe {
-            transmute(indices.as_ptr())
+            transmute(INDICES.as_ptr())
         });
         let uniform_size = (UNIFORM.len() * 4) as isize;
         let uniform_buffer = buffer_manager.create_dynamic_buffer(uniform_size);
@@ -247,7 +248,7 @@ impl Engine {
     //     self.basic_engine.as_mut().unwrap()
     // }
 
-    fn record(&mut self) {
+    pub fn record(&mut self) {
         let mut clear_values = [vk::VkClearValue::default(); 2];
         clear_values[0].data = [0.4, 0.4, 0.4, 1.0];
         clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
@@ -265,7 +266,7 @@ impl Engine {
         let frame_number = vxresult!(self.frame_number.read());
         let frame_number = *frame_number as usize;
         render_pass_begin_info.framebuffer = self.framebuffers[frame_number].vk_data;
-        let mut draw_command = &mut self.draw_commands[frame_number];
+        let draw_command = &mut self.draw_commands[frame_number];
         draw_command.reset();
         draw_command.begin_render_pass_with_info(render_pass_begin_info);
         let mut viewport = vk::VkViewport::default();
@@ -287,34 +288,12 @@ impl Engine {
             &vxresult!(self.pipeline_manager.read()).descriptor_manager.main_set,
             vxresult!(self.uniform_buffer.buffers[frame_number].0.read()).info.offset as usize,
         );
-            // vk::vkCmdBindPipeline(
-            //     draw_command.vk_data,
-            //     vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-            //     self.pipeline.as_ref().unwrap().vk_data,
-            // );
-                // let offsets = 0 as vk::VkDeviceSize;
-                // vk::vkCmdBindVertexBuffers(
-                //     draw_command.vk_data,
-                //     0,
-                //     1,
-                //     &(self.mesh_buff.as_ref().unwrap().vertices_buffer),
-                //     &offsets,
-                // );
-                // vk::vkCmdBindIndexBuffer(
-                //     draw_command.vk_data,
-                //     self.mesh_buff.as_ref().unwrap().indices_buffer,
-                //     0,
-                //     vk::VkIndexType::VK_INDEX_TYPE_UINT32,
-                // );
-                // vk::vkCmdDrawIndexed(
-                //     draw_command.vk_data,
-                //     self.mesh_buff.as_ref().unwrap().indices_count,
-                //     1,
-                //     0,
-                //     0,
-                //     1,
-                // );
-            // }
+        draw_command.bind_pipeline(
+            &vxresult!(self.pipeline_manager.read()).main_pipeline
+        );
+        draw_command.bind_vertex_buffer(&self.vertex_buffer.buffer);
+        draw_command.bind_index_buffer(&self.index_buffer.buffer);
+        draw_command.draw_index(INDICES.len() as u32);
         draw_command.end_render_pass();
         draw_command.end();
     }

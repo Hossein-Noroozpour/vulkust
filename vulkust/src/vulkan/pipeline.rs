@@ -20,8 +20,8 @@ impl Layout {
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipeline_layout_create_info.setLayoutCount = descriptor_set.layout.len() as u32;
-        pipeline_layout_create_info.pSetLayouts = descriptor_set.layout.as_ptr();
+        pipeline_layout_create_info.setLayoutCount = descriptor_set.layouts.len() as u32;
+        pipeline_layout_create_info.pSetLayouts = descriptor_set.layouts.as_ptr();
         vulkan_check!(vk::vkCreatePipelineLayout(
             logical_device.vk_data,
             &pipeline_layout_create_info,

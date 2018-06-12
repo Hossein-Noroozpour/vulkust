@@ -1,6 +1,6 @@
 use super::super::vulkan as vk;
-use std::default::Default;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
+use super::super::buffer::Buffer as BufBuffer;
 use super::super::descriptor::Set as DescriptorSet;
 use super::super::pipeline::{Pipeline, Layout as PipelineLayout};
 use super::super::synchronizer::fence::Fence;
@@ -117,14 +117,47 @@ impl Buffer {
         }
     }
 
-    // pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
-    //     let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
-    //     unsafe {
-    //         vk::vkCmdBindPipeline(
-    //             self.vk_data, bind_point, p.vk_data,
-    //         );
-    //     }
-    // }
+    pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
+        let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+        unsafe {
+            vk::vkCmdBindPipeline(
+                self.vk_data, bind_point, p.vk_data,
+            );
+        }
+    }
+
+    pub fn bind_vertex_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
+        let buffer = vxresult!(buffer.read());
+        let offset = buffer.info.offset as vk::VkDeviceSize;
+        unsafe {
+            vk::vkCmdBindVertexBuffers(
+                self.vk_data,
+                0, 1,
+                &buffer.vk_data,
+                &offset,
+            );
+        }
+
+    }
+
+    pub fn bind_index_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
+        let buffer = vxresult!(buffer.read());
+        let offset = buffer.info.offset as vk::VkDeviceSize;
+        unsafe {
+            vk::vkCmdBindIndexBuffer(
+                self.vk_data,
+                buffer.vk_data,
+                offset,
+                vk::VkIndexType::VK_INDEX_TYPE_UINT32,
+            );
+        }
+    }
+
+    pub fn draw_index(&mut self, indices_count: u32) {
+        unsafe {
+            vk::vkCmdDrawIndexed(self.vk_data, indices_count, 1, 0, 0, 1);
+        }
+    }
 }
 
 impl Drop for Buffer {

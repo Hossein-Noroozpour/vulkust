@@ -66,7 +66,7 @@ impl RootMemory {
         manager: Weak<RwLock<Manager>>,
         logical_device: &Arc<LogicalDevice>,
     ) -> Self {
-        let alignment = logical_device.physical_device.get_max_min_alignment() as isize * 4;
+        let alignment = logical_device.physical_device.get_max_min_alignment() as isize;
         let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
         mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         mem_alloc.allocationSize = DEFAULT_MEMORY_SIZE;

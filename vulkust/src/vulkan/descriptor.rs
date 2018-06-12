@@ -44,7 +44,7 @@ impl Drop for Pool {
 
 pub struct Set {
     pub pool: Arc<Pool>,
-    pub layout: Vec<vk::VkDescriptorSetLayout>,
+    pub layouts: Vec<vk::VkDescriptorSetLayout>,
     pub vk_data: vk::VkDescriptorSet,
 }
 
@@ -92,8 +92,18 @@ impl Set {
         }
         Set {
             pool: pool,
-            layout: vec![descriptor_set_layout; 1],
+            layouts: vec![descriptor_set_layout; 1],
             vk_data: vk_data,
+        }
+    }
+}
+
+impl Drop for Set {
+    fn drop(&mut self) {
+        unsafe {
+            for layout in &self.layouts {
+                vk::vkDestroyDescriptorSetLayout(self.pool.logical_device.vk_data, *layout, null());
+            }
         }
     }
 }

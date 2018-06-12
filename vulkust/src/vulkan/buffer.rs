@@ -2,6 +2,7 @@ use super::super::core::allocate as alc;
 use super::super::core::allocate::{Allocator, Object};
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::Pool as CmdPool;
+use super::device::logical::Logical as LogicalDevice;
 use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
 use super::vulkan as vk;
 use libc;
@@ -13,19 +14,21 @@ use std::sync::{Arc, RwLock};
 pub struct Buffer {
     pub memory_offset: isize,
     pub info: alc::Container,
+    pub vk_data: vk::VkBuffer,
 }
 
 impl Buffer {
-    pub fn new(size: isize, memory_offset: isize) -> Self {
+    pub fn new(size: isize, memory_offset: isize, vk_data: vk::VkBuffer) -> Self {
         let info = alc::Container::new(size);
         Buffer {
             memory_offset,
             info,
+            vk_data,
         }
     }
 
     pub fn allocate(&mut self, size: isize) -> Arc<RwLock<Buffer>> {
-        let buffer = Arc::new(RwLock::new(Buffer::new(size, self.memory_offset)));
+        let buffer = Arc::new(RwLock::new(Buffer::new(size, self.memory_offset, self.vk_data)));
         let obj: Arc<RwLock<Object>> = buffer.clone();
         self.info.allocate(&obj);
         return buffer;
@@ -69,6 +72,7 @@ pub enum Location {
 }
 
 pub struct RootBuffer {
+    pub logical_device: Arc<LogicalDevice>,
     pub memory: Arc<RwLock<Memory>>,
     pub vk_data: vk::VkBuffer,
     pub container: alc::Container,
@@ -121,6 +125,7 @@ impl RootBuffer {
         }
         let container = alc::Container::new(size);
         RootBuffer {
+            logical_device,
             memory,
             vk_data,
             container,
@@ -129,10 +134,18 @@ impl RootBuffer {
 
     pub fn allocate(&mut self, size: isize) -> Arc<RwLock<Buffer>> {
         let memoff = vxresult!(self.memory.read()).info.offset;
-        let buffer = Arc::new(RwLock::new(Buffer::new(size, memoff)));
+        let buffer = Arc::new(RwLock::new(Buffer::new(size, memoff, self.vk_data)));
         let obj: Arc<RwLock<Object>> = buffer.clone();
         self.container.allocate(&obj);
         return buffer;
+    }
+}
+
+impl Drop for RootBuffer {
+    fn drop(&mut self) {
+        unsafe {
+            vk::vkDestroyBuffer(self.logical_device.vk_data, self.vk_data, null());
+        }
     }
 }
 
