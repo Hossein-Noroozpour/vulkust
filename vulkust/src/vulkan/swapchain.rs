@@ -19,7 +19,7 @@ pub struct Swapchain {
 
 impl Swapchain {
     pub fn new(logical_device: &Arc<LogicalDevice>) -> Self {
-        let surface_caps = logical_device.physical_device.get_surface_capabilities();
+        let surface_caps = logical_device.physical_device.surface_caps;
         let surface_formats = logical_device.physical_device.get_surface_formats();
         let mut best_surface_format = vk::VkSurfaceFormatKHR::default();
         for format in &surface_formats {

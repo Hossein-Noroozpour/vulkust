@@ -3,8 +3,7 @@ use std::sync::{Arc, RwLock};
 // use super::super::core::application::ApplicationTrait;
 // use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
-// use super::super::system::vulkan as vk;
-// use super::super::util::cell::DebugCell;
+use super::super::system::vulkan as vk;
 use super::buffer::{DynamicBuffer, Manager as BufferManager, StaticBuffer};
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
@@ -248,88 +247,77 @@ impl Engine {
     //     self.basic_engine.as_mut().unwrap()
     // }
 
-    // fn record(&mut self) {
-    //     let mut clear_values = [vk::VkClearValue::default(); 2];
-    //     clear_values[0].data = [0.4, 0.4, 0.4, 1.0];
-    //     clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
-    //     let surface_caps = self.physical_device
-    //         .as_ref()
-    //         .unwrap()
-    //         .get_surface_capabilities();
-    //     let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
-    //     render_pass_begin_info.sType =
-    //         vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    //     render_pass_begin_info.renderPass = self.render_pass.as_ref().unwrap().vk_data;
-    //     render_pass_begin_info.renderArea.offset.x = 0;
-    //     render_pass_begin_info.renderArea.offset.y = 0;
-    //     render_pass_begin_info.renderArea.extent.width = surface_caps.currentExtent.width;
-    //     render_pass_begin_info.renderArea.extent.height = surface_caps.currentExtent.height;
-    //     render_pass_begin_info.clearValueCount = clear_values.len() as u32;
-    //     render_pass_begin_info.pClearValues = clear_values.as_ptr();
-    //     let images_count = self.framebuffers.len();
-    //     for i in 0..images_count {
-    //         render_pass_begin_info.framebuffer = self.framebuffers[i].vk_data;
-    //         let mut draw_command = CmdBuffer::new(self.graphic_cmd_pool.as_ref().unwrap().clone());
-    //         draw_command.begin_render_pass_with_info(render_pass_begin_info);
-    //         let mut viewport = vk::VkViewport::default();
-    //         viewport.x = 0.0;
-    //         viewport.y = 0.0;
-    //         viewport.height = surface_caps.currentExtent.height as f32;
-    //         viewport.width = surface_caps.currentExtent.width as f32;
-    //         viewport.minDepth = 0.0;
-    //         viewport.maxDepth = 1.0;
-    //         draw_command.set_viewport(viewport);
-    //         let mut scissor = vk::VkRect2D::default();
-    //         scissor.extent.width = surface_caps.currentExtent.width;
-    //         scissor.extent.height = surface_caps.currentExtent.height;
-    //         scissor.offset.x = 0;
-    //         scissor.offset.y = 0;
-    //         draw_command.set_scissor(scissor);
-    //         self.basic_engine.as_mut().unwrap().record(&mut draw_command, i);
-    //         // unsafe {
-    //             // vk::vkCmdBindDescriptorSets(
-    //             //     draw_command.vk_data,
-    //             //     vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-    //             //     self.pipeline_layout.as_ref().unwrap().vk_data,
-    //             //     0,
-    //             //     1,
-    //             //     &(self.descriptor_set.as_ref().unwrap().vk_data),
-    //             //     0,
-    //             //     null(),
-    //             // );
-    //             // vk::vkCmdBindPipeline(
-    //             //     draw_command.vk_data,
-    //             //     vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-    //             //     self.pipeline.as_ref().unwrap().vk_data,
-    //             // );
-    //             // let offsets = 0 as vk::VkDeviceSize;
-    //             // vk::vkCmdBindVertexBuffers(
-    //             //     draw_command.vk_data,
-    //             //     0,
-    //             //     1,
-    //             //     &(self.mesh_buff.as_ref().unwrap().vertices_buffer),
-    //             //     &offsets,
-    //             // );
-    //             // vk::vkCmdBindIndexBuffer(
-    //             //     draw_command.vk_data,
-    //             //     self.mesh_buff.as_ref().unwrap().indices_buffer,
-    //             //     0,
-    //             //     vk::VkIndexType::VK_INDEX_TYPE_UINT32,
-    //             // );
-    //             // vk::vkCmdDrawIndexed(
-    //             //     draw_command.vk_data,
-    //             //     self.mesh_buff.as_ref().unwrap().indices_count,
-    //             //     1,
-    //             //     0,
-    //             //     0,
-    //             //     1,
-    //             // );
-    //         // }
-    //         draw_command.end_render_pass();
-    //         draw_command.end();
-    //         self.draw_commands.push(draw_command);
-    //     }
-    // }
+    fn record(&mut self) {
+        let mut clear_values = [vk::VkClearValue::default(); 2];
+        clear_values[0].data = [0.4, 0.4, 0.4, 1.0];
+        clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
+        let surface_caps = &self.physical_device.surface_caps;
+        let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
+        render_pass_begin_info.sType =
+            vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_begin_info.renderPass = self.render_pass.vk_data;
+        render_pass_begin_info.renderArea.offset.x = 0;
+        render_pass_begin_info.renderArea.offset.y = 0;
+        render_pass_begin_info.renderArea.extent.width = surface_caps.currentExtent.width;
+        render_pass_begin_info.renderArea.extent.height = surface_caps.currentExtent.height;
+        render_pass_begin_info.clearValueCount = clear_values.len() as u32;
+        render_pass_begin_info.pClearValues = clear_values.as_ptr();
+        let frame_number = vxresult!(self.frame_number.read());
+        let frame_number = *frame_number as usize;
+        render_pass_begin_info.framebuffer = self.framebuffers[frame_number].vk_data;
+        let mut draw_command = &mut self.draw_commands[frame_number];
+        draw_command.reset();
+        draw_command.begin_render_pass_with_info(render_pass_begin_info);
+        let mut viewport = vk::VkViewport::default();
+        viewport.x = 0.0;
+        viewport.y = 0.0;
+        viewport.height = surface_caps.currentExtent.height as f32;
+        viewport.width = surface_caps.currentExtent.width as f32;
+        viewport.minDepth = 0.0;
+        viewport.maxDepth = 1.0;
+        draw_command.set_viewport(viewport);
+        let mut scissor = vk::VkRect2D::default();
+        scissor.extent.width = surface_caps.currentExtent.width;
+        scissor.extent.height = surface_caps.currentExtent.height;
+        scissor.offset.x = 0;
+        scissor.offset.y = 0;
+        draw_command.set_scissor(scissor);
+        draw_command.bind_descriptor_set(
+            &vxresult!(self.pipeline_manager.read()).main_pipeline.layout,
+            &vxresult!(self.pipeline_manager.read()).descriptor_manager.main_set,
+            vxresult!(self.uniform_buffer.buffers[frame_number].0.read()).info.offset as usize,
+        );
+            // vk::vkCmdBindPipeline(
+            //     draw_command.vk_data,
+            //     vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+            //     self.pipeline.as_ref().unwrap().vk_data,
+            // );
+                // let offsets = 0 as vk::VkDeviceSize;
+                // vk::vkCmdBindVertexBuffers(
+                //     draw_command.vk_data,
+                //     0,
+                //     1,
+                //     &(self.mesh_buff.as_ref().unwrap().vertices_buffer),
+                //     &offsets,
+                // );
+                // vk::vkCmdBindIndexBuffer(
+                //     draw_command.vk_data,
+                //     self.mesh_buff.as_ref().unwrap().indices_buffer,
+                //     0,
+                //     vk::VkIndexType::VK_INDEX_TYPE_UINT32,
+                // );
+                // vk::vkCmdDrawIndexed(
+                //     draw_command.vk_data,
+                //     self.mesh_buff.as_ref().unwrap().indices_count,
+                //     1,
+                //     0,
+                //     0,
+                //     1,
+                // );
+            // }
+        draw_command.end_render_pass();
+        draw_command.end();
+    }
 
     // fn clean(&mut self) {
     //     self.logical_device.as_ref().unwrap().wait_idle();

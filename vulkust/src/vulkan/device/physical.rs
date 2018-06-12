@@ -13,6 +13,7 @@ pub struct Physical {
     pub vk_data: vk::VkPhysicalDevice,
     pub memory_properties: vk::VkPhysicalDeviceMemoryProperties,
     pub properties: vk::VkPhysicalDeviceProperties,
+    pub surface_caps: vk::VkSurfaceCapabilitiesKHR,
 }
 
 impl Physical {
@@ -26,6 +27,12 @@ impl Physical {
         ) = Self::find_device(surface);
         let mut memory_properties = vk::VkPhysicalDeviceMemoryProperties::default();
         let mut properties = vk::VkPhysicalDeviceProperties::default();
+        let mut surface_caps = vk::VkSurfaceCapabilitiesKHR::default();
+        vulkan_check!(vk::vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+            vk_data,
+            surface.vk_data,
+            &mut surface_caps,
+        ));
         unsafe {
             vk::vkGetPhysicalDeviceMemoryProperties(vk_data, &mut memory_properties);
             vk::vkGetPhysicalDeviceProperties(vk_data, &mut properties);
@@ -39,6 +46,7 @@ impl Physical {
             vk_data,
             memory_properties,
             properties,
+            surface_caps,
         };
         physical
     }
@@ -213,15 +221,6 @@ impl Physical {
         vxlogf!("No depth format found!");
     }
 
-    pub fn get_surface_capabilities(&self) -> vk::VkSurfaceCapabilitiesKHR {
-        let mut caps = vk::VkSurfaceCapabilitiesKHR::default();
-        vulkan_check!(vk::vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-            self.vk_data,
-            self.surface.vk_data,
-            &mut caps,
-        ));
-        return caps;
-    }
     pub fn get_surface_formats(&self) -> Vec<vk::VkSurfaceFormatKHR> {
         let mut count = 0u32;
         vulkan_check!(vk::vkGetPhysicalDeviceSurfaceFormatsKHR(

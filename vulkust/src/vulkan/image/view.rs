@@ -17,7 +17,7 @@ impl View {
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
     ) -> Self {
         let depth_format = logical_device.physical_device.get_supported_depth_format();
-        let surface_caps = logical_device.physical_device.get_surface_capabilities();
+        let surface_caps = logical_device.physical_device.surface_caps;
         let mut image_info = vk::VkImageCreateInfo::default();
         image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;

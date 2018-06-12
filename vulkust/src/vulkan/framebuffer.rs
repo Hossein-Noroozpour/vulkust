@@ -23,7 +23,7 @@ impl Framebuffer {
             .image
             .logical_device
             .physical_device
-            .get_surface_capabilities();
+            .surface_caps;
         let mut fb_create_info = vk::VkFramebufferCreateInfo::default();
         fb_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         fb_create_info.renderPass = render_pass.vk_data;

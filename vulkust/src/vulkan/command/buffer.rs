@@ -1,8 +1,8 @@
 use super::super::vulkan as vk;
 use std::default::Default;
 use std::sync::Arc;
-// use super::super::descriptor::Set as DescriptorSet;
-// use super::super::pipeline::{Pipeline, Layout as PipelineLayout};
+use super::super::descriptor::Set as DescriptorSet;
+use super::super::pipeline::{Pipeline, Layout as PipelineLayout};
 use super::super::synchronizer::fence::Fence;
 use super::pool::Pool;
 
@@ -73,6 +73,10 @@ impl Buffer {
         }
     }
 
+    pub fn reset(&mut self) {
+        unsafe { vk::vkResetCommandBuffer(self.vk_data, 0); }
+    }
+
     pub fn flush(&mut self) {
         let fence = Fence::new(self.pool.logical_device.clone());
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
@@ -99,14 +103,19 @@ impl Buffer {
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
     }
 
-    // pub fn bind_descriptor_set(&mut self, pl: &Arc<PipelineLayout>, ds: &Arc<DescriptorSet>, offset: usize) {
-    //     let offset = offset as u32;
-    //     let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
-    //     unsafe {
-    //         vk::vkCmdBindDescriptorSets(
-    //             self.vk_data, bind_point, pl.vk_data, 0, 1, &(ds.vk_data), 1, &offset);
-    //     }
-    // }
+    pub fn bind_descriptor_set(
+        &mut self, 
+        pl: &PipelineLayout, 
+        ds: &Arc<DescriptorSet>, 
+        offset: usize
+    ) {
+        let offset = offset as u32;
+        let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+        unsafe {
+            vk::vkCmdBindDescriptorSets(
+                self.vk_data, bind_point, pl.vk_data, 0, 1, &ds.vk_data, 1, &offset);
+        }
+    }
 
     // pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
     //     let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
