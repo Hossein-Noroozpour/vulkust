@@ -3,13 +3,11 @@ use std::sync::{Arc, RwLock};
 // use super::super::core::application::ApplicationTrait;
 // use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
-use super::vulkan as vk;
 use super::buffer::{DynamicBuffer, Manager as BufferManager, StaticBuffer};
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
-use super::synchronizer::fence::Fence;
 use super::framebuffer::Framebuffer;
 use super::image::view::View as ImageView;
 use super::instance::Instance;
@@ -17,8 +15,10 @@ use super::memory::Manager as MemoryManager;
 use super::pipeline::Manager as PipelineManager;
 use super::render_pass::RenderPass;
 use super::surface::Surface;
-use super::swapchain::{Swapchain, NextImageResult};
+use super::swapchain::{NextImageResult, Swapchain};
+use super::synchronizer::fence::Fence;
 use super::synchronizer::semaphore::Semaphore;
+use super::vulkan as vk;
 
 const INDICES: [u32; 3] = [0, 1, 2];
 
@@ -68,9 +68,7 @@ impl Engine {
         for _ in 0..swapchain.image_views.len() {
             let draw_command = CmdBuffer::new(graphic_cmd_pool.clone());
             draw_commands.push(draw_command);
-            wait_fences.push(Fence::new_signaled(
-                logical_device.clone()
-            ));
+            wait_fences.push(Fence::new_signaled(logical_device.clone()));
         }
         draw_commands.shrink_to_fit();
         wait_fences.shrink_to_fit();
@@ -162,8 +160,10 @@ impl Engine {
     // }
 
     pub fn update(&mut self) {
-        let current_buffer = match self.swapchain.get_next_image_index(
-            &self.present_complete_semaphore) {
+        let current_buffer = match self
+            .swapchain
+            .get_next_image_index(&self.present_complete_semaphore)
+        {
             NextImageResult::Next(c) => c,
             NextImageResult::NeedsRefresh => {
                 vxunimplemented!();
@@ -267,12 +267,14 @@ impl Engine {
         draw_command.set_scissor(scissor);
         draw_command.bind_descriptor_set(
             &vxresult!(self.pipeline_manager.read()).main_pipeline.layout,
-            &vxresult!(self.pipeline_manager.read()).descriptor_manager.main_set,
-            vxresult!(self.uniform_buffer.buffers[frame_number].0.read()).info.offset as usize,
+            &vxresult!(self.pipeline_manager.read())
+                .descriptor_manager
+                .main_set,
+            vxresult!(self.uniform_buffer.buffers[frame_number].0.read())
+                .info
+                .offset as usize,
         );
-        draw_command.bind_pipeline(
-            &vxresult!(self.pipeline_manager.read()).main_pipeline
-        );
+        draw_command.bind_pipeline(&vxresult!(self.pipeline_manager.read()).main_pipeline);
         draw_command.bind_vertex_buffer(&self.vertex_buffer.buffer);
         draw_command.bind_index_buffer(&self.index_buffer.buffer);
         draw_command.draw_index(INDICES.len() as u32);

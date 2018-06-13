@@ -4,16 +4,16 @@
 
 pub extern crate libc;
 
-#[cfg(target_os = "macos")]
+#[cfg(apple_os)]
 #[macro_use]
 pub extern crate objc;
 
-#[cfg(any(target_os = "macos", target_os = "android"))]
+#[cfg(any(apple_os, target_os = "android"))]
 #[macro_use]
 pub extern crate bitflags;
 
 #[cfg(target_os = "windows")]
-extern crate winapi;
+pub extern crate winapi;
 
 // pub extern crate cgmath as math;
 // pub extern crate image;

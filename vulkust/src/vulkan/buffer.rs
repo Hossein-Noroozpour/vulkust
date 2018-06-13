@@ -28,7 +28,11 @@ impl Buffer {
     }
 
     pub fn allocate(&mut self, size: isize) -> Arc<RwLock<Buffer>> {
-        let buffer = Arc::new(RwLock::new(Buffer::new(size, self.memory_offset, self.vk_data)));
+        let buffer = Arc::new(RwLock::new(Buffer::new(
+            size,
+            self.memory_offset,
+            self.vk_data,
+        )));
         let obj: Arc<RwLock<Object>> = buffer.clone();
         self.info.allocate(&obj);
         return buffer;

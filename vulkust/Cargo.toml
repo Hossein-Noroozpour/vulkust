@@ -21,10 +21,10 @@ libc = "*"
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser"] }
 
-[target.'cfg(any(target_os = "android", target_os = "macos"))'.dependencies]
+[target.'cfg(any(target_os = "android", target_os = "macos", target_os = "ios"))'.dependencies]
 bitflags = "*"
 
-[target.'cfg(target_os = "macos")'.dependencies]
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 # This feautres are for debug mode remove them in future
 objc = { version = "*", features = ["exception", "verify_message"] }
 

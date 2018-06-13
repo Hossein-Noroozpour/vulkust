@@ -1,10 +1,10 @@
-use super::super::vulkan as vk;
-use std::sync::{Arc, RwLock};
 use super::super::buffer::Buffer as BufBuffer;
 use super::super::descriptor::Set as DescriptorSet;
-use super::super::pipeline::{Pipeline, Layout as PipelineLayout};
+use super::super::pipeline::{Layout as PipelineLayout, Pipeline};
 use super::super::synchronizer::fence::Fence;
+use super::super::vulkan as vk;
 use super::pool::Pool;
+use std::sync::{Arc, RwLock};
 
 pub struct Buffer {
     pub pool: Arc<Pool>,
@@ -81,7 +81,9 @@ impl Buffer {
     }
 
     pub fn reset(&mut self) {
-        unsafe { vk::vkResetCommandBuffer(self.vk_data, 0); }
+        unsafe {
+            vk::vkResetCommandBuffer(self.vk_data, 0);
+        }
     }
 
     pub fn flush(&mut self) {
@@ -111,25 +113,31 @@ impl Buffer {
     }
 
     pub fn bind_descriptor_set(
-        &mut self, 
-        pl: &PipelineLayout, 
-        ds: &Arc<DescriptorSet>, 
-        offset: usize
+        &mut self,
+        pl: &PipelineLayout,
+        ds: &Arc<DescriptorSet>,
+        offset: usize,
     ) {
         let offset = offset as u32;
         let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
         unsafe {
             vk::vkCmdBindDescriptorSets(
-                self.vk_data, bind_point, pl.vk_data, 0, 1, &ds.vk_data, 1, &offset);
+                self.vk_data,
+                bind_point,
+                pl.vk_data,
+                0,
+                1,
+                &ds.vk_data,
+                1,
+                &offset,
+            );
         }
     }
 
     pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
         let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
         unsafe {
-            vk::vkCmdBindPipeline(
-                self.vk_data, bind_point, p.vk_data,
-            );
+            vk::vkCmdBindPipeline(self.vk_data, bind_point, p.vk_data);
         }
     }
 
@@ -137,14 +145,8 @@ impl Buffer {
         let buffer = vxresult!(buffer.read());
         let offset = buffer.info.offset as vk::VkDeviceSize;
         unsafe {
-            vk::vkCmdBindVertexBuffers(
-                self.vk_data,
-                0, 1,
-                &buffer.vk_data,
-                &offset,
-            );
+            vk::vkCmdBindVertexBuffers(self.vk_data, 0, 1, &buffer.vk_data, &offset);
         }
-
     }
 
     pub fn bind_index_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {

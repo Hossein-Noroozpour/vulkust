@@ -2,7 +2,7 @@
 pub mod android;
 #[cfg(target_os = "android")]
 pub use self::android as os;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub mod apple;
 #[cfg(target_os = "ios")]
 pub mod ios;

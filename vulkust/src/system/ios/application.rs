@@ -26,7 +26,9 @@ impl Application {
         self.itself = Some(itself);
     }
 
-    pub fn update(&self) {}
+    pub fn update(&self) {
+        vxresult!(vxunwrap!(self.renderer).write()).update();
+    }
 }
 
 impl Drop for Application {
