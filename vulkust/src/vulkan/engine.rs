@@ -27,6 +27,7 @@ const UNIFORM: [f32; 16] = [
 ];
 
 pub struct Engine {
+    pub os_app: Arc<RwLock<OsApp>>,
     pub instance: Arc<Instance>,
     pub surface: Arc<Surface>,
     pub physical_device: Arc<PhysicalDevice>,
@@ -35,7 +36,7 @@ pub struct Engine {
     pub present_complete_semaphore: Arc<Semaphore>,
     pub render_complete_semaphore: Arc<Semaphore>,
     pub graphic_cmd_pool: Arc<CmdPool>,
-    pub draw_commands: Vec<CmdBuffer>,
+    pub draw_commands: Vec<Arc<RwLock<CmdBuffer>>>,
     pub memory_mgr: Arc<RwLock<MemoryManager>>,
     pub depth_stencil_image_view: Arc<ImageView>,
     pub render_pass: Arc<RenderPass>,
@@ -43,7 +44,7 @@ pub struct Engine {
     pub framebuffers: Vec<Arc<Framebuffer>>,
     pub frame_number: Arc<RwLock<u32>>,
     pub buffer_manager: Arc<RwLock<BufferManager>>,
-    pub wait_fences: Vec<Fence>,
+    pub wait_fences: Vec<Arc<Fence>>,
     // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
     // pub basic_engine: Option<BasicEngine>,
     //----------------------------------------------------------------------------------------------
@@ -66,9 +67,9 @@ impl Engine {
         let mut draw_commands = Vec::new();
         let mut wait_fences = Vec::new();
         for _ in 0..swapchain.image_views.len() {
-            let draw_command = CmdBuffer::new(graphic_cmd_pool.clone());
+            let draw_command = Arc::new(RwLock::new(CmdBuffer::new(graphic_cmd_pool.clone())));
             draw_commands.push(draw_command);
-            wait_fences.push(Fence::new_signaled(logical_device.clone()));
+            wait_fences.push(Arc::new(Fence::new_signaled(logical_device.clone())));
         }
         draw_commands.shrink_to_fit();
         wait_fences.shrink_to_fit();
@@ -121,9 +122,10 @@ impl Engine {
             &buffer_manager,
             &render_pass,
         )));
+        let os_app = os_app.clone();
         Engine {
             // core_app: unsafe { transmute(0usize) },
-            // os_app: unsafe { transmute(0usize) },
+            os_app,
             instance,
             surface,
             physical_device,
@@ -166,7 +168,8 @@ impl Engine {
         {
             NextImageResult::Next(c) => c,
             NextImageResult::NeedsRefresh => {
-                vxunimplemented!();
+                self.reinitialize();
+                return;
             }
         } as usize;
         vulkan_check!(vk::vkWaitForFences(
@@ -195,7 +198,7 @@ impl Engine {
         submit_info.waitSemaphoreCount = 1;
         submit_info.pSignalSemaphores = &self.render_complete_semaphore.vk_data;
         submit_info.signalSemaphoreCount = 1;
-        submit_info.pCommandBuffers = &self.draw_commands[current_buffer].vk_data;
+        submit_info.pCommandBuffers = &vxresult!(self.draw_commands[current_buffer].read()).vk_data;
         submit_info.commandBufferCount = 1;
         vulkan_check!(vk::vkQueueSubmit(
             self.logical_device.vk_graphic_queue,
@@ -217,9 +220,9 @@ impl Engine {
         ));
     }
 
-    // fn terminate(&mut self) {
-    //     self.clean();
-    // }
+    pub fn terminate(&mut self) {
+        self.logical_device.wait_idle();
+    }
 
     // fn get_basic(&self) -> &BasicEngine {
     //     self.basic_engine.as_ref().unwrap()
@@ -247,10 +250,6 @@ impl Engine {
         let frame_number = vxresult!(self.frame_number.read());
         let frame_number = *frame_number as usize;
         render_pass_begin_info.framebuffer = self.framebuffers[frame_number].vk_data;
-        let draw_command = &mut self.draw_commands[frame_number];
-        draw_command.reset();
-        draw_command.begin();
-        draw_command.begin_render_pass_with_info(render_pass_begin_info);
         let mut viewport = vk::VkViewport::default();
         viewport.x = 0.0;
         viewport.y = 0.0;
@@ -258,12 +257,17 @@ impl Engine {
         viewport.width = surface_caps.currentExtent.width as f32;
         viewport.minDepth = 0.0;
         viewport.maxDepth = 1.0;
-        draw_command.set_viewport(viewport);
         let mut scissor = vk::VkRect2D::default();
         scissor.extent.width = surface_caps.currentExtent.width;
         scissor.extent.height = surface_caps.currentExtent.height;
         scissor.offset.x = 0;
         scissor.offset.y = 0;
+        let draw_command = &mut self.draw_commands[frame_number];
+        let mut draw_command = vxresult!(draw_command.write());
+        draw_command.reset();
+        draw_command.begin();
+        draw_command.begin_render_pass_with_info(render_pass_begin_info);
+        draw_command.set_viewport(viewport);
         draw_command.set_scissor(scissor);
         draw_command.bind_descriptor_set(
             &vxresult!(self.pipeline_manager.read()).main_pipeline.layout,
@@ -282,31 +286,30 @@ impl Engine {
         draw_command.end();
     }
 
-    // fn clean(&mut self) {
-    //     self.logical_device.as_ref().unwrap().wait_idle();
-    //     self.basic_engine = None;
-    //     // TODO
-    //     self.pipeline_manager = None;
-    //     self.buffer_manager = None;
-    //     self.wait_fences.clear();
-    //     self.render_complete_semaphore = None;
-    //     self.present_complete_semaphore = None;
-    //     self.draw_commands.clear();
-    //     self.transfer_cmd_pool = None;
-    //     self.graphic_cmd_pool = None;
-    //     self.framebuffers.clear();
-    //     self.render_pass = None;
-    //     self.depth_stencil_image_view = None;
-    //     self.swapchain = None;
-    //     self.logical_device = None;
-    //     self.physical_device = None;
-    //     self.surface = None;
-    // }
-
-    // fn reinitialize(&mut self) {
-    //     self.clean();
-    //     self.initialize();
-    // }
+    fn reinitialize(&mut self) {
+        self.logical_device.wait_idle();
+        let new = Self::new(&self.os_app);
+        self.instance = new.instance.clone();
+        self.surface = new.surface.clone();
+        self.physical_device = new.physical_device.clone();
+        self.logical_device = new.logical_device.clone();
+        self.swapchain = new.swapchain.clone();
+        self.present_complete_semaphore = new.present_complete_semaphore.clone();
+        self.render_complete_semaphore = new.render_complete_semaphore.clone();
+        self.graphic_cmd_pool = new.graphic_cmd_pool.clone();
+        self.draw_commands = new.draw_commands.clone();
+        self.memory_mgr = new.memory_mgr.clone();
+        self.depth_stencil_image_view = new.depth_stencil_image_view.clone();
+        self.render_pass = new.render_pass.clone();
+        self.pipeline_manager = new.pipeline_manager.clone();
+        self.framebuffers = new.framebuffers.clone();
+        self.frame_number = new.frame_number.clone();
+        self.buffer_manager = new.buffer_manager.clone();
+        self.wait_fences = new.wait_fences.clone();
+        self.vertex_buffer = new.vertex_buffer.clone();
+        self.index_buffer = new.index_buffer.clone();
+        self.uniform_buffer = new.uniform_buffer.clone();
+    }
 
     // fn window_resized(&mut self, w: f64, h: f64) {
     //     {

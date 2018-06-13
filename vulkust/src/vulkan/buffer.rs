@@ -153,6 +153,7 @@ impl Drop for RootBuffer {
     }
 }
 
+#[derive(Clone)]
 pub struct StaticBuffer {
     pub buffer: Arc<RwLock<Buffer>>,
 }
@@ -163,6 +164,7 @@ impl StaticBuffer {
     }
 }
 
+#[derive(Clone)]
 pub struct DynamicBuffer {
     pub buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
     pub frame_number: Arc<RwLock<u32>>,
