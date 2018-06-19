@@ -2,6 +2,7 @@
 #![feature(integer_atomics)]
 #![feature(stmt_expr_attributes)]
 
+pub extern crate image;
 pub extern crate libc;
 
 #[cfg(apple_os)]

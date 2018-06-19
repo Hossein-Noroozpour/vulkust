@@ -80,6 +80,24 @@ impl Buffer {
         }
     }
 
+    pub fn copy_buffer_to_image(
+        &mut self,
+        src: vk::VkBuffer,
+        dst: vk::VkImage,
+        region: &vk::VkBufferImageCopy,
+    ) {
+        unsafe {
+            vk::vkCmdCopyBufferToImage(
+                self.vk_data,
+                src,
+                dst,
+                vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1,
+                region,
+            );
+        }
+    }
+
     pub fn reset(&mut self) {
         unsafe {
             vk::vkResetCommandBuffer(self.vk_data, 0);

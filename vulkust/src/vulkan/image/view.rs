@@ -1,3 +1,4 @@
+use super::super::buffer::Manager as BufferManager;
 use super::super::device::logical::Logical as LogicalDevice;
 use super::super::memory::Manager as MemeoryManager;
 use super::super::vulkan as vk;
@@ -32,12 +33,8 @@ impl View {
         image_info.usage = vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
             as u32
             | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT as u32;
-        // image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-        let image = Arc::new(Image::new_with_info(
-            logical_device.clone(),
-            &image_info,
-            memory_mgr,
-        ));
+        image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+        let image = Arc::new(Image::new_with_info(&image_info, memory_mgr));
         let mut depth_stencil_view_info = vk::VkImageViewCreateInfo::default();
         depth_stencil_view_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -93,6 +90,10 @@ impl View {
             vk_data: vk_data,
         }
     }
+
+    // pub fn new_texture_with_file(file: &str, buffer_mgr: &Arc<RwLock<BufferManager>>) -> Self {
+
+    // }
 }
 
 impl Drop for View {

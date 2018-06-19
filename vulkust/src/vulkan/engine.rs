@@ -101,18 +101,12 @@ impl Engine {
             swapchain.image_views.len() as isize,
         );
         // -----------------------------------------------------------------------------------------
-        let vertices = [
+        let vertices = vec![
             1.0f32, 1.0f32, 0.0f32, 1.0f32, 0.0f32, 0.0f32, -1.0f32, 1.0f32, 0.0f32, 0.0f32,
             1.0f32, 0.0f32, 0.0f32, -1.0f32, 0.0f32, 0.0f32, 0.0f32, 1.0f32,
         ];
-        let vertices_size = vertices.len() * 4;
-        let vertex_buffer = buffer_manager.create_static_buffer(vertices_size as isize, unsafe {
-            transmute(vertices.as_ptr())
-        });
-        let indices_size = INDICES.len() * 4;
-        let index_buffer = buffer_manager.create_static_buffer(indices_size as isize, unsafe {
-            transmute(INDICES.as_ptr())
-        });
+        let vertex_buffer = buffer_manager.create_static_buffer_with_vec(&vertices);
+        let index_buffer = buffer_manager.create_static_buffer_with_vec(&INDICES.to_vec());
         let uniform_size = (UNIFORM.len() * 4) as isize;
         let uniform_buffer = buffer_manager.create_dynamic_buffer(uniform_size);
         //------------------------------------------------------------------------------------------

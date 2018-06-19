@@ -3,10 +3,11 @@ use super::super::core::allocate::{Allocator, Object};
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::Pool as CmdPool;
 use super::device::logical::Logical as LogicalDevice;
+use super::image::Image;
 use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
 use super::vulkan as vk;
 use libc;
-use std::mem::transmute;
+use std::mem::{size_of, transmute};
 use std::os::raw::c_void;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
@@ -200,7 +201,9 @@ pub struct Manager {
     pub static_buffer: Arc<RwLock<Buffer>>,
     pub static_uploader_buffer: Arc<RwLock<Buffer>>,
     pub dynamic_buffers: Vec<Arc<RwLock<Buffer>>>,
+    pub copy_buffers: Vec<Arc<RwLock<Buffer>>>,
     pub copy_ranges: Vec<vk::VkBufferCopy>,
+    pub copy_to_image_ranges: Vec<(vk::VkBufferImageCopy, Arc<Image>)>,
     pub frame_number: Arc<RwLock<u32>>,
     pub cmd_pool: Arc<CmdPool>,
 }
@@ -256,7 +259,9 @@ impl Manager {
             dynamic_buffers.push(cpu_buffer.allocate(dynamics_size));
         }
         dynamic_buffers.shrink_to_fit();
+        let copy_buffers = Vec::new();
         let copy_ranges = Vec::new();
+        let copy_to_image_ranges = Vec::new();
         let cmd_pool = cmd_pool.clone();
         let frame_number = frame_number.clone();
         Manager {
@@ -267,34 +272,84 @@ impl Manager {
             static_buffer,
             static_uploader_buffer,
             dynamic_buffers,
+            copy_buffers,
             copy_ranges,
+            copy_to_image_ranges,
             cmd_pool,
             frame_number,
         }
     }
 
-    pub fn create_static_buffer(
+    pub fn create_static_buffer_with_ptr(
         &mut self,
-        actual_size: isize,
         data: *const c_void,
+        data_len: usize,
     ) -> StaticBuffer {
-        let size = alc::align(actual_size, self.alignment);
+        let size = alc::align(data_len as isize, self.alignment);
         let buffer = vxresult!(self.static_buffer.write()).allocate(size);
-        let upbuffer = vxresult!(self.static_uploader_buffer.write()).allocate(size);
-        let upbuffer = vxresult!(upbuffer.read());
-        let mut off = upbuffer.memory_offset;
-        off += upbuffer.info.offset;
-        off += self.cpu_memory_mapped_ptr;
-        unsafe {
-            let ptr = transmute(off);
-            libc::memcpy(ptr, transmute(data), actual_size as usize);
-        }
+        let upbuff = self.create_staging_buffer_with_ptr(data, data_len as usize);
+        let upbuffer = vxresult!(upbuff.read());
         let mut range = vk::VkBufferCopy::default();
         range.srcOffset = upbuffer.info.offset as vk::VkDeviceSize;
         range.dstOffset = vxresult!(buffer.read()).info.offset as vk::VkDeviceSize;
-        range.size = size as vk::VkDeviceSize;
+        range.size = data_len as vk::VkDeviceSize;
         self.copy_ranges.push(range);
         StaticBuffer::new(buffer)
+    }
+
+    pub fn create_static_buffer_with_vec<T>(&mut self, data: &Vec<T>) -> StaticBuffer {
+        let data_ptr = unsafe { transmute(data.as_ptr()) };
+        let data_len = data.len() * size_of::<T>();
+        self.create_static_buffer_with_ptr(data_ptr, data_len)
+    }
+
+    pub fn create_staging_buffer_with_ptr(
+        &mut self,
+        data: *const c_void,
+        data_len: usize,
+    ) -> Arc<RwLock<Buffer>> {
+        let size = alc::align(data_len as isize, self.alignment);
+        let upbuffer = vxresult!(self.static_uploader_buffer.write()).allocate(size);
+        let off = {
+            let upbuff = vxresult!(upbuffer.read());
+            let mut off = upbuff.memory_offset;
+            off += upbuff.info.offset;
+            off += self.cpu_memory_mapped_ptr;
+            off
+        };
+        unsafe {
+            let ptr = transmute(off);
+            libc::memcpy(ptr, transmute(data), data_len);
+        }
+        self.copy_buffers.push(upbuffer.clone());
+        upbuffer
+    }
+
+    pub fn create_staging_buffer_with_vec<T>(&mut self, data: &Vec<T>) -> Arc<RwLock<Buffer>> {
+        let data_ptr = unsafe { transmute(data.as_ptr()) };
+        let data_len = data.len() * size_of::<T>();
+        self.create_staging_buffer_with_ptr(data_ptr, data_len)
+    }
+
+    pub fn create_staging_image(
+        &mut self,
+        image: &Arc<Image>,
+        pixels: &Vec<u8>,
+        img_info: &vk::VkImageCreateInfo,
+    ) {
+        let upbuff = self.create_staging_buffer_with_vec(pixels);
+        let upbuffer = vxresult!(upbuff.read());
+        let mut copy_info = vk::VkBufferImageCopy::default();
+        copy_info.imageSubresource.aspectMask =
+            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32;
+        copy_info.imageSubresource.mipLevel = 0;
+        copy_info.imageSubresource.baseArrayLayer = 0;
+        copy_info.imageSubresource.layerCount = 1;
+        copy_info.imageExtent.width = img_info.extent.width;
+        copy_info.imageExtent.height = img_info.extent.height;
+        copy_info.imageExtent.depth = img_info.extent.depth;
+        copy_info.bufferOffset = upbuffer.info.offset as vk::VkDeviceSize;
+        self.copy_to_image_ranges.push((copy_info, image.clone()));
     }
 
     pub fn create_dynamic_buffer(&mut self, actual_size: isize) -> DynamicBuffer {
@@ -313,16 +368,23 @@ impl Manager {
     }
 
     pub fn update(&mut self) {
-        if self.copy_ranges.len() == 0 {
+        if self.copy_buffers.len() == 0 {
             return;
         }
         let mut cmd = CmdBuffer::new(self.cmd_pool.clone());
-        cmd.copy_buffer(
-            self.cpu_buffer.vk_data,
-            self.gpu_buffer.vk_data,
-            &self.copy_ranges,
-        );
-        self.copy_ranges.clear();
+        if self.copy_ranges.len() != 0 {
+            cmd.copy_buffer(
+                self.cpu_buffer.vk_data,
+                self.gpu_buffer.vk_data,
+                &self.copy_ranges,
+            );
+            self.copy_ranges.clear();
+        }
+        for copy_img in &self.copy_to_image_ranges {
+            cmd.copy_buffer_to_image(self.cpu_buffer.vk_data, copy_img.1.vk_data, &copy_img.0);
+        }
+        self.copy_to_image_ranges.clear();
         cmd.flush();
+        self.copy_buffers.clear();
     }
 }

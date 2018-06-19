@@ -13,7 +13,7 @@ categories = ["game-engines"]
 fullscreen = []
 
 [dependencies]
-# image = "*"
+image = "*"
 # cgmath = "*"
 # gltf = { version = "*", features = ["extras", "names"] }
 libc = "*"
