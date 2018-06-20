@@ -14,6 +14,7 @@ use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
 use super::pipeline::Manager as PipelineManager;
 use super::render_pass::RenderPass;
+use super::sampler::Sampler;
 use super::surface::Surface;
 use super::swapchain::{NextImageResult, Swapchain};
 use super::synchronizer::fence::Fence;
@@ -45,8 +46,7 @@ pub struct Engine {
     pub frame_number: Arc<RwLock<u32>>,
     pub buffer_manager: Arc<RwLock<BufferManager>>,
     pub wait_fences: Vec<Arc<Fence>>,
-    // pub transfer_cmd_pool: Option<Arc<CmdPool>>,
-    // pub basic_engine: Option<BasicEngine>,
+    pub sampler: Arc<Sampler>,
     //----------------------------------------------------------------------------------------------
     pub vertex_buffer: StaticBuffer,
     pub index_buffer: StaticBuffer,
@@ -101,6 +101,7 @@ impl Engine {
             4 * 1028,
             swapchain.image_views.len() as isize,
         );
+        let sampler = Arc::new(Sampler::new(logical_device.clone()));
         // -----------------------------------------------------------------------------------------
         let vertices = vec![
             1.0f32, 1.0f32, 0.0f32, 1.0f32, 0.0f32, 0.0f32, -1.0f32, 1.0f32, 0.0f32, 0.0f32,
@@ -139,7 +140,7 @@ impl Engine {
             frame_number,
             buffer_manager,
             wait_fences,
-            //     basic_engine: None,
+            sampler,
             //--------------------------------------------------------------------------------------
             vertex_buffer,
             index_buffer,

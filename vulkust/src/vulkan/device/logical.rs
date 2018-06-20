@@ -37,12 +37,15 @@ impl Logical {
             queue_create_info.pQueuePriorities = queue_priorities.as_ptr();
             queue_create_info_s.push(queue_create_info);
         }
+        let mut features = vk::VkPhysicalDeviceFeatures::default();
+        features.samplerAnisotropy = vk::VK_TRUE;
         let mut device_create_info = vk::VkDeviceCreateInfo::default();
         device_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         device_create_info.queueCreateInfoCount = queue_create_info_s.len() as u32;
         device_create_info.pQueueCreateInfos = queue_create_info_s.as_ptr();
         device_create_info.enabledExtensionCount = device_extensions.len() as u32;
         device_create_info.ppEnabledExtensionNames = device_extensions.as_ptr();
+        device_create_info.pEnabledFeatures = &features;
         let mut vk_data = 0 as vk::VkDevice;
         vulkan_check!(vk::vkCreateDevice(
             physical_device.vk_data,
