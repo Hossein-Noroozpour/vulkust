@@ -9,7 +9,6 @@ use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
-use super::image::Image;
 use super::image::view::View as ImageView;
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
@@ -52,6 +51,7 @@ pub struct Engine {
     pub vertex_buffer: StaticBuffer,
     pub index_buffer: StaticBuffer,
     pub uniform_buffer: DynamicBuffer,
+    pub texture_view: ImageView,
     //----------------------------------------------------------------------------------------------
 }
 
@@ -117,7 +117,7 @@ impl Engine {
             &buffer_manager,
             &render_pass,
         )));
-        Image::new_with_file_name("1.png", &buffer_manager);
+        let texture_view = ImageView::new_texture_with_file("1.png", &buffer_manager);
         let os_app = os_app.clone();
         Engine {
             // core_app: unsafe { transmute(0usize) },
@@ -144,6 +144,7 @@ impl Engine {
             vertex_buffer,
             index_buffer,
             uniform_buffer,
+            texture_view,
             //--------------------------------------------------------------------------------------
         }
     }

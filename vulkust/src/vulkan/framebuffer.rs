@@ -19,11 +19,8 @@ impl Framebuffer {
         render_pass: Arc<RenderPass>,
     ) -> Self {
         let attachments = vec![color_buffer.vk_data, depth_buffer.vk_data];
-        let surface_caps = color_buffer
-            .image
-            .logical_device
-            .physical_device
-            .surface_caps;
+        let dev = vxresult!(color_buffer.image.read()).logical_device.clone();
+        let ref surface_caps = &dev.physical_device.surface_caps;
         let mut fb_create_info = vk::VkFramebufferCreateInfo::default();
         fb_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         fb_create_info.renderPass = render_pass.vk_data;
@@ -34,7 +31,7 @@ impl Framebuffer {
         fb_create_info.height = surface_caps.currentExtent.height;
         let mut vk_data = 0 as vk::VkFramebuffer;
         vulkan_check!(vk::vkCreateFramebuffer(
-            color_buffer.image.logical_device.vk_data,
+            dev.vk_data,
             &fb_create_info,
             null(),
             &mut vk_data,
@@ -52,7 +49,7 @@ impl Drop for Framebuffer {
     fn drop(&mut self) {
         unsafe {
             vk::vkDestroyFramebuffer(
-                self.color_buffer.image.logical_device.vk_data,
+                vxresult!(self.color_buffer.image.read()).logical_device.vk_data,
                 self.vk_data,
                 null(),
             );

@@ -14,6 +14,7 @@ pub struct Image {
     pub logical_device: Arc<LogicalDevice>,
     pub vk_data: vk::VkImage,
     pub layout: vk::VkImageLayout,
+    pub format: vk::VkFormat,
     pub mips_count: u8,
     pub memory: Option<Arc<RwLock<Memory>>>,
 }
@@ -50,6 +51,7 @@ impl Image {
             logical_device,
             vk_data,
             layout: info.initialLayout,
+            format: info.format,
             mips_count: info.mipLevels as u8,
             memory: Some(memory),
         }
@@ -59,11 +61,13 @@ impl Image {
         logical_device: Arc<LogicalDevice>, 
         vk_image: vk::VkImage, 
         layout: vk::VkImageLayout,
+        format: vk::VkFormat,
     ) -> Self {
         Image {
             logical_device,
             layout,
-            mips_count: 0,
+            format,
+            mips_count: 1,
             vk_data: vk_image,
             memory: None,
         }
