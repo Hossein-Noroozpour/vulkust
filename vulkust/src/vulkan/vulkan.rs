@@ -166,6 +166,8 @@ pub const VK_PIPELINE_CACHE_HEADER_VERSION_END_RANGE: VkPipelineCacheHeaderVersi
 pub const VK_PIPELINE_CACHE_HEADER_VERSION_RANGE_SIZE: VkPipelineCacheHeaderVersion =
     VkPipelineCacheHeaderVersion::VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
 
+pub const VK_QUEUE_FAMILY_IGNORED: u32 = !0u32;
+
 #[derive(Copy, Clone, Debug)]
 #[repr(u32)]
 pub enum VkPipelineCacheHeaderVersion {

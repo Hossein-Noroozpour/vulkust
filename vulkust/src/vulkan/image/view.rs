@@ -63,8 +63,9 @@ impl View {
         logical_device: Arc<LogicalDevice>,
         vk_image: vk::VkImage,
         format: vk::VkFormat,
+        layout: vk::VkImageLayout,
     ) -> Self {
-        let image = Image::new_with_vk_data(logical_device.clone(), vk_image);
+        let image = Image::new_with_vk_data(logical_device.clone(), vk_image, layout);
         let mut view_create_info = vk::VkImageViewCreateInfo::default();
         view_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         view_create_info.image = image.vk_data;

@@ -203,7 +203,7 @@ pub struct Manager {
     pub dynamic_buffers: Vec<Arc<RwLock<Buffer>>>,
     pub copy_buffers: Vec<Arc<RwLock<Buffer>>>,
     pub copy_ranges: Vec<vk::VkBufferCopy>,
-    pub copy_to_image_ranges: Vec<(vk::VkBufferImageCopy, Arc<Image>)>,
+    pub copy_to_image_ranges: Vec<(vk::VkBufferImageCopy, Arc<RwLock<Image>>)>,
     pub frame_number: Arc<RwLock<u32>>,
     pub cmd_pool: Arc<CmdPool>,
 }
@@ -333,7 +333,7 @@ impl Manager {
 
     pub fn create_staging_image(
         &mut self,
-        image: &Arc<Image>,
+        image: &Arc<RwLock<Image>>,
         pixels: &Vec<u8>,
         img_info: &vk::VkImageCreateInfo,
     ) {
@@ -380,11 +380,22 @@ impl Manager {
             );
             self.copy_ranges.clear();
         }
-        for copy_img in &self.copy_to_image_ranges {
-            cmd.copy_buffer_to_image(self.cpu_buffer.vk_data, copy_img.1.vk_data, &copy_img.0);
+        if self.copy_to_image_ranges.len() != 0 {
+            for copy_img in &self.copy_to_image_ranges {
+                let mut image = vxresult!(copy_img.1.write());
+                image.change_layout(&mut cmd, vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            }
+            for copy_img in &self.copy_to_image_ranges {
+                let image = vxresult!(copy_img.1.read());
+                cmd.copy_buffer_to_image(self.cpu_buffer.vk_data, image.vk_data, &copy_img.0);
+            }
+            for copy_img in &self.copy_to_image_ranges {
+                let mut image = vxresult!(copy_img.1.write());
+                image.change_layout(&mut cmd, vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            }
         }
-        self.copy_to_image_ranges.clear();
         cmd.flush();
         self.copy_buffers.clear();
+        self.copy_to_image_ranges.clear();
     }
 }

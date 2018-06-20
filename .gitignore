@@ -35,3 +35,9 @@ toolchains/
 *.ipa
 *.app
 *.exe
+*.png
+*.jpg
+*.ktx
+*.ttf
+*.gltf
+*.ogv

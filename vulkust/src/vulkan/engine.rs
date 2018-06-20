@@ -9,6 +9,7 @@ use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
+use super::image::Image;
 use super::image::view::View as ImageView;
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
@@ -96,7 +97,7 @@ impl Engine {
             &graphic_cmd_pool,
             &frame_number,
             4 * 1028,
-            4 * 1028,
+            8 * 1028 * 1028,
             4 * 1028,
             swapchain.image_views.len() as isize,
         );
@@ -116,6 +117,7 @@ impl Engine {
             &buffer_manager,
             &render_pass,
         )));
+        Image::new_with_file_name("1.png", &buffer_manager);
         let os_app = os_app.clone();
         Engine {
             // core_app: unsafe { transmute(0usize) },

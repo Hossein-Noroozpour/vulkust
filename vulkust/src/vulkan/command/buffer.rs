@@ -5,6 +5,7 @@ use super::super::synchronizer::fence::Fence;
 use super::super::vulkan as vk;
 use super::pool::Pool;
 use std::sync::{Arc, RwLock};
+use std::ptr::null;
 
 pub struct Buffer {
     pub pool: Arc<Pool>,
@@ -183,6 +184,26 @@ impl Buffer {
     pub fn draw_index(&mut self, indices_count: u32) {
         unsafe {
             vk::vkCmdDrawIndexed(self.vk_data, indices_count, 1, 0, 0, 1);
+        }
+    }
+
+    pub fn pipeline_image_barrier(
+        &mut self, 
+        src_stage: vk::VkPipelineStageFlags,
+        dst_stage: vk::VkPipelineStageFlags,
+        dependancy: vk::VkDependencyFlags,
+        info: &vk::VkImageMemoryBarrier,
+    ) {
+        unsafe {
+            vk::vkCmdPipelineBarrier(
+				self.vk_data,
+				src_stage,
+				dst_stage,
+				dependancy,
+				0, null(),
+				0, null(),
+				1, info
+            );
         }
     }
 }
