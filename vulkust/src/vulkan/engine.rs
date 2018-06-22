@@ -6,6 +6,7 @@ use super::super::system::os::application::Application as OsApp;
 use super::buffer::{DynamicBuffer, Manager as BufferManager, StaticBuffer};
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
+use super::descriptor::{Manager as DescriptorManager, Set as DescriptorSet};
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
@@ -41,6 +42,7 @@ pub struct Engine {
     pub memory_mgr: Arc<RwLock<MemoryManager>>,
     pub depth_stencil_image_view: Arc<ImageView>,
     pub render_pass: Arc<RenderPass>,
+    pub descriptor_manager: Arc<RwLock<DescriptorManager>>,
     pub pipeline_manager: Arc<RwLock<PipelineManager>>,
     pub framebuffers: Vec<Arc<Framebuffer>>,
     pub frame_number: Arc<RwLock<u32>>,
@@ -52,6 +54,7 @@ pub struct Engine {
     pub index_buffer: StaticBuffer,
     pub uniform_buffer: DynamicBuffer,
     pub texture_view: Arc<ImageView>,
+    pub main_desc: Arc<DescriptorSet>,
     //----------------------------------------------------------------------------------------------
 }
 
@@ -112,12 +115,19 @@ impl Engine {
         let uniform_size = (UNIFORM.len() * 4) as isize;
         let uniform_buffer = buffer_manager.create_dynamic_buffer(uniform_size);
         let buffer_manager = Arc::new(RwLock::new(buffer_manager));
+        let descriptor_manager = Arc::new(RwLock::new(DescriptorManager::new(
+            &buffer_manager,
+            &logical_device,
+        )));
         let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(
             &logical_device,
-            &buffer_manager,
+            &descriptor_manager,
             &render_pass,
         )));
         let texture_view = Arc::new(ImageView::new_texture_with_file("1.png", &buffer_manager));
+        let main_desc = Arc::new(
+            vxresult!(descriptor_manager.write()).create_main_set(&texture_view, &sampler),
+        );
         let os_app = os_app.clone();
         Engine {
             // core_app: unsafe { transmute(0usize) },
@@ -134,6 +144,7 @@ impl Engine {
             memory_mgr,
             depth_stencil_image_view,
             render_pass,
+            descriptor_manager,
             pipeline_manager,
             framebuffers,
             frame_number,
@@ -145,6 +156,7 @@ impl Engine {
             index_buffer,
             uniform_buffer,
             texture_view,
+            main_desc,
             //--------------------------------------------------------------------------------------
         }
     }
@@ -267,14 +279,9 @@ impl Engine {
         draw_command.set_viewport(viewport);
         draw_command.set_scissor(scissor);
         let pipemgr = vxresult!(self.pipeline_manager.read());
-        vxresult!(pipemgr.descriptor_manager.main_set.write()).update_image(
-            1,
-            &self.texture_view,
-            &self.sampler,
-        );
         draw_command.bind_descriptor_set(
             &pipemgr.main_pipeline.layout,
-            &pipemgr.descriptor_manager.main_set,
+            &self.main_desc,
             vxresult!(self.uniform_buffer.buffers[frame_number].0.read())
                 .info
                 .offset as usize,

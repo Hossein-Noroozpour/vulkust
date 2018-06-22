@@ -1,5 +1,4 @@
-use super::buffer::Manager as BufferManager;
-use super::descriptor::{Manager as DescriptorManager, Set as DescriptorSet};
+use super::descriptor::{Manager as DescriptorManager, SetLayout as DescriptorSetLayout};
 use super::device::logical::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
 use super::shader::Module;
@@ -9,23 +8,22 @@ use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 pub struct Layout {
-    pub logical_device: Arc<LogicalDevice>,
-    pub descriptor_set: Arc<RwLock<DescriptorSet>>,
+    pub descriptor_set_layout: Arc<DescriptorSetLayout>,
     pub vk_data: vk::VkPipelineLayout,
 }
 
 impl Layout {
     pub fn new(
         logical_device: Arc<LogicalDevice>,
-        descriptor_set: Arc<RwLock<DescriptorSet>>,
+        descriptor_manager: &Arc<RwLock<DescriptorManager>>,
     ) -> Self {
         let mut vk_data = 0 as vk::VkPipelineLayout;
+        let descriptor_set_layout = vxresult!(descriptor_manager.read()).main_set_layout.clone();
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipeline_layout_create_info.setLayoutCount =
-            vxresult!(descriptor_set.read()).layouts.len() as u32;
-        pipeline_layout_create_info.pSetLayouts = vxresult!(descriptor_set.read()).layouts.as_ptr();
+        pipeline_layout_create_info.setLayoutCount = 1;
+        pipeline_layout_create_info.pSetLayouts = &descriptor_set_layout.vk_data;
         vulkan_check!(vk::vkCreatePipelineLayout(
             logical_device.vk_data,
             &pipeline_layout_create_info,
@@ -33,9 +31,8 @@ impl Layout {
             &mut vk_data,
         ));
         Layout {
-            descriptor_set: descriptor_set,
-            logical_device: logical_device,
-            vk_data: vk_data,
+            descriptor_set_layout,
+            vk_data,
         }
     }
 }
@@ -43,7 +40,11 @@ impl Layout {
 impl Drop for Layout {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyPipelineLayout(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyPipelineLayout(
+                self.descriptor_set_layout.logical_device.vk_data,
+                self.vk_data,
+                null(),
+            );
         }
     }
 }
@@ -90,15 +91,18 @@ pub struct Pipeline {
 
 impl Pipeline {
     fn new(
-        descriptor_set: Arc<RwLock<DescriptorSet>>,
+        descriptor_manager: &Arc<RwLock<DescriptorManager>>,
         render_pass: Arc<RenderPass>,
         cache: Arc<Cache>,
     ) -> Self {
-        let device = vxresult!(descriptor_set.read()).pool.logical_device.clone();
+        let device = vxresult!(descriptor_manager.read())
+            .pool
+            .logical_device
+            .clone();
         let vertex_shader = Module::new_with_file("shaders/main.vert.spv", device.clone());
         let fragment_shader = Module::new_with_file("shaders/main.frag.spv", device.clone());
         let shader = vec![vertex_shader, fragment_shader];
-        let layout = Layout::new(device.clone(), descriptor_set.clone());
+        let layout = Layout::new(device.clone(), descriptor_manager);
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
         input_assembly_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -221,7 +225,7 @@ impl Pipeline {
 impl Drop for Pipeline {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyPipeline(self.layout.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyPipeline(self.cache.logical_device.vk_data, self.vk_data, null());
         }
     }
 }
@@ -229,23 +233,20 @@ impl Drop for Pipeline {
 pub struct Manager {
     pub cache: Arc<Cache>,
     pub main_pipeline: Arc<Pipeline>,
-    pub descriptor_manager: Arc<DescriptorManager>,
+    pub descriptor_manager: Arc<RwLock<DescriptorManager>>,
     pub render_pass: Arc<RenderPass>,
 }
 
 impl Manager {
     pub fn new(
         logical_device: &Arc<LogicalDevice>,
-        buffer_manager: &Arc<RwLock<BufferManager>>,
+        descriptor_manager: &Arc<RwLock<DescriptorManager>>,
         render_pass: &Arc<RenderPass>,
     ) -> Self {
         let cache = Arc::new(Cache::new(logical_device));
-        let descriptor_manager = Arc::new(DescriptorManager::new(
-            buffer_manager.clone(),
-            logical_device.clone(),
-        ));
+        let descriptor_manager = descriptor_manager.clone();
         let main_pipeline = Arc::new(Pipeline::new(
-            descriptor_manager.main_set.clone(),
+            &descriptor_manager,
             render_pass.clone(),
             cache.clone(),
         ));

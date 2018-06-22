@@ -134,7 +134,7 @@ impl Buffer {
     pub fn bind_descriptor_set(
         &mut self,
         pl: &PipelineLayout,
-        ds: &Arc<RwLock<DescriptorSet>>,
+        ds: &Arc<DescriptorSet>,
         offset: usize,
     ) {
         let offset = offset as u32;
@@ -146,7 +146,7 @@ impl Buffer {
                 pl.vk_data,
                 0,
                 1,
-                &vxresult!(ds.read()).vk_data,
+                &ds.vk_data,
                 1,
                 &offset,
             );

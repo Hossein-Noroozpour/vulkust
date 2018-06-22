@@ -46,19 +46,13 @@ impl Drop for Pool {
     }
 }
 
-pub struct Set {
-    pub pool: Arc<Pool>,
-    pub layouts: Vec<vk::VkDescriptorSetLayout>,
-    pub vk_data: vk::VkDescriptorSet,
+pub struct SetLayout {
+    pub logical_device: Arc<LogicalDevice>,
+    pub vk_data: vk::VkDescriptorSetLayout,
 }
 
-impl Set {
-    fn new(pool: Arc<Pool>, buffer_manager: &Arc<RwLock<BufferManager>>) -> Self {
-        let buffer = vxresult!(buffer_manager.read()).cpu_buffer.vk_data;
-        let mut buff_info = vk::VkDescriptorBufferInfo::default();
-        buff_info.buffer = buffer;
-        buff_info.range = 64; // temporary
-        let logical_device = pool.logical_device.clone();
+impl SetLayout {
+    fn new(logical_device: Arc<LogicalDevice>) -> Self {
         let mut layout_bindings = vec![vk::VkDescriptorSetLayoutBinding::default(); 2];
         layout_bindings[0].binding = 0;
         layout_bindings[0].descriptorType =
@@ -77,99 +71,126 @@ impl Set {
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         descriptor_layout.bindingCount = layout_bindings.len() as u32;
         descriptor_layout.pBindings = layout_bindings.as_ptr();
-        let mut descriptor_set_layout = 0 as vk::VkDescriptorSetLayout;
+        let mut vk_data = 0 as vk::VkDescriptorSetLayout;
         vulkan_check!(vk::vkCreateDescriptorSetLayout(
             logical_device.vk_data,
             &descriptor_layout,
             null(),
-            &mut descriptor_set_layout,
+            &mut vk_data,
         ));
+        SetLayout {
+            logical_device,
+            vk_data,
+        }
+    }
+}
+
+impl Drop for SetLayout {
+    fn drop(&mut self) {
+        unsafe {
+            vk::vkDestroyDescriptorSetLayout(self.logical_device.vk_data, self.vk_data, null());
+        }
+    }
+}
+
+pub struct Set {
+    pub pool: Arc<Pool>,
+    pub layout: Arc<SetLayout>,
+    pub vk_data: vk::VkDescriptorSet,
+}
+
+impl Set {
+    fn new(
+        pool: &Arc<Pool>,
+        layout: &Arc<SetLayout>,
+        buffer_manager: &Arc<RwLock<BufferManager>>,
+        image_view: &Arc<ImageView>,
+        sampler: &Arc<Sampler>,
+    ) -> Self {
+        let layout = layout.clone();
+        let logical_device: &Arc<LogicalDevice> = &pool.logical_device;
+        let pool = pool.clone();
         let mut alloc_info = vk::VkDescriptorSetAllocateInfo::default();
         alloc_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         alloc_info.descriptorPool = pool.vk_data;
         alloc_info.descriptorSetCount = 1;
-        alloc_info.pSetLayouts = &descriptor_set_layout;
+        alloc_info.pSetLayouts = &layout.vk_data;
         let mut vk_data = 0 as vk::VkDescriptorSet;
         vulkan_check!(vk::vkAllocateDescriptorSets(
             logical_device.vk_data,
             &alloc_info,
             &mut vk_data,
         ));
-        let mut write_descriptor_set = vk::VkWriteDescriptorSet::default();
-        write_descriptor_set.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_set.dstSet = vk_data;
-        write_descriptor_set.descriptorCount = 1;
-        write_descriptor_set.descriptorType =
-            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        write_descriptor_set.pBufferInfo = &buff_info;
-        write_descriptor_set.dstBinding = 0;
-        unsafe {
-            vk::vkUpdateDescriptorSets(logical_device.vk_data, 1, &write_descriptor_set, 0, null());
-        }
-        Set {
-            pool: pool,
-            layouts: vec![descriptor_set_layout; 1],
-            vk_data: vk_data,
-        }
-    }
-
-    pub fn update_image(
-        &mut self,
-        binding: u32,
-        image_view: &Arc<ImageView>,
-        sampler: &Arc<Sampler>,
-    ) {
-        let mut image_info = vk::VkDescriptorImageInfo::default();
-        image_info.imageLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image_view.vk_data;
-        image_info.sampler = sampler.vk_data;
-        let mut write_descriptor_set = vk::VkWriteDescriptorSet::default();
-        write_descriptor_set.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_set.dstSet = self.vk_data;
-        write_descriptor_set.descriptorCount = 1;
-        write_descriptor_set.descriptorType =
-            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        write_descriptor_set.pImageInfo = &image_info;
-        write_descriptor_set.dstBinding = binding;
+        let buffer = vxresult!(buffer_manager.read()).cpu_buffer.vk_data;
+        let mut buff_info = vk::VkDescriptorBufferInfo::default();
+        buff_info.buffer = buffer;
+        buff_info.range = 64; // todo: temporary
+        let mut img_info = vk::VkDescriptorImageInfo::default();
+        img_info.imageLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        img_info.imageView = image_view.vk_data;
+        img_info.sampler = sampler.vk_data;
+        let mut infos = vec![vk::VkWriteDescriptorSet::default(); 2];
+        infos[0].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        infos[0].dstSet = vk_data;
+        infos[0].descriptorCount = 1;
+        infos[0].descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        infos[0].pBufferInfo = &buff_info;
+        infos[0].dstBinding = 0;
+        infos[1].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        infos[1].dstSet = vk_data;
+        infos[1].descriptorCount = 1;
+        infos[1].descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        infos[1].pImageInfo = &img_info;
+        infos[1].dstBinding = 1;
         unsafe {
             vk::vkUpdateDescriptorSets(
-                self.pool.logical_device.vk_data,
-                1,
-                &write_descriptor_set,
+                logical_device.vk_data,
+                infos.len() as u32,
+                infos.as_ptr(),
                 0,
                 null(),
             );
+        }
+        Set {
+            pool,
+            layout,
+            vk_data,
         }
     }
 }
 
 impl Drop for Set {
-    fn drop(&mut self) {
-        unsafe {
-            for layout in &self.layouts {
-                vk::vkDestroyDescriptorSetLayout(self.pool.logical_device.vk_data, *layout, null());
-            }
-        }
-    }
+    fn drop(&mut self) {}
 }
 
 pub struct Manager {
-    pub main_set: Arc<RwLock<Set>>,
     pub buffer_manager: Arc<RwLock<BufferManager>>,
+    pub main_set_layout: Arc<SetLayout>,
     pub pool: Arc<Pool>,
 }
 
 impl Manager {
     pub fn new(
-        buffer_manager: Arc<RwLock<BufferManager>>,
-        logical_device: Arc<LogicalDevice>,
+        buffer_manager: &Arc<RwLock<BufferManager>>,
+        logical_device: &Arc<LogicalDevice>,
     ) -> Self {
-        let pool = Arc::new(Pool::new(logical_device));
-        let main_set = Arc::new(RwLock::new(Set::new(pool.clone(), &buffer_manager)));
+        let pool = Arc::new(Pool::new(logical_device.clone()));
+        let main_set_layout = Arc::new(SetLayout::new(logical_device.clone()));
+        let buffer_manager = buffer_manager.clone();
         Manager {
-            main_set,
-            pool,
             buffer_manager,
+            main_set_layout,
+            pool,
         }
+    }
+
+    pub fn create_main_set(&mut self, image_view: &Arc<ImageView>, sampler: &Arc<Sampler>) -> Set {
+        Set::new(
+            &self.pool,
+            &self.main_set_layout,
+            &self.buffer_manager,
+            image_view,
+            sampler,
+        )
     }
 }
