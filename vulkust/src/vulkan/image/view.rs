@@ -66,7 +66,11 @@ impl View {
         layout: vk::VkImageLayout,
     ) -> Self {
         Self::new_with_image(Arc::new(RwLock::new(Image::new_with_vk_data(
-            logical_device.clone(), vk_image, layout, format))))
+            logical_device.clone(),
+            vk_image,
+            layout,
+            format,
+        ))))
     }
 
     pub fn new_texture_with_file(file: &str, buffmgr: &Arc<RwLock<BufferManager>>) -> Self {
@@ -76,10 +80,7 @@ impl View {
 
     pub fn new_with_image(image: Arc<RwLock<Image>>) -> Self {
         let vk_data = Self::create_vk_data_with_image(&image);
-        View {
-            image,
-            vk_data,
-        }
+        View { image, vk_data }
     }
 
     pub fn create_vk_data_with_image(image: &Arc<RwLock<Image>>) -> vk::VkImageView {

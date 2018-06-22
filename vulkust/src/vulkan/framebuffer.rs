@@ -49,7 +49,9 @@ impl Drop for Framebuffer {
     fn drop(&mut self) {
         unsafe {
             vk::vkDestroyFramebuffer(
-                vxresult!(self.color_buffer.image.read()).logical_device.vk_data,
+                vxresult!(self.color_buffer.image.read())
+                    .logical_device
+                    .vk_data,
                 self.vk_data,
                 null(),
             );

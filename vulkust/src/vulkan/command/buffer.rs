@@ -4,8 +4,8 @@ use super::super::pipeline::{Layout as PipelineLayout, Pipeline};
 use super::super::synchronizer::fence::Fence;
 use super::super::vulkan as vk;
 use super::pool::Pool;
-use std::sync::{Arc, RwLock};
 use std::ptr::null;
+use std::sync::{Arc, RwLock};
 
 pub struct Buffer {
     pub pool: Arc<Pool>,
@@ -134,7 +134,7 @@ impl Buffer {
     pub fn bind_descriptor_set(
         &mut self,
         pl: &PipelineLayout,
-        ds: &Arc<DescriptorSet>,
+        ds: &Arc<RwLock<DescriptorSet>>,
         offset: usize,
     ) {
         let offset = offset as u32;
@@ -146,7 +146,7 @@ impl Buffer {
                 pl.vk_data,
                 0,
                 1,
-                &ds.vk_data,
+                &vxresult!(ds.read()).vk_data,
                 1,
                 &offset,
             );
@@ -188,7 +188,7 @@ impl Buffer {
     }
 
     pub fn pipeline_image_barrier(
-        &mut self, 
+        &mut self,
         src_stage: vk::VkPipelineStageFlags,
         dst_stage: vk::VkPipelineStageFlags,
         dependancy: vk::VkDependencyFlags,
@@ -196,13 +196,16 @@ impl Buffer {
     ) {
         unsafe {
             vk::vkCmdPipelineBarrier(
-				self.vk_data,
-				src_stage,
-				dst_stage,
-				dependancy,
-				0, null(),
-				0, null(),
-				1, info
+                self.vk_data,
+                src_stage,
+                dst_stage,
+                dependancy,
+                0,
+                null(),
+                0,
+                null(),
+                1,
+                info,
             );
         }
     }

@@ -383,7 +383,10 @@ impl Manager {
         if self.copy_to_image_ranges.len() != 0 {
             for copy_img in &self.copy_to_image_ranges {
                 let mut image = vxresult!(copy_img.1.write());
-                image.change_layout(&mut cmd, vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                image.change_layout(
+                    &mut cmd,
+                    vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                );
             }
             for copy_img in &self.copy_to_image_ranges {
                 let image = vxresult!(copy_img.1.read());
@@ -391,7 +394,10 @@ impl Manager {
             }
             for copy_img in &self.copy_to_image_ranges {
                 let mut image = vxresult!(copy_img.1.write());
-                image.change_layout(&mut cmd, vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                image.change_layout(
+                    &mut cmd,
+                    vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                );
             }
         }
         cmd.flush();

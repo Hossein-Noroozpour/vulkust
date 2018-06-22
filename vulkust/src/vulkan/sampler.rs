@@ -1,7 +1,7 @@
-use super::vulkan as vk;
 use super::device::logical::Logical as LogicalDevice;
-use std::sync::Arc;
+use super::vulkan as vk;
 use std::ptr::null;
+use std::sync::Arc;
 
 pub struct Sampler {
     pub logical_device: Arc<LogicalDevice>,
@@ -18,7 +18,11 @@ impl Sampler {
         info.addressModeV = vk::VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
         info.addressModeW = vk::VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
         info.anisotropyEnable = vk::VK_TRUE;
-        info.maxAnisotropy = logical_device.physical_device.properties.limits.maxSamplerAnisotropy;
+        info.maxAnisotropy = logical_device
+            .physical_device
+            .properties
+            .limits
+            .maxSamplerAnisotropy;
         info.borderColor = vk::VkBorderColor::VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         info.unnormalizedCoordinates = vk::VK_FALSE;
         info.compareEnable = vk::VK_FALSE;
@@ -28,7 +32,12 @@ impl Sampler {
         info.minLod = 0f32;
         info.maxLod = 0f32;
         let mut vk_data = 0 as vk::VkSampler;
-        vulkan_check!(vk::vkCreateSampler(logical_device.vk_data, &info, null(), &mut vk_data));
+        vulkan_check!(vk::vkCreateSampler(
+            logical_device.vk_data,
+            &info,
+            null(),
+            &mut vk_data
+        ));
         Sampler {
             logical_device,
             vk_data,

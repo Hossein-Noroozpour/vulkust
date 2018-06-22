@@ -51,7 +51,7 @@ pub struct Engine {
     pub vertex_buffer: StaticBuffer,
     pub index_buffer: StaticBuffer,
     pub uniform_buffer: DynamicBuffer,
-    pub texture_view: ImageView,
+    pub texture_view: Arc<ImageView>,
     //----------------------------------------------------------------------------------------------
 }
 
@@ -102,23 +102,22 @@ impl Engine {
             swapchain.image_views.len() as isize,
         );
         let sampler = Arc::new(Sampler::new(logical_device.clone()));
-        // -----------------------------------------------------------------------------------------
         let vertices = vec![
-            1.0f32, 1.0f32, 0.0f32, 1.0f32, 0.0f32, 0.0f32, -1.0f32, 1.0f32, 0.0f32, 0.0f32,
-            1.0f32, 0.0f32, 0.0f32, -1.0f32, 0.0f32, 0.0f32, 0.0f32, 1.0f32,
+            1.0f32, 1.0f32, 0.0f32, 0.0f32, 0.0f32, 1.0f32, 1.0f32, 1.0f32, -1.0f32, 1.0f32,
+            0.0f32, 0.0f32, 1.0f32, 1.0f32, -1.0f32, 1.0f32, 0.0f32, -1.0f32, 0.0f32, 0.0f32,
+            0.0f32, 1.0f32, 0.0f32, -1.0f32,
         ];
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(&vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(&INDICES.to_vec());
         let uniform_size = (UNIFORM.len() * 4) as isize;
         let uniform_buffer = buffer_manager.create_dynamic_buffer(uniform_size);
-        //------------------------------------------------------------------------------------------
         let buffer_manager = Arc::new(RwLock::new(buffer_manager));
         let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(
             &logical_device,
             &buffer_manager,
             &render_pass,
         )));
-        let texture_view = ImageView::new_texture_with_file("1.png", &buffer_manager);
+        let texture_view = Arc::new(ImageView::new_texture_with_file("1.png", &buffer_manager));
         let os_app = os_app.clone();
         Engine {
             // core_app: unsafe { transmute(0usize) },
@@ -267,16 +266,20 @@ impl Engine {
         draw_command.begin_render_pass_with_info(render_pass_begin_info);
         draw_command.set_viewport(viewport);
         draw_command.set_scissor(scissor);
+        let pipemgr = vxresult!(self.pipeline_manager.read());
+        vxresult!(pipemgr.descriptor_manager.main_set.write()).update_image(
+            1,
+            &self.texture_view,
+            &self.sampler,
+        );
         draw_command.bind_descriptor_set(
-            &vxresult!(self.pipeline_manager.read()).main_pipeline.layout,
-            &vxresult!(self.pipeline_manager.read())
-                .descriptor_manager
-                .main_set,
+            &pipemgr.main_pipeline.layout,
+            &pipemgr.descriptor_manager.main_set,
             vxresult!(self.uniform_buffer.buffers[frame_number].0.read())
                 .info
                 .offset as usize,
         );
-        draw_command.bind_pipeline(&vxresult!(self.pipeline_manager.read()).main_pipeline);
+        draw_command.bind_pipeline(&pipemgr.main_pipeline);
         draw_command.bind_vertex_buffer(&self.vertex_buffer.buffer);
         draw_command.bind_index_buffer(&self.index_buffer.buffer);
         draw_command.draw_index(INDICES.len() as u32);

@@ -10,18 +10,22 @@ use std::sync::{Arc, RwLock};
 
 pub struct Layout {
     pub logical_device: Arc<LogicalDevice>,
-    pub descriptor_set: Arc<DescriptorSet>,
+    pub descriptor_set: Arc<RwLock<DescriptorSet>>,
     pub vk_data: vk::VkPipelineLayout,
 }
 
 impl Layout {
-    pub fn new(logical_device: Arc<LogicalDevice>, descriptor_set: Arc<DescriptorSet>) -> Self {
+    pub fn new(
+        logical_device: Arc<LogicalDevice>,
+        descriptor_set: Arc<RwLock<DescriptorSet>>,
+    ) -> Self {
         let mut vk_data = 0 as vk::VkPipelineLayout;
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipeline_layout_create_info.setLayoutCount = descriptor_set.layouts.len() as u32;
-        pipeline_layout_create_info.pSetLayouts = descriptor_set.layouts.as_ptr();
+        pipeline_layout_create_info.setLayoutCount =
+            vxresult!(descriptor_set.read()).layouts.len() as u32;
+        pipeline_layout_create_info.pSetLayouts = vxresult!(descriptor_set.read()).layouts.as_ptr();
         vulkan_check!(vk::vkCreatePipelineLayout(
             logical_device.vk_data,
             &pipeline_layout_create_info,
@@ -78,7 +82,6 @@ impl Drop for Cache {
 
 pub struct Pipeline {
     pub cache: Arc<Cache>,
-    pub descriptor_set: Arc<DescriptorSet>,
     pub layout: Layout,
     pub shader: Vec<Module>,
     pub render_pass: Arc<RenderPass>,
@@ -87,11 +90,11 @@ pub struct Pipeline {
 
 impl Pipeline {
     fn new(
-        descriptor_set: Arc<DescriptorSet>,
+        descriptor_set: Arc<RwLock<DescriptorSet>>,
         render_pass: Arc<RenderPass>,
         cache: Arc<Cache>,
     ) -> Self {
-        let device = descriptor_set.pool.logical_device.clone();
+        let device = vxresult!(descriptor_set.read()).pool.logical_device.clone();
         let vertex_shader = Module::new_with_file("shaders/main.vert.spv", device.clone());
         let fragment_shader = Module::new_with_file("shaders/main.frag.spv", device.clone());
         let shader = vec![vertex_shader, fragment_shader];
@@ -147,13 +150,16 @@ impl Pipeline {
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisample_state.rasterizationSamples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         let mut vertex_input_binding = vk::VkVertexInputBindingDescription::default();
-        vertex_input_binding.stride = 24; // temporary
+        vertex_input_binding.stride = 3 * 4 + 3 * 4 + 2 * 4; // temporary
         vertex_input_binding.inputRate = vk::VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
-        let mut vertex_attributes = vec![vk::VkVertexInputAttributeDescription::default(); 2];
+        let mut vertex_attributes = vec![vk::VkVertexInputAttributeDescription::default(); 3];
         vertex_attributes[0].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
         vertex_attributes[1].location = 1;
-        vertex_attributes[1].offset = 12;
+        vertex_attributes[1].offset = 3 * 4;
         vertex_attributes[1].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+        vertex_attributes[2].location = 2;
+        vertex_attributes[2].offset = 3 * 4 + 3 * 4;
+        vertex_attributes[2].format = vk::VkFormat::VK_FORMAT_R32G32_SFLOAT;
         let mut vertex_input_state = vk::VkPipelineVertexInputStateCreateInfo::default();
         vertex_input_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -204,11 +210,10 @@ impl Pipeline {
         ));
         Pipeline {
             cache,
-            descriptor_set: descriptor_set,
-            layout: layout,
+            layout,
             shader,
-            render_pass: render_pass.clone(),
-            vk_data: vk_data,
+            render_pass,
+            vk_data,
         }
     }
 }

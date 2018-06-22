@@ -4,23 +4,26 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 layout (location = 0) in vec3 pos;
-layout (location = 1) in vec3 color;
+layout (location = 1) in vec3 nrm;
+layout (location = 2) in vec2 uv;
 
 layout (binding = 0) uniform UBO 
 {
 	mat4 mvp;
 } ubo;
 
-layout (location = 0) out vec3 out_color;
+layout (location = 0) out vec2 out_uv;
+layout (location = 1) out float out_diff;
 
 out gl_PerVertex 
 {
-    vec4 gl_Position;   
+    vec4 gl_Position;
 };
 
 
 void main() 
 {
-	out_color = color;
+	out_diff = dot(nrm, vec3(0.0, 0.0, 1.0));
+	out_uv = uv;
 	gl_Position = ubo.mvp * vec4(pos, 1.0);
 }
