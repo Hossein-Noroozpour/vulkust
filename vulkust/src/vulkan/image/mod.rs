@@ -77,13 +77,14 @@ impl Image {
         file: &str,
         buffmgr: &Arc<RwLock<BufferManager>>,
     ) -> Arc<RwLock<Self>> {
-        let img = vxresult!(image::open(file)).to_rgba(); // todo: issue #8
+        let img = vxresult!(image::open(file)).to_rgba();
         let (width, height) = img.dimensions();
-        let img: Vec<u8> = img.into_raw();
+        let img = img.into_raw();
+        let format = vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
         let mut image_info = vk::VkImageCreateInfo::default();
         image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
-        image_info.format = vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM; // todo: issue #8
+        image_info.format = format;
         image_info.extent.width = width;
         image_info.extent.height = height;
         image_info.extent.depth = 1;
