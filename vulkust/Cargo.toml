@@ -14,9 +14,9 @@ fullscreen = []
 
 [dependencies]
 image = "*"
-# cgmath = "*"
-# gltf = { version = "*", features = ["extras", "names"] }
+cgmath = "*"
 libc = "*"
+# gltf = { version = "*", features = ["extras", "names"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser"] }

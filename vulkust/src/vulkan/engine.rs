@@ -22,6 +22,9 @@ use super::synchronizer::fence::Fence;
 use super::synchronizer::semaphore::Semaphore;
 use super::vulkan as vk;
 
+use math;
+use math::prelude::*;
+
 const INDICES: [u32; 3] = [0, 1, 2];
 
 const UNIFORM: [f32; 16] = [
@@ -195,8 +198,14 @@ impl Engine {
         ));
         *vxresult!(self.frame_number.write()) = current_buffer as u32;
         self.record();
+        let proj = math::perspective(math::Rad(1.57f32), 1.43f32, 0.1f32, 2.0f32);
+        let view = math::Matrix4::look_at(
+            math::Point3::new(0.0f32, 0.0f32, 1.5f32),
+            math::Point3::new(0.0f32, 0.0f32, 0.0f32),
+            math::Vector3::new(0.0f32, 1.0f32, 0.0f32));
+        let vp = proj * view;
         self.uniform_buffer
-            .update(unsafe { transmute(UNIFORM.as_ptr()) });
+            .update(unsafe { transmute(vp.as_ptr()) });
         vxresult!(self.buffer_manager.write()).update();
         let wait_stage_mask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
