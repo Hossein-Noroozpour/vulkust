@@ -1,5 +1,6 @@
 pub mod view;
 
+use super::super::system::file::File;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuffer;
 use super::device::logical::Logical as LogicalDevice;
@@ -8,6 +9,7 @@ use super::vulkan as vk;
 use image;
 
 use std::ptr::null;
+use std::io::Read;
 use std::sync::{Arc, RwLock};
 
 pub struct Image {
@@ -77,7 +79,10 @@ impl Image {
         file: &str,
         buffmgr: &Arc<RwLock<BufferManager>>,
     ) -> Arc<RwLock<Self>> {
-        let img = vxresult!(image::open(file)).to_rgba();
+        let mut file = vxresult!(File::open(file));
+        let mut data = Vec::new();
+        let _ = vxresult!(file.read_to_end(&mut data));
+        let img = vxresult!(image::load_from_memory(&data)).to_rgba();
         let (width, height) = img.dimensions();
         let img = img.into_raw();
         let format = vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
