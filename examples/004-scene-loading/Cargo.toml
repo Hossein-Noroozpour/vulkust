@@ -1,5 +1,5 @@
 [package]
-name = "simple-game"
+name = "scene-loading"
 version = "0.1.0"
 authors = ["Hossein Noroozpour (Thany Hulixer) <hossein.noroozpour@gmail.com>"]
 description = "A simple game made by Vulkust game engine"

@@ -10,7 +10,7 @@ pub mod engine;
 // pub mod model;
 // pub mod mesh;
 // pub mod pipeline;
-// pub mod scene;
+pub mod scene;
 // pub mod shader;
 // pub mod texture;
 // pub mod vertex;

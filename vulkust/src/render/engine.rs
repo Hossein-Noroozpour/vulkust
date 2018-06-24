@@ -7,14 +7,14 @@ pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
 use std::sync::{Arc, RwLock, Weak};
 
 pub struct Engine {
-    pub gapi_engine: GraphicApiEngine,
+    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub os_app: Weak<RwLock<OsApp>>,
     pub core_app: Arc<RwLock<CoreAppTrait>>,
 }
 
 impl Engine {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
-        let gapi_engine = GraphicApiEngine::new(os_app);
+        let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app)));
         Engine {
             gapi_engine,
             os_app: Arc::downgrade(os_app),
@@ -23,7 +23,11 @@ impl Engine {
     }
 
     pub fn update(&mut self) {
-        self.gapi_engine.update();
+        vxresult!(self.gapi_engine.write()).update();
+    }
+
+    pub fn load_scene(&mut self, file_name: &str, scene_name: &str) {
+        vxlogi!("called");
     }
 
     pub fn on_event(&self, _e: Event) {}

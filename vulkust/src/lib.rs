@@ -5,6 +5,7 @@
 pub extern crate image;
 pub extern crate libc;
 pub extern crate cgmath as math;
+pub extern crate gltf;
 
 #[cfg(apple_os)]
 #[macro_use]

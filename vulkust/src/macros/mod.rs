@@ -9,13 +9,20 @@ macro_rules! vulkust_start {
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let os_app = Arc::new(RwLock::new(OsApp::new(core_app.clone())));
             OsApp::initialize(&os_app);
-            let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app, &os_app)));
-            vxresult!(os_app.write()).set_renderer(renderer);
+            let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
+            vxresult!(os_app.write()).set_renderer(renderer.clone());
+            {
+                let mut core_app = vxresult!(core_app.write());
+                core_app.set_os_app(os_app.clone());
+                core_app.set_renderer(renderer);
+                core_app.initialize();
+            }
             vxresult!(os_app.read()).run();
         }
     };
 }
 
+// todo core app set os app renderer initialize
 #[cfg(target_os = "android")]
 #[macro_export]
 macro_rules! vulkust_start {
