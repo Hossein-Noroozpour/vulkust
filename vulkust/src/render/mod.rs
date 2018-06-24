@@ -9,6 +9,7 @@ pub mod engine;
 // pub mod material;
 // pub mod model;
 // pub mod mesh;
+pub mod object;
 // pub mod pipeline;
 pub mod scene;
 // pub mod shader;

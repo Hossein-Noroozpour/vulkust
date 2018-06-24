@@ -8,8 +8,8 @@ use super::memory::{Location as MemeoryLocation, Manager as MemeoryManager, Memo
 use super::vulkan as vk;
 use image;
 
-use std::ptr::null;
 use std::io::Read;
+use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 pub struct Image {

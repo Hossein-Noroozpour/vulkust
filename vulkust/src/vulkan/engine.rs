@@ -202,7 +202,8 @@ impl Engine {
         let view = math::Matrix4::look_at(
             math::Point3::new(0.0f32, 0.0f32, 1.5f32),
             math::Point3::new(0.0f32, 0.0f32, 0.0f32),
-            math::Vector3::new(0.0f32, 1.0f32, 0.0f32));
+            math::Vector3::new(0.0f32, 1.0f32, 0.0f32),
+        );
         let vp = proj * view;
         self.uniform_buffer
             .update(unsafe { transmute(vp.as_ptr()) });

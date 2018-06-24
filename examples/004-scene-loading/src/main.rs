@@ -4,6 +4,7 @@ extern crate vulkust;
 use vulkust::core::application::ApplicationTrait as CoreAppTrait;
 use vulkust::core::event::Event;
 use vulkust::render::engine::Engine as Renderer;
+use vulkust::render::scene::Game as GameScene;
 use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
@@ -11,6 +12,7 @@ use std::sync::{Arc, RwLock};
 struct MyGame {
     pub os_app: Option<Arc<RwLock<OsApp>>>,
     pub renderer: Option<Arc<RwLock<Renderer>>>,
+    pub scene: Option<Arc<RwLock<GameScene>>>,
 }
 
 impl MyGame {
@@ -18,6 +20,7 @@ impl MyGame {
         MyGame {
             os_app: None,
             renderer: None,
+            scene: None,
         }
     }
 }
@@ -32,7 +35,10 @@ impl CoreAppTrait for MyGame {
     }
 
     fn initialize(&mut self) {
-        vxresult!(vxunwrap!(self.renderer).write()).load_scene("data.gltf", "scene-01");
+        self.scene = Some(
+            vxresult!(vxunwrap!(self.renderer).write())
+                .load_scene("blenders/data.gltf", "scene-001"),
+        );
     }
 
     fn on_event(&self, _e: Event) {}

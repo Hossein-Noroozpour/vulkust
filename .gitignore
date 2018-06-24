@@ -40,4 +40,6 @@ toolchains/
 *.ktx
 *.ttf
 *.gltf
+*.glb
 *.ogv
+*.bin

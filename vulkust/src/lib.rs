@@ -2,10 +2,10 @@
 #![feature(integer_atomics)]
 #![feature(stmt_expr_attributes)]
 
-pub extern crate image;
-pub extern crate libc;
 pub extern crate cgmath as math;
 pub extern crate gltf;
+pub extern crate image;
+pub extern crate libc;
 
 #[cfg(apple_os)]
 #[macro_use]
