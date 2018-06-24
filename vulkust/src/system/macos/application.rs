@@ -75,6 +75,12 @@ impl Application {
         vxresult!(vxunwrap!(self.renderer).write()).update();
         // vxlogi!("reached");
     }
+
+    pub fn aspect_ratio(&self) -> f32 {
+        let view: apple::Id = unsafe { transmute(self.view) };
+        let frame: apple::NSRect = unsafe { msg_send![view, frame] };
+        frame.size.width as f32 / frame.size.height as f32
+    }
 }
 
 impl Drop for Application {

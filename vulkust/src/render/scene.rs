@@ -1,4 +1,5 @@
 use super::super::system::file::File;
+use super::camera::Manager as CameraManager;
 use super::engine::GraphicApiEngine;
 use super::object::Object;
 use std::collections::BTreeMap;
@@ -35,7 +36,10 @@ impl Manager {
     {
         let file = Self::load_gltf(file_name);
         let scene = Self::fetch_gltf_scene(&file, scene_name);
-        let scene = Arc::new(RwLock::new(S::new_with_gltf_scene(scene)));
+        let scene = Arc::new(RwLock::new(S::new_with_gltf(
+            self.gapi_engine.clone(),
+            scene,
+        )));
         let s: Arc<RwLock<Scene>> = scene.clone();
         self.add(s);
         return scene;
@@ -87,13 +91,14 @@ impl Manager {
 pub trait Scene: Object {}
 
 pub trait Loadable: Scene + Sized {
-    fn new_with_gltf_scene(gltf::Scene) -> Self {
+    fn new_with_gltf(Arc<RwLock<GraphicApiEngine>>, gltf::Scene) -> Self {
         vxunexpected!();
     }
 }
 
 pub struct Game {
     pub name: String,
+    pub camera_manager: Arc<RwLock<CameraManager>>,
 }
 
 impl Object for Game {
@@ -105,8 +110,25 @@ impl Object for Game {
 impl Scene for Game {}
 
 impl Loadable for Game {
-    fn new_with_gltf_scene(scene: gltf::Scene) -> Self {
+    fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene) -> Self {
         let name = vxunwrap_o!(scene.name()).to_string();
-        Game { name }
+        let mut camera_manager = CameraManager::new(gapi_engine);
+        let nodes = scene.nodes();
+        for node in nodes {
+            if node.camera().is_some() {
+                camera_manager.load(node);
+            } else {
+                for node in node.children() {
+                    if node.camera().is_some() {
+                        camera_manager.load(node);
+                    }
+                }
+            }
+        }
+        let camera_manager = Arc::new(RwLock::new(camera_manager));
+        Game {
+            name,
+            camera_manager,
+        }
     }
 }

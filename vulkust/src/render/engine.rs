@@ -3,7 +3,7 @@ use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
 pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
 // use super::command::buffer::Buffer as CmdBuff;
-use super::scene::{Loadable as LoadableScene, Manager as SceneManager, Scene};
+use super::scene::{Loadable as LoadableScene, Manager as SceneManager};
 use std::sync::{Arc, RwLock, Weak};
 
 pub struct Engine {
@@ -34,6 +34,7 @@ impl Engine {
         file_name: &str,
         scene_name: &str,
     ) -> Arc<RwLock<S>> {
+        vxlogi!("Reached");
         vxresult!(self.scene_manager.write()).load::<S>(file_name, scene_name)
     }
 
