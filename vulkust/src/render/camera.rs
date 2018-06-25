@@ -1,9 +1,11 @@
 use super::engine::GraphicApiEngine;
-use super::object::{Loadable, Object};
+use super::object::{Loadable, Object, Transferable};
 use gltf;
 use math;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
+use std::convert::From;
+use std::fmt::Debug;
 
 pub struct Manager {
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
@@ -42,19 +44,57 @@ impl Manager {
         };
         let name = vxunwrap_o!(c.name()).to_string();
         self.cameras.insert(name, camera.clone());
+        let decomposeed = n.transform().decomposed();
+        let (location, rotation, _scale) = decomposeed;
+        let location = math::Vector3::new(location[0], location[1], location[2]);
+        let rotation = math::Quaternion::new(
+            rotation[3], rotation[0], rotation[1], rotation[2]);
+        vxresult!(camera.write()).set_orientation_location(rotation, location);
+        vxlogi!("Camera is: {:?}", &camera);
         camera
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Basic {
     pub near: f32,
     pub far: f32,
     pub aspect_ratio: f32,
+    pub x: math::Vector3<f32>,
+    pub y: math::Vector3<f32>,
+    pub z: math::Vector3<f32>,
     pub location: math::Vector3<f32>,
     pub direction: math::Matrix4<f32>,
     pub view: math::Matrix4<f32>,
     pub projection: math::Matrix4<f32>,
     pub view_projection: math::Matrix4<f32>,
+}
+
+impl Basic {
+    pub fn set_orientation(&mut self, q: math::Quaternion<f32>) {
+        let rotation = math::Matrix4::from(q);
+        self.x = (rotation * self.x.extend(1.0)).truncate();
+        self.y = (rotation * self.y.extend(1.0)).truncate();
+        self.z = (rotation * self.z.extend(1.0)).truncate();
+        let rotation = math::Matrix4::from(-q);
+        let translate = math::Matrix4::from_translation(-self.location);
+        self.direction = rotation;
+        self.view = rotation * translate;
+        self.view_projection = self.projection * self.view;
+    }
+
+    pub fn set_orientation_location(&mut self, q: math::Quaternion<f32>, l: math::Vector3<f32>) {
+        let rotation = math::Matrix4::from(q);
+        self.x = (rotation * self.x.extend(1.0)).truncate();
+        self.y = (rotation * self.y.extend(1.0)).truncate();
+        self.z = (rotation * self.z.extend(1.0)).truncate();
+        let rotation = math::Matrix4::from(-q);
+        self.location = l;
+        let translate = math::Matrix4::from_translation(-l);
+        self.direction = rotation;
+        self.view = rotation * translate;
+        self.view_projection = self.projection * self.view;
+    }
 }
 
 impl Default for Basic {
@@ -66,6 +106,9 @@ impl Default for Basic {
             near: 0.0,
             far: 0.0,
             aspect_ratio: 0.0,
+            x: math::Vector3::new(1.0, 0.0, 0.0),
+            y: math::Vector3::new(0.0, 1.0, 0.0),
+            z: math::Vector3::new(0.0, 0.0, -1.0),
             location: math::Vector3::new(0.0, 0.0, 0.0),
             direction: identity,
             view: identity,
@@ -75,8 +118,17 @@ impl Default for Basic {
     }
 }
 
-pub trait Camera: Object {}
+#[cfg(debug_assertions)]
+pub trait Camera: Object + Transferable + Debug {
 
+}
+
+#[cfg(not(debug_assertions))]
+pub trait Camera: Object + Transferable {
+
+}
+
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Perspective {
     pub fov_vertical: f32,
     pub fov_horizontal: f32,
@@ -126,10 +178,21 @@ impl Perspective {
 
 impl Object for Perspective {}
 
+impl Transferable for Perspective {
+    fn set_orientation(&mut self, q: math::Quaternion<f32>) {
+        self.basic.set_orientation(q);
+    }
+
+    fn set_orientation_location(&mut self, q: math::Quaternion<f32>, l: math::Vector3<f32>) {
+        self.basic.set_orientation_location(q, l);
+    }
+}
+
 impl Camera for Perspective {}
 
 impl Loadable for Perspective {}
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Orthographic {
     pub basic: Basic,
 }
@@ -142,5 +205,7 @@ impl Orthographic {
 }
 
 impl Object for Orthographic {}
+
+impl Transferable for Orthographic {}
 
 impl Camera for Orthographic {}
