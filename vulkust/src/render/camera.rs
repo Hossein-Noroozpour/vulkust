@@ -40,6 +40,8 @@ impl Manager {
                 camera
             }
         };
+        let name = vxunwrap_o!(c.name()).to_string();
+        self.cameras.insert(name, camera.clone());
         camera
     }
 }
@@ -108,7 +110,7 @@ impl Perspective {
         };
         basic.projection =
             math::perspective(math::Rad(fov_vertical), aspect_ratio, basic.near, basic.far);
-        vxlogi!("Ok we reached here name is: {}", name);
+        basic.view_projection = basic.projection;
         Perspective {
             fov_vertical,
             fov_horizontal,
@@ -133,8 +135,8 @@ pub struct Orthographic {
 }
 
 impl Orthographic {
-    pub fn new_with_gltf_orthographic(o: gltf::camera::Orthographic) -> Self {
-        let mut basic = Basic::default();
+    pub fn new_with_gltf_orthographic(_o: gltf::camera::Orthographic) -> Self {
+        let basic = Basic::default();
         Orthographic { basic }
     }
 }

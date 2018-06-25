@@ -22,6 +22,9 @@ pub struct Application {
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,
     pub atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t,
+    pub window_width: f32,
+    pub window_height: f32,
+    pub window_aspect_ratio: f32,
 }
 
 impl Application {
@@ -49,9 +52,12 @@ impl Application {
             | xcb::xcb_event_mask_t::XCB_EVENT_MASK_STRUCTURE_NOTIFY as u32
             | xcb::xcb_event_mask_t::XCB_EVENT_MASK_POINTER_MOTION as u32
             | xcb::xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_PRESS as u32
-            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_RELEASE as u32;
+            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_RELEASE as u32
+            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_RESIZE_REDIRECT as u32;
         let value_mask =
             xcb::xcb_cw_t::XCB_CW_BACK_PIXEL as u32 | xcb::xcb_cw_t::XCB_CW_EVENT_MASK as u32;
+        let window_width = DEFAULT_WINDOW_WIDTH as u16;
+        let window_height = DEFAULT_WINDOW_HEIGHT as u16;
         unsafe {
             xcb::xcb_create_window(
                 connection,
@@ -60,8 +66,8 @@ impl Application {
                 (*screen).root,
                 0,
                 0,
-                DEFAULT_WINDOW_WIDTH as u16,
-                DEFAULT_WINDOW_HEIGHT as u16,
+                window_width,
+                window_height,
                 0,
                 xcb::xcb_window_class_t::XCB_WINDOW_CLASS_INPUT_OUTPUT as u16,
                 (*screen).root_visual,
@@ -69,6 +75,9 @@ impl Application {
                 value_list.as_ptr(),
             );
         }
+        let window_width = window_width as f32;
+        let window_height = window_height as f32;
+        let window_aspect_ratio = window_width / window_height;
         /* Magic code that will send notification when window is destroyed */
         let cs = CString::new("WM_PROTOCOLS".to_string().into_bytes()).unwrap();
         let cookie = unsafe { xcb::xcb_intern_atom(connection, 1, 12, cs.as_ptr()) };
@@ -115,6 +124,9 @@ impl Application {
             screen,
             window,
             atom_wm_delete_window,
+            window_width,
+            window_height,
+            window_aspect_ratio,
         }
     }
 
@@ -284,5 +296,9 @@ impl Application {
             }
         }
         return None;
+    }
+
+    pub fn aspect_ratio(&self) -> f32 {
+        self.window_aspect_ratio
     }
 }

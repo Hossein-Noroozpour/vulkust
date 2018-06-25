@@ -34,7 +34,6 @@ impl Engine {
         file_name: &str,
         scene_name: &str,
     ) -> Arc<RwLock<S>> {
-        vxlogi!("Reached");
         vxresult!(self.scene_manager.write()).load::<S>(file_name, scene_name)
     }
 

@@ -96,14 +96,48 @@ pub trait Loadable: Scene + Sized {
     }
 }
 
-pub struct Game {
+pub struct Basic {
     pub name: String,
     pub camera_manager: Arc<RwLock<CameraManager>>,
+    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+}
+
+impl Basic {
+    pub fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene) -> Self {
+        let camera_manager = Arc::new(RwLock::new(CameraManager::new(gapi_engine.clone())));
+        let name = vxunwrap_o!(scene.name()).to_string();
+        let myself = Basic {
+            name,
+            camera_manager,
+            gapi_engine,
+        };
+        for node in scene.nodes() {
+            myself.import_gltf_node(node);
+        }
+        myself
+    }
+
+    pub fn import_gltf_node(&self, node: gltf::scene::Node) {
+        if node.camera().is_some() {
+            vxresult!(self.camera_manager.write()).load(node);
+        } else {
+            for node in node.children() {
+                self.import_gltf_node(node);
+            }
+        }
+    }
+}
+
+pub struct Game {
+    pub basic: Basic,
+}
+
+impl Game {
 }
 
 impl Object for Game {
     fn name(&self) -> &str {
-        &self.name
+        &self.basic.name
     }
 }
 
@@ -111,24 +145,9 @@ impl Scene for Game {}
 
 impl Loadable for Game {
     fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene) -> Self {
-        let name = vxunwrap_o!(scene.name()).to_string();
-        let mut camera_manager = CameraManager::new(gapi_engine);
-        let nodes = scene.nodes();
-        for node in nodes {
-            if node.camera().is_some() {
-                camera_manager.load(node);
-            } else {
-                for node in node.children() {
-                    if node.camera().is_some() {
-                        camera_manager.load(node);
-                    }
-                }
-            }
-        }
-        let camera_manager = Arc::new(RwLock::new(camera_manager));
+        let basic = Basic::new_with_gltf(gapi_engine, scene);
         Game {
-            name,
-            camera_manager,
+            basic,
         }
     }
 }

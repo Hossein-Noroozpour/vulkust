@@ -1,12 +1,9 @@
-use std::mem::transmute;
 use std::sync::{Arc, RwLock};
-// use super::super::core::application::ApplicationTrait;
-// use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
-use super::buffer::{DynamicBuffer, Manager as BufferManager, StaticBuffer};
+use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
-use super::descriptor::{Manager as DescriptorManager, Set as DescriptorSet};
+use super::descriptor::Manager as DescriptorManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
@@ -21,15 +18,17 @@ use super::swapchain::{NextImageResult, Swapchain};
 use super::synchronizer::fence::Fence;
 use super::synchronizer::semaphore::Semaphore;
 use super::vulkan as vk;
-
-use math;
-use math::prelude::*;
-
-const INDICES: [u32; 3] = [0, 1, 2];
-
-const UNIFORM: [f32; 16] = [
-    1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-];
+// use std::mem::transmute;
+// use super::super::core::application::ApplicationTrait;
+// use super::super::core::event::Event;
+// use super::buffer::{DynamicBuffer, StaticBuffer};
+// use super::descriptor::Set as DescriptorSet;
+// use math;
+// use math::prelude::*;
+// const INDICES: [u32; 3] = [0, 1, 2];
+// const UNIFORM: [f32; 16] = [
+//     1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+// ];
 
 pub struct Engine {
     pub os_app: Arc<RwLock<OsApp>>,
@@ -53,11 +52,11 @@ pub struct Engine {
     pub wait_fences: Vec<Arc<Fence>>,
     pub sampler: Arc<Sampler>,
     //----------------------------------------------------------------------------------------------
-    pub vertex_buffer: StaticBuffer,
-    pub index_buffer: StaticBuffer,
-    pub uniform_buffer: DynamicBuffer,
-    pub texture_view: Arc<ImageView>,
-    pub main_desc: Arc<DescriptorSet>,
+    // pub vertex_buffer: StaticBuffer,
+    // pub index_buffer: StaticBuffer,
+    // pub uniform_buffer: DynamicBuffer,
+    // pub texture_view: Arc<ImageView>,
+    // pub main_desc: Arc<DescriptorSet>,
     //----------------------------------------------------------------------------------------------
 }
 
@@ -98,7 +97,8 @@ impl Engine {
         }
         framebuffers.shrink_to_fit();
         let frame_number = Arc::new(RwLock::new(0));
-        let mut buffer_manager = BufferManager::new(
+        let sampler = Arc::new(Sampler::new(logical_device.clone()));
+        let buffer_manager = Arc::new(RwLock::new(BufferManager::new(
             &memory_mgr,
             &graphic_cmd_pool,
             &frame_number,
@@ -106,18 +106,7 @@ impl Engine {
             8 * 1028 * 1028,
             4 * 1028,
             swapchain.image_views.len() as isize,
-        );
-        let sampler = Arc::new(Sampler::new(logical_device.clone()));
-        let vertices = vec![
-            1.0f32, 1.0f32, 0.0f32, 0.0f32, 0.0f32, 1.0f32, 1.0f32, 1.0f32, -1.0f32, 1.0f32,
-            0.0f32, 0.0f32, 1.0f32, 1.0f32, -1.0f32, 1.0f32, 0.0f32, -1.0f32, 0.0f32, 0.0f32,
-            0.0f32, 1.0f32, 0.0f32, -1.0f32,
-        ];
-        let vertex_buffer = buffer_manager.create_static_buffer_with_vec(&vertices);
-        let index_buffer = buffer_manager.create_static_buffer_with_vec(&INDICES.to_vec());
-        let uniform_size = (UNIFORM.len() * 4) as isize;
-        let uniform_buffer = buffer_manager.create_dynamic_buffer(uniform_size);
-        let buffer_manager = Arc::new(RwLock::new(buffer_manager));
+        )));
         let descriptor_manager = Arc::new(RwLock::new(DescriptorManager::new(
             &buffer_manager,
             &logical_device,
@@ -127,10 +116,19 @@ impl Engine {
             &descriptor_manager,
             &render_pass,
         )));
-        let texture_view = Arc::new(ImageView::new_texture_with_file("1.png", &buffer_manager));
-        let main_desc = Arc::new(
-            vxresult!(descriptor_manager.write()).create_main_set(&texture_view, &sampler),
-        );
+        // let vertices = vec![
+        //     1.0f32, 1.0f32, 0.0f32, 0.0f32, 0.0f32, 1.0f32, 1.0f32, 1.0f32, -1.0f32, 1.0f32,
+        //     0.0f32, 0.0f32, 1.0f32, 1.0f32, -1.0f32, 1.0f32, 0.0f32, -1.0f32, 0.0f32, 0.0f32,
+        //     0.0f32, 1.0f32, 0.0f32, -1.0f32,
+        // ];
+        // let vertex_buffer = buffer_manager.create_static_buffer_with_vec(&vertices);
+        // let index_buffer = buffer_manager.create_static_buffer_with_vec(&INDICES.to_vec());
+        // let uniform_size = (UNIFORM.len() * 4) as isize;
+        // let uniform_buffer = buffer_manager.create_dynamic_buffer(uniform_size);
+        // let texture_view = Arc::new(ImageView::new_texture_with_file("1.png", &buffer_manager));
+        // let main_desc = Arc::new(
+        //     vxresult!(descriptor_manager.write()).create_main_set(&texture_view, &sampler),
+        // );
         let os_app = os_app.clone();
         Engine {
             // core_app: unsafe { transmute(0usize) },
@@ -155,11 +153,11 @@ impl Engine {
             wait_fences,
             sampler,
             //--------------------------------------------------------------------------------------
-            vertex_buffer,
-            index_buffer,
-            uniform_buffer,
-            texture_view,
-            main_desc,
+            // vertex_buffer,
+            // index_buffer,
+            // uniform_buffer,
+            // texture_view,
+            // main_desc,
             //--------------------------------------------------------------------------------------
         }
     }
@@ -198,15 +196,15 @@ impl Engine {
         ));
         *vxresult!(self.frame_number.write()) = current_buffer as u32;
         self.record();
-        let proj = math::perspective(math::Rad(1.57f32), 1.43f32, 0.1f32, 2.0f32);
-        let view = math::Matrix4::look_at(
-            math::Point3::new(0.0f32, 0.0f32, 1.5f32),
-            math::Point3::new(0.0f32, 0.0f32, 0.0f32),
-            math::Vector3::new(0.0f32, 1.0f32, 0.0f32),
-        );
-        let vp = proj * view;
-        self.uniform_buffer
-            .update(unsafe { transmute(vp.as_ptr()) });
+        // let proj = math::perspective(math::Rad(1.57f32), 1.43f32, 0.1f32, 2.0f32);
+        // let view = math::Matrix4::look_at(
+        //     math::Point3::new(0.0f32, 0.0f32, 1.5f32),
+        //     math::Point3::new(0.0f32, 0.0f32, 0.0f32),
+        //     math::Vector3::new(0.0f32, 1.0f32, 0.0f32),
+        // );
+        // let vp = proj * view;
+        // self.uniform_buffer
+        //     .update(unsafe { transmute(vp.as_ptr()) });
         vxresult!(self.buffer_manager.write()).update();
         let wait_stage_mask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
@@ -288,18 +286,18 @@ impl Engine {
         draw_command.begin_render_pass_with_info(render_pass_begin_info);
         draw_command.set_viewport(viewport);
         draw_command.set_scissor(scissor);
-        let pipemgr = vxresult!(self.pipeline_manager.read());
-        draw_command.bind_descriptor_set(
-            &pipemgr.main_pipeline.layout,
-            &self.main_desc,
-            vxresult!(self.uniform_buffer.buffers[frame_number].0.read())
-                .info
-                .offset as usize,
-        );
-        draw_command.bind_pipeline(&pipemgr.main_pipeline);
-        draw_command.bind_vertex_buffer(&self.vertex_buffer.buffer);
-        draw_command.bind_index_buffer(&self.index_buffer.buffer);
-        draw_command.draw_index(INDICES.len() as u32);
+        // let pipemgr = vxresult!(self.pipeline_manager.read());
+        // draw_command.bind_descriptor_set(
+        //     &pipemgr.main_pipeline.layout,
+        //     &self.main_desc,
+        //     vxresult!(self.uniform_buffer.buffers[frame_number].0.read())
+        //         .info
+        //         .offset as usize,
+        // );
+        // draw_command.bind_pipeline(&pipemgr.main_pipeline);
+        // draw_command.bind_vertex_buffer(&self.vertex_buffer.buffer);
+        // draw_command.bind_index_buffer(&self.index_buffer.buffer);
+        // draw_command.draw_index(INDICES.len() as u32);
         draw_command.end_render_pass();
         draw_command.end();
     }
@@ -324,9 +322,9 @@ impl Engine {
         self.frame_number = new.frame_number.clone();
         self.buffer_manager = new.buffer_manager.clone();
         self.wait_fences = new.wait_fences.clone();
-        self.vertex_buffer = new.vertex_buffer.clone();
-        self.index_buffer = new.index_buffer.clone();
-        self.uniform_buffer = new.uniform_buffer.clone();
+        // self.vertex_buffer = new.vertex_buffer.clone();
+        // self.index_buffer = new.index_buffer.clone();
+        // self.uniform_buffer = new.uniform_buffer.clone();
     }
 
     // fn window_resized(&mut self, w: f64, h: f64) {
