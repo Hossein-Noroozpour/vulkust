@@ -1,4 +1,4 @@
-// pub mod buffer;
+pub mod buffer;
 pub mod camera;
 // pub mod command;
 // pub mod config;
@@ -6,9 +6,9 @@ pub mod camera;
 // pub mod device;
 pub mod engine;
 // pub mod light;
-// pub mod material;
+pub mod material;
 // pub mod model;
-// pub mod mesh;
+pub mod mesh;
 pub mod object;
 // pub mod pipeline;
 pub mod scene;

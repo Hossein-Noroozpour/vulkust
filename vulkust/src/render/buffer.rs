@@ -1,6 +1,6 @@
-#[cfg(feature = "d3d12")]
+#[cfg(directx12_api)]
 pub use super::super::d3d12::buffer::*;
-#[cfg(any(feature = "metal", target_os = "macos"))]
+#[cfg(metal_api)]
 pub use super::super::metal::buffer::*;
-#[cfg(all(not(feature = "metal"), not(feature = "d3d12"), not(target_os = "macos")))]
+#[cfg(vulkan_api)]
 pub use super::super::vulkan::buffer::*;
