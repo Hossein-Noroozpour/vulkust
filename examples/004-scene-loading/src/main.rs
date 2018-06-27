@@ -37,7 +37,7 @@ impl CoreAppTrait for MyGame {
     fn initialize(&mut self) {
         self.scene = Some(
             vxresult!(vxunwrap!(self.renderer).write())
-                .load_scene("data/first.gltf", "scene-001"),
+                .load_scene("data/1.glb", "scene-001"),
         );
     }
 

@@ -6,7 +6,7 @@ pub mod camera;
 // pub mod device;
 pub mod engine;
 // pub mod light;
-pub mod material;
+// pub mod material;
 // pub mod model;
 pub mod mesh;
 pub mod object;

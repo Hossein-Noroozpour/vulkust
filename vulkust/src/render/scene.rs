@@ -1,6 +1,7 @@
 use super::super::system::file::File;
 use super::camera::Manager as CameraManager;
 use super::engine::GraphicApiEngine;
+use super::mesh::Mesh;
 use super::object::Object;
 use std::collections::BTreeMap;
 use std::io::BufReader;
@@ -37,8 +38,9 @@ impl Manager {
         let file = Self::load_gltf(file_name);
         let scene = Self::fetch_gltf_scene(&file, scene_name);
         let scene = Arc::new(RwLock::new(S::new_with_gltf(
-            self.gapi_engine.clone(),
+            self.gapi_engine.clone(), 
             scene,
+            vxunwrap!(file.blob),
         )));
         let s: Arc<RwLock<Scene>> = scene.clone();
         self.add(s);
@@ -91,7 +93,7 @@ impl Manager {
 pub trait Scene: Object {}
 
 pub trait Loadable: Scene + Sized {
-    fn new_with_gltf(Arc<RwLock<GraphicApiEngine>>, gltf::Scene) -> Self {
+    fn new_with_gltf(Arc<RwLock<GraphicApiEngine>>, gltf::Scene, &Vec<u8>) -> Self {
         vxunexpected!();
     }
 }
@@ -103,7 +105,7 @@ pub struct Basic {
 }
 
 impl Basic {
-    pub fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene) -> Self {
+    pub fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene, data: &Vec<u8>) -> Self {
         let camera_manager = Arc::new(RwLock::new(CameraManager::new(gapi_engine.clone())));
         let name = vxunwrap_o!(scene.name()).to_string();
         let myself = Basic {
@@ -112,17 +114,19 @@ impl Basic {
             gapi_engine,
         };
         for node in scene.nodes() {
-            myself.import_gltf_node(node);
+            myself.import_gltf_node(node, data);
         }
         myself
     }
 
-    pub fn import_gltf_node(&self, node: gltf::scene::Node) {
+    pub fn import_gltf_node(&self, node: gltf::scene::Node, data: &Vec<u8>) {
         if node.camera().is_some() {
             vxresult!(self.camera_manager.write()).load(node);
+        } else if let Some(gltf_mesh) = node.mesh() {
+            Mesh::new_with_gltf(&self.gapi_engine, gltf_mesh, data);
         } else {
             for node in node.children() {
-                self.import_gltf_node(node);
+                self.import_gltf_node(node, data);
             }
         }
     }
@@ -144,8 +148,8 @@ impl Object for Game {
 impl Scene for Game {}
 
 impl Loadable for Game {
-    fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene) -> Self {
-        let basic = Basic::new_with_gltf(gapi_engine, scene);
+    fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene, data: &Vec<u8>) -> Self {
+        let basic = Basic::new_with_gltf(gapi_engine, scene, data);
         Game {
             basic,
         }
