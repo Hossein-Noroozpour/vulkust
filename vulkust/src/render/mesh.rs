@@ -1,5 +1,6 @@
 use std::sync::{Arc, RwLock};
 use std::mem::transmute;
+use std::f32::MAX as F32MAX;
 use super::super::system::file::File;
 use super::buffer::{
     Manager as BufferManager,
@@ -9,6 +10,7 @@ use super::engine::GraphicApiEngine;
 // use super::material::Material;
 
 use gltf;
+use libc;
 
 pub struct Mesh {
     // pub vertices: StaticBuffer,
@@ -26,25 +28,36 @@ impl Mesh {
         let primitives = mesh.primitives();
         // let mut vertex_buffers = Vec::new();
         for primitive in primitives {
-            // let mut vertex_buffer = Vec::new();
             let accessor = vxunwrap_o!(primitive.get(&gltf::Semantic::Positions));
-            let view = accessor.view();
-            let source = view.buffer().source();
-            match source {
-                gltf::buffer::Source::Bin => (),
-                _ => vxlogf!("Buffer source must be binary."),
+            let count = accessor.count();
+            let mut vertex_buffer = vec![0u8; (count / 3) * 44];
+            let fun = |sem : &gltf::Semantic| {
+                let accessor = primitive.get(&gltf::Semantic::Positions);
+                let accessor = vxunwrap_o!(accessor);
+                let view = accessor.view();
+                let source = view.buffer().source();
+                match source {
+                    gltf::buffer::Source::Bin => (),
+                    _ => vxlogf!("Buffer source must be binary."),
+                }
+                let offset = view.offset();
+                let length = view.length();
+                if view.stride() != None { // Its meaning is not clear
+                    vxlogf!("Stride is unexpectable.");
+                }
+                data[offset..(length + offset)]
+            };
+            let pos = fun(&gltf::Semantic::Positions);
+            let pos = fun(&gltf::Semantic::Normals);
+            let pos = fun(&gltf::Semantic::Positions);
+            let pos = fun(&gltf::Semantic::Positions);
+            let mut srci = offset;
+            let mut dsti = 0;
+            for c in 0..count {
+                let si = i + offset;
+                let i = (i / 12) * 44 + (i % 12);
+
             }
-            let offset = view.offset();
-            let length = view.length() / 4;
-            if view.stride() != None {
-                vxlogf!("Stride is unexpectable.");
-            }
-            let v: Vec<f32> = unsafe { Vec::from_raw_parts(transmute(data.as_ptr().offset(offset as isize)), length, length) };
-            vxlogi!("Vec: {:?}", &v);
-            // for i in 0..length {
-            //     let modi = i % 12;
-            //     let i = (i / 12) * 
-            // }
         }
         Mesh {
             // buffer: buffer,
