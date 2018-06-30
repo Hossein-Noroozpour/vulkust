@@ -8,6 +8,7 @@ use std::io::BufReader;
 use std::sync::{Arc, RwLock};
 
 use gltf;
+use math;
 
 pub struct Manager {
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
@@ -98,9 +99,30 @@ pub trait Loadable: Scene + Sized {
     }
 }
 
+#[repr(C)]
+pub struct Uniform {
+    pub vp: math::Matrix4<f32>,
+}
+
+impl Uniform {
+    pub fn new() -> Self {
+        let vp = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 
+            0.0, 1.0, 0.0, 0.0, 
+            0.0, 0.0, 1.0, 0.0, 
+            0.0, 0.0, 0.0, 1.0, 
+        );
+        Uniform {
+            vp,
+        }
+    }
+}
+
 pub struct Basic {
     pub name: String,
+    pub uniform: Uniform,
     pub camera_manager: Arc<RwLock<CameraManager>>,
+    pub meshes: Vec<Mesh>,
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
 }
 
@@ -108,27 +130,35 @@ impl Basic {
     pub fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene, data: &Vec<u8>) -> Self {
         let camera_manager = Arc::new(RwLock::new(CameraManager::new(gapi_engine.clone())));
         let name = vxunwrap_o!(scene.name()).to_string();
-        let myself = Basic {
+        let uniform = Uniform::new();
+        let mut myself = Basic {
             name,
+            uniform,
             camera_manager,
+            meshes: Vec::new(),
             gapi_engine,
         };
         for node in scene.nodes() {
             myself.import_gltf_node(node, data);
         }
+        myself.meshes.shrink_to_fit();
         myself
     }
 
-    pub fn import_gltf_node(&self, node: gltf::scene::Node, data: &Vec<u8>) {
+    pub fn import_gltf_node(&mut self, node: gltf::scene::Node, data: &Vec<u8>) {
         if node.camera().is_some() {
             vxresult!(self.camera_manager.write()).load(node);
         } else if let Some(gltf_mesh) = node.mesh() {
-            Mesh::new_with_gltf(&self.gapi_engine, gltf_mesh, data);
+            self.meshes.push(Mesh::new_with_gltf(&self.gapi_engine, gltf_mesh, data));
         } else {
             for node in node.children() {
                 self.import_gltf_node(node, data);
             }
         }
+    }
+
+    pub fn render(&self) {
+        
     }
 }
 
@@ -142,6 +172,10 @@ impl Game {
 impl Object for Game {
     fn name(&self) -> &str {
         &self.basic.name
+    }
+
+    fn render(&self) {
+        self.basic.render();
     }
 }
 

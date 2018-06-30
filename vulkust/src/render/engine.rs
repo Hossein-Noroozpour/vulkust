@@ -27,6 +27,7 @@ impl Engine {
 
     pub fn update(&self) {
         vxresult!(self.gapi_engine.write()).update();
+        vxresult!(self.scene_manager.read()).render();
     }
 
     pub fn load_scene<S: 'static + LoadableScene>(

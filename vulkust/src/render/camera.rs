@@ -11,6 +11,7 @@ pub struct Manager {
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub aspect_ratio: f32,
     pub cameras: BTreeMap<String, Arc<RwLock<Camera>>>,
+    pub active_camera: Option<Arc<RwLock<Camera>>>,
 }
 
 impl Manager {
@@ -24,6 +25,7 @@ impl Manager {
             gapi_engine,
             aspect_ratio,
             cameras: BTreeMap::new(),
+            active_camera: None,
         }
     }
 
@@ -125,7 +127,9 @@ pub trait Camera: Object + Transferable + Debug {
 
 #[cfg(not(debug_assertions))]
 pub trait Camera: Object + Transferable {
-
+    fn get_view_projection(&self) -> &math::Matrix4<f32> {
+        vxunimplemented!();
+    }
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
