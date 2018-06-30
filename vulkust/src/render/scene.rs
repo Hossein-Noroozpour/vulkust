@@ -1,7 +1,7 @@
 use super::super::system::file::File;
 use super::camera::Manager as CameraManager;
 use super::engine::GraphicApiEngine;
-use super::mesh::Mesh;
+use super::mesh::{Basic as BasicMesh, Mesh};
 use super::object::Object;
 use std::collections::BTreeMap;
 use std::io::BufReader;
@@ -39,7 +39,7 @@ impl Manager {
         let file = Self::load_gltf(file_name);
         let scene = Self::fetch_gltf_scene(&file, scene_name);
         let scene = Arc::new(RwLock::new(S::new_with_gltf(
-            self.gapi_engine.clone(), 
+            self.gapi_engine.clone(),
             scene,
             vxunwrap!(file.blob),
         )));
@@ -107,14 +107,9 @@ pub struct Uniform {
 impl Uniform {
     pub fn new() -> Self {
         let vp = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 
-            0.0, 1.0, 0.0, 0.0, 
-            0.0, 0.0, 1.0, 0.0, 
-            0.0, 0.0, 0.0, 1.0, 
+            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
-        Uniform {
-            vp,
-        }
+        Uniform { vp }
     }
 }
 
@@ -122,12 +117,17 @@ pub struct Basic {
     pub name: String,
     pub uniform: Uniform,
     pub camera_manager: Arc<RwLock<CameraManager>>,
-    pub meshes: Vec<Mesh>,
+    pub meshes: Vec<Arc<RwLock<Mesh>>>,
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+    pub render_enabled: bool,
 }
 
 impl Basic {
-    pub fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene, data: &Vec<u8>) -> Self {
+    pub fn new_with_gltf(
+        gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+        scene: gltf::Scene,
+        data: &Vec<u8>,
+    ) -> Self {
         let camera_manager = Arc::new(RwLock::new(CameraManager::new(gapi_engine.clone())));
         let name = vxunwrap_o!(scene.name()).to_string();
         let uniform = Uniform::new();
@@ -137,6 +137,7 @@ impl Basic {
             camera_manager,
             meshes: Vec::new(),
             gapi_engine,
+            render_enabled: true,
         };
         for node in scene.nodes() {
             myself.import_gltf_node(node, data);
@@ -149,7 +150,12 @@ impl Basic {
         if node.camera().is_some() {
             vxresult!(self.camera_manager.write()).load(node);
         } else if let Some(gltf_mesh) = node.mesh() {
-            self.meshes.push(Mesh::new_with_gltf(&self.gapi_engine, gltf_mesh, data));
+            self.meshes
+                .push(Arc::new(RwLock::new(BasicMesh::new_with_gltf(
+                    &self.gapi_engine,
+                    gltf_mesh,
+                    data,
+                ))));
         } else {
             for node in node.children() {
                 self.import_gltf_node(node, data);
@@ -158,7 +164,13 @@ impl Basic {
     }
 
     pub fn render(&self) {
-        
+        if !self.render_enabled {
+            return;
+        }
+        for mesh in &self.meshes {
+            let mesh: &Mesh = &*vxresult!(mesh.read());
+            Mesh::render(mesh, &self.uniform);
+        }
     }
 }
 
@@ -166,8 +178,7 @@ pub struct Game {
     pub basic: Basic,
 }
 
-impl Game {
-}
+impl Game {}
 
 impl Object for Game {
     fn name(&self) -> &str {
@@ -182,10 +193,12 @@ impl Object for Game {
 impl Scene for Game {}
 
 impl Loadable for Game {
-    fn new_with_gltf(gapi_engine: Arc<RwLock<GraphicApiEngine>>, scene: gltf::Scene, data: &Vec<u8>) -> Self {
+    fn new_with_gltf(
+        gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+        scene: gltf::Scene,
+        data: &Vec<u8>,
+    ) -> Self {
         let basic = Basic::new_with_gltf(gapi_engine, scene, data);
-        Game {
-            basic,
-        }
+        Game { basic }
     }
 }

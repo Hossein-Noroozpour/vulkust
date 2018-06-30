@@ -1,4 +1,3 @@
-use std::sync::{Arc, RwLock};
 use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuffer;
@@ -18,11 +17,12 @@ use super::swapchain::{NextImageResult, Swapchain};
 use super::synchronizer::fence::Fence;
 use super::synchronizer::semaphore::Semaphore;
 use super::vulkan as vk;
+use std::sync::{Arc, RwLock};
 // use std::mem::transmute;
 // use super::super::core::application::ApplicationTrait;
 // use super::super::core::event::Event;
-// use super::buffer::{DynamicBuffer, StaticBuffer};
-// use super::descriptor::Set as DescriptorSet;
+use super::buffer::{DynamicBuffer, StaticBuffer};
+use super::descriptor::Set as DescriptorSet;
 // use math;
 // use math::prelude::*;
 // const INDICES: [u32; 3] = [0, 1, 2];
@@ -171,7 +171,7 @@ impl Engine {
     //     }
     // }
 
-    pub fn update(&mut self) {
+    pub fn start_recording(&mut self) {
         let current_buffer = match self
             .swapchain
             .get_next_image_index(&self.present_complete_semaphore)
@@ -195,61 +195,8 @@ impl Engine {
             &self.wait_fences[current_buffer].vk_data,
         ));
         *vxresult!(self.frame_number.write()) = current_buffer as u32;
-        self.record();
-        // let proj = math::perspective(math::Rad(1.57f32), 1.43f32, 0.1f32, 2.0f32);
-        // let view = math::Matrix4::look_at(
-        //     math::Point3::new(0.0f32, 0.0f32, 1.5f32),
-        //     math::Point3::new(0.0f32, 0.0f32, 0.0f32),
-        //     math::Vector3::new(0.0f32, 1.0f32, 0.0f32),
-        // );
-        // let vp = proj * view;
-        // self.uniform_buffer
-        //     .update(unsafe { transmute(vp.as_ptr()) });
-        vxresult!(self.buffer_manager.write()).update();
-        let wait_stage_mask =
-            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
-        let mut submit_info = vk::VkSubmitInfo::default();
-        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.pWaitDstStageMask = &wait_stage_mask;
-        submit_info.pWaitSemaphores = &self.present_complete_semaphore.vk_data;
-        submit_info.waitSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = &self.render_complete_semaphore.vk_data;
-        submit_info.signalSemaphoreCount = 1;
-        submit_info.pCommandBuffers = &vxresult!(self.draw_commands[current_buffer].read()).vk_data;
-        submit_info.commandBufferCount = 1;
-        vulkan_check!(vk::vkQueueSubmit(
-            self.logical_device.vk_graphic_queue,
-            1,
-            &submit_info,
-            self.wait_fences[current_buffer].vk_data,
-        ));
-        let image_index = current_buffer as u32;
-        let mut present_info = vk::VkPresentInfoKHR::default();
-        present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present_info.swapchainCount = 1;
-        present_info.pSwapchains = &self.swapchain.vk_data;
-        present_info.pImageIndices = &image_index;
-        present_info.pWaitSemaphores = &self.render_complete_semaphore.vk_data;
-        present_info.waitSemaphoreCount = 1;
-        vulkan_check!(vk::vkQueuePresentKHR(
-            self.logical_device.vk_graphic_queue,
-            &present_info,
-        ));
-    }
-
-    pub fn terminate(&mut self) {
-        self.logical_device.wait_idle();
-    }
-
-    // fn get_basic(&self) -> &BasicEngine {
-    //     self.basic_engine.as_ref().unwrap()
-    // }
-
-    // fn get_mut_basic(&mut self) -> &mut BasicEngine {
-    //     self.basic_engine.as_mut().unwrap()
-    // }
-
-    pub fn record(&mut self) {
+        // self.record();
+        //////////////////////////////////////////////
         let mut clear_values = [vk::VkClearValue::default(); 2];
         clear_values[0].data = [0.4, 0.4, 0.4, 1.0];
         clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
@@ -279,27 +226,183 @@ impl Engine {
         scissor.extent.height = surface_caps.currentExtent.height;
         scissor.offset.x = 0;
         scissor.offset.y = 0;
-        let draw_command = &mut self.draw_commands[frame_number];
+        let draw_command = &self.draw_commands[frame_number];
         let mut draw_command = vxresult!(draw_command.write());
         draw_command.reset();
         draw_command.begin();
         draw_command.begin_render_pass_with_info(render_pass_begin_info);
         draw_command.set_viewport(viewport);
         draw_command.set_scissor(scissor);
-        // let pipemgr = vxresult!(self.pipeline_manager.read());
-        // draw_command.bind_descriptor_set(
-        //     &pipemgr.main_pipeline.layout,
-        //     &self.main_desc,
-        //     vxresult!(self.uniform_buffer.buffers[frame_number].0.read())
-        //         .info
-        //         .offset as usize,
+        ///////////////////////////////////////////////////
+        // let proj = math::perspective(math::Rad(1.57f32), 1.43f32, 0.1f32, 2.0f32);
+        // let view = math::Matrix4::look_at(
+        //     math::Point3::new(0.0f32, 0.0f32, 1.5f32),
+        //     math::Point3::new(0.0f32, 0.0f32, 0.0f32),
+        //     math::Vector3::new(0.0f32, 1.0f32, 0.0f32),
         // );
-        // draw_command.bind_pipeline(&pipemgr.main_pipeline);
-        // draw_command.bind_vertex_buffer(&self.vertex_buffer.buffer);
-        // draw_command.bind_index_buffer(&self.index_buffer.buffer);
-        // draw_command.draw_index(INDICES.len() as u32);
+        // let vp = proj * view;
+        // self.uniform_buffer
+        //     .update(unsafe { transmute(vp.as_ptr()) });
+        // vxresult!(self.buffer_manager.write()).update();
+        // let wait_stage_mask =
+        //     vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+        // let mut submit_info = vk::VkSubmitInfo::default();
+        // submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        // submit_info.pWaitDstStageMask = &wait_stage_mask;
+        // submit_info.pWaitSemaphores = &self.present_complete_semaphore.vk_data;
+        // submit_info.waitSemaphoreCount = 1;
+        // submit_info.pSignalSemaphores = &self.render_complete_semaphore.vk_data;
+        // submit_info.signalSemaphoreCount = 1;
+        // submit_info.pCommandBuffers = &vxresult!(self.draw_commands[current_buffer].read()).vk_data;
+        // submit_info.commandBufferCount = 1;
+        // vulkan_check!(vk::vkQueueSubmit(
+        //     self.logical_device.vk_graphic_queue,
+        //     1,
+        //     &submit_info,
+        //     self.wait_fences[current_buffer].vk_data,
+        // ));
+        // let image_index = current_buffer as u32;
+        // let mut present_info = vk::VkPresentInfoKHR::default();
+        // present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        // present_info.swapchainCount = 1;
+        // present_info.pSwapchains = &self.swapchain.vk_data;
+        // present_info.pImageIndices = &image_index;
+        // present_info.pWaitSemaphores = &self.render_complete_semaphore.vk_data;
+        // present_info.waitSemaphoreCount = 1;
+        // vulkan_check!(vk::vkQueuePresentKHR(
+        //     self.logical_device.vk_graphic_queue,
+        //     &present_info,
+        // ));
+    }
+
+    pub fn end_recording(&mut self) {
+        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+        let draw_command = &self.draw_commands[frame_number];
+        let mut draw_command = vxresult!(draw_command.write());
         draw_command.end_render_pass();
         draw_command.end();
+        vxresult!(self.buffer_manager.write()).update();
+        let wait_stage_mask =
+            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+        let mut submit_info = vk::VkSubmitInfo::default();
+        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.pWaitDstStageMask = &wait_stage_mask;
+        submit_info.pWaitSemaphores = &self.present_complete_semaphore.vk_data;
+        submit_info.waitSemaphoreCount = 1;
+        submit_info.pSignalSemaphores = &self.render_complete_semaphore.vk_data;
+        submit_info.signalSemaphoreCount = 1;
+        submit_info.pCommandBuffers = &draw_command.vk_data;
+        submit_info.commandBufferCount = 1;
+        vulkan_check!(vk::vkQueueSubmit(
+            self.logical_device.vk_graphic_queue,
+            1,
+            &submit_info,
+            self.wait_fences[frame_number].vk_data,
+        ));
+        let image_index = frame_number as u32;
+        let mut present_info = vk::VkPresentInfoKHR::default();
+        present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        present_info.swapchainCount = 1;
+        present_info.pSwapchains = &self.swapchain.vk_data;
+        present_info.pImageIndices = &image_index;
+        present_info.pWaitSemaphores = &self.render_complete_semaphore.vk_data;
+        present_info.waitSemaphoreCount = 1;
+        vulkan_check!(vk::vkQueuePresentKHR(
+            self.logical_device.vk_graphic_queue,
+            &present_info,
+        ));
+    }
+
+    pub fn terminate(&mut self) {
+        self.logical_device.wait_idle();
+    }
+
+    // fn get_basic(&self) -> &BasicEngine {
+    //     self.basic_engine.as_ref().unwrap()
+    // }
+
+    // fn get_mut_basic(&mut self) -> &mut BasicEngine {
+    //     self.basic_engine.as_mut().unwrap()
+    // }
+
+    // pub fn record(&mut self) {
+    //     let mut clear_values = [vk::VkClearValue::default(); 2];
+    //     clear_values[0].data = [0.4, 0.4, 0.4, 1.0];
+    //     clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
+    //     let surface_caps = &self.physical_device.surface_caps;
+    //     let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
+    //     render_pass_begin_info.sType =
+    //         vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    //     render_pass_begin_info.renderPass = self.render_pass.vk_data;
+    //     render_pass_begin_info.renderArea.offset.x = 0;
+    //     render_pass_begin_info.renderArea.offset.y = 0;
+    //     render_pass_begin_info.renderArea.extent.width = surface_caps.currentExtent.width;
+    //     render_pass_begin_info.renderArea.extent.height = surface_caps.currentExtent.height;
+    //     render_pass_begin_info.clearValueCount = clear_values.len() as u32;
+    //     render_pass_begin_info.pClearValues = clear_values.as_ptr();
+    //     let frame_number = vxresult!(self.frame_number.read());
+    //     let frame_number = *frame_number as usize;
+    //     render_pass_begin_info.framebuffer = self.framebuffers[frame_number].vk_data;
+    //     let mut viewport = vk::VkViewport::default();
+    //     viewport.x = 0.0;
+    //     viewport.y = 0.0;
+    //     viewport.height = surface_caps.currentExtent.height as f32;
+    //     viewport.width = surface_caps.currentExtent.width as f32;
+    //     viewport.minDepth = 0.0;
+    //     viewport.maxDepth = 1.0;
+    //     let mut scissor = vk::VkRect2D::default();
+    //     scissor.extent.width = surface_caps.currentExtent.width;
+    //     scissor.extent.height = surface_caps.currentExtent.height;
+    //     scissor.offset.x = 0;
+    //     scissor.offset.y = 0;
+    //     let draw_command = &mut self.draw_commands[frame_number];
+    //     let mut draw_command = vxresult!(draw_command.write());
+    //     draw_command.reset();
+    //     draw_command.begin();
+    //     draw_command.begin_render_pass_with_info(render_pass_begin_info);
+    //     draw_command.set_viewport(viewport);
+    //     draw_command.set_scissor(scissor);
+    // let pipemgr = vxresult!(self.pipeline_manager.read());
+    // draw_command.bind_descriptor_set(
+    //     &pipemgr.main_pipeline.layout,
+    //     &self.main_desc,
+    //     vxresult!(self.uniform_buffer.buffers[frame_number].0.read())
+    //         .info
+    //         .offset as usize,
+    // );
+    // draw_command.bind_pipeline(&pipemgr.main_pipeline);
+    // draw_command.bind_vertex_buffer(&self.vertex_buffer.buffer);
+    // draw_command.bind_index_buffer(&self.index_buffer.buffer);
+    // draw_command.draw_index(INDICES.len() as u32);
+    ///////////////////////////////////////////////////////////////////////////////
+    // draw_command.end_render_pass();
+    // draw_command.end();
+    // }
+
+    pub fn render_main_pipeline(
+        &self,
+        descriptor_set: &Arc<DescriptorSet>,
+        uniform_buffer: DynamicBuffer,
+        vertex_buffer: StaticBuffer,
+        index_buffer: StaticBuffer,
+        indices_count: u32,
+    ) {
+        // todo it is not good it's gonna change soon, frame_number
+        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+        let draw_command = &self.draw_commands[frame_number];
+        let mut draw_command = vxresult!(draw_command.write());
+        let pipemgr = vxresult!(self.pipeline_manager.read());
+        draw_command.bind_descriptor_set(
+            &pipemgr.main_pipeline.layout,
+            &descriptor_set,
+            vxresult!(uniform_buffer.buffers[frame_number].0.read())
+                .info
+                .offset as usize,
+        );
+        draw_command.bind_pipeline(&pipemgr.main_pipeline);
+        draw_command.bind_vertex_buffer(&vertex_buffer.buffer);
+        draw_command.bind_index_buffer(&index_buffer.buffer);
+        draw_command.draw_index(indices_count);
     }
 
     fn reinitialize(&mut self) {

@@ -3,9 +3,9 @@ use super::object::{Loadable, Object, Transferable};
 use gltf;
 use math;
 use std::collections::BTreeMap;
-use std::sync::{Arc, RwLock};
 use std::convert::From;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 pub struct Manager {
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
@@ -49,8 +49,7 @@ impl Manager {
         let decomposeed = n.transform().decomposed();
         let (location, rotation, _scale) = decomposeed;
         let location = math::Vector3::new(location[0], location[1], location[2]);
-        let rotation = math::Quaternion::new(
-            rotation[3], rotation[0], rotation[1], rotation[2]);
+        let rotation = math::Quaternion::new(rotation[3], rotation[0], rotation[1], rotation[2]);
         vxresult!(camera.write()).set_orientation_location(rotation, location);
         vxlogi!("Camera is: {:?}", &camera);
         camera
@@ -121,9 +120,7 @@ impl Default for Basic {
 }
 
 #[cfg(debug_assertions)]
-pub trait Camera: Object + Transferable + Debug {
-
-}
+pub trait Camera: Object + Transferable + Debug {}
 
 #[cfg(not(debug_assertions))]
 pub trait Camera: Object + Transferable {

@@ -191,6 +191,16 @@ impl DynamicBuffer {
             libc::memcpy(transmute(ptr), transmute(data), self.actual_size as usize);
         }
     }
+
+    pub fn update_with_vec<T>(&mut self, data: &Vec<T>) {
+        #[cfg(debug_assertions)]
+        {
+            if data.len() * size_of::<T>() != self.actual_size as usize {
+                vxlogf!("Data must have same size of buffer.");
+            }
+        }
+        self.update(unsafe { transmute(data.as_ptr()) });
+    }
 }
 
 pub struct Manager {

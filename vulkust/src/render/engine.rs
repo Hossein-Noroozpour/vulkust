@@ -26,8 +26,9 @@ impl Engine {
     }
 
     pub fn update(&self) {
-        vxresult!(self.gapi_engine.write()).update();
+        vxresult!(self.gapi_engine.write()).start_recording();
         vxresult!(self.scene_manager.read()).render();
+        vxresult!(self.gapi_engine.write()).end_recording();
     }
 
     pub fn load_scene<S: 'static + LoadableScene>(
