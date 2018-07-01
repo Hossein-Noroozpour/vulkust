@@ -413,6 +413,6 @@ impl Manager {
         cmd.flush();
         self.copy_buffers.clear();
         self.copy_to_image_ranges.clear();
-        vxtodo!(); // I have to clean the static uploader container in here
+        // todo I have to clean the static uploader container in here
     }
 }

@@ -17,6 +17,10 @@ pub trait Object {
     fn enable_rendering(&mut self) {
         vxunimplemented!();
     }
+
+    fn update(&mut self) {
+        vxunimplemented!();
+    }
 }
 
 pub trait Loadable: Object + Sized {

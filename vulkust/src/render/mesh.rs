@@ -1,16 +1,20 @@
 use super::buffer::{DynamicBuffer, StaticBuffer};
+use super::descriptor::Set as DescriptorSet;
 use super::engine::GraphicApiEngine;
+use super::image::view::View as ImageView;
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
 use std::mem::size_of;
+use std::mem::transmute;
 use std::sync::{Arc, RwLock};
 // use super::material::Material;
 
 use gltf;
 use math;
+use math::Matrix;
 
 pub trait Mesh: Object {
-    fn render(&self, scene_uniform: &SceneUniform) {
+    fn render(&mut self, _: &SceneUniform) {
         unimplemented!();
     }
 }
@@ -21,6 +25,8 @@ pub struct Uniform {
 }
 
 pub struct Geometry {
+    pub texture: Arc<ImageView>,
+    pub descriptor_set: Arc<DescriptorSet>,
     pub uniform_buffer: DynamicBuffer, // todo it must move to material
     pub vertex_buffer: StaticBuffer,
     pub index_buffer: StaticBuffer,
@@ -28,6 +34,7 @@ pub struct Geometry {
 }
 
 pub struct Basic {
+    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub name: String,
     pub geometries: Vec<Geometry>,
     // pub material: Arc<RwLock<Material>>,
@@ -39,6 +46,7 @@ impl Basic {
         mesh: gltf::Mesh,
         data: &Vec<u8>,
     ) -> Self {
+        let gapi_engine_clone = gapi_engine.clone();
         let name = vxunwrap_o!(mesh.name()).to_string();
         let primitives = mesh.primitives();
         let mut geometries = Vec::new();
@@ -143,7 +151,11 @@ impl Basic {
                 .create_static_buffer_with_vec(&index_buffer);
             let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
                 .create_dynamic_buffer(size_of::<Uniform>() as isize);
+            let texture = gapi_engine.create_texture("1.png");
+            let descriptor_set = Arc::new(gapi_engine.create_descriptor_set(&texture)); // todo
             geometries.push(Geometry {
+                texture,
+                descriptor_set,
                 uniform_buffer,
                 vertex_buffer,
                 index_buffer,
@@ -154,6 +166,7 @@ impl Basic {
         Basic {
             name,
             geometries,
+            gapi_engine: gapi_engine_clone,
             // buffer: buffer,
             // buffer_manager: buffer_manager,
             // material: material,
@@ -164,9 +177,19 @@ impl Basic {
 impl Object for Basic {}
 
 impl Mesh for Basic {
-    fn render(&self, scene_uniform: &SceneUniform) {
+    fn render(&mut self, scene_uniform: &SceneUniform) {
         let mvp = scene_uniform.vp;
-        // update uniform
+        for geo in &mut self.geometries {
+            geo.uniform_buffer
+                .update(unsafe { transmute(mvp.as_ptr()) });
+            vxresult!(self.gapi_engine.read()).render_main_pipeline(
+                &geo.descriptor_set,
+                &geo.uniform_buffer,
+                &geo.vertex_buffer,
+                &geo.index_buffer,
+                geo.indices_count,
+            );
+        }
         // bind des
         // bind pipe
         // bind buff

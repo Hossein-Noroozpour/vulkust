@@ -154,16 +154,19 @@ impl Pipeline {
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisample_state.rasterizationSamples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         let mut vertex_input_binding = vk::VkVertexInputBindingDescription::default();
-        vertex_input_binding.stride = 3 * 4 + 3 * 4 + 2 * 4; // temporary
+        vertex_input_binding.stride = 3 * 4 + 3 * 4 + 3 * 4 + 2 * 4; // temporary
         vertex_input_binding.inputRate = vk::VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
-        let mut vertex_attributes = vec![vk::VkVertexInputAttributeDescription::default(); 3];
+        let mut vertex_attributes = vec![vk::VkVertexInputAttributeDescription::default(); 4];
         vertex_attributes[0].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
         vertex_attributes[1].location = 1;
         vertex_attributes[1].offset = 3 * 4;
         vertex_attributes[1].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
         vertex_attributes[2].location = 2;
         vertex_attributes[2].offset = 3 * 4 + 3 * 4;
-        vertex_attributes[2].format = vk::VkFormat::VK_FORMAT_R32G32_SFLOAT;
+        vertex_attributes[2].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+        vertex_attributes[3].location = 3;
+        vertex_attributes[3].offset = 3 * 4 + 3 * 4 + 3 * 4;
+        vertex_attributes[3].format = vk::VkFormat::VK_FORMAT_R32G32_SFLOAT;
         let mut vertex_input_state = vk::VkPipelineVertexInputStateCreateInfo::default();
         vertex_input_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

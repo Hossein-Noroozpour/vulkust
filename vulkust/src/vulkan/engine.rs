@@ -382,9 +382,9 @@ impl Engine {
     pub fn render_main_pipeline(
         &self,
         descriptor_set: &Arc<DescriptorSet>,
-        uniform_buffer: DynamicBuffer,
-        vertex_buffer: StaticBuffer,
-        index_buffer: StaticBuffer,
+        uniform_buffer: &DynamicBuffer,
+        vertex_buffer: &StaticBuffer,
+        index_buffer: &StaticBuffer,
         indices_count: u32,
     ) {
         // todo it is not good it's gonna change soon, frame_number
@@ -403,6 +403,17 @@ impl Engine {
         draw_command.bind_vertex_buffer(&vertex_buffer.buffer);
         draw_command.bind_index_buffer(&index_buffer.buffer);
         draw_command.draw_index(indices_count);
+    }
+
+    pub fn create_texture(&self, file_name: &str) -> Arc<ImageView> {
+        Arc::new(ImageView::new_texture_with_file(
+            file_name,
+            &self.buffer_manager,
+        ))
+    }
+
+    pub fn create_descriptor_set(&self, image_view: &Arc<ImageView>) -> DescriptorSet {
+        vxresult!(self.descriptor_manager.write()).create_main_set(image_view, &self.sampler)
     }
 
     fn reinitialize(&mut self) {

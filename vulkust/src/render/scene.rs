@@ -27,8 +27,11 @@ impl Manager {
 
     pub fn render(&self) {
         for scene in &self.scenes {
+            vxresult!(scene.write()).update();
+        }
+        for scene in &self.scenes {
             vxresult!(scene.read()).render();
-            vxtodo!(); // do depth cleaning, and other related things in here
+            // todo depth cleaning, and other related things in here
         }
     }
 
@@ -168,9 +171,19 @@ impl Basic {
             return;
         }
         for mesh in &self.meshes {
-            let mesh: &Mesh = &*vxresult!(mesh.read());
+            let mesh: &mut Mesh = &mut *vxresult!(mesh.write());
             Mesh::render(mesh, &self.uniform);
         }
+    }
+
+    pub fn update(&mut self) {
+        let camera_manager = vxresult!(self.camera_manager.read());
+        if camera_manager.active_camera.is_none() {
+            return;
+        }
+        let camera = vxunwrap!(camera_manager.active_camera);
+        let camera = vxresult!(camera.read());
+        self.uniform.vp = *camera.get_view_projection();
     }
 }
 
@@ -187,6 +200,10 @@ impl Object for Game {
 
     fn render(&self) {
         self.basic.render();
+    }
+
+    fn update(&mut self) {
+        self.basic.update();
     }
 }
 

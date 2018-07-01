@@ -52,6 +52,7 @@ impl Manager {
         let rotation = math::Quaternion::new(rotation[3], rotation[0], rotation[1], rotation[2]);
         vxresult!(camera.write()).set_orientation_location(rotation, location);
         vxlogi!("Camera is: {:?}", &camera);
+        self.active_camera = Some(camera.clone());
         camera
     }
 }
@@ -77,10 +78,12 @@ impl Basic {
         self.x = (rotation * self.x.extend(1.0)).truncate();
         self.y = (rotation * self.y.extend(1.0)).truncate();
         self.z = (rotation * self.z.extend(1.0)).truncate();
-        let rotation = math::Matrix4::from(-q);
+        let mut q = q;
+        q.s = -q.s;
+        let rotation = math::Matrix4::from(q);
         let translate = math::Matrix4::from_translation(-self.location);
         self.direction = rotation;
-        self.view = rotation * translate;
+        self.view = rotation * self.view * translate;
         self.view_projection = self.projection * self.view;
     }
 
@@ -89,7 +92,9 @@ impl Basic {
         self.x = (rotation * self.x.extend(1.0)).truncate();
         self.y = (rotation * self.y.extend(1.0)).truncate();
         self.z = (rotation * self.z.extend(1.0)).truncate();
-        let rotation = math::Matrix4::from(-q);
+        let mut q = q;
+        q.s = -q.s;
+        let rotation = math::Matrix4::from(q);
         self.location = l;
         let translate = math::Matrix4::from_translation(-l);
         self.direction = rotation;
@@ -112,7 +117,11 @@ impl Default for Basic {
             z: math::Vector3::new(0.0, 0.0, -1.0),
             location: math::Vector3::new(0.0, 0.0, 0.0),
             direction: identity,
-            view: identity,
+            view: math::Matrix4::look_at(
+                math::Point3::new(0.0, 0.0, 0.0),
+                math::Point3::new(0.0, 0.0, -1.0),
+                math::Vector3::new(0.0, 1.0, 0.0),
+            ),
             projection: identity,
             view_projection: identity,
         }
@@ -120,7 +129,11 @@ impl Default for Basic {
 }
 
 #[cfg(debug_assertions)]
-pub trait Camera: Object + Transferable + Debug {}
+pub trait Camera: Object + Transferable + Debug {
+    fn get_view_projection(&self) -> &math::Matrix4<f32> {
+        vxunimplemented!();
+    }
+}
 
 #[cfg(not(debug_assertions))]
 pub trait Camera: Object + Transferable {
@@ -189,7 +202,11 @@ impl Transferable for Perspective {
     }
 }
 
-impl Camera for Perspective {}
+impl Camera for Perspective {
+    fn get_view_projection(&self) -> &math::Matrix4<f32> {
+        &self.basic.view_projection
+    }
+}
 
 impl Loadable for Perspective {}
 
