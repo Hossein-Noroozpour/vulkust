@@ -258,7 +258,7 @@ fn enumerate_extensions() -> Vec<String> {
     extensions
 }
 
-fn contain_extension(s: &str) -> bool {
+pub fn contain_extension(s: &str) -> bool {
     let properties = get_all_extensions();
     for p in properties {
         let name = slice_to_string(&p.extensionName);

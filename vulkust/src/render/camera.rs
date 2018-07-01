@@ -4,6 +4,7 @@ use gltf;
 use math;
 use std::collections::BTreeMap;
 use std::convert::From;
+#[cfg(debug_assertions)]
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -52,6 +53,7 @@ impl Manager {
         let location = math::Vector3::new(location[0], location[1], location[2]);
         let rotation = math::Quaternion::new(rotation[3], rotation[0], rotation[1], rotation[2]);
         vxresult!(camera.write()).set_orientation_location(rotation, location);
+        #[cfg(debug_assertions)]
         vxlogi!("Camera is: {:?}", &camera);
         self.active_camera = Some(camera.clone());
         camera
