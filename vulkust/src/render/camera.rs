@@ -7,6 +7,7 @@ use std::convert::From;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
+
 pub struct Manager {
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub aspect_ratio: f32,
@@ -84,7 +85,12 @@ impl Basic {
         let translate = math::Matrix4::from_translation(-self.location);
         self.direction = rotation;
         self.view = rotation * self.view * translate;
-        self.view_projection = self.projection * self.view;
+        self.view_projection = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 
+            0.0, -1.0, 0.0, 0.0, 
+            0.0, 0.0, 0.5, 0.5, 
+            0.0, 0.0, 0.0, 1.0, 
+        ) * self.projection * self.view;
     }
 
     pub fn set_orientation_location(&mut self, q: math::Quaternion<f32>, l: math::Vector3<f32>) {
@@ -98,8 +104,13 @@ impl Basic {
         self.location = l;
         let translate = math::Matrix4::from_translation(-l);
         self.direction = rotation;
-        self.view = rotation * translate;
-        self.view_projection = self.projection * self.view;
+        self.view = rotation * self.view * translate;
+        self.view_projection = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 
+            0.0, -1.0, 0.0, 0.0, 
+            0.0, 0.0, 0.5, 0.5, 
+            0.0, 0.0, 0.0, 1.0, 
+        ) * self.projection * self.view;
     }
 }
 
@@ -117,11 +128,7 @@ impl Default for Basic {
             z: math::Vector3::new(0.0, 0.0, -1.0),
             location: math::Vector3::new(0.0, 0.0, 0.0),
             direction: identity,
-            view: math::Matrix4::look_at(
-                math::Point3::new(0.0, 0.0, 0.0),
-                math::Point3::new(0.0, 0.0, -1.0),
-                math::Vector3::new(0.0, 1.0, 0.0),
-            ),
+            view: identity,
             projection: identity,
             view_projection: identity,
         }

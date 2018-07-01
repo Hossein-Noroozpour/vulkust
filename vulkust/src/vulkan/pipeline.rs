@@ -113,7 +113,7 @@ impl Pipeline {
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterization_state.polygonMode = vk::VkPolygonMode::VK_POLYGON_MODE_FILL;
         rasterization_state.cullMode = vk::VkCullModeFlagBits::VK_CULL_MODE_FRONT_BIT as u32;
-        rasterization_state.frontFace = vk::VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        rasterization_state.frontFace = vk::VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
         rasterization_state.lineWidth = 1.0f32;
         let mut blend_attachment_state =
             vec![vk::VkPipelineColorBlendAttachmentState::default(); 1];
