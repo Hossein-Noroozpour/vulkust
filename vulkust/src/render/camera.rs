@@ -90,8 +90,8 @@ impl Basic {
         self.view_projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 
             0.0, -1.0, 0.0, 0.0, 
-            0.0, 0.0, 0.5, 0.5, 
-            0.0, 0.0, 0.0, 1.0, 
+            0.0, 0.0, 0.5, 0.0, 
+            0.0, 0.0, 0.5, 1.0, 
         ) * self.projection * self.view;
     }
 
@@ -109,9 +109,9 @@ impl Basic {
         self.view = rotation * self.view * translate;
         self.view_projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 
-            0.0, -1.0, 0.0, 0.0, 
-            0.0, 0.0, 0.5, 0.5, 
-            0.0, 0.0, 0.0, 1.0, 
+            0.0, -1.0, 0.0, 0.0,
+            0.0, 0.0, 0.5, 0.0,
+            0.0, 0.0, 0.5, 1.0,
         ) * self.projection * self.view;
     }
 }
@@ -171,10 +171,10 @@ impl Perspective {
     ) -> Self {
         let fov_vertical = p.yfov();
         let tan_vertical = (fov_vertical / 2.0).tan();
-        let tan_horizontal = tan_vertical / aspect_ratio;
+        let tan_horizontal = tan_vertical * aspect_ratio;
         let fov_horizontal = tan_horizontal.atan() * 2.0;
-        let div_cos_vertical = 1.0 / (tan_vertical + 1.0).sqrt();
-        let div_cos_horizontal = 1.0 / (tan_horizontal + 1.0).sqrt();
+        let div_cos_vertical = (tan_vertical * tan_vertical + 1.0).sqrt();
+        let div_cos_horizontal = (tan_horizontal * tan_horizontal + 1.0).sqrt();
         let name = vxunwrap_o!(c.name()).to_string();
         let mut basic = Basic::default();
         basic.aspect_ratio = aspect_ratio;
