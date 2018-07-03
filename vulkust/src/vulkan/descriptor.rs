@@ -15,15 +15,15 @@ impl Pool {
     pub fn new(logical_device: Arc<LogicalDevice>) -> Self {
         let mut type_counts = [vk::VkDescriptorPoolSize::default(); 2];
         type_counts[0].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        type_counts[0].descriptorCount = 1;
+        type_counts[0].descriptorCount = 8;
         type_counts[1].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        type_counts[1].descriptorCount = 1;
+        type_counts[1].descriptorCount = 8;
         let mut descriptor_pool_info = vk::VkDescriptorPoolCreateInfo::default();
         descriptor_pool_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptor_pool_info.poolSizeCount = type_counts.len() as u32;
         descriptor_pool_info.pPoolSizes = type_counts.as_ptr();
-        descriptor_pool_info.maxSets = 1;
+        descriptor_pool_info.maxSets = 8; // todo find a better solution for this
         let mut vk_data = 0 as vk::VkDescriptorPool;
         vulkan_check!(vk::vkCreateDescriptorPool(
             logical_device.vk_data,

@@ -102,9 +102,9 @@ impl Engine {
             &memory_mgr,
             &graphic_cmd_pool,
             &frame_number,
-            4 * 1028,
+            4 * 1028 * 1028,
             8 * 1028 * 1028,
-            4 * 1028,
+            4 * 1028 * 1028,
             swapchain.image_views.len() as isize,
         )));
         let descriptor_manager = Arc::new(RwLock::new(DescriptorManager::new(

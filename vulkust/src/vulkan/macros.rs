@@ -3,82 +3,11 @@ macro_rules! vulkan_check {
     ($x:expr) => {
         #[allow(unused_unsafe)]
         unsafe {
+            use $crate::vulkan::vulkan as vk;
             match $x {
-                vk::VkResult::VK_SUCCESS => {}
-                vk::VkResult::VK_NOT_READY => {
-                    vxlogf!("VK_NOT_READY");
-                }
-                vk::VkResult::VK_TIMEOUT => {
-                    vxlogf!("VK_TIMEOUT");
-                }
-                vk::VkResult::VK_EVENT_SET => {
-                    vxlogf!("VK_EVENT_SET");
-                }
-                vk::VkResult::VK_EVENT_RESET => {
-                    vxlogf!("VK_EVENT_RESET");
-                }
-                vk::VkResult::VK_INCOMPLETE => {
-                    vxlogf!("VK_INCOMPLETE");
-                }
-                vk::VkResult::VK_ERROR_OUT_OF_HOST_MEMORY => {
-                    vxlogf!("VK_ERROR_OUT_OF_HOST_MEMORY");
-                }
-                vk::VkResult::VK_ERROR_OUT_OF_DEVICE_MEMORY => {
-                    vxlogf!("VK_ERROR_OUT_OF_DEVICE_MEMORY");
-                }
-                vk::VkResult::VK_ERROR_INITIALIZATION_FAILED => {
-                    vxlogf!("VK_ERROR_INITIALIZATION_FAILED");
-                }
-                vk::VkResult::VK_ERROR_DEVICE_LOST => {
-                    vxlogf!("VK_ERROR_DEVICE_LOST");
-                }
-                vk::VkResult::VK_ERROR_MEMORY_MAP_FAILED => {
-                    vxlogf!("VK_ERROR_MEMORY_MAP_FAILED");
-                }
-                vk::VkResult::VK_ERROR_LAYER_NOT_PRESENT => {
-                    vxlogf!("VK_ERROR_LAYER_NOT_PRESENT");
-                }
-                vk::VkResult::VK_ERROR_EXTENSION_NOT_PRESENT => {
-                    vxlogf!("VK_ERROR_EXTENSION_NOT_PRESENT");
-                }
-                vk::VkResult::VK_ERROR_FEATURE_NOT_PRESENT => {
-                    vxlogf!("VK_ERROR_FEATURE_NOT_PRESENT");
-                }
-                vk::VkResult::VK_ERROR_INCOMPATIBLE_DRIVER => {
-                    vxlogf!("VK_ERROR_INCOMPATIBLE_DRIVER");
-                }
-                vk::VkResult::VK_ERROR_TOO_MANY_OBJECTS => {
-                    vxlogf!("VK_ERROR_TOO_MANY_OBJECTS");
-                }
-                vk::VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED => {
-                    vxlogf!("VK_ERROR_FORMAT_NOT_SUPPORTED");
-                }
-                vk::VkResult::VK_ERROR_SURFACE_LOST_KHR => {
-                    vxlogf!("VK_ERROR_SURFACE_LOST_KHR");
-                }
-                vk::VkResult::VK_ERROR_NATIVE_WINDOW_IN_USE_KHR => {
-                    vxlogf!("VK_ERROR_NATIVE_WINDOW_IN_USE_KHR");
-                }
-                vk::VkResult::VK_SUBOPTIMAL_KHR => {
-                    vxlogf!("VK_SUBOPTIMAL_KHR");
-                }
-                vk::VkResult::VK_ERROR_OUT_OF_DATE_KHR => {
-                    vxlogf!("VK_ERROR_OUT_OF_DATE_KHR");
-                }
-                vk::VkResult::VK_ERROR_INCOMPATIBLE_DISPLAY_KHR => {
-                    vxlogf!("VK_ERROR_INCOMPATIBLE_DISPLAY_KHR");
-                }
-                vk::VkResult::VK_ERROR_VALIDATION_FAILED_EXT => {
-                    vxlogf!("VK_ERROR_VALIDATION_FAILED_EXT");
-                }
-                vk::VkResult::VK_ERROR_INVALID_SHADER_NV => {
-                    vxlogf!("VK_ERROR_INVALID_SHADER_NV");
-                }
-                vk::VkResult::VK_RESULT_RANGE_SIZE => {
-                    vxlogf!("VK_RESULT_RANGE_SIZE");
-                }
-                _ => {
-                    vxlogf!("Unknown error");
+                vk::VkResult::VK_SUCCESS => {},
+                c => {
+                    vxlogf!("{:?}, value is: {}", c, c as i32);
                 }
             }
         }

@@ -51,6 +51,7 @@ impl Manager {
         if let Some(id) = self.name_to_id.get(&name) {
             if let Some(t) = self.cached.get(id) {
                 if let Some(t) = t.upgrade() {
+                    vxlogi!("cached");
                     return t;
                 }
             }
