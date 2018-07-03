@@ -1,9 +1,9 @@
 use super::buffer::{DynamicBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
 use super::engine::GraphicApiEngine;
-use super::image::view::View as ImageView;
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
+use super::texture::{Texture, Texture2D, Manager as TextureManager};
 use std::mem::size_of;
 use std::mem::transmute;
 use std::sync::{Arc, RwLock};
@@ -25,7 +25,7 @@ pub struct Uniform {
 }
 
 pub struct Geometry {
-    pub texture: Arc<ImageView>,
+    pub texture: Arc<RwLock<Texture>>,
     pub descriptor_set: Arc<DescriptorSet>,
     pub uniform_buffer: DynamicBuffer, // todo it must move to material
     pub vertex_buffer: StaticBuffer,
@@ -44,6 +44,7 @@ impl Basic {
     pub fn new_with_gltf(
         gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
         mesh: gltf::Mesh,
+        texture_manager: &Arc<RwLock<TextureManager>>,
         data: &Vec<u8>,
     ) -> Self {
         let gapi_engine_clone = gapi_engine.clone();
@@ -151,8 +152,9 @@ impl Basic {
                 .create_static_buffer_with_vec(&index_buffer);
             let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
                 .create_dynamic_buffer(size_of::<Uniform>() as isize);
-            let texture = gapi_engine.create_texture("1.png");
-            let descriptor_set = Arc::new(gapi_engine.create_descriptor_set(&texture)); // todo
+            let texture = vxunwrap_o!(primitive.material().pbr_metallic_roughness().base_color_texture()).texture();
+            let texture = vxresult!(texture_manager.write()).get_with_gltf::<Texture2D>(&texture, data);
+            let descriptor_set = Arc::new(gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view())); // todo
             geometries.push(Geometry {
                 texture,
                 descriptor_set,

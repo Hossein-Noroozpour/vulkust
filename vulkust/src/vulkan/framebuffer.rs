@@ -1,4 +1,4 @@
-use super::image::view::View;
+use super::image::View;
 use super::render_pass::RenderPass;
 use super::vulkan as vk;
 

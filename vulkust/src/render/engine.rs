@@ -31,11 +31,14 @@ impl Engine {
         vxresult!(self.gapi_engine.write()).end_recording();
     }
 
-    pub fn load_scene<S: 'static + LoadableScene>(
+    pub fn load_scene<S>(
         &self,
         file_name: &str,
         scene_name: &str,
-    ) -> Arc<RwLock<S>> {
+    ) -> Arc<RwLock<S>> 
+    where
+        S: 'static + LoadableScene
+    {
         vxresult!(self.scene_manager.write()).load::<S>(file_name, scene_name)
     }
 

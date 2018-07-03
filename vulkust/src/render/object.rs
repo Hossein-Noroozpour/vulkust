@@ -23,8 +23,8 @@ pub trait Object {
     }
 }
 
-pub trait Loadable: Object + Sized {
-    fn new_with_gltf(gltf::Node) -> Self {
+pub trait Loadable: Sized {
+    fn new_with_gltf(&gltf::Node) -> Self {
         vxunexpected!();
     }
 }

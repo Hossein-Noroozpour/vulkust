@@ -31,7 +31,7 @@ impl Manager {
         }
     }
 
-    pub fn load(&mut self, n: gltf::Node) -> Arc<RwLock<Camera>> {
+    pub fn load(&mut self, n: &gltf::Node) -> Arc<RwLock<Camera>> {
         let c = vxunwrap_o!(n.camera());
         let camera = match c.projection() {
             gltf::camera::Projection::Perspective(p) => {

@@ -6,7 +6,7 @@ use super::descriptor::Manager as DescriptorManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
-use super::image::view::View as ImageView;
+use super::image::View as ImageView;
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
 use super::pipeline::Manager as PipelineManager;
@@ -408,6 +408,13 @@ impl Engine {
     pub fn create_texture(&self, file_name: &str) -> Arc<ImageView> {
         Arc::new(ImageView::new_texture_with_file(
             file_name,
+            &self.buffer_manager,
+        ))
+    }
+
+    pub fn create_texture_with_bytes(&self, data: &[u8]) -> Arc<ImageView> {
+        Arc::new(ImageView::new_texture_with_bytes(
+            data,
             &self.buffer_manager,
         ))
     }

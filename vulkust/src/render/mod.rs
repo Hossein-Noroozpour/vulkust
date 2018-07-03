@@ -14,5 +14,5 @@ pub mod object;
 // pub mod pipeline;
 pub mod scene;
 // pub mod shader;
-// pub mod texture;
+pub mod texture;
 // pub mod vertex;

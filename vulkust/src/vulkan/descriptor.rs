@@ -1,6 +1,6 @@
 use super::buffer::Manager as BufferManager;
 use super::device::logical::Logical as LogicalDevice;
-use super::image::view::View as ImageView;
+use super::image::View as ImageView;
 use super::sampler::Sampler;
 use super::vulkan as vk;
 use std::ptr::null;
