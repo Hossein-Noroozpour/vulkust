@@ -6,7 +6,7 @@ pub mod descriptor;
 // pub mod device;
 pub mod engine;
 pub mod image;
-// pub mod light;
+pub mod light;
 // pub mod material;
 // pub mod model;
 pub mod mesh;

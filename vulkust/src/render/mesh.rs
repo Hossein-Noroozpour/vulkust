@@ -3,7 +3,7 @@ use super::descriptor::Set as DescriptorSet;
 use super::engine::GraphicApiEngine;
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
-use super::texture::{Texture, Texture2D, Manager as TextureManager};
+use super::texture::{Manager as TextureManager, Texture, Texture2D};
 use std::mem::size_of;
 use std::mem::transmute;
 use std::sync::{Arc, RwLock};
@@ -152,9 +152,17 @@ impl Basic {
                 .create_static_buffer_with_vec(&index_buffer);
             let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
                 .create_dynamic_buffer(size_of::<Uniform>() as isize);
-            let texture = vxunwrap_o!(primitive.material().pbr_metallic_roughness().base_color_texture()).texture();
-            let texture = vxresult!(texture_manager.write()).get_with_gltf::<Texture2D>(&texture, data);
-            let descriptor_set = Arc::new(gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view())); // todo
+            let texture = vxunwrap_o!(
+                primitive
+                    .material()
+                    .pbr_metallic_roughness()
+                    .base_color_texture()
+            ).texture();
+            let texture =
+                vxresult!(texture_manager.write()).get_with_gltf::<Texture2D>(&texture, data);
+            let descriptor_set = Arc::new(
+                gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
+            ); // todo
             geometries.push(Geometry {
                 texture,
                 descriptor_set,

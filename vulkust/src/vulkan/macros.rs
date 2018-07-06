@@ -5,7 +5,7 @@ macro_rules! vulkan_check {
         unsafe {
             use $crate::vulkan::vulkan as vk;
             match $x {
-                vk::VkResult::VK_SUCCESS => {},
+                vk::VkResult::VK_SUCCESS => {}
                 c => {
                     vxlogf!("{:?}, value is: {}", c, c as i32);
                 }

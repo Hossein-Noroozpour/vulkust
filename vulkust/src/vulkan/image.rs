@@ -7,8 +7,8 @@ use super::vulkan as vk;
 
 use image;
 
-use std::io::Read;
 use std::default::Default;
+use std::io::Read;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
@@ -85,10 +85,7 @@ impl Image {
         Self::new_with_bytes(&data, buffmgr)
     }
 
-    pub fn new_with_bytes(
-        data: &[u8],
-        buffmgr: &Arc<RwLock<BufferManager>>,
-    ) -> Arc<RwLock<Self>> {
+    pub fn new_with_bytes(data: &[u8], buffmgr: &Arc<RwLock<BufferManager>>) -> Arc<RwLock<Self>> {
         let img = vxresult!(image::load_from_memory(&data)).to_rgba();
         let (width, height) = img.dimensions();
         let img = img.into_raw();
@@ -309,4 +306,3 @@ impl Drop for View {
         }
     }
 }
-

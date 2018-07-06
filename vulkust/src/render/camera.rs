@@ -8,7 +8,6 @@ use std::convert::From;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
-
 pub struct Manager {
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub aspect_ratio: f32,
@@ -88,10 +87,7 @@ impl Basic {
         self.direction = rotation;
         self.view = rotation * self.view * translate;
         self.view_projection = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 
-            0.0, -1.0, 0.0, 0.0, 
-            0.0, 0.0, 0.5, 0.0, 
-            0.0, 0.0, 0.5, 1.0, 
+            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         ) * self.projection * self.view;
     }
 
@@ -108,10 +104,7 @@ impl Basic {
         self.direction = rotation;
         self.view = rotation * self.view * translate;
         self.view_projection = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 
-            0.0, -1.0, 0.0, 0.0,
-            0.0, 0.0, 0.5, 0.0,
-            0.0, 0.0, 0.5, 1.0,
+            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         ) * self.projection * self.view;
     }
 }
@@ -142,11 +135,19 @@ pub trait Camera: Object + Transferable + Debug {
     fn get_view_projection(&self) -> &math::Matrix4<f32> {
         vxunimplemented!();
     }
+
+    fn get_cascaded_shadow_points(&self, _sections_count: usize) -> Vec<math::Vector3<f32>> {
+        vxunimplemented!();
+    }
 }
 
 #[cfg(not(debug_assertions))]
 pub trait Camera: Object + Transferable {
     fn get_view_projection(&self) -> &math::Matrix4<f32> {
+        vxunimplemented!();
+    }
+
+    fn get_cascaded_shadow_points(&self, _sections_count: usize) -> Vec<math::Vector3<f32>> {
         vxunimplemented!();
     }
 }
@@ -215,10 +216,40 @@ impl Camera for Perspective {
     fn get_view_projection(&self) -> &math::Matrix4<f32> {
         &self.basic.view_projection
     }
+
+    fn get_cascaded_shadow_points(&self, sections_count: usize) -> Vec<math::Vector3<f32>> {
+        #[cfg(debug_assertions)]
+        {
+            if sections_count < 1 {
+                vxlogf!("sections_count must be greater than zero.");
+            }
+        }
+        let mut result = vec![math::Vector3::new(0.0f32, 0.0f32, 0.0f32); sections_count + 1];
+        result[0] = self.basic.location + self.basic.z * self.basic.near;
+        if sections_count > 1 {
+            let oneminlambda = 0.5 / self.div_cos_horizontal + 0.5 / self.div_cos_horizontal;
+            let lambda = 1.0 - oneminlambda;
+            let onedivcn = 1.0 / sections_count as f32;
+            let unisecinc = oneminlambda * onedivcn * (self.basic.far - self.basic.near);
+            let fdivn = self.basic.far / self.basic.near;
+            let logsecmul = fdivn.powf(onedivcn);
+            let mut unisec = oneminlambda * self.basic.near + unisecinc;
+            let mut logsec = lambda * self.basic.near * logsecmul;
+            result[1] = self.basic.location + self.basic.z * (logsec + unisec);
+            for i in 2..sections_count {
+                logsec *= logsecmul;
+                unisec += unisecinc;
+                result[i] = self.basic.location + self.basic.z * (logsec + unisec);
+            }
+        }
+        result[sections_count] = self.basic.location + self.basic.z * self.basic.far;
+        return result;
+    }
 }
 
 impl Loadable for Perspective {}
 
+#[derive(Default)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Orthographic {
     pub basic: Basic,

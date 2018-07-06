@@ -3,10 +3,10 @@ use super::camera::Manager as CameraManager;
 use super::engine::GraphicApiEngine;
 use super::mesh::{Basic as BasicMesh, Mesh};
 use super::object::Object;
+use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
 use std::io::BufReader;
 use std::sync::{Arc, RwLock};
-use super::texture::Manager as TextureManager;
 
 use gltf;
 use math;
@@ -103,9 +103,9 @@ pub trait Scene: Object {}
 
 pub trait Loadable: Scene + Sized {
     fn new_with_gltf(
-        Arc<RwLock<GraphicApiEngine>>, 
-        &gltf::Scene, 
-        &Arc<RwLock<TextureManager>>, 
+        Arc<RwLock<GraphicApiEngine>>,
+        &gltf::Scene,
+        &Arc<RwLock<TextureManager>>,
         &Vec<u8>,
     ) -> Self {
         vxunexpected!();
@@ -161,9 +161,9 @@ impl Basic {
     }
 
     pub fn import_gltf_node(
-        &mut self, 
+        &mut self,
         node: &gltf::scene::Node,
-        texture_manager: &Arc<RwLock<TextureManager>>, 
+        texture_manager: &Arc<RwLock<TextureManager>>,
         data: &Vec<u8>,
     ) {
         if node.camera().is_some() {
@@ -184,6 +184,9 @@ impl Basic {
     }
 
     pub fn render(&self) {
+        // todo get directional light
+        // then create light frustums
+        // then rendering meshes with light
         if !self.render_enabled {
             return;
         }
@@ -233,8 +236,7 @@ impl Loadable for Game {
         texture_manager: &Arc<RwLock<TextureManager>>,
         data: &Vec<u8>,
     ) -> Self {
-        let basic = Basic::new_with_gltf(
-            gapi_engine, scene, texture_manager, data);
+        let basic = Basic::new_with_gltf(gapi_engine, scene, texture_manager, data);
         Game { basic }
     }
 }
