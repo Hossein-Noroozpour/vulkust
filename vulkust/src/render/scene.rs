@@ -1,12 +1,14 @@
+use super::super::core::types::Id;
 use super::super::system::file::File;
-use super::camera::Manager as CameraManager;
+use super::camera::{Camera, Manager as CameraManager};
 use super::engine::GraphicApiEngine;
+use super::light::Manager as LightManager;
 use super::mesh::{Basic as BasicMesh, Mesh};
 use super::object::Object;
 use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
 use std::io::BufReader;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Weak};
 
 use gltf;
 use math;
@@ -16,16 +18,22 @@ pub struct Manager {
     pub scenes: Vec<Arc<RwLock<Scene>>>,
     pub scenes_names: BTreeMap<String, usize>,
     pub texture_manager: Arc<RwLock<TextureManager>>,
+    pub light_manager: Arc<RwLock<LightManager>>,
+    pub camera_manager: Arc<RwLock<CameraManager>>,
 }
 
 impl Manager {
     pub fn new(gapi_engine: &Arc<RwLock<GraphicApiEngine>>) -> Self {
         let texture_manager = Arc::new(RwLock::new(TextureManager::new(gapi_engine)));
+        let light_manager = Arc::new(RwLock::new(LightManager::new()));
+        let camera_manager = Arc::new(RwLock::new(CameraManager::new(&gapi_engine)));
         Manager {
             gapi_engine: gapi_engine.clone(),
             scenes: Vec::new(),
             scenes_names: BTreeMap::new(),
             texture_manager,
+            light_manager,
+            camera_manager,
         }
     }
 
@@ -39,16 +47,18 @@ impl Manager {
         }
     }
 
-    pub fn load<S: 'static>(&mut self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
+    pub fn load<S>(&mut self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
     where
-        S: Loadable,
+        S: 'static + Loadable,
     {
         let file = Self::load_gltf(file_name);
         let scene = Self::fetch_gltf_scene(&file, scene_name);
         let scene = Arc::new(RwLock::new(S::new_with_gltf(
-            self.gapi_engine.clone(),
-            &scene,
+            &self.gapi_engine,
             &self.texture_manager,
+            &self.light_manager,
+            &self.camera_manager,
+            &scene,
             vxunwrap!(file.blob),
         )));
         let s: Arc<RwLock<Scene>> = scene.clone();
@@ -103,9 +113,11 @@ pub trait Scene: Object {}
 
 pub trait Loadable: Scene + Sized {
     fn new_with_gltf(
-        Arc<RwLock<GraphicApiEngine>>,
-        &gltf::Scene,
+        &Arc<RwLock<GraphicApiEngine>>,
         &Arc<RwLock<TextureManager>>,
+        &Arc<RwLock<LightManager>>,
+        &Arc<RwLock<CameraManager>>,
+        &gltf::Scene,
         &Vec<u8>,
     ) -> Self {
         vxunexpected!();
@@ -129,56 +141,70 @@ impl Uniform {
 pub struct Basic {
     pub name: String,
     pub uniform: Uniform,
-    pub camera_manager: Arc<RwLock<CameraManager>>,
+    pub cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
+    pub active_camera: Option<Weak<RwLock<Camera>>>,
     pub meshes: Vec<Arc<RwLock<Mesh>>>,
-    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+    pub gapi_engine: Weak<RwLock<GraphicApiEngine>>,
     pub render_enabled: bool,
 }
 
 impl Basic {
     pub fn new_with_gltf(
-        gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+        gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
         scene: &gltf::Scene,
         texture_manager: &Arc<RwLock<TextureManager>>,
+        camera_manager: &Arc<RwLock<CameraManager>>,
+        light_manager: &Arc<RwLock<LightManager>>,
         data: &Vec<u8>,
     ) -> Self {
-        let camera_manager = Arc::new(RwLock::new(CameraManager::new(gapi_engine.clone())));
         let name = vxunwrap_o!(scene.name()).to_string();
         let uniform = Uniform::new();
+        let gapi_engine = Arc::downgrade(gapi_engine);
+        let cameras = BTreeMap::new();
+        let active_camera = None;
+        let meshes = Vec::new();
+        let render_enabled = true;
         let mut myself = Basic {
             name,
             uniform,
-            camera_manager,
-            meshes: Vec::new(),
+            cameras,
+            active_camera,
+            meshes,
             gapi_engine,
-            render_enabled: true,
+            render_enabled,
         };
         for node in scene.nodes() {
-            myself.import_gltf_node(&node, texture_manager, data);
+            myself.import_gltf_node(&node, texture_manager, camera_manager, light_manager, data);
         }
         myself.meshes.shrink_to_fit();
-        myself
+        return myself;
     }
 
     pub fn import_gltf_node(
         &mut self,
         node: &gltf::scene::Node,
         texture_manager: &Arc<RwLock<TextureManager>>,
+        camera_manager: &Arc<RwLock<CameraManager>>,
+        light_manager: &Arc<RwLock<LightManager>>,
         data: &Vec<u8>,
     ) {
         if node.camera().is_some() {
-            vxresult!(self.camera_manager.write()).load(node);
+            let camera = vxresult!(camera_manager.write()).load(node);
+            let name = vxunwrap_o!(node.name()).to_string();
+            let w = Arc::downgrade(&camera);
+            self.cameras.insert(name, camera);
+            self.active_camera = Some(w);
         } else if let Some(gltf_mesh) = node.mesh() {
             self.meshes
                 .push(Arc::new(RwLock::new(BasicMesh::new_with_gltf(
-                    &self.gapi_engine,
+                    vxunwrap!(self.gapi_engine.upgrade()),
                     gltf_mesh,
                     texture_manager,
                     data,
                 ))));
         } else {
             for node in node.children() {
-                self.import_gltf_node(&node, texture_manager, data);
+                self.import_gltf_node(&node, texture_manager, camera_manager, light_manager, data);
             }
         }
     }
@@ -197,11 +223,8 @@ impl Basic {
     }
 
     pub fn update(&mut self) {
-        let camera_manager = vxresult!(self.camera_manager.read());
-        if camera_manager.active_camera.is_none() {
-            return;
-        }
-        let camera = vxunwrap!(camera_manager.active_camera);
+        let camera = vxunwrap!(self.active_camera);
+        let camera = vxunwrap_o!(camera.upgrade());
         let camera = vxresult!(camera.read());
         self.uniform.vp = *camera.get_view_projection();
     }
@@ -231,12 +254,14 @@ impl Scene for Game {}
 
 impl Loadable for Game {
     fn new_with_gltf(
-        gapi_engine: Arc<RwLock<GraphicApiEngine>>,
-        scene: &gltf::Scene,
+        gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
         texture_manager: &Arc<RwLock<TextureManager>>,
+        light_manager: &Arc<RwLock<LightManager>>,
+        camera_manager: &Arc<RwLock<CameraManager>>,
+        scene: &gltf::Scene,
         data: &Vec<u8>,
     ) -> Self {
-        let basic = Basic::new_with_gltf(gapi_engine, scene, texture_manager, data);
+        let basic = Basic::new_with_gltf(gapi_engine, scene, texture_manager, camera_manager, light_manager, data);
         Game { basic }
     }
 }

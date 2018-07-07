@@ -3,10 +3,12 @@ use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
 pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
 // use super::command::buffer::Buffer as CmdBuff;
+use super::config::Config;
 use super::scene::{Loadable as LoadableScene, Manager as SceneManager};
 use std::sync::{Arc, RwLock, Weak};
 
 pub struct Engine {
+    pub config: Arc<RwLock<Config>>,
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub os_app: Weak<RwLock<OsApp>>,
     pub core_app: Arc<RwLock<CoreAppTrait>>,
@@ -15,9 +17,13 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
+        let config = Arc::new(RwLock::new(Config { // todo It must be filled with a file
+            number_cascaded_shadows: 6,
+        }));
         let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app)));
         let scene_manager = Arc::new(RwLock::new(SceneManager::new(&gapi_engine)));
         Engine {
+            config,
             gapi_engine,
             os_app: Arc::downgrade(os_app),
             core_app,

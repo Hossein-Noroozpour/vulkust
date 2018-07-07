@@ -1,19 +1,30 @@
-use super::super::core::object::create_id;
+use super::super::core::object::{Object as CoreObject};
 use super::super::core::types::Id;
 use super::camera::Orthographic;
+use super::object::{Basic as BasicObject, Object};
 use math::{Matrix4, Vector3};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 
-pub trait Light {}
+pub trait Light: CoreObject + Object {}
 
-#[derive(Default)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Sun {
+    obj_basic: BasicObject,
     camera: Orthographic,
 }
 
-impl Sun {}
+impl Sun {
+
+}
+
+impl CoreObject for Sun {
+    fn get_id(&self) -> Id {
+        self.obj_basic.get_id()
+    }
+}
+
+impl Object for Sun {}
 
 impl Light for Sun {}
 

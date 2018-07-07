@@ -20,16 +20,16 @@ pub trait Loadable: Sized {
 }
 
 pub struct Manager {
-    cached: BTreeMap<Id, Weak<RwLock<Texture>>>,
+    textures: BTreeMap<Id, Weak<RwLock<Texture>>>,
     name_to_id: BTreeMap<String, Id>,
-    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+    pub gapi_engine: Weak<RwLock<GraphicApiEngine>>,
 }
 
 impl Manager {
     pub fn new(engine: &Arc<RwLock<GraphicApiEngine>>) -> Self {
-        let gapi_engine = engine.clone();
+        let gapi_engine = Arc::downgrade(engine);
         Manager {
-            cached: BTreeMap::new(),
+            textures: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
             gapi_engine,
         }
@@ -45,22 +45,23 @@ impl Manager {
     {
         let name = vxunwrap_o!(texture.source().name()).to_string();
         if let Some(id) = self.name_to_id.get(&name) {
-            if let Some(t) = self.cached.get(id) {
+            if let Some(t) = self.textures.get(id) {
                 if let Some(t) = t.upgrade() {
                     vxlogi!("cached");
                     return t;
                 }
             }
         }
+        let gapi_engine = vxunwrap_o!(self.gapi_engine.upgrade());
         let texture: Arc<RwLock<Texture>> = Arc::new(RwLock::new(T::new_with_gltf(
             texture,
-            &self.gapi_engine,
+            &gapi_engine,
             data,
         )));
         let id = vxresult!(texture.read()).get_id();
         let weak = Arc::downgrade(&texture);
         self.name_to_id.insert(name, id);
-        self.cached.insert(id, weak);
+        self.textures.insert(id, weak);
         return texture;
     }
 }
