@@ -6,7 +6,9 @@ use math::{Matrix4, Vector3};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 
-pub trait Light: CoreObject + Object {}
+pub trait Light: CoreObject + Object {
+    // fn set_cascaded_frustums()
+}
 
 pub trait DefaultLighting {
     fn default(size: f32, name: &str) -> Self;
