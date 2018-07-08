@@ -13,25 +13,25 @@ pub trait Object {
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct Basic {
+pub struct Base {
     pub id: Id,
 }
 
-impl Basic {
+impl Base {
     pub fn new() -> Self {
-        Basic {
+        Base {
             id: create_id(),
         }
     }
 
     pub fn new_with_id(id: Id) -> Self {
-        Basic {
+        Base {
             id,
         }
     }
 }
 
-impl Object for Basic {
+impl Object for Base {
     fn get_id(&self) -> Id {
         self.id
     }

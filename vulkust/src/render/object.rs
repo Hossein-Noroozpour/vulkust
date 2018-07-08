@@ -1,4 +1,4 @@
-use super::super::core::object::{Basic as CoreBasic, Object as CoreObject};
+use super::super::core::object::{Base as CoreBase, Object as CoreObject};
 use super::super::core::types::Id;
 use super::engine::GraphicApiEngine;
 use std::sync::{Arc, RwLock};
@@ -19,36 +19,36 @@ pub trait Loadable: Sized {
 
 pub trait Transferable {
     fn set_orientation(&mut self, &math::Quaternion<f32>);
-    fn set_orientation_location(&mut self, &math::Quaternion<f32>, &math::Vector3<f32>);
+    fn set_location(&mut self, &math::Vector3<f32>);
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct Basic {
+pub struct Base {
     pub name: String,
     pub renderable: bool,
-    pub core_basic: CoreBasic,
+    pub core_base: CoreBase,
 }
 
-impl Basic {
+impl Base {
     pub fn new(name: &str) -> Self {
         let name = name.to_string();
         let renderable = true;
-        let core_basic = CoreBasic::new();
-        Basic {
+        let core_base = CoreBase::new();
+        Base {
             name,
             renderable,
-            core_basic,
+            core_base,
         }
     }
 }
 
-impl CoreObject for Basic {
+impl CoreObject for Base {
     fn get_id(&self) -> Id {
-        self.core_basic.get_id()
+        self.core_base.get_id()
     }
 }
 
-impl Object for Basic {
+impl Object for Base {
     fn name(&self) -> &str {
         &self.name
     }
@@ -66,7 +66,7 @@ impl Object for Basic {
     fn update(&mut self) {}
 }
 
-impl Loadable for Basic {
+impl Loadable for Base {
     fn new_with_gltf(node: &gltf::Node, _: &Arc<RwLock<GraphicApiEngine>>) -> Self {
         Self::new(vxunwrap_o!(node.name()))
     }

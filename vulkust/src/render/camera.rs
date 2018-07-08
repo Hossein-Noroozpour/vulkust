@@ -1,7 +1,7 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::engine::GraphicApiEngine;
-use super::object::{Basic as BasicObject, Loadable, Object, Transferable};
+use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use gltf;
 use math;
 use std::collections::BTreeMap;
@@ -57,13 +57,13 @@ impl Manager {
         }
         let eng = vxunwrap_o!(self.gapi_engine.upgrade());
         let camera = match c.projection() {
-            gltf::camera::Projection::Perspective(p) => {
+            gltf::camera::Projection::Perspective(_) => {
                 let camera: Arc<RwLock<Camera>> = Arc::new(RwLock::new(
                     Perspective::new_with_gltf(n, &eng),
                 ));
                 camera
             }
-            gltf::camera::Projection::Orthographic(o) => {
+            gltf::camera::Projection::Orthographic(_) => {
                 let camera: Arc<RwLock<Camera>> = Arc::new(RwLock::new(
                     Orthographic::new_with_gltf(n, &eng)));
                 camera
@@ -78,8 +78,8 @@ impl Manager {
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct Basic {
-    pub obj_basic: BasicObject,
+pub struct Base {
+    pub obj_base: ObjectBase,
     pub near: f32,
     pub far: f32,
     pub aspect_ratio: f32,
@@ -93,13 +93,13 @@ pub struct Basic {
     pub view_projection: math::Matrix4<f32>,
 }
 
-impl Basic {
+impl Base {
     pub fn new(name: &str) -> Self {
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
-        Basic {
-            obj_basic: BasicObject::new(name),
+        Base {
+            obj_base: ObjectBase::new(name),
             near: 0.0,
             far: 0.0,
             aspect_ratio: 0.0,
@@ -121,61 +121,60 @@ impl Basic {
     }
 }
 
-impl CoreObject for Basic {
+impl CoreObject for Base {
     fn get_id(&self) -> Id {
-        self.obj_basic.get_id()
+        self.obj_base.get_id()
     }
 }
 
-impl Object for Basic {
+impl Object for Base {
     fn name(&self) -> &str {
-        self.obj_basic.name()
+        self.obj_base.name()
     }
 
     fn render(&self) {
-        vxlogf!("Basic camera does not implement rendering.");
+        vxlogf!("Base camera does not implement rendering.");
     }
 
     fn disable_rendering(&mut self) {
-        self.obj_basic.disable_rendering()
+        self.obj_base.disable_rendering()
     }
 
     fn enable_rendering(&mut self) {
-        self.obj_basic.enable_rendering()
+        self.obj_base.enable_rendering()
     }
 
     fn update(&mut self) {}
 }
 
-impl Transferable for Basic {
+impl Transferable for Base {
     fn set_orientation(&mut self, q: &math::Quaternion<f32>) {
         let rotation = math::Matrix4::from(*q);
         self.x = (rotation * self.x.extend(1.0)).truncate();
         self.y = (rotation * self.y.extend(1.0)).truncate();
         self.z = (rotation * self.z.extend(1.0)).truncate();
-        let mut q = q;
+        let mut q = *q;
         q.s = -q.s;
-        let rotation = math::Matrix4::from(*q);
+        let rotation = math::Matrix4::from(q);
         let translate = math::Matrix4::from_translation(-self.location);
         self.direction = rotation;
         self.view = rotation * self.view * translate;
         self.update_view_projection();
     }
 
-    fn set_orientation_location(&mut self, q: &math::Quaternion<f32>, l: &math::Vector3<f32>) {
+    fn set_location(&mut self, l: &math::Vector3<f32>) {
         self.location = *l;
-        self.set_orientation(q);
     }
 }
 
-impl Loadable for Basic {
+impl Loadable for Base {
      fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<GraphicApiEngine>>) -> Self {
         let eng = vxresult!(eng.read());
         let aspect_ratio = vxresult!(eng.os_app.read()).aspect_ratio();
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
-        let obj_basic = BasicObject::new(vxunwrap_o!(node.name()));
+        let obj_base = ObjectBase::new(vxunwrap_o!(node.name()));
         let c = vxunwrap_o!(node.camera());
         let (near, far) = match c.projection() {
             gltf::camera::Projection::Perspective(p) => {
@@ -185,8 +184,8 @@ impl Loadable for Basic {
                 (p.znear(), p.zfar())
             },
         };
-        let mut basic = Basic {
-            obj_basic,
+        let mut base = Base {
+            obj_base,
             near,
             far,
             aspect_ratio,
@@ -202,18 +201,26 @@ impl Loadable for Basic {
         let decomposed = node.transform().decomposed(); 
         let (l, r, _) = decomposed;
         let location = math::Vector3::new(l[0], l[1], l[2]);
+        base.set_location(&location);
         let rotation = math::Quaternion::new(r[3], r[0], r[1], r[2]);
-        basic.set_orientation_location(&rotation, &location);
-        return basic;
+        base.set_orientation(&rotation);
+        return base;
     }
 }
 
-impl Camera for Basic {
+impl Camera for Base {
+    fn get_view_projection(&self) -> &math::Matrix4<f32> {
+        &self.view_projection
+    }
+
+    fn get_cascaded_shadow_points(&self, _: usize) -> Vec<math::Vector3<f32>> {
+        vxlogf!("Base camera does not implement cascading.");
+    }
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Perspective {
-    pub basic: Basic,
+    pub base: Base,
     pub fov_vertical: f32,
     pub fov_horizontal: f32,
     pub tan_vertical: f32,
@@ -228,13 +235,13 @@ impl Perspective {
 
 impl CoreObject for Perspective {
     fn get_id(&self) -> Id {
-        self.basic.get_id()
+        self.base.get_id()
     }
 }
 
 impl Object for Perspective {
     fn name(&self) -> &str {
-        self.basic.name()
+        self.base.name()
     }
 
     fn render(&self) {
@@ -242,15 +249,15 @@ impl Object for Perspective {
     }
 
     fn disable_rendering(&mut self) {
-        self.basic.disable_rendering()
+        self.base.disable_rendering()
     }
 
     fn enable_rendering(&mut self) {
-        self.basic.enable_rendering()
+        self.base.enable_rendering()
     }
 
     fn update(&mut self) {
-        self.basic.update();
+        self.base.update();
     }
 }
 
@@ -259,21 +266,21 @@ impl Loadable for Perspective {
         let c = vxunwrap_o!(n.camera());
         let p = match c.projection() {
             gltf::camera::Projection::Perspective(p) => p,
-            gltf::camera::Projection::Orthographic(o) => 
+            gltf::camera::Projection::Orthographic(_) => 
                 vxlogf!("Type of camera isn't perspective."),
         };
-        let basic = Basic::new_with_gltf(n, eng);
+        let mut base = Base::new_with_gltf(n, eng);
         let fov_vertical = p.yfov();
         let tan_vertical = (fov_vertical / 2.0).tan();
-        let tan_horizontal = tan_vertical * basic.aspect_ratio;
+        let tan_horizontal = tan_vertical * base.aspect_ratio;
         let fov_horizontal = tan_horizontal.atan() * 2.0;
         let div_cos_vertical = (tan_vertical * tan_vertical + 1.0).sqrt();
         let div_cos_horizontal = (tan_horizontal * tan_horizontal + 1.0).sqrt();
-        basic.projection =
-            math::perspective(math::Rad(fov_vertical), basic.aspect_ratio, basic.near, basic.far);
-        basic.update_view_projection();
+        base.projection =
+            math::perspective(math::Rad(fov_vertical), base.aspect_ratio, base.near, base.far);
+        base.update_view_projection();
         Perspective {
-            basic,
+            base,
             fov_vertical,
             fov_horizontal,
             tan_vertical,
@@ -286,17 +293,17 @@ impl Loadable for Perspective {
 
 impl Transferable for Perspective {
     fn set_orientation(&mut self, q: &math::Quaternion<f32>) {
-        self.basic.set_orientation(q);
+        self.base.set_orientation(q);
     }
 
-    fn set_orientation_location(&mut self, q: &math::Quaternion<f32>, l: &math::Vector3<f32>) {
-        self.basic.set_orientation_location(q, l);
+    fn set_location(&mut self, l: &math::Vector3<f32>) {
+        self.base.set_location(l);
     }
 }
 
 impl Camera for Perspective {
     fn get_view_projection(&self) -> &math::Matrix4<f32> {
-        &self.basic.view_projection
+        self.base.get_view_projection()
     }
 
     fn get_cascaded_shadow_points(&self, sections_count: usize) -> Vec<math::Vector3<f32>> {
@@ -307,45 +314,52 @@ impl Camera for Perspective {
             }
         }
         let mut result = vec![math::Vector3::new(0.0f32, 0.0f32, 0.0f32); sections_count + 1];
-        result[0] = self.basic.location + self.basic.z * self.basic.near;
+        result[0] = self.base.location + self.base.z * self.base.near;
         if sections_count > 1 {
             let oneminlambda = 0.5 / self.div_cos_horizontal + 0.5 / self.div_cos_horizontal;
             let lambda = 1.0 - oneminlambda;
             let onedivcn = 1.0 / sections_count as f32;
-            let unisecinc = oneminlambda * onedivcn * (self.basic.far - self.basic.near);
-            let fdivn = self.basic.far / self.basic.near;
+            let unisecinc = oneminlambda * onedivcn * (self.base.far - self.base.near);
+            let fdivn = self.base.far / self.base.near;
             let logsecmul = fdivn.powf(onedivcn);
-            let mut unisec = oneminlambda * self.basic.near + unisecinc;
-            let mut logsec = lambda * self.basic.near * logsecmul;
-            result[1] = self.basic.location + self.basic.z * (logsec + unisec);
+            let mut unisec = oneminlambda * self.base.near + unisecinc;
+            let mut logsec = lambda * self.base.near * logsecmul;
+            result[1] = self.base.location + self.base.z * (logsec + unisec);
             for i in 2..sections_count {
                 logsec *= logsecmul;
                 unisec += unisecinc;
-                result[i] = self.basic.location + self.basic.z * (logsec + unisec);
+                result[i] = self.base.location + self.base.z * (logsec + unisec);
             }
         }
-        result[sections_count] = self.basic.location + self.basic.z * self.basic.far;
+        result[sections_count] = self.base.location + self.base.z * self.base.far;
         return result;
     }
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Orthographic {
-    pub basic: Basic,
+    pub base: Base,
     pub size: f32,
 }
 
-impl Orthographic {}
+impl Orthographic {
+    pub fn new(size: f32, name: &str) -> Self {
+        Orthographic {
+            base: Base::new(name),
+            size,
+        }
+    }
+}
 
 impl CoreObject for Orthographic {
     fn get_id(&self) -> Id {
-        self.basic.get_id()
+        self.base.get_id()
     }
 }
 
 impl Object for Orthographic {
     fn name(&self) -> &str {
-        self.basic.name()
+        self.base.name()
     }
 
     fn render(&self) {
@@ -353,15 +367,15 @@ impl Object for Orthographic {
     }
 
     fn disable_rendering(&mut self) {
-        self.basic.disable_rendering()
+        self.base.disable_rendering()
     }
 
     fn enable_rendering(&mut self) {
-        self.basic.enable_rendering()
+        self.base.enable_rendering()
     }
 
     fn update(&mut self) {
-        self.basic.update();
+        self.base.update();
     }
 }
 
@@ -369,21 +383,21 @@ impl Loadable for Orthographic {
     fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<GraphicApiEngine>>) -> Self {
         let c = vxunwrap_o!(n.camera());
         let o = match c.projection() {
-            gltf::camera::Projection::Perspective(p) => 
+            gltf::camera::Projection::Perspective(_) => 
                 vxlogf!("Type of camera isn't perspective."),
             gltf::camera::Projection::Orthographic(o) => o,
         };
-        let basic = Basic::new_with_gltf(n, eng);
+        let mut base = Base::new_with_gltf(n, eng);
         let size = o.ymag();
-        let right = size * basic.aspect_ratio * 0.5; 
+        let right = size * base.aspect_ratio * 0.5; 
         let left = -right;
         let top = size * 0.5;
         let bottom = -top;
-        basic.projection =
-            math::ortho(left, right, bottom, top, basic.near, basic.far);
-        basic.update_view_projection();
+        base.projection =
+            math::ortho(left, right, bottom, top, base.near, base.far);
+        base.update_view_projection();
         Orthographic {
-            basic,
+            base,
             size,
         }
     }
@@ -391,17 +405,17 @@ impl Loadable for Orthographic {
 
 impl Transferable for Orthographic {
     fn set_orientation(&mut self, q: &math::Quaternion<f32>) {
-        self.basic.set_orientation(q);
+        self.base.set_orientation(q);
     }
 
-    fn set_orientation_location(&mut self, q: &math::Quaternion<f32>, l: &math::Vector3<f32>) {
-        self.basic.set_orientation_location(q, l);
+    fn set_location(&mut self, l: &math::Vector3<f32>) {
+        self.base.set_location(l);
     }
 }
 
 impl Camera for Orthographic {
     fn get_view_projection(&self) -> &math::Matrix4<f32> {
-        &self.basic.view_projection
+        &self.base.view_projection
     }
 
     fn get_cascaded_shadow_points(&self, sections_count: usize) -> Vec<math::Vector3<f32>> {
@@ -412,10 +426,10 @@ impl Camera for Orthographic {
             }
         }
         let mut result = vec![math::Vector3::new(0.0f32, 0.0f32, 0.0f32); sections_count + 1];
-        let mut previous = self.basic.location + self.basic.z * self.basic.near;
+        let mut previous = self.base.location + self.base.z * self.base.near;
         result[0] = previous;
-        let unisecinc = (self.basic.far - self.basic.near) / sections_count as f32;
-        let unisecinc = self.basic.z * unisecinc;
+        let unisecinc = (self.base.far - self.base.near) / sections_count as f32;
+        let unisecinc = self.base.z * unisecinc;
         let sections_count = sections_count + 1;
         for i in 1..sections_count {
             previous += unisecinc;

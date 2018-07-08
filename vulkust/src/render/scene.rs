@@ -1,10 +1,11 @@
 use super::super::core::types::Id;
+use super::super::core::object::Object as CoreObject;
 use super::super::system::file::File;
 use super::camera::{Camera, Manager as CameraManager};
 use super::engine::GraphicApiEngine;
 use super::light::Manager as LightManager;
-use super::mesh::{Basic as BasicMesh, Mesh};
-use super::object::Object;
+use super::mesh::{Base as MeshBase, Mesh};
+use super::object::{Base as BaseObject, Object};
 use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
 use std::io::BufReader;
@@ -138,17 +139,16 @@ impl Uniform {
     }
 }
 
-pub struct Basic {
-    pub name: String,
+pub struct Base {
+    pub obj_base: BaseObject,
     pub uniform: Uniform,
     pub cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
     pub active_camera: Option<Weak<RwLock<Camera>>>,
     pub meshes: Vec<Arc<RwLock<Mesh>>>,
     pub gapi_engine: Weak<RwLock<GraphicApiEngine>>,
-    pub render_enabled: bool,
 }
 
-impl Basic {
+impl Base {
     pub fn new_with_gltf(
         gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
         scene: &gltf::Scene,
@@ -157,21 +157,19 @@ impl Basic {
         light_manager: &Arc<RwLock<LightManager>>,
         data: &Vec<u8>,
     ) -> Self {
-        let name = vxunwrap_o!(scene.name()).to_string();
+        let obj_base = BaseObject::new(vxunwrap_o!(scene.name()));
         let uniform = Uniform::new();
         let gapi_engine = Arc::downgrade(gapi_engine);
         let cameras = BTreeMap::new();
         let active_camera = None;
         let meshes = Vec::new();
-        let render_enabled = true;
-        let mut myself = Basic {
-            name,
+        let mut myself = Base {
+            obj_base,
             uniform,
             cameras,
             active_camera,
             meshes,
             gapi_engine,
-            render_enabled,
         };
         for node in scene.nodes() {
             myself.import_gltf_node(&node, texture_manager, camera_manager, light_manager, data);
@@ -190,13 +188,13 @@ impl Basic {
     ) {
         if node.camera().is_some() {
             let camera = vxresult!(camera_manager.write()).load(node);
-            let name = vxunwrap_o!(node.name()).to_string();
+            let id = vxresult!(camera.read()).get_id();
             let w = Arc::downgrade(&camera);
-            self.cameras.insert(name, camera);
+            self.cameras.insert(id, camera);
             self.active_camera = Some(w);
         } else if let Some(gltf_mesh) = node.mesh() {
             self.meshes
-                .push(Arc::new(RwLock::new(BasicMesh::new_with_gltf(
+                .push(Arc::new(RwLock::new(MeshBase::new_with_gltf(
                     vxunwrap!(self.gapi_engine.upgrade()),
                     gltf_mesh,
                     texture_manager,
@@ -208,12 +206,24 @@ impl Basic {
             }
         }
     }
+}
 
-    pub fn render(&self) {
+impl CoreObject for Base {
+    fn get_id(&self) -> Id {
+        self.obj_base.get_id()
+    }
+}
+
+impl Object for Base {
+    fn name(&self) -> &str {
+        &self.obj_base.name()
+    }
+
+    fn render(&self) {
         // todo get directional light
         // then create light frustums
         // then rendering meshes with light
-        if !self.render_enabled {
+        if !self.obj_base.renderable {
             return;
         }
         for mesh in &self.meshes {
@@ -222,31 +232,53 @@ impl Basic {
         }
     }
 
-    pub fn update(&mut self) {
+    fn update(&mut self) {
         let camera = vxunwrap!(self.active_camera);
         let camera = vxunwrap_o!(camera.upgrade());
         let camera = vxresult!(camera.read());
         self.uniform.vp = *camera.get_view_projection();
     }
+
+    fn disable_rendering(&mut self) {
+        self.obj_base.disable_rendering()
+    }
+
+    fn enable_rendering(&mut self) {
+        self.obj_base.enable_rendering()
+    }
 }
 
 pub struct Game {
-    pub basic: Basic,
+    pub base: Base,
 }
 
 impl Game {}
 
+impl CoreObject for Game {
+    fn get_id(&self) -> Id {
+        self.base.get_id()
+    }
+}
+
 impl Object for Game {
     fn name(&self) -> &str {
-        &self.basic.name
+        &self.base.name()
     }
 
     fn render(&self) {
-        self.basic.render();
+        self.base.render();
     }
 
     fn update(&mut self) {
-        self.basic.update();
+        self.base.update();
+    }
+
+    fn disable_rendering(&mut self) {
+        self.base.disable_rendering()
+    }
+
+    fn enable_rendering(&mut self) {
+        self.base.enable_rendering()
     }
 }
 
@@ -261,7 +293,7 @@ impl Loadable for Game {
         scene: &gltf::Scene,
         data: &Vec<u8>,
     ) -> Self {
-        let basic = Basic::new_with_gltf(gapi_engine, scene, texture_manager, camera_manager, light_manager, data);
-        Game { basic }
+        let base = Base::new_with_gltf(gapi_engine, scene, texture_manager, camera_manager, light_manager, data);
+        Game { base }
     }
 }

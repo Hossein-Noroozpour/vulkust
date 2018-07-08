@@ -1,7 +1,9 @@
+use super::super::core::object::Object as CoreObject;
+use super::super::core::types::Id;
 use super::buffer::{DynamicBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
 use super::engine::GraphicApiEngine;
-use super::object::Object;
+use super::object::{Base as ObjectBase, Object};
 use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture, Texture2D};
 use std::mem::size_of;
@@ -33,14 +35,14 @@ pub struct Geometry {
     pub indices_count: u32,
 }
 
-pub struct Basic {
+pub struct Base {
+    pub obj_base: ObjectBase,
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
-    pub name: String,
     pub geometries: Vec<Geometry>,
     // pub material: Arc<RwLock<Material>>,
 }
 
-impl Basic {
+impl Base {
     pub fn new_with_gltf(
         gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
         mesh: gltf::Mesh,
@@ -48,7 +50,7 @@ impl Basic {
         data: &Vec<u8>,
     ) -> Self {
         let gapi_engine_clone = gapi_engine.clone();
-        let name = vxunwrap_o!(mesh.name()).to_string();
+        let obj_base = ObjectBase::new(vxunwrap_o!(mesh.name()));
         let primitives = mesh.primitives();
         let mut geometries = Vec::new();
         for primitive in primitives {
@@ -173,8 +175,8 @@ impl Basic {
             });
         }
         geometries.shrink_to_fit();
-        Basic {
-            name,
+        Base {
+            obj_base,
             geometries,
             gapi_engine: gapi_engine_clone,
             // buffer: buffer,
@@ -184,9 +186,34 @@ impl Basic {
     }
 }
 
-impl Object for Basic {}
+impl CoreObject for Base {
+    fn get_id(&self) -> Id {
+        self.obj_base.get_id()
+    }
+}
 
-impl Mesh for Basic {
+impl Object for Base {
+    fn name(&self) -> &str {
+        &self.obj_base.name()
+    }
+
+    fn render(&self) {
+        vxlogf!("Mesh does not implement this function instead it does the Mesh trait render.");
+    }
+
+    fn update(&mut self) {
+    }
+
+    fn disable_rendering(&mut self) {
+        self.obj_base.disable_rendering()
+    }
+
+    fn enable_rendering(&mut self) {
+        self.obj_base.enable_rendering()
+    }
+}
+
+impl Mesh for Base {
     fn render(&mut self, scene_uniform: &SceneUniform) {
         let mvp = scene_uniform.vp;
         for geo in &mut self.geometries {
@@ -200,10 +227,5 @@ impl Mesh for Basic {
                 geo.indices_count,
             );
         }
-        // bind des
-        // bind pipe
-        // bind buff
-        // bind index
-        // draw
     }
 }

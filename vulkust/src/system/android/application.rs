@@ -92,6 +92,10 @@ impl Application {
         vxresult!(self.events.write()).clear();
         return events;
     }
+
+    pub fn aspect_ratio(&self) -> f32 {
+        1.7
+    }
 }
 
 extern "C" fn handle_cmd(android_app: *mut AndroidApp, cmd: i32) {

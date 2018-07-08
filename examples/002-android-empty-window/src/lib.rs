@@ -8,7 +8,7 @@ use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
 
-struct MyGame {}
+pub struct MyGame {}
 
 impl MyGame {
     pub fn new() -> Self {
