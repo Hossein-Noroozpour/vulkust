@@ -1,5 +1,6 @@
 use super::super::render::engine::Engine as RenderEngine;
 use super::super::system::os::application::Application as OsApp;
+use super::config::Configurations;
 use super::event::Event;
 use std::sync::{Arc, RwLock};
 
@@ -10,4 +11,7 @@ pub trait ApplicationTrait {
     fn on_event(&self, _e: Event) {}
     fn update(&mut self) {}
     fn terminate(&mut self) {}
+    fn get_config(&mut self) -> Configurations {
+        Configurations::default()
+    }
 }

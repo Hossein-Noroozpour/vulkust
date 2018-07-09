@@ -1,6 +1,4 @@
-use super::super::super::core::constants::{
-    APPLICATION_NAME, DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH,
-};
+use super::super::super::core::constants::APPLICATION_NAME;
 use super::super::super::objc::runtime::{Object, Sel, BOOL, YES};
 use super::super::apple;
 use super::game_view;
@@ -17,6 +15,7 @@ pub const APP_VAR_NAME: &str = "os_app";
 
 #[cfg(debug_assertions)]
 fn create_frame() -> apple::NSRect {
+    use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
     apple::NSRect::new(0.0, 0.0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
 }
 
@@ -30,11 +29,14 @@ fn create_frame() -> apple::NSRect {
 extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
     vxlogi!("I'm initialized.");
     let frame = create_frame();
-    let style_mask = (apple::NsWindowStyleMask::NS_TITLED_WINDOW_MASK
+    let style_mask = apple::NsWindowStyleMask::NS_TITLED_WINDOW_MASK
         | apple::NsWindowStyleMask::NS_CLOSABLE_WINDOW_MASK
         | apple::NsWindowStyleMask::NS_RESIZABLE_WINDOW_MASK
-        | apple::NsWindowStyleMask::NS_MINIATURIZABLE_WINDOW_MASK)
-        .bits() as apple::NSUInteger;
+        | apple::NsWindowStyleMask::NS_MINIATURIZABLE_WINDOW_MASK
+        | apple::NsWindowStyleMask::NS_UNIFIED_TITLE_AND_TOOLBAR_WINDOW_MASK;
+    #[cfg(not(debug_assertions))]
+    let style_mask = style_mask | apple::NsWindowStyleMask::NS_FULLSCREEN_WINDOW_MASK;
+    let style_mask = style_mask.bits() as apple::NSUInteger;
     let backing = apple::NsBackingStoreType::NS_BACKING_STORE_BUFFERED;
     let window: apple::Id = unsafe {
         msg_send![apple::alloc("NSWindow"),
@@ -58,7 +60,6 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
         let _: () = msg_send![window, setContentViewController: gvc];
         let _: () = msg_send![window, setTitle: title];
         let _: () = msg_send![window, makeKeyAndOrderFront: apple::NIL];
-        let _: () = msg_send![window, makeKeyWindow];
         let _: () = msg_send![gvc, gameViewDidLoad];
     }
 }

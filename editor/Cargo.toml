@@ -1,9 +1,0 @@
-[package]
-name = "vulkust-editor"
-version = "0.1.0"
-authors = ["Hossein Noroozpour <hossein.noroozpour@gmail.com>"]
-description = "Editor for Vulkust game engine"
-license = "MIT"
-
-[dependencies]
-vulkust = { path = "../vulkust" }

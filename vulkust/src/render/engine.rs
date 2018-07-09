@@ -3,7 +3,7 @@ use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
 pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
 // use super::command::buffer::Buffer as CmdBuff;
-use super::config::Config;
+use super::config::Configurations as Config;
 use super::scene::{Loadable as LoadableScene, Manager as SceneManager};
 use std::sync::{Arc, RwLock, Weak};
 
