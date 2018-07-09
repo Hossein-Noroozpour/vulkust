@@ -1,7 +1,7 @@
 [package]
 name = "vulkust"
 version = "0.1.0"
-authors = ["Hossein Noroozpour (Thany Hulixer) <hossein.noroozpour@gmail.com>"]
+authors = ["Hossein Noroozpour <hossein.noroozpour@gmail.com>"]
 description = "Vulakn based game engine"
 license = "MIT"
 build = "build.rs"

@@ -198,7 +198,7 @@ impl Engine {
         // self.record();
         //////////////////////////////////////////////
         let mut clear_values = [vk::VkClearValue::default(); 2];
-        clear_values[0].data = [0.4, 0.4, 0.4, 1.0];
+        clear_values[0].data = [0.2, 0.2, 0.2, 1.0];
         clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
         let surface_caps = &self.physical_device.surface_caps;
         let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();

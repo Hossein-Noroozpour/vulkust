@@ -1,9 +1,9 @@
 use super::super::core::object::{Base as CoreBase, Object as CoreObject};
 use super::super::core::types::Id;
 use super::engine::GraphicApiEngine;
-use std::sync::{Arc, RwLock};
 use gltf;
 use math;
+use std::sync::{Arc, RwLock};
 
 pub trait Object: CoreObject {
     fn name(&self) -> &str;

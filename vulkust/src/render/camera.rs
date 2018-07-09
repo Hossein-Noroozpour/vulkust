@@ -58,14 +58,13 @@ impl Manager {
         let eng = vxunwrap_o!(self.gapi_engine.upgrade());
         let camera = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
-                let camera: Arc<RwLock<Camera>> = Arc::new(RwLock::new(
-                    Perspective::new_with_gltf(n, &eng),
-                ));
+                let camera: Arc<RwLock<Camera>> =
+                    Arc::new(RwLock::new(Perspective::new_with_gltf(n, &eng)));
                 camera
             }
             gltf::camera::Projection::Orthographic(_) => {
-                let camera: Arc<RwLock<Camera>> = Arc::new(RwLock::new(
-                    Orthographic::new_with_gltf(n, &eng)));
+                let camera: Arc<RwLock<Camera>> =
+                    Arc::new(RwLock::new(Orthographic::new_with_gltf(n, &eng)));
                 camera
             }
         };
@@ -168,7 +167,7 @@ impl Transferable for Base {
 }
 
 impl Loadable for Base {
-     fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<GraphicApiEngine>>) -> Self {
+    fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<GraphicApiEngine>>) -> Self {
         let eng = vxresult!(eng.read());
         let aspect_ratio = vxresult!(eng.os_app.read()).aspect_ratio();
         let identity = math::Matrix4::new(
@@ -177,12 +176,8 @@ impl Loadable for Base {
         let obj_base = ObjectBase::new(vxunwrap_o!(node.name()));
         let c = vxunwrap_o!(node.camera());
         let (near, far) = match c.projection() {
-            gltf::camera::Projection::Perspective(p) => {
-                (p.znear(), vxunwrap_o!(p.zfar()))
-            },
-            gltf::camera::Projection::Orthographic(p) => {
-                (p.znear(), p.zfar())
-            },
+            gltf::camera::Projection::Perspective(p) => (p.znear(), vxunwrap_o!(p.zfar())),
+            gltf::camera::Projection::Orthographic(p) => (p.znear(), p.zfar()),
         };
         let mut base = Base {
             obj_base,
@@ -198,7 +193,7 @@ impl Loadable for Base {
             projection: identity,
             view_projection: identity,
         };
-        let decomposed = node.transform().decomposed(); 
+        let decomposed = node.transform().decomposed();
         let (l, r, _) = decomposed;
         let location = math::Vector3::new(l[0], l[1], l[2]);
         base.set_location(&location);
@@ -229,9 +224,7 @@ pub struct Perspective {
     pub div_cos_horizontal: f32,
 }
 
-impl Perspective {
-
-}
+impl Perspective {}
 
 impl CoreObject for Perspective {
     fn get_id(&self) -> Id {
@@ -266,8 +259,9 @@ impl Loadable for Perspective {
         let c = vxunwrap_o!(n.camera());
         let p = match c.projection() {
             gltf::camera::Projection::Perspective(p) => p,
-            gltf::camera::Projection::Orthographic(_) => 
-                vxlogf!("Type of camera isn't perspective."),
+            gltf::camera::Projection::Orthographic(_) => {
+                vxlogf!("Type of camera isn't perspective.")
+            }
         };
         let mut base = Base::new_with_gltf(n, eng);
         let fov_vertical = p.yfov();
@@ -276,8 +270,12 @@ impl Loadable for Perspective {
         let fov_horizontal = tan_horizontal.atan() * 2.0;
         let div_cos_vertical = (tan_vertical * tan_vertical + 1.0).sqrt();
         let div_cos_horizontal = (tan_horizontal * tan_horizontal + 1.0).sqrt();
-        base.projection =
-            math::perspective(math::Rad(fov_vertical), base.aspect_ratio, base.near, base.far);
+        base.projection = math::perspective(
+            math::Rad(fov_vertical),
+            base.aspect_ratio,
+            base.near,
+            base.far,
+        );
         base.update_view_projection();
         Perspective {
             base,
@@ -383,23 +381,20 @@ impl Loadable for Orthographic {
     fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<GraphicApiEngine>>) -> Self {
         let c = vxunwrap_o!(n.camera());
         let o = match c.projection() {
-            gltf::camera::Projection::Perspective(_) => 
-                vxlogf!("Type of camera isn't perspective."),
+            gltf::camera::Projection::Perspective(_) => {
+                vxlogf!("Type of camera isn't perspective.")
+            }
             gltf::camera::Projection::Orthographic(o) => o,
         };
         let mut base = Base::new_with_gltf(n, eng);
         let size = o.ymag();
-        let right = size * base.aspect_ratio * 0.5; 
+        let right = size * base.aspect_ratio * 0.5;
         let left = -right;
         let top = size * 0.5;
         let bottom = -top;
-        base.projection =
-            math::ortho(left, right, bottom, top, base.near, base.far);
+        base.projection = math::ortho(left, right, bottom, top, base.near, base.far);
         base.update_view_projection();
-        Orthographic {
-            base,
-            size,
-        }
+        Orthographic { base, size }
     }
 }
 

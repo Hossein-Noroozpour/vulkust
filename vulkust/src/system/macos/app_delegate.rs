@@ -121,3 +121,15 @@ pub fn register() {
 pub fn create_instance() -> apple::Id {
     apple::get_instance(CLASS_NAME)
 }
+
+pub fn get_window(appdlg: apple::Id) -> apple::Id {
+    unsafe { *(*appdlg).get_ivar(WINDOW_VAR_NAME) }
+}
+
+pub fn set_title(appdlg: apple::Id, title: &str) {
+    let window = get_window(appdlg);
+    let title = apple::NSString::new(title);
+    unsafe {
+        let _: () = msg_send![window, setTitle: title];
+    }
+}

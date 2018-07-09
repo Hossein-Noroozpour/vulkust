@@ -17,7 +17,8 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
-        let config = Arc::new(RwLock::new(Config { // todo It must be filled with a file
+        let config = Arc::new(RwLock::new(Config {
+            // todo It must be filled with a file
             number_cascaded_shadows: 6,
         }));
         let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app)));

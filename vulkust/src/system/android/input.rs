@@ -131,7 +131,10 @@ pub enum AinputMotionRange {
 
 pub type AInputQueue = c_void;
 
-#[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
+#[cfg_attr(
+    target_os = "android",
+    link(name = "android", kind = "dylib")
+)]
 extern "C" {
     pub fn AInputEvent_getType(event: *const AInputEvent) -> i32;
     pub fn AInputEvent_getDeviceId(event: *const AInputEvent) -> i32;

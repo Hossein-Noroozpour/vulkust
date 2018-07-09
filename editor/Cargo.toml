@@ -1,9 +1,9 @@
 [package]
-name = "scene-loading"
+name = "vulkust-editor"
 version = "0.1.0"
 authors = ["Hossein Noroozpour <hossein.noroozpour@gmail.com>"]
-description = "A simple game made by Vulkust game engine"
+description = "Editor for Vulkust game engine"
 license = "MIT"
 
 [dependencies]
-vulkust = { path = "../../vulkust" }
+vulkust = { path = "../vulkust" }

@@ -201,8 +201,7 @@ impl Object for Base {
         vxlogf!("Mesh does not implement this function instead it does the Mesh trait render.");
     }
 
-    fn update(&mut self) {
-    }
+    fn update(&mut self) {}
 
     fn disable_rendering(&mut self) {
         self.obj_base.disable_rendering()

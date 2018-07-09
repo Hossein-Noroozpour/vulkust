@@ -1,5 +1,5 @@
-use super::super::core::types::Id;
 use super::super::core::object::Object as CoreObject;
+use super::super::core::types::Id;
 use super::super::system::file::File;
 use super::camera::{Camera, Manager as CameraManager};
 use super::engine::GraphicApiEngine;
@@ -293,7 +293,14 @@ impl Loadable for Game {
         scene: &gltf::Scene,
         data: &Vec<u8>,
     ) -> Self {
-        let base = Base::new_with_gltf(gapi_engine, scene, texture_manager, camera_manager, light_manager, data);
+        let base = Base::new_with_gltf(
+            gapi_engine,
+            scene,
+            texture_manager,
+            camera_manager,
+            light_manager,
+            data,
+        );
         Game { base }
     }
 }

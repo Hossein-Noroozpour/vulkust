@@ -53,11 +53,8 @@ impl Manager {
             }
         }
         let gapi_engine = vxunwrap_o!(self.gapi_engine.upgrade());
-        let texture: Arc<RwLock<Texture>> = Arc::new(RwLock::new(T::new_with_gltf(
-            texture,
-            &gapi_engine,
-            data,
-        )));
+        let texture: Arc<RwLock<Texture>> =
+            Arc::new(RwLock::new(T::new_with_gltf(texture, &gapi_engine, data)));
         let id = vxresult!(texture.read()).get_id();
         let weak = Arc::downgrade(&texture);
         self.name_to_id.insert(name, id);

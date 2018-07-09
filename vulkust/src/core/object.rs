@@ -19,15 +19,11 @@ pub struct Base {
 
 impl Base {
     pub fn new() -> Self {
-        Base {
-            id: create_id(),
-        }
+        Base { id: create_id() }
     }
 
     pub fn new_with_id(id: Id) -> Self {
-        Base {
-            id,
-        }
+        Base { id }
     }
 }
 

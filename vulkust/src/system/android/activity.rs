@@ -54,7 +54,10 @@ pub struct ANativeActivityCallbacks {
     pub onLowMemory: activity_receiver,
 }
 
-#[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
+#[cfg_attr(
+    target_os = "android",
+    link(name = "android", kind = "dylib")
+)]
 extern "C" {
     pub fn ANativeActivity_finish(activity: *mut ANativeActivity);
     pub fn ANativeActivity_setWindowFormat(activity: *mut ANativeActivity, format: i32);

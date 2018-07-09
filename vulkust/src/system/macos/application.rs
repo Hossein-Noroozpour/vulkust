@@ -81,6 +81,10 @@ impl Application {
         let frame: apple::NSRect = unsafe { msg_send![view, frame] };
         frame.size.width as f32 / frame.size.height as f32
     }
+
+    pub fn set_title(&self, title: &str) {
+        app_delegate::set_title(self.app_dlg, title);
+    }
 }
 
 impl Drop for Application {

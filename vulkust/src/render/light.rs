@@ -1,7 +1,7 @@
-use super::super::core::object::{Object as CoreObject};
+use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::camera::Orthographic;
-use super::object::{Object};
+use super::object::Object;
 use math::{Matrix4, Vector3};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
@@ -19,9 +19,7 @@ pub struct Sun {
     camera: Orthographic,
 }
 
-impl Sun {
-
-}
+impl Sun {}
 
 impl CoreObject for Sun {
     fn get_id(&self) -> Id {
@@ -56,7 +54,7 @@ impl Light for Sun {}
 impl DefaultLighting for Sun {
     fn default(size: f32, name: &str) -> Self {
         Sun {
-            camera: Orthographic::new(size, name)
+            camera: Orthographic::new(size, name),
         }
     }
 }
