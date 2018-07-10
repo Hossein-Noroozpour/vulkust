@@ -1,0 +1,12 @@
+[package]
+name = "ttf-baker"
+version = "0.0.1"
+authors = ["Hossein Noroozpour <hossein.noroozpour@gmail.com>"]
+description = "For baking ttf file"
+license = "MIT"
+
+[dependencies]
+vulkust = { path = "../../vulkust" }
+image = "*"
+rusttype = "*"
+clap = "*"

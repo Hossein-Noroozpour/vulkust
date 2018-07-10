@@ -30,11 +30,6 @@ pub struct Manager {
 
 impl Manager {
     pub fn new(gapi_engine: &Arc<RwLock<GraphicApiEngine>>) -> Self {
-        // let aspect_ratio = {
-        //     let eng = vxresult!(gapi_engine.read());
-        //     let asp = vxresult!(eng.os_app.read()).aspect_ratio();
-        //     asp
-        // };
         let gapi_engine = Arc::downgrade(gapi_engine);
         let cameras = BTreeMap::new();
         let name_to_id = BTreeMap::new();
