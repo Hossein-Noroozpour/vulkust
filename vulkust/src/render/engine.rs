@@ -1,11 +1,14 @@
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
-pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
-// use super::command::buffer::Buffer as CmdBuff;
 use super::config::Configurations as Config;
-use super::scene::{Loadable as LoadableScene, Manager as SceneManager};
+use super::mesh::DefaultMesh;
+use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
+use super::camera::DefaultCamera;
 use std::sync::{Arc, RwLock, Weak};
+// use super::command::buffer::Buffer as CmdBuff;
+
+pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
 
 pub struct Engine {
     pub config: Arc<RwLock<Config>>,
@@ -43,6 +46,23 @@ impl Engine {
         S: 'static + LoadableScene,
     {
         vxresult!(self.scene_manager.write()).load::<S>(file_name, scene_name)
+    }
+
+    pub fn create_scene<S>(&self) -> Arc<RwLock<S>> 
+    where 
+        S: 'static + DefaultScene
+    {
+        vxresult!(self.scene_manager.write()).create()
+    }
+
+    pub fn create_camera<C>(&self) -> Arc<RwLock<C>>
+    where C: 'static + DefaultCamera {
+        vxresult!(self.scene_manager.read()).create_camera()
+    }
+
+    pub fn create_mesh<M>(&self) -> Arc<RwLock<M>>
+    where M: 'static + DefaultMesh {
+        vxresult!(self.scene_manager.read()).create_mesh()
     }
 
     pub fn on_event(&self, _e: Event) {}

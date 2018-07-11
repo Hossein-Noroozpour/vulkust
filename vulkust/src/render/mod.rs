@@ -16,3 +16,4 @@ pub mod scene;
 // pub mod shader;
 pub mod texture;
 // pub mod vertex;
+pub mod widget;

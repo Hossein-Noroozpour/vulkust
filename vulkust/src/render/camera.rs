@@ -22,34 +22,27 @@ pub trait Camera: Object + Transferable {
     fn get_cascaded_shadow_points(&self, _sections_count: usize) -> Vec<math::Vector3<f32>>;
 }
 
+pub trait DefaultCamera: Camera {
+    fn default() -> Self;
+}
+
 pub struct Manager {
     pub gapi_engine: Weak<RwLock<GraphicApiEngine>>,
     pub cameras: BTreeMap<Id, Weak<RwLock<Camera>>>,
-    pub name_to_id: BTreeMap<String, Id>,
 }
 
 impl Manager {
     pub fn new(gapi_engine: &Arc<RwLock<GraphicApiEngine>>) -> Self {
         let gapi_engine = Arc::downgrade(gapi_engine);
         let cameras = BTreeMap::new();
-        let name_to_id = BTreeMap::new();
         Manager {
             gapi_engine,
             cameras,
-            name_to_id,
         }
     }
 
     pub fn load(&mut self, n: &gltf::Node) -> Arc<RwLock<Camera>> {
         let c = vxunwrap_o!(n.camera());
-        let name = vxunwrap_o!(c.name()).to_string();
-        if let Some(id) = self.name_to_id.get(&name) {
-            if let Some(c) = self.cameras.get(&id) {
-                if let Some(c) = c.upgrade() {
-                    return c;
-                }
-            }
-        }
         let eng = vxunwrap_o!(self.gapi_engine.upgrade());
         let camera = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
@@ -67,6 +60,16 @@ impl Manager {
         #[cfg(debug_assertions)]
         vxlogi!("Camera is: {:?}", &camera);
         self.cameras.insert(id, Arc::downgrade(&camera));
+        camera
+    }
+
+    pub fn create<C>(&mut self) -> Arc<RwLock<C>> where C: 'static + DefaultCamera {
+        let camera = C::default();
+        let id = camera.get_id();
+        let camera = Arc::new(RwLock::new(camera));
+        let c: Arc<RwLock<Camera>> = camera.clone();
+        let c: Weak<RwLock<Camera>> = Arc::downgrade(&c);
+        self.cameras.insert(id, c);
         camera
     }
 }
@@ -88,12 +91,12 @@ pub struct Base {
 }
 
 impl Base {
-    pub fn new(name: &str) -> Self {
+    pub fn new() -> Self {
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
         Base {
-            obj_base: ObjectBase::new(name),
+            obj_base: ObjectBase::new(),
             near: 0.0,
             far: 0.0,
             aspect_ratio: 0.0,
@@ -122,10 +125,6 @@ impl CoreObject for Base {
 }
 
 impl Object for Base {
-    fn name(&self) -> &str {
-        self.obj_base.name()
-    }
-
     fn render(&self) {
         vxlogf!("Base camera does not implement rendering.");
     }
@@ -168,7 +167,7 @@ impl Loadable for Base {
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
-        let obj_base = ObjectBase::new(vxunwrap_o!(node.name()));
+        let obj_base = ObjectBase::new();
         let c = vxunwrap_o!(node.camera());
         let (near, far) = match c.projection() {
             gltf::camera::Projection::Perspective(p) => (p.znear(), vxunwrap_o!(p.zfar())),
@@ -228,10 +227,6 @@ impl CoreObject for Perspective {
 }
 
 impl Object for Perspective {
-    fn name(&self) -> &str {
-        self.base.name()
-    }
-
     fn render(&self) {
         vxlogf!("Perspective camera does not implement rendering.");
     }
@@ -336,9 +331,9 @@ pub struct Orthographic {
 }
 
 impl Orthographic {
-    pub fn new(size: f32, name: &str) -> Self {
+    pub fn new(size: f32) -> Self {
         Orthographic {
-            base: Base::new(name),
+            base: Base::new(),
             size,
         }
     }
@@ -351,10 +346,6 @@ impl CoreObject for Orthographic {
 }
 
 impl Object for Orthographic {
-    fn name(&self) -> &str {
-        self.base.name()
-    }
-
     fn render(&self) {
         vxlogf!("Orthographic camera does not implement rendering.");
     }
@@ -426,5 +417,11 @@ impl Camera for Orthographic {
             result[i] = previous;
         }
         return result;
+    }
+}
+
+impl DefaultCamera for Orthographic {
+    fn default() -> Self {
+        Orthographic::new(1.0)
     }
 }

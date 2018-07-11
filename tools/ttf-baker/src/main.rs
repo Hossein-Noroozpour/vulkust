@@ -64,13 +64,14 @@ fn main() {
     let paddingf = (font_scale / 10.0).ceil();
     let paddingi = paddingf as i32;
     let scale = Scale::uniform(font_scale);
-    let mut text = String::new();
+    // let mut text = String::new();
+    let mut text = "\u{62A}\u{627}\u{6CC}\u{644}\u{fe8e}\u{fee3}";
     let starting_char = 33i32;
     let ending_char = 127i32;
     let chars_number = ending_char - starting_char;
-    for i in starting_char..ending_char {
-        text += &(i as u8 as char).to_string();
-    }
+    // for i in starting_char..ending_char {
+    //     text += &(i as u8 as char).to_string();
+    // }
     let interleaved_space = chars_number * paddingi;
     let colour = (255, 255, 255); // todo change it to black and white
     let v_metrics = font.v_metrics(scale);
@@ -119,7 +120,7 @@ fn main() {
                 loline = upline + charh.ceil();
                 row.clear();
             }
-            row.push((bounding_box.min.x, bounding_box.max.x));
+            row.push((bounding_box.min.x + incx, bounding_box.max.x + incx));
             glyph.draw(|x, y, v| {
                 image.put_pixel(
                     (x as i32 + bounding_box.min.x + incx) as u32,
@@ -152,6 +153,26 @@ fn main() {
                     data: [0, 255, 0, 255],
                 },
             )
+        }
+        for (x1, x2) in &meta.0 {
+            for y in meta.1 as u32..meta.2 as u32 {
+                image.put_pixel(
+                    *x1 as u32,
+                    y as u32,
+                    Rgba {
+                        data: [255, 255, 0, 255],
+                    },
+                )
+            }
+            for y in meta.1 as u32..meta.2 as u32 {
+                image.put_pixel(
+                    *x2 as u32,
+                    y as u32,
+                    Rgba {
+                        data: [255, 0, 255, 255],
+                    },
+                )
+            }
         }
     }
 

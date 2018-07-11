@@ -6,7 +6,6 @@ use math;
 use std::sync::{Arc, RwLock};
 
 pub trait Object: CoreObject {
-    fn name(&self) -> &str;
     fn render(&self);
     fn disable_rendering(&mut self);
     fn enable_rendering(&mut self);
@@ -24,18 +23,15 @@ pub trait Transferable {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Base {
-    pub name: String,
     pub renderable: bool,
     pub core_base: CoreBase,
 }
 
 impl Base {
-    pub fn new(name: &str) -> Self {
-        let name = name.to_string();
+    pub fn new() -> Self {
         let renderable = true;
         let core_base = CoreBase::new();
         Base {
-            name,
             renderable,
             core_base,
         }
@@ -49,10 +45,6 @@ impl CoreObject for Base {
 }
 
 impl Object for Base {
-    fn name(&self) -> &str {
-        &self.name
-    }
-
     fn render(&self) {}
 
     fn disable_rendering(&mut self) {
@@ -67,7 +59,7 @@ impl Object for Base {
 }
 
 impl Loadable for Base {
-    fn new_with_gltf(node: &gltf::Node, _: &Arc<RwLock<GraphicApiEngine>>) -> Self {
-        Self::new(vxunwrap_o!(node.name()))
+    fn new_with_gltf(_: &gltf::Node, _: &Arc<RwLock<GraphicApiEngine>>) -> Self {
+        Self::new()
     }
 }

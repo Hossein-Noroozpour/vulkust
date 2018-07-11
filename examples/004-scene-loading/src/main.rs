@@ -3,8 +3,9 @@ extern crate vulkust;
 
 use vulkust::core::application::ApplicationTrait as CoreAppTrait;
 use vulkust::core::event::Event;
+use vulkust::render::camera::{DefaultCamera, Orthographic};
 use vulkust::render::engine::Engine as Renderer;
-use vulkust::render::scene::Game as GameScene;
+use vulkust::render::scene::{Scene, Ui as UiScene};
 use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
@@ -12,7 +13,7 @@ use std::sync::{Arc, RwLock};
 struct MyGame {
     pub os_app: Option<Arc<RwLock<OsApp>>>,
     pub renderer: Option<Arc<RwLock<Renderer>>>,
-    pub scene: Option<Arc<RwLock<GameScene>>>,
+    pub ui_scene: Option<Arc<RwLock<UiScene>>>,
 }
 
 impl MyGame {
@@ -20,7 +21,7 @@ impl MyGame {
         MyGame {
             os_app: None,
             renderer: None,
-            scene: None,
+            ui_scene: None,
         }
     }
 }
@@ -35,8 +36,16 @@ impl CoreAppTrait for MyGame {
     }
 
     fn initialize(&mut self) {
-        self.scene =
-            Some(vxresult!(vxunwrap!(self.renderer).write()).load_scene("data/1.glb", "scene-001"));
+        let renderer = vxunwrap!(self.renderer);
+        let renderer = vxresult!(renderer.read());
+        let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene();
+        let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
+        let mesh: Arc<RwLock<Label>> = 
+        {
+            let mut uiscn = vxresult!(ui_scene.write());
+            uiscn.add_camera(camera);
+        }
+        self.ui_scene = Some(ui_scene);
     }
 
     fn on_event(&self, _e: Event) {}

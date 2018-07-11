@@ -8,7 +8,8 @@ use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture, Texture2D};
 use std::mem::size_of;
 use std::mem::transmute;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Weak};
+use std::collections::BTreeMap;
 // use super::material::Material;
 
 use gltf;
@@ -18,6 +19,34 @@ use math::Matrix;
 pub trait Mesh: Object {
     fn render(&mut self, _: &SceneUniform) {
         unimplemented!();
+    }
+}
+
+pub trait DefaultMesh: Mesh {
+    fn default(Arc<RwLock<GraphicApiEngine>>) -> Self;
+}
+
+pub struct Manager {
+    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+    pub meshes: BTreeMap<Id, Weak<RwLock<Mesh>>>,
+}
+
+impl Manager {
+    pub fn new(gapi_engine: &Arc<RwLock<GraphicApiEngine>>) -> Self {
+        Manager {
+            gapi_engine: gapi_engine.clone(),
+            meshes: BTreeMap::new(),
+        }
+    }
+
+    pub fn create<M>(&mut self) -> Arc<RwLock<M>> where M: 'static + DefaultMesh {
+        let mesh = M::default(self.gapi_engine.clone());
+        let id = mesh.get_id();
+        let mesh = Arc::new(RwLock::new(mesh));
+        let m: Arc<RwLock<Mesh>> = mesh.clone();
+        let m: Weak<RwLock<Mesh>> = Arc::downgrade(&m);
+        self.meshes.insert(id, m);
+        mesh
     }
 }
 
@@ -50,7 +79,7 @@ impl Base {
         data: &Vec<u8>,
     ) -> Self {
         let gapi_engine_clone = gapi_engine.clone();
-        let obj_base = ObjectBase::new(vxunwrap_o!(mesh.name()));
+        let obj_base = ObjectBase::new();
         let primitives = mesh.primitives();
         let mut geometries = Vec::new();
         for primitive in primitives {
@@ -193,10 +222,6 @@ impl CoreObject for Base {
 }
 
 impl Object for Base {
-    fn name(&self) -> &str {
-        &self.obj_base.name()
-    }
-
     fn render(&self) {
         vxlogf!("Mesh does not implement this function instead it does the Mesh trait render.");
     }
