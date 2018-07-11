@@ -15,4 +15,6 @@ An experimental tiny engine for **Vulkan in Rust**.
  5. Maintainable code
 
 ## License
-You can do whatever you want to do with it and every consequences are on you, **But** If you used it and it was useful for you, please make an acknowledgment and promotion for this project and me, I'm really need that because I'm currently seeking for a job in the graphic and game programing fields.
+ - You can do whatever you want to do with it, but every consequences are on you.
+ - You can not say that you have written this.
+ - Make some promotion for this project and me (I'm a job seeker).
