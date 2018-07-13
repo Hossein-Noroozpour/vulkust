@@ -16,10 +16,10 @@ impl Module {
         let mut file = vxresult!(File::open(file_name));
         let mut data = Vec::new();
         let _ = vxresult!(file.read_to_end(&mut data));
-        Self::new(data, logical_device)
+        Self::new(&data, logical_device)
     }
 
-    pub fn new(data: Vec<u8>, logical_device: Arc<LogicalDevice>) -> Self {
+    pub fn new(data: &[u8], logical_device: Arc<LogicalDevice>) -> Self {
         let mut module_create_info = vk::VkShaderModuleCreateInfo::default();
         module_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         module_create_info.codeSize = data.len();
