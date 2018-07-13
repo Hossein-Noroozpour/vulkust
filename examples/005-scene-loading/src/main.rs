@@ -6,6 +6,7 @@ use vulkust::core::event::Event;
 use vulkust::render::camera::{DefaultCamera, Orthographic};
 use vulkust::render::engine::Engine as Renderer;
 use vulkust::render::scene::{Scene, Ui as UiScene};
+use vulkust::render::widget::Label;
 use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
@@ -40,10 +41,12 @@ impl CoreAppTrait for MyGame {
         let renderer = vxresult!(renderer.read());
         let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene();
         let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
-        let mesh: Arc<RwLock<Label>> = 
+        let label: Arc<RwLock<Label>> = renderer.create_mesh();
+        vxresult!(label.write()).set_text("Hello Vulkust!");
         {
             let mut uiscn = vxresult!(ui_scene.write());
             uiscn.add_camera(camera);
+            uiscn.add_mesh(label);
         }
         self.ui_scene = Some(ui_scene);
     }

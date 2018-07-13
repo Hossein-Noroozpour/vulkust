@@ -4,7 +4,7 @@ use super::super::system::file::File;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager};
 use super::engine::GraphicApiEngine;
 use super::light::Manager as LightManager;
-use super::mesh::{Base as MeshBase, DefaultMesh, Mesh, Manager as MeshManager};
+use super::mesh::{Base as MeshBase, DefaultMesh, Manager as MeshManager, Mesh};
 use super::object::{Base as BaseObject, Object};
 use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
@@ -16,6 +16,7 @@ use math;
 
 pub trait Scene: Object {
     fn add_camera(&mut self, Arc<RwLock<Camera>>);
+    fn add_mesh(&mut self, Arc<RwLock<Mesh>>);
 }
 
 pub trait Loadable: Scene + Sized {
@@ -89,18 +90,27 @@ impl Manager {
         return scene;
     }
 
-    pub fn create<S>(&mut self) -> Arc<RwLock<S>> where S: 'static + DefaultScene {
+    pub fn create<S>(&mut self) -> Arc<RwLock<S>>
+    where
+        S: 'static + DefaultScene,
+    {
         let scene = Arc::new(RwLock::new(S::default()));
         let s: Arc<RwLock<Scene>> = scene.clone();
         self.add(&s);
         scene
     }
 
-    pub fn create_camera<C>(&self) -> Arc<RwLock<C>> where C: 'static + DefaultCamera {
+    pub fn create_camera<C>(&self) -> Arc<RwLock<C>>
+    where
+        C: 'static + DefaultCamera,
+    {
         vxresult!(self.camera_manager.write()).create()
     }
 
-    pub fn create_mesh<M>(&self) -> Arc<RwLock<M>> where M: 'static + DefaultMesh {
+    pub fn create_mesh<M>(&self) -> Arc<RwLock<M>>
+    where
+        M: 'static + DefaultMesh,
+    {
         vxresult!(self.mesh_manager.write()).create()
     }
 
@@ -155,7 +165,7 @@ pub struct Base {
     pub uniform: Uniform,
     pub cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
     pub active_camera: Option<Weak<RwLock<Camera>>>,
-    pub meshes: Vec<Arc<RwLock<Mesh>>>,
+    pub meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
 }
 
 impl Base {
@@ -171,7 +181,7 @@ impl Base {
         let uniform = Uniform::new();
         let cameras = BTreeMap::new();
         let active_camera = None;
-        let meshes = Vec::new();
+        let meshes = BTreeMap::new();
         let mut myself = Base {
             obj_base,
             uniform,
@@ -181,10 +191,14 @@ impl Base {
         };
         for node in scene.nodes() {
             myself.import_gltf_node(
-                &node, gapi_engine, texture_manager, 
-                camera_manager, light_manager, data);
+                &node,
+                gapi_engine,
+                texture_manager,
+                camera_manager,
+                light_manager,
+                data,
+            );
         }
-        myself.meshes.shrink_to_fit();
         return myself;
     }
 
@@ -204,18 +218,20 @@ impl Base {
             self.cameras.insert(id, camera);
             self.active_camera = Some(w);
         } else if let Some(gltf_mesh) = node.mesh() {
-            self.meshes
-                .push(Arc::new(RwLock::new(MeshBase::new_with_gltf(
-                    gapi_engine,
-                    gltf_mesh,
-                    texture_manager,
-                    data,
-                ))));
+            let mesh = MeshBase::new_with_gltf(gapi_engine, gltf_mesh, texture_manager, data);
+            let id = mesh.get_id();
+            let mesh = Arc::new(RwLock::new(mesh));
+            self.meshes.insert(id, mesh);
         } else {
             for node in node.children() {
                 self.import_gltf_node(
-                    &node, gapi_engine, texture_manager, 
-                    camera_manager, light_manager, data);
+                    &node,
+                    gapi_engine,
+                    texture_manager,
+                    camera_manager,
+                    light_manager,
+                    data,
+                );
             }
         }
     }
@@ -235,7 +251,7 @@ impl Object for Base {
         if !self.obj_base.renderable {
             return;
         }
-        for mesh in &self.meshes {
+        for (_, mesh) in &self.meshes {
             let mesh: &mut Mesh = &mut *vxresult!(mesh.write());
             Mesh::render(mesh, &self.uniform);
         }
@@ -268,6 +284,17 @@ impl Scene for Base {
         }
         self.cameras.insert(id, camera);
     }
+
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
+        let id = vxresult!(mesh.read()).get_id();
+        #[cfg(debug_assertions)]
+        {
+            if self.meshes.get(&id).is_some() {
+                vxlogf!("Mesh is already added.\nDo not import same mesh twise");
+            }
+        }
+        self.meshes.insert(id, mesh);
+    }
 }
 
 impl DefaultScene for Base {
@@ -277,7 +304,7 @@ impl DefaultScene for Base {
             uniform: Uniform::new(),
             cameras: BTreeMap::new(),
             active_camera: None,
-            meshes: Vec::new(),
+            meshes: BTreeMap::new(),
         }
     }
 }
@@ -314,7 +341,11 @@ impl Object for Game {
 
 impl Scene for Game {
     fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
-        self.base.add_camera(camera)
+        self.base.add_camera(camera);
+    }
+
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
+        self.base.add_mesh(mesh);
     }
 }
 
@@ -372,6 +403,10 @@ impl Object for Ui {
 impl Scene for Ui {
     fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
         self.base.add_camera(camera)
+    }
+
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
+        self.base.add_mesh(mesh);
     }
 }
 

@@ -6,10 +6,10 @@ use super::engine::GraphicApiEngine;
 use super::object::{Base as ObjectBase, Object};
 use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture, Texture2D};
+use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::mem::transmute;
 use std::sync::{Arc, RwLock, Weak};
-use std::collections::BTreeMap;
 // use super::material::Material;
 
 use gltf;
@@ -17,9 +17,7 @@ use math;
 use math::Matrix;
 
 pub trait Mesh: Object {
-    fn render(&mut self, _: &SceneUniform) {
-        unimplemented!();
-    }
+    fn render(&mut self, _: &SceneUniform);
 }
 
 pub trait DefaultMesh: Mesh {
@@ -39,7 +37,10 @@ impl Manager {
         }
     }
 
-    pub fn create<M>(&mut self) -> Arc<RwLock<M>> where M: 'static + DefaultMesh {
+    pub fn create<M>(&mut self) -> Arc<RwLock<M>>
+    where
+        M: 'static + DefaultMesh,
+    {
         let mesh = M::default(self.gapi_engine.clone());
         let id = mesh.get_id();
         let mesh = Arc::new(RwLock::new(mesh));
@@ -250,6 +251,16 @@ impl Mesh for Base {
                 &geo.index_buffer,
                 geo.indices_count,
             );
+        }
+    }
+}
+
+impl DefaultMesh for Base {
+    fn default(gapi_engine: Arc<RwLock<GraphicApiEngine>>) -> Self {
+        Base {
+            obj_base: ObjectBase::new(),
+            gapi_engine,
+            geometries: Vec::new(),
         }
     }
 }

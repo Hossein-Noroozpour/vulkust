@@ -3,7 +3,8 @@ members = [
     "examples/001-empty-window",
     "examples/002-android-empty-window",
     "examples/003-ios-empty-window",
-    "examples/004-scene-loading",
+    "examples/004-hello-world",
+    "examples/005-scene-loading",
     "tools/ttf-baker",
     "vulkust",
 ]

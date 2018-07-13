@@ -63,7 +63,10 @@ impl Manager {
         camera
     }
 
-    pub fn create<C>(&mut self) -> Arc<RwLock<C>> where C: 'static + DefaultCamera {
+    pub fn create<C>(&mut self) -> Arc<RwLock<C>>
+    where
+        C: 'static + DefaultCamera,
+    {
         let camera = C::default();
         let id = camera.get_id();
         let camera = Arc::new(RwLock::new(camera));

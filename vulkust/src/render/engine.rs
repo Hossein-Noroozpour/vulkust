@@ -1,10 +1,10 @@
 use super::super::core::application::ApplicationTrait as CoreAppTrait;
 use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
+use super::camera::DefaultCamera;
 use super::config::Configurations as Config;
 use super::mesh::DefaultMesh;
 use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
-use super::camera::DefaultCamera;
 use std::sync::{Arc, RwLock, Weak};
 // use super::command::buffer::Buffer as CmdBuff;
 
@@ -48,20 +48,24 @@ impl Engine {
         vxresult!(self.scene_manager.write()).load::<S>(file_name, scene_name)
     }
 
-    pub fn create_scene<S>(&self) -> Arc<RwLock<S>> 
-    where 
-        S: 'static + DefaultScene
+    pub fn create_scene<S>(&self) -> Arc<RwLock<S>>
+    where
+        S: 'static + DefaultScene,
     {
         vxresult!(self.scene_manager.write()).create()
     }
 
     pub fn create_camera<C>(&self) -> Arc<RwLock<C>>
-    where C: 'static + DefaultCamera {
+    where
+        C: 'static + DefaultCamera,
+    {
         vxresult!(self.scene_manager.read()).create_camera()
     }
 
     pub fn create_mesh<M>(&self) -> Arc<RwLock<M>>
-    where M: 'static + DefaultMesh {
+    where
+        M: 'static + DefaultMesh,
+    {
         vxresult!(self.scene_manager.read()).create_mesh()
     }
 
