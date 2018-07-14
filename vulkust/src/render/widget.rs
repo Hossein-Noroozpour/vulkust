@@ -1,6 +1,6 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
-use super::engine::GraphicApiEngine;
+use super::engine::Engine;
 use super::mesh::{Base as MeshBase, DefaultMesh, Mesh};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
@@ -20,6 +20,15 @@ impl CoreObject for Base {
 }
 
 impl Object for Base {
+    fn get_name(&self) -> Option<String> {
+        self.mesh_base.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.mesh_base.set_name(name);
+        vxunimplemented!();//it must update corresponding manager
+    }
+    
     fn render(&self) {
         self.mesh_base.render();
     }
@@ -44,9 +53,9 @@ impl Mesh for Base {
 }
 
 impl DefaultMesh for Base {
-    fn default(gapi_engine: Arc<RwLock<GraphicApiEngine>>) -> Self {
+    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
         Base {
-            mesh_base: MeshBase::default(gapi_engine),
+            mesh_base: MeshBase::default(engine),
             sensitive: true,
         }
     }
@@ -57,6 +66,9 @@ impl Widget for Base {}
 pub struct Label {
     pub base: Base,
     pub text: String,
+    pub text_size: f32,
+    pub text_color: [f32; 4],
+    pub background_color: [f32; 4],
 }
 
 impl Label {
@@ -73,6 +85,15 @@ impl CoreObject for Label {
 }
 
 impl Object for Label {
+    fn get_name(&self) -> Option<String> {
+        self.base.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.base.set_name(name);
+        vxunimplemented!();//it must update corresponding manager
+    }
+
     fn render(&self) {
         self.base.render();
     }
@@ -97,10 +118,13 @@ impl Mesh for Label {
 }
 
 impl DefaultMesh for Label {
-    fn default(gapi_engine: Arc<RwLock<GraphicApiEngine>>) -> Self {
+    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
         Label {
-            base: Base::default(gapi_engine),
+            base: Base::default(engine),
             text: String::new(),
+            text_size: 1f32,
+            text_color: [1f32; 4],
+            background_color: [0f32; 4],
         }
     }
 }

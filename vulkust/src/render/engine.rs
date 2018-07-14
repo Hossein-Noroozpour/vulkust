@@ -11,6 +11,7 @@ use std::sync::{Arc, RwLock, Weak};
 pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
 
 pub struct Engine {
+    pub myself: Option<Weak<RwLock<Engine>>>,
     pub config: Arc<RwLock<Config>>,
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub os_app: Weak<RwLock<OsApp>>,
@@ -25,8 +26,10 @@ impl Engine {
             number_cascaded_shadows: 6,
         }));
         let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app)));
-        let scene_manager = Arc::new(RwLock::new(SceneManager::new(&gapi_engine)));
+        let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
+        let myself = None;
         Engine {
+            myself,
             config,
             gapi_engine,
             os_app: Arc::downgrade(os_app),
@@ -35,17 +38,22 @@ impl Engine {
         }
     }
 
+    pub fn set_myself(&mut self, myself: Weak<RwLock<Engine>>) {
+        self.myself = Some(myself.clone());
+        vxresult!(self.scene_manager.write()).set_engine(myself);
+    }
+
     pub fn update(&self) {
         vxresult!(self.gapi_engine.write()).start_recording();
         vxresult!(self.scene_manager.read()).render();
         vxresult!(self.gapi_engine.write()).end_recording();
     }
 
-    pub fn load_scene<S>(&self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
+    pub fn load_gltf_scene<S>(&self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
     where
         S: 'static + LoadableScene,
     {
-        vxresult!(self.scene_manager.write()).load::<S>(file_name, scene_name)
+        vxresult!(self.scene_manager.write()).load_gltf::<S>(file_name, scene_name)
     }
 
     pub fn create_scene<S>(&self) -> Arc<RwLock<S>>

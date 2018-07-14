@@ -1,6 +1,6 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
-use super::engine::GraphicApiEngine;
+use super::engine::Engine;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use gltf;
 use math;
@@ -27,32 +27,32 @@ pub trait DefaultCamera: Camera {
 }
 
 pub struct Manager {
-    pub gapi_engine: Weak<RwLock<GraphicApiEngine>>,
     pub cameras: BTreeMap<Id, Weak<RwLock<Camera>>>,
+    pub name_to_id: BTreeMap<String, Id>,
 }
 
 impl Manager {
-    pub fn new(gapi_engine: &Arc<RwLock<GraphicApiEngine>>) -> Self {
-        let gapi_engine = Arc::downgrade(gapi_engine);
+    pub fn new() -> Self {
         let cameras = BTreeMap::new();
+        let name_to_id = BTreeMap::new();
         Manager {
-            gapi_engine,
             cameras,
+            name_to_id,
         }
     }
 
-    pub fn load(&mut self, n: &gltf::Node) -> Arc<RwLock<Camera>> {
+    pub fn load_gltf(&mut self, n: &gltf::Node, eng: &Arc<RwLock<Engine>>) -> Arc<RwLock<Camera>> {
         let c = vxunwrap_o!(n.camera());
-        let eng = vxunwrap_o!(self.gapi_engine.upgrade());
+        let data = Vec::new();
         let camera = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
                 let camera: Arc<RwLock<Camera>> =
-                    Arc::new(RwLock::new(Perspective::new_with_gltf(n, &eng)));
+                    Arc::new(RwLock::new(Perspective::new_with_gltf(n, eng, &data)));
                 camera
             }
             gltf::camera::Projection::Orthographic(_) => {
                 let camera: Arc<RwLock<Camera>> =
-                    Arc::new(RwLock::new(Orthographic::new_with_gltf(n, &eng)));
+                    Arc::new(RwLock::new(Orthographic::new_with_gltf(n, eng, &data)));
                 camera
             }
         };
@@ -60,6 +60,10 @@ impl Manager {
         #[cfg(debug_assertions)]
         vxlogi!("Camera is: {:?}", &camera);
         self.cameras.insert(id, Arc::downgrade(&camera));
+        if let Some(name) = n.name() {
+            let name = name.to_string();
+            self.name_to_id.insert(name, id);
+        }
         camera
     }
 
@@ -69,6 +73,9 @@ impl Manager {
     {
         let camera = C::default();
         let id = camera.get_id();
+        if let Some(name) = camera.get_name() {
+            self.name_to_id.insert(name, id);
+        }
         let camera = Arc::new(RwLock::new(camera));
         let c: Arc<RwLock<Camera>> = camera.clone();
         let c: Weak<RwLock<Camera>> = Arc::downgrade(&c);
@@ -128,6 +135,15 @@ impl CoreObject for Base {
 }
 
 impl Object for Base {
+    fn get_name(&self) -> Option<String> {
+        self.obj_base.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.obj_base.set_name(name);
+        vxunimplemented!(); // It must update corresponding manager
+    }
+
     fn render(&self) {
         vxlogf!("Base camera does not implement rendering.");
     }
@@ -164,9 +180,10 @@ impl Transferable for Base {
 }
 
 impl Loadable for Base {
-    fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<GraphicApiEngine>>) -> Self {
+    fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
         let eng = vxresult!(eng.read());
-        let aspect_ratio = vxresult!(eng.os_app.read()).aspect_ratio();
+        let os_app = vxunwrap_o!(eng.os_app.upgrade());
+        let aspect_ratio = vxresult!(os_app.read()).aspect_ratio();
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
@@ -230,6 +247,15 @@ impl CoreObject for Perspective {
 }
 
 impl Object for Perspective {
+    fn get_name(&self) -> Option<String> {
+        self.base.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.base.set_name(name);
+        vxunimplemented!();//it must update corresponding manager
+    }
+
     fn render(&self) {
         vxlogf!("Perspective camera does not implement rendering.");
     }
@@ -248,7 +274,7 @@ impl Object for Perspective {
 }
 
 impl Loadable for Perspective {
-    fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<GraphicApiEngine>>) -> Self {
+    fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
         let c = vxunwrap_o!(n.camera());
         let p = match c.projection() {
             gltf::camera::Projection::Perspective(p) => p,
@@ -256,7 +282,7 @@ impl Loadable for Perspective {
                 vxlogf!("Type of camera isn't perspective.")
             }
         };
-        let mut base = Base::new_with_gltf(n, eng);
+        let mut base = Base::new_with_gltf(n, eng, data);
         let fov_vertical = p.yfov();
         let tan_vertical = (fov_vertical / 2.0).tan();
         let tan_horizontal = tan_vertical * base.aspect_ratio;
@@ -349,6 +375,14 @@ impl CoreObject for Orthographic {
 }
 
 impl Object for Orthographic {
+    fn get_name(&self) -> Option<String> {
+        self.base.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.base.set_name(name);
+    }
+
     fn render(&self) {
         vxlogf!("Orthographic camera does not implement rendering.");
     }
@@ -367,7 +401,7 @@ impl Object for Orthographic {
 }
 
 impl Loadable for Orthographic {
-    fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<GraphicApiEngine>>) -> Self {
+    fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
         let c = vxunwrap_o!(n.camera());
         let o = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
@@ -375,7 +409,7 @@ impl Loadable for Orthographic {
             }
             gltf::camera::Projection::Orthographic(o) => o,
         };
-        let mut base = Base::new_with_gltf(n, eng);
+        let mut base = Base::new_with_gltf(n, eng, data);
         let size = o.ymag();
         let right = size * base.aspect_ratio * 0.5;
         let left = -right;

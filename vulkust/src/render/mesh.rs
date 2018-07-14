@@ -2,7 +2,7 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::buffer::{DynamicBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
-use super::engine::GraphicApiEngine;
+use super::engine::Engine;
 use super::object::{Base as ObjectBase, Object};
 use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture, Texture2D};
@@ -17,32 +17,35 @@ use math;
 use math::Matrix;
 
 pub trait Mesh: Object {
-    fn render(&mut self, _: &SceneUniform);
+    fn render(&mut self, _: &SceneUniform); // todo scene uniform is gonna move and this function is in the object
 }
 
 pub trait DefaultMesh: Mesh {
-    fn default(Arc<RwLock<GraphicApiEngine>>) -> Self;
+    fn default(&Arc<RwLock<Engine>>) -> Self;
 }
 
 pub struct Manager {
-    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub meshes: BTreeMap<Id, Weak<RwLock<Mesh>>>,
+    pub name_to_id: BTreeMap<String, Id>,
 }
 
 impl Manager {
-    pub fn new(gapi_engine: &Arc<RwLock<GraphicApiEngine>>) -> Self {
+    pub fn new() -> Self {
         Manager {
-            gapi_engine: gapi_engine.clone(),
             meshes: BTreeMap::new(),
+            name_to_id: BTreeMap::new(),
         }
     }
 
-    pub fn create<M>(&mut self) -> Arc<RwLock<M>>
+    pub fn create<M>(&mut self, engine: &Arc<RwLock<Engine>>) -> Arc<RwLock<M>>
     where
         M: 'static + DefaultMesh,
     {
-        let mesh = M::default(self.gapi_engine.clone());
+        let mesh = M::default(engine);
         let id = mesh.get_id();
+        if let Some(name) = mesh.get_name() {
+            self.name_to_id.insert(name, id);
+        }
         let mesh = Arc::new(RwLock::new(mesh));
         let m: Arc<RwLock<Mesh>> = mesh.clone();
         let m: Weak<RwLock<Mesh>> = Arc::downgrade(&m);
@@ -67,19 +70,19 @@ pub struct Geometry {
 
 pub struct Base {
     pub obj_base: ObjectBase,
-    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+    pub engine: Arc<RwLock<Engine>>,
     pub geometries: Vec<Geometry>,
     // pub material: Arc<RwLock<Material>>,
 }
 
 impl Base {
     pub fn new_with_gltf(
-        gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
+        engine: &Arc<RwLock<Engine>>,
         mesh: gltf::Mesh,
         texture_manager: &Arc<RwLock<TextureManager>>,
-        data: &Vec<u8>,
+        data: &[u8],
     ) -> Self {
-        let gapi_engine_clone = gapi_engine.clone();
+        let engine_clone = engine.clone();
         let obj_base = ObjectBase::new();
         let primitives = mesh.primitives();
         let mut geometries = Vec::new();
@@ -177,7 +180,8 @@ impl Base {
             // };
             // vxlogi!("{:?}", &v);
             let indices_count = indices_count as u32;
-            let gapi_engine = vxresult!(gapi_engine.read());
+            let eng = vxresult!(engine.read());
+            let gapi_engine = vxresult!(eng.gapi_engine.read());
             let vertex_buffer = vxresult!(gapi_engine.buffer_manager.write())
                 .create_static_buffer_with_vec(&vertex_buffer);
             let index_buffer = vxresult!(gapi_engine.buffer_manager.write())
@@ -191,7 +195,7 @@ impl Base {
                     .base_color_texture()
             ).texture();
             let texture =
-                vxresult!(texture_manager.write()).get_with_gltf::<Texture2D>(&texture, data);
+                vxresult!(texture_manager.write()).load_gltf::<Texture2D>(&texture, engine, data);
             let descriptor_set = Arc::new(
                 gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
             ); // todo
@@ -208,7 +212,7 @@ impl Base {
         Base {
             obj_base,
             geometries,
-            gapi_engine: gapi_engine_clone,
+            engine: engine_clone,
             // buffer: buffer,
             // buffer_manager: buffer_manager,
             // material: material,
@@ -223,6 +227,15 @@ impl CoreObject for Base {
 }
 
 impl Object for Base {
+    fn get_name(&self) -> Option<String> {
+        self.obj_base.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.obj_base.set_name(name);
+        vxunimplemented!();//it must update corresponding manager
+    }
+
     fn render(&self) {
         vxlogf!("Mesh does not implement this function instead it does the Mesh trait render.");
     }
@@ -244,7 +257,9 @@ impl Mesh for Base {
         for geo in &mut self.geometries {
             geo.uniform_buffer
                 .update(unsafe { transmute(mvp.as_ptr()) });
-            vxresult!(self.gapi_engine.read()).render_main_pipeline(
+            let eng = vxresult!(self.engine.read());
+            let eng = vxresult!(eng.gapi_engine.read());
+            eng.render_main_pipeline(
                 &geo.descriptor_set,
                 &geo.uniform_buffer,
                 &geo.vertex_buffer,
@@ -256,10 +271,10 @@ impl Mesh for Base {
 }
 
 impl DefaultMesh for Base {
-    fn default(gapi_engine: Arc<RwLock<GraphicApiEngine>>) -> Self {
+    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
         Base {
             obj_base: ObjectBase::new(),
-            gapi_engine,
+            engine: engine.clone(),
             geometries: Vec::new(),
         }
     }

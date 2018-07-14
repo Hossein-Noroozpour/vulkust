@@ -28,6 +28,15 @@ impl CoreObject for Sun {
 }
 
 impl Object for Sun {
+    fn get_name(&self) -> Option<String> {
+        self.camera.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.camera.set_name(name);
+        vxunimplemented!();//it must update corresponding manager
+    }
+
     fn render(&self) {
         vxlogf!("Sun light does not implement rendering.");
     }

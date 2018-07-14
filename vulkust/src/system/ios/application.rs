@@ -50,6 +50,8 @@ pub extern "C" fn vulkust_set_view(context: *mut c_void, view: *mut c_void) {
     vxresult!(os_app.write()).view = view;
     let core_app = vxresult!(os_app.read()).core_app.clone();
     let renderer = Some(Arc::new(RwLock::new(RenderEngine::new(core_app, os_app))));
+    let renderer_w = Arc::downgrade(&renderer);
+    vxresult!(renderer.write()).set_myself(renderer_w);
     vxresult!(os_app.write()).renderer = renderer;
     vxlogi!("Reached");
 }

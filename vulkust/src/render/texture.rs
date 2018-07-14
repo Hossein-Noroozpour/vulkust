@@ -1,6 +1,6 @@
 use super::super::core::object::{create_id, Object as CoreObject};
 use super::super::core::types::Id;
-use super::engine::GraphicApiEngine;
+use super::engine::Engine;
 use super::image::View as ImageView;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
@@ -8,37 +8,31 @@ use std::sync::{Arc, RwLock, Weak};
 use gltf;
 
 pub trait Texture: CoreObject {
-    fn get_image_view(&self) -> &Arc<ImageView> {
-        vxunimplemented!();
-    }
+    fn get_image_view(&self) -> &Arc<ImageView>;
 }
 
 pub trait Loadable: Sized {
-    fn new_with_gltf(&gltf::Texture, &Arc<RwLock<GraphicApiEngine>>, &Vec<u8>) -> Self {
-        vxunexpected!();
-    }
+    fn new_with_gltf(&gltf::Texture, &Arc<RwLock<Engine>>, &[u8]) -> Self;
 }
 
 pub struct Manager {
     textures: BTreeMap<Id, Weak<RwLock<Texture>>>,
     name_to_id: BTreeMap<String, Id>,
-    pub gapi_engine: Weak<RwLock<GraphicApiEngine>>,
 }
 
 impl Manager {
-    pub fn new(engine: &Arc<RwLock<GraphicApiEngine>>) -> Self {
-        let gapi_engine = Arc::downgrade(engine);
+    pub fn new() -> Self {
         Manager {
             textures: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
-            gapi_engine,
         }
     }
 
-    pub fn get_with_gltf<T>(
+    pub fn load_gltf<T>(
         &mut self,
         texture: &gltf::Texture,
-        data: &Vec<u8>,
+        engine: &Arc<RwLock<Engine>>,
+        data: &[u8],
     ) -> Arc<RwLock<Texture>>
     where
         T: 'static + Loadable + Texture,
@@ -52,9 +46,9 @@ impl Manager {
                 }
             }
         }
-        let gapi_engine = vxunwrap_o!(self.gapi_engine.upgrade());
         let texture: Arc<RwLock<Texture>> =
-            Arc::new(RwLock::new(T::new_with_gltf(texture, &gapi_engine, data)));
+            Arc::new(RwLock::new(T::new_with_gltf(
+                texture, &engine, data)));
         let id = vxresult!(texture.read()).get_id();
         let weak = Arc::downgrade(&texture);
         self.name_to_id.insert(name, id);
@@ -84,8 +78,8 @@ impl Texture for Texture2D {
 impl Loadable for Texture2D {
     fn new_with_gltf(
         texture: &gltf::Texture,
-        engine: &Arc<RwLock<GraphicApiEngine>>,
-        data: &Vec<u8>,
+        engine: &Arc<RwLock<Engine>>,
+        data: &[u8],
     ) -> Self {
         let name = vxunwrap_o!(texture.source().name()).to_string();
         let id = create_id();
@@ -102,8 +96,9 @@ impl Loadable for Texture2D {
             gltf::buffer::Source::Bin => {}
             _ => vxlogf!("Only embeded and view texture resources is acceptable."),
         }
-        let image_view =
-            vxresult!(engine.read()).create_texture_with_bytes(&data[offset..offset + length]);
+        let engine = vxresult!(engine.read());
+        let engine = vxresult!(engine.gapi_engine.read());
+        let image_view = engine.create_texture_with_bytes(&data[offset..offset + length]);
         Texture2D {
             id,
             name,

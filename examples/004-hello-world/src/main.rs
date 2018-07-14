@@ -42,7 +42,14 @@ impl CoreAppTrait for MyGame {
         let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene();
         let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
         let label: Arc<RwLock<Label>> = renderer.create_mesh();
-        vxresult!(label.write()).set_text("Hello Vulkust!");
+        {
+            let mut label = vxresult!(label.write());
+            label.set_font("Ubuntu-R.ttf");
+            label.set_text_size(10.0);
+            label.set_text_color(0.5, 0.3, 0.2, 1.0);
+            label.set_background_color(0.8, 0.9, 0.8, 1.0);
+            label.set_text("Hello Vulkust!");
+        }
         {
             let mut uiscn = vxresult!(ui_scene.write());
             uiscn.add_camera(camera);

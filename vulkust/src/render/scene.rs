@@ -2,7 +2,7 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::super::system::file::File;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager};
-use super::engine::GraphicApiEngine;
+use super::engine::Engine;
 use super::light::Manager as LightManager;
 use super::mesh::{Base as MeshBase, DefaultMesh, Manager as MeshManager, Mesh};
 use super::object::{Base as BaseObject, Object};
@@ -21,22 +21,20 @@ pub trait Scene: Object {
 
 pub trait Loadable: Scene + Sized {
     fn new_with_gltf(
-        &Arc<RwLock<GraphicApiEngine>>,
-        &Arc<RwLock<TextureManager>>,
-        &Arc<RwLock<LightManager>>,
-        &Arc<RwLock<CameraManager>>,
+        &Arc<RwLock<Engine>>,
         &gltf::Scene,
-        &Vec<u8>,
+        &[u8],
     ) -> Self;
 }
 
 pub trait DefaultScene: Scene + Sized {
-    fn default() -> Self;
+    fn default(&Arc<RwLock<Engine>>) -> Self;
 }
 
 pub struct Manager {
-    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+    pub engine: Option<Weak<RwLock<Engine>>>,
     pub scenes: BTreeMap<Id, Weak<RwLock<Scene>>>,
+    pub name_to_id: BTreeMap<String, Id>,
     pub texture_manager: Arc<RwLock<TextureManager>>,
     pub light_manager: Arc<RwLock<LightManager>>,
     pub camera_manager: Arc<RwLock<CameraManager>>,
@@ -44,19 +42,24 @@ pub struct Manager {
 }
 
 impl Manager {
-    pub fn new(gapi_engine: &Arc<RwLock<GraphicApiEngine>>) -> Self {
-        let texture_manager = Arc::new(RwLock::new(TextureManager::new(gapi_engine)));
+    pub fn new() -> Self {
+        let texture_manager = Arc::new(RwLock::new(TextureManager::new()));
         let light_manager = Arc::new(RwLock::new(LightManager::new()));
-        let camera_manager = Arc::new(RwLock::new(CameraManager::new(gapi_engine)));
-        let mesh_manager = Arc::new(RwLock::new(MeshManager::new(gapi_engine)));
+        let camera_manager = Arc::new(RwLock::new(CameraManager::new()));
+        let mesh_manager = Arc::new(RwLock::new(MeshManager::new()));
         Manager {
-            gapi_engine: gapi_engine.clone(),
+            engine: None,
             scenes: BTreeMap::new(),
+            name_to_id: BTreeMap::new(),
             texture_manager,
             light_manager,
             camera_manager,
             mesh_manager,
         }
+    }
+
+    pub fn set_engine(&mut self, engine: Weak<RwLock<Engine>>) {
+        self.engine = Some(engine);
     }
 
     pub fn render(&self) {
@@ -71,22 +74,23 @@ impl Manager {
         }
     }
 
-    pub fn load<S>(&mut self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
+    pub fn load_gltf<S>(&mut self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
     where
         S: 'static + Loadable,
     {
-        let file = Self::load_gltf(file_name);
+        let file = Self::load_gltf_struct(file_name);
         let scene = Self::fetch_gltf_scene(&file, scene_name);
-        let scene = Arc::new(RwLock::new(S::new_with_gltf(
-            &self.gapi_engine,
-            &self.texture_manager,
-            &self.light_manager,
-            &self.camera_manager,
-            &scene,
-            vxunwrap!(file.blob),
-        )));
+        let scene = {
+            let engine = vxunwrap!(self.engine);
+            let engine = vxunwrap_o!(engine.upgrade());
+            Arc::new(RwLock::new(S::new_with_gltf(
+                &engine,
+                &scene,
+                vxunwrap!(file.blob),
+            )))
+        };
         let s: Arc<RwLock<Scene>> = scene.clone();
-        self.add(&s);
+        self.add_scene(&s);
         return scene;
     }
 
@@ -94,9 +98,13 @@ impl Manager {
     where
         S: 'static + DefaultScene,
     {
-        let scene = Arc::new(RwLock::new(S::default()));
+        let scene = {
+            let engine = vxunwrap!(self.engine);
+            let engine = vxunwrap_o!(engine.upgrade());
+            Arc::new(RwLock::new(S::default(&engine)))
+        };
         let s: Arc<RwLock<Scene>> = scene.clone();
-        self.add(&s);
+        self.add_scene(&s);
         scene
     }
 
@@ -111,7 +119,9 @@ impl Manager {
     where
         M: 'static + DefaultMesh,
     {
-        vxresult!(self.mesh_manager.write()).create()
+        let engine = vxunwrap!(self.engine);
+        let engine = vxunwrap_o!(engine.upgrade());
+        vxresult!(self.mesh_manager.write()).create(&engine)
     }
 
     pub fn fetch_gltf_scene<'a>(file: &'a gltf::Gltf, scene_name: &str) -> gltf::Scene<'a> {
@@ -124,7 +134,7 @@ impl Manager {
         vxunexpected!();
     }
 
-    pub fn load_gltf(file_name: &str) -> gltf::Gltf {
+    pub fn load_gltf_struct(file_name: &str) -> gltf::Gltf {
         let file = BufReader::new(vxresult!(File::open(file_name)));
         #[cfg(debug_assertions)]
         return vxresult!(gltf::Gltf::from_reader(file));
@@ -132,8 +142,15 @@ impl Manager {
         return vxresult!(gltf::Gltf::from_reader_without_validation(file));
     }
 
-    pub fn add(&mut self, scene: &Arc<RwLock<Scene>>) {
-        let id = vxresult!(scene.read()).get_id();
+    pub fn add_scene(&mut self, scene: &Arc<RwLock<Scene>>) {
+        let id = {
+            let scene = vxresult!(scene.read());
+            let id = scene.get_id();
+            if let Some(name) = scene.get_name() {
+                self.name_to_id.insert(name, id);
+            }
+            id
+        };
         self.scenes.insert(id, Arc::downgrade(scene));
     }
 
@@ -170,13 +187,19 @@ pub struct Base {
 
 impl Base {
     pub fn new_with_gltf(
-        gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
+        engine: &Arc<RwLock<Engine>>,
         scene: &gltf::Scene,
-        texture_manager: &Arc<RwLock<TextureManager>>,
-        camera_manager: &Arc<RwLock<CameraManager>>,
-        light_manager: &Arc<RwLock<LightManager>>,
-        data: &Vec<u8>,
+        data: &[u8],
     ) -> Self {
+        let (texture_manager, camera_manager, light_manager) = {
+            let engine = vxresult!(engine.read());
+            let manager = vxresult!(engine.scene_manager.read());
+            (
+                manager.texture_manager.clone(),
+                manager.camera_manager.clone(),
+                manager.light_manager.clone(),
+            )
+        };
         let obj_base = BaseObject::new();
         let uniform = Uniform::new();
         let cameras = BTreeMap::new();
@@ -192,10 +215,10 @@ impl Base {
         for node in scene.nodes() {
             myself.import_gltf_node(
                 &node,
-                gapi_engine,
-                texture_manager,
-                camera_manager,
-                light_manager,
+                engine,
+                &texture_manager,
+                &camera_manager,
+                &light_manager,
                 data,
             );
         }
@@ -205,20 +228,20 @@ impl Base {
     pub fn import_gltf_node(
         &mut self,
         node: &gltf::scene::Node,
-        gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
+        engine: &Arc<RwLock<Engine>>,
         texture_manager: &Arc<RwLock<TextureManager>>,
         camera_manager: &Arc<RwLock<CameraManager>>,
         light_manager: &Arc<RwLock<LightManager>>,
-        data: &Vec<u8>,
+        data: &[u8],
     ) {
         if node.camera().is_some() {
-            let camera = vxresult!(camera_manager.write()).load(node);
+            let camera = vxresult!(camera_manager.write()).load_gltf(node, engine);
             let id = vxresult!(camera.read()).get_id();
             let w = Arc::downgrade(&camera);
             self.cameras.insert(id, camera);
             self.active_camera = Some(w);
         } else if let Some(gltf_mesh) = node.mesh() {
-            let mesh = MeshBase::new_with_gltf(gapi_engine, gltf_mesh, texture_manager, data);
+            let mesh = MeshBase::new_with_gltf(engine, gltf_mesh, texture_manager, data);
             let id = mesh.get_id();
             let mesh = Arc::new(RwLock::new(mesh));
             self.meshes.insert(id, mesh);
@@ -226,7 +249,7 @@ impl Base {
             for node in node.children() {
                 self.import_gltf_node(
                     &node,
-                    gapi_engine,
+                    engine,
                     texture_manager,
                     camera_manager,
                     light_manager,
@@ -244,6 +267,15 @@ impl CoreObject for Base {
 }
 
 impl Object for Base {
+    fn get_name(&self) -> Option<String> {
+        self.obj_base.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.obj_base.set_name(name);
+        vxunimplemented!();//it must update corresponding manager
+    }
+
     fn render(&self) {
         // todo get directional light
         // then create light frustums
@@ -298,7 +330,7 @@ impl Scene for Base {
 }
 
 impl DefaultScene for Base {
-    fn default() -> Self {
+    fn default(_: &Arc<RwLock<Engine>>) -> Self {
         Base {
             obj_base: BaseObject::new(),
             uniform: Uniform::new(),
@@ -322,6 +354,15 @@ impl CoreObject for Game {
 }
 
 impl Object for Game {
+    fn get_name(&self) -> Option<String> {
+        self.base.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.base.set_name(name);
+        vxunimplemented!();//it must update corresponding manager
+    }
+    
     fn render(&self) {
         self.base.render();
     }
@@ -351,19 +392,13 @@ impl Scene for Game {
 
 impl Loadable for Game {
     fn new_with_gltf(
-        gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
-        texture_manager: &Arc<RwLock<TextureManager>>,
-        light_manager: &Arc<RwLock<LightManager>>,
-        camera_manager: &Arc<RwLock<CameraManager>>,
+        engine: &Arc<RwLock<Engine>>,
         scene: &gltf::Scene,
-        data: &Vec<u8>,
+        data: &[u8],
     ) -> Self {
         let base = Base::new_with_gltf(
-            gapi_engine,
+            engine,
             scene,
-            texture_manager,
-            camera_manager,
-            light_manager,
             data,
         );
         Game { base }
@@ -383,6 +418,15 @@ impl CoreObject for Ui {
 }
 
 impl Object for Ui {
+    fn get_name(&self) -> Option<String> {
+        self.base.get_name()
+    }
+
+    fn set_name(&mut self, name: &str) {
+        self.base.set_name(name);
+        vxunimplemented!();//it must update corresponding manager
+    }
+    
     fn render(&self) {
         self.base.render();
     }
@@ -412,19 +456,13 @@ impl Scene for Ui {
 
 impl Loadable for Ui {
     fn new_with_gltf(
-        gapi_engine: &Arc<RwLock<GraphicApiEngine>>,
-        texture_manager: &Arc<RwLock<TextureManager>>,
-        light_manager: &Arc<RwLock<LightManager>>,
-        camera_manager: &Arc<RwLock<CameraManager>>,
+        engine: &Arc<RwLock<Engine>>,
         scene: &gltf::Scene,
-        data: &Vec<u8>,
+        data: &[u8],
     ) -> Self {
         let base = Base::new_with_gltf(
-            gapi_engine,
+            engine,
             scene,
-            texture_manager,
-            camera_manager,
-            light_manager,
             data,
         );
         Ui { base }
@@ -432,8 +470,8 @@ impl Loadable for Ui {
 }
 
 impl DefaultScene for Ui {
-    fn default() -> Self {
-        let base = Base::default();
+    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
+        let base = Base::default(engine);
         Ui { base }
     }
 }

@@ -10,6 +10,8 @@ macro_rules! vulkust_start {
             let os_app = Arc::new(RwLock::new(OsApp::new(core_app.clone())));
             OsApp::initialize(&os_app);
             let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
+            let renderer_w = Arc::downgrade(&renderer);
+            vxresult!(renderer.write()).set_myself(renderer_w);
             vxresult!(os_app.write()).set_renderer(renderer.clone());
             {
                 let mut core_app = vxresult!(core_app.write());
