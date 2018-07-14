@@ -29,3 +29,4 @@ bitflags = "*"
 objc = { version = "*", features = ["exception", "verify_message"] }
 
 [build-dependencies]
+reqwest = "*"

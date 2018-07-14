@@ -47,8 +47,7 @@ impl Manager {
             }
         }
         let texture: Arc<RwLock<Texture>> =
-            Arc::new(RwLock::new(T::new_with_gltf(
-                texture, &engine, data)));
+            Arc::new(RwLock::new(T::new_with_gltf(texture, &engine, data)));
         let id = vxresult!(texture.read()).get_id();
         let weak = Arc::downgrade(&texture);
         self.name_to_id.insert(name, id);
@@ -76,11 +75,7 @@ impl Texture for Texture2D {
 }
 
 impl Loadable for Texture2D {
-    fn new_with_gltf(
-        texture: &gltf::Texture,
-        engine: &Arc<RwLock<Engine>>,
-        data: &[u8],
-    ) -> Self {
+    fn new_with_gltf(texture: &gltf::Texture, engine: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
         let name = vxunwrap_o!(texture.source().name()).to_string();
         let id = create_id();
         let view = match texture.source().source() {

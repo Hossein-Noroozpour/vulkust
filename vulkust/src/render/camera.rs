@@ -253,7 +253,7 @@ impl Object for Perspective {
 
     fn set_name(&mut self, name: &str) {
         self.base.set_name(name);
-        vxunimplemented!();//it must update corresponding manager
+        vxunimplemented!(); //it must update corresponding manager
     }
 
     fn render(&self) {

@@ -233,7 +233,7 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.obj_base.set_name(name);
-        vxunimplemented!();//it must update corresponding manager
+        vxunimplemented!(); //it must update corresponding manager
     }
 
     fn render(&self) {

@@ -1,7 +1,15 @@
+extern crate reqwest;
+
 use std::env;
 use std::fs;
+use std::fs::File;
 use std::path::Path;
 use std::process::Command;
+
+const DEFAULT_FONTS: [(&str, &str); 1] = [(
+    "Ubuntu-B.ttf",
+    "https://github.com/Hossein-Noroozpour/vulkust-static-files/blob/master/Ubuntu-B.ttf?raw=true",
+)];
 
 fn main() {
     let target = env::var("TARGET").unwrap();
@@ -34,18 +42,21 @@ fn main() {
     if in_linux || in_ios || in_macos || in_android {
         println!("cargo:rustc-cfg=unix_based_os");
     }
+    check_shaders();
+    check_fonts();
+}
 
+fn check_shaders() {
     let out_dir = env::var("OUT_DIR").unwrap();
     let src_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let vulkan_spirv_path = Path::new(&out_dir).join("vulkan/");
-    let _ = fs::create_dir(vulkan_spirv_path.clone());
-    let vulkan_spirv_path = vulkan_spirv_path.join("shaders/");
-    let _ = fs::create_dir(vulkan_spirv_path.clone());
+    let vulkan_spirv_path = Path::new(&out_dir).join("vulkan/shaders/");
+    fs::create_dir_all(vulkan_spirv_path.clone()).expect("can not create vulkan/shaders path");;
     let vulkan_shaders_path = Path::new(&src_dir).join("src/vulkan/shaders/");
     let ls = vulkan_shaders_path
         .read_dir()
         .expect("read_dir call failed");
     for entry in ls {
+        // todo it must become more conservative, it should compile changed shaders
         if entry.is_err() {
             continue;
         }
@@ -80,12 +91,32 @@ fn main() {
             panic!("Compiling vulkan shaders failed.\n {:?}", output);
         }
     }
-    // glslangValidator -V -g ../../vulkust/src/vulkan/shaders/main.vert -o shaders/main.vert.spv
-    // let mut f = File::create(&dest_path).unwrap();
+}
 
-    // f.write_all(b"
-    //     pub fn message() -> &'static str {
-    //         \"Hello, World!\"
-    //     }
-    // ").unwrap();
+fn check_fonts() {
+    let out_dir = env::var("OUT_DIR").unwrap();
+    let fonts_path = Path::new(&out_dir).join("render/fonts/");
+    if !fonts_path.exists() {
+        fs::create_dir_all(fonts_path.clone()).expect("can not create render path");
+        download_fonts();
+        return;
+    }
+    for font in &DEFAULT_FONTS {
+        let font_path = Path::new(&fonts_path).join(font.0);
+        if !font_path.is_file() {
+            download_fonts();
+            return;
+        }
+    }
+}
+
+fn download_fonts() {
+    let out_dir = env::var("OUT_DIR").unwrap();
+    let fonts_path = Path::new(&out_dir).join("render/fonts/");
+    for font in &DEFAULT_FONTS {
+        let font_path = Path::new(&fonts_path).join(font.0);
+        let mut file = File::create(font_path).expect("can not create font file.");
+        let mut resp = reqwest::get(font.1).expect("can not connect to fonts server.");
+        resp.copy_to(&mut file).expect("can not download fonts");
+    }
 }

@@ -34,7 +34,7 @@ impl Object for Sun {
 
     fn set_name(&mut self, name: &str) {
         self.camera.set_name(name);
-        vxunimplemented!();//it must update corresponding manager
+        vxunimplemented!(); //it must update corresponding manager
     }
 
     fn render(&self) {

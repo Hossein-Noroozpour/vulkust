@@ -26,9 +26,9 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.mesh_base.set_name(name);
-        vxunimplemented!();//it must update corresponding manager
+        vxunimplemented!(); //it must update corresponding manager
     }
-    
+
     fn render(&self) {
         self.mesh_base.render();
     }
@@ -91,7 +91,7 @@ impl Object for Label {
 
     fn set_name(&mut self, name: &str) {
         self.base.set_name(name);
-        vxunimplemented!();//it must update corresponding manager
+        vxunimplemented!(); //it must update corresponding manager
     }
 
     fn render(&self) {

@@ -44,7 +44,7 @@ impl CoreAppTrait for MyGame {
         let label: Arc<RwLock<Label>> = renderer.create_mesh();
         {
             let mut label = vxresult!(label.write());
-            label.set_font("Ubuntu-R.ttf");
+            label.set_font("Ubuntu-B.ttf");
             label.set_text_size(10.0);
             label.set_text_color(0.5, 0.3, 0.2, 1.0);
             label.set_background_color(0.8, 0.9, 0.8, 1.0);

@@ -20,11 +20,7 @@ pub trait Scene: Object {
 }
 
 pub trait Loadable: Scene + Sized {
-    fn new_with_gltf(
-        &Arc<RwLock<Engine>>,
-        &gltf::Scene,
-        &[u8],
-    ) -> Self;
+    fn new_with_gltf(&Arc<RwLock<Engine>>, &gltf::Scene, &[u8]) -> Self;
 }
 
 pub trait DefaultScene: Scene + Sized {
@@ -186,11 +182,7 @@ pub struct Base {
 }
 
 impl Base {
-    pub fn new_with_gltf(
-        engine: &Arc<RwLock<Engine>>,
-        scene: &gltf::Scene,
-        data: &[u8],
-    ) -> Self {
+    pub fn new_with_gltf(engine: &Arc<RwLock<Engine>>, scene: &gltf::Scene, data: &[u8]) -> Self {
         let (texture_manager, camera_manager, light_manager) = {
             let engine = vxresult!(engine.read());
             let manager = vxresult!(engine.scene_manager.read());
@@ -273,7 +265,7 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.obj_base.set_name(name);
-        vxunimplemented!();//it must update corresponding manager
+        vxunimplemented!(); //it must update corresponding manager
     }
 
     fn render(&self) {
@@ -360,9 +352,9 @@ impl Object for Game {
 
     fn set_name(&mut self, name: &str) {
         self.base.set_name(name);
-        vxunimplemented!();//it must update corresponding manager
+        vxunimplemented!(); //it must update corresponding manager
     }
-    
+
     fn render(&self) {
         self.base.render();
     }
@@ -391,16 +383,8 @@ impl Scene for Game {
 }
 
 impl Loadable for Game {
-    fn new_with_gltf(
-        engine: &Arc<RwLock<Engine>>,
-        scene: &gltf::Scene,
-        data: &[u8],
-    ) -> Self {
-        let base = Base::new_with_gltf(
-            engine,
-            scene,
-            data,
-        );
+    fn new_with_gltf(engine: &Arc<RwLock<Engine>>, scene: &gltf::Scene, data: &[u8]) -> Self {
+        let base = Base::new_with_gltf(engine, scene, data);
         Game { base }
     }
 }
@@ -424,9 +408,9 @@ impl Object for Ui {
 
     fn set_name(&mut self, name: &str) {
         self.base.set_name(name);
-        vxunimplemented!();//it must update corresponding manager
+        vxunimplemented!(); //it must update corresponding manager
     }
-    
+
     fn render(&self) {
         self.base.render();
     }
@@ -455,16 +439,8 @@ impl Scene for Ui {
 }
 
 impl Loadable for Ui {
-    fn new_with_gltf(
-        engine: &Arc<RwLock<Engine>>,
-        scene: &gltf::Scene,
-        data: &[u8],
-    ) -> Self {
-        let base = Base::new_with_gltf(
-            engine,
-            scene,
-            data,
-        );
+    fn new_with_gltf(engine: &Arc<RwLock<Engine>>, scene: &gltf::Scene, data: &[u8]) -> Self {
+        let base = Base::new_with_gltf(engine, scene, data);
         Ui { base }
     }
 }
