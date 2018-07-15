@@ -16,6 +16,7 @@ fullscreen = []
 image = "*"
 cgmath = "*"
 libc = "*"
+rusttype = "*"
 gltf = { version = "*", features = ["extras", "default"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]

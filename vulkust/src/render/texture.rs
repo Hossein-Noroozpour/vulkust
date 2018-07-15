@@ -54,12 +54,38 @@ impl Manager {
         self.textures.insert(id, weak);
         return texture;
     }
+
+    pub fn create_2d_with_pixels(
+        &mut self,
+        width: u32,
+        height: u32,
+        engine: &Arc<RwLock<Engine>>,
+        data: &[u8],
+    ) -> Arc<RwLock<Texture2D>> {
+
+    }
+
 }
 
 pub struct Texture2D {
     pub id: Id,
     pub name: String,
     pub image_view: Arc<ImageView>,
+}
+
+impl Texture2D {
+    pub fn new_with_pixels(
+        width: u32,
+        height: u32,
+        engine: &Arc<RwLock<Engine>>,
+        data: &[u8]
+    ) -> Self {
+        let engine = vxresult!(engine.read());
+        let engine = vxresult!(engine.gapi_engine.read());
+        Texture2D {
+
+        }
+    }
 }
 
 impl CoreObject for Texture2D {

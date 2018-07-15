@@ -1,10 +1,13 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::engine::Engine;
+use super::font::Font;
 use super::mesh::{Base as MeshBase, DefaultMesh, Mesh};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
 use std::sync::{Arc, RwLock};
+
+use rusttype::{Scale, point};
 
 pub trait Widget: Mesh {}
 
@@ -65,16 +68,103 @@ impl Widget for Base {}
 
 pub struct Label {
     pub base: Base,
+    pub background_color: [f32; 4],
+    pub font: Arc<RwLock<Font>>,
     pub text: String,
     pub text_size: f32,
     pub text_color: [f32; 4],
-    pub background_color: [f32; 4],
+    pub size: f32,
 }
 
 impl Label {
     pub fn set_text(&mut self, text: &str) {
         self.text = text.to_string();
-        // todo
+        self.create_text_mesh();
+    }
+
+    pub fn set_font_with_file_name(&mut self, name: &str) {
+        {
+            let engine = vxresult!(self.base.mesh_base.engine.read());
+            let scene_manager = vxresult!(engine.scene_manager.read());
+            let mut font_manager = vxresult!(scene_manager.font_manager.write());
+            self.font = font_manager.load_ttf(name);
+        }
+        self.create_text_mesh();
+    }
+
+    pub fn set_text_size(&mut self, size: f32) {
+        self.text_size = size;
+        self.create_text_mesh();
+    }
+    
+    pub fn set_text_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) {
+        self.text_color = [red, green, blue, alpha];
+        self.create_text_mesh();
+    }
+    
+    pub fn set_background_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) {
+        self.background_color = [red, green, blue, alpha];
+        self.create_text_mesh();
+    }
+
+    pub fn create_text_mesh(&mut self) {
+        if self.text.len() < 1 {
+            if self.base.mesh_base.geometries.len() < 1 {
+                return;
+            }
+            self.base.mesh_base.geometries = Vec::new();
+            return;
+        }
+        let scale = Scale::uniform(self.text_size);
+        let font = vxresult!(self.font.read());
+        let font = font.get_font();
+        let v_metrics = font.v_metrics(scale);
+        let point = point(0.0, 0.0 + v_metrics.ascent);
+        let glyphs: Vec<_> = font.layout(&self.text, scale, point).collect();
+        let glyphs_len = glyphs.len();
+        let imgw = vxunwrap!(glyphs[glyphs_len - 1].pixel_bounding_box()).max.x;
+        let imgh = (v_metrics.ascent - v_metrics.descent).ceil() as i32;
+        let w = self.size * (imgw as f32 / imgh as f32);
+        let h = self.size;
+        let bg = [
+            (self.background_color[0] * 255.0) as u32, 
+            (self.background_color[1] * 255.0) as u32, 
+            (self.background_color[2] * 255.0) as u32, 
+            (self.background_color[3] * 255.0) as u32,
+        ];
+        let fc = [
+            (self.text_color[0] * 255.0) as u32,
+            (self.text_color[1] * 255.0) as u32,
+            (self.text_color[2] * 255.0) as u32,
+            (self.text_color[3] * 255.0) as u32,
+        ];
+        let mut img = vec![bg; (imgw * imgh) as usize];
+        for glyph in &glyphs {
+            if let Some(bounding_box) = glyph.pixel_bounding_box() {
+                glyph.draw(|x, y, v| {
+                    let x = (x + bounding_box.min.x as u32) as usize;
+                    let y = (y + bounding_box.min.y as u32) as usize;
+                    let i = y * imgw as usize + x;
+                    let v = (v * 255.0) as u32;
+                    let inv = 255 - v;
+                    let color = [
+                        (bg[0] * inv + fc[0] * v) >> 8,
+                        (bg[1] * inv + fc[1] * v) >> 8,
+                        (bg[2] * inv + fc[2] * v) >> 8,
+                        (bg[3] * inv + fc[3] * v) >> 8,
+                    ];
+                    img[i] = color;
+                });
+            }
+        }
+        let vertices = [
+            w,   h,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0,
+            w,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+            0.0, h,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ];
+        let indices = [0u32, 1, 2];
+        vxunimplemented!();
     }
 }
 
@@ -119,12 +209,18 @@ impl Mesh for Label {
 
 impl DefaultMesh for Label {
     fn default(engine: &Arc<RwLock<Engine>>) -> Self {
+        let eng = vxresult!(engine.read());
+        let scene_manager = vxresult!(eng.scene_manager.read());
+        let font_manager = vxresult!(scene_manager.font_manager.read());
+        let font = font_manager.default.clone();
         Label {
             base: Base::default(engine),
             text: String::new(),
             text_size: 1f32,
             text_color: [1f32; 4],
             background_color: [0f32; 4],
+            font,
+            size: 1f32,
         }
     }
 }

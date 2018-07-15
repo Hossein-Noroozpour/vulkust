@@ -3,6 +3,7 @@ use super::super::core::types::Id;
 use super::super::system::file::File;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager};
 use super::engine::Engine;
+use super::font::Manager as FontManager;
 use super::light::Manager as LightManager;
 use super::mesh::{Base as MeshBase, DefaultMesh, Manager as MeshManager, Mesh};
 use super::object::{Base as BaseObject, Object};
@@ -35,6 +36,7 @@ pub struct Manager {
     pub light_manager: Arc<RwLock<LightManager>>,
     pub camera_manager: Arc<RwLock<CameraManager>>,
     pub mesh_manager: Arc<RwLock<MeshManager>>,
+    pub font_manager: Arc<RwLock<FontManager>>,
 }
 
 impl Manager {
@@ -43,6 +45,7 @@ impl Manager {
         let light_manager = Arc::new(RwLock::new(LightManager::new()));
         let camera_manager = Arc::new(RwLock::new(CameraManager::new()));
         let mesh_manager = Arc::new(RwLock::new(MeshManager::new()));
+        let font_manager = Arc::new(RwLock::new(FontManager::new()));
         Manager {
             engine: None,
             scenes: BTreeMap::new(),
@@ -51,6 +54,7 @@ impl Manager {
             light_manager,
             camera_manager,
             mesh_manager,
+            font_manager,
         }
     }
 
