@@ -23,7 +23,7 @@ pub trait Camera: Object + Transferable {
 }
 
 pub trait DefaultCamera: Camera {
-    fn default() -> Self;
+    fn default(&Arc<RwLock<Engine>>) -> Self;
 }
 
 pub struct Manager {
@@ -67,11 +67,11 @@ impl Manager {
         camera
     }
 
-    pub fn create<C>(&mut self) -> Arc<RwLock<C>>
+    pub fn create<C>(&mut self, eng: &Arc<RwLock<Engine>>) -> Arc<RwLock<C>>
     where
         C: 'static + DefaultCamera,
     {
-        let camera = C::default();
+        let camera = C::default(eng);
         let id = camera.get_id();
         if let Some(name) = camera.get_name() {
             self.name_to_id.insert(name, id);
@@ -101,15 +101,18 @@ pub struct Base {
 }
 
 impl Base {
-    pub fn new() -> Self {
+    pub fn new(eng: &Arc<RwLock<Engine>>) -> Self {
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
+        let eng = vxresult!(eng.read());
+        let eng = vxunwrap_o!(eng.os_app.upgrade());
+        let os_app = vxresult!(eng.read());
         Base {
             obj_base: ObjectBase::new(),
             near: 0.0,
-            far: 0.0,
-            aspect_ratio: 0.0,
+            far: 1.0,
+            aspect_ratio: os_app.get_window_aspect_ratio(),
             x: math::Vector3::new(1.0, 0.0, 0.0),
             y: math::Vector3::new(0.0, 1.0, 0.0),
             z: math::Vector3::new(0.0, 0.0, -1.0),
@@ -117,7 +120,9 @@ impl Base {
             direction: identity,
             view: identity,
             projection: identity,
-            view_projection: identity,
+            view_projection: math::Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
+            ),
         }
     }
 
@@ -183,7 +188,7 @@ impl Loadable for Base {
     fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
         let eng = vxresult!(eng.read());
         let os_app = vxunwrap_o!(eng.os_app.upgrade());
-        let aspect_ratio = vxresult!(os_app.read()).aspect_ratio();
+        let aspect_ratio = vxresult!(os_app.read()).get_window_aspect_ratio();
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
@@ -360,9 +365,13 @@ pub struct Orthographic {
 }
 
 impl Orthographic {
-    pub fn new(size: f32) -> Self {
+    pub fn new(eng: &Arc<RwLock<Engine>>, size: f32) -> Self {
+        let mut base = Base::new(eng);
+        let w = base.aspect_ratio * size;
+        base.projection = math::ortho(-w, w, -1.0, 1.0, base.near, base.far);
+        base.update_view_projection();
         Orthographic {
-            base: Base::new(),
+            base,
             size,
         }
     }
@@ -458,7 +467,7 @@ impl Camera for Orthographic {
 }
 
 impl DefaultCamera for Orthographic {
-    fn default() -> Self {
-        Orthographic::new(1.0)
+    fn default(eng: &Arc<RwLock<Engine>>) -> Self {
+        Orthographic::new(eng, 1.0)
     }
 }

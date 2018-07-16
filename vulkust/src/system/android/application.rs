@@ -93,7 +93,7 @@ impl Application {
         return events;
     }
 
-    pub fn aspect_ratio(&self) -> f32 {
+    pub fn get_window_aspect_ratio(&self) -> f32 {
         1.7
     }
 }

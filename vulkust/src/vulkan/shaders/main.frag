@@ -12,5 +12,5 @@ layout (binding = 1) uniform sampler2D smp;
 
 void main() 
 {
-  out_color = texture(smp, uv, 1.0);
+  out_color = texture(smp, uv);
 }

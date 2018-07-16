@@ -152,7 +152,7 @@ impl Application {
                     _ => (),
                 }
             }
-            vxresult!(vxunwrap!(self.renderer).write()).update();
+            vxresult!(vxunwrap!(self.renderer).read()).update();
         }
     }
 
@@ -298,7 +298,7 @@ impl Application {
         return None;
     }
 
-    pub fn aspect_ratio(&self) -> f32 {
+    pub fn get_window_aspect_ratio(&self) -> f32 {
         self.window_aspect_ratio
     }
 }

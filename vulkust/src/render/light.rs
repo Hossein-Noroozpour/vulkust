@@ -2,6 +2,7 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::camera::Orthographic;
 use super::object::Object;
+use super::engine::Engine;
 // use math::{Matrix4, Vector3};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
@@ -11,7 +12,7 @@ pub trait Light: CoreObject + Object {
 }
 
 pub trait DefaultLighting {
-    fn default(size: f32) -> Self;
+    fn default(eng: &Arc<RwLock<Engine>>, size: f32) -> Self;
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -57,9 +58,9 @@ impl Object for Sun {
 impl Light for Sun {}
 
 impl DefaultLighting for Sun {
-    fn default(size: f32) -> Self {
+    fn default(eng: &Arc<RwLock<Engine>>, size: f32) -> Self {
         Sun {
-            camera: Orthographic::new(size),
+            camera: Orthographic::new(eng, size),
         }
     }
 }
@@ -77,11 +78,11 @@ impl Manager {
         }
     }
 
-    pub fn create<L>(&mut self, name: &str) -> Arc<RwLock<L>>
+    pub fn create<L>(&mut self, eng: &Arc<RwLock<Engine>>, name: &str) -> Arc<RwLock<L>>
     where
         L: 'static + Light + DefaultLighting,
     {
-        let result = Arc::new(RwLock::new(L::default(1.0)));
+        let result = Arc::new(RwLock::new(L::default(eng, 1.0)));
         let light: Arc<RwLock<Light>> = result.clone();
         let id = vxresult!(light.read()).get_id();
         self.cameras.insert(id, light);

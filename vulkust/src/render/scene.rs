@@ -112,7 +112,9 @@ impl Manager {
     where
         C: 'static + DefaultCamera,
     {
-        vxresult!(self.camera_manager.write()).create()
+        let engine = vxunwrap!(self.engine);
+        let engine = vxunwrap_o!(engine.upgrade());
+        vxresult!(self.camera_manager.write()).create(&engine)
     }
 
     pub fn create_mesh<M>(&self) -> Arc<RwLock<M>>

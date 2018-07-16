@@ -48,10 +48,10 @@ impl CoreAppTrait for MyGame {
             // If you want custom font,
             //     place your ttf it in data/fonts/ directory
             //     and call following function.
-            label.set_font_with_file_name("Ubuntu-R.ttf");
+            // label.set_font_with_file_name("Ubuntu-R.ttf");
             label.set_text_size(50.0);
-            label.set_text_color(0.5, 0.3, 0.2, 1.0);
-            label.set_background_color(0.8, 0.9, 0.8, 1.0);
+            label.set_text_color(1.0, 1.0, 1.0, 1.0);
+            label.set_background_color(0.0, 0.0, 0.0, 0.0);
             label.set_text("Hello Vulkust!");
         }
         {

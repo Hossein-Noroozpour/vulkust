@@ -125,8 +125,9 @@ impl Label {
         let point = point(0.0, 0.0 + v_metrics.ascent);
         let glyphs: Vec<_> = font.layout(&self.text, scale, point).collect();
         let glyphs_len = glyphs.len();
-        let imgw = vxunwrap!(glyphs[glyphs_len - 1].pixel_bounding_box()).max.x;
-        let imgh = (v_metrics.ascent - v_metrics.descent).ceil() as i32;
+        let imgbb = vxunwrap!(glyphs[glyphs_len - 1].pixel_bounding_box()).max;
+        let imgw = imgbb.x as i32 + 5;
+        let imgh = imgbb.y as i32 + 5;
         let w = self.size * (imgw as f32 / imgh as f32);
         let h = self.size;
         let bg = [
@@ -158,16 +159,17 @@ impl Label {
                     img[i] = ((bg[0] * inv + fc[0] * v) >> 8) as u8;
                     img[i + 1] = ((bg[1] * inv + fc[1] * v) >> 8) as u8;
                     img[i + 2] = ((bg[2] * inv + fc[2] * v) >> 8) as u8;
-                    img[i + 3] = ((bg[3] * inv + fc[3] * v) >> 8) as u8;
+                    img[i + 3] = 0;//((bg[3] * inv + fc[3] * v) >> 8) as u8;
                 });
             }
         }
         let vertices = [
-            w, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, w, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 1.0, 0.0, 0.0, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            w, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 
+            w, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 
+            0.0, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+            0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         ];
-        let indices = [0u32, 1, 2, 1, 3, 2];
+        let indices = [0u32, 2, 1, 1, 2, 3];
         let eng = vxresult!(self.base.mesh_base.engine.read());
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
@@ -234,7 +236,7 @@ impl DefaultMesh for Label {
             text_color: [1f32; 4],
             background_color: [0f32; 4],
             font,
-            size: 0.1f32,
+            size: 0.15f32,
         }
     }
 }
