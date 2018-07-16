@@ -108,7 +108,10 @@ impl Allocator for Container {
             vxlogf!(
                 "Out of space, {} offset_alignment: {} {} {} {}",
                 "you probably forget to increase the size or cleaning the allocator.",
-                offset_alignment, free_offset, self.base.size, obj_size
+                offset_alignment,
+                free_offset,
+                self.base.size,
+                obj_size
             );
         }
         vxresult!(obj.write()).place(offset);
@@ -124,8 +127,7 @@ impl Allocator for Container {
                 let mut objm = vxresult!(obj.write());
                 let size = objm.get_size();
                 let offset = objm.get_offset();
-                let aligned_offset = align(
-                    self.free_offset, objm.get_offset_alignment());
+                let aligned_offset = align(self.free_offset, objm.get_offset_alignment());
                 if aligned_offset != offset {
                     objm.place(aligned_offset);
                 }

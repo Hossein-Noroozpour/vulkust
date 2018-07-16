@@ -396,7 +396,8 @@ impl Engine {
             &pipemgr.main_pipeline.layout,
             &descriptor_set,
             vxresult!(uniform_buffer.buffers[frame_number].0.read())
-                .info.base
+                .info
+                .base
                 .offset as usize,
         );
         draw_command.bind_pipeline(&pipemgr.main_pipeline);

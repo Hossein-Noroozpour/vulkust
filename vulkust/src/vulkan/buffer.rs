@@ -245,8 +245,7 @@ impl Manager {
             Location::CPU,
             memmgr,
         );
-        let mut gpu_buffer =
-            RootBuffer::new(static_size, Location::GPU, memmgr);
+        let mut gpu_buffer = RootBuffer::new(static_size, Location::GPU, memmgr);
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
         let vk_memory = vxresult!(cpu_buffer.memory.read()).vk_data;

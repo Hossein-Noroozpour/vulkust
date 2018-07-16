@@ -25,9 +25,11 @@ winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "
 [target.'cfg(any(target_os = "android", target_os = "macos", target_os = "ios"))'.dependencies]
 bitflags = "*"
 
-[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-# This feautres are for debug mode remove them in future
+[target.'cfg(all(any(target_os = "macos", target_os = "ios"), debug_assertions))'.dependencies]
 objc = { version = "*", features = ["exception", "verify_message"] }
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
+objc = "*"
 
 [build-dependencies]
 reqwest = "*"

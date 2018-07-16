@@ -370,10 +370,7 @@ impl Orthographic {
         let w = base.aspect_ratio * size;
         base.projection = math::ortho(-w, w, -1.0, 1.0, base.near, base.far);
         base.update_view_projection();
-        Orthographic {
-            base,
-            size,
-        }
+        Orthographic { base, size }
     }
 }
 

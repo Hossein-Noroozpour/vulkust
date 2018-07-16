@@ -58,6 +58,7 @@ macro_rules! vulkust_start {
         #[no_mangle]
         pub extern "C" fn vulkust_allocate() -> *mut ::std::os::raw::c_void {
             use std::mem::transmute;
+            use std::sync::{Arc, RwLock};
             use $crate::core::application::ApplicationTrait as CoreAppTrait;
             use $crate::system::os::application::Application as OsApp;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));

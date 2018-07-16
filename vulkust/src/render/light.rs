@@ -1,8 +1,8 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::camera::Orthographic;
-use super::object::Object;
 use super::engine::Engine;
+use super::object::Object;
 // use math::{Matrix4, Vector3};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
