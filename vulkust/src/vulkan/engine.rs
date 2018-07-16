@@ -102,9 +102,9 @@ impl Engine {
             &memory_mgr,
             &graphic_cmd_pool,
             &frame_number,
-            4 * 1028 * 1028,
-            8 * 1028 * 1028,
-            4 * 1028 * 1028,
+            32 * 1024 * 1024,
+            32 * 1024 * 1024,
+            16 * 1024 * 1024,
             swapchain.image_views.len() as isize,
         )));
         let descriptor_manager = Arc::new(RwLock::new(DescriptorManager::new(
@@ -396,7 +396,7 @@ impl Engine {
             &pipemgr.main_pipeline.layout,
             &descriptor_set,
             vxresult!(uniform_buffer.buffers[frame_number].0.read())
-                .info
+                .info.base
                 .offset as usize,
         );
         draw_command.bind_pipeline(&pipemgr.main_pipeline);

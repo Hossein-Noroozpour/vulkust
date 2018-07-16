@@ -3,6 +3,7 @@
 macro_rules! vulkust_start {
     ($App:ident) => {
         fn main() {
+            use std::sync::{Arc, RwLock};
             use $crate::core::application::ApplicationTrait as CoreAppTrait;
             use $crate::render::engine::Engine as RenderEngine;
             use $crate::system::os::application::Application as OsApp;
@@ -36,6 +37,7 @@ macro_rules! vulkust_start {
             saved_state: *mut $crate::libc::c_void,
             saved_state_size: $crate::libc::size_t,
         ) {
+            use std::sync::{Arc, RwLock};
             use $crate::core::application::ApplicationTrait as CoreAppTrait;
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             $crate::system::android::glue::android_app_create(

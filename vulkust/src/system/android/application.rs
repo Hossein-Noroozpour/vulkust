@@ -57,7 +57,7 @@ impl Application {
     pub fn run(&self) {
         loop {
             let _ = self.fetch_events();
-            vxresult!(vxunwrap!(self.renderer).write()).update();
+            vxresult!(vxunwrap!(self.renderer).read()).update();
         }
     }
 

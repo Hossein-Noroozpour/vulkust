@@ -162,7 +162,7 @@ impl Buffer {
 
     pub fn bind_vertex_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
-        let offset = buffer.info.offset as vk::VkDeviceSize;
+        let offset = buffer.info.base.offset as vk::VkDeviceSize;
         unsafe {
             vk::vkCmdBindVertexBuffers(self.vk_data, 0, 1, &buffer.vk_data, &offset);
         }
@@ -170,7 +170,7 @@ impl Buffer {
 
     pub fn bind_index_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
-        let offset = buffer.info.offset as vk::VkDeviceSize;
+        let offset = buffer.info.base.offset as vk::VkDeviceSize;
         unsafe {
             vk::vkCmdBindIndexBuffer(
                 self.vk_data,

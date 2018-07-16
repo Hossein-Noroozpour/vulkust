@@ -81,6 +81,7 @@ impl Geometry {
             vxresult!(gapi_engine.buffer_manager.write()).create_static_buffer_with_vec(vertices);
         let index_buffer =
             vxresult!(gapi_engine.buffer_manager.write()).create_static_buffer_with_vec(indices);
+        vxlogi!("dfdfsdfsdfsdfsdfsdfsdf {}", size_of::<Uniform>());
         let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let descriptor_set = Arc::new(

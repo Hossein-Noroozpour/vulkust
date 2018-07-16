@@ -18,13 +18,13 @@ pub struct Memory {
 impl Memory {
     pub fn new(
         size: isize,
-        actual_size: vk::VkDeviceSize,
+        mem_req: &vk::VkMemoryRequirements,
         vk_data: vk::VkDeviceMemory,
         manager: Arc<RwLock<Manager>>,
         root_memory: Arc<RwLock<RootMemory>>,
     ) -> Self {
-        let info = alc::Memory::new(size);
-        let size = actual_size;
+        let info = alc::Memory::new(size, mem_req.alignment as isize);
+        let size = mem_req.size;
         Memory {
             info,
             size,
@@ -36,12 +36,16 @@ impl Memory {
 }
 
 impl Object for Memory {
-    fn size(&self) -> isize {
-        self.info.size()
+    fn get_size(&self) -> isize {
+        self.info.get_size()
     }
 
-    fn offset(&self) -> isize {
-        self.info.offset()
+    fn get_offset(&self) -> isize {
+        self.info.get_offset()
+    }
+
+    fn get_offset_alignment(&self) -> isize {
+        self.info.get_offset_alignment()
     }
 
     fn place(&mut self, offset: isize) {
@@ -84,23 +88,24 @@ impl RootMemory {
             vk_data,
             manager,
             itself: None,
-            container: alc::Container::new(DEFAULT_MEMORY_SIZE as isize),
+            container: alc::Container::new(DEFAULT_MEMORY_SIZE as isize, 2),
         }
     }
 
-    pub fn allocate(&mut self, size: vk::VkDeviceSize) -> Arc<RwLock<Memory>> {
-        let aligned_size = alc::align(size as isize, self.alignment);
+    pub fn allocate(&mut self, mem_req: &vk::VkMemoryRequirements) -> Arc<RwLock<Memory>> {
+        let aligned_size = alc::align(mem_req.size as isize, self.alignment);
+        let aligned_size = alc::align(aligned_size, mem_req.alignment as isize);
         let manager = vxunwrap_o!(self.manager.upgrade());
         let itself = vxunwrap_o!(vxunwrap!(self.itself).upgrade());
         let memory = Arc::new(RwLock::new(Memory::new(
             aligned_size,
-            size as vk::VkDeviceSize,
+            mem_req,
             self.vk_data,
             manager,
             itself,
         )));
         let obj: Arc<RwLock<Object>> = memory.clone();
-        self.container.allocate(&obj);
+        self.container.allocate(mem_req.alignment as isize, &obj);
         return memory;
     }
 
@@ -171,7 +176,7 @@ impl Manager {
     ) -> Arc<RwLock<Memory>> {
         let memory_type_index = self.get_memory_type_index(mem_req, location);
         if let Some(root_memory) = self.root_memories.get_mut(&memory_type_index) {
-            return vxresult!(root_memory.write()).allocate(mem_req.size);
+            return vxresult!(root_memory.write()).allocate(mem_req);
         }
         let itself = vxunwrap!(self.itself).clone();
         let root_memory = RootMemory::new(memory_type_index, itself, &self.logical_device);
@@ -180,7 +185,7 @@ impl Manager {
         let allocated = {
             let mut root_memory_wl = vxresult!(root_memory.write());
             root_memory_wl.set_itself(root_memory_w);
-            root_memory_wl.allocate(mem_req.size)
+            root_memory_wl.allocate(mem_req)
         };
         self.root_memories.insert(memory_type_index, root_memory);
         return allocated;

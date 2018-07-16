@@ -20,7 +20,7 @@ pub struct Buffer {
 
 impl Buffer {
     pub fn new(size: isize, memory_offset: isize, vk_data: vk::VkBuffer) -> Self {
-        let info = alc::Container::new(size);
+        let info = alc::Container::new(size, 2);
         Buffer {
             memory_offset,
             info,
@@ -35,18 +35,22 @@ impl Buffer {
             self.vk_data,
         )));
         let obj: Arc<RwLock<Object>> = buffer.clone();
-        self.info.allocate(&obj);
+        self.info.allocate(2, &obj);
         return buffer;
     }
 }
 
 impl Object for Buffer {
-    fn size(&self) -> isize {
-        self.info.size
+    fn get_size(&self) -> isize {
+        self.info.base.size
     }
 
-    fn offset(&self) -> isize {
-        self.info.offset
+    fn get_offset(&self) -> isize {
+        self.info.base.offset
+    }
+
+    fn get_offset_alignment(&self) -> isize {
+        self.info.base.offset_alignment
     }
 
     fn place(&mut self, offset: isize) {
@@ -60,8 +64,8 @@ impl Allocator for Buffer {
         vxunimplemented!();
     }
 
-    fn allocate(&mut self, obj: &Arc<RwLock<Object>>) {
-        self.info.allocate(obj);
+    fn allocate(&mut self, offset_alignment: isize, obj: &Arc<RwLock<Object>>) {
+        self.info.allocate(offset_alignment, obj);
         vxunimplemented!();
     }
 
@@ -128,7 +132,7 @@ impl RootBuffer {
                 mem.info.offset as vk::VkDeviceSize,
             ));
         }
-        let container = alc::Container::new(size);
+        let container = alc::Container::new(size, 2);
         RootBuffer {
             logical_device,
             memory,
@@ -141,7 +145,7 @@ impl RootBuffer {
         let memoff = vxresult!(self.memory.read()).info.offset;
         let buffer = Arc::new(RwLock::new(Buffer::new(size, memoff, self.vk_data)));
         let obj: Arc<RwLock<Object>> = buffer.clone();
-        self.container.allocate(&obj);
+        self.container.allocate(2, &obj);
         return buffer;
     }
 }
@@ -242,14 +246,14 @@ impl Manager {
             memmgr,
         );
         let mut gpu_buffer =
-            RootBuffer::new(frames_dynamics_size + static_size, Location::GPU, memmgr);
+            RootBuffer::new(static_size, Location::GPU, memmgr);
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
         let vk_memory = vxresult!(cpu_buffer.memory.read()).vk_data;
         let vk_device = vxresult!(memmgr.read()).logical_device.vk_data;
         let memory_size = {
             let cpu_memory = vxresult!(cpu_buffer.memory.read());
-            let size = vxresult!(cpu_memory.root_memory.read()).container.size;
+            let size = vxresult!(cpu_memory.root_memory.read()).container.base.size;
             size
         };
         let cpu_memory_mapped_ptr = unsafe {
@@ -300,8 +304,8 @@ impl Manager {
         let upbuff = self.create_staging_buffer_with_ptr(data, data_len as usize);
         let upbuffer = vxresult!(upbuff.read());
         let mut range = vk::VkBufferCopy::default();
-        range.srcOffset = upbuffer.info.offset as vk::VkDeviceSize;
-        range.dstOffset = vxresult!(buffer.read()).info.offset as vk::VkDeviceSize;
+        range.srcOffset = upbuffer.info.base.offset as vk::VkDeviceSize;
+        range.dstOffset = vxresult!(buffer.read()).info.base.offset as vk::VkDeviceSize;
         range.size = data_len as vk::VkDeviceSize;
         self.copy_ranges.push(range);
         StaticBuffer::new(buffer)
@@ -323,7 +327,7 @@ impl Manager {
         let off = {
             let upbuff = vxresult!(upbuffer.read());
             let mut off = upbuff.memory_offset;
-            off += upbuff.info.offset;
+            off += upbuff.info.base.offset;
             off += self.cpu_memory_mapped_ptr;
             off
         };
@@ -358,7 +362,7 @@ impl Manager {
         copy_info.imageExtent.width = img_info.extent.width;
         copy_info.imageExtent.height = img_info.extent.height;
         copy_info.imageExtent.depth = img_info.extent.depth;
-        copy_info.bufferOffset = upbuffer.info.offset as vk::VkDeviceSize;
+        copy_info.bufferOffset = upbuffer.info.base.offset as vk::VkDeviceSize;
         self.copy_to_image_ranges.push((copy_info, image.clone()));
     }
 
@@ -369,7 +373,7 @@ impl Manager {
             let buffer = vxresult!(dynamic_buffer.write()).allocate(size);
             let ptr = {
                 let buffer = vxresult!(buffer.read());
-                buffer.memory_offset + buffer.info.offset + self.cpu_memory_mapped_ptr
+                buffer.memory_offset + buffer.info.base.offset + self.cpu_memory_mapped_ptr
             };
             buffers.push((buffer, ptr));
         }

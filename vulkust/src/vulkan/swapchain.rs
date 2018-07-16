@@ -73,7 +73,7 @@ impl Swapchain {
         swapchain_create_info.imageColorSpace = best_surface_format.colorSpace;
         swapchain_create_info.imageExtent = surface_caps.currentExtent;
         swapchain_create_info.imageUsage = image_usage;
-        swapchain_create_info.preTransform = surface_caps.currentTransform;
+        swapchain_create_info.preTransform = vk::VkSurfaceTransformFlagBitsKHR::VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
         swapchain_create_info.imageArrayLayers = 1;
         if queue_family_indices[0] != queue_family_indices[1] {
             swapchain_create_info.imageSharingMode = vk::VkSharingMode::VK_SHARING_MODE_CONCURRENT;

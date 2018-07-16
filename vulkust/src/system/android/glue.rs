@@ -298,10 +298,16 @@ extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
             let os_app = vxunwrap!((*android_app).os_app);
             vxresult!(os_app.read()).initialize();
             let core_app = vxunwrap!(vxresult!(os_app.read()).core_app).clone();
-            let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app, os_app)));
+            let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), os_app)));
             let renderer_w = Arc::downgrade(&renderer);
             vxresult!(renderer.write()).set_myself(renderer_w);
-            vxresult!(os_app.write()).set_renderer(renderer);
+            vxresult!(os_app.write()).set_renderer(renderer.clone());
+            {
+                let mut core_app = vxresult!(core_app.write());
+                core_app.set_os_app(os_app.clone());
+                core_app.set_renderer(renderer);
+                core_app.initialize();
+            }
             vxresult!(os_app.read()).run();
         }
         android_app_destroy(android_app);

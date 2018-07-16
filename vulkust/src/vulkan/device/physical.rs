@@ -37,6 +37,7 @@ impl Physical {
             vk::vkGetPhysicalDeviceMemoryProperties(vk_data, &mut memory_properties);
             vk::vkGetPhysicalDeviceProperties(vk_data, &mut properties);
         }
+        vxlogi!("{:?}", &surface_caps);
         let physical = Physical {
             surface: surface.clone(),
             graphics_queue_node_index,
