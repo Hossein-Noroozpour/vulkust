@@ -419,6 +419,20 @@ impl Engine {
         ))
     }
 
+    pub fn create_texture_2d_with_pixels(
+        &self,
+        width: u32,
+        height: u32,
+        data: &[u8],
+    ) -> Arc<ImageView> {
+        Arc::new(ImageView::new_texture_2d_with_pixels(
+            width,
+            height,
+            data,
+            &self.buffer_manager,
+        ))
+    }
+
     pub fn create_descriptor_set(&self, image_view: &Arc<ImageView>) -> DescriptorSet {
         vxresult!(self.descriptor_manager.write()).create_main_set(image_view, &self.sampler)
     }

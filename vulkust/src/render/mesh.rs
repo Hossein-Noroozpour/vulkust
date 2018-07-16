@@ -68,6 +68,35 @@ pub struct Geometry {
     pub indices_count: u32,
 }
 
+impl Geometry {
+    pub fn new(
+        texture: Arc<RwLock<Texture>>,
+        vertices: &[f32],
+        indices: &[u32],
+        engine: &Arc<RwLock<Engine>>,
+    ) -> Self {
+        let eng = vxresult!(engine.read());
+        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let vertex_buffer =
+            vxresult!(gapi_engine.buffer_manager.write()).create_static_buffer_with_vec(vertices);
+        let index_buffer =
+            vxresult!(gapi_engine.buffer_manager.write()).create_static_buffer_with_vec(indices);
+        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let descriptor_set = Arc::new(
+            gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
+        ); // todo
+        Geometry {
+            texture,
+            descriptor_set,
+            uniform_buffer,
+            vertex_buffer,
+            index_buffer,
+            indices_count: indices.len() as u32,
+        }
+    }
+}
+
 pub struct Base {
     pub obj_base: ObjectBase,
     pub engine: Arc<RwLock<Engine>>,

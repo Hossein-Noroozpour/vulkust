@@ -1,11 +1,11 @@
 use super::super::core::object::{Base as ObjectBase, Object as CoreObject};
 use super::super::core::types::Id;
 use super::super::system::file::File;
-use std::sync::{Arc, RwLock, Weak};
+use rusttype::Font as TypeFont;
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::io::Read;
-use rusttype::Font as TypeFont;
+use std::sync::{Arc, RwLock, Weak};
 
 pub trait Font: CoreObject {
     fn get_font(&self) -> &TypeFont;
@@ -72,8 +72,8 @@ impl Base {
 
 impl Default for Base {
     fn default() -> Self {
-        let font = include_bytes!(concat!(env!("OUT_DIR"), 
-            "/render/fonts/Ubuntu-B.ttf"));
+        let font = include_bytes!(concat!(env!("OUT_DIR"), "/render/fonts/Ubuntu-B.ttf"));
+        let font = font.to_vec();
         let font = vxresult!(TypeFont::from_bytes(font));
         let obj_base = ObjectBase::new();
         let name = None;

@@ -307,7 +307,7 @@ impl Manager {
         StaticBuffer::new(buffer)
     }
 
-    pub fn create_static_buffer_with_vec<T>(&mut self, data: &Vec<T>) -> StaticBuffer {
+    pub fn create_static_buffer_with_vec<T>(&mut self, data: &[T]) -> StaticBuffer {
         let data_ptr = unsafe { transmute(data.as_ptr()) };
         let data_len = data.len() * size_of::<T>();
         self.create_static_buffer_with_ptr(data_ptr, data_len)
@@ -335,7 +335,7 @@ impl Manager {
         upbuffer
     }
 
-    pub fn create_staging_buffer_with_vec<T>(&mut self, data: &Vec<T>) -> Arc<RwLock<Buffer>> {
+    pub fn create_staging_buffer_with_vec<T>(&mut self, data: &[T]) -> Arc<RwLock<Buffer>> {
         let data_ptr = unsafe { transmute(data.as_ptr()) };
         let data_len = data.len() * size_of::<T>();
         self.create_staging_buffer_with_ptr(data_ptr, data_len)
@@ -344,7 +344,7 @@ impl Manager {
     pub fn create_staging_image(
         &mut self,
         image: &Arc<RwLock<Image>>,
-        pixels: &Vec<u8>,
+        pixels: &[u8],
         img_info: &vk::VkImageCreateInfo,
     ) {
         let upbuff = self.create_staging_buffer_with_vec(pixels);

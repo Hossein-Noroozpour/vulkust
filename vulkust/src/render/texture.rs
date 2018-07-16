@@ -1,4 +1,4 @@
-use super::super::core::object::{create_id, Object as CoreObject};
+use super::super::core::object::{Base as ObjectBase, Object as CoreObject};
 use super::super::core::types::Id;
 use super::engine::Engine;
 use super::image::View as ImageView;
@@ -47,7 +47,7 @@ impl Manager {
             }
         }
         let texture: Arc<RwLock<Texture>> =
-            Arc::new(RwLock::new(T::new_with_gltf(texture, &engine, data)));
+            Arc::new(RwLock::new(T::new_with_gltf(texture, engine, data)));
         let id = vxresult!(texture.read()).get_id();
         let weak = Arc::downgrade(&texture);
         self.name_to_id.insert(name, id);
@@ -62,14 +62,19 @@ impl Manager {
         engine: &Arc<RwLock<Engine>>,
         data: &[u8],
     ) -> Arc<RwLock<Texture2D>> {
-
+        let tex = Texture2D::new_with_pixels(width, height, engine, data);
+        let id = tex.get_id();
+        let tex = Arc::new(RwLock::new(tex));
+        let t: Arc<RwLock<Texture>> = tex.clone();
+        let t = Arc::downgrade(&t);
+        self.textures.insert(id, t);
+        return tex;
     }
-
 }
 
 pub struct Texture2D {
-    pub id: Id,
-    pub name: String,
+    pub obj_base: ObjectBase,
+    pub name: Option<String>,
     pub image_view: Arc<ImageView>,
 }
 
@@ -78,19 +83,22 @@ impl Texture2D {
         width: u32,
         height: u32,
         engine: &Arc<RwLock<Engine>>,
-        data: &[u8]
+        data: &[u8],
     ) -> Self {
         let engine = vxresult!(engine.read());
         let engine = vxresult!(engine.gapi_engine.read());
+        let image_view = engine.create_texture_2d_with_pixels(width, height, data);
         Texture2D {
-
+            obj_base: ObjectBase::new(),
+            name: None,
+            image_view,
         }
     }
 }
 
 impl CoreObject for Texture2D {
     fn get_id(&self) -> Id {
-        self.id
+        self.obj_base.get_id()
     }
 }
 
@@ -103,7 +111,7 @@ impl Texture for Texture2D {
 impl Loadable for Texture2D {
     fn new_with_gltf(texture: &gltf::Texture, engine: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
         let name = vxunwrap_o!(texture.source().name()).to_string();
-        let id = create_id();
+        let obj_base = ObjectBase::new();
         let view = match texture.source().source() {
             gltf::image::Source::View { view, mime_type: _ } => view,
             _ => vxlogf!("Only embeded and view texture resources is acceptable."),
@@ -121,8 +129,8 @@ impl Loadable for Texture2D {
         let engine = vxresult!(engine.gapi_engine.read());
         let image_view = engine.create_texture_with_bytes(&data[offset..offset + length]);
         Texture2D {
-            id,
-            name,
+            obj_base,
+            name: Some(name),
             image_view,
         }
     }

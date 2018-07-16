@@ -2,12 +2,12 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::engine::Engine;
 use super::font::Font;
-use super::mesh::{Base as MeshBase, DefaultMesh, Mesh};
+use super::mesh::{Base as MeshBase, DefaultMesh, Geometry, Mesh};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
 use std::sync::{Arc, RwLock};
 
-use rusttype::{Scale, point};
+use rusttype::{point, Scale};
 
 pub trait Widget: Mesh {}
 
@@ -96,18 +96,21 @@ impl Label {
         self.text_size = size;
         self.create_text_mesh();
     }
-    
+
     pub fn set_text_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) {
         self.text_color = [red, green, blue, alpha];
         self.create_text_mesh();
     }
-    
+
     pub fn set_background_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) {
         self.background_color = [red, green, blue, alpha];
         self.create_text_mesh();
     }
 
     pub fn create_text_mesh(&mut self) {
+        // todo margin
+        // todo alignment
+        // todo multiline support
         if self.text.len() < 1 {
             if self.base.mesh_base.geometries.len() < 1 {
                 return;
@@ -127,9 +130,9 @@ impl Label {
         let w = self.size * (imgw as f32 / imgh as f32);
         let h = self.size;
         let bg = [
-            (self.background_color[0] * 255.0) as u32, 
-            (self.background_color[1] * 255.0) as u32, 
-            (self.background_color[2] * 255.0) as u32, 
+            (self.background_color[0] * 255.0) as u32,
+            (self.background_color[1] * 255.0) as u32,
+            (self.background_color[2] * 255.0) as u32,
             (self.background_color[3] * 255.0) as u32,
         ];
         let fc = [
@@ -138,33 +141,44 @@ impl Label {
             (self.text_color[2] * 255.0) as u32,
             (self.text_color[3] * 255.0) as u32,
         ];
-        let mut img = vec![bg; (imgw * imgh) as usize];
+        let pixels_count = (imgw * imgh) as usize;
+        let bytes_count = pixels_count << 2;
+        let mut img = vec![0u8; bytes_count];
+        for i in 0..bytes_count {
+            img[i] = bg[i & 3] as u8;
+        }
         for glyph in &glyphs {
             if let Some(bounding_box) = glyph.pixel_bounding_box() {
                 glyph.draw(|x, y, v| {
                     let x = (x + bounding_box.min.x as u32) as usize;
                     let y = (y + bounding_box.min.y as u32) as usize;
-                    let i = y * imgw as usize + x;
+                    let i = (y * imgw as usize + x) << 2;
                     let v = (v * 255.0) as u32;
                     let inv = 255 - v;
-                    let color = [
-                        (bg[0] * inv + fc[0] * v) >> 8,
-                        (bg[1] * inv + fc[1] * v) >> 8,
-                        (bg[2] * inv + fc[2] * v) >> 8,
-                        (bg[3] * inv + fc[3] * v) >> 8,
-                    ];
-                    img[i] = color;
+                    img[i] = ((bg[0] * inv + fc[0] * v) >> 8) as u8;
+                    img[i + 1] = ((bg[1] * inv + fc[1] * v) >> 8) as u8;
+                    img[i + 2] = ((bg[2] * inv + fc[2] * v) >> 8) as u8;
+                    img[i + 3] = ((bg[3] * inv + fc[3] * v) >> 8) as u8;
                 });
             }
         }
         let vertices = [
-            w,   h,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0,
-            w,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-            0.0, h,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            w, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, w, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 1.0, 0.0, 0.0, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         ];
-        let indices = [0u32, 1, 2];
-        vxunimplemented!();
+        let indices = [0u32, 1, 2, 1, 3, 2];
+        let eng = vxresult!(self.base.mesh_base.engine.read());
+        let scene_manager = vxresult!(eng.scene_manager.read());
+        let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
+        let texture = texture_manager.create_2d_with_pixels(
+            imgw as u32,
+            imgh as u32,
+            &self.base.mesh_base.engine,
+            &img,
+        );
+        let geo = Geometry::new(texture, &vertices, &indices, &self.base.mesh_base.engine);
+        self.base.mesh_base.geometries.push(geo);
     }
 }
 
@@ -220,7 +234,7 @@ impl DefaultMesh for Label {
             text_color: [1f32; 4],
             background_color: [0f32; 4],
             font,
-            size: 1f32,
+            size: 0.1f32,
         }
     }
 }

@@ -89,6 +89,15 @@ impl Image {
         let img = vxresult!(image::load_from_memory(&data)).to_rgba();
         let (width, height) = img.dimensions();
         let img = img.into_raw();
+        Self::new_2d_with_pixels(width, height, &img, buffmgr)
+    }
+
+    pub fn new_2d_with_pixels(
+        width: u32,
+        height: u32,
+        data: &[u8],
+        buffmgr: &Arc<RwLock<BufferManager>>,
+    ) -> Arc<RwLock<Self>> {
         let format = vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
         let mut image_info = vk::VkImageCreateInfo::default();
         image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -111,7 +120,7 @@ impl Image {
             memmgr
         };
         let myself = Arc::new(RwLock::new(Self::new_with_info(&image_info, &memmgr)));
-        vxresult!(buffmgr.write()).create_staging_image(&myself, &img, &image_info);
+        vxresult!(buffmgr.write()).create_staging_image(&myself, data, &image_info);
         myself
     }
 
@@ -263,6 +272,16 @@ impl View {
 
     pub fn new_texture_with_bytes(data: &[u8], buffmgr: &Arc<RwLock<BufferManager>>) -> Self {
         let image = Image::new_with_bytes(data, buffmgr);
+        Self::new_with_image(image)
+    }
+
+    pub fn new_texture_2d_with_pixels(
+        width: u32,
+        height: u32,
+        data: &[u8],
+        buffmgr: &Arc<RwLock<BufferManager>>,
+    ) -> Self {
+        let image = Image::new_2d_with_pixels(width, height, data, buffmgr);
         Self::new_with_image(image)
     }
 

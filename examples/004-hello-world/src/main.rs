@@ -45,11 +45,11 @@ impl CoreAppTrait for MyGame {
         {
             let mut label = vxresult!(label.write());
             // by default label has Ubuntu-B.ttf font.
-            // If you want custom font, 
-            //     place your ttf it in data/fonts/ directory 
+            // If you want custom font,
+            //     place your ttf it in data/fonts/ directory
             //     and call following function.
-            label.set_font_with_file_name("Ubuntu-I.ttf");
-            label.set_text_size(10.0);
+            label.set_font_with_file_name("Ubuntu-R.ttf");
+            label.set_text_size(50.0);
             label.set_text_color(0.5, 0.3, 0.2, 1.0);
             label.set_background_color(0.8, 0.9, 0.8, 1.0);
             label.set_text("Hello Vulkust!");
