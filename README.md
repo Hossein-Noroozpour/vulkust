@@ -18,7 +18,7 @@ An experimental tiny engine for **Vulkan in Rust**.
 
 ## Examples
 
-- You must have **glslangValidator** in you PATH invironment variable.
+- You must have **glslangValidator** in you PATH environment variable.
 - For **iOS** and **Android**, you must have 
   [vulkust-ios](https://github.com/Hossein-Noroozpour/vulkust-ios) and
   [vulkust-android](https://github.com/Hossein-Noroozpour/vulkust-android)
