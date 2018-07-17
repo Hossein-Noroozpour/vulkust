@@ -35,7 +35,7 @@ impl Buffer {
             self.vk_data,
         )));
         let obj: Arc<RwLock<Object>> = buffer.clone();
-        self.info.allocate(2, &obj);
+        self.info.allocate(&obj);
         return buffer;
     }
 }
@@ -64,8 +64,8 @@ impl Allocator for Buffer {
         vxunimplemented!();
     }
 
-    fn allocate(&mut self, offset_alignment: isize, obj: &Arc<RwLock<Object>>) {
-        self.info.allocate(offset_alignment, obj);
+    fn allocate(&mut self, obj: &Arc<RwLock<Object>>) {
+        self.info.allocate(obj);
         vxunimplemented!();
     }
 
@@ -145,7 +145,7 @@ impl RootBuffer {
         let memoff = vxresult!(self.memory.read()).info.offset;
         let buffer = Arc::new(RwLock::new(Buffer::new(size, memoff, self.vk_data)));
         let obj: Arc<RwLock<Object>> = buffer.clone();
-        self.container.allocate(2, &obj);
+        self.container.allocate(&obj);
         return buffer;
     }
 }

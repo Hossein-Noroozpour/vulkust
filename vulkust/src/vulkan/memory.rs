@@ -105,7 +105,7 @@ impl RootMemory {
             itself,
         )));
         let obj: Arc<RwLock<Object>> = memory.clone();
-        self.container.allocate(mem_req.alignment as isize, &obj);
+        self.container.allocate(&obj);
         return memory;
     }
 
