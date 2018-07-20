@@ -6,6 +6,7 @@ pub mod descriptor;
 // pub mod device;
 pub mod engine;
 pub mod font;
+pub mod gx3d;
 pub mod image;
 pub mod light;
 // pub mod material;

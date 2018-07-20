@@ -11,6 +11,11 @@ use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
 
+///     In this example you have to place your data.gx3d file in data directory of your project (in
+/// android assets/data/ and in ios Resources/data/). Then if data.gx3d was presented render engine
+/// is gonna import its references and then you can load your scene by id (in here we load the first
+/// scene). Keep in mind that, you can not have several gx3d file and its name must be data.gx3d
+
 struct MyGame {
     pub os_app: Option<Arc<RwLock<OsApp>>>,
     pub renderer: Option<Arc<RwLock<Renderer>>>,
@@ -36,20 +41,7 @@ impl CoreAppTrait for MyGame {
         self.renderer = Some(renderer);
     }
 
-    fn initialize(&mut self) {
-        let renderer = vxunwrap!(self.renderer);
-        let renderer = vxresult!(renderer.read());
-        let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene();
-        let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
-        let label: Arc<RwLock<Label>> = renderer.create_mesh();
-        vxresult!(label.write()).set_text("Hello Vulkust!");
-        {
-            let mut uiscn = vxresult!(ui_scene.write());
-            uiscn.add_camera(camera);
-            uiscn.add_mesh(label);
-        }
-        self.ui_scene = Some(ui_scene);
-    }
+    fn initialize(&mut self) {}
 
     fn on_event(&self, _e: Event) {}
 

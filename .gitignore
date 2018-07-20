@@ -19,6 +19,8 @@ rls/
 .DS_Store
 *.gx3d
 *.gx3d.rs
+*.gx3d.hpp
+*.gx3d.cpp
 .vscode
 /.vscode
 .vscode/

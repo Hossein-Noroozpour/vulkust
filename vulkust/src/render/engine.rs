@@ -27,6 +27,7 @@ impl Engine {
         }));
         let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app)));
         let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
+        
         let myself = None;
         Engine {
             myself,

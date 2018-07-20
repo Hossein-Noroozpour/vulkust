@@ -1,5 +1,5 @@
 [package]
-name = "scene-loading"
+name = "gx3d-loading"
 version = "0.1.0"
 authors = ["Hossein Noroozpour <hossein.noroozpour@gmail.com>"]
 description = "A simple game made by Vulkust game engine"
