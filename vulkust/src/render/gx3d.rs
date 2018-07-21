@@ -1,8 +1,8 @@
-use super::super::core::types::{Id, Offset};
+use super::super::core::types::{Id, Offset, TypeId};
 use super::super::core::object::NEXT_ID;
 use super::super::system::file::File;
 use super::scene::Manager as SceneManager;
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Read, Seek, SeekFrom};
 use std::mem::{size_of, transmute};
 use std::ptr::copy;
 use std::sync::atomic::Ordering;
@@ -37,6 +37,23 @@ impl Gx3DReader {
             file,
             different_endianness,
         })
+    }
+
+    pub fn read_u8(&mut self) -> u8 {
+        let mut d = [0u8; 1];
+        #[cfg(debug_assertions)]
+        {
+            if 1 != vxresult!(self.file.read(&mut d)) {
+                vxunexpected!();
+            }
+        }
+        #[cfg(not(debug_assertions))]
+        vxresult!(self.file.read(&mut d));
+        return d[0];
+    }
+
+    pub fn read_type_id(&mut self) -> TypeId {
+        self.read_u8()
     }
 
     fn read_typed_bytes(&mut self, dest: *mut u8, count: usize) {
@@ -116,6 +133,18 @@ impl Gx3DReader {
         self.read_array_typed_bytes(unsafe { transmute(ts.as_mut_ptr()) }, size_of::<T>(), count);
         return ts;
     }
+
+    #[cfg(not(debug_assertions))]
+    pub fn seek(&mut self, offset: Offset) {
+        vxresult!(self.file.seek(SeekFrom::Start(offset)));
+    }
+
+    #[cfg(debug_assertions)]
+    pub fn seek(&mut self, offset: Offset) {
+        if offset != vxresult!(self.file.seek(SeekFrom::Start(offset))) {
+            vxunexpected!();
+        }
+    }
 }
 
 pub struct Table {
@@ -135,6 +164,11 @@ impl Table {
             id_offset,
         }
     }
+
+    pub fn goto(&mut self, id: Id) {
+        let off = vxunwrap_o!(self.id_offset.get(&id));
+        self.reader.seek(*off);
+    } 
 }
 
 pub fn import(scenemgr: &Arc<RwLock<SceneManager>>) {

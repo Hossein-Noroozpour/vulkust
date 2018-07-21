@@ -1,10 +1,10 @@
 use super::super::core::object::Object as CoreObject;
-use super::super::core::types::Id;
+use super::super::core::types::{Id, TypeId as CoreTypeId};
 use super::super::system::file::File;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager};
 use super::engine::Engine;
 use super::font::Manager as FontManager;
-use super::gx3d::Table as Gx3dTable;
+use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::light::Manager as LightManager;
 use super::mesh::{Base as MeshBase, DefaultMesh, Manager as MeshManager, Mesh};
 use super::model::Manager as ModelManager;
@@ -17,6 +17,13 @@ use std::sync::{Arc, RwLock, Weak};
 use gltf;
 use math;
 
+#[repr(u8)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum TypeId {
+    GAME = 1,
+    UI = 2,
+}
+
 pub trait Scene: Object {
     fn add_camera(&mut self, Arc<RwLock<Camera>>);
     fn add_mesh(&mut self, Arc<RwLock<Mesh>>);
@@ -24,6 +31,7 @@ pub trait Scene: Object {
 
 pub trait Loadable: Scene + Sized {
     fn new_with_gltf(&Arc<RwLock<Engine>>, &gltf::Scene, &[u8]) -> Self;
+    fn new_with_gx3d(&Arc<RwLock<Engine>>, &mut Gx3DReader) -> Self;
 }
 
 pub trait DefaultScene: Scene + Sized {
@@ -100,6 +108,27 @@ impl Manager {
         self.add_scene(&s);
         return scene;
     }
+
+    pub fn load_gx3d(&mut self, id: Id) -> Arc<RwLock<Scene>> {
+        let mut table = vxunwrap!(self.gx3d_table);
+        table.goto(id);
+        let mut reader: &mut Gx3DReader = &mut table.reader;
+        let type_id = reader.read_type_id();
+        let scene: Arc<RwLock<Scene>> = if type_id == TypeId::GAME as CoreTypeId {
+            let engine = vxunwrap!(self.engine);
+            let engine = vxunwrap_o!(engine.upgrade());
+            Arc::new(RwLock::new(Game::new_with_gx3d(&engine, &mut reader)))
+        } else if type_id == TypeId::UI as CoreTypeId {
+            let engine = vxunwrap!(self.engine);
+            let engine = vxunwrap_o!(engine.upgrade());
+            Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, &mut reader)))
+        } else {
+            vxunexpected!();
+        };
+        self.add_scene(&scene);
+        return scene;
+    }
+
 
     pub fn create<S>(&mut self) -> Arc<RwLock<S>>
     where
