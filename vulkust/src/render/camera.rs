@@ -9,6 +9,7 @@ use std::convert::From;
 #[cfg(debug_assertions)]
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock, Weak};
+use super::gx3d::Table as Gx3dTable;
 
 #[cfg(debug_assertions)]
 pub trait Camera: Object + Transferable + Debug {
@@ -29,6 +30,7 @@ pub trait DefaultCamera: Camera {
 pub struct Manager {
     pub cameras: BTreeMap<Id, Weak<RwLock<Camera>>>,
     pub name_to_id: BTreeMap<String, Id>,
+    pub gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
@@ -38,6 +40,7 @@ impl Manager {
         Manager {
             cameras,
             name_to_id,
+            gx3d_table: None,
         }
     }
 

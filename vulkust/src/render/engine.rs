@@ -3,6 +3,7 @@ use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
 use super::camera::DefaultCamera;
 use super::config::Configurations as Config;
+use super::gx3d::import as gx3d_import;
 use super::mesh::DefaultMesh;
 use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
 use std::sync::{Arc, RwLock, Weak};
@@ -27,7 +28,7 @@ impl Engine {
         }));
         let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app)));
         let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
-
+        gx3d_import(&scene_manager);
         let myself = None;
         Engine {
             myself,

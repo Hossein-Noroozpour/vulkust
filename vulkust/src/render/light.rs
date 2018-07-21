@@ -6,6 +6,7 @@ use super::object::Object;
 // use math::{Matrix4, Vector3};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
+use super::gx3d::Table as Gx3dTable;
 
 pub trait Light: CoreObject + Object {
     // fn set_cascaded_frustums()
@@ -66,15 +67,17 @@ impl DefaultLighting for Sun {
 }
 
 pub struct Manager {
-    pub cameras: BTreeMap<Id, Arc<RwLock<Light>>>,
+    pub lights: BTreeMap<Id, Arc<RwLock<Light>>>,
     pub name_to_id: BTreeMap<String, Id>,
+    pub gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
     pub fn new() -> Self {
         Manager {
-            cameras: BTreeMap::new(),
+            lights: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
+            gx3d_table: None,
         }
     }
 
@@ -85,7 +88,7 @@ impl Manager {
         let result = Arc::new(RwLock::new(L::default(eng, 1.0)));
         let light: Arc<RwLock<Light>> = result.clone();
         let id = vxresult!(light.read()).get_id();
-        self.cameras.insert(id, light);
+        self.lights.insert(id, light);
         self.name_to_id.insert(name.to_string(), id);
         return result;
     }

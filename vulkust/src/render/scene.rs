@@ -4,8 +4,10 @@ use super::super::system::file::File;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager};
 use super::engine::Engine;
 use super::font::Manager as FontManager;
+use super::gx3d::Table as Gx3dTable;
 use super::light::Manager as LightManager;
 use super::mesh::{Base as MeshBase, DefaultMesh, Manager as MeshManager, Mesh};
+use super::model::Manager as ModelManager;
 use super::object::{Base as BaseObject, Object};
 use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
@@ -37,6 +39,8 @@ pub struct Manager {
     pub camera_manager: Arc<RwLock<CameraManager>>,
     pub mesh_manager: Arc<RwLock<MeshManager>>,
     pub font_manager: Arc<RwLock<FontManager>>,
+    pub model_manager: Arc<RwLock<ModelManager>>,
+    pub gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
@@ -46,6 +50,7 @@ impl Manager {
         let camera_manager = Arc::new(RwLock::new(CameraManager::new()));
         let mesh_manager = Arc::new(RwLock::new(MeshManager::new()));
         let font_manager = Arc::new(RwLock::new(FontManager::new()));
+        let model_manager = Arc::new(RwLock::new(ModelManager::new()));
         Manager {
             engine: None,
             scenes: BTreeMap::new(),
@@ -55,6 +60,8 @@ impl Manager {
             camera_manager,
             mesh_manager,
             font_manager,
+            model_manager,
+            gx3d_table: None,
         }
     }
 

@@ -1,6 +1,7 @@
 use super::super::core::object::{Base as ObjectBase, Object as CoreObject};
 use super::super::core::types::Id;
 use super::super::system::file::File;
+use super::gx3d::Table as Gx3dTable;
 use rusttype::Font as TypeFont;
 use std::collections::BTreeMap;
 use std::default::Default;
@@ -15,6 +16,7 @@ pub struct Manager {
     pub fonts: BTreeMap<Id, Weak<RwLock<Font>>>,
     pub name_to_id: BTreeMap<String, Id>,
     pub default: Arc<RwLock<Base>>,
+    pub gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
@@ -23,6 +25,7 @@ impl Manager {
             fonts: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
             default: Arc::new(RwLock::new(Base::default())),
+            gx3d_table: None,
         }
     }
 

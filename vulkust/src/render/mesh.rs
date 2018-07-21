@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::mem::transmute;
 use std::sync::{Arc, RwLock, Weak};
+use super::gx3d::Table as Gx3dTable;
 // use super::material::Material;
 
 use gltf;
@@ -27,6 +28,7 @@ pub trait DefaultMesh: Mesh {
 pub struct Manager {
     pub meshes: BTreeMap<Id, Weak<RwLock<Mesh>>>,
     pub name_to_id: BTreeMap<String, Id>,
+    pub gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
@@ -34,6 +36,7 @@ impl Manager {
         Manager {
             meshes: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
+            gx3d_table: None,
         }
     }
 

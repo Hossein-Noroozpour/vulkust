@@ -10,7 +10,7 @@ pub mod gx3d;
 pub mod image;
 pub mod light;
 // pub mod material;
-// pub mod model;
+pub mod model;
 pub mod mesh;
 pub mod object;
 // pub mod pipeline;

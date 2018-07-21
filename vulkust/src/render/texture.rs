@@ -4,6 +4,7 @@ use super::engine::Engine;
 use super::image::View as ImageView;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
+use super::gx3d::Table as Gx3dTable;
 
 use gltf;
 
@@ -18,6 +19,7 @@ pub trait Loadable: Sized {
 pub struct Manager {
     textures: BTreeMap<Id, Weak<RwLock<Texture>>>,
     name_to_id: BTreeMap<String, Id>,
+    pub gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
@@ -25,6 +27,7 @@ impl Manager {
         Manager {
             textures: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
+            gx3d_table: None,
         }
     }
 

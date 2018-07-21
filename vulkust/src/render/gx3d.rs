@@ -1,22 +1,25 @@
+use super::super::core::types::{Id, Offset};
+use super::super::core::object::NEXT_ID;
 use super::super::system::file::File;
 use super::scene::Manager as SceneManager;
 use std::io::{BufReader, Read};
 use std::mem::{size_of, transmute};
 use std::ptr::copy;
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, RwLock};
+use std::collections::BTreeMap;
 
-pub struct Gx3D {
+pub struct Gx3DReader {
     file: BufReader<File>,
     different_endianness: bool,
 }
 
 pub trait Readable: 'static + Sized + Default + Clone {}
 
-impl Readable for u8 {}
 impl Readable for u32 {}
 impl Readable for u64 {}
 
-impl Gx3D {
+impl Gx3DReader {
     pub fn new() -> Option<Self> {
         let file = File::open("data.gx3d");
         if file.is_err() {
@@ -30,7 +33,7 @@ impl Gx3D {
         let different_endianness = endian[0] == 0;
         #[cfg(target_endian = "big")]
         let different_endianness = endian[0] != 0;
-        Some(Gx3D {
+        Some(Gx3DReader {
             file,
             different_endianness,
         })
@@ -115,4 +118,50 @@ impl Gx3D {
     }
 }
 
-pub fn import(scenemgr: &Arc<RwLock<SceneManager>>) {}
+pub struct Table {
+    pub reader: Gx3DReader,
+    pub id_offset: BTreeMap<Id, Offset>,
+}
+
+impl Table {
+    pub fn new(reader: &mut Gx3DReader) -> Self {
+        let count = reader.read::<u64>() << 1;
+        let mut id_offset = BTreeMap::new();
+        for _ in 0..count {
+            id_offset.insert(reader.read::<Id>(), reader.read::<Offset>());
+        }
+        Table {
+            reader: vxunwrap_o!(Gx3DReader::new()),
+            id_offset,
+        }
+    }
+}
+
+pub fn import(scenemgr: &Arc<RwLock<SceneManager>>) {
+    let main_file = Gx3DReader::new();
+    if main_file.is_none() {
+        return;
+    }
+    let mut main_file = vxunwrap_o!(main_file);
+    let last_id: Id = main_file.read();
+    NEXT_ID.store(last_id, Ordering::Relaxed);
+    let mut scnmgr = vxresult!(scenemgr.write());
+    macro_rules! set_table {
+        ($mgr:ident) => {{
+            let mut mgr = vxresult!(scnmgr.$mgr.write());
+            let table = Table::new(&mut main_file);
+            mgr.gx3d_table = Some(table);
+        }}
+    }
+    set_table!(camera_manager);
+    let _audio_table = Table::new(&mut main_file);
+    set_table!(light_manager);
+    set_table!(texture_manager);
+    set_table!(font_manager);
+    set_table!(mesh_manager);
+    set_table!(model_manager);
+    let _skybox_table = Table::new(&mut main_file);
+    let _constraint_table = Table::new(&mut main_file);
+    let table = Table::new(&mut main_file);
+    scnmgr.gx3d_table = Some(table);
+}
