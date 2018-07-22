@@ -1,6 +1,7 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::engine::Engine;
+use super::gx3d::Table as Gx3dTable;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use gltf;
 use math;
@@ -9,7 +10,6 @@ use std::convert::From;
 #[cfg(debug_assertions)]
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock, Weak};
-use super::gx3d::Table as Gx3dTable;
 
 #[cfg(debug_assertions)]
 pub trait Camera: Object + Transferable + Debug {

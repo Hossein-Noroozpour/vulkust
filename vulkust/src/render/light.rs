@@ -4,9 +4,9 @@ use super::camera::Orthographic;
 use super::engine::Engine;
 use super::object::Object;
 // use math::{Matrix4, Vector3};
+use super::gx3d::Table as Gx3dTable;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
-use super::gx3d::Table as Gx3dTable;
 
 pub trait Light: CoreObject + Object {
     // fn set_cascaded_frustums()

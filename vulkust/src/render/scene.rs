@@ -31,7 +31,7 @@ pub trait Scene: Object {
 
 pub trait Loadable: Scene + Sized {
     fn new_with_gltf(&Arc<RwLock<Engine>>, &gltf::Scene, &[u8]) -> Self;
-    fn new_with_gx3d(&Arc<RwLock<Engine>>, &mut Gx3DReader) -> Self;
+    fn new_with_gx3d(&Arc<RwLock<Engine>>, &mut Gx3DReader, Id) -> Self;
 }
 
 pub trait DefaultScene: Scene + Sized {
@@ -110,6 +110,11 @@ impl Manager {
     }
 
     pub fn load_gx3d(&mut self, id: Id) -> Arc<RwLock<Scene>> {
+        if let Some(scene) = self.scenes.get(&id) {
+            if let Some(scene) = scene.upgrade() {
+                return scene;
+            }
+        }
         let mut table = vxunwrap!(self.gx3d_table);
         table.goto(id);
         let mut reader: &mut Gx3DReader = &mut table.reader;
@@ -117,18 +122,17 @@ impl Manager {
         let scene: Arc<RwLock<Scene>> = if type_id == TypeId::GAME as CoreTypeId {
             let engine = vxunwrap!(self.engine);
             let engine = vxunwrap_o!(engine.upgrade());
-            Arc::new(RwLock::new(Game::new_with_gx3d(&engine, &mut reader)))
+            Arc::new(RwLock::new(Game::new_with_gx3d(&engine, &mut reader, id)))
         } else if type_id == TypeId::UI as CoreTypeId {
             let engine = vxunwrap!(self.engine);
             let engine = vxunwrap_o!(engine.upgrade());
-            Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, &mut reader)))
+            Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, &mut reader, id)))
         } else {
             vxunexpected!();
         };
         self.add_scene(&scene);
         return scene;
     }
-
 
     pub fn create<S>(&mut self) -> Arc<RwLock<S>>
     where
@@ -203,15 +207,15 @@ impl Manager {
 
 #[repr(C)]
 pub struct Uniform {
-    pub vp: math::Matrix4<f32>,
+    pub view_projection: math::Matrix4<f32>,
 }
 
 impl Uniform {
     pub fn new() -> Self {
-        let vp = math::Matrix4::new(
+        let view_projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
-        Uniform { vp }
+        Uniform { view_projection }
     }
 }
 
@@ -220,7 +224,10 @@ pub struct Base {
     pub uniform: Uniform,
     pub cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
     pub active_camera: Option<Weak<RwLock<Camera>>>,
-    pub meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
+    pub lights: BTreeMap<Id, Arc<RwLock<Light>>>,
+    pub models: BTreeMap<Id, Arc<RwLock<Model>>>,
+    // pub skybox: Option<Arc<RwLock<Skybox>>>, // todo, maybe its not gonna be needed in GI PBR
+    // pub constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
 }
 
 impl Base {
@@ -236,60 +243,68 @@ impl Base {
         };
         let obj_base = BaseObject::new();
         let uniform = Uniform::new();
-        let cameras = BTreeMap::new();
-        let active_camera = None;
-        let meshes = BTreeMap::new();
-        let mut myself = Base {
+        let mut cameras = BTreeMap::new();
+        let mut active_camera = None;
+        let mut meshes = BTreeMap::new();
+        for node in scene.nodes() {
+            if node.camera().is_some() {
+                let camera = vxresult!(camera_manager.write()).load_gltf(&node, engine);
+                let id = vxresult!(camera.read()).get_id();
+                let w = Arc::downgrade(&camera);
+                cameras.insert(id, camera);
+                active_camera = Some(w);
+            } else if let Some(gltf_mesh) = node.mesh() {
+                let mesh = MeshBase::new_with_gltf(engine, gltf_mesh, &texture_manager, data);
+                let id = mesh.get_id();
+                let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
+                meshes.insert(id, mesh);
+            }
+        }
+        Base {
             obj_base,
             uniform,
             cameras,
             active_camera,
             meshes,
-        };
-        for node in scene.nodes() {
-            myself.import_gltf_node(
-                &node,
-                engine,
-                &texture_manager,
-                &camera_manager,
-                &light_manager,
-                data,
-            );
         }
-        return myself;
     }
 
-    pub fn import_gltf_node(
-        &mut self,
-        node: &gltf::scene::Node,
-        engine: &Arc<RwLock<Engine>>,
-        texture_manager: &Arc<RwLock<TextureManager>>,
-        camera_manager: &Arc<RwLock<CameraManager>>,
-        light_manager: &Arc<RwLock<LightManager>>,
-        data: &[u8],
-    ) {
-        if node.camera().is_some() {
-            let camera = vxresult!(camera_manager.write()).load_gltf(node, engine);
-            let id = vxresult!(camera.read()).get_id();
-            let w = Arc::downgrade(&camera);
-            self.cameras.insert(id, camera);
-            self.active_camera = Some(w);
-        } else if let Some(gltf_mesh) = node.mesh() {
-            let mesh = MeshBase::new_with_gltf(engine, gltf_mesh, texture_manager, data);
-            let id = mesh.get_id();
-            let mesh = Arc::new(RwLock::new(mesh));
-            self.meshes.insert(id, mesh);
+    pub fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+        let cameras_ids = reader.read_array::<Id>();
+        let _audios_ids = reader.read_array::<Id>(); // todo
+        let lights_ids = reader.read_array::<Id>();
+        let models_ids = reader.read_array::<Id>();
+        if reader.read_bool() {
+            let _skybox_id = reader.read();
+        }
+        let _constraits_ids = reader.read_array::<Id>(); // todo
+        if reader.read_bool() {
+            vxunimplemented!(); // todo
+        }
+        let (texture_manager, camera_manager, light_manager) = {
+            let engine = vxresult!(engine.read());
+            let manager = vxresult!(engine.scene_manager.read());
+            (
+                &manager.texture_manager,
+                &manager.camera_manager,
+                &manager.light_manager,
+            )
+        };
+        let mut cameras = BTreeMap::new();
+        for id in cameras_ids {
+            cameras.insert(id, camera_manager.load_gx3d(engine, id));
+        }
+        let active_camera = if cameras_ids.len() > 0 {
+            Some(Arc::downgrade(
+                &camera_manager.load_gx3d(engine, cameras_ids[0]),
+            ))
         } else {
-            for node in node.children() {
-                self.import_gltf_node(
-                    &node,
-                    engine,
-                    texture_manager,
-                    camera_manager,
-                    light_manager,
-                    data,
-                );
-            }
+            None
+        };
+        Base {
+            obj_base: BaseObject::new_with_id(my_id),
+            cameras,
+            active_camera,
         }
     }
 }
@@ -429,6 +444,8 @@ impl Loadable for Game {
         let base = Base::new_with_gltf(engine, scene, data);
         Game { base }
     }
+
+    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {}
 }
 
 pub struct Ui {

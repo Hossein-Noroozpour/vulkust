@@ -1,10 +1,10 @@
 use super::super::core::object::{Base as ObjectBase, Object as CoreObject};
 use super::super::core::types::Id;
 use super::engine::Engine;
+use super::gx3d::Table as Gx3dTable;
 use super::image::View as ImageView;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
-use super::gx3d::Table as Gx3dTable;
 
 use gltf;
 

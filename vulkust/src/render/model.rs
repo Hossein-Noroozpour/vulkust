@@ -1,7 +1,7 @@
-use std::collections::BTreeMap;
-use std::sync::{Arc, RwLock};
 use super::super::core::types::Id;
 use super::gx3d::Table as Gx3dTable;
+use std::collections::BTreeMap;
+use std::sync::{Arc, RwLock};
 
 pub trait Model {}
 

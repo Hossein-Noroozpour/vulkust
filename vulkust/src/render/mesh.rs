@@ -3,6 +3,7 @@ use super::super::core::types::Id;
 use super::buffer::{DynamicBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
+use super::gx3d::Table as Gx3dTable;
 use super::object::{Base as ObjectBase, Object};
 use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture, Texture2D};
@@ -10,7 +11,6 @@ use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::mem::transmute;
 use std::sync::{Arc, RwLock, Weak};
-use super::gx3d::Table as Gx3dTable;
 // use super::material::Material;
 
 use gltf;

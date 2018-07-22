@@ -1,13 +1,13 @@
-use super::super::core::types::{Id, Offset, TypeId};
 use super::super::core::object::NEXT_ID;
+use super::super::core::types::{Id, Offset, TypeId};
 use super::super::system::file::File;
 use super::scene::Manager as SceneManager;
+use std::collections::BTreeMap;
 use std::io::{BufReader, Read, Seek, SeekFrom};
 use std::mem::{size_of, transmute};
 use std::ptr::copy;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, RwLock};
-use std::collections::BTreeMap;
 
 pub struct Gx3DReader {
     file: BufReader<File>,
@@ -50,6 +50,10 @@ impl Gx3DReader {
         #[cfg(not(debug_assertions))]
         vxresult!(self.file.read(&mut d));
         return d[0];
+    }
+
+    pub fn read_bool(&mut self) -> bool {
+        self.read_u8() != 0
     }
 
     pub fn read_type_id(&mut self) -> TypeId {
@@ -168,7 +172,7 @@ impl Table {
     pub fn goto(&mut self, id: Id) {
         let off = vxunwrap_o!(self.id_offset.get(&id));
         self.reader.seek(*off);
-    } 
+    }
 }
 
 pub fn import(scenemgr: &Arc<RwLock<SceneManager>>) {
@@ -185,7 +189,7 @@ pub fn import(scenemgr: &Arc<RwLock<SceneManager>>) {
             let mut mgr = vxresult!(scnmgr.$mgr.write());
             let table = Table::new(&mut main_file);
             mgr.gx3d_table = Some(table);
-        }}
+        }};
     }
     set_table!(camera_manager);
     let _audio_table = Table::new(&mut main_file);
