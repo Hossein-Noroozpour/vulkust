@@ -1,5 +1,7 @@
 use super::super::core::types::Id;
+use super::super::core::object::Object as CoreObject;
 use super::gx3d::Table as Gx3dTable;
+use super::object::{Loadable, Object};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 
@@ -20,3 +22,22 @@ impl Manager {
         }
     }
 }
+
+pub struct Base {
+
+}
+
+impl Base {
+}
+
+impl CoreObject for Base {
+    
+}
+
+impl Object for Base {}
+
+impl Loadable for Base {
+    
+}
+
+impl Model for Base {}

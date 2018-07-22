@@ -16,6 +16,7 @@ pub struct Gx3DReader {
 
 pub trait Readable: 'static + Sized + Default + Clone {}
 
+impl Readable for f32 {}
 impl Readable for u32 {}
 impl Readable for u64 {}
 

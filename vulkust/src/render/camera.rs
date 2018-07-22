@@ -1,7 +1,7 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::engine::Engine;
-use super::gx3d::Table as Gx3dTable;
+use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use gltf;
 use math;
@@ -25,6 +25,13 @@ pub trait Camera: Object + Transferable {
 
 pub trait DefaultCamera: Camera {
     fn default(&Arc<RwLock<Engine>>) -> Self;
+}
+
+#[cfg_attr(debug_assertions, derive(Debug))]
+#[repr(u8)]
+pub enum TypeId {
+    Perspective = 1,
+    Orthographic = 2,
 }
 
 pub struct Manager {
@@ -70,6 +77,27 @@ impl Manager {
         camera
     }
 
+    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Camera>> {
+        if let Some(camera) = self.cameras.get(&id) {
+            if let Some(camera) = camera.upgrade() {
+                return camera;
+            }
+        }
+        let mut table = vxunwrap!(self.gx3d_table);
+        table.goto(id);
+        let mut reader: &mut Gx3DReader = &mut table.reader;
+        let type_id = reader.read_type_id();
+        let camera: Arc<RwLock<Camera>> = if type_id == TypeId::Perspective as u8 {
+            Arc::new(RwLock::new(Perspective::new_with_gx3d(engine, reader, id)))
+        } else if type_id == TypeId::Orthographic as u8 {
+            Arc::new(RwLock::new(Orthographic::new_with_gx3d(engine, reader, id)))
+        } else {
+            vxunexpected!();
+        };
+        self.cameras.insert(id, Arc::downgrade(&camera));
+        camera
+    }
+
     pub fn create<C>(&mut self, eng: &Arc<RwLock<Engine>>) -> Arc<RwLock<C>>
     where
         C: 'static + DefaultCamera,
@@ -105,6 +133,14 @@ pub struct Base {
 
 impl Base {
     pub fn new(eng: &Arc<RwLock<Engine>>) -> Self {
+        Self::new_with_obj_base(eng, ObjectBase::new())
+    }
+
+    pub fn new_with_id(eng: &Arc<RwLock<Engine>>, id: Id) -> Self {
+        Self::new_with_obj_base(eng, ObjectBase::new_with_id(id))
+    }
+
+    pub fn new_with_obj_base(eng: &Arc<RwLock<Engine>>, obj_base: ObjectBase) -> Self {
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
@@ -112,7 +148,7 @@ impl Base {
         let eng = vxunwrap_o!(eng.os_app.upgrade());
         let os_app = vxresult!(eng.read());
         Base {
-            obj_base: ObjectBase::new(),
+            obj_base,
             near: 0.0,
             far: 1.0,
             aspect_ratio: os_app.get_window_aspect_ratio(),
@@ -178,50 +214,52 @@ impl Transferable for Base {
         let rotation = math::Matrix4::from(q);
         let translate = math::Matrix4::from_translation(-self.location);
         self.direction = rotation;
-        self.view = rotation * self.view * translate;
+        self.view = rotation * translate;
         self.update_view_projection();
     }
 
     fn set_location(&mut self, l: &math::Vector3<f32>) {
         self.location = *l;
+        let translate = math::Matrix4::from_translation(-*l);
+        self.view = self.direction * translate;
+        self.update_view_projection();
     }
 }
 
 impl Loadable for Base {
     fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
-        let eng = vxresult!(eng.read());
-        let os_app = vxunwrap_o!(eng.os_app.upgrade());
-        let aspect_ratio = vxresult!(os_app.read()).get_window_aspect_ratio();
-        let identity = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-        );
-        let obj_base = ObjectBase::new();
-        let c = vxunwrap_o!(node.camera());
-        let (near, far) = match c.projection() {
+        let (near, far) = match vxunwrap_o!(node.camera()).projection() {
             gltf::camera::Projection::Perspective(p) => (p.znear(), vxunwrap_o!(p.zfar())),
             gltf::camera::Projection::Orthographic(p) => (p.znear(), p.zfar()),
         };
-        let mut base = Base {
-            obj_base,
-            near,
-            far,
-            aspect_ratio,
-            x: math::Vector3::new(1.0, 0.0, 0.0),
-            y: math::Vector3::new(0.0, 1.0, 0.0),
-            z: math::Vector3::new(0.0, 0.0, -1.0),
-            location: math::Vector3::new(0.0, 0.0, 0.0),
-            direction: identity,
-            view: identity,
-            projection: identity,
-            view_projection: identity,
-        };
-        let decomposed = node.transform().decomposed();
-        let (l, r, _) = decomposed;
-        let location = math::Vector3::new(l[0], l[1], l[2]);
-        base.set_location(&location);
+        let mut myself = Base::new(eng);
+        myself.near = near;
+        myself.near = far;
+        let (l, r, _)  = node.transform().decomposed();
+        myself.location = math::Vector3::new(l[0], l[1], l[2]);
         let rotation = math::Quaternion::new(r[3], r[0], r[1], r[2]);
-        base.set_orientation(&rotation);
-        return base;
+        myself.set_orientation(&rotation);
+        return myself;
+    }
+
+    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+        let mut myself = Base::new_with_id(engine, my_id);
+        myself.location = math::Vector3::new(
+            reader.read(),
+            reader.read(),
+            reader.read(),
+        );
+        let r = [
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+        ];
+        myself.near = reader.read();
+        myself.far = reader.read();
+        let r = math::Quaternion::new(r[3], r[0], r[1], r[2]);
+        myself.set_orientation(&r);
+        return myself;
     }
 }
 
@@ -246,7 +284,35 @@ pub struct Perspective {
     pub div_cos_horizontal: f32,
 }
 
-impl Perspective {}
+impl Perspective {
+    pub fn new_with_base(base: Base) -> Self {
+        Perspective {
+            base,
+            fov_vertical: 0.0,
+            fov_horizontal: 0.0,
+            tan_vertical: 0.0,
+            tan_horizontal: 0.0,
+            div_cos_vertical: 0.0,
+            div_cos_horizontal: 0.0,
+        }
+    }
+
+    pub fn set_fov_vertical(&mut self, fov_vertical: f32) {
+        self.fov_vertical = fov_vertical;
+        self.tan_vertical = (fov_vertical / 2.0).tan();
+        self.tan_horizontal = self.tan_vertical * self.base.aspect_ratio;
+        self.fov_horizontal = self.tan_horizontal.atan() * 2.0;
+        self.div_cos_vertical = (self.tan_vertical * self.tan_vertical + 1.0).sqrt();
+        self.div_cos_horizontal = (self.tan_horizontal * self.tan_horizontal + 1.0).sqrt();
+        self.base.projection = math::perspective(
+            math::Rad(fov_vertical),
+            self.base.aspect_ratio,
+            self.base.near,
+            self.base.far,
+        );
+        self.base.update_view_projection();
+    }
+}
 
 impl CoreObject for Perspective {
     fn get_id(&self) -> Id {
@@ -290,29 +356,17 @@ impl Loadable for Perspective {
                 vxlogf!("Type of camera isn't perspective.")
             }
         };
-        let mut base = Base::new_with_gltf(n, eng, data);
-        let fov_vertical = p.yfov();
-        let tan_vertical = (fov_vertical / 2.0).tan();
-        let tan_horizontal = tan_vertical * base.aspect_ratio;
-        let fov_horizontal = tan_horizontal.atan() * 2.0;
-        let div_cos_vertical = (tan_vertical * tan_vertical + 1.0).sqrt();
-        let div_cos_horizontal = (tan_horizontal * tan_horizontal + 1.0).sqrt();
-        base.projection = math::perspective(
-            math::Rad(fov_vertical),
-            base.aspect_ratio,
-            base.near,
-            base.far,
-        );
-        base.update_view_projection();
-        Perspective {
-            base,
-            fov_vertical,
-            fov_horizontal,
-            tan_vertical,
-            tan_horizontal,
-            div_cos_vertical,
-            div_cos_horizontal,
-        }
+        let base = Base::new_with_gltf(n, eng, data);
+        let mut myself = Self::new_with_base(base);
+        myself.set_fov_vertical(p.yfov());
+        return myself;
+    }
+
+    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+        let base = Base::new_with_gx3d(engine, reader, my_id);
+        let mut myself = Self::new_with_base(base);
+        myself.set_fov_vertical(reader.read());
+        return myself;
     }
 }
 
@@ -369,9 +423,13 @@ pub struct Orthographic {
 
 impl Orthographic {
     pub fn new(eng: &Arc<RwLock<Engine>>, size: f32) -> Self {
-        let mut base = Base::new(eng);
+        Self::new_with_base(eng, Base::new(eng), size)
+    }
+
+    pub fn new_with_base(eng: &Arc<RwLock<Engine>>, mut base: Base, size: f32) -> Self {
+        let size = size * 0.5;
         let w = base.aspect_ratio * size;
-        base.projection = math::ortho(-w, w, -1.0, 1.0, base.near, base.far);
+        base.projection = math::ortho(-w, w, -size, size, base.near, base.far);
         base.update_view_projection();
         Orthographic { base, size }
     }
@@ -411,22 +469,19 @@ impl Object for Orthographic {
 
 impl Loadable for Orthographic {
     fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
-        let c = vxunwrap_o!(n.camera());
-        let o = match c.projection() {
+        let o = match vxunwrap_o!(n.camera()).projection() {
             gltf::camera::Projection::Perspective(_) => {
                 vxlogf!("Type of camera isn't perspective.")
             }
             gltf::camera::Projection::Orthographic(o) => o,
         };
-        let mut base = Base::new_with_gltf(n, eng, data);
-        let size = o.ymag();
-        let right = size * base.aspect_ratio * 0.5;
-        let left = -right;
-        let top = size * 0.5;
-        let bottom = -top;
-        base.projection = math::ortho(left, right, bottom, top, base.near, base.far);
-        base.update_view_projection();
-        Orthographic { base, size }
+        let base = Base::new_with_gltf(n, eng, data);
+        Self::new_with_base(eng, base, o.ymag())
+    }
+
+    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+        let base = Base::new_with_gx3d(engine, reader, my_id);
+        Self::new_with_base(engine, base, reader.read())
     }
 }
 

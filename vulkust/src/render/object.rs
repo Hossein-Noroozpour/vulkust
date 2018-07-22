@@ -1,6 +1,7 @@
 use super::super::core::object::{Base as CoreBase, Object as CoreObject};
 use super::super::core::types::Id;
 use super::engine::Engine;
+use super::gx3d::Gx3DReader;
 use gltf;
 use math;
 use std::sync::{Arc, RwLock};
@@ -16,6 +17,7 @@ pub trait Object: CoreObject {
 
 pub trait Loadable: Sized {
     fn new_with_gltf(&gltf::Node, &Arc<RwLock<Engine>>, &[u8]) -> Self;
+    fn new_with_gx3d(&Arc<RwLock<Engine>>, &mut Gx3DReader, Id) -> Self;
 }
 
 pub trait Transferable {
@@ -35,6 +37,17 @@ impl Base {
         let name = None;
         let renderable = true;
         let core_base = CoreBase::new();
+        Base {
+            name,
+            renderable,
+            core_base,
+        }
+    }
+
+    pub fn new_with_id(id: Id) -> Self {
+        let name = None;
+        let renderable = true;
+        let core_base = CoreBase::new_with_id(id);
         Base {
             name,
             renderable,
@@ -74,5 +87,9 @@ impl Object for Base {
 impl Loadable for Base {
     fn new_with_gltf(_: &gltf::Node, _: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
         Self::new()
+    }
+
+    fn new_with_gx3d(_: &Arc<RwLock<Engine>>, _: &mut Gx3DReader, my_id: Id) -> Self {
+        Self::new_with_id(my_id)
     }
 }

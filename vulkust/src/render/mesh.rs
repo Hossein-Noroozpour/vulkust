@@ -286,7 +286,7 @@ impl Object for Base {
 
 impl Mesh for Base {
     fn render(&mut self, scene_uniform: &SceneUniform) {
-        let mvp = scene_uniform.vp;
+        let mvp = scene_uniform.view_projection;
         for geo in &mut self.geometries {
             geo.uniform_buffer
                 .update(unsafe { transmute(mvp.as_ptr()) });
