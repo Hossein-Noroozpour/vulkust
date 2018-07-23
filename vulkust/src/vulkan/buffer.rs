@@ -12,6 +12,7 @@ use std::os::raw::c_void;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Buffer {
     pub memory_offset: isize,
     pub info: alc::Container,
@@ -75,11 +76,13 @@ impl Allocator for Buffer {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Location {
     CPU,
     GPU,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct RootBuffer {
     pub logical_device: Arc<LogicalDevice>,
     pub memory: Arc<RwLock<Memory>>,
@@ -159,6 +162,7 @@ impl Drop for RootBuffer {
 }
 
 #[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct StaticBuffer {
     pub buffer: Arc<RwLock<Buffer>>,
 }
@@ -170,6 +174,7 @@ impl StaticBuffer {
 }
 
 #[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct DynamicBuffer {
     pub buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
     pub frame_number: Arc<RwLock<u32>>,
@@ -207,6 +212,7 @@ impl DynamicBuffer {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub alignment: isize,
     pub cpu_buffer: RootBuffer,

@@ -3,6 +3,7 @@ pub mod allocate;
 pub mod application;
 pub mod config;
 pub mod constants;
+pub mod debug;
 pub mod event;
 pub mod object;
 pub mod string;

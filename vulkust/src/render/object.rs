@@ -71,7 +71,14 @@ impl Object for Base {
         self.name = Some(name.to_string());
     }
 
-    fn render(&self) {}
+    fn render(&self) {
+        #[cfg(debug_assertions)]
+        {
+            if !self.renderable {
+                vxunexpected!();
+            }
+        }
+    }
 
     fn disable_rendering(&mut self) {
         self.renderable = false;

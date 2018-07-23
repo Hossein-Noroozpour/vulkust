@@ -3,6 +3,8 @@ use super::super::vulkan as vk;
 use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;
+
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Semaphore {
     pub logical_device: Arc<LogicalDevice>,
     pub vk_data: vk::VkSemaphore,

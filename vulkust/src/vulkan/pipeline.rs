@@ -7,6 +7,7 @@ use std::ffi::CString;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Layout {
     pub descriptor_set_layout: Arc<DescriptorSetLayout>,
     pub vk_data: vk::VkPipelineLayout,
@@ -49,6 +50,7 @@ impl Drop for Layout {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Cache {
     pub logical_device: Arc<LogicalDevice>,
     pub vk_data: vk::VkPipelineCache,
@@ -81,6 +83,7 @@ impl Drop for Cache {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Pipeline {
     pub cache: Arc<Cache>,
     pub layout: Layout,
@@ -235,6 +238,7 @@ impl Drop for Pipeline {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub cache: Arc<Cache>,
     pub main_pipeline: Arc<Pipeline>,

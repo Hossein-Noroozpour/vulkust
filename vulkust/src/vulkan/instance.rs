@@ -70,6 +70,7 @@ mod debug {
         0u32
     }
 
+    #[derive(Debug)]
     pub struct Debugger {
         vk_data: Option<vk::VkDebugReportCallbackEXT>,
     }
@@ -269,6 +270,7 @@ pub fn contain_extension(s: &str) -> bool {
     return false;
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Instance {
     pub vk_data: vk::VkInstance,
     debugger: debug::Debugger,

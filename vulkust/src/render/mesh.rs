@@ -8,6 +8,7 @@ use super::object::{Base as ObjectBase, Object};
 use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture, Texture2D};
 use std::collections::BTreeMap;
+use super::super::core::debug::Debug;
 use std::mem::size_of;
 use std::mem::transmute;
 use std::sync::{Arc, RwLock, Weak};
@@ -18,13 +19,13 @@ use math;
 use math::Matrix;
 
 pub trait Mesh: Object {
-    fn render(&mut self, _: &SceneUniform); // todo scene uniform is gonna move and this function is in the object
 }
 
 pub trait DefaultMesh: Mesh {
     fn default(&Arc<RwLock<Engine>>) -> Self;
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub meshes: BTreeMap<Id, Weak<RwLock<Mesh>>>,
     pub name_to_id: BTreeMap<String, Id>,
@@ -58,10 +59,12 @@ impl Manager {
 }
 
 #[repr(C)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
     pub mvp: math::Matrix4<f32>,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Geometry {
     pub texture: Arc<RwLock<Texture>>,
     pub descriptor_set: Arc<DescriptorSet>,
@@ -101,6 +104,7 @@ impl Geometry {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Base {
     pub obj_base: ObjectBase,
     pub engine: Arc<RwLock<Engine>>,
@@ -285,22 +289,22 @@ impl Object for Base {
 }
 
 impl Mesh for Base {
-    fn render(&mut self, scene_uniform: &SceneUniform) {
-        let mvp = scene_uniform.view_projection;
-        for geo in &mut self.geometries {
-            geo.uniform_buffer
-                .update(unsafe { transmute(mvp.as_ptr()) });
-            let eng = vxresult!(self.engine.read());
-            let eng = vxresult!(eng.gapi_engine.read());
-            eng.render_main_pipeline(
-                &geo.descriptor_set,
-                &geo.uniform_buffer,
-                &geo.vertex_buffer,
-                &geo.index_buffer,
-                geo.indices_count,
-            );
-        }
-    }
+//     fn render(&mut self, scene_uniform: &SceneUniform) {
+//         let mvp = scene_uniform.view_projection;
+//         for geo in &mut self.geometries {
+//             geo.uniform_buffer
+//                 .update(unsafe { transmute(mvp.as_ptr()) });
+//             let eng = vxresult!(self.engine.read());
+//             let eng = vxresult!(eng.gapi_engine.read());
+//             eng.render_main_pipeline(
+//                 &geo.descriptor_set,
+//                 &geo.uniform_buffer,
+//                 &geo.vertex_buffer,
+//                 &geo.index_buffer,
+//                 geo.indices_count,
+//             );
+//         }
+//     }
 }
 
 impl DefaultMesh for Base {

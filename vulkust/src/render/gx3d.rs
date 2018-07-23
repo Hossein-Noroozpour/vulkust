@@ -9,6 +9,7 @@ use std::ptr::copy;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, RwLock};
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Gx3DReader {
     file: BufReader<File>,
     different_endianness: bool,
@@ -152,6 +153,7 @@ impl Gx3DReader {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Table {
     pub reader: Gx3DReader,
     pub id_offset: BTreeMap<Id, Offset>,

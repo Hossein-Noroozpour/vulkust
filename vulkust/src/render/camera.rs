@@ -7,17 +7,8 @@ use gltf;
 use math;
 use std::collections::BTreeMap;
 use std::convert::From;
-#[cfg(debug_assertions)]
-use std::fmt::Debug;
 use std::sync::{Arc, RwLock, Weak};
 
-#[cfg(debug_assertions)]
-pub trait Camera: Object + Transferable + Debug {
-    fn get_view_projection(&self) -> &math::Matrix4<f32>;
-    fn get_cascaded_shadow_points(&self, _sections_count: usize) -> Vec<math::Vector3<f32>>;
-}
-
-#[cfg(not(debug_assertions))]
 pub trait Camera: Object + Transferable {
     fn get_view_projection(&self) -> &math::Matrix4<f32>;
     fn get_cascaded_shadow_points(&self, _sections_count: usize) -> Vec<math::Vector3<f32>>;
@@ -34,6 +25,7 @@ pub enum TypeId {
     Orthographic = 2,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub cameras: BTreeMap<Id, Weak<RwLock<Camera>>>,
     pub name_to_id: BTreeMap<String, Id>,

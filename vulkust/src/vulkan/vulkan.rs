@@ -3,6 +3,8 @@
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
+#[cfg(debug_assertions)]
+use std::fmt;
 use std::default::Default;
 use std::mem::{transmute, zeroed};
 use std::os::raw::{
@@ -1755,6 +1757,13 @@ pub struct VkPhysicalDeviceProperties {
     pub pipelineCacheUUID: [uint8_t; 16usize],
     pub limits: VkPhysicalDeviceLimits,
     pub sparseProperties: VkPhysicalDeviceSparseProperties,
+}
+
+#[cfg(debug_assertions)]
+impl fmt::Debug for VkPhysicalDeviceProperties {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "")
+    }
 }
 
 impl Clone for VkPhysicalDeviceProperties {

@@ -38,6 +38,7 @@ pub trait DefaultScene: Scene + Sized {
     fn default(&Arc<RwLock<Engine>>) -> Self;
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub engine: Option<Weak<RwLock<Engine>>>,
     pub scenes: BTreeMap<Id, Weak<RwLock<Scene>>>,
@@ -206,6 +207,7 @@ impl Manager {
 }
 
 #[repr(C)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
     pub view_projection: math::Matrix4<f32>,
 }
@@ -219,6 +221,7 @@ impl Uniform {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Base {
     pub obj_base: ObjectBase,
     pub uniform: Uniform,
@@ -476,6 +479,7 @@ impl DefaultScene for Base {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Game {
     pub base: Base,
 }
@@ -534,6 +538,7 @@ impl Loadable for Game {
     fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {}
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Ui {
     pub base: Base,
 }

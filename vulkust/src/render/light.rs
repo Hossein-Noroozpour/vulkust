@@ -8,8 +8,8 @@ use super::gx3d::Table as Gx3dTable;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 
-pub trait Light: CoreObject + Object {
-    // fn set_cascaded_frustums()
+pub trait Light: Object {
+    // fn set_cascaded_frustums() // todo
 }
 
 pub trait DefaultLighting {
@@ -66,6 +66,7 @@ impl DefaultLighting for Sun {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub lights: BTreeMap<Id, Arc<RwLock<Light>>>,
     pub name_to_id: BTreeMap<String, Id>,

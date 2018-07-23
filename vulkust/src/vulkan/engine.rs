@@ -30,6 +30,7 @@ use super::descriptor::Set as DescriptorSet;
 //     1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
 // ];
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Engine {
     pub os_app: Arc<RwLock<OsApp>>,
     pub instance: Arc<Instance>,

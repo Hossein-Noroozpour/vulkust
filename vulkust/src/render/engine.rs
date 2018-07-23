@@ -1,4 +1,4 @@
-use super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::core::application::Application as CoreAppTrait;
 use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
 use super::camera::DefaultCamera;
@@ -11,6 +11,7 @@ use std::sync::{Arc, RwLock, Weak};
 
 pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Engine {
     pub myself: Option<Weak<RwLock<Engine>>>,
     pub config: Arc<RwLock<Config>>,

@@ -1,4 +1,4 @@
-use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::apple;
 use std::mem::transmute;

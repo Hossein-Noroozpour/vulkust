@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate vulkust;
 
-use vulkust::core::application::ApplicationTrait as CoreAppTrait;
+use vulkust::core::application::Application as CoreAppTrait;
 use vulkust::core::event::Event;
 
 use std::sync::{Arc, RwLock};

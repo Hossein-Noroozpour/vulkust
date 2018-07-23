@@ -1,4 +1,4 @@
-use vulkust::core::application::ApplicationTrait as CoreAppTrait;
+use vulkust::core::application::Application as CoreAppTrait;
 use vulkust::core::event::Event;
 use vulkust::render::camera::Orthographic;
 use vulkust::render::engine::Engine as Renderer;

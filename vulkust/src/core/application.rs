@@ -2,9 +2,10 @@ use super::super::render::engine::Engine as RenderEngine;
 use super::super::system::os::application::Application as OsApp;
 use super::config::Configurations;
 use super::event::Event;
+use super::debug::Debug;
 use std::sync::{Arc, RwLock};
 
-pub trait ApplicationTrait {
+pub trait Application: Debug {
     fn set_os_app(&mut self, _app: Arc<RwLock<OsApp>>) {}
     fn set_renderer(&mut self, _renderer: Arc<RwLock<RenderEngine>>) {}
     fn initialize(&mut self) {}

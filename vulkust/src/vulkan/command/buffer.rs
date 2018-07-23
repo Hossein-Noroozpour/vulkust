@@ -7,6 +7,7 @@ use super::pool::Pool;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Buffer {
     pub pool: Arc<Pool>,
     pub vk_data: vk::VkCommandBuffer,

@@ -1,4 +1,5 @@
 use std::sync::{Arc, RwLock, Weak};
+use super::debug::Debug;
 
 pub fn align(size: isize, alignment: isize) -> isize {
     let tmp = size / alignment;
@@ -9,19 +10,20 @@ pub fn align(size: isize, alignment: isize) -> isize {
     aligned_size + alignment
 }
 
-pub trait Object {
+pub trait Object: Debug {
     fn get_size(&self) -> isize;
     fn get_offset(&self) -> isize;
     fn get_offset_alignment(&self) -> isize;
     fn place(&mut self, offset: isize);
 }
 
-pub trait Allocator {
+pub trait Allocator: Debug {
     fn increase_size(&mut self, size: isize);
     fn allocate(&mut self, obj: &Arc<RwLock<Object>>);
     fn clean(&mut self);
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Memory {
     pub offset: isize,
     pub end: isize,
@@ -65,6 +67,7 @@ impl Object for Memory {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Container {
     pub base: Memory,
     pub free_offset: isize,

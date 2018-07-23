@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Memory {
     pub info: alc::Memory,
     pub size: vk::VkDeviceSize,
@@ -53,6 +54,7 @@ impl Object for Memory {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct RootMemory {
     pub alignment: isize,
     pub logical_device: Arc<LogicalDevice>,
@@ -122,11 +124,13 @@ impl Drop for RootMemory {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Location {
     CPU,
     GPU,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub logical_device: Arc<LogicalDevice>,
     itself: Option<Weak<RwLock<Manager>>>,

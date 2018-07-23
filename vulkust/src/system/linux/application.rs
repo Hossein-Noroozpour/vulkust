@@ -1,4 +1,4 @@
-use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
 use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
 use super::super::super::core::types::Real;
@@ -15,6 +15,7 @@ use std::os::raw::{c_int, c_uint};
 use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Application {
     pub renderer: Option<Arc<RwLock<RenderEngine>>>,
     pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,

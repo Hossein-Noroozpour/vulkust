@@ -11,6 +11,7 @@ use rusttype::{point, Scale};
 
 pub trait Widget: Mesh {}
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Base {
     pub mesh_base: MeshBase,
     pub sensitive: bool,
@@ -49,11 +50,7 @@ impl Object for Base {
     }
 }
 
-impl Mesh for Base {
-    fn render(&mut self, su: &SceneUniform) {
-        Mesh::render(&mut self.mesh_base, su);
-    }
-}
+impl Mesh for Base {}
 
 impl DefaultMesh for Base {
     fn default(engine: &Arc<RwLock<Engine>>) -> Self {
@@ -66,6 +63,7 @@ impl DefaultMesh for Base {
 
 impl Widget for Base {}
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Label {
     pub base: Base,
     pub background_color: [f32; 4],
@@ -216,11 +214,7 @@ impl Object for Label {
     }
 }
 
-impl Mesh for Label {
-    fn render(&mut self, su: &SceneUniform) {
-        Mesh::render(&mut self.base, su);
-    }
-}
+impl Mesh for Label { }
 
 impl DefaultMesh for Label {
     fn default(engine: &Arc<RwLock<Engine>>) -> Self {

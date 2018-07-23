@@ -4,6 +4,7 @@ use super::engine::Engine;
 use super::gx3d::Table as Gx3dTable;
 use super::image::View as ImageView;
 use std::collections::BTreeMap;
+use std::fmt::Debug;
 use std::sync::{Arc, RwLock, Weak};
 
 use gltf;
@@ -16,6 +17,7 @@ pub trait Loadable: Sized {
     fn new_with_gltf(&gltf::Texture, &Arc<RwLock<Engine>>, &[u8]) -> Self;
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     textures: BTreeMap<Id, Weak<RwLock<Texture>>>,
     name_to_id: BTreeMap<String, Id>,
@@ -75,6 +77,7 @@ impl Manager {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Texture2D {
     pub obj_base: ObjectBase,
     pub name: Option<String>,

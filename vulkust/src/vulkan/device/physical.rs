@@ -4,6 +4,7 @@ use std::cmp::max;
 use std::ptr::null_mut;
 use std::sync::Arc;
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Physical {
     pub surface: Arc<Surface>,
     pub graphics_queue_node_index: u32,

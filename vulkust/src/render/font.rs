@@ -7,11 +7,13 @@ use std::collections::BTreeMap;
 use std::default::Default;
 use std::io::Read;
 use std::sync::{Arc, RwLock, Weak};
+use std::fmt;
 
 pub trait Font: CoreObject {
     fn get_font(&self) -> &TypeFont;
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub fonts: BTreeMap<Id, Weak<RwLock<Font>>>,
     pub name_to_id: BTreeMap<String, Id>,
@@ -52,6 +54,13 @@ pub struct Base {
     pub name: Option<String>,
     pub font: TypeFont<'static>,
 }
+
+impl fmt::Debug for Base {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Base {{ obj_base: {:?}, name: {:?} }}", self.obj_base, self.name)
+    }
+}
+
 
 impl Base {
     pub fn new_ttf(name: &str) -> Self {

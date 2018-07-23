@@ -4,11 +4,13 @@ use std::default::Default;
 use std::ptr::null;
 use std::sync::Arc;
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Type {
     Graphic,
     Compute,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Pool {
     pub pool_type: Type,
     pub logical_device: Arc<LogicalDevice>,
