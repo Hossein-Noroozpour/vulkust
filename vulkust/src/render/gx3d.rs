@@ -167,13 +167,13 @@ impl Table {
             id_offset.insert(reader.read::<Id>(), reader.read::<Offset>());
         }
         Table {
-            reader: vxunwrap_o!(Gx3DReader::new()),
+            reader: vxunwrap!(Gx3DReader::new()),
             id_offset,
         }
     }
 
     pub fn goto(&mut self, id: Id) {
-        let off = vxunwrap_o!(self.id_offset.get(&id));
+        let off = vxunwrap!(self.id_offset.get(&id));
         self.reader.seek(*off);
     }
 }
@@ -183,7 +183,7 @@ pub fn import(scenemgr: &Arc<RwLock<SceneManager>>) {
     if main_file.is_none() {
         return;
     }
-    let mut main_file = vxunwrap_o!(main_file);
+    let mut main_file = vxunwrap!(main_file);
     let last_id: Id = main_file.read();
     NEXT_ID.store(last_id, Ordering::Relaxed);
     let mut scnmgr = vxresult!(scenemgr.write());

@@ -44,7 +44,7 @@ impl Manager {
     }
 
     pub fn load_gltf(&mut self, n: &gltf::Node, eng: &Arc<RwLock<Engine>>) -> Arc<RwLock<Camera>> {
-        let c = vxunwrap_o!(n.camera());
+        let c = vxunwrap!(n.camera());
         let data = Vec::new();
         let camera = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
@@ -137,7 +137,7 @@ impl Base {
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
         let eng = vxresult!(eng.read());
-        let eng = vxunwrap_o!(eng.os_app.upgrade());
+        let eng = vxunwrap!(eng.os_app.upgrade());
         let os_app = vxresult!(eng.read());
         Base {
             obj_base,
@@ -220,8 +220,8 @@ impl Transferable for Base {
 
 impl Loadable for Base {
     fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
-        let (near, far) = match vxunwrap_o!(node.camera()).projection() {
-            gltf::camera::Projection::Perspective(p) => (p.znear(), vxunwrap_o!(p.zfar())),
+        let (near, far) = match vxunwrap!(node.camera()).projection() {
+            gltf::camera::Projection::Perspective(p) => (p.znear(), vxunwrap!(p.zfar())),
             gltf::camera::Projection::Orthographic(p) => (p.znear(), p.zfar()),
         };
         let mut myself = Base::new(eng);
@@ -341,7 +341,7 @@ impl Object for Perspective {
 
 impl Loadable for Perspective {
     fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
-        let c = vxunwrap_o!(n.camera());
+        let c = vxunwrap!(n.camera());
         let p = match c.projection() {
             gltf::camera::Projection::Perspective(p) => p,
             gltf::camera::Projection::Orthographic(_) => {
@@ -461,7 +461,7 @@ impl Object for Orthographic {
 
 impl Loadable for Orthographic {
     fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
-        let o = match vxunwrap_o!(n.camera()).projection() {
+        let o = match vxunwrap!(n.camera()).projection() {
             gltf::camera::Projection::Perspective(_) => {
                 vxlogf!("Type of camera isn't perspective.")
             }

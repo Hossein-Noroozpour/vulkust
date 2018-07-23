@@ -156,16 +156,6 @@ macro_rules! vxlogf {
 #[macro_export]
 macro_rules! vxunwrap {
     ($e:expr) => {
-        match &$e {
-            Some(v) => v,
-            None => vxlogf!("Unwrap failed!"),
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! vxunwrap_o {
-    ($e:expr) => {
         match $e {
             Some(v) => v,
             None => vxlogf!("Unwrap failed!"),

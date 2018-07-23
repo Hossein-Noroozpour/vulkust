@@ -97,8 +97,8 @@ impl RootMemory {
     pub fn allocate(&mut self, mem_req: &vk::VkMemoryRequirements) -> Arc<RwLock<Memory>> {
         let aligned_size = alc::align(mem_req.size as isize, self.alignment);
         let aligned_size = alc::align(aligned_size, mem_req.alignment as isize);
-        let manager = vxunwrap_o!(self.manager.upgrade());
-        let itself = vxunwrap_o!(vxunwrap!(self.itself).upgrade());
+        let manager = vxunwrap!(self.manager.upgrade());
+        let itself = vxunwrap!(vxunwrap!(self.itself).upgrade());
         let memory = Arc::new(RwLock::new(Memory::new(
             aligned_size,
             mem_req,

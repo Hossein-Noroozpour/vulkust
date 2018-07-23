@@ -4,7 +4,6 @@ use super::engine::Engine;
 use super::gx3d::Table as Gx3dTable;
 use super::image::View as ImageView;
 use std::collections::BTreeMap;
-use std::fmt::Debug;
 use std::sync::{Arc, RwLock, Weak};
 
 use gltf;
@@ -14,7 +13,7 @@ pub trait Texture: CoreObject {
 }
 
 pub trait Loadable: Sized {
-    fn new_with_gltf(&gltf::Texture, &Arc<RwLock<Engine>>, &[u8]) -> Self;
+    fn new_with_gltf(&gltf::Texture, &Engine, &[u8]) -> Self;
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -36,13 +35,13 @@ impl Manager {
     pub fn load_gltf<T>(
         &mut self,
         texture: &gltf::Texture,
-        engine: &Arc<RwLock<Engine>>,
+        engine: &Engine,
         data: &[u8],
     ) -> Arc<RwLock<Texture>>
     where
         T: 'static + Loadable + Texture,
     {
-        let name = vxunwrap_o!(texture.source().name()).to_string();
+        let name = vxunwrap!(texture.source().name()).to_string();
         if let Some(id) = self.name_to_id.get(&name) {
             if let Some(t) = self.textures.get(id) {
                 if let Some(t) = t.upgrade() {
@@ -115,8 +114,8 @@ impl Texture for Texture2D {
 }
 
 impl Loadable for Texture2D {
-    fn new_with_gltf(texture: &gltf::Texture, engine: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
-        let name = vxunwrap_o!(texture.source().name()).to_string();
+    fn new_with_gltf(texture: &gltf::Texture, engine: &Engine, data: &[u8]) -> Self {
+        let name = vxunwrap!(texture.source().name()).to_string();
         let obj_base = ObjectBase::new();
         let view = match texture.source().source() {
             gltf::image::Source::View { view, mime_type: _ } => view,

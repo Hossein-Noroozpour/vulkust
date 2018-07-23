@@ -21,10 +21,6 @@ use math::Matrix;
 pub trait Mesh: Object {
 }
 
-pub trait DefaultMesh: Mesh {
-    fn default(&Arc<RwLock<Engine>>) -> Self;
-}
-
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub meshes: BTreeMap<Id, Weak<RwLock<Mesh>>>,
@@ -39,6 +35,18 @@ impl Manager {
             name_to_id: BTreeMap::new(),
             gx3d_table: None,
         }
+    }
+
+    pub fn load_gltf(&mut self, primitive: gltf::Primitive, engine: &Engine, data: &[u8]) -> Arc<RwLock<Mesh>> {
+        let mesh = Base::new_with_gltf_primitive(primitive, engine, data);
+        let id = mesh.get_id();
+        let name = mesh.get_name();
+        let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
+        self.meshes.insert(id, Arc::downgrade(&mesh));
+        if let Some(name) = name {
+            self.name_to_id.insert(name, id);
+        }
+        return mesh;
     }
 
     pub fn create<M>(&mut self, engine: &Arc<RwLock<Engine>>) -> Arc<RwLock<M>>
@@ -64,68 +72,31 @@ pub struct Uniform {
     pub mvp: math::Matrix4<f32>,
 }
 
+// impl Geometry {
+//     
+// }
+
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct Geometry {
+pub struct Base {
+    pub obj_base: ObjectBase,
+    
     pub texture: Arc<RwLock<Texture>>,
     pub descriptor_set: Arc<DescriptorSet>,
     pub uniform_buffer: DynamicBuffer, // todo it must move to material
+    // pub material: Arc<RwLock<Material>>,
+
     pub vertex_buffer: StaticBuffer,
     pub index_buffer: StaticBuffer,
     pub indices_count: u32,
 }
 
-impl Geometry {
-    pub fn new(
-        texture: Arc<RwLock<Texture>>,
-        vertices: &[f32],
-        indices: &[u32],
-        engine: &Arc<RwLock<Engine>>,
-    ) -> Self {
-        let eng = vxresult!(engine.read());
-        let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let vertex_buffer =
-            vxresult!(gapi_engine.buffer_manager.write()).create_static_buffer_with_vec(vertices);
-        let index_buffer =
-            vxresult!(gapi_engine.buffer_manager.write()).create_static_buffer_with_vec(indices);
-        vxlogi!("dfdfsdfsdfsdfsdfsdfsdf {}", size_of::<Uniform>());
-        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
-            .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let descriptor_set = Arc::new(
-            gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
-        ); // todo
-        Geometry {
-            texture,
-            descriptor_set,
-            uniform_buffer,
-            vertex_buffer,
-            index_buffer,
-            indices_count: indices.len() as u32,
-        }
-    }
-}
-
-#[cfg_attr(debug_assertions, derive(Debug))]
-pub struct Base {
-    pub obj_base: ObjectBase,
-    pub engine: Arc<RwLock<Engine>>,
-    pub geometries: Vec<Geometry>,
-    // pub material: Arc<RwLock<Material>>,
-}
-
 impl Base {
-    pub fn new_with_gltf(
-        engine: &Arc<RwLock<Engine>>,
-        mesh: gltf::Mesh,
-        texture_manager: &Arc<RwLock<TextureManager>>,
+    pub fn new_with_gltf_primitive(
+        primitive: gltf::Primitive,
+        engine: &Engine,
         data: &[u8],
     ) -> Self {
-        let engine_clone = engine.clone();
-        let obj_base = ObjectBase::new();
-        let primitives = mesh.primitives();
-        let mut geometries = Vec::new();
-        for primitive in primitives {
-            let count = vxunwrap_o!(primitive.get(&gltf::Semantic::Positions)).count();
-            // vxlogi!("count: {}", count);
+        let count = vxunwrap!(primitive.get(&gltf::Semantic::Positions)).count();
             let mut vertex_buffer = vec![0u8; count * 44];
             for (sem, acc) in primitive.attributes() {
                 let view = acc.view();
@@ -135,8 +106,6 @@ impl Base {
                 }
                 let source = view.buffer().source();
                 let offset = view.offset();
-                // let length = view.length();
-                // vxlogi!("{:?} o-{} l-{} a-{} s-{:?}", sem, offset, length, acc.offset(), source);
                 match source {
                     gltf::buffer::Source::Bin => (),
                     _ => vxlogf!("Buffer source must be binary."),
@@ -201,7 +170,7 @@ impl Base {
                     _ => {}
                 }
             }
-            let indices = vxunwrap_o!(primitive.indices());
+            let indices = vxunwrap!(primitive.indices());
             match indices.data_type() {
                 gltf::accessor::DataType::U32 => {}
                 _ => vxlogf!("Only u32 data type is acceptable for indices."),
@@ -217,42 +186,60 @@ impl Base {
             // };
             // vxlogi!("{:?}", &v);
             let indices_count = indices_count as u32;
-            let eng = vxresult!(engine.read());
-            let gapi_engine = vxresult!(eng.gapi_engine.read());
+            let gapi_engine = vxresult!(engine.gapi_engine.read());
             let vertex_buffer = vxresult!(gapi_engine.buffer_manager.write())
                 .create_static_buffer_with_vec(&vertex_buffer);
             let index_buffer = vxresult!(gapi_engine.buffer_manager.write())
                 .create_static_buffer_with_vec(&index_buffer);
             let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
                 .create_dynamic_buffer(size_of::<Uniform>() as isize);
-            let texture = vxunwrap_o!(
+            let texture = vxunwrap!(
                 primitive
                     .material()
                     .pbr_metallic_roughness()
                     .base_color_texture()
             ).texture();
-            let texture =
-                vxresult!(texture_manager.write()).load_gltf::<Texture2D>(&texture, engine, data);
+            let scene_manager = vxresult!(engine.scene_manager.read());
+            let texture_manager = vxresult!(scene_manager.texture_manager.write());
+            let texture = texture_manager.load_gltf::<Texture2D>(&texture, engine, data);
             let descriptor_set = Arc::new(
                 gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
             ); // todo
-            geometries.push(Geometry {
+            let obj_base = ObjectBase::new();
+            Base {
+                obj_base,
                 texture,
                 descriptor_set,
                 uniform_buffer,
                 vertex_buffer,
                 index_buffer,
                 indices_count,
-            });
-        }
-        geometries.shrink_to_fit();
+            }
+    }
+
+    pub fn new_with_material(
+        texture: Arc<RwLock<Texture>>,
+        vertices: &[f32],
+        indices: &[u32],
+        engine: &Engine,
+    ) -> Self {
+        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let buffer_manager = vxresult!(gapi_engine.buffer_manager.write());
+        let vertex_buffer = buffer_manager.create_static_buffer_with_vec(vertices);
+        let index_buffer = buffer_manager.create_static_buffer_with_vec(indices);
+        let uniform_buffer = buffer_manager.create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let descriptor_set = Arc::new(
+            gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
+        ); // todo move it to material
+        let obj_base = ObjectBase::new();
         Base {
             obj_base,
-            geometries,
-            engine: engine_clone,
-            // buffer: buffer,
-            // buffer_manager: buffer_manager,
-            // material: material,
+            texture,
+            descriptor_set,
+            uniform_buffer,
+            vertex_buffer,
+            index_buffer,
+            indices_count: indices.len() as u32,
         }
     }
 }
@@ -273,8 +260,7 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self) {
-        vxlogf!("Mesh does not implement this function instead it does the Mesh trait render.");
+    fn render(&self, engine: &Engine) {
     }
 
     fn update(&mut self) {}
@@ -305,14 +291,4 @@ impl Mesh for Base {
 //             );
 //         }
 //     }
-}
-
-impl DefaultMesh for Base {
-    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
-        Base {
-            obj_base: ObjectBase::new(),
-            engine: engine.clone(),
-            geometries: Vec::new(),
-        }
-    }
 }

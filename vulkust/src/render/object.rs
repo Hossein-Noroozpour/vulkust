@@ -9,7 +9,7 @@ use std::sync::{Arc, RwLock};
 pub trait Object: CoreObject {
     fn get_name(&self) -> Option<String>;
     fn set_name(&mut self, name: &str);
-    fn render(&self);
+    fn render(&self, &Engine);
     fn disable_rendering(&mut self);
     fn enable_rendering(&mut self);
     fn update(&mut self);
@@ -71,7 +71,7 @@ impl Object for Base {
         self.name = Some(name.to_string());
     }
 
-    fn render(&self) {
+    fn render(&self, engine: &Engine) {
         #[cfg(debug_assertions)]
         {
             if !self.renderable {
@@ -92,8 +92,18 @@ impl Object for Base {
 }
 
 impl Loadable for Base {
-    fn new_with_gltf(_: &gltf::Node, _: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
-        Self::new()
+    fn new_with_gltf(node: &gltf::Node, _: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {    
+        let name = match node.name() {
+            Some(s) => Some(s.to_string()),
+            None => None,
+        };
+        let renderable = true;
+        let core_base = CoreBase::new();
+        Base {
+            name,
+            renderable,
+            core_base,
+        }
     }
 
     fn new_with_gx3d(_: &Arc<RwLock<Engine>>, _: &mut Gx3DReader, my_id: Id) -> Self {

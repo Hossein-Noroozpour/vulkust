@@ -2,10 +2,12 @@ use super::super::core::types::Id;
 use super::super::core::object::Object as CoreObject;
 use super::gx3d::{ Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object};
-use super::mesh::Mesh;
+use super::mesh::{Base as MeshBase, Mesh};
 use super::engine::Engine;
+use super::texture::{Texture2D, Loadable as TextureLoadable};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
+use std::mem::size_of;
 
 use math;
 use gltf;
@@ -74,11 +76,11 @@ impl Object for Base {
         vxunimplemented!();
     }
 
-    fn render(&self) {
+    fn render(&self, engine: &Engine) {
         if !self.obj_base.renderable {
             return;
         }
-        self.obj_base.render();
+        self.obj_base.render(engine);
         vxunimplemented!();
     }
 
@@ -96,8 +98,27 @@ impl Object for Base {
 }
 
 impl Loadable for Base {
-    fn new_with_gltf(node: &gltf::Node, engine: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
+    fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
         let obj_base = ObjectBase::new();
+        let engine = eng.clone();
+        let model = vxunwrap!(node.mesh());
+        let primitives = model.primitives();
+        let mut meshes = BTreeMap::new();
+        for primitive in primitives {
+            let engine = vxresult!(eng.read());
+            let scene_manager = vxresult!(engine.scene_manager.read());
+            let mesh_manager = vxresult!(scene_manager.mesh_manager.write());
+            let mesh = mesh_manager.load_gltf(primitive, eng, data);
+            let id = vxresult!(mesh.read()).get_id();
+            meshes.insert(id, mesh);
+        }
+        Base {
+            obj_base,
+            meshes,
+            // buffer: buffer,
+            // buffer_manager: buffer_manager,
+            // material: material,
+        }
     }
 
     fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {

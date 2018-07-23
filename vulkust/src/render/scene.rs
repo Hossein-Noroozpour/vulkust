@@ -80,11 +80,11 @@ impl Manager {
 
     pub fn render(&self) {
         for (_, scene) in &self.scenes {
-            let scene = vxunwrap_o!(scene.upgrade());
+            let scene = vxunwrap!(scene.upgrade());
             vxresult!(scene.write()).update();
         }
         for (_, scene) in &self.scenes {
-            let scene = vxunwrap_o!(scene.upgrade());
+            let scene = vxunwrap!(scene.upgrade());
             vxresult!(scene.read()).render();
             // todo depth cleaning, and other related things in here
         }
@@ -98,7 +98,7 @@ impl Manager {
         let scene = Self::fetch_gltf_scene(&file, scene_name);
         let scene = {
             let engine = vxunwrap!(self.engine);
-            let engine = vxunwrap_o!(engine.upgrade());
+            let engine = vxunwrap!(engine.upgrade());
             Arc::new(RwLock::new(S::new_with_gltf(
                 &engine,
                 &scene,
@@ -122,11 +122,11 @@ impl Manager {
         let type_id = reader.read_type_id();
         let scene: Arc<RwLock<Scene>> = if type_id == TypeId::GAME as CoreTypeId {
             let engine = vxunwrap!(self.engine);
-            let engine = vxunwrap_o!(engine.upgrade());
+            let engine = vxunwrap!(engine.upgrade());
             Arc::new(RwLock::new(Game::new_with_gx3d(&engine, &mut reader, id)))
         } else if type_id == TypeId::UI as CoreTypeId {
             let engine = vxunwrap!(self.engine);
-            let engine = vxunwrap_o!(engine.upgrade());
+            let engine = vxunwrap!(engine.upgrade());
             Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, &mut reader, id)))
         } else {
             vxunexpected!();
@@ -141,7 +141,7 @@ impl Manager {
     {
         let scene = {
             let engine = vxunwrap!(self.engine);
-            let engine = vxunwrap_o!(engine.upgrade());
+            let engine = vxunwrap!(engine.upgrade());
             Arc::new(RwLock::new(S::default(&engine)))
         };
         let s: Arc<RwLock<Scene>> = scene.clone();
@@ -154,7 +154,7 @@ impl Manager {
         C: 'static + DefaultCamera,
     {
         let engine = vxunwrap!(self.engine);
-        let engine = vxunwrap_o!(engine.upgrade());
+        let engine = vxunwrap!(engine.upgrade());
         vxresult!(self.camera_manager.write()).create(&engine)
     }
 
@@ -163,14 +163,14 @@ impl Manager {
         M: 'static + DefaultMesh,
     {
         let engine = vxunwrap!(self.engine);
-        let engine = vxunwrap_o!(engine.upgrade());
+        let engine = vxunwrap!(engine.upgrade());
         vxresult!(self.mesh_manager.write()).create(&engine)
     }
 
     pub fn fetch_gltf_scene<'a>(file: &'a gltf::Gltf, scene_name: &str) -> gltf::Scene<'a> {
         let scenes = file.scenes();
         for scene in scenes {
-            if vxunwrap_o!(scene.name()) == scene_name {
+            if vxunwrap!(scene.name()) == scene_name {
                 return scene;
             }
         }
@@ -371,10 +371,10 @@ impl Object for Base {
         let mut deleted_meshes = BTreeMap::new();
         for (pipeline_id, models_meshes) in vxresult!(self.meshes.read()) {
             deleted_meshes.insert(pipeline_id, BTreeMap::new());
-            let deleted_meshes = vxunwrap_o!(deleted_meshes.get_mut(&pipeline_id));
+            let deleted_meshes = vxunwrap!(deleted_meshes.get_mut(&pipeline_id));
             for (model_id, meshes) in models_meshes {
                 deleted_meshes.insert(model_id, Vec::new());
-                let deleted_meshes = vxunwrap_o!(deleted_meshes.get_mut(&model_id));
+                let deleted_meshes = vxunwrap!(deleted_meshes.get_mut(&model_id));
                 for (mesh_id, mesh) in meshes {
                     if let Some(mesh) = mesh.upgrade() {
                         vxresult!(mesh.read()).render();
