@@ -6,7 +6,7 @@ use super::engine::Engine;
 use super::font::Manager as FontManager;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::light::{Light, Manager as LightManager};
-use super::mesh::{DefaultMesh, Manager as MeshManager, Mesh};
+use super::mesh::{Manager as MeshManager, Mesh};
 use super::model::{Base as ModelBase, Model, Manager as ModelManager};
 use super::object::{Base as ObjectBase, Object, Loadable as ObjectLoadable};
 use super::texture::Manager as TextureManager;
@@ -83,9 +83,12 @@ impl Manager {
             let scene = vxunwrap!(scene.upgrade());
             vxresult!(scene.write()).update();
         }
+        let engine = vxunwrap!(&self.engine); // todo remove these lines i'm not happy with
+        let engine = vxunwrap!(engine.upgrade()); //
+        let engine = vxresult!(engine.read()); //
         for (_, scene) in &self.scenes {
             let scene = vxunwrap!(scene.upgrade());
-            vxresult!(scene.read()).render();
+            vxresult!(scene.read()).render(&engine);
             // todo depth cleaning, and other related things in here
         }
     }
@@ -102,7 +105,7 @@ impl Manager {
             Arc::new(RwLock::new(S::new_with_gltf(
                 &engine,
                 &scene,
-                vxunwrap!(file.blob),
+                vxunwrap!(&file.blob),
             )))
         };
         let s: Arc<RwLock<Scene>> = scene.clone();
@@ -156,15 +159,6 @@ impl Manager {
         let engine = vxunwrap!(self.engine);
         let engine = vxunwrap!(engine.upgrade());
         vxresult!(self.camera_manager.write()).create(&engine)
-    }
-
-    pub fn create_mesh<M>(&self) -> Arc<RwLock<M>>
-    where
-        M: 'static + DefaultMesh,
-    {
-        let engine = vxunwrap!(self.engine);
-        let engine = vxunwrap!(engine.upgrade());
-        vxresult!(self.mesh_manager.write()).create(&engine)
     }
 
     pub fn fetch_gltf_scene<'a>(file: &'a gltf::Gltf, scene_name: &str) -> gltf::Scene<'a> {
@@ -313,11 +307,11 @@ impl Base {
         };
         let mut models = BTreeMap::new();
         for id in models_ids {
-            models.insert(id, model_manager.load_gx3d(engine, id));
+            models.insert(id, vxresult!(model_manager.write()).load_gx3d(engine, id));
         }
         let mut lights = BTreeMap::new();
         for id in lights_ids {
-            lights.insert(id, light_manager.load_gx3d(engine, id));
+            lights.insert(id, vxresult!(light_manager.write()).load_gx3d(engine, id));
         }
         let mut uniform = Uniform::new();
         // todo initialize the uniform
@@ -353,7 +347,7 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self) {
+    fn render(&self, _: &Engine) {
         // todo get directional light
         // then create light frustums
         // then rendering meshes with light
@@ -502,8 +496,8 @@ impl Object for Game {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self) {
-        self.base.render();
+    fn render(&self, engine: &Engine) {
+        self.base.render(engine);
     }
 
     fn update(&mut self) {
@@ -561,8 +555,8 @@ impl Object for Ui {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self) {
-        self.base.render();
+    fn render(&self, engine: &Engine) {
+        self.base.render(engine);
     }
 
     fn update(&mut self) {

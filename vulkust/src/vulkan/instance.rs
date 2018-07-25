@@ -115,7 +115,7 @@ mod debug {
             let destroy_debug_report_callback: vk::PFN_vkDestroyDebugReportCallbackEXT =
                 unsafe { transmute(get_function(vk_instance, "vkDestroyDebugReportCallbackEXT")) };
             unsafe {
-                destroy_debug_report_callback(vk_instance, *vxunwrap!(self.vk_data), null());
+                destroy_debug_report_callback(vk_instance, *vxunwrap!(&self.vk_data), null());
             }
             self.vk_data = None;
         }

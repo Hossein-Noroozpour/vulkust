@@ -1,5 +1,6 @@
 use super::super::core::types::Id;
 use super::super::core::object::Object as CoreObject;
+use super::super::physics::collider::{Collider, read as read_collider, Ghost as GhostCollider};
 use super::gx3d::{ Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object};
 use super::mesh::{Base as MeshBase, Mesh};
@@ -29,6 +30,10 @@ impl Manager {
             gx3d_table: None,
         }
     }
+
+    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, my_id: Id) -> Arc<RwLock<Model>> {
+
+    }
 }
 
 #[repr(C)]
@@ -42,6 +47,35 @@ pub struct Uniform {
     // pub sun_mvp: math::Matrix4<f32>,
 }
 
+impl Uniform {
+    fn new_with_gltf(node: &gltf::Node) -> Self {
+        let m = node.transform().matrix();
+        let model = math::Matrix4::new(
+            m[0][0], m[0][1], m[0][2], m[0][3], 
+            m[1][0], m[1][1], m[1][2], m[1][3], 
+            m[2][0], m[2][1], m[2][2], m[2][3], 
+            m[3][0], m[3][1], m[3][2], m[3][3], 
+        );
+        Uniform {
+            model,
+            model_view_projection: model,
+        }
+    }
+
+    fn new_with_gx3d(reader: &mut Gx3DReader) -> Self {
+        let model = math::Matrix4::new(
+            reader.read(), reader.read(), reader.read(), reader.read(), 
+            reader.read(), reader.read(), reader.read(), reader.read(), 
+            reader.read(), reader.read(), reader.read(), reader.read(), 
+            reader.read(), reader.read(), reader.read(), reader.read(), 
+        );
+        Uniform {
+            model,
+            model_view_projection: model,
+        }
+    }
+}
+
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Base {
     pub obj_base: ObjectBase,
@@ -52,9 +86,10 @@ pub struct Base {
     pub is_in_sun: Vec<bool>,
     pub is_in_camera: Vec<bool>,
     pub distance_from_cameras: Vec<f32>,
+    pub collider: Arc<RwLock<Collider>>,
+    pub uniform: Uniform,
     pub meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
     pub children: BTreeMap<Id, Arc<RwLock<Model>>>,
-    // pub collider: Arc<RwLock<Collider>>,
 }
 
 impl Base {
@@ -100,29 +135,83 @@ impl Object for Base {
 impl Loadable for Base {
     fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
         let obj_base = ObjectBase::new();
-        let engine = eng.clone();
+        let engine = vxresult!(eng.read());
+        let scene_manager = vxresult!(engine.scene_manager.read());
+        let mesh_manager = vxresult!(scene_manager.mesh_manager.write());
         let model = vxunwrap!(node.mesh());
         let primitives = model.primitives();
         let mut meshes = BTreeMap::new();
+        let mut has_shadow_caster = false;
+        let mut has_transparent = false;
+        let mut occlusion_culling_radius = 0.0001;
         for primitive in primitives {
-            let engine = vxresult!(eng.read());
-            let scene_manager = vxresult!(engine.scene_manager.read());
-            let mesh_manager = vxresult!(scene_manager.mesh_manager.write());
-            let mesh = mesh_manager.load_gltf(primitive, eng, data);
-            let id = vxresult!(mesh.read()).get_id();
+            let mesh = mesh_manager.load_gltf(primitive, &engine, data);
+            let id = {
+                let mesh = vxresult!(mesh.read());
+                has_shadow_caster |= mesh.is_shadow_caster();
+                has_transparent |= mesh.is_transparent();
+                let occ = mesh.get_occlusion_culling_radius();
+                if occ > occlusion_culling_radius {
+                    occlusion_culling_radius = occ;
+                }
+                mesh.get_id()
+            };
             meshes.insert(id, mesh);
+        }
+        if node.children().count() > 0 {
+            vxunimplemented!(); // todo support children
         }
         Base {
             obj_base,
+            is_dynamic: true,
+            has_shadow_caster,
+            has_transparent,
+            occlusion_culling_radius,
+            is_in_sun: Vec::new(),
+            is_in_camera: Vec::new(),
+            distance_from_cameras: Vec::new(),
+            collider: Arc::new(RwLock::new(GhostCollider::new())),
+            uniform: Uniform::new_with_gltf(node),
             meshes,
-            // buffer: buffer,
-            // buffer_manager: buffer_manager,
-            // material: material,
+            children: BTreeMap::new(),
         }
     }
 
     fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let obj_base = ObjectBase::new_with_id(my_id);
+        let uniform = Uniform::new_with_gx3d(reader);
+        let occlusion_culling_radius = reader.read();
+        let collider = read_collider(reader);
+        let meshes_ids = reader.read_array();
+        let eng = vxresult!(engine.read());
+        let scene_manager = vxresult!(eng.scene_manager.read());
+        let mesh_manager = vxresult!(scene_manager.mesh_manager.write());
+        let mut meshes = BTreeMap::new();
+        let mut has_shadow_caster = false;
+        let mut has_transparent = false;
+        for mesh_id in meshes_ids {
+            let mesh = mesh_manager.load_gx3d(eng, mesh_id);
+            {
+                let mesh = vxresult!(mesh.read());
+                has_shadow_caster |= mesh.is_shadow_caster();
+                has_transparent |= mesh.is_transparent();
+            }
+            meshes.insert(mesh_id, mesh);
+        }
+        Base {
+            obj_base,
+            is_dynamic: false, // todo there must be a dynamic struct for this that implement transformable
+            has_shadow_caster,
+            has_transparent,
+            occlusion_culling_radius,
+            is_in_sun: Vec::new(),
+            is_in_camera: Vec::new(),
+            distance_from_cameras: Vec::new(),
+            collider,
+            uniform,
+            meshes,
+            children: BTreeMap::new(),
+        }
     }
 }
 

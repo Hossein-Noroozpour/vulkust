@@ -180,7 +180,7 @@ impl Object for Base {
         vxunimplemented!(); // It must update corresponding manager
     }
 
-    fn render(&self) {
+    fn render(&self, _: &Engine) {
         vxlogf!("Base camera does not implement rendering.");
     }
 
@@ -322,7 +322,7 @@ impl Object for Perspective {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self) {
+    fn render(&self, _: &Engine) {
         vxlogf!("Perspective camera does not implement rendering.");
     }
 
@@ -442,7 +442,7 @@ impl Object for Orthographic {
         self.base.set_name(name);
     }
 
-    fn render(&self) {
+    fn render(&self, _: &Engine) {
         vxlogf!("Orthographic camera does not implement rendering.");
     }
 

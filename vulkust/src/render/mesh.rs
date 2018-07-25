@@ -48,22 +48,6 @@ impl Manager {
         }
         return mesh;
     }
-
-    pub fn create<M>(&mut self, engine: &Arc<RwLock<Engine>>) -> Arc<RwLock<M>>
-    where
-        M: 'static + DefaultMesh,
-    {
-        let mesh = M::default(engine);
-        let id = mesh.get_id();
-        if let Some(name) = mesh.get_name() {
-            self.name_to_id.insert(name, id);
-        }
-        let mesh = Arc::new(RwLock::new(mesh));
-        let m: Arc<RwLock<Mesh>> = mesh.clone();
-        let m: Weak<RwLock<Mesh>> = Arc::downgrade(&m);
-        self.meshes.insert(id, m);
-        mesh
-    }
 }
 
 #[repr(C)]

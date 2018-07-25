@@ -24,6 +24,7 @@ pub mod macros;
 // pub mod audio;
 pub mod core;
 // pub mod math;
+pub mod physics;
 pub mod render;
 // pub mod sync;
 pub mod system;

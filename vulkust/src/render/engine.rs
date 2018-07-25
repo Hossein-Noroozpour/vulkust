@@ -4,7 +4,7 @@ use super::super::system::os::application::Application as OsApp;
 use super::camera::DefaultCamera;
 use super::config::Configurations as Config;
 use super::gx3d::import as gx3d_import;
-use super::mesh::DefaultMesh;
+use super::mesh::Mesh;
 use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
 use std::sync::{Arc, RwLock, Weak};
 // use super::command::buffer::Buffer as CmdBuff;
@@ -71,13 +71,6 @@ impl Engine {
         C: 'static + DefaultCamera,
     {
         vxresult!(self.scene_manager.read()).create_camera()
-    }
-
-    pub fn create_mesh<M>(&self) -> Arc<RwLock<M>>
-    where
-        M: 'static + DefaultMesh,
-    {
-        vxresult!(self.scene_manager.read()).create_mesh()
     }
 
     pub fn on_event(&self, _e: Event) {}

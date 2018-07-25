@@ -58,7 +58,7 @@ extern "C" fn deallocate(this: &mut Object, _cmd: Sel) {
         apple::core_video::CVDisplayLinkRelease(display_link);
         let os_app: *mut c_void = *this.get_ivar(APP_VAR_NAME);
         let os_app: *mut Arc<RwLock<OsApp>> = transmute(os_app);
-        let _: () = msg_send![*vxunwrap!(this.class().superclass()), dealloc];
+        let _: () = msg_send![*vxunwrap!(&this.class().superclass()), dealloc];
         let _ = Box::from_raw(os_app);
     }
 }

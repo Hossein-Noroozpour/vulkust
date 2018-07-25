@@ -2,7 +2,7 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::engine::Engine;
 use super::font::Font;
-use super::mesh::{Base as MeshBase, DefaultMesh, Geometry, Mesh};
+use super::mesh::{Base as MeshBase, Mesh};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
 use std::sync::{Arc, RwLock};
@@ -33,8 +33,8 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self) {
-        self.mesh_base.render();
+    fn render(&self, engine: &Engine) {
+        self.mesh_base.render(engine);
     }
 
     fn disable_rendering(&mut self) {
@@ -51,15 +51,6 @@ impl Object for Base {
 }
 
 impl Mesh for Base {}
-
-impl DefaultMesh for Base {
-    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
-        Base {
-            mesh_base: MeshBase::default(engine),
-            sensitive: true,
-        }
-    }
-}
 
 impl Widget for Base {}
 
@@ -176,7 +167,7 @@ impl Label {
             &self.base.mesh_base.engine,
             &img,
         );
-        let geo = Geometry::new(texture, &vertices, &indices, &self.base.mesh_base.engine);
+        let geo = Base::new(texture, &vertices, &indices, &self.base.mesh_base.engine);
         self.base.mesh_base.geometries.push(geo);
     }
 }
@@ -197,8 +188,8 @@ impl Object for Label {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self) {
-        self.base.render();
+    fn render(&self, engine: &Engine) {
+        self.base.render(engine);
     }
 
     fn disable_rendering(&mut self) {
@@ -216,22 +207,22 @@ impl Object for Label {
 
 impl Mesh for Label { }
 
-impl DefaultMesh for Label {
-    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
-        let eng = vxresult!(engine.read());
-        let scene_manager = vxresult!(eng.scene_manager.read());
-        let font_manager = vxresult!(scene_manager.font_manager.read());
-        let font = font_manager.default.clone();
-        Label {
-            base: Base::default(engine),
-            text: String::new(),
-            text_size: 1f32,
-            text_color: [1f32; 4],
-            background_color: [0f32; 4],
-            font,
-            size: 0.15f32,
-        }
-    }
-}
+// impl DefaultMesh for Label {
+//     fn default(engine: &Arc<RwLock<Engine>>) -> Self {
+//         let eng = vxresult!(engine.read());
+//         let scene_manager = vxresult!(eng.scene_manager.read());
+//         let font_manager = vxresult!(scene_manager.font_manager.read());
+//         let font = font_manager.default.clone();
+//         Label {
+//             base: Base::default(engine),
+//             text: String::new(),
+//             text_size: 1f32,
+//             text_color: [1f32; 4],
+//             background_color: [0f32; 4],
+//             font,
+//             size: 0.15f32,
+//         }
+//     }
+// }
 
 impl Widget for Label {}

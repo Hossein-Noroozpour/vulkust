@@ -16,7 +16,7 @@ pub const APP_VAR_NAME: &str = "os_app";
 #[cfg(debug_assertions)]
 fn create_frame() -> apple::NSRect {
     use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
-    apple::NSRect::new(0.0, 0.0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
+    apple::NSRect::new(0.0, 0.0, DEFAULT_WINDOW_WIDTH as f64, DEFAULT_WINDOW_HEIGHT as f64)
 }
 
 #[cfg(not(debug_assertions))]

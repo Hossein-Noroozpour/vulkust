@@ -39,7 +39,7 @@ impl Object for Sun {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self) {
+    fn render(&self, _: &Engine) {
         vxlogf!("Sun light does not implement rendering.");
     }
 

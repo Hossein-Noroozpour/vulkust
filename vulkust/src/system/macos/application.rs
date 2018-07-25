@@ -1,4 +1,4 @@
-use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::objc::runtime::YES;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::apple;
@@ -8,6 +8,8 @@ use super::game_view_controller;
 use std::mem::transmute;
 use std::os::raw::c_void;
 use std::sync::{Arc, RwLock};
+#[cfg(debug_assertions)]
+use std::fmt;
 
 pub struct Application {
     pub app: apple::Id,
@@ -17,6 +19,13 @@ pub struct Application {
     pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
     pub renderer: Option<Arc<RwLock<RenderEngine>>>,
     pub view: *mut c_void,
+}
+
+#[cfg(debug_assertions)]
+impl fmt::Debug for Application {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "MacOSApplication")
+    }
 }
 
 impl Application {
