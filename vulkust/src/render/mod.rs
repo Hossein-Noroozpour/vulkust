@@ -9,7 +9,7 @@ pub mod font;
 pub mod gx3d;
 pub mod image;
 pub mod light;
-// pub mod material;
+pub mod material;
 pub mod mesh;
 pub mod model;
 pub mod object;
