@@ -18,8 +18,10 @@ An experimental tiny engine for **Vulkan in Rust**.
 
 ## Examples
 
+- First of all master branch may become unstable or even uncompilable. 
+  (I'm gonna create a release branch in the first stable version)
 - You must have **glslangValidator** in you PATH environment variable.
-- For **iOS** and **Android**, you must have 
+- For **iOS** and **Android**, you must have
   [vulkust-ios](https://github.com/Hossein-Noroozpour/vulkust-ios) and
   [vulkust-android](https://github.com/Hossein-Noroozpour/vulkust-android)
   projects next to the vulkust root.

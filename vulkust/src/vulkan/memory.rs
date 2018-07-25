@@ -98,7 +98,7 @@ impl RootMemory {
         let aligned_size = alc::align(mem_req.size as isize, self.alignment);
         let aligned_size = alc::align(aligned_size, mem_req.alignment as isize);
         let manager = vxunwrap!(self.manager.upgrade());
-        let itself = vxunwrap!(vxunwrap!(self.itself).upgrade());
+        let itself = vxunwrap!(vxunwrap!(&self.itself).upgrade());
         let memory = Arc::new(RwLock::new(Memory::new(
             aligned_size,
             mem_req,
@@ -182,7 +182,7 @@ impl Manager {
         if let Some(root_memory) = self.root_memories.get_mut(&memory_type_index) {
             return vxresult!(root_memory.write()).allocate(mem_req);
         }
-        let itself = vxunwrap!(self.itself).clone();
+        let itself = vxunwrap!(&self.itself).clone();
         let root_memory = RootMemory::new(memory_type_index, itself, &self.logical_device);
         let root_memory = Arc::new(RwLock::new(root_memory));
         let root_memory_w = Arc::downgrade(&root_memory);

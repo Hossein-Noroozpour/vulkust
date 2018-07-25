@@ -16,6 +16,7 @@ use std::sync::{Arc, RwLock};
 /// is gonna import its references and then you can load your scene by id (in here we load the first
 /// scene). Keep in mind that, you can not have several gx3d file and its name must be data.gx3d
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 struct MyGame {
     pub os_app: Option<Arc<RwLock<OsApp>>>,
     pub renderer: Option<Arc<RwLock<Renderer>>>,

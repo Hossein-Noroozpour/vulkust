@@ -3,7 +3,7 @@ use super::super::core::types::Id;
 use super::buffer::{DynamicBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
-use super::gx3d::Table as Gx3dTable;
+use super::gx3d::{ Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Object};
 use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture, Texture2D};
@@ -18,7 +18,16 @@ use gltf;
 use math;
 use math::Matrix;
 
+#[repr(u8)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum TypeId {
+    Base = 1,
+}
+
 pub trait Mesh: Object {
+    fn is_shadow_caster(&self) -> bool;
+    fn is_transparent(&self) -> bool;
+    fn get_occlusion_culling_radius(&self) -> f32;
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -46,6 +55,25 @@ impl Manager {
         if let Some(name) = name {
             self.name_to_id.insert(name, id);
         }
+        return mesh;
+    }
+
+    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Mesh>> {
+        if let Some(mesh) = self.meshes.get(&id) {
+            if let Some(mesh) = mesh.upgrade() {
+                return mesh;
+            }
+        }
+        let gx3d_table = vxunwrap!(self.gx3d_table.as_mut());
+        gx3d_table.goto(id);
+        let reader = &mut gx3d_table.reader;
+        let t = reader.read_type_id();
+        let mesh: Arc<RwLock<Mesh>> = if t == TypeId::Base as u8 {
+            Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
+        } else {
+            vxunimplemented!();
+        };
+        self.meshes.insert(id, Arc::downgrade(&mesh));
         return mesh;
     }
 }
@@ -184,7 +212,7 @@ impl Base {
                     .base_color_texture()
             ).texture();
             let scene_manager = vxresult!(engine.scene_manager.read());
-            let texture_manager = vxresult!(scene_manager.texture_manager.write());
+            let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
             let texture = texture_manager.load_gltf::<Texture2D>(&texture, engine, data);
             let descriptor_set = Arc::new(
                 gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
@@ -202,13 +230,13 @@ impl Base {
     }
 
     pub fn new_with_material(
-        texture: Arc<RwLock<Texture>>,
+        texture: Arc<RwLock<Texture>>, // todo it must change to material
         vertices: &[f32],
         indices: &[u32],
         engine: &Engine,
     ) -> Self {
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let buffer_manager = vxresult!(gapi_engine.buffer_manager.write());
+        let mut buffer_manager = vxresult!(gapi_engine.buffer_manager.write());
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(indices);
         let uniform_buffer = buffer_manager.create_dynamic_buffer(size_of::<Uniform>() as isize);
@@ -225,6 +253,10 @@ impl Base {
             index_buffer,
             indices_count: indices.len() as u32,
         }
+    }
+
+    pub fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+        vxunimplemented!(); // todo
     }
 }
 
@@ -259,6 +291,10 @@ impl Object for Base {
 }
 
 impl Mesh for Base {
+    fn is_shadow_caster(&self) -> bool {vxunimplemented!()} // todo
+    fn is_transparent(&self) -> bool {vxunimplemented!()} // todo
+    fn get_occlusion_culling_radius(&self) -> f32 {vxunimplemented!()} // todo
+    
 //     fn render(&mut self, scene_uniform: &SceneUniform) {
 //         let mvp = scene_uniform.view_projection;
 //         for geo in &mut self.geometries {

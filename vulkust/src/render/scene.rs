@@ -100,7 +100,7 @@ impl Manager {
         let file = Self::load_gltf_struct(file_name);
         let scene = Self::fetch_gltf_scene(&file, scene_name);
         let scene = {
-            let engine = vxunwrap!(self.engine);
+            let engine = vxunwrap!(&self.engine);
             let engine = vxunwrap!(engine.upgrade());
             Arc::new(RwLock::new(S::new_with_gltf(
                 &engine,
@@ -119,20 +119,22 @@ impl Manager {
                 return scene;
             }
         }
-        let mut table = vxunwrap!(self.gx3d_table);
-        table.goto(id);
-        let mut reader: &mut Gx3DReader = &mut table.reader;
-        let type_id = reader.read_type_id();
-        let scene: Arc<RwLock<Scene>> = if type_id == TypeId::GAME as CoreTypeId {
-            let engine = vxunwrap!(self.engine);
-            let engine = vxunwrap!(engine.upgrade());
-            Arc::new(RwLock::new(Game::new_with_gx3d(&engine, &mut reader, id)))
-        } else if type_id == TypeId::UI as CoreTypeId {
-            let engine = vxunwrap!(self.engine);
-            let engine = vxunwrap!(engine.upgrade());
-            Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, &mut reader, id)))
-        } else {
-            vxunexpected!();
+        let scene: Arc<RwLock<Scene>> = {
+            let mut table = vxunwrap!(&mut self.gx3d_table);
+            table.goto(id);
+            let mut reader: &mut Gx3DReader = &mut table.reader;
+            let type_id = reader.read_type_id();
+            if type_id == TypeId::GAME as CoreTypeId {
+                let engine = vxunwrap!(&self.engine);
+                let engine = vxunwrap!(engine.upgrade());
+                Arc::new(RwLock::new(Game::new_with_gx3d(&engine, &mut reader, id)))
+            } else if type_id == TypeId::UI as CoreTypeId {
+                let engine = vxunwrap!(&self.engine);
+                let engine = vxunwrap!(engine.upgrade());
+                Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, &mut reader, id)))
+            } else {
+                vxunexpected!();
+            }
         };
         self.add_scene(&scene);
         return scene;
@@ -143,7 +145,7 @@ impl Manager {
         S: 'static + DefaultScene,
     {
         let scene = {
-            let engine = vxunwrap!(self.engine);
+            let engine = vxunwrap!(&self.engine);
             let engine = vxunwrap!(engine.upgrade());
             Arc::new(RwLock::new(S::default(&engine)))
         };
@@ -156,7 +158,7 @@ impl Manager {
     where
         C: 'static + DefaultCamera,
     {
-        let engine = vxunwrap!(self.engine);
+        let engine = vxunwrap!(&self.engine);
         let engine = vxunwrap!(engine.upgrade());
         vxresult!(self.camera_manager.write()).create(&engine)
     }
@@ -278,15 +280,15 @@ impl Base {
         let lights_ids = reader.read_array::<Id>();
         let models_ids = reader.read_array::<Id>();
         if reader.read_bool() {
-            let _skybox_id = reader.read();
+            let _skybox_id: Id = reader.read();
         }
         let _constraits_ids = reader.read_array::<Id>(); // todo
         if reader.read_bool() {
             vxunimplemented!(); // todo
         }
+        let eng = vxresult!(engine.read());
+        let manager = vxresult!(eng.scene_manager.read());
         let (texture_manager, camera_manager, light_manager, model_manager) = {
-            let engine = vxresult!(engine.read());
-            let manager = vxresult!(engine.scene_manager.read());
             (
                 &manager.texture_manager,
                 &manager.camera_manager,
@@ -295,8 +297,8 @@ impl Base {
             )
         };
         let mut cameras = BTreeMap::new();
-        for id in cameras_ids {
-            cameras.insert(id, vxresult!(camera_manager.write()).load_gx3d(engine, id));
+        for id in &cameras_ids {
+            cameras.insert(*id, vxresult!(camera_manager.write()).load_gx3d(engine, *id));
         }
         let active_camera = if cameras_ids.len() > 0 {
             Some(Arc::downgrade(
@@ -311,7 +313,8 @@ impl Base {
         }
         let mut lights = BTreeMap::new();
         for id in lights_ids {
-            lights.insert(id, vxresult!(light_manager.write()).load_gx3d(engine, id));
+            vxunimplemented!();
+            // lights.insert(id, vxresult!(light_manager.write()).load_gx3d(engine, id));
         }
         let mut uniform = Uniform::new();
         // todo initialize the uniform
@@ -347,7 +350,7 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, _: &Engine) {
+    fn render(&self, engine: &Engine) {
         // todo get directional light
         // then create light frustums
         // then rendering meshes with light
@@ -362,18 +365,22 @@ impl Object for Base {
         if !self.obj_base.renderable {
             return;
         }
-        let mut deleted_meshes = BTreeMap::new();
-        for (pipeline_id, models_meshes) in vxresult!(self.meshes.read()) {
-            deleted_meshes.insert(pipeline_id, BTreeMap::new());
-            let deleted_meshes = vxunwrap!(deleted_meshes.get_mut(&pipeline_id));
-            for (model_id, meshes) in models_meshes {
-                deleted_meshes.insert(model_id, Vec::new());
-                let deleted_meshes = vxunwrap!(deleted_meshes.get_mut(&model_id));
-                for (mesh_id, mesh) in meshes {
-                    if let Some(mesh) = mesh.upgrade() {
-                        vxresult!(mesh.read()).render();
-                    } else {
-                        deleted_meshes.push(mesh_id);
+        let mut deleted_meshes: BTreeMap<Id, BTreeMap<Id, Vec<Id>>> = BTreeMap::new();
+        {
+            let meshes = vxresult!(self.meshes.read());
+            let meshes = meshes.iter();
+            for (pipeline_id, models_meshes) in meshes {
+                deleted_meshes.insert(*pipeline_id, BTreeMap::new());
+                let deleted_meshes = vxunwrap!(deleted_meshes.get_mut(&pipeline_id));
+                for (model_id, meshes) in models_meshes {
+                    deleted_meshes.insert(*model_id, Vec::new());
+                    let deleted_meshes = vxunwrap!(deleted_meshes.get_mut(&model_id));
+                    for (mesh_id, mesh) in meshes {
+                        if let Some(mesh) = mesh.upgrade() {
+                            vxresult!(mesh.read()).render(engine);
+                        } else {
+                            deleted_meshes.push(*mesh_id);
+                        }
                     }
                 }
             }
@@ -441,8 +448,17 @@ impl Scene for Base {
 
     fn add_mesh(&mut self, pipeline_id: Id, model_id: Id, mesh_id: Id, mesh: Weak<RwLock<Mesh>>) {
         let mut meshes = vxresult!(self.meshes.write());
-        if let Some(meshes) = meshes.get_mut(&pipeline_id) {
-            if let Some(meshes) = meshes.get_mut(&model_id) {
+        let (pipext, mdlext) = match meshes.get(&pipeline_id) {
+            Some(m) => match m.get(&model_id) {
+                Some(_) => (true, true),
+                None => (true, false),
+            },
+            None => (false, false),
+        };
+        if pipext {
+            let meshes = vxunwrap!(meshes.get_mut(&pipeline_id));
+            if mdlext {
+                let meshes = vxunwrap!(meshes.get_mut(&model_id));
                 meshes.insert(mesh_id, mesh);
             } else {
                 let mut c = BTreeMap::new();
@@ -529,7 +545,9 @@ impl Loadable for Game {
         Game { base }
     }
 
-    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {}
+    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+        vxunimplemented!();
+    }
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]

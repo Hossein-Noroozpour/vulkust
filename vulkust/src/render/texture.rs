@@ -130,7 +130,6 @@ impl Loadable for Texture2D {
             gltf::buffer::Source::Bin => {}
             _ => vxlogf!("Only embeded and view texture resources is acceptable."),
         }
-        let engine = vxresult!(engine.read());
         let engine = vxresult!(engine.gapi_engine.read());
         let image_view = engine.create_texture_with_bytes(&data[offset..offset + length]);
         Texture2D {

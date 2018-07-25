@@ -33,7 +33,7 @@ pub struct Mesh {
 impl Mesh {
     pub fn new_with_gx3d(reader: &mut Gx3DReader) -> Self {
         let count: u64 = reader.read();
-        let vertices = vec![math::Vector3::new(0.0, 0.0, 0.0); count as usize];
+        let mut vertices = vec![math::Vector3::new(0.0, 0.0, 0.0); count as usize];
         for i in 0..count as usize {
             vertices[i] = math::Vector3::new(reader.read(),reader.read(),reader.read());
         }

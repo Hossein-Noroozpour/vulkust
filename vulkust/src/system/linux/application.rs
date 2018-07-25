@@ -153,7 +153,7 @@ impl Application {
                     _ => (),
                 }
             }
-            vxresult!(vxunwrap!(self.renderer).read()).update();
+            vxresult!(vxunwrap!(&self.renderer).read()).update();
         }
     }
 

@@ -8,6 +8,7 @@ use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct MyGame {
     pub os_app: Option<Arc<RwLock<OsApp>>>,
     pub renderer: Option<Arc<RwLock<Renderer>>>,
@@ -46,10 +47,10 @@ impl CoreAppTrait for MyGame {
             //     place your ttf it in data/fonts/ directory
             //     and call following function.
             // label.set_font_with_file_name("Ubuntu-R.ttf");
-            label.set_text_size(50.0);
-            label.set_text_color(1.0, 1.0, 1.0, 1.0);
-            label.set_background_color(0.0, 0.0, 0.0, 0.0);
-            label.set_text("Hello Vulkust!");
+            label.set_text_size(50.0, &renderer);
+            label.set_text_color(1.0, 1.0, 1.0, 1.0, &renderer);
+            label.set_background_color(0.0, 0.0, 0.0, 0.0, &renderer);
+            label.set_text("Hello Vulkust!", &renderer);
         }
         {
             let mut uiscn = vxresult!(ui_scene.write());

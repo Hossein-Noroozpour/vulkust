@@ -3,54 +3,56 @@ use super::super::core::types::Id;
 use super::engine::Engine;
 use super::font::Font;
 use super::mesh::{Base as MeshBase, Mesh};
+use super::model::{Base as ModelBase, Model};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
 use std::sync::{Arc, RwLock};
+use std::collections::BTreeMap;
 
 use rusttype::{point, Scale};
 
-pub trait Widget: Mesh {}
+pub trait Widget: Model {}
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Base {
-    pub mesh_base: MeshBase,
+    pub model_base: ModelBase,
     pub sensitive: bool,
 }
 
 impl CoreObject for Base {
     fn get_id(&self) -> Id {
-        self.mesh_base.get_id()
+        self.model_base.get_id()
     }
 }
 
 impl Object for Base {
     fn get_name(&self) -> Option<String> {
-        self.mesh_base.get_name()
+        self.model_base.get_name()
     }
 
     fn set_name(&mut self, name: &str) {
-        self.mesh_base.set_name(name);
+        self.model_base.set_name(name);
         vxunimplemented!(); //it must update corresponding manager
     }
 
     fn render(&self, engine: &Engine) {
-        self.mesh_base.render(engine);
+        self.model_base.render(engine);
     }
 
     fn disable_rendering(&mut self) {
-        self.mesh_base.disable_rendering();
+        self.model_base.disable_rendering();
     }
 
     fn enable_rendering(&mut self) {
-        self.mesh_base.enable_rendering()
+        self.model_base.enable_rendering()
     }
 
     fn update(&mut self) {
-        self.mesh_base.update();
+        self.model_base.update();
     }
 }
 
-impl Mesh for Base {}
+impl Model for Base {}
 
 impl Widget for Base {}
 
@@ -66,45 +68,45 @@ pub struct Label {
 }
 
 impl Label {
-    pub fn set_text(&mut self, text: &str) {
+    pub fn set_text(&mut self, text: &str, engine: &Arc<RwLock<Engine>>) {
         self.text = text.to_string();
-        self.create_text_mesh();
+        self.create_text_mesh(engine);
     }
 
-    pub fn set_font_with_file_name(&mut self, name: &str) {
+    pub fn set_font_with_file_name(&mut self, name: &str, engine: &Arc<RwLock<Engine>>) {
         {
-            let engine = vxresult!(self.base.mesh_base.engine.read());
+            let engine = vxresult!(engine.read());
             let scene_manager = vxresult!(engine.scene_manager.read());
             let mut font_manager = vxresult!(scene_manager.font_manager.write());
             self.font = font_manager.load_ttf(name);
         }
-        self.create_text_mesh();
+        self.create_text_mesh(engine);
     }
 
-    pub fn set_text_size(&mut self, size: f32) {
+    pub fn set_text_size(&mut self, size: f32, engine: &Arc<RwLock<Engine>>) {
         self.text_size = size;
-        self.create_text_mesh();
+        self.create_text_mesh(engine);
     }
 
-    pub fn set_text_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) {
+    pub fn set_text_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32, engine: &Arc<RwLock<Engine>>) {
         self.text_color = [red, green, blue, alpha];
-        self.create_text_mesh();
+        self.create_text_mesh(engine);
     }
 
-    pub fn set_background_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) {
+    pub fn set_background_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32, engine: &Arc<RwLock<Engine>>) {
         self.background_color = [red, green, blue, alpha];
-        self.create_text_mesh();
+        self.create_text_mesh(engine);
     }
 
-    pub fn create_text_mesh(&mut self) {
+    pub fn create_text_mesh(&mut self, engine: &Arc<RwLock<Engine>>) {
         // todo margin
         // todo alignment
         // todo multiline support
         if self.text.len() < 1 {
-            if self.base.mesh_base.geometries.len() < 1 {
+            if self.base.model_base.meshes.len() < 1 {
                 return;
             }
-            self.base.mesh_base.geometries = Vec::new();
+            self.base.model_base.meshes = BTreeMap::new();
             return;
         }
         let scale = Scale::uniform(self.text_size);
@@ -158,17 +160,19 @@ impl Label {
             0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         ];
         let indices = [0u32, 2, 1, 1, 2, 3];
-        let eng = vxresult!(self.base.mesh_base.engine.read());
+        let eng = vxresult!(engine.read());
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let texture = texture_manager.create_2d_with_pixels(
             imgw as u32,
             imgh as u32,
-            &self.base.mesh_base.engine,
+            &engine,
             &img,
         );
-        let geo = Base::new(texture, &vertices, &indices, &self.base.mesh_base.engine);
-        self.base.mesh_base.geometries.push(geo);
+        let mesh = MeshBase::new_with_material(texture, &vertices, &indices, &eng);
+        let mesh_id = mesh.get_id();
+        let mesh = Arc::new(RwLock::new(mesh));
+        self.base.model_base.meshes.insert(mesh_id, mesh);
     }
 }
 
@@ -205,7 +209,7 @@ impl Object for Label {
     }
 }
 
-impl Mesh for Label { }
+impl Model for Label { }
 
 // impl DefaultMesh for Label {
 //     fn default(engine: &Arc<RwLock<Engine>>) -> Self {

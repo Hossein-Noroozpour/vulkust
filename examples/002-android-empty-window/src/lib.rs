@@ -8,6 +8,7 @@ use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct MyGame {}
 
 impl MyGame {

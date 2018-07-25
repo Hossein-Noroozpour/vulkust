@@ -6,6 +6,7 @@ use vulkust::core::event::Event;
 
 use std::sync::{Arc, RwLock};
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 struct MyGame {}
 
 impl MyGame {

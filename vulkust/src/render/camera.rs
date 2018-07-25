@@ -75,7 +75,7 @@ impl Manager {
                 return camera;
             }
         }
-        let mut table = vxunwrap!(self.gx3d_table);
+        let mut table = vxunwrap!(&mut self.gx3d_table);
         table.goto(id);
         let mut reader: &mut Gx3DReader = &mut table.reader;
         let type_id = reader.read_type_id();
@@ -461,7 +461,8 @@ impl Object for Orthographic {
 
 impl Loadable for Orthographic {
     fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
-        let o = match vxunwrap!(n.camera()).projection() {
+        let c = vxunwrap!(n.camera());
+        let o = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
                 vxlogf!("Type of camera isn't perspective.")
             }

@@ -7,7 +7,7 @@ use super::mesh::{Base as MeshBase, Mesh};
 use super::engine::Engine;
 use super::texture::{Texture2D, Loadable as TextureLoadable};
 use std::collections::BTreeMap;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Weak};
 use std::mem::size_of;
 
 use math;
@@ -15,9 +15,17 @@ use gltf;
 
 pub trait Model: Object {}
 
+#[repr(u8)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum TypeId {
+    Dynamic = 1,
+    Static = 2,
+    Widget = 3,
+}
+
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
-    pub models: BTreeMap<Id, Arc<RwLock<Model>>>,
+    pub models: BTreeMap<Id, Weak<RwLock<Model>>>,
     pub name_to_id: BTreeMap<String, Id>,
     pub gx3d_table: Option<Gx3dTable>,
 }
@@ -31,8 +39,27 @@ impl Manager {
         }
     }
 
-    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, my_id: Id) -> Arc<RwLock<Model>> {
-
+    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Model>> {
+        if let Some(model) = self.models.get(&id) {
+            if let Some(model) = model.upgrade() {
+                return model;
+            }
+        }
+        let gx3d_table = vxunwrap!(self.gx3d_table.as_mut());
+        gx3d_table.goto(id);
+        let reader = &mut gx3d_table.reader;
+        let t = reader.read_type_id();
+        let model: Arc<RwLock<Model>> = if t == TypeId::Static as u8 {
+            Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
+        } else if t == TypeId::Dynamic as u8 {
+            vxunimplemented!()
+        } else if t == TypeId::Widget as u8 {
+            vxunimplemented!()
+        } else {
+            vxunexpected!()
+        };
+        self.models.insert(id, Arc::downgrade(&model));
+        return model;
     }
 }
 
@@ -137,7 +164,7 @@ impl Loadable for Base {
         let obj_base = ObjectBase::new();
         let engine = vxresult!(eng.read());
         let scene_manager = vxresult!(engine.scene_manager.read());
-        let mesh_manager = vxresult!(scene_manager.mesh_manager.write());
+        let mut mesh_manager = vxresult!(scene_manager.mesh_manager.write());
         let model = vxunwrap!(node.mesh());
         let primitives = model.primitives();
         let mut meshes = BTreeMap::new();
@@ -185,12 +212,12 @@ impl Loadable for Base {
         let meshes_ids = reader.read_array();
         let eng = vxresult!(engine.read());
         let scene_manager = vxresult!(eng.scene_manager.read());
-        let mesh_manager = vxresult!(scene_manager.mesh_manager.write());
+        let mut mesh_manager = vxresult!(scene_manager.mesh_manager.write());
         let mut meshes = BTreeMap::new();
         let mut has_shadow_caster = false;
         let mut has_transparent = false;
         for mesh_id in meshes_ids {
-            let mesh = mesh_manager.load_gx3d(eng, mesh_id);
+            let mesh = mesh_manager.load_gx3d(engine, mesh_id);
             {
                 let mesh = vxresult!(mesh.read());
                 has_shadow_caster |= mesh.is_shadow_caster();
