@@ -5,9 +5,9 @@ use super::gx3d::Table as Gx3dTable;
 use rusttype::Font as TypeFont;
 use std::collections::BTreeMap;
 use std::default::Default;
+use std::fmt;
 use std::io::Read;
 use std::sync::{Arc, RwLock, Weak};
-use std::fmt;
 
 pub trait Font: CoreObject {
     fn get_font(&self) -> &TypeFont;
@@ -55,12 +55,16 @@ pub struct Base {
     pub font: TypeFont<'static>,
 }
 
+#[cfg(debug_assertions)]
 impl fmt::Debug for Base {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Base {{ obj_base: {:?}, name: {:?} }}", self.obj_base, self.name)
+        write!(
+            f,
+            "Base {{ obj_base: {:?}, name: {:?} }}",
+            self.obj_base, self.name
+        )
     }
 }
-
 
 impl Base {
     pub fn new_ttf(name: &str) -> Self {

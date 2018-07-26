@@ -92,7 +92,7 @@ impl Object for Base {
 }
 
 impl Loadable for Base {
-    fn new_with_gltf(node: &gltf::Node, _: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {    
+    fn new_with_gltf(node: &gltf::Node, _: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
         let name = match node.name() {
             Some(s) => Some(s.to_string()),
             None => None,

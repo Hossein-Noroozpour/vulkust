@@ -3,9 +3,9 @@
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
+use std::default::Default;
 #[cfg(debug_assertions)]
 use std::fmt;
-use std::default::Default;
 use std::mem::{transmute, zeroed};
 use std::os::raw::{
     c_char, c_int, c_long, c_longlong, c_short, c_uchar, c_uint, c_ulong, c_ushort, c_void,

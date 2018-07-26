@@ -1,6 +1,6 @@
+use super::debug::Debug;
 use super::types::Id;
 use std::sync::atomic::{AtomicU64, Ordering};
-use super::debug::Debug;
 
 pub static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 

@@ -6,8 +6,8 @@ use super::mesh::{Base as MeshBase, Mesh};
 use super::model::{Base as ModelBase, Model};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
-use std::sync::{Arc, RwLock};
 use std::collections::BTreeMap;
+use std::sync::{Arc, RwLock};
 
 use rusttype::{point, Scale};
 
@@ -88,12 +88,26 @@ impl Label {
         self.create_text_mesh(engine);
     }
 
-    pub fn set_text_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32, engine: &Arc<RwLock<Engine>>) {
+    pub fn set_text_color(
+        &mut self,
+        red: f32,
+        green: f32,
+        blue: f32,
+        alpha: f32,
+        engine: &Arc<RwLock<Engine>>,
+    ) {
         self.text_color = [red, green, blue, alpha];
         self.create_text_mesh(engine);
     }
 
-    pub fn set_background_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32, engine: &Arc<RwLock<Engine>>) {
+    pub fn set_background_color(
+        &mut self,
+        red: f32,
+        green: f32,
+        blue: f32,
+        alpha: f32,
+        engine: &Arc<RwLock<Engine>>,
+    ) {
         self.background_color = [red, green, blue, alpha];
         self.create_text_mesh(engine);
     }
@@ -163,12 +177,8 @@ impl Label {
         let eng = vxresult!(engine.read());
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
-        let texture = texture_manager.create_2d_with_pixels(
-            imgw as u32,
-            imgh as u32,
-            &engine,
-            &img,
-        );
+        let texture =
+            texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, &engine, &img);
         let mesh = MeshBase::new_with_material(texture, &vertices, &indices, &eng);
         let mesh_id = mesh.get_id();
         let mesh = Arc::new(RwLock::new(mesh));
@@ -209,7 +219,7 @@ impl Object for Label {
     }
 }
 
-impl Model for Label { }
+impl Model for Label {}
 
 // impl DefaultMesh for Label {
 //     fn default(engine: &Arc<RwLock<Engine>>) -> Self {

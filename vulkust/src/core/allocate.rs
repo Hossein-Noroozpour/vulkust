@@ -1,5 +1,5 @@
-use std::sync::{Arc, RwLock, Weak};
 use super::debug::Debug;
+use std::sync::{Arc, RwLock, Weak};
 
 pub fn align(size: isize, alignment: isize) -> isize {
     let tmp = size / alignment;

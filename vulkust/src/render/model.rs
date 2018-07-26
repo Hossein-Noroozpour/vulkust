@@ -1,17 +1,17 @@
-use super::super::core::types::Id;
 use super::super::core::object::Object as CoreObject;
-use super::super::physics::collider::{Collider, read as read_collider, Ghost as GhostCollider};
-use super::gx3d::{ Gx3DReader, Table as Gx3dTable};
-use super::object::{Base as ObjectBase, Loadable, Object};
-use super::mesh::{Base as MeshBase, Mesh};
+use super::super::core::types::Id;
+use super::super::physics::collider::{read as read_collider, Collider, Ghost as GhostCollider};
 use super::engine::Engine;
-use super::texture::{Texture2D, Loadable as TextureLoadable};
+use super::gx3d::{Gx3DReader, Table as Gx3dTable};
+use super::mesh::{Base as MeshBase, Mesh};
+use super::object::{Base as ObjectBase, Loadable, Object};
+use super::texture::{Loadable as TextureLoadable, Texture2D};
 use std::collections::BTreeMap;
-use std::sync::{Arc, RwLock, Weak};
 use std::mem::size_of;
+use std::sync::{Arc, RwLock, Weak};
 
-use math;
 use gltf;
+use math;
 
 pub trait Model: Object {}
 
@@ -68,7 +68,7 @@ impl Manager {
 pub struct Uniform {
     pub model: math::Matrix4<f32>,
     pub model_view_projection: math::Matrix4<f32>,
-    // todo, I think its not gonna be needed, 
+    // todo, I think its not gonna be needed,
     // because of cascaded shadow
     // pub directional_biased_model: math::Matrix4<f32>,
     // pub sun_mvp: math::Matrix4<f32>,
@@ -78,10 +78,8 @@ impl Uniform {
     fn new_with_gltf(node: &gltf::Node) -> Self {
         let m = node.transform().matrix();
         let model = math::Matrix4::new(
-            m[0][0], m[0][1], m[0][2], m[0][3], 
-            m[1][0], m[1][1], m[1][2], m[1][3], 
-            m[2][0], m[2][1], m[2][2], m[2][3], 
-            m[3][0], m[3][1], m[3][2], m[3][3], 
+            m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0],
+            m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3],
         );
         Uniform {
             model,
@@ -91,10 +89,22 @@ impl Uniform {
 
     fn new_with_gx3d(reader: &mut Gx3DReader) -> Self {
         let model = math::Matrix4::new(
-            reader.read(), reader.read(), reader.read(), reader.read(), 
-            reader.read(), reader.read(), reader.read(), reader.read(), 
-            reader.read(), reader.read(), reader.read(), reader.read(), 
-            reader.read(), reader.read(), reader.read(), reader.read(), 
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
+            reader.read(),
         );
         Uniform {
             model,
@@ -119,8 +129,7 @@ pub struct Base {
     pub children: BTreeMap<Id, Arc<RwLock<Model>>>,
 }
 
-impl Base {
-}
+impl Base {}
 
 impl CoreObject for Base {
     fn get_id(&self) -> Id {

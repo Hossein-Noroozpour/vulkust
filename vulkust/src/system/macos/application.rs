@@ -5,11 +5,11 @@ use super::super::apple;
 use super::app_delegate;
 use super::game_view;
 use super::game_view_controller;
+#[cfg(debug_assertions)]
+use std::fmt;
 use std::mem::transmute;
 use std::os::raw::c_void;
 use std::sync::{Arc, RwLock};
-#[cfg(debug_assertions)]
-use std::fmt;
 
 pub struct Application {
     pub app: apple::Id,
@@ -66,7 +66,7 @@ impl Application {
     pub fn run(&self) {
         unsafe {
             {
-                let os_app = vxresult!(vxunwrap!(self.renderer).read()).os_app.upgrade();
+                let os_app = vxresult!(vxunwrap!(&self.renderer).read()).os_app.upgrade();
                 let os_app = Box::into_raw(Box::new(vxunwrap!(os_app).clone()));
                 let os_app: *mut c_void = transmute(os_app);
                 (*self.app_dlg).set_ivar(app_delegate::APP_VAR_NAME, os_app);
@@ -81,7 +81,7 @@ impl Application {
     }
 
     pub fn update(&self) {
-        vxresult!(vxunwrap!(self.renderer).read()).update();
+        vxresult!(vxunwrap!(&self.renderer).read()).update();
         // vxlogi!("reached");
     }
 

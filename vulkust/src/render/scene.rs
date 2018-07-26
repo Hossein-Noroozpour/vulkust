@@ -7,8 +7,8 @@ use super::font::Manager as FontManager;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::light::{Light, Manager as LightManager};
 use super::mesh::{Manager as MeshManager, Mesh};
-use super::model::{Base as ModelBase, Model, Manager as ModelManager};
-use super::object::{Base as ObjectBase, Object, Loadable as ObjectLoadable};
+use super::model::{Base as ModelBase, Manager as ModelManager, Model};
+use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
 use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
 use std::io::BufReader;
@@ -211,7 +211,8 @@ pub struct Uniform {
 impl Uniform {
     pub fn new() -> Self {
         let view_projection = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, // todo default view projection
+            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+            1.0, // todo default view projection
         );
         Uniform { view_projection }
     }
@@ -298,7 +299,10 @@ impl Base {
         };
         let mut cameras = BTreeMap::new();
         for id in &cameras_ids {
-            cameras.insert(*id, vxresult!(camera_manager.write()).load_gx3d(engine, *id));
+            cameras.insert(
+                *id,
+                vxresult!(camera_manager.write()).load_gx3d(engine, *id),
+            );
         }
         let active_camera = if cameras_ids.len() > 0 {
             Some(Arc::downgrade(
@@ -320,7 +324,7 @@ impl Base {
         // todo initialize the uniform
         let mut meshes = BTreeMap::new();
         // todo initialize meshes
-        // for 
+        // for
         let meshes = Arc::new(RwLock::new(meshes));
         Base {
             obj_base: ObjectBase::new_with_id(my_id),
@@ -595,7 +599,6 @@ impl Scene for Ui {
         self.base.add_camera(camera)
     }
 
-    
     fn add_mesh(&mut self, pipeline_id: Id, model_id: Id, mesh_id: Id, mesh: Weak<RwLock<Mesh>>) {
         self.base.add_mesh(pipeline_id, model_id, mesh_id, mesh);
     }

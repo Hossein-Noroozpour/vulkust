@@ -1,5 +1,5 @@
-use super::super::render::gx3d::Gx3DReader;
 use super::super::core::debug::Debug;
+use super::super::render::gx3d::Gx3DReader;
 use std::sync::{Arc, RwLock};
 
 use math;
@@ -8,7 +8,7 @@ pub trait Collider: Debug {}
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 #[repr(u8)]
-pub enum TypeId  {
+pub enum TypeId {
     Mesh = 2,
     Ghost = 1,
 }
@@ -35,13 +35,10 @@ impl Mesh {
         let count: u64 = reader.read();
         let mut vertices = vec![math::Vector3::new(0.0, 0.0, 0.0); count as usize];
         for i in 0..count as usize {
-            vertices[i] = math::Vector3::new(reader.read(),reader.read(),reader.read());
+            vertices[i] = math::Vector3::new(reader.read(), reader.read(), reader.read());
         }
         let indices = reader.read_array();
-        Mesh {
-            vertices,
-            indices,
-        }
+        Mesh { vertices, indices }
     }
 }
 
@@ -51,7 +48,9 @@ impl Collider for Mesh {}
 pub struct Ghost {}
 
 impl Ghost {
-    pub fn new() -> Self { Ghost {} }
+    pub fn new() -> Self {
+        Ghost {}
+    }
 }
 
 impl Collider for Ghost {}
