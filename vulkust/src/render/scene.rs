@@ -1,6 +1,7 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, TypeId as CoreTypeId};
 use super::super::system::file::File;
+use super::buffer::DynamicBuffer;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager};
 use super::engine::Engine;
 use super::font::Manager as FontManager;
@@ -12,6 +13,7 @@ use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
 use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
 use std::io::BufReader;
+use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
 
 use gltf;
@@ -222,6 +224,7 @@ impl Uniform {
 pub struct Base {
     pub obj_base: ObjectBase,
     pub uniform: Uniform,
+    pub uniform_buffer: DynamicBuffer,
     pub cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
     pub active_camera: Option<Weak<RwLock<Camera>>>,
     pub lights: BTreeMap<Id, Arc<RwLock<Light>>>,
@@ -264,9 +267,14 @@ impl Base {
                 models.insert(id, model);
             } // todo read lights
         }
+        let engine = vxresult!(engine.read());
+        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         Base {
             obj_base,
             uniform,
+            uniform_buffer,
             cameras,
             active_camera,
             models,
@@ -326,6 +334,9 @@ impl Base {
         // todo initialize meshes
         // for
         let meshes = Arc::new(RwLock::new(meshes));
+        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         Base {
             obj_base: ObjectBase::new_with_id(my_id),
             cameras,
@@ -333,6 +344,7 @@ impl Base {
             models,
             lights,
             uniform,
+            uniform_buffer,
             meshes,
         }
     }
@@ -480,10 +492,15 @@ impl Scene for Base {
 }
 
 impl DefaultScene for Base {
-    fn default(_: &Arc<RwLock<Engine>>) -> Self {
+    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
+        let engine = vxresult!(engine.read());
+        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         Base {
             obj_base: ObjectBase::new(),
             uniform: Uniform::new(),
+            uniform_buffer,
             cameras: BTreeMap::new(),
             active_camera: None,
             lights: BTreeMap::new(),

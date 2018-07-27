@@ -1,6 +1,7 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::super::physics::collider::{read as read_collider, Collider, Ghost as GhostCollider};
+use super::buffer::DynamicBuffer;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::mesh::{Base as MeshBase, Mesh};
@@ -125,6 +126,7 @@ pub struct Base {
     pub distance_from_cameras: Vec<f32>,
     pub collider: Arc<RwLock<Collider>>,
     pub uniform: Uniform,
+    pub uniform_buffer: DynamicBuffer,
     pub meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
     pub children: BTreeMap<Id, Arc<RwLock<Model>>>,
 }
@@ -197,6 +199,9 @@ impl Loadable for Base {
         if node.children().count() > 0 {
             vxunimplemented!(); // todo support children
         }
+        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         Base {
             obj_base,
             is_dynamic: true,
@@ -208,6 +213,7 @@ impl Loadable for Base {
             distance_from_cameras: Vec::new(),
             collider: Arc::new(RwLock::new(GhostCollider::new())),
             uniform: Uniform::new_with_gltf(node),
+            uniform_buffer,
             meshes,
             children: BTreeMap::new(),
         }
@@ -234,6 +240,9 @@ impl Loadable for Base {
             }
             meshes.insert(mesh_id, mesh);
         }
+        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         Base {
             obj_base,
             is_dynamic: false, // todo there must be a dynamic struct for this that implement transformable
@@ -245,6 +254,7 @@ impl Loadable for Base {
             distance_from_cameras: Vec::new(),
             collider,
             uniform,
+            uniform_buffer,
             meshes,
             children: BTreeMap::new(),
         }

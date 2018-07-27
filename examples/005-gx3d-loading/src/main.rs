@@ -3,6 +3,7 @@ extern crate vulkust;
 
 use vulkust::core::application::Application as CoreAppTrait;
 use vulkust::core::event::Event;
+use vulkust::core::types::Id;
 use vulkust::render::camera::{DefaultCamera, Orthographic};
 use vulkust::render::engine::Engine as Renderer;
 use vulkust::render::scene::{Scene, Ui as UiScene};
@@ -10,6 +11,8 @@ use vulkust::render::widget::Label;
 use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
+
+mod data_gx3d;
 
 ///     In this example you have to place your data.gx3d file in data directory of your project (in
 /// android assets/data/ and in ios Resources/data/). Then if data.gx3d was presented render engine
@@ -20,7 +23,7 @@ use std::sync::{Arc, RwLock};
 struct MyGame {
     pub os_app: Option<Arc<RwLock<OsApp>>>,
     pub renderer: Option<Arc<RwLock<Renderer>>>,
-    pub ui_scene: Option<Arc<RwLock<UiScene>>>,
+    pub scene: Option<Arc<RwLock<Scene>>>,
 }
 
 impl MyGame {
@@ -28,7 +31,7 @@ impl MyGame {
         MyGame {
             os_app: None,
             renderer: None,
-            ui_scene: None,
+            scene: None,
         }
     }
 }
@@ -42,7 +45,11 @@ impl CoreAppTrait for MyGame {
         self.renderer = Some(renderer);
     }
 
-    fn initialize(&mut self) {}
+    fn initialize(&mut self) {
+        let renderer = vxresult!(vxunwrap!(&self.renderer).read());
+        let mut scene_manager = vxresult!(renderer.scene_manager.write());
+        self.scene = Some(scene_manager.load_gx3d(data_gx3d::Scene::SCENE_GAME_SPLASH as Id));
+    }
 
     fn on_event(&self, _e: Event) {}
 

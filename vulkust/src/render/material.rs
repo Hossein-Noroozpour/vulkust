@@ -1,7 +1,9 @@
 use super::super::core::types::{Id, TypeId};
+use super::buffer::DynamicBuffer;
 use super::engine::Engine;
 use super::gx3d::Gx3DReader;
 use super::texture::Texture;
+use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
 use math;
@@ -70,10 +72,14 @@ pub struct Material {
     pub emissive_factor_texture: Option<Arc<RwLock<Texture>>>,
     pub translucency: TranslucencyMode,
     pub uniform: Uniform,
+    pub uniform_buffer: DynamicBuffer,
 }
 
 impl Material {
-    pub fn new() -> Self {
+    pub fn new(engine: &Engine) -> Self {
+        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         Material {
             base_color_texture: None,
             base_color_factor_texture: None,
@@ -84,6 +90,7 @@ impl Material {
             emissive_factor_texture: None,
             translucency: TranslucencyMode::Opaque,
             uniform: Uniform::new(),
+            uniform_buffer,
         }
     }
 
@@ -91,7 +98,7 @@ impl Material {
         let eng = vxresult!(engine.read());
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
-        let mut myself = Self::new();
+        let mut myself = Self::new(&eng);
         // Alpha
         let t = reader.read_type_id();
         if t == Field::Float as TypeId {
