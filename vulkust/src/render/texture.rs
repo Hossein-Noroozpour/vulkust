@@ -1,12 +1,21 @@
 use super::super::core::object::{Base as ObjectBase, Object as CoreObject};
-use super::super::core::types::Id;
+use super::super::core::types::{Id, Size, TypeId};
 use super::engine::Engine;
-use super::gx3d::Table as Gx3dTable;
+use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::image::View as ImageView;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 
 use gltf;
+use image;
+
+#[repr(u8)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum TextureType {
+    T2D = 1,
+    T3D = 2,
+    Cube = 3,
+}
 
 pub trait Texture: CoreObject {
     fn get_image_view(&self) -> &Arc<ImageView>;
@@ -14,6 +23,7 @@ pub trait Texture: CoreObject {
 
 pub trait Loadable: Sized {
     fn new_with_gltf(&gltf::Texture, &Engine, &[u8]) -> Self;
+    fn new_with_gx3d(&Arc<RwLock<Engine>>, &mut Gx3DReader, Id) -> Self;
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -60,7 +70,22 @@ impl Manager {
     }
 
     pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Texture>> {
-        vxunimplemented!();
+        if let Some(t) = self.textures.get(&id) {
+            if let Some(t) = t.upgrade() {
+                return t;
+            }
+        }
+        let table = vxunwrap!(&mut self.gx3d_table);
+        table.goto(id);
+        let reader: &mut Gx3DReader = &mut table.reader;
+        let t = reader.read_type_id();
+        let texture: Arc<RwLock<Texture>> = if t == TextureType::T2D as TypeId {
+            Arc::new(RwLock::new(Texture2D::new_with_gx3d(engine, reader, id)))
+        } else {
+            vxunexpected!();
+        };
+        self.textures.insert(id, Arc::downgrade(&texture));
+        return texture;
     }
 
     pub fn create_2d_with_pixels(
@@ -94,11 +119,21 @@ impl Texture2D {
         engine: &Arc<RwLock<Engine>>,
         data: &[u8],
     ) -> Self {
+        Self::new_with_base_pixels(ObjectBase::new(), width, height, engine, data)
+    }
+
+    pub fn new_with_base_pixels(
+        obj_base: ObjectBase,
+        width: u32,
+        height: u32,
+        engine: &Arc<RwLock<Engine>>,
+        data: &[u8],
+    ) -> Self {
         let engine = vxresult!(engine.read());
         let engine = vxresult!(engine.gapi_engine.read());
         let image_view = engine.create_texture_2d_with_pixels(width, height, data);
         Texture2D {
-            obj_base: ObjectBase::new(),
+            obj_base,
             name: None,
             image_view,
         }
@@ -141,5 +176,15 @@ impl Loadable for Texture2D {
             name: Some(name),
             image_view,
         }
+    }
+
+    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, id: Id) -> Self {
+        let obj_base = ObjectBase::new_with_id(id);
+        let size: Size = reader.read();
+        let data = reader.read_bytes(size);
+        let img = vxresult!(image::load_from_memory(&data)).to_rgba();
+        let (width, height) = img.dimensions();
+        let img = img.into_raw();
+        Self::new_with_base_pixels(obj_base, width, height, engine, &img)
     }
 }

@@ -1,5 +1,5 @@
 use super::super::core::object::NEXT_ID;
-use super::super::core::types::{Id, Offset, TypeId};
+use super::super::core::types::{Id, Offset, Size, TypeId};
 use super::super::system::file::File;
 use super::scene::Manager as SceneManager;
 use std::collections::BTreeMap;
@@ -150,6 +150,12 @@ impl Gx3DReader {
         if offset != vxresult!(self.file.seek(SeekFrom::Start(offset))) {
             vxunexpected!();
         }
+    }
+
+    pub fn read_bytes(&mut self, count: Size) -> Vec<u8> {
+        let mut data = vec![0u8; count as usize];
+        self.file.read(&mut data);
+        return data;
     }
 }
 
