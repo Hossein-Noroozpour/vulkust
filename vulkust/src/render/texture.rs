@@ -59,6 +59,10 @@ impl Manager {
         return texture;
     }
 
+    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Texture>> {
+        vxunimplemented!();
+    }
+
     pub fn create_2d_with_pixels(
         &mut self,
         width: u32,
