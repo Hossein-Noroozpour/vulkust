@@ -5,7 +5,6 @@ members = [
     "examples/003-ios-empty-window",
     "examples/004-hello-world",
     "examples/005-gx3d-loading",
-    "tools/ttf-baker",
     "vulkust",
 ]
 
