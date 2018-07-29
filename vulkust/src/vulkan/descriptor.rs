@@ -56,20 +56,20 @@ pub struct SetLayout {
 }
 
 impl SetLayout {
-    fn new(logical_device: Arc<LogicalDevice>) -> Self {
-        let mut layout_bindings = vec![vk::VkDescriptorSetLayoutBinding::default(); 2];
-        layout_bindings[0].binding = 0;
-        layout_bindings[0].descriptorType =
-            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        layout_bindings[0].descriptorCount = 1;
-        layout_bindings[0].stageFlags =
-            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32;
-        layout_bindings[1].binding = 1;
-        layout_bindings[1].descriptorType =
-            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        layout_bindings[1].descriptorCount = 1;
-        layout_bindings[1].stageFlags =
-            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32;
+    pub fn new_pbr(logical_device: Arc<LogicalDevice>) -> Self {
+        let layout_bindings = Self::create_bindings_info_pbr();
+        return Self::new_with_bindings_info(logical_device, &layout_bindings);
+    }
+
+    pub fn new_buffer_only(logical_device: Arc<LogicalDevice>) -> Self {
+        let layout_bindings = Self::create_bindings_info_buffer_only();
+        return Self::new_with_bindings_info(logical_device, &layout_bindings);
+    }
+
+    pub fn new_with_bindings_info(
+        logical_device: Arc<LogicalDevice>, 
+        layout_bindings: &Vec<vk::VkDescriptorSetLayoutBinding>
+    ) -> Self {
         let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
         descriptor_layout.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -86,6 +86,36 @@ impl SetLayout {
             logical_device,
             vk_data,
         }
+    }
+
+    pub fn create_bindings_info_buffer_only() -> Vec<vk::VkDescriptorSetLayoutBinding> {
+        let mut layout_bindings = vec![vk::VkDescriptorSetLayoutBinding::default(); 1];
+        layout_bindings[0].binding = 0;
+        layout_bindings[0].descriptorType =
+            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        layout_bindings[0].descriptorCount = 1;
+        layout_bindings[0].stageFlags =
+            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32;
+        return layout_bindings;
+    }
+
+    pub fn create_bindings_info_pbr() -> Vec<vk::VkDescriptorSetLayoutBinding> {
+        let mut layout_bindings = vec![vk::VkDescriptorSetLayoutBinding::default(); 8];
+        layout_bindings[0].binding = 0;
+        layout_bindings[0].descriptorType =
+            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        layout_bindings[0].descriptorCount = 1;
+        layout_bindings[0].stageFlags =
+            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32;
+        for i in 1..8 {
+            layout_bindings[i].binding = i as u32;
+            layout_bindings[i].descriptorCount = 1;
+            layout_bindings[i].descriptorType =
+                vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            layout_bindings[i].stageFlags =
+                vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32;
+        }
+        return layout_bindings;
     }
 }
 
@@ -171,7 +201,8 @@ impl Drop for Set {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub buffer_manager: Arc<RwLock<BufferManager>>,
-    pub main_set_layout: Arc<SetLayout>,
+    pub pbr_set_layout: Arc<SetLayout>,
+    pub buffer_only_set_layout: Arc<SetLayout>,
     pub pool: Arc<Pool>,
 }
 
@@ -182,19 +213,21 @@ impl Manager {
         conf: &Configurations,
     ) -> Self {
         let pool = Arc::new(Pool::new(logical_device.clone(), conf));
-        let main_set_layout = Arc::new(SetLayout::new(logical_device.clone()));
+        let pbr_set_layout = Arc::new(SetLayout::new_pbr(logical_device.clone()));
+        let buffer_only_set_layout = Arc::new(SetLayout::new_buffer_only(logical_device.clone()));
         let buffer_manager = buffer_manager.clone();
         Manager {
             buffer_manager,
-            main_set_layout,
+            pbr_set_layout,
+            buffer_only_set_layout,
             pool,
         }
     }
 
-    pub fn create_main_set(&mut self, image_view: &Arc<ImageView>, sampler: &Arc<Sampler>) -> Set {
+    pub fn create_pbr_set(&mut self, image_view: &Arc<ImageView>, sampler: &Arc<Sampler>) -> Set {
         Set::new(
             &self.pool,
-            &self.main_set_layout,
+            &self.pbr_set_layout,
             &self.buffer_manager,
             image_view,
             sampler,
