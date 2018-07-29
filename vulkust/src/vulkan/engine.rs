@@ -1,4 +1,5 @@
 use super::super::system::os::application::Application as OsApp;
+use super::super::render::config::Configurations;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
@@ -62,7 +63,7 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn new(os_app: &Arc<RwLock<OsApp>>) -> Self {
+    pub fn new(os_app: &Arc<RwLock<OsApp>>, conf: &Configurations) -> Self {
         let instance = Arc::new(Instance::new());
         let surface = Arc::new(Surface::new(&instance, os_app));
         let physical_device = Arc::new(PhysicalDevice::new(&surface));
@@ -111,6 +112,7 @@ impl Engine {
         let descriptor_manager = Arc::new(RwLock::new(DescriptorManager::new(
             &buffer_manager,
             &logical_device,
+            conf,
         )));
         let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(
             &logical_device,
@@ -172,14 +174,14 @@ impl Engine {
     //     }
     // }
 
-    pub fn start_recording(&mut self) {
+    pub fn start_recording(&mut self, ) {
         let current_buffer = match self
             .swapchain
             .get_next_image_index(&self.present_complete_semaphore)
         {
             NextImageResult::Next(c) => c,
             NextImageResult::NeedsRefresh => {
-                self.reinitialize();
+                vxlogf!("Problem with rereshing screen, engine needs refreshing.");
                 return;
             }
         } as usize;
@@ -439,9 +441,9 @@ impl Engine {
         vxresult!(self.descriptor_manager.write()).create_main_set(image_view, &self.sampler)
     }
 
-    fn reinitialize(&mut self) {
+    fn reinitialize(&mut self, conf: &Configurations) {
         self.logical_device.wait_idle();
-        let new = Self::new(&self.os_app);
+        let new = Self::new(&self.os_app, conf);
         self.instance = new.instance.clone();
         self.surface = new.surface.clone();
         self.physical_device = new.physical_device.clone();

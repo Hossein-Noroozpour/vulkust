@@ -12,7 +12,7 @@ pub trait Application: Debug {
     fn on_event(&self, _e: Event) {}
     fn update(&mut self) {}
     fn terminate(&mut self) {}
-    fn get_config(&mut self) -> Configurations {
+    fn get_config(&self) -> Configurations {
         Configurations::default()
     }
 }

@@ -14,7 +14,6 @@ pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Engine {
     pub myself: Option<Weak<RwLock<Engine>>>,
-    pub config: Arc<RwLock<Config>>,
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub os_app: Weak<RwLock<OsApp>>,
     pub core_app: Arc<RwLock<CoreAppTrait>>,
@@ -23,17 +22,13 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
-        let config = Arc::new(RwLock::new(Config {
-            // todo It must be filled with a file
-            number_cascaded_shadows: 6,
-        }));
-        let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app)));
+        let config = &vxresult!(core_app.read()).get_config();
+        let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app, &config.render)));
         let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
         gx3d_import(&scene_manager);
         let myself = None;
         Engine {
             myself,
-            config,
             gapi_engine,
             os_app: Arc::downgrade(os_app),
             core_app,

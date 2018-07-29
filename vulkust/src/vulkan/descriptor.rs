@@ -3,6 +3,7 @@ use super::device::logical::Logical as LogicalDevice;
 use super::image::View as ImageView;
 use super::sampler::Sampler;
 use super::vulkan as vk;
+use super::super::render::config::Configurations;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
@@ -13,19 +14,19 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn new(logical_device: Arc<LogicalDevice>) -> Self {
-        let materials_count = 8;
+    pub fn new(logical_device: Arc<LogicalDevice>, conf: &Configurations) -> Self {
+        let buffers_count = conf.max_number_mesh + conf.max_number_models + conf.max_number_scene;
         let mut type_counts = [vk::VkDescriptorPoolSize::default(); 2];
         type_counts[0].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        type_counts[0].descriptorCount = materials_count;
+        type_counts[0].descriptorCount = buffers_count as u32;
         type_counts[1].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        type_counts[1].descriptorCount = materials_count;
+        type_counts[1].descriptorCount = conf.max_number_texture as u32;
         let mut descriptor_pool_info = vk::VkDescriptorPoolCreateInfo::default();
         descriptor_pool_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptor_pool_info.poolSizeCount = type_counts.len() as u32;
         descriptor_pool_info.pPoolSizes = type_counts.as_ptr();
-        descriptor_pool_info.maxSets = materials_count + 1; // todo find a better solution for this
+        descriptor_pool_info.maxSets = buffers_count as u32 + 1; // todo find a better solution for this
         let mut vk_data = 0 as vk::VkDescriptorPool;
         vulkan_check!(vk::vkCreateDescriptorPool(
             logical_device.vk_data,
@@ -178,8 +179,9 @@ impl Manager {
     pub fn new(
         buffer_manager: &Arc<RwLock<BufferManager>>,
         logical_device: &Arc<LogicalDevice>,
+        conf: &Configurations,
     ) -> Self {
-        let pool = Arc::new(Pool::new(logical_device.clone()));
+        let pool = Arc::new(Pool::new(logical_device.clone(), conf));
         let main_set_layout = Arc::new(SetLayout::new(logical_device.clone()));
         let buffer_manager = buffer_manager.clone();
         Manager {
