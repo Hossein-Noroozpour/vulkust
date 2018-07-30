@@ -19,17 +19,10 @@ pub enum Field {
 #[repr(C)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
-    pub base_color: math::Vector3<f32>,
-    pub base_color_factor: math::Vector3<f32>,
-    pub metallic_roughness: math::Vector3<f32>,
     pub metallic_factor: f32,
     pub roughness_factor: f32,
-    pub normal: math::Vector3<f32>,
     pub normal_scale: f32,
-    pub occlusion: math::Vector3<f32>,
     pub occlusion_strength: f32,
-    pub emissive: math::Vector3<f32>,
-    pub emissive_factor: math::Vector3<f32>,
     pub alpha: f32,
     pub alpha_cutoff: f32,
 }
@@ -37,17 +30,10 @@ pub struct Uniform {
 impl Uniform {
     pub fn new() -> Self {
         Uniform {
-            base_color: math::Vector3::new(1.0, 1.0, 1.0),
-            base_color_factor: math::Vector3::new(1.0, 1.0, 1.0),
-            metallic_roughness: math::Vector3::new(1.0, 1.0, 1.0),
             metallic_factor: 1.0,
             roughness_factor: 1.0,
-            normal: math::Vector3::new(0.5, 0.5, 1.0),
             normal_scale: 1.0,
-            occlusion: math::Vector3::new(1.0, 1.0, 1.0),
             occlusion_strength: 1.0,
-            emissive: math::Vector3::new(1.0, 1.0, 1.0),
-            emissive_factor: math::Vector3::new(0.0, 0.0, 0.0),
             alpha: 1.0,
             alpha_cutoff: 0.0,
         }
@@ -63,13 +49,13 @@ pub enum TranslucencyMode {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Material {
-    pub base_color_texture: Option<Arc<RwLock<Texture>>>,
-    pub base_color_factor_texture: Option<Arc<RwLock<Texture>>>,
-    pub metallic_roughness_texture: Option<Arc<RwLock<Texture>>>,
-    pub normal_texture: Option<Arc<RwLock<Texture>>>,
-    pub occlusion_texture: Option<Arc<RwLock<Texture>>>,
-    pub emissive_texture: Option<Arc<RwLock<Texture>>>,
-    pub emissive_factor_texture: Option<Arc<RwLock<Texture>>>,
+    pub base_color: Arc<RwLock<Texture>>,
+    pub base_color_factor: Arc<RwLock<Texture>>,
+    pub metallic_roughness: Arc<RwLock<Texture>>,
+    pub normal: Arc<RwLock<Texture>>,
+    pub occlusion: Arc<RwLock<Texture>>,
+    pub emissive: Arc<RwLock<Texture>>,
+    pub emissive_factor: Arc<RwLock<Texture>>,
     pub translucency: TranslucencyMode,
     pub uniform: Uniform,
     pub uniform_buffer: DynamicBuffer,
@@ -81,13 +67,13 @@ impl Material {
         let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         Material {
-            base_color_texture: None,
-            base_color_factor_texture: None,
-            metallic_roughness_texture: None,
-            normal_texture: None,
-            occlusion_texture: None,
-            emissive_texture: None,
-            emissive_factor_texture: None,
+            base_color: None,
+            base_color_factor: None,
+            metallic_roughness: None,
+            normal: None,
+            occlusion: None,
+            emissive: None,
+            emissive_factor: None,
             translucency: TranslucencyMode::Opaque,
             uniform: Uniform::new(),
             uniform_buffer,

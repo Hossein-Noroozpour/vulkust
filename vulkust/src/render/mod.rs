@@ -15,7 +15,7 @@ pub mod model;
 pub mod object;
 // pub mod pipeline;
 pub mod scene;
-// pub mod shader;
+pub mod sampler;
 pub mod texture;
 // pub mod vertex;
 pub mod widget;

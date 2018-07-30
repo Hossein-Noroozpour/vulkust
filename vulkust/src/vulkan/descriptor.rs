@@ -1,9 +1,9 @@
-use super::buffer::Manager as BufferManager;
+use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::device::logical::Logical as LogicalDevice;
-use super::image::View as ImageView;
-use super::sampler::Sampler;
 use super::vulkan as vk;
 use super::super::render::config::Configurations;
+use super::super::render::texture::Texture;
+use super::super::core::allocate::Object as AlcObject;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
@@ -131,52 +131,28 @@ impl Drop for SetLayout {
 pub struct Set {
     pub pool: Arc<Pool>,
     pub layout: Arc<SetLayout>,
+    pub uniform: Arc<RwLock<DynamicBuffer>>,
+    pub textures: Vec<Arc<RwLock<Texture>>>,
     pub vk_data: vk::VkDescriptorSet,
 }
 
 impl Set {
-    fn new(
-        pool: &Arc<Pool>,
-        layout: &Arc<SetLayout>,
+    fn new_buffer_only(
+        pool: Arc<Pool>,
+        layout: Arc<SetLayout>,
+        uniform: Arc<RwLock<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
-        image_view: &Arc<ImageView>,
-        sampler: &Arc<Sampler>,
     ) -> Self {
-        let layout = layout.clone();
+        let vk_data = Self::allocate_set(&pool, &layout);
         let logical_device: &Arc<LogicalDevice> = &pool.logical_device;
-        let pool = pool.clone();
-        let mut alloc_info = vk::VkDescriptorSetAllocateInfo::default();
-        alloc_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        alloc_info.descriptorPool = pool.vk_data;
-        alloc_info.descriptorSetCount = 1;
-        alloc_info.pSetLayouts = &layout.vk_data;
-        let mut vk_data = 0 as vk::VkDescriptorSet;
-        vulkan_check!(vk::vkAllocateDescriptorSets(
-            logical_device.vk_data,
-            &alloc_info,
-            &mut vk_data,
-        ));
-        let buffer = vxresult!(buffer_manager.read()).cpu_buffer.vk_data;
-        let mut buff_info = vk::VkDescriptorBufferInfo::default();
-        buff_info.buffer = buffer;
-        buff_info.range = 64; // todo: temporary
-        let mut img_info = vk::VkDescriptorImageInfo::default();
-        img_info.imageLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        img_info.imageView = image_view.vk_data;
-        img_info.sampler = sampler.vk_data;
-        let mut infos = vec![vk::VkWriteDescriptorSet::default(); 2];
+        let buff_info = Self::create_buffer_info(&vxresult!(uniform.read()), buffer_manager);
+        let mut infos = vec![vk::VkWriteDescriptorSet::default(); 1];
         infos[0].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         infos[0].dstSet = vk_data;
         infos[0].descriptorCount = 1;
         infos[0].descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         infos[0].pBufferInfo = &buff_info;
         infos[0].dstBinding = 0;
-        infos[1].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        infos[1].dstSet = vk_data;
-        infos[1].descriptorCount = 1;
-        infos[1].descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        infos[1].pImageInfo = &img_info;
-        infos[1].dstBinding = 1;
         unsafe {
             vk::vkUpdateDescriptorSets(
                 logical_device.vk_data,
@@ -186,9 +162,89 @@ impl Set {
                 null(),
             );
         }
+        let textures = Vec::new();
         Set {
             pool,
             layout,
+            uniform,
+            textures,
+            vk_data,
+        }
+    }
+
+    fn create_buffer_info(
+        uniform: &DynamicBuffer,
+        buffer_manager: &Arc<RwLock<BufferManager>>,
+    ) -> vk::VkDescriptorBufferInfo { 
+        let mut buff_info = vk::VkDescriptorBufferInfo::default();
+        buff_info.buffer = vxresult!(buffer_manager.read()).cpu_buffer.vk_data;
+        buff_info.range = vxresult!(uniform.buffers[0].0.read()).get_size() as vk::VkDeviceSize;
+        return buff_info;
+    }
+
+    fn allocate_set(pool: &Arc<Pool>, layout: &Arc<SetLayout>) -> vk::VkDescriptorSet {
+        let mut alloc_info = vk::VkDescriptorSetAllocateInfo::default();
+        alloc_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        alloc_info.descriptorPool = pool.vk_data;
+        alloc_info.descriptorSetCount = 1;
+        alloc_info.pSetLayouts = &layout.vk_data;
+        let mut vk_data = 0 as vk::VkDescriptorSet;
+        vulkan_check!(vk::vkAllocateDescriptorSets(
+            pool.logical_device.vk_data,
+            &alloc_info,
+            &mut vk_data,
+        ));
+        return vk_data;
+    }
+
+    fn new_pbr(
+        pool: Arc<Pool>,
+        layout: Arc<SetLayout>,
+        uniform: Arc<RwLock<DynamicBuffer>>,
+        buffer_manager: &Arc<RwLock<BufferManager>>,
+        textures: &[Arc<RwLock<Texture>>; 7],
+    ) -> Self {
+        let vk_data = Self::allocate_set(&pool, &layout);
+        let logical_device: &Arc<LogicalDevice> = &pool.logical_device;
+        let buff_info = Self::create_buffer_info(&vxresult!(uniform.read()), buffer_manager);
+        let mut infos = vec![vk::VkWriteDescriptorSet::default(); 1 + textures.len()];
+        infos[0].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        infos[0].dstSet = vk_data;
+        infos[0].descriptorCount = 1;
+        infos[0].descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        infos[0].pBufferInfo = &buff_info;
+        infos[0].dstBinding = 0;
+        let mut last_info_i = 1;
+        for texture in textures {
+            let texture = vxresult!(texture.read());
+            let mut img_info = vk::VkDescriptorImageInfo::default();
+            img_info.imageLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            img_info.imageView = texture.get_image_view().vk_data;
+            img_info.sampler = texture.get_sampler().vk_data;
+            infos[last_info_i].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            infos[last_info_i].dstSet = vk_data;
+            infos[last_info_i].descriptorCount = 1;
+            infos[last_info_i].descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            infos[last_info_i].pImageInfo = &img_info;
+            infos[last_info_i].dstBinding = last_info_i as u32;
+            last_info_i += 1;
+        }
+        unsafe {
+            vk::vkUpdateDescriptorSets(
+                logical_device.vk_data,
+                infos.len() as u32,
+                infos.as_ptr(),
+                0,
+                null(),
+            );
+        }
+        let mut textures = textures.to_vec();
+        textures.shrink_to_fit();
+        Set {
+            pool,
+            layout,
+            uniform,
+            textures,
             vk_data,
         }
     }
@@ -224,13 +280,25 @@ impl Manager {
         }
     }
 
-    pub fn create_pbr_set(&mut self, image_view: &Arc<ImageView>, sampler: &Arc<Sampler>) -> Set {
-        Set::new(
-            &self.pool,
-            &self.pbr_set_layout,
+    pub fn create_pbr_set(
+        &mut self, 
+        uniform: Arc<RwLock<DynamicBuffer>>, 
+        textures: &[Arc<RwLock<Texture>>; 7]) -> Set {
+        Set::new_pbr(
+            self.pool.clone(),
+            self.pbr_set_layout.clone(),
+            uniform,
             &self.buffer_manager,
-            image_view,
-            sampler,
+            textures,
+        )
+    }
+
+    pub fn create_buffer_only_set(&mut self, uniform: Arc<RwLock<DynamicBuffer>>) -> Set {
+        Set::new_buffer_only(
+            self.pool.clone(),
+            self.buffer_only_set_layout.clone(),
+            uniform,
+            &self.buffer_manager,
         )
     }
 }

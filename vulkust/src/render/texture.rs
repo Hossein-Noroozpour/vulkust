@@ -3,6 +3,7 @@ use super::super::core::types::{Id, Size, TypeId};
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::image::View as ImageView;
+use super::sampler::Sampler;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 
@@ -19,6 +20,7 @@ pub enum TextureType {
 
 pub trait Texture: CoreObject {
     fn get_image_view(&self) -> &Arc<ImageView>;
+    fn get_sampler(&self) -> &Arc<Sampler>;
 }
 
 pub trait Loadable: Sized {
@@ -149,6 +151,10 @@ impl CoreObject for Texture2D {
 impl Texture for Texture2D {
     fn get_image_view(&self) -> &Arc<ImageView> {
         &self.image_view
+    }
+
+    fn get_sampler(&self) -> &Arc<Sampler> {
+        vxunimplemented!();
     }
 }
 
