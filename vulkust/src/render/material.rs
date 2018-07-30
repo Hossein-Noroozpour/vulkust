@@ -2,11 +2,9 @@ use super::super::core::types::{Id, TypeId};
 use super::buffer::DynamicBuffer;
 use super::engine::Engine;
 use super::gx3d::Gx3DReader;
-use super::texture::Texture;
+use super::texture::{Manager as TextureManager, Texture};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
-
-use math;
 
 #[repr(u8)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -58,47 +56,64 @@ pub struct Material {
     pub emissive_factor: Arc<RwLock<Texture>>,
     pub translucency: TranslucencyMode,
     pub uniform: Uniform,
-    pub uniform_buffer: DynamicBuffer,
+    pub uniform_buffer: Arc<RwLock<DynamicBuffer>>,
 }
 
 impl Material {
-    pub fn new(engine: &Engine) -> Self {
-        let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
-            .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        Material {
-            base_color: None,
-            base_color_factor: None,
-            metallic_roughness: None,
-            normal: None,
-            occlusion: None,
-            emissive: None,
-            emissive_factor: None,
-            translucency: TranslucencyMode::Opaque,
-            uniform: Uniform::new(),
-            uniform_buffer,
-        }
-    }
-
     pub fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader) -> Self {
         let eng = vxresult!(engine.read());
+        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = Arc::new(RwLock::new(uniform_buffer));
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
-        let mut myself = Self::new(&eng);
+        let mut uniform = Uniform::new();
+        let mut translucency = TranslucencyMode::Opaque;
+        let read_color = |reader: &mut Gx3DReader| {
+            [
+                ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
+                ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
+                ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
+                ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
+            ]
+        };
+        let read_tex = |engine: &Arc<RwLock<Engine>>,
+                        reader: &mut Gx3DReader,
+                        texture_manager: &mut TextureManager| {
+            let t = reader.read_type_id();
+            if t == Field::Texture as TypeId {
+                texture_manager.load_gx3d(engine, reader.read())
+            } else if t == Field::Vector as TypeId {
+                texture_manager.create_2d_with_color(engine, read_color(reader))
+            } else {
+                vxunexpected!()
+            }
+        };
+        let read_value = |reader: &mut Gx3DReader| {
+            let t = reader.read_type_id();
+            if t != Field::Float as TypeId {
+                vxunexpected!();
+            }
+            reader.read::<f32>()
+        };
         // Alpha
         let t = reader.read_type_id();
         if t == Field::Float as TypeId {
-            myself.uniform.alpha = reader.read();
+            uniform.alpha = reader.read();
         } else if t == Field::Texture as TypeId {
             let _: Id = reader.read();
-            myself.translucency = TranslucencyMode::Tansparent;
+            translucency = TranslucencyMode::Tansparent;
         } else {
             vxunexpected!();
         }
         // AlphaCutoff
         let t = reader.read_type_id();
         if t == Field::Float as TypeId {
-            myself.uniform.alpha_cutoff = reader.read();
+            uniform.alpha_cutoff = reader.read();
+            if uniform.alpha_cutoff > 0.001 {
+                translucency = TranslucencyMode::Cutoff;
+            }
         } else {
             vxunexpected!();
         }
@@ -107,123 +122,57 @@ impl Material {
         if t == Field::Float as TypeId {
             let alpha_mode: f32 = reader.read();
             if alpha_mode < 1.0 && 0.0 < alpha_mode {
-                myself.translucency = TranslucencyMode::Cutoff;
+                translucency = TranslucencyMode::Cutoff;
             }
         } else {
             vxunexpected!();
         }
         // BaseColor
         let t = reader.read_type_id();
-        if t == Field::Texture as TypeId {
-            let txtid = reader.read();
-            myself.base_color_texture = Some(texture_manager.load_gx3d(engine, txtid));
+        let base_color = if t == Field::Texture as TypeId {
+            texture_manager.load_gx3d(engine, reader.read())
         } else if t == Field::Vector as TypeId {
-            myself.uniform.base_color =
-                math::Vector3::new(reader.read(), reader.read(), reader.read());
+            let color = read_color(reader);
+            if color[3] < 254 {
+                translucency = TranslucencyMode::Tansparent;
+            }
+            texture_manager.create_2d_with_color(engine, color)
         } else {
-            vxunexpected!();
-        }
+            vxunexpected!()
+        };
         // BaseColorFactor
-        let t = reader.read_type_id();
-        if t == Field::Texture as TypeId {
-            let txtid = reader.read();
-            myself.base_color_factor_texture = Some(texture_manager.load_gx3d(engine, txtid));
-        } else if t == Field::Vector as TypeId {
-            myself.uniform.base_color_factor =
-                math::Vector3::new(reader.read(), reader.read(), reader.read());
-        } else {
-            vxunexpected!();
-        }
+        let base_color_factor = read_tex(engine, reader, &mut *texture_manager);
         // DoubleSided
-        let t = reader.read_type_id();
-        if t == Field::Float as TypeId {
-            let _double_sided: f32 = reader.read();
-        // todo change pipeline based on this
-        } else {
-            vxunexpected!();
-        }
-        // Emissive
-        let t = reader.read_type_id();
-        if t == Field::Texture as TypeId {
-            let txtid = reader.read();
-            myself.emissive_texture = Some(texture_manager.load_gx3d(engine, txtid));
-        } else if t == Field::Vector as TypeId {
-            myself.uniform.emissive =
-                math::Vector3::new(reader.read(), reader.read(), reader.read());
-        } else {
-            vxunexpected!();
-        }
+        let _double_sided = read_value(reader); // maybe in future I think about it
+                                                // Emissive
+        let emissive = read_tex(engine, reader, &mut *texture_manager);
         // EmissiveFactor
-        let t = reader.read_type_id();
-        if t == Field::Texture as TypeId {
-            let txtid = reader.read();
-            myself.emissive_factor_texture = Some(texture_manager.load_gx3d(engine, txtid));
-        } else if t == Field::Vector as TypeId {
-            myself.uniform.emissive_factor =
-                math::Vector3::new(reader.read(), reader.read(), reader.read());
-        } else {
-            vxunexpected!();
-        }
+        let emissive_factor = read_tex(engine, reader, &mut *texture_manager);
         // MetallicFactor
-        let t = reader.read_type_id();
-        if t == Field::Float as TypeId {
-            myself.uniform.metallic_factor = reader.read();
-        } else {
-            vxunexpected!();
-        }
+        uniform.metallic_factor = read_value(reader);
         // MetallicRoughness
-        let t = reader.read_type_id();
-        if t == Field::Texture as TypeId {
-            let txtid = reader.read();
-            myself.metallic_roughness_texture = Some(texture_manager.load_gx3d(engine, txtid));
-        } else if t == Field::Vector as TypeId {
-            myself.uniform.metallic_roughness =
-                math::Vector3::new(reader.read(), reader.read(), reader.read());
-        } else {
-            vxunexpected!();
-        }
+        let metallic_roughness = read_tex(engine, reader, &mut *texture_manager);
         // Normal
-        let t = reader.read_type_id();
-        if t == Field::Texture as TypeId {
-            let txtid = reader.read();
-            myself.normal_texture = Some(texture_manager.load_gx3d(engine, txtid));
-        } else if t == Field::Vector as TypeId {
-            myself.uniform.normal = math::Vector3::new(reader.read(), reader.read(), reader.read());
-        } else {
-            vxunexpected!();
-        }
+        let normal = read_tex(engine, reader, &mut *texture_manager);
         // NormalScale
-        let t = reader.read_type_id();
-        if t == Field::Float as TypeId {
-            myself.uniform.normal_scale = reader.read();
-        } else {
-            vxunexpected!();
-        }
+        uniform.normal_scale = read_value(reader);
         // Occlusion
-        let t = reader.read_type_id();
-        if t == Field::Texture as TypeId {
-            let txtid = reader.read();
-            myself.occlusion_texture = Some(texture_manager.load_gx3d(engine, txtid));
-        } else if t == Field::Vector as TypeId {
-            myself.uniform.occlusion =
-                math::Vector3::new(reader.read(), reader.read(), reader.read());
-        } else {
-            vxunexpected!();
-        }
+        let occlusion = read_tex(engine, reader, &mut *texture_manager);
         // OcclusionStrength
-        let t = reader.read_type_id();
-        if t == Field::Float as TypeId {
-            myself.uniform.occlusion_strength = reader.read();
-        } else {
-            vxunexpected!();
-        }
+        uniform.occlusion_strength = read_value(reader);
         // RoughnessFactor
-        let t = reader.read_type_id();
-        if t == Field::Float as TypeId {
-            myself.uniform.roughness_factor = reader.read();
-        } else {
-            vxunexpected!();
+        uniform.roughness_factor = read_value(reader);
+        Material {
+            base_color,
+            base_color_factor,
+            metallic_roughness,
+            normal,
+            occlusion,
+            emissive,
+            emissive_factor,
+            translucency,
+            uniform,
+            uniform_buffer,
         }
-        return myself;
     }
 }

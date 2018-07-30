@@ -32,6 +32,7 @@ pub trait Loadable: Sized {
 pub struct Manager {
     textures: BTreeMap<Id, Weak<RwLock<Texture>>>,
     name_to_id: BTreeMap<String, Id>,
+    color_to_id: BTreeMap<[u8; 4], Id>,
     pub gx3d_table: Option<Gx3dTable>,
 }
 
@@ -40,6 +41,7 @@ impl Manager {
         Manager {
             textures: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
+            color_to_id: BTreeMap::new(),
             gx3d_table: None,
         }
     }
@@ -103,6 +105,27 @@ impl Manager {
         let t: Arc<RwLock<Texture>> = tex.clone();
         let t = Arc::downgrade(&t);
         self.textures.insert(id, t);
+        return tex;
+    }
+
+    pub fn create_2d_with_color(
+        &mut self,
+        engine: &Arc<RwLock<Engine>>,
+        color: [u8; 4],
+    ) -> Arc<RwLock<Texture>> {
+        if let Some(id) = self.color_to_id.get(&color) {
+            if let Some(t) = self.textures.get(id) {
+                if let Some(t) = t.upgrade() {
+                    vxlogi!("color texture cached.");
+                    return t;
+                }
+            }
+        }
+        let tex = Texture2D::new_with_pixels(1, 1, engine, &color);
+        let id = tex.get_id();
+        let tex: Arc<RwLock<Texture>> = Arc::new(RwLock::new(tex));
+        self.textures.insert(id, Arc::downgrade(&tex));
+        self.color_to_id.insert(color, id);
         return tex;
     }
 }

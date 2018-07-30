@@ -19,7 +19,7 @@ impl Layout {
         descriptor_manager: &Arc<RwLock<DescriptorManager>>,
     ) -> Self {
         let mut vk_data = 0 as vk::VkPipelineLayout;
-        let descriptor_set_layout = vxresult!(descriptor_manager.read()).main_set_layout.clone();
+        let descriptor_set_layout = vxresult!(descriptor_manager.read()).pbr_set_layout.clone();
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

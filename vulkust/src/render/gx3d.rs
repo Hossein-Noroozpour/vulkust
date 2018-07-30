@@ -154,7 +154,13 @@ impl Gx3DReader {
 
     pub fn read_bytes(&mut self, count: Size) -> Vec<u8> {
         let mut data = vec![0u8; count as usize];
-        self.file.read(&mut data);
+        let _n = vxresult!(self.file.read(&mut data));
+        #[cfg(debug_assertions)]
+        {
+            if _n as Size != count {
+                vxunexpected!();
+            }
+        }
         return data;
     }
 }

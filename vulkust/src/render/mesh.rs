@@ -98,7 +98,7 @@ pub struct Base {
     pub obj_base: ObjectBase,
 
     pub texture: Arc<RwLock<Texture>>,
-    pub descriptor_set: Arc<DescriptorSet>,
+    // pub descriptor_set: Arc<DescriptorSet>,
     pub uniform_buffer: DynamicBuffer, // todo it must move to material
     // pub material: Arc<RwLock<Material>>,
     pub vertex_buffer: StaticBuffer,
@@ -218,14 +218,14 @@ impl Base {
         let scene_manager = vxresult!(engine.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let texture = texture_manager.load_gltf::<Texture2D>(&texture, engine, data);
-        let descriptor_set = Arc::new(
-            gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
-        ); // todo
+        // let descriptor_set = Arc::new(
+        //     gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
+        // ); // todo
         let obj_base = ObjectBase::new();
         Base {
             obj_base,
             texture,
-            descriptor_set,
+            // descriptor_set,
             uniform_buffer,
             vertex_buffer,
             index_buffer,
@@ -244,14 +244,14 @@ impl Base {
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(indices);
         let uniform_buffer = buffer_manager.create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let descriptor_set = Arc::new(
-            gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
-        ); // todo move it to material
+        // let descriptor_set = Arc::new(
+        //     gapi_engine.create_descriptor_set(&vxresult!(texture.read()).get_image_view()),
+        // ); // todo move it to material
         let obj_base = ObjectBase::new();
         Base {
             obj_base,
             texture,
-            descriptor_set,
+            // descriptor_set,
             uniform_buffer,
             vertex_buffer,
             index_buffer,

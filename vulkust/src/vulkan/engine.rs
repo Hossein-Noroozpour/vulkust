@@ -1,5 +1,5 @@
-use super::super::system::os::application::Application as OsApp;
 use super::super::render::config::Configurations;
+use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
@@ -174,7 +174,7 @@ impl Engine {
     //     }
     // }
 
-    pub fn start_recording(&mut self, ) {
+    pub fn start_recording(&mut self) {
         let current_buffer = match self
             .swapchain
             .get_next_image_index(&self.present_complete_semaphore)
@@ -437,9 +437,9 @@ impl Engine {
         ))
     }
 
-    pub fn create_descriptor_set(&self, image_view: &Arc<ImageView>) -> DescriptorSet {
-        vxresult!(self.descriptor_manager.write()).create_main_set(image_view, &self.sampler)
-    }
+    // pub fn create_descriptor_set(&self, image_view: &Arc<ImageView>) -> DescriptorSet {
+    //     vxresult!(self.descriptor_manager.write()).create_pbr_set(image_view, &self.sampler)
+    // }
 
     fn reinitialize(&mut self, conf: &Configurations) {
         self.logical_device.wait_idle();
