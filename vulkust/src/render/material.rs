@@ -3,6 +3,7 @@ use super::buffer::DynamicBuffer;
 use super::engine::Engine;
 use super::gx3d::Gx3DReader;
 use super::texture::{Manager as TextureManager, Texture};
+use super::descriptor::Set as DescriptorSet;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
@@ -57,6 +58,7 @@ pub struct Material {
     pub translucency: TranslucencyMode,
     pub uniform: Uniform,
     pub uniform_buffer: Arc<RwLock<DynamicBuffer>>,
+    pub descriptor_set: Arc<DescriptorSet>,
 }
 
 impl Material {
@@ -162,6 +164,19 @@ impl Material {
         uniform.occlusion_strength = read_value(reader);
         // RoughnessFactor
         uniform.roughness_factor = read_value(reader);
+        let textures = [
+            base_color.clone(),
+            base_color_factor.clone(),
+            metallic_roughness.clone(),
+            normal.clone(),
+            occlusion.clone(),
+            emissive.clone(),
+            emissive_factor.clone(),
+        ];
+        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let descriptor_set = descriptor_manager.create_pbr_set(uniform_buffer.clone(), &textures);
+        let descriptor_set = Arc::new(descriptor_set);
         Material {
             base_color,
             base_color_factor,
@@ -173,6 +188,7 @@ impl Material {
             translucency,
             uniform,
             uniform_buffer,
+            descriptor_set,
         }
     }
 }
