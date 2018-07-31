@@ -47,7 +47,7 @@ impl CoreAppTrait for MyGame {
 
     fn initialize(&mut self) {
         let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-        let mut scene_manager = vxresult!(renderer.scene_manager.write());
+        let scene_manager = vxresult!(renderer.scene_manager.read());
         self.scene = Some(scene_manager.load_gx3d(data_gx3d::Scene::SCENE_GAME_SPLASH as Id));
     }
 

@@ -7,6 +7,8 @@ use super::descriptor::Set as DescriptorSet;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
+use gltf;
+
 #[repr(u8)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Field {
@@ -62,6 +64,10 @@ pub struct Material {
 }
 
 impl Material {
+    pub fn new_with_gltf(_engine: &Engine, _mat: &gltf::Material) -> Self {
+        vxunimplemented!();
+    }
+
     pub fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader) -> Self {
         let eng = vxresult!(engine.read());
         let gapi_engine = vxresult!(eng.gapi_engine.read());

@@ -43,15 +43,15 @@ pub trait DefaultScene: Scene + Sized {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub engine: Option<Weak<RwLock<Engine>>>,
-    pub scenes: BTreeMap<Id, Weak<RwLock<Scene>>>,
-    pub name_to_id: BTreeMap<String, Id>,
+    pub scenes: Arc<RwLock<BTreeMap<Id, Weak<RwLock<Scene>>>>>,
+    pub name_to_id: Arc<RwLock<BTreeMap<String, Id>>>,
     pub texture_manager: Arc<RwLock<TextureManager>>,
     pub light_manager: Arc<RwLock<LightManager>>,
     pub camera_manager: Arc<RwLock<CameraManager>>,
     pub mesh_manager: Arc<RwLock<MeshManager>>,
     pub font_manager: Arc<RwLock<FontManager>>,
     pub model_manager: Arc<RwLock<ModelManager>>,
-    pub gx3d_table: Option<Gx3dTable>,
+    pub gx3d_table: Option<Arc<RwLock<Gx3dTable>>>,
 }
 
 impl Manager {
@@ -62,10 +62,12 @@ impl Manager {
         let mesh_manager = Arc::new(RwLock::new(MeshManager::new()));
         let font_manager = Arc::new(RwLock::new(FontManager::new()));
         let model_manager = Arc::new(RwLock::new(ModelManager::new()));
+        let scenes = Arc::new(RwLock::new(BTreeMap::new()));
+        let name_to_id = Arc::new(RwLock::new(BTreeMap::new()));
         Manager {
             engine: None,
-            scenes: BTreeMap::new(),
-            name_to_id: BTreeMap::new(),
+            scenes,
+            name_to_id,
             texture_manager,
             light_manager,
             camera_manager,
@@ -81,21 +83,21 @@ impl Manager {
     }
 
     pub fn render(&self) {
-        for (_, scene) in &self.scenes {
+        for (_, scene) in &*vxresult!(self.scenes.read()) {
             let scene = vxunwrap!(scene.upgrade());
             vxresult!(scene.write()).update();
         }
         let engine = vxunwrap!(&self.engine); // todo remove these lines i'm not happy with
         let engine = vxunwrap!(engine.upgrade()); //
         let engine = vxresult!(engine.read()); //
-        for (_, scene) in &self.scenes {
+        for (_, scene) in &*vxresult!(self.scenes.read()) {
             let scene = vxunwrap!(scene.upgrade());
             vxresult!(scene.read()).render(&engine);
             // todo depth cleaning, and other related things in here
         }
     }
 
-    pub fn load_gltf<S>(&mut self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
+    pub fn load_gltf<S>(&self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
     where
         S: 'static + Loadable,
     {
@@ -115,14 +117,15 @@ impl Manager {
         return scene;
     }
 
-    pub fn load_gx3d(&mut self, id: Id) -> Arc<RwLock<Scene>> {
-        if let Some(scene) = self.scenes.get(&id) {
+    pub fn load_gx3d(&self, id: Id) -> Arc<RwLock<Scene>> {
+        if let Some(scene) = vxresult!(self.scenes.read()).get(&id) {
             if let Some(scene) = scene.upgrade() {
                 return scene;
             }
         }
         let scene: Arc<RwLock<Scene>> = {
-            let mut table = vxunwrap!(&mut self.gx3d_table);
+            let mut table = vxunwrap!(&self.gx3d_table);
+            let mut table = vxresult!(table.write());
             table.goto(id);
             let mut reader: &mut Gx3DReader = &mut table.reader;
             let type_id = reader.read_type_id();
@@ -142,7 +145,7 @@ impl Manager {
         return scene;
     }
 
-    pub fn create<S>(&mut self) -> Arc<RwLock<S>>
+    pub fn create<S>(&self) -> Arc<RwLock<S>>
     where
         S: 'static + DefaultScene,
     {
@@ -183,23 +186,23 @@ impl Manager {
         return vxresult!(gltf::Gltf::from_reader_without_validation(file));
     }
 
-    pub fn add_scene(&mut self, scene: &Arc<RwLock<Scene>>) {
+    pub fn add_scene(&self, scene: &Arc<RwLock<Scene>>) {
         let id = {
             let scene = vxresult!(scene.read());
             let id = scene.get_id();
             if let Some(name) = scene.get_name() {
-                self.name_to_id.insert(name, id);
+                vxresult!(self.name_to_id.write()).insert(name, id);
             }
             id
         };
-        self.scenes.insert(id, Arc::downgrade(scene));
+        vxresult!(self.scenes.write()).insert(id, Arc::downgrade(scene));
     }
 
-    pub fn remove_with_id(&mut self, id: Id) {
-        self.scenes.remove(&id);
+    pub fn remove_with_id(&self, id: Id) {
+        vxresult!(self.scenes.write()).remove(&id);
     }
 
-    pub fn remove(&mut self, scene: Arc<RwLock<Scene>>) {
+    pub fn remove(&self, scene: Arc<RwLock<Scene>>) {
         self.remove_with_id(vxresult!(scene.read()).get_id());
     }
 }
@@ -567,7 +570,8 @@ impl Loadable for Game {
     }
 
     fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
-        vxunimplemented!();
+        let base = Base::new_with_gx3d(engine, reader, my_id);
+        Game { base }
     }
 }
 

@@ -23,7 +23,7 @@ impl Readable for u64 {}
 
 impl Gx3DReader {
     pub fn new() -> Option<Self> {
-        let file = File::open("data.gx3d");
+        let file = File::open("data/data.gx3d");
         if file.is_err() {
             return None;
         }
@@ -173,7 +173,7 @@ pub struct Table {
 
 impl Table {
     pub fn new(reader: &mut Gx3DReader) -> Self {
-        let count = reader.read::<u64>() << 1;
+        let count = reader.read::<u64>();
         let mut id_offset = BTreeMap::new();
         for _ in 0..count {
             id_offset.insert(reader.read::<Id>(), reader.read::<Offset>());
@@ -197,6 +197,8 @@ pub fn import(scenemgr: &Arc<RwLock<SceneManager>>) {
     }
     let mut main_file = vxunwrap!(main_file);
     let last_id: Id = main_file.read();
+    #[cfg(debug_gx3d)]
+    vxlogi!("last id is: {}", last_id);
     NEXT_ID.store(last_id, Ordering::Relaxed);
     let mut scnmgr = vxresult!(scenemgr.write());
     macro_rules! set_table {
@@ -216,5 +218,5 @@ pub fn import(scenemgr: &Arc<RwLock<SceneManager>>) {
     let _skybox_table = Table::new(&mut main_file);
     let _constraint_table = Table::new(&mut main_file);
     let table = Table::new(&mut main_file);
-    scnmgr.gx3d_table = Some(table);
+    scnmgr.gx3d_table = Some(Arc::new(RwLock::new(table)));
 }

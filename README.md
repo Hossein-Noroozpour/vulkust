@@ -7,6 +7,10 @@ An experimental tiny engine for **Vulkan in Rust**.
 <br>
 <br>
 
+### Status:
+
+It is under lots of changes, there is lots of work to be done!
+
 ## Missions
 
  1. Safety

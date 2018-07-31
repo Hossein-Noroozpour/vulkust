@@ -183,7 +183,7 @@ impl Loadable for Base {
         let mut has_transparent = false;
         let mut occlusion_culling_radius = 0.0001;
         for primitive in primitives {
-            let mesh = mesh_manager.load_gltf(primitive, &engine, data);
+            let mesh = mesh_manager.load_gltf(&primitive, &engine, data);
             let id = {
                 let mesh = vxresult!(mesh.read());
                 has_shadow_caster |= mesh.is_shadow_caster();

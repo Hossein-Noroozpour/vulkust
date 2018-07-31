@@ -179,10 +179,11 @@ impl Label {
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let texture =
             texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, &engine, &img);
-        let mesh = MeshBase::new_with_material(texture, &vertices, &indices, &eng);
-        let mesh_id = mesh.get_id();
-        let mesh = Arc::new(RwLock::new(mesh));
-        self.base.model_base.meshes.insert(mesh_id, mesh);
+        // todo
+        // let mesh = MeshBase::new_with_material(texture, &vertices, &indices, &eng);
+        // let mesh_id = mesh.get_id();
+        // let mesh = Arc::new(RwLock::new(mesh));
+        // self.base.model_base.meshes.insert(mesh_id, mesh);
     }
 }
 

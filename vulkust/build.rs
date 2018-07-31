@@ -42,6 +42,10 @@ fn main() {
     if in_linux || in_ios || in_macos || in_android {
         println!("cargo:rustc-cfg=unix_based_os");
     }
+    #[cfg(debug_assertions)]
+    {
+        println!("cargo:rustc-cfg=debug_gx3d");
+    }
     check_shaders();
     check_fonts();
 }
