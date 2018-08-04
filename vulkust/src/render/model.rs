@@ -4,9 +4,8 @@ use super::super::physics::collider::{read as read_collider, Collider, Ghost as 
 use super::buffer::DynamicBuffer;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::mesh::{Base as MeshBase, Mesh};
+use super::mesh::Mesh;
 use super::object::{Base as ObjectBase, Loadable, Object};
-use super::texture::{Loadable as TextureLoadable, Texture2D};
 use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
@@ -144,7 +143,7 @@ impl Object for Base {
         self.obj_base.get_name()
     }
 
-    fn set_name(&mut self, name: &str) {
+    fn set_name(&mut self, _name: &str) {
         self.obj_base.get_name();
         vxunimplemented!();
     }

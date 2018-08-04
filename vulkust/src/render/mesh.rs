@@ -1,23 +1,17 @@
-use super::super::core::debug::Debug;
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
-use super::buffer::{DynamicBuffer, StaticBuffer};
-use super::descriptor::Set as DescriptorSet;
+use super::buffer::StaticBuffer;
 use super::engine::Engine;
 use super::material::Material;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Object};
 use super::scene::Uniform as SceneUniform;
-use super::texture::{Manager as TextureManager, Texture, Texture2D};
 use std::collections::BTreeMap;
 use std::mem::size_of;
-use std::mem::transmute;
 use std::sync::{Arc, RwLock, Weak};
 // use super::material::Material;
 
 use gltf;
-use math;
-use math::Matrix;
 
 #[repr(u8)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -83,13 +77,6 @@ impl Manager {
         return mesh;
     }
 }
-
-#[repr(C)]
-#[cfg_attr(debug_assertions, derive(Debug))]
-pub struct Uniform {
-    pub mvp: math::Matrix4<f32>,
-}
-
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Base {
@@ -216,7 +203,6 @@ impl Base {
         let mut buffer_manager = vxresult!(gapi_engine.buffer_manager.write());
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(indices);
-        let uniform_buffer = buffer_manager.create_dynamic_buffer(size_of::<Uniform>() as isize);
         let obj_base = ObjectBase::new();
         Base {
             obj_base,

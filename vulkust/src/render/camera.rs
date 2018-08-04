@@ -75,9 +75,9 @@ impl Manager {
                 return camera;
             }
         }
-        let mut table = vxunwrap!(&mut self.gx3d_table);
+        let table = vxunwrap!(&mut self.gx3d_table);
         table.goto(id);
-        let mut reader: &mut Gx3DReader = &mut table.reader;
+        let reader: &mut Gx3DReader = &mut table.reader;
         let type_id = reader.read_type_id();
         let camera: Arc<RwLock<Camera>> = if type_id == TypeId::Perspective as u8 {
             Arc::new(RwLock::new(Perspective::new_with_gx3d(engine, reader, id)))
@@ -406,11 +406,20 @@ pub struct Orthographic {
 
 impl Orthographic {
     pub fn new(eng: &Arc<RwLock<Engine>>, size: f32) -> Self {
-        Self::new_with_base(eng, Base::new(eng), size)
+        Self::new_with_base(Base::new(eng), size)
     }
 
-    pub fn new_with_base(eng: &Arc<RwLock<Engine>>, mut base: Base, size: f32) -> Self {
+    pub fn new_with_base(mut base: Base, size: f32) -> Self {
         let size = size * 0.5;
+        let w = base.aspect_ratio * size;
+        base.projection = math::ortho(-w, w, -size, size, base.near, base.far);
+        base.update_view_projection();
+        Orthographic { base, size }
+    }
+
+    pub fn new_with_id(eng: &Arc<RwLock<Engine>>, id: Id) -> Self {
+        let mut base = Base::new_with_id(eng, id);
+        let size = 0.5;
         let w = base.aspect_ratio * size;
         base.projection = math::ortho(-w, w, -size, size, base.near, base.far);
         base.update_view_projection();
@@ -460,12 +469,12 @@ impl Loadable for Orthographic {
             gltf::camera::Projection::Orthographic(o) => o,
         };
         let base = Base::new_with_gltf(n, eng, data);
-        Self::new_with_base(eng, base, o.ymag())
+        Self::new_with_base(base, o.ymag())
     }
 
     fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let base = Base::new_with_gx3d(engine, reader, my_id);
-        Self::new_with_base(engine, base, reader.read())
+        Self::new_with_base(base, reader.read())
     }
 }
 

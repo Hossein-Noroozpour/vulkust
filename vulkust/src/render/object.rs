@@ -71,7 +71,7 @@ impl Object for Base {
         self.name = Some(name.to_string());
     }
 
-    fn render(&self, engine: &Engine) {
+    fn render(&self, _engine: &Engine) {
         #[cfg(debug_assertions)]
         {
             if !self.renderable {

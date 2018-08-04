@@ -182,7 +182,6 @@ impl Engine {
             NextImageResult::Next(c) => c,
             NextImageResult::NeedsRefresh => {
                 vxlogf!("Problem with rereshing screen, engine needs refreshing.");
-                return;
             }
         } as usize;
         vulkan_check!(vk::vkWaitForFences(
@@ -441,7 +440,7 @@ impl Engine {
     //     vxresult!(self.descriptor_manager.write()).create_pbr_set(image_view, &self.sampler)
     // }
 
-    fn reinitialize(&mut self, conf: &Configurations) {
+    pub fn reinitialize(&mut self, conf: &Configurations) {
         self.logical_device.wait_idle();
         let new = Self::new(&self.os_app, conf);
         self.instance = new.instance.clone();

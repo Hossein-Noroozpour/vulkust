@@ -2,7 +2,6 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::engine::Engine;
 use super::font::Font;
-use super::mesh::{Base as MeshBase, Mesh};
 use super::model::{Base as ModelBase, Model};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
