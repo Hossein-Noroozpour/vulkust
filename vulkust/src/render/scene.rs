@@ -380,6 +380,9 @@ impl Object for Base {
         };
         let camera = vxresult!(camera.read());
         self.uniform.view_projection = *camera.get_view_projection();
+        for _, model in &mut self.models {
+            vxresult!(model.write())
+        }
     }
 
     fn disable_rendering(&mut self) {

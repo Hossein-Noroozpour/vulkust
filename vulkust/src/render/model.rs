@@ -6,6 +6,7 @@ use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::mesh::Mesh;
 use super::object::{Base as ObjectBase, Loadable, Object};
+use super::scene::Uniform as SceneUniform;
 use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
@@ -13,7 +14,9 @@ use std::sync::{Arc, RwLock, Weak};
 use gltf;
 use math;
 
-pub trait Model: Object {}
+pub trait Model: Object {
+    fn update(&mut self, scene_uniform: &SceneUniform);
+}
 
 #[repr(u8)]
 #[cfg_attr(debug_assertions, derive(Debug))]
