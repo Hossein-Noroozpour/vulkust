@@ -11,6 +11,7 @@ use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
 use super::texture::Manager as TextureManager;
+use super::descriptor::Set as DescriptorSet;
 use std::collections::BTreeMap;
 use std::io::BufReader;
 use std::mem::size_of;
@@ -83,15 +84,17 @@ impl Manager {
 
     pub fn render(&self) {
         for (_, scene) in &*vxresult!(self.scenes.read()) {
-            let scene = vxunwrap!(scene.upgrade());
-            vxresult!(scene.write()).update();
+            if let Some(scene) = scene.upgrade() {
+                vxresult!(scene.write()).update(); // todo temporary works, physics related things
+            }
         }
         let engine = vxunwrap!(&self.engine); // todo remove these lines i'm not happy with
         let engine = vxunwrap!(engine.upgrade()); //
         let engine = vxresult!(engine.read()); //
         for (_, scene) in &*vxresult!(self.scenes.read()) {
-            let scene = vxunwrap!(scene.upgrade());
-            vxresult!(scene.read()).render(&engine);
+            if let Some(scene) = scene.upgrade() {
+                vxresult!(scene.read()).render(&engine);
+            }
             // todo depth cleaning, and other related things in here
         }
     }
@@ -226,11 +229,12 @@ impl Uniform {
 pub struct Base {
     pub obj_base: ObjectBase,
     pub uniform: Uniform,
-    pub uniform_buffer: DynamicBuffer,
+    pub uniform_buffer: Arc<RwLock<DynamicBuffer>>,
     pub cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
     pub active_camera: Option<Weak<RwLock<Camera>>>,
     pub lights: BTreeMap<Id, Arc<RwLock<Light>>>,
     pub models: BTreeMap<Id, Arc<RwLock<Model>>>,
+    pub descriptor_set: Arc<DescriptorSet>,
     // pub skybox: Option<Arc<RwLock<Skybox>>>, // todo, maybe its not gonna be needed in GI PBR
     // pub constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
 }
@@ -264,12 +268,16 @@ impl Base {
         }
         let engine = vxresult!(engine.read());
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
-            .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = Arc::new(RwLock::new(vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize)));
+        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
+        let descriptor_set = Arc::new(descriptor_set);
         Base {
             obj_base,
             uniform,
             uniform_buffer,
+            descriptor_set,
             cameras,
             active_camera,
             models,
@@ -322,8 +330,11 @@ impl Base {
         }
         let uniform = Uniform::new();
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
-            .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = Arc::new(RwLock::new(vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize)));
+        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
+        let descriptor_set = Arc::new(descriptor_set);
         Base {
             obj_base: ObjectBase::new_with_id(my_id),
             cameras,
@@ -332,6 +343,7 @@ impl Base {
             lights,
             uniform,
             uniform_buffer,
+            descriptor_set,
         }
     }
 }
@@ -367,6 +379,14 @@ impl Object for Base {
         if !self.obj_base.renderable {
             return;
         }
+        self.obj_base.render(engine);
+        {
+            vxresult!(self.uniform_buffer.write()).update(&self.uniform);
+            /////////////////////////////////////////// todo
+        }
+        for (_, model) in &self.models {
+            vxresult!(model.read()).render(engine);
+        }
     }
 
     fn update(&mut self) {
@@ -380,8 +400,10 @@ impl Object for Base {
         };
         let camera = vxresult!(camera.read());
         self.uniform.view_projection = *camera.get_view_projection();
-        for _, model in &mut self.models {
-            vxresult!(model.write())
+        for (_, model) in &mut self.models {
+            let mut model = vxresult!(model.write());
+            Object::update(&mut *model);
+            Model::update(&mut *model, &self.uniform);
         }
     }
 
@@ -408,12 +430,16 @@ impl DefaultScene for Base {
     fn default(engine: &Arc<RwLock<Engine>>) -> Self {
         let engine = vxresult!(engine.read());
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
-            .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = Arc::new(RwLock::new(vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize)));
+        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
+        let descriptor_set = Arc::new(descriptor_set);
         Base {
             obj_base: ObjectBase::new(),
             uniform: Uniform::new(),
             uniform_buffer,
+            descriptor_set,
             cameras: BTreeMap::new(),
             active_camera: None,
             lights: BTreeMap::new(),

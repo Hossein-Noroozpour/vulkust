@@ -3,6 +3,7 @@ use super::super::core::types::Id;
 use super::buffer::StaticBuffer;
 use super::engine::Engine;
 use super::material::Material;
+use super::model::Uniform as ModelUniform;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Object};
 use super::scene::Uniform as SceneUniform;
@@ -23,6 +24,7 @@ pub trait Mesh: Object {
     fn is_shadow_caster(&self) -> bool;
     fn is_transparent(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> f32;
+    fn update(&mut self, scene_uniform: &SceneUniform, model_uniform: &ModelUniform);
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -266,7 +268,9 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, engine: &Engine) {}
+    fn render(&self, engine: &Engine) {
+        
+    }
 
     fn update(&mut self) {}
 
@@ -293,6 +297,10 @@ impl Mesh for Base {
     fn get_occlusion_culling_radius(&self) -> f32 {
         vxunimplemented!()
     } // todo
+
+    fn update(&mut self, scene_uniform: &SceneUniform, model_uniform: &ModelUniform) {
+        self.material.update(scene_uniform, model_uniform);
+    }
 
     //     fn render(&mut self, scene_uniform: &SceneUniform) {
     //         let mvp = scene_uniform.view_projection;

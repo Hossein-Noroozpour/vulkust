@@ -156,7 +156,12 @@ impl Object for Base {
             return;
         }
         self.obj_base.render(engine);
-        vxunimplemented!();
+        for (_, mesh) in &self.meshes {
+            vxresult!(mesh.read()).render(engine);
+        }
+        for (_, model) in &self.children {
+            vxresult!(model.read()).render(engine);
+        }
     }
 
     fn disable_rendering(&mut self) {
@@ -168,7 +173,14 @@ impl Object for Base {
     }
 
     fn update(&mut self) {
-        vxunimplemented!();
+        for (_, model) in &self.children {
+            let mut model = vxresult!(model.write());
+            Object::update(&mut *model);
+        }
+        for (_, mesh) in &self.meshes {
+            let mut mesh = vxresult!(mesh.write());
+            Object::update(&mut *mesh);
+        }
     }
 }
 
@@ -247,7 +259,7 @@ impl Loadable for Base {
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         Base {
             obj_base,
-            is_dynamic: false, // todo there must be a dynamic struct for this that implement transformable
+            is_dynamic: false, // todo there must be a dynamic struct
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
@@ -263,4 +275,16 @@ impl Loadable for Base {
     }
 }
 
-impl Model for Base {}
+impl Model for Base {
+    fn update(&mut self, scene_uniform: &SceneUniform) {
+        self.uniform.model_view_projection = scene_uniform.view_projection * self.uniform.model;
+        for (_, model) in &self.children {
+            let mut model = vxresult!(model.write());
+            Model::update(&mut *model, scene_uniform);
+        }
+        for (_, mesh) in &self.meshes {
+            let mut mesh = vxresult!(mesh.write());
+            Mesh::update(&mut *mesh, scene_uniform, &self.uniform);
+        }
+    }
+}

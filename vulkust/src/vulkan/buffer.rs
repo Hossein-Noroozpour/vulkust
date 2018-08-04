@@ -194,21 +194,21 @@ impl DynamicBuffer {
         }
     }
 
-    pub fn update(&mut self, data: *const c_void) {
+    pub fn update_with_ptr(&mut self, data: *const c_void) {
         let ptr = self.buffers[*vxresult!(self.frame_number.read()) as usize].1;
         unsafe {
             libc::memcpy(transmute(ptr), transmute(data), self.actual_size as usize);
         }
     }
 
-    pub fn update_with_vec<T>(&mut self, data: &Vec<T>) {
+    pub fn update<T>(&mut self, data: &T) where T: Sized {
         #[cfg(debug_assertions)]
         {
-            if data.len() * size_of::<T>() != self.actual_size as usize {
+            if size_of::<T>() != self.actual_size as usize {
                 vxlogf!("Data must have same size of buffer.");
             }
         }
-        self.update(unsafe { transmute(data.as_ptr()) });
+        self.update_with_ptr(unsafe { transmute(data) });
     }
 }
 

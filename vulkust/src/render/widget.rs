@@ -47,11 +47,15 @@ impl Object for Base {
     }
 
     fn update(&mut self) {
-        self.model_base.update();
+        Object::update(&mut self.model_base);
     }
 }
 
-impl Model for Base {}
+impl Model for Base {
+    fn update(&mut self, scene_uniform: &SceneUniform) {
+        Model::update(&mut self.model_base, scene_uniform);
+    }
+}
 
 impl Widget for Base {}
 
@@ -215,11 +219,15 @@ impl Object for Label {
     }
 
     fn update(&mut self) {
-        self.base.update();
+        Object::update(&mut self.base);
     }
 }
 
-impl Model for Label {}
+impl Model for Label {
+    fn update(&mut self, scene_uniform: &SceneUniform) {
+        Model::update(&mut self.base, scene_uniform);
+    }
+}
 
 // impl DefaultMesh for Label {
 //     fn default(engine: &Arc<RwLock<Engine>>) -> Self {

@@ -2,6 +2,8 @@ use super::super::core::types::{Id, TypeId};
 use super::buffer::DynamicBuffer;
 use super::engine::Engine;
 use super::gx3d::Gx3DReader;
+use super::model::Uniform as ModelUniform;
+use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture};
 use super::descriptor::Set as DescriptorSet;
 use std::mem::size_of;
@@ -196,5 +198,9 @@ impl Material {
             uniform_buffer,
             descriptor_set,
         }
+    }
+
+    pub fn update(&mut self, _scene_uniform: &SceneUniform, _model_uniform: &ModelUniform) {
+
     }
 }
