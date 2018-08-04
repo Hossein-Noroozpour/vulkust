@@ -93,4 +93,8 @@ impl Manager {
         self.name_to_id.insert(name.to_string(), id);
         return result;
     }
+
+    pub fn load_gx3d(&mut self, eng: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Light>> {
+        vxunimplemented!()
+    }
 }

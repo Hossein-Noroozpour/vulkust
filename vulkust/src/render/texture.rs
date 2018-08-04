@@ -135,6 +135,7 @@ pub struct Texture2D {
     pub obj_base: ObjectBase,
     pub name: Option<String>,
     pub image_view: Arc<ImageView>,
+    pub sampler: Arc<Sampler>,
 }
 
 impl Texture2D {
@@ -157,10 +158,12 @@ impl Texture2D {
         let engine = vxresult!(engine.read());
         let engine = vxresult!(engine.gapi_engine.read());
         let image_view = engine.create_texture_2d_with_pixels(width, height, data);
+        let sampler = engine.sampler.clone();
         Texture2D {
             obj_base,
             name: None,
             image_view,
+            sampler,
         }
     }
 }
@@ -177,7 +180,7 @@ impl Texture for Texture2D {
     }
 
     fn get_sampler(&self) -> &Arc<Sampler> {
-        vxunimplemented!();
+        &self.sampler
     }
 }
 
@@ -200,10 +203,13 @@ impl Loadable for Texture2D {
         }
         let engine = vxresult!(engine.gapi_engine.read());
         let image_view = engine.create_texture_with_bytes(&data[offset..offset + length]);
+        let sampler = engine.sampler.clone();
+        // todo call new_with_pixels do not create it your self
         Texture2D {
             obj_base,
             name: Some(name),
             image_view,
+            sampler,
         }
     }
 

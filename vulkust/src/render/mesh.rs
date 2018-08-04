@@ -228,16 +228,19 @@ impl Base {
     }
 
     pub fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
-        let _number_of_vertex_attribute = reader.read_u8();
+        let number_of_vertex_attribute = reader.read_u8() as usize;
         #[cfg(debug_assertions)]
         {
-            if _number_of_vertex_attribute != 12 {
+            if number_of_vertex_attribute != 12 {
                 vxunexpected!();
             }
         }
-        let vertex_count: u64 = reader.read();
-        let mut vertices = vec![0f32; vertex_count as usize];
-        for i in 0..vertex_count as usize {
+        let vertex_count = reader.read::<u64>() as usize;
+        #[cfg(debug_gx3d)]
+        vxlogi!("Number of vertices is: {}", vertex_count);
+        let number_of_floats = vertex_count * number_of_vertex_attribute;
+        let mut vertices = vec![0f32; number_of_floats];
+        for i in 0..number_of_floats {
             vertices[i] = reader.read();
         }
         let indices = reader.read_array::<u32>();
@@ -249,6 +252,8 @@ impl Base {
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(&vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(&indices);
         let indices_count = indices.len() as u32;
+        #[cfg(debug_gx3d)]
+        vxlogi!("Number of indices is: {}", indices_count);
         Base {
             obj_base,
             material,
@@ -290,11 +295,15 @@ impl Object for Base {
 
 impl Mesh for Base {
     fn is_shadow_caster(&self) -> bool {
-        vxunimplemented!()
-    } // todo
+        true
+        // todo
+    }
+
     fn is_transparent(&self) -> bool {
-        vxunimplemented!()
-    } // todo
+        false
+        // todo
+    }
+    
     fn get_occlusion_culling_radius(&self) -> f32 {
         vxunimplemented!()
     } // todo

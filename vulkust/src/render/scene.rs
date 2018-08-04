@@ -328,8 +328,7 @@ impl Base {
         }
         let mut lights = BTreeMap::new();
         for id in lights_ids {
-            vxunimplemented!();
-            // lights.insert(id, vxresult!(light_manager.write()).load_gx3d(engine, id));
+            lights.insert(id, vxresult!(light_manager.write()).load_gx3d(engine, id));
         }
         let mut uniform = Uniform::new();
         // todo initialize the uniform
