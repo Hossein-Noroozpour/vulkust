@@ -1,5 +1,4 @@
 use super::super::buffer::Buffer as BufBuffer;
-use super::super::descriptor::Set as DescriptorSet;
 use super::super::pipeline::{Layout as PipelineLayout, Pipeline};
 use super::super::synchronizer::fence::Fence;
 use super::super::vulkan as vk;
@@ -132,24 +131,22 @@ impl Buffer {
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
     }
 
-    pub fn bind_descriptor_set(
+    pub fn bind_descriptor_sets(
         &mut self,
-        pl: &PipelineLayout,
-        ds: &Arc<DescriptorSet>,
-        offset: usize,
+        pipeline_layout: &PipelineLayout,
+        descriptor_sets: &[vk::VkDescriptorSet],
+        offsets: &[u32],
     ) {
-        let offset = offset as u32;
-        let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
         unsafe {
             vk::vkCmdBindDescriptorSets(
                 self.vk_data,
-                bind_point,
-                pl.vk_data,
+                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipeline_layout.vk_data,
                 0,
-                1,
-                &ds.vk_data,
-                1,
-                &offset,
+                descriptor_sets.len() as u32,
+                descriptor_sets.as_ptr(),
+                offsets.len() as u32,
+                offsets.as_ptr(),
             );
         }
     }

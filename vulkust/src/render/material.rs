@@ -22,12 +22,12 @@ pub enum Field {
 #[repr(C)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
-    pub metallic_factor: f32,
-    pub roughness_factor: f32,
-    pub normal_scale: f32,
-    pub occlusion_strength: f32,
     pub alpha: f32,
     pub alpha_cutoff: f32,
+    pub metallic_factor: f32,
+    pub normal_scale: f32,
+    pub occlusion_strength: f32,
+    pub roughness_factor: f32,
 }
 
 impl Uniform {

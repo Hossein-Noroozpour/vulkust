@@ -12,7 +12,7 @@ use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
 
-mod data_gx3d;
+pub mod data_gx3d;
 
 ///     In this example you have to place your data.gx3d file in data directory of your project (in
 /// android assets/data/ and in ios Resources/data/). Then if data.gx3d was presented render engine
@@ -48,7 +48,7 @@ impl CoreAppTrait for MyGame {
     fn initialize(&mut self) {
         let renderer = vxresult!(vxunwrap!(&self.renderer).read());
         let scene_manager = vxresult!(renderer.scene_manager.read());
-        self.scene = Some(scene_manager.load_gx3d(data_gx3d::Scene::SCENE_GAME_SPLASH as Id));
+        self.scene = Some(scene_manager.load_gx3d(data_gx3d::Scene::SceneGameSplash as Id));
     }
 
     fn on_event(&self, _e: Event) {}

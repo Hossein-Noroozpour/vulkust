@@ -53,6 +53,8 @@ pub struct Engine {
     pub buffer_manager: Arc<RwLock<BufferManager>>,
     pub wait_fences: Vec<Arc<Fence>>,
     pub sampler: Arc<Sampler>,
+    pub bound_pbr_descriptor_sets: [vk::VkDescriptorSet; 3],
+    pub bound_pbr_dynamic_offsets: [u32; 3],
     //----------------------------------------------------------------------------------------------
     // pub vertex_buffer: StaticBuffer,
     // pub index_buffer: StaticBuffer,
@@ -155,6 +157,8 @@ impl Engine {
             buffer_manager,
             wait_fences,
             sampler,
+            bound_pbr_descriptor_sets: [0 as vk::VkDescriptorSet; 3],
+            bound_pbr_dynamic_offsets: [0; 3],
             //--------------------------------------------------------------------------------------
             // vertex_buffer,
             // index_buffer,
@@ -381,28 +385,65 @@ impl Engine {
     // draw_command.end();
     // }
 
-    pub fn render_main_pipeline(
-        &self,
-        descriptor_set: &Arc<DescriptorSet>,
+    // pub fn render_main_pipeline(
+    //     &self,
+    //     descriptor_set: &Arc<DescriptorSet>,
+    //     uniform_buffer: &DynamicBuffer,
+    //     vertex_buffer: &StaticBuffer,
+    //     index_buffer: &StaticBuffer,
+    //     indices_count: u32,
+    // ) {
+    //     // todo it is not good it's gonna change soon, frame_number
+    //     let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+    //     let draw_command = &self.draw_commands[frame_number];
+    //     let mut draw_command = vxresult!(draw_command.write());
+    //     let pipemgr = vxresult!(self.pipeline_manager.read());
+    //     draw_command.bind_descriptor_set(
+    //         &pipemgr.main_pipeline.layout,
+    //         &descriptor_set,
+    //         vxresult!(uniform_buffer.buffers[frame_number].0.read())
+    //             .info
+    //             .base
+    //             .offset as usize,
+    //     );
+    //     draw_command.bind_pipeline(&pipemgr.main_pipeline);
+    //     draw_command.bind_vertex_buffer(&vertex_buffer.buffer);
+    //     draw_command.bind_index_buffer(&index_buffer.buffer);
+    //     draw_command.draw_index(indices_count);
+    // }
+
+    pub fn bind_pbr_descriptor(&mut self, 
+        descriptor_set: &DescriptorSet,
         uniform_buffer: &DynamicBuffer,
-        vertex_buffer: &StaticBuffer,
-        index_buffer: &StaticBuffer,
-        indices_count: u32,
-    ) {
-        // todo it is not good it's gonna change soon, frame_number
+        index: usize) {
+        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+        self.bound_pbr_descriptor_sets[index] = descriptor_set.vk_data;
+        self.bound_pbr_dynamic_offsets[index] = vxresult!(uniform_buffer.buffers[frame_number].0.read()).info.base.offset as u32;
+    }
+
+    pub fn bind_pbr_pipeline(&self) {
         let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
         let draw_command = &self.draw_commands[frame_number];
         let mut draw_command = vxresult!(draw_command.write());
         let pipemgr = vxresult!(self.pipeline_manager.read());
-        draw_command.bind_descriptor_set(
-            &pipemgr.main_pipeline.layout,
-            &descriptor_set,
-            vxresult!(uniform_buffer.buffers[frame_number].0.read())
-                .info
-                .base
-                .offset as usize,
+        draw_command.bind_pipeline(&pipemgr.pbr_pipeline);
+    }
+
+    pub fn render_pbr(
+        &self,
+        vertex_buffer: &StaticBuffer,
+        index_buffer: &StaticBuffer,
+        indices_count: u32,
+    ) {
+        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+        let draw_command = &self.draw_commands[frame_number];
+        let mut draw_command = vxresult!(draw_command.write());
+        let pipemgr = vxresult!(self.pipeline_manager.read());
+        draw_command.bind_descriptor_sets(
+            &pipemgr.pbr_pipeline.layout,
+            &self.bound_pbr_descriptor_sets,
+            &self.bound_pbr_dynamic_offsets,
         );
-        draw_command.bind_pipeline(&pipemgr.main_pipeline);
         draw_command.bind_vertex_buffer(&vertex_buffer.buffer);
         draw_command.bind_index_buffer(&index_buffer.buffer);
         draw_command.draw_index(indices_count);

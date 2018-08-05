@@ -9,22 +9,30 @@ use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Layout {
-    pub descriptor_set_layout: Arc<DescriptorSetLayout>,
+    pub pbr_descriptor_set_layout: Arc<DescriptorSetLayout>,
+    pub buffer_only_descriptor_set_layout: Arc<DescriptorSetLayout>,
     pub vk_data: vk::VkPipelineLayout,
 }
 
 impl Layout {
-    pub fn new(
+    pub fn new_pbr(
         logical_device: Arc<LogicalDevice>,
         descriptor_manager: &Arc<RwLock<DescriptorManager>>,
     ) -> Self {
         let mut vk_data = 0 as vk::VkPipelineLayout;
-        let descriptor_set_layout = vxresult!(descriptor_manager.read()).pbr_set_layout.clone();
+        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let pbr_descriptor_set_layout = descriptor_manager.pbr_set_layout.clone();
+        let buffer_only_descriptor_set_layout = descriptor_manager.buffer_only_set_layout.clone();
+        let set_layouts = [
+            buffer_only_descriptor_set_layout.vk_data,
+            buffer_only_descriptor_set_layout.vk_data,
+            pbr_descriptor_set_layout.vk_data,
+        ];
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipeline_layout_create_info.setLayoutCount = 1;
-        pipeline_layout_create_info.pSetLayouts = &descriptor_set_layout.vk_data;
+        pipeline_layout_create_info.setLayoutCount = set_layouts.len() as u32;
+        pipeline_layout_create_info.pSetLayouts = set_layouts.as_ptr();
         vulkan_check!(vk::vkCreatePipelineLayout(
             logical_device.vk_data,
             &pipeline_layout_create_info,
@@ -32,7 +40,8 @@ impl Layout {
             &mut vk_data,
         ));
         Layout {
-            descriptor_set_layout,
+            pbr_descriptor_set_layout,
+            buffer_only_descriptor_set_layout,
             vk_data,
         }
     }
@@ -42,7 +51,7 @@ impl Drop for Layout {
     fn drop(&mut self) {
         unsafe {
             vk::vkDestroyPipelineLayout(
-                self.descriptor_set_layout.logical_device.vk_data,
+                self.pbr_descriptor_set_layout.logical_device.vk_data,
                 self.vk_data,
                 null(),
             );
@@ -93,7 +102,7 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
-    fn new(
+    fn new_pbr(
         descriptor_manager: &Arc<RwLock<DescriptorManager>>,
         render_pass: Arc<RenderPass>,
         cache: Arc<Cache>,
@@ -102,12 +111,12 @@ impl Pipeline {
             .pool
             .logical_device
             .clone();
-        let vert_bytes = include_bytes!(concat!(env!("OUT_DIR"), "/vulkan/shaders/main.vert.spv"));
-        let frag_bytes = include_bytes!(concat!(env!("OUT_DIR"), "/vulkan/shaders/main.frag.spv"));
+        let vert_bytes = include_bytes!(concat!(env!("OUT_DIR"), "/vulkan/shaders/pbr.vert.spv"));
+        let frag_bytes = include_bytes!(concat!(env!("OUT_DIR"), "/vulkan/shaders/pbr.frag.spv"));
         let vertex_shader = Module::new(vert_bytes, device.clone());
         let fragment_shader = Module::new(frag_bytes, device.clone());
         let shader = vec![vertex_shader, fragment_shader];
-        let layout = Layout::new(device.clone(), descriptor_manager);
+        let layout = Layout::new_pbr(device.clone(), descriptor_manager);
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
         input_assembly_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -159,18 +168,18 @@ impl Pipeline {
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisample_state.rasterizationSamples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         let mut vertex_input_binding = vk::VkVertexInputBindingDescription::default();
-        vertex_input_binding.stride = 3 * 4 + 3 * 4 + 3 * 4 + 2 * 4; // temporary
+        vertex_input_binding.stride = 48; // bytes of vertex
         vertex_input_binding.inputRate = vk::VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
         let mut vertex_attributes = vec![vk::VkVertexInputAttributeDescription::default(); 4];
         vertex_attributes[0].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
         vertex_attributes[1].location = 1;
-        vertex_attributes[1].offset = 3 * 4;
+        vertex_attributes[1].offset = 12;
         vertex_attributes[1].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
         vertex_attributes[2].location = 2;
-        vertex_attributes[2].offset = 3 * 4 + 3 * 4;
-        vertex_attributes[2].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+        vertex_attributes[2].offset = 24;
+        vertex_attributes[2].format = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
         vertex_attributes[3].location = 3;
-        vertex_attributes[3].offset = 3 * 4 + 3 * 4 + 3 * 4;
+        vertex_attributes[3].offset = 40;
         vertex_attributes[3].format = vk::VkFormat::VK_FORMAT_R32G32_SFLOAT;
         let mut vertex_input_state = vk::VkPipelineVertexInputStateCreateInfo::default();
         vertex_input_state.sType =
@@ -241,7 +250,7 @@ impl Drop for Pipeline {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub cache: Arc<Cache>,
-    pub main_pipeline: Arc<Pipeline>,
+    pub pbr_pipeline: Arc<Pipeline>,
     pub descriptor_manager: Arc<RwLock<DescriptorManager>>,
     pub render_pass: Arc<RenderPass>,
 }
@@ -254,7 +263,7 @@ impl Manager {
     ) -> Self {
         let cache = Arc::new(Cache::new(logical_device));
         let descriptor_manager = descriptor_manager.clone();
-        let main_pipeline = Arc::new(Pipeline::new(
+        let pbr_pipeline = Arc::new(Pipeline::new_pbr(
             &descriptor_manager,
             render_pass.clone(),
             cache.clone(),
@@ -264,7 +273,7 @@ impl Manager {
             render_pass,
             cache,
             descriptor_manager,
-            main_pipeline,
+            pbr_pipeline,
         }
     }
 }
