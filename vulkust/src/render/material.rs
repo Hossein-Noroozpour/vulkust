@@ -203,4 +203,11 @@ impl Material {
     pub fn update(&mut self, _scene_uniform: &SceneUniform, _model_uniform: &ModelUniform) {
 
     }
+
+    pub fn bind(&self, engine: &Engine) {
+            let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
+            uniform_buffer.update(&self.uniform);
+            let mut gapi_engine = vxresult!(engine.gapi_engine.write());
+            gapi_engine.bind_pbr_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 2);
+    }
 }

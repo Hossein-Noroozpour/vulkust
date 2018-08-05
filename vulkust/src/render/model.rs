@@ -162,7 +162,7 @@ impl Object for Base {
             let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
             uniform_buffer.update(&self.uniform);
             let mut gapi_engine = vxresult!(engine.gapi_engine.write());
-            gapi_engine.bind_pbr_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 0);
+            gapi_engine.bind_pbr_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 1);
         }
         for (_, mesh) in &self.meshes {
             vxresult!(mesh.read()).render(engine);
