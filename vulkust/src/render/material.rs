@@ -1,11 +1,11 @@
 use super::super::core::types::{Id, TypeId};
 use super::buffer::DynamicBuffer;
+use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::gx3d::Gx3DReader;
 use super::model::Uniform as ModelUniform;
 use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture};
-use super::descriptor::Set as DescriptorSet;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
@@ -200,14 +200,12 @@ impl Material {
         }
     }
 
-    pub fn update(&mut self, _scene_uniform: &SceneUniform, _model_uniform: &ModelUniform) {
-
-    }
+    pub fn update(&mut self, _scene_uniform: &SceneUniform, _model_uniform: &ModelUniform) {}
 
     pub fn bind(&self, engine: &Engine) {
-            let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
-            uniform_buffer.update(&self.uniform);
-            let mut gapi_engine = vxresult!(engine.gapi_engine.write());
-            gapi_engine.bind_pbr_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 2);
+        let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
+        uniform_buffer.update(&self.uniform);
+        let mut gapi_engine = vxresult!(engine.gapi_engine.write());
+        gapi_engine.bind_pbr_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 2);
     }
 }

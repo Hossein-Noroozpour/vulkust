@@ -412,13 +412,19 @@ impl Engine {
     //     draw_command.draw_index(indices_count);
     // }
 
-    pub fn bind_pbr_descriptor(&mut self, 
+    pub fn bind_pbr_descriptor(
+        &mut self,
         descriptor_set: &DescriptorSet,
         uniform_buffer: &DynamicBuffer,
-        index: usize) {
+        index: usize,
+    ) {
         let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
         self.bound_pbr_descriptor_sets[index] = descriptor_set.vk_data;
-        self.bound_pbr_dynamic_offsets[index] = vxresult!(uniform_buffer.buffers[frame_number].0.read()).info.base.offset as u32;
+        self.bound_pbr_dynamic_offsets[index] = vxresult!(
+            uniform_buffer.buffers[frame_number].0.read()
+        ).info
+            .base
+            .offset as u32;
     }
 
     pub fn bind_pbr_pipeline(&self) {

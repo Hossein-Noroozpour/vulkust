@@ -2,9 +2,9 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::buffer::StaticBuffer;
 use super::engine::Engine;
+use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::material::Material;
 use super::model::Uniform as ModelUniform;
-use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Object};
 use super::scene::Uniform as SceneUniform;
 use std::collections::BTreeMap;
@@ -271,7 +271,10 @@ impl Object for Base {
     fn render(&self, engine: &Engine) {
         self.material.bind(engine);
         vxresult!(engine.gapi_engine.read()).render_pbr(
-            &self.vertex_buffer, &self.index_buffer, self.indices_count);
+            &self.vertex_buffer,
+            &self.index_buffer,
+            self.indices_count,
+        );
     }
 
     fn update(&mut self) {}
@@ -295,7 +298,7 @@ impl Mesh for Base {
         false
         // todo
     }
-    
+
     fn get_occlusion_culling_radius(&self) -> f32 {
         vxunimplemented!()
     } // todo

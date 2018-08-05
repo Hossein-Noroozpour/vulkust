@@ -201,7 +201,10 @@ impl DynamicBuffer {
         }
     }
 
-    pub fn update<T>(&mut self, data: &T) where T: Sized {
+    pub fn update<T>(&mut self, data: &T)
+    where
+        T: Sized,
+    {
         #[cfg(debug_assertions)]
         {
             if size_of::<T>() != self.actual_size as usize {

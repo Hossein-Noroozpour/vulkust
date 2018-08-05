@@ -2,8 +2,8 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::camera::Orthographic;
 use super::engine::Engine;
-use super::object::{Loadable, Object, Transferable};
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
+use super::object::{Loadable, Object, Transferable};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 

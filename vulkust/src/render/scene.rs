@@ -3,6 +3,7 @@ use super::super::core::types::{Id, TypeId as CoreTypeId};
 use super::super::system::file::File;
 use super::buffer::DynamicBuffer;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager};
+use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::font::Manager as FontManager;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
@@ -11,7 +12,6 @@ use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
 use super::texture::Manager as TextureManager;
-use super::descriptor::Set as DescriptorSet;
 use std::collections::BTreeMap;
 use std::io::BufReader;
 use std::mem::size_of;
@@ -268,8 +268,10 @@ impl Base {
         }
         let engine = vxresult!(engine.read());
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer = Arc::new(RwLock::new(vxresult!(gapi_engine.buffer_manager.write())
-            .create_dynamic_buffer(size_of::<Uniform>() as isize)));
+        let uniform_buffer = Arc::new(RwLock::new(
+            vxresult!(gapi_engine.buffer_manager.write())
+                .create_dynamic_buffer(size_of::<Uniform>() as isize),
+        ));
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
@@ -330,8 +332,10 @@ impl Base {
         }
         let uniform = Uniform::new();
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer = Arc::new(RwLock::new(vxresult!(gapi_engine.buffer_manager.write())
-            .create_dynamic_buffer(size_of::<Uniform>() as isize)));
+        let uniform_buffer = Arc::new(RwLock::new(
+            vxresult!(gapi_engine.buffer_manager.write())
+                .create_dynamic_buffer(size_of::<Uniform>() as isize),
+        ));
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
@@ -384,6 +388,7 @@ impl Object for Base {
             let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
             uniform_buffer.update(&self.uniform);
             let mut gapi_engine = vxresult!(engine.gapi_engine.write());
+            gapi_engine.bind_pbr_pipeline();
             gapi_engine.bind_pbr_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 0);
         }
         for (_, model) in &self.models {
@@ -432,8 +437,10 @@ impl DefaultScene for Base {
     fn default(engine: &Arc<RwLock<Engine>>) -> Self {
         let engine = vxresult!(engine.read());
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer = Arc::new(RwLock::new(vxresult!(gapi_engine.buffer_manager.write())
-            .create_dynamic_buffer(size_of::<Uniform>() as isize)));
+        let uniform_buffer = Arc::new(RwLock::new(
+            vxresult!(gapi_engine.buffer_manager.write())
+                .create_dynamic_buffer(size_of::<Uniform>() as isize),
+        ));
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
