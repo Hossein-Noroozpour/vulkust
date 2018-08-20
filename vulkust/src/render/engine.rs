@@ -3,6 +3,7 @@ use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
 use super::camera::DefaultCamera;
 use super::gx3d::import as gx3d_import;
+use super::model::DefaultModel;
 use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
 use std::sync::{Arc, RwLock, Weak};
 // use super::command::buffer::Buffer as CmdBuff;
@@ -64,6 +65,16 @@ impl Engine {
         C: 'static + DefaultCamera,
     {
         vxresult!(self.scene_manager.read()).create_camera()
+    }
+
+    pub fn create_model<M>(&self) -> Arc<RwLock<M>>
+    where
+        M: 'static + DefaultModel,
+    {
+        let sm = vxresult!(self.scene_manager.read());
+        let mut mm = vxresult!(sm.model_manager.write());
+        let m = mm.create(self);
+        return m;
     }
 
     pub fn on_event(&self, _e: Event) {}

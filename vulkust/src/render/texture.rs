@@ -25,7 +25,7 @@ pub trait Texture: CoreObject {
 
 pub trait Loadable: Sized {
     fn new_with_gltf(&gltf::Texture, &Engine, &[u8]) -> Self;
-    fn new_with_gx3d(&Arc<RwLock<Engine>>, &mut Gx3DReader, Id) -> Self;
+    fn new_with_gx3d(&Engine, &mut Gx3DReader, Id) -> Self;
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -73,7 +73,7 @@ impl Manager {
         return texture;
     }
 
-    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Texture>> {
+    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<Texture>> {
         if let Some(t) = self.textures.get(&id) {
             if let Some(t) = t.upgrade() {
                 return t;
@@ -96,7 +96,7 @@ impl Manager {
         &mut self,
         width: u32,
         height: u32,
-        engine: &Arc<RwLock<Engine>>,
+        engine: &Engine,
         data: &[u8],
     ) -> Arc<RwLock<Texture2D>> {
         let tex = Texture2D::new_with_pixels(width, height, engine, data);
@@ -110,7 +110,7 @@ impl Manager {
 
     pub fn create_2d_with_color(
         &mut self,
-        engine: &Arc<RwLock<Engine>>,
+        engine: &Engine,
         color: [u8; 4],
     ) -> Arc<RwLock<Texture>> {
         if let Some(id) = self.color_to_id.get(&color) {
@@ -142,7 +142,7 @@ impl Texture2D {
     pub fn new_with_pixels(
         width: u32,
         height: u32,
-        engine: &Arc<RwLock<Engine>>,
+        engine: &Engine,
         data: &[u8],
     ) -> Self {
         Self::new_with_base_pixels(ObjectBase::new(), width, height, engine, data)
@@ -152,10 +152,9 @@ impl Texture2D {
         obj_base: ObjectBase,
         width: u32,
         height: u32,
-        engine: &Arc<RwLock<Engine>>,
+        engine: &Engine,
         data: &[u8],
     ) -> Self {
-        let engine = vxresult!(engine.read());
         let engine = vxresult!(engine.gapi_engine.read());
         let image_view = engine.create_texture_2d_with_pixels(width, height, data);
         let sampler = engine.sampler.clone();
@@ -213,7 +212,7 @@ impl Loadable for Texture2D {
         }
     }
 
-    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, id: Id) -> Self {
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
         let obj_base = ObjectBase::new_with_id(id);
         let size: Size = reader.read();
         let data = reader.read_bytes(size);

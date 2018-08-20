@@ -35,11 +35,11 @@ impl CoreAppTrait for MyGame {
     }
 
     fn initialize(&mut self) {
-        let renderer = vxunwrap!(self.renderer);
+        let renderer = vxunwrap!(&self.renderer);
         let renderer = vxresult!(renderer.read());
         let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene();
         let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
-        let label: Arc<RwLock<Label>> = renderer.create_mesh();
+        let label: Arc<RwLock<Label>> = renderer.create_model();
         {
             let mut label = vxresult!(label.write());
             // by default label has Ubuntu-B.ttf font.
@@ -55,7 +55,7 @@ impl CoreAppTrait for MyGame {
         {
             let mut uiscn = vxresult!(ui_scene.write());
             uiscn.add_camera(camera);
-            uiscn.add_mesh(label);
+            uiscn.add_model(label);
         }
         self.ui_scene = Some(ui_scene);
     }

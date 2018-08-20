@@ -2,7 +2,7 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::engine::Engine;
 use super::font::Font;
-use super::model::{Base as ModelBase, Model};
+use super::model::{Base as ModelBase, DefaultModel, Model};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
 use std::collections::BTreeMap;
@@ -57,6 +57,15 @@ impl Model for Base {
     }
 }
 
+impl DefaultModel for Base {
+    fn default(eng: &Engine) -> Self {
+        Base {
+            model_base: ModelBase::default(eng),
+            sensitive: false,
+        }
+    }
+}
+
 impl Widget for Base {}
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -71,14 +80,13 @@ pub struct Label {
 }
 
 impl Label {
-    pub fn set_text(&mut self, text: &str, engine: &Arc<RwLock<Engine>>) {
+    pub fn set_text(&mut self, text: &str, engine: &Engine) {
         self.text = text.to_string();
         self.create_text_mesh(engine);
     }
 
-    pub fn set_font_with_file_name(&mut self, name: &str, engine: &Arc<RwLock<Engine>>) {
+    pub fn set_font_with_file_name(&mut self, name: &str, engine: &Engine) {
         {
-            let engine = vxresult!(engine.read());
             let scene_manager = vxresult!(engine.scene_manager.read());
             let mut font_manager = vxresult!(scene_manager.font_manager.write());
             self.font = font_manager.load_ttf(name);
@@ -86,7 +94,7 @@ impl Label {
         self.create_text_mesh(engine);
     }
 
-    pub fn set_text_size(&mut self, size: f32, engine: &Arc<RwLock<Engine>>) {
+    pub fn set_text_size(&mut self, size: f32, engine: &Engine) {
         self.text_size = size;
         self.create_text_mesh(engine);
     }
@@ -97,7 +105,7 @@ impl Label {
         green: f32,
         blue: f32,
         alpha: f32,
-        engine: &Arc<RwLock<Engine>>,
+        engine: &Engine,
     ) {
         self.text_color = [red, green, blue, alpha];
         self.create_text_mesh(engine);
@@ -109,13 +117,13 @@ impl Label {
         green: f32,
         blue: f32,
         alpha: f32,
-        engine: &Arc<RwLock<Engine>>,
+        engine: &Engine,
     ) {
         self.background_color = [red, green, blue, alpha];
         self.create_text_mesh(engine);
     }
 
-    pub fn create_text_mesh(&mut self, engine: &Arc<RwLock<Engine>>) {
+    pub fn create_text_mesh(&mut self, engine: &Engine) {
         // todo margin
         // todo alignment
         // todo multiline support
@@ -177,8 +185,7 @@ impl Label {
             0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         ];
         let indices = [0u32, 2, 1, 1, 2, 3];
-        let eng = vxresult!(engine.read());
-        let scene_manager = vxresult!(eng.scene_manager.read());
+        let scene_manager = vxresult!(engine.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let texture =
             texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, &engine, &img);
@@ -229,22 +236,21 @@ impl Model for Label {
     }
 }
 
-// impl DefaultMesh for Label {
-//     fn default(engine: &Arc<RwLock<Engine>>) -> Self {
-//         let eng = vxresult!(engine.read());
-//         let scene_manager = vxresult!(eng.scene_manager.read());
-//         let font_manager = vxresult!(scene_manager.font_manager.read());
-//         let font = font_manager.default.clone();
-//         Label {
-//             base: Base::default(engine),
-//             text: String::new(),
-//             text_size: 1f32,
-//             text_color: [1f32; 4],
-//             background_color: [0f32; 4],
-//             font,
-//             size: 0.15f32,
-//         }
-//     }
-// }
+impl DefaultModel for Label {
+    fn default(eng: &Engine) -> Self {
+        let scene_manager = vxresult!(eng.scene_manager.read());
+        let font_manager = vxresult!(scene_manager.font_manager.read());
+        let font = font_manager.default.clone();
+        Label {
+            base: Base::default(eng),
+            text: String::new(),
+            text_size: 1f32,
+            text_color: [1f32; 4],
+            background_color: [0f32; 4],
+            font,
+            size: 0.15f32,
+        }
+    }
+}
 
 impl Widget for Label {}

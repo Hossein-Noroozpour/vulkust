@@ -88,7 +88,7 @@ impl Material {
                 ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
             ]
         };
-        let read_tex = |engine: &Arc<RwLock<Engine>>,
+        let read_tex = |engine: &Engine,
                         reader: &mut Gx3DReader,
                         texture_manager: &mut TextureManager| {
             let t = reader.read_type_id();
@@ -140,34 +140,34 @@ impl Material {
         // BaseColor
         let t = reader.read_type_id();
         let base_color = if t == Field::Texture as TypeId {
-            texture_manager.load_gx3d(engine, reader.read())
+            texture_manager.load_gx3d(&*eng, reader.read())
         } else if t == Field::Vector as TypeId {
             let color = read_color(reader);
             if color[3] < 254 {
                 translucency = TranslucencyMode::Tansparent;
             }
-            texture_manager.create_2d_with_color(engine, color)
+            texture_manager.create_2d_with_color(&*eng, color)
         } else {
             vxunexpected!()
         };
         // BaseColorFactor
-        let base_color_factor = read_tex(engine, reader, &mut *texture_manager);
+        let base_color_factor = read_tex(&*eng, reader, &mut *texture_manager);
         // DoubleSided
         let _double_sided = read_value(reader); // maybe in future I think about it
                                                 // Emissive
-        let emissive = read_tex(engine, reader, &mut *texture_manager);
+        let emissive = read_tex(&*eng, reader, &mut *texture_manager);
         // EmissiveFactor
-        let emissive_factor = read_tex(engine, reader, &mut *texture_manager);
+        let emissive_factor = read_tex(&*eng, reader, &mut *texture_manager);
         // MetallicFactor
         uniform.metallic_factor = read_value(reader);
         // MetallicRoughness
-        let metallic_roughness = read_tex(engine, reader, &mut *texture_manager);
+        let metallic_roughness = read_tex(&*eng, reader, &mut *texture_manager);
         // Normal
-        let normal = read_tex(engine, reader, &mut *texture_manager);
+        let normal = read_tex(&*eng, reader, &mut *texture_manager);
         // NormalScale
         uniform.normal_scale = read_value(reader);
         // Occlusion
-        let occlusion = read_tex(engine, reader, &mut *texture_manager);
+        let occlusion = read_tex(&*eng, reader, &mut *texture_manager);
         // OcclusionStrength
         uniform.occlusion_strength = read_value(reader);
         // RoughnessFactor

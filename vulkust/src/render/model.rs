@@ -19,6 +19,10 @@ pub trait Model: Object {
     fn update(&mut self, scene_uniform: &SceneUniform);
 }
 
+pub trait DefaultModel: Model + Sized {
+    fn default(&Engine) -> Self;
+}
+
 #[repr(u8)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum TypeId {
@@ -64,6 +68,16 @@ impl Manager {
         };
         self.models.insert(id, Arc::downgrade(&model));
         return model;
+    }
+
+    pub fn create<M>(&mut self, eng: &Engine) -> Arc<RwLock<M>>
+    where M: 'static + DefaultModel {
+        let m = M::default(eng);
+        let id = m.get_id();
+        let m1 = Arc::new(RwLock::new(m));
+        let m2: Arc<RwLock<Model>> = m1.clone();
+        self.models.insert(id, Arc::downgrade(&m2));
+        return m1;
     }
 }
 
@@ -113,6 +127,19 @@ impl Uniform {
         Uniform {
             model,
             model_view_projection: model,
+        }
+    }
+
+    fn default() -> Self {
+        let m = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        );
+        Uniform {
+            model: m,
+            model_view_projection: m,
         }
     }
 }
@@ -305,6 +332,35 @@ impl Model for Base {
         for (_, mesh) in &self.meshes {
             let mut mesh = vxresult!(mesh.write());
             Mesh::update(&mut *mesh, scene_uniform, &self.uniform);
+        }
+    }
+}
+
+impl DefaultModel for Base {
+    fn default(eng: &Engine) -> Self {
+        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let uniform_buffer = Arc::new(RwLock::new(
+            vxresult!(gapi_engine.buffer_manager.write())
+                .create_dynamic_buffer(size_of::<Uniform>() as isize),
+        ));
+        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
+        let descriptor_set = Arc::new(descriptor_set);
+        Base {
+            obj_base: ObjectBase::new(),
+            is_dynamic: true,
+            has_shadow_caster: false,
+            has_transparent: false,
+            occlusion_culling_radius: 1.0,
+            is_in_sun: Vec::new(),
+            is_in_camera: Vec::new(),
+            distance_from_cameras: Vec::new(),
+            collider: Arc::new(RwLock::new(GhostCollider::new())),
+            uniform: Uniform::default(),
+            uniform_buffer,
+            descriptor_set,
+            meshes: BTreeMap::new(),
+            children: BTreeMap::new(),
         }
     }
 }

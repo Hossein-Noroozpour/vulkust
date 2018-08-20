@@ -29,6 +29,7 @@ pub enum TypeId {
 
 pub trait Scene: Object {
     fn add_camera(&mut self, Arc<RwLock<Camera>>);
+    fn add_model(&mut self, Arc<RwLock<Model>>);
 }
 
 pub trait Loadable: Scene + Sized {
@@ -431,6 +432,11 @@ impl Scene for Base {
         }
         self.cameras.insert(id, camera);
     }
+
+    fn add_model(&mut self, model: Arc<RwLock<Model>>) 
+    {
+        vxunimplemented!();
+    }
 }
 
 impl DefaultScene for Base {
@@ -501,6 +507,10 @@ impl Scene for Game {
     fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
         self.base.add_camera(camera);
     }
+    fn add_model(&mut self, model: Arc<RwLock<Model>>) 
+    {
+        vxunimplemented!();
+    }
 }
 
 impl Loadable for Game {
@@ -558,6 +568,10 @@ impl Object for Ui {
 impl Scene for Ui {
     fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
         self.base.add_camera(camera)
+    }
+    fn add_model(&mut self, model: Arc<RwLock<Model>>) 
+    {
+        vxunimplemented!();
     }
 }
 
