@@ -2,7 +2,9 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::engine::Engine;
 use super::font::Font;
+use super::material::Material;
 use super::model::{Base as ModelBase, DefaultModel, Model};
+use super::mesh::{Base as MeshBase, Mesh};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
 use std::collections::BTreeMap;
@@ -180,20 +182,22 @@ impl Label {
             }
         }
         let vertices = [
-            w, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, w, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 1.0, 1.0, 0.0, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+            w, h, 0.0,      0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     0.0, 0.0,
+            w, 0.0, 0.0,    0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     1.0, 1.0,
+            0.0, h, 0.0,    0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     1.0, 0.0, 
+            0.0, 0.0, 0.0,  0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     0.0, 1.0,
         ];
         let indices = [0u32, 2, 1, 1, 2, 3];
+        let mut material = Material::default(engine);
         let scene_manager = vxresult!(engine.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
-        let texture =
-            texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, &engine, &img);
-        // todo
-        // let mesh = MeshBase::new_with_material(texture, &vertices, &indices, &eng);
-        // let mesh_id = mesh.get_id();
-        // let mesh = Arc::new(RwLock::new(mesh));
-        // self.base.model_base.meshes.insert(mesh_id, mesh);
+        material.base_color =
+            texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, engine, &img);
+        let mesh = MeshBase::new_with_material(material, &vertices, &indices, engine);
+        let mesh_id = mesh.get_id();
+        let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
+        vxresult!(scene_manager.mesh_manager.write()).add(&mesh);
+        self.base.model_base.meshes.insert(mesh_id, mesh);
     }
 }
 

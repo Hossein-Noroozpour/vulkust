@@ -8,6 +8,7 @@ use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
+use std::default::Default;
 
 use gltf;
 
@@ -48,6 +49,12 @@ pub enum TranslucencyMode {
     Cutoff,
     Tansparent,
     Opaque,
+}
+
+impl Default for TranslucencyMode {
+    fn default() -> Self {
+        TranslucencyMode::Opaque
+    }
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -172,6 +179,50 @@ impl Material {
         uniform.occlusion_strength = read_value(reader);
         // RoughnessFactor
         uniform.roughness_factor = read_value(reader);
+        let textures = [
+            base_color.clone(),
+            base_color_factor.clone(),
+            metallic_roughness.clone(),
+            normal.clone(),
+            occlusion.clone(),
+            emissive.clone(),
+            emissive_factor.clone(),
+        ];
+        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let descriptor_set = descriptor_manager.create_pbr_set(uniform_buffer.clone(), &textures);
+        let descriptor_set = Arc::new(descriptor_set);
+        Material {
+            base_color,
+            base_color_factor,
+            metallic_roughness,
+            normal,
+            occlusion,
+            emissive,
+            emissive_factor,
+            translucency,
+            uniform,
+            uniform_buffer,
+            descriptor_set,
+        }
+    }
+
+    pub fn default(eng: &Engine) -> Self {
+        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = Arc::new(RwLock::new(uniform_buffer));
+        let scene_manager = vxresult!(eng.scene_manager.read());
+        let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
+        let uniform = Uniform::new();
+        let translucency = TranslucencyMode::default();
+        let base_color = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
+        let base_color_factor = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
+        let emissive = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
+        let emissive_factor = texture_manager.create_2d_with_color(&*eng, [0, 0, 0, 0]);
+        let metallic_roughness = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
+        let normal = texture_manager.create_2d_with_color(&*eng, [127, 127, 255, 255]);
+        let occlusion = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
         let textures = [
             base_color.clone(),
             base_color_factor.clone(),

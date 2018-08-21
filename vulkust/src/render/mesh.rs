@@ -78,6 +78,11 @@ impl Manager {
         self.meshes.insert(id, Arc::downgrade(&mesh));
         return mesh;
     }
+
+    pub fn add(&mut self, mesh: &Arc<RwLock<Mesh>>) {
+        let id = vxresult!(mesh.read()).get_id();
+        self.meshes.insert(id, Arc::downgrade(&mesh));
+    }
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
