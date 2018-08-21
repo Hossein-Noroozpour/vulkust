@@ -433,9 +433,9 @@ impl Scene for Base {
         self.cameras.insert(id, camera);
     }
 
-    fn add_model(&mut self, model: Arc<RwLock<Model>>) 
-    {
-        vxunimplemented!();
+    fn add_model(&mut self, model: Arc<RwLock<Model>>) {
+        let id = vxresult!(model.read()).get_id();
+        self.models.insert(id, model);
     }
 }
 
@@ -507,9 +507,9 @@ impl Scene for Game {
     fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
         self.base.add_camera(camera);
     }
-    fn add_model(&mut self, model: Arc<RwLock<Model>>) 
-    {
-        vxunimplemented!();
+
+    fn add_model(&mut self, model: Arc<RwLock<Model>>) {
+        self.base.add_model(model);
     }
 }
 
@@ -569,9 +569,9 @@ impl Scene for Ui {
     fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
         self.base.add_camera(camera)
     }
-    fn add_model(&mut self, model: Arc<RwLock<Model>>) 
-    {
-        vxunimplemented!();
+
+    fn add_model(&mut self, model: Arc<RwLock<Model>>) {
+        self.base.add_model(model);
     }
 }
 
