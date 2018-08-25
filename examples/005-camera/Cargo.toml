@@ -1,0 +1,17 @@
+[package]
+name = "hello-world"
+version = "0.1.0"
+authors = ["Hossein Noroozpour <hossein.noroozpour@gmail.com>"]
+description = "A hello world by Vulkust game engine"
+license = "MIT"
+
+[dependencies]
+vulkust = { path = "../../vulkust" }
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["staticlib"]
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
