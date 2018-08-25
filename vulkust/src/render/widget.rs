@@ -101,6 +101,11 @@ impl Label {
         self.create_text_mesh(engine);
     }
 
+    pub fn set_size(&mut self, size: f32, engine: &Engine) {
+        self.size = size;
+        self.create_text_mesh(engine);
+    }
+
     pub fn set_text_color(
         &mut self,
         red: f32,
@@ -182,9 +187,9 @@ impl Label {
             }
         }
         let vertices = [
-            w, h, 0.0,      0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     0.0, 0.0,
+            w, h, 0.0,      0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     1.0, 0.0,
             w, 0.0, 0.0,    0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     1.0, 1.0,
-            0.0, h, 0.0,    0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     1.0, 0.0, 
+            0.0, h, 0.0,    0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     0.0, 0.0, 
             0.0, 0.0, 0.0,  0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     0.0, 1.0,
         ];
         let indices = [0u32, 2, 1, 1, 2, 3];
@@ -193,6 +198,7 @@ impl Label {
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         material.base_color =
             texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, engine, &img);
+        material.finalize_textures_change(engine);
         let mesh = MeshBase::new_with_material(material, &vertices, &indices, engine);
         let mesh_id = mesh.get_id();
         let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));

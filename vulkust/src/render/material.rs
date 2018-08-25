@@ -232,7 +232,6 @@ impl Material {
             emissive.clone(),
             emissive_factor.clone(),
         ];
-        let gapi_engine = vxresult!(eng.gapi_engine.read());
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
         let descriptor_set = descriptor_manager.create_pbr_set(uniform_buffer.clone(), &textures);
         let descriptor_set = Arc::new(descriptor_set);
@@ -249,6 +248,22 @@ impl Material {
             uniform_buffer,
             descriptor_set,
         }
+    }
+
+    pub fn finalize_textures_change(&mut self, eng: &Engine) {
+        let textures = [
+            self.base_color.clone(),
+            self.base_color_factor.clone(),
+            self.metallic_roughness.clone(),
+            self.normal.clone(),
+            self.occlusion.clone(),
+            self.emissive.clone(),
+            self.emissive_factor.clone(),
+        ];
+        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let descriptor_set = descriptor_manager.create_pbr_set(self.uniform_buffer.clone(), &textures);
+        self.descriptor_set = Arc::new(descriptor_set);
     }
 
     pub fn update(&mut self, _scene_uniform: &SceneUniform, _model_uniform: &ModelUniform) {}

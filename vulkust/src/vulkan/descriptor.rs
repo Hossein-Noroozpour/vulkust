@@ -213,20 +213,22 @@ impl Set {
         infos[0].pBufferInfo = &buff_info;
         infos[0].dstBinding = 0;
         let mut last_info_i = 1;
+        let mut last_img_info_i = 0;
+        let mut img_infos = vec![vk::VkDescriptorImageInfo::default(); textures.len()];
         for texture in textures {
             let texture = vxresult!(texture.read());
-            let mut img_info = vk::VkDescriptorImageInfo::default();
-            img_info.imageLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            img_info.imageView = texture.get_image_view().vk_data;
-            img_info.sampler = texture.get_sampler().vk_data;
+            img_infos[last_img_info_i].imageLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            img_infos[last_img_info_i].imageView = texture.get_image_view().vk_data;
+            img_infos[last_img_info_i].sampler = texture.get_sampler().vk_data;
             infos[last_info_i].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             infos[last_info_i].dstSet = vk_data;
             infos[last_info_i].descriptorCount = 1;
             infos[last_info_i].descriptorType =
                 vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            infos[last_info_i].pImageInfo = &img_info;
+            infos[last_info_i].pImageInfo = &(img_infos[last_img_info_i]);
             infos[last_info_i].dstBinding = last_info_i as u32;
             last_info_i += 1;
+            last_img_info_i += 1;
         }
         unsafe {
             vk::vkUpdateDescriptorSets(
