@@ -1,8 +1,8 @@
 [package]
-name = "hello-world"
+name = "camera"
 version = "0.1.0"
 authors = ["Hossein Noroozpour <hossein.noroozpour@gmail.com>"]
-description = "A hello world by Vulkust game engine"
+description = "A camera manipulating example for Vulkust game engine"
 license = "MIT"
 
 [dependencies]

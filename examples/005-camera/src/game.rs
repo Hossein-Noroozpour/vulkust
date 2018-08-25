@@ -1,10 +1,13 @@
 use vulkust::core::application::Application as CoreAppTrait;
 use vulkust::core::event::Event;
-use vulkust::render::camera::Orthographic;
+use vulkust::render::camera::Perspective;
 use vulkust::render::engine::Engine as Renderer;
 use vulkust::render::scene::{Scene, Ui as UiScene};
 use vulkust::render::widget::Label;
+use vulkust::render::model::Base as ModelBase;
 use vulkust::system::os::application::Application as OsApp;
+use vulkust::render::object::Transferable;
+use vulkust::math;
 
 use std::sync::{Arc, RwLock};
 
@@ -38,7 +41,11 @@ impl CoreAppTrait for MyGame {
         let renderer = vxunwrap!(&self.renderer);
         let renderer = vxresult!(renderer.read());
         let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene();
-        let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
+        let camera: Arc<RwLock<Perspective>> = renderer.create_camera();
+        {
+            let mut camera = vxresult!(camera.write());
+            camera.set_location(&math::Vector3::new(0.0, 0.0, 2.0));
+        }
         let label: Arc<RwLock<Label>> = renderer.create_model();
         {
             let mut label = vxresult!(label.write());
@@ -47,7 +54,7 @@ impl CoreAppTrait for MyGame {
             //     place your ttf it in data/fonts/ directory
             //     and call following function.
             // label.set_font_with_file_name("your-font.ttf");
-            label.set_size(0.05, &renderer);
+            label.set_size(0.15, &renderer);
             label.set_text_size(50.0, &renderer);
             label.set_text_color(1.0, 1.0, 1.0, 1.0, &renderer);
             label.set_background_color(0.0, 0.0, 0.0, 0.0, &renderer);

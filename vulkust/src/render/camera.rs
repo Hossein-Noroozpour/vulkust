@@ -141,8 +141,8 @@ impl Base {
         let os_app = vxresult!(eng.read());
         Base {
             obj_base,
-            near: 0.0,
-            far: 1.0,
+            near: 1.0,
+            far: 100.0,
             aspect_ratio: os_app.get_window_aspect_ratio(),
             x: math::Vector3::new(1.0, 0.0, 0.0),
             y: math::Vector3::new(0.0, 1.0, 0.0),
@@ -268,15 +268,23 @@ pub struct Perspective {
 }
 
 impl Perspective {
+    pub fn new(eng: &Arc<RwLock<Engine>>) -> Self {
+        let base = Base::new_with_obj_base(eng, ObjectBase::new());
+        let mut myself = Self::new_with_base(base);
+        myself.set_fov_vertical(1.0);
+        return myself;
+    }
+
+
     pub fn new_with_base(base: Base) -> Self {
         Perspective {
             base,
-            fov_vertical: 0.0,
-            fov_horizontal: 0.0,
-            tan_vertical: 0.0,
-            tan_horizontal: 0.0,
-            div_cos_vertical: 0.0,
-            div_cos_horizontal: 0.0,
+            fov_vertical: 0.785398163,
+            fov_horizontal: 0.785398163,
+            tan_vertical: 1.0,
+            tan_horizontal: 1.0,
+            div_cos_vertical: 0.707106781,
+            div_cos_horizontal: 0.707106781,
         }
     }
 
@@ -395,6 +403,12 @@ impl Camera for Perspective {
         }
         result[sections_count] = self.base.location + self.base.z * self.base.far;
         return result;
+    }
+}
+
+impl DefaultCamera for Perspective {
+    fn default(eng: &Arc<RwLock<Engine>>) -> Self {
+        Perspective::new(eng)
     }
 }
 
