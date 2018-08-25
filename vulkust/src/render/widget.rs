@@ -182,7 +182,7 @@ impl Label {
                     img[i] = ((bg[0] * inv + fc[0] * v) >> 8) as u8;
                     img[i + 1] = ((bg[1] * inv + fc[1] * v) >> 8) as u8;
                     img[i + 2] = ((bg[2] * inv + fc[2] * v) >> 8) as u8;
-                    img[i + 3] = 0; //((bg[3] * inv + fc[3] * v) >> 8) as u8;
+                    img[i + 3] = ((bg[3] * inv + fc[3] * v) >> 8) as u8;
                 });
             }
         }
