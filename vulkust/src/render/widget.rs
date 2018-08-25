@@ -57,6 +57,10 @@ impl Model for Base {
     fn update(&mut self, scene_uniform: &SceneUniform) {
         Model::update(&mut self.model_base, scene_uniform);
     }
+
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
+        self.model_base.add_mesh(mesh);
+    }
 }
 
 impl DefaultModel for Base {
@@ -243,6 +247,10 @@ impl Object for Label {
 impl Model for Label {
     fn update(&mut self, scene_uniform: &SceneUniform) {
         Model::update(&mut self.base, scene_uniform);
+    }
+
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
+        self.base.add_mesh(mesh);
     }
 }
 

@@ -17,6 +17,7 @@ use math;
 
 pub trait Model: Object {
     fn update(&mut self, scene_uniform: &SceneUniform);
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>);
 }
 
 pub trait DefaultModel: Model + Sized {
@@ -333,6 +334,11 @@ impl Model for Base {
             let mut mesh = vxresult!(mesh.write());
             Mesh::update(&mut *mesh, scene_uniform, &self.uniform);
         }
+    }
+
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
+        let id = vxresult!(mesh.read()).get_id();
+        self.meshes.insert(id, mesh);
     }
 }
 

@@ -83,6 +83,20 @@ impl Manager {
         let id = vxresult!(mesh.read()).get_id();
         self.meshes.insert(id, Arc::downgrade(&mesh));
     }
+
+    pub fn create_with_material(
+        &mut self,
+        material: Material,
+        vertices: &[f32],
+        indices: &[u32],
+        engine: &Engine,
+    ) -> Arc<RwLock<Mesh>> {
+        let mesh = Base::new_with_material(material, vertices, indices, engine);
+        let mesh_id = mesh.get_id();
+        let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
+        self.meshes.insert(mesh_id, Arc::downgrade(&mesh));
+        return mesh;
+    }
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
