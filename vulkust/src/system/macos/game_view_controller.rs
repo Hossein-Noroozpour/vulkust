@@ -1,4 +1,4 @@
-use super::super::super::objc::runtime::{Object, Sel, YES};
+use super::super::super::objc::runtime::{Object, Sel, YES, BOOL};
 use super::super::apple;
 use super::application::Application as OsApp;
 use std::mem::transmute;
@@ -66,6 +66,38 @@ extern "C" fn deallocate(this: &mut Object, _cmd: Sel) {
 //-(void) keyDown:(NSEvent*) theEvent
 extern "C" fn key_down(_this: &mut Object, _cmd: Sel, _event: apple::Id) {}
 
+// - (void)mouseDown:(NSEvent *)event
+extern "C" fn mouse_down(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
+    vxlogi!("1111111111111111111111111111111111111");
+}
+
+// - (void)mouseUp:(NSEvent *)event
+extern "C" fn mouse_up(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
+    vxlogi!("2222222222222222222222222222222222222");
+}
+
+// - (void)mouseDragged:(NSEvent *)event
+extern "C" fn mouse_dragged(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
+    vxlogi!("333333333333333333333333333333333");
+}
+
+// - (void)mouseMoved:(NSEvent *)event
+extern "C" fn mouse_moved(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
+    vxlogi!("444444444444444444444444444444444");
+}
+
+// -(BOOL) acceptsFirstResponder { return YES; }
+extern "C" fn accepts_first_responder(_this: &mut Object, _cmd: Sel) -> BOOL {
+    vxlogi!("Reached");
+    YES
+}
+
+// -(BOOL) acceptsMouseMovedEvents
+extern "C" fn accepts_mouse_moved_events(_this: &mut Object, _cmd: Sel) -> BOOL {
+    vxlogi!("Reached");
+    YES
+}
+
 pub fn register() {
     let mut self_class = apple::dec_class_s(CLASS_NAME, SUPER_CLASS_NAME);
     self_class.add_ivar::<*mut c_void>(DISPLAY_LINK_VAR_NAME);
@@ -84,6 +116,30 @@ pub fn register() {
         self_class.add_method(
             sel!(keyDown:),
             key_down as extern "C" fn(&mut Object, Sel, apple::Id),
+        );
+        self_class.add_method(
+            sel!(mouseDown:),
+            mouse_down as extern "C" fn(&mut Object, Sel, apple::Id),
+        );
+        self_class.add_method(
+            sel!(mouseUp:),
+            mouse_up as extern "C" fn(&mut Object, Sel, apple::Id),
+        );
+        self_class.add_method(
+            sel!(mouseDragged:),
+            mouse_dragged as extern "C" fn(&mut Object, Sel, apple::Id),
+        );
+        self_class.add_method(
+            sel!(mouseMoved:),
+            mouse_moved as extern "C" fn(&mut Object, Sel, apple::Id),
+        );
+        self_class.add_method(
+            sel!(acceptsFirstResponder),
+            accepts_first_responder as extern "C" fn(&mut Object, Sel) -> BOOL,
+        );
+        self_class.add_method(
+            sel!(acceptsMouseMovedEvents),
+            accepts_mouse_moved_events as extern "C" fn(&mut Object, Sel) -> BOOL,
         );
     }
     self_class.register();

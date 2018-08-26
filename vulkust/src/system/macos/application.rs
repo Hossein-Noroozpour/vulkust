@@ -43,7 +43,7 @@ impl Application {
             let view: apple::Id = *(*app_dlg).get_ivar(app_delegate::VIEW_VAR_NAME);
             transmute(view)
         };
-        let controller = unsafe { *(*app_dlg).get_ivar(app_delegate::VIEW_VAR_NAME) };
+        let controller = unsafe { *(*app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME) };
         let renderer = None;
         let core_app = Some(core_app);
         Application {
