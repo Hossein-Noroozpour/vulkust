@@ -162,6 +162,12 @@ impl Base {
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         ) * self.projection * self.view;
     }
+
+    pub fn update_location(&mut self) {
+        let translate = math::Matrix4::from_translation(-self.location);
+        self.view = self.direction * translate;
+        self.update_view_projection();
+    }
 }
 
 impl CoreObject for Base {
@@ -212,9 +218,37 @@ impl Transferable for Base {
 
     fn set_location(&mut self, l: &math::Vector3<f32>) {
         self.location = *l;
-        let translate = math::Matrix4::from_translation(-*l);
-        self.view = self.direction * translate;
-        self.update_view_projection();
+        self.update_location();
+    }
+
+    fn move_local_z(&mut self, v: f32) {
+        self.location = self.location + self.z * v;
+        self.update_location();
+    }
+
+    fn move_local_x(&mut self, v: f32) {
+        self.location = self.location + self.x * v;
+        self.update_location();
+    }
+
+    fn rotate_local_x(&mut self, v: f32) {
+        let rot = math::Matrix4::from_axis_angle(self.x, math::Rad(-v));
+        let irot = math::Matrix4::from_axis_angle(self.x, math::Rad(v));
+        self.y = (irot * self.y.extend(0.0)).truncate();
+        self.z = (irot * self.z.extend(0.0)).truncate();
+        self.direction = self.direction * rot;
+        self.update_location();
+    }
+
+    fn rotate_global_z(&mut self, v: f32) {
+        let ax = math::Vector3::new(0.0, 0.0, 1.0);
+        let rot = math::Matrix4::from_axis_angle(ax, math::Rad(-v));
+        let irot = math::Matrix4::from_axis_angle(ax, math::Rad(v));
+        self.x = (irot * self.x.extend(0.0)).truncate();
+        self.y = (irot * self.y.extend(0.0)).truncate();
+        self.z = (irot * self.z.extend(0.0)).truncate();
+        self.direction = self.direction * rot;
+        self.update_location();
     }
 }
 
@@ -369,6 +403,22 @@ impl Transferable for Perspective {
     fn set_location(&mut self, l: &math::Vector3<f32>) {
         self.base.set_location(l);
     }
+    
+    fn move_local_z(&mut self, v: f32) {
+        self.base.move_local_z(v);
+    }
+    
+    fn move_local_x(&mut self, v: f32) {
+        self.base.move_local_x(v);
+    }
+
+    fn rotate_local_x(&mut self, v: f32) {
+        self.base.rotate_local_x(v);
+    }
+
+    fn rotate_global_z(&mut self, v: f32) {
+        self.base.rotate_global_z(v);
+    }
 }
 
 impl Camera for Perspective {
@@ -499,6 +549,22 @@ impl Transferable for Orthographic {
 
     fn set_location(&mut self, l: &math::Vector3<f32>) {
         self.base.set_location(l);
+    }
+    
+    fn move_local_z(&mut self, v: f32) {
+        self.base.move_local_z(v);
+    }
+    
+    fn move_local_x(&mut self, v: f32) {
+        self.base.move_local_x(v);
+    }
+
+    fn rotate_local_x(&mut self, v: f32) {
+        self.base.rotate_local_x(v);
+    }
+
+    fn rotate_global_z(&mut self, v: f32) {
+        self.base.rotate_global_z(v);
     }
 }
 

@@ -23,6 +23,10 @@ pub trait Loadable: Sized {
 pub trait Transferable {
     fn set_orientation(&mut self, &math::Quaternion<f32>);
     fn set_location(&mut self, &math::Vector3<f32>);
+    fn move_local_z(&mut self, f32);
+    fn move_local_x(&mut self, f32);
+    fn rotate_local_x(&mut self, f32);
+    fn rotate_global_z(&mut self, f32);
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]

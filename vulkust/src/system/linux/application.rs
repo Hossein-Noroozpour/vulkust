@@ -1,6 +1,7 @@
 use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
 use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
+use super::super::super::core::event;
 use super::super::super::core::types::Real;
 use super::super::super::libc;
 use super::super::super::render::engine::Engine as RenderEngine;
@@ -23,9 +24,10 @@ pub struct Application {
     pub screen: *mut xcb::xcb_screen_t,
     pub window: xcb::xcb_window_t,
     pub atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t,
-    pub window_width: f32,
-    pub window_height: f32,
-    pub window_aspect_ratio: f32,
+    pub window_width: Real,
+    pub window_height: Real,
+    pub window_aspect_ratio: Real,
+    pub current_mouse_position: Arc<RwLock<(Real, Real)>>,
 }
 
 impl Application {
@@ -118,6 +120,7 @@ impl Application {
             xcb::xcb_map_window(connection, window);
             xcb::xcb_flush(connection);
         }
+        let current_mouse_position = Arc::new(RwLock::new(get_mouse_position(connection, window, screen)));
         Application {
             renderer: None,
             core_app: Some(core_app),
@@ -128,6 +131,7 @@ impl Application {
             window_width,
             window_height,
             window_aspect_ratio,
+            current_mouse_position,
         }
     }
 
@@ -139,6 +143,11 @@ impl Application {
 
     pub fn run(&self) {
         'main_loop: loop {
+            {
+                let renderer = vxresult!(vxunwrap!(&self.renderer).read());
+                let mut timing = vxresult!(renderer.timing.write());
+                timing.update();
+            }
             let events = self.fetch_events();
             for e in events {
                 match e.event_type {
@@ -152,22 +161,15 @@ impl Application {
                     }
                     _ => (),
                 }
+                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
             }
+            vxresult!(vxunwrap!(&self.core_app).write()).update();
             vxresult!(vxunwrap!(&self.renderer).read()).update();
         }
     }
 
-    pub fn get_mouse_position(&self) -> (f64, f64) {
-        unsafe {
-            let coockie = xcb::xcb_query_pointer(self.connection, self.window);
-            let reply: &mut xcb::xcb_query_pointer_reply_t = transmute(
-                xcb::xcb_query_pointer_reply(self.connection, coockie, null_mut()),
-            );
-            let x = reply.root_x as f64 / (*self.screen).width_in_pixels as f64;
-            let y = reply.root_y as f64 / (*self.screen).height_in_pixels as f64;
-            libc::free(transmute(reply));
-            (x, y)
-        }
+    pub fn get_mouse_position(&self) -> (Real, Real) {
+        get_mouse_position(self.connection, self.window, self.screen)
     }
 
     pub fn get_window_ratio(&self) -> f64 {
@@ -181,9 +183,9 @@ impl Application {
             if xcb_event == null_mut() {
                 break;
             }
-            let event = self.translate(xcb_event);
-            if event.is_some() {
-                events.push(Event::new(event.unwrap()));
+            let e = self.translate(xcb_event);
+            if let Some(e) = e {
+                events.push(Event::new(e));
             }
             unsafe {
                 libc::free(transmute(xcb_event));
@@ -215,10 +217,13 @@ impl Application {
             }
             xproto::XCB_MOTION_NOTIFY => {
                 let pos = self.get_mouse_position();
-                return Some(EventType::MouseMove {
-                    delta_x: pos.0,
-                    delta_y: pos.1,
-                });
+                let pre = *vxresult!(self.current_mouse_position.read());
+                *vxresult!(self.current_mouse_position.write()) = pos;
+                return Some(EventType::Move(event::Move::Mouse {
+                    previous: pre,
+                    current: pos,
+                    delta: (pos.0 - pre.0, pos.1 - pre.1),
+                }));
             }
             xproto::XCB_BUTTON_PRESS => {
                 let press: &mut xcb::xcb_button_press_event_t = unsafe { transmute(e) };
@@ -232,8 +237,9 @@ impl Application {
                         Mouse::Left
                     }
                 };
-                return Some(EventType::Press {
+                return Some(EventType::Button {
                     button: Button::Mouse(m),
+                    action: event::ButtonAction::Press,
                 });
             }
             xproto::XCB_BUTTON_RELEASE => {
@@ -248,8 +254,9 @@ impl Application {
                         Mouse::Left
                     }
                 };
-                return Some(EventType::Release {
+                return Some(EventType::Button {
                     button: Button::Mouse(m),
+                    action: event::ButtonAction::Release,
                 });
             }
             a @ xproto::XCB_KEY_PRESS | a @ xproto::XCB_KEY_RELEASE => {
@@ -267,9 +274,15 @@ impl Application {
                     }
                 });
                 return Some(if a == xproto::XCB_KEY_RELEASE {
-                    EventType::Release { button: b }
+                    EventType::Button { 
+                        button: b,
+                        action: event::ButtonAction::Release,
+                    }
                 } else {
-                    EventType::Press { button: b }
+                    EventType::Button { 
+                        button: b,
+                        action: event::ButtonAction::Press,
+                    }
                 });
             }
             xproto::XCB_DESTROY_NOTIFY => {
@@ -301,5 +314,21 @@ impl Application {
 
     pub fn get_window_aspect_ratio(&self) -> f32 {
         self.window_aspect_ratio
+    }
+}
+
+fn get_mouse_position(
+    connection: *mut xcb::xcb_connection_t, 
+    window: xcb::xcb_window_t, 
+    screen: *mut xcb::xcb_screen_t) -> (Real, Real) {
+    unsafe {
+        let coockie = xcb::xcb_query_pointer(connection, window);
+        let reply: &mut xcb::xcb_query_pointer_reply_t = transmute(
+            xcb::xcb_query_pointer_reply(connection, coockie, null_mut()),
+        );
+        let x = reply.root_x as Real / (*screen).width_in_pixels as Real;
+        let y = reply.root_y as Real / (*screen).height_in_pixels as Real;
+        libc::free(transmute(reply));
+        (x, y)
     }
 }

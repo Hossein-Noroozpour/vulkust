@@ -1,6 +1,7 @@
 #![feature(repr_simd)]
 #![feature(integer_atomics)]
 #![feature(stmt_expr_attributes)]
+#![feature(duration_as_u128)]
 
 pub extern crate cgmath as math;
 pub extern crate gltf;

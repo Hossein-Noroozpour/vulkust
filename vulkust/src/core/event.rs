@@ -1,7 +1,7 @@
 use super::object::{create_id, Object};
 use super::types::{Id, Real};
 
-#[derive(Debug, Copy, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Mouse {
     Left,
     Right,
@@ -11,7 +11,7 @@ pub enum Mouse {
     Offic,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Keyboard {
     A,
     B,
@@ -82,13 +82,13 @@ pub enum Keyboard {
     Equal,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Button {
     Mouse(Mouse),
     Keyboard(Keyboard),
 }
 
-#[derive(Debug, Copy, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Window {
     SizeChange {
         w: Real,
@@ -100,16 +100,30 @@ pub enum Window {
     },
 }
 
-#[derive(Debug, Copy, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum Move {
+    Mouse {
+        previous: (Real, Real),
+        current: (Real, Real),
+        delta: (Real, Real),
+    },
+}
+
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum ButtonAction {
+    Press,
+    Release,
+}
+
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Type {
-    MouseMove { delta_x: f64, delta_y: f64 },
-    Press { button: Button },
-    Release { button: Button },
+    Move(Move),
+    Button { button: Button, action: ButtonAction },
     Window(Window),
     Quit,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Event {
     id: Id,
     pub event_type: Type,
