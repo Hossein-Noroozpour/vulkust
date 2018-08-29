@@ -3,9 +3,16 @@ use std::ffi::CString;
 use std::io::{Read, Result, Seek, SeekFrom};
 use std::mem::transmute;
 use std::ptr::null_mut;
+use std::fmt;
 
 pub struct File {
     pub asset: *mut aas::AAsset,
+}
+
+impl fmt::Debug for File {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Android-Asset-File")
+    }
 }
 
 pub static mut AASSET_MANAGER: isize = 0;

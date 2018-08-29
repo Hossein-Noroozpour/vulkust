@@ -1,4 +1,4 @@
-use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
 use super::super::super::libc::c_int;
 use super::super::super::render::engine::Engine as RenderEngine;
@@ -8,12 +8,19 @@ use super::looper::ALooper_pollAll;
 use std::mem::transmute;
 use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
+use std::fmt;
 
 pub struct Application {
     pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
     pub renderer: Option<Arc<RwLock<RenderEngine>>>,
     pub and_app: *mut AndroidApp,
     pub events: Arc<RwLock<Vec<Event>>>,
+}
+
+impl fmt::Debug for Application {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Android Application")
+    }
 }
 
 impl Application {
@@ -57,7 +64,7 @@ impl Application {
     pub fn run(&self) {
         loop {
             let _ = self.fetch_events();
-            vxresult!(vxunwrap!(self.renderer).read()).update();
+            vxresult!(vxunwrap!(&self.renderer).read()).update();
         }
     }
 
@@ -100,7 +107,7 @@ impl Application {
 
 extern "C" fn handle_cmd(android_app: *mut AndroidApp, cmd: i32) {
     unsafe {
-        vxresult!(vxunwrap!((*android_app).os_app).read()).handle_cmd(cmd);
+        vxresult!(vxunwrap!(&(*android_app).os_app).read()).handle_cmd(cmd);
     }
 }
 

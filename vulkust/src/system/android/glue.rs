@@ -1,4 +1,4 @@
-use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::libc;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::os::application::Application as OsApp;
@@ -295,10 +295,10 @@ extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
         libc::pthread_cond_broadcast(&mut ((*android_app).cond));
         libc::pthread_mutex_unlock(&mut (*android_app).mutex);
         {
-            let os_app = vxunwrap!((*android_app).os_app);
+            let os_app = vxunwrap!(&(*android_app).os_app);
             vxresult!(os_app.read()).initialize();
-            let core_app = vxunwrap!(vxresult!(os_app.read()).core_app).clone();
-            let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), os_app)));
+            let core_app = vxunwrap!(&vxresult!(os_app.read()).core_app).clone();
+            let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
             let renderer_w = Arc::downgrade(&renderer);
             vxresult!(renderer.write()).set_myself(renderer_w);
             vxresult!(os_app.write()).set_renderer(renderer.clone());

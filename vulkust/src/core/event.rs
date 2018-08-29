@@ -1,6 +1,7 @@
 use super::object::{create_id, Object};
 use super::types::{Id, Real};
 
+#[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Mouse {
     Left,
@@ -11,6 +12,7 @@ pub enum Mouse {
     Offic,
 }
 
+#[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Keyboard {
     A,
@@ -82,12 +84,14 @@ pub enum Keyboard {
     Equal,
 }
 
+#[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Button {
     Mouse(Mouse),
     Keyboard(Keyboard),
 }
 
+#[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Window {
     SizeChange {
@@ -100,6 +104,7 @@ pub enum Window {
     },
 }
 
+#[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Move {
     Mouse {
@@ -109,12 +114,14 @@ pub enum Move {
     },
 }
 
+#[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ButtonAction {
     Press,
     Release,
 }
 
+#[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Type {
     Move(Move),
@@ -123,6 +130,7 @@ pub enum Type {
     Quit,
 }
 
+#[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Event {
     id: Id,
