@@ -1,6 +1,6 @@
 use super::asset as aas;
 use std::ffi::CString;
-use std::io::{Read, Result, Seek, SeekFrom};
+use std::io::{Read, Result, Seek, SeekFrom, Error, ErrorKind};
 use std::mem::transmute;
 use std::ptr::null_mut;
 use std::fmt;
@@ -28,7 +28,7 @@ impl File {
             )
         };
         if asset == null_mut() {
-            vxlogf!("File {} not found!", file_name);
+            return Err(Error::new(ErrorKind::NotFound, format!("File {} not found!", file_name)));
         }
         Ok(File { asset: asset })
     }
