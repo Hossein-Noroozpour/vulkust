@@ -67,19 +67,6 @@ impl CoreAppTrait for MyGame {
         }
         self.camera = Some(camera.clone());
         let model: Arc<RwLock<Model>> = renderer.create_model::<ModelBase>();
-        // {
-        //     let mut label = vxresult!(label.write());
-        //     // by default label has Ubuntu-B.ttf font.
-        //     // If you want custom font,
-        //     //     place your ttf it in data/fonts/ directory
-        //     //     and call following function.
-        //     // label.set_font_with_file_name("your-font.ttf");
-        //     label.set_size(0.15, &renderer);
-        //     label.set_text_size(50.0, &renderer);
-        //     label.set_text_color(1.0, 1.0, 1.0, 1.0, &renderer);
-        //     label.set_background_color(0.0, 0.0, 0.0, 0.0, &renderer);
-        //     label.set_text("Hello Vulkust!", &renderer);
-        // }
         {
             let vertices = [
                 -1.0, -1.0, 1.0,    0.0, 0.0, 1.0,    1.0, 0.0, 0.0, 1.0,     0.0, 0.0,
@@ -138,11 +125,12 @@ impl CoreAppTrait for MyGame {
     fn on_event(&self, e: Event) {
         match e.event_type {
             EventType::Move(m) => match m {
-                Move::Mouse { previous, current, delta } => {
+                Move::Mouse { previous: _, current: _, delta } => {
                     if vxresult!(self.keys_state.read()).lm {
-                        
+                        let mut camera = vxresult!(vxunwrap!(&self.camera).write());
+                        camera.rotate_local_x(delta.1 * 1.5);
+                        camera.rotate_global_z(delta.0 * 1.5);
                     }
-                    vxlogi!("p: {:?}, c: {:?}, d: {:?}", previous, current, delta);
                 },
             },
             EventType::Button {button, action } => match action {
@@ -158,7 +146,6 @@ impl CoreAppTrait for MyGame {
                         Mouse::Left => vxresult!(self.keys_state.write()).lm = true,
                         _ => (),
                     },
-                    _ => (),
                 },
                 ButtonAction::Release => match button {
                     Button::Keyboard(k) => match k {
@@ -169,10 +156,9 @@ impl CoreAppTrait for MyGame {
                         _ => (),
                     },
                     Button::Mouse(m) => match m {
-                        Mouse::Right => vxresult!(self.keys_state.write()).lm = false,
+                        Mouse::Left => vxresult!(self.keys_state.write()).lm = false,
                         _ => (),
                     },
-                    _ => (),
                 },
             },
             _ => (),
