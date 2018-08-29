@@ -1,5 +1,7 @@
 use super::object::{create_id, Object};
 use super::types::{Id, Real};
+use super::gesture::State as GestureState;
+use std::time::{Duration, Instant};
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -123,9 +125,46 @@ pub enum ButtonAction {
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
+pub enum TouchAction {
+    Press,
+    HardPress,
+    Release,
+}
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum TouchGesture {
+    Tap, // todo
+    Drag {
+        index: u8,
+        start: (Real, Real),
+        previous: (Real, Real),
+        current: (Real, Real),
+        delta: (Real, Real),
+    },
+    Scale {
+        first: (u8, (Real, Real)),
+        second: (u8, (Real, Real)),
+        start: Real,
+        previous: Real,
+        current: Real,
+        delta: Real,
+    },
+}
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum Touch {
+    Gesture { start_time: Instant, duration: Duration, state: GestureState, gest: TouchGesture },
+    Raw { index: u8, action: TouchAction, point: (Real, Real) },
+}
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Type {
     Move(Move),
     Button { button: Button, action: ButtonAction },
+    Touch(Touch),
     Window(Window),
     Quit,
 }
