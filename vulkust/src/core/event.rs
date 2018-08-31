@@ -115,7 +115,7 @@ pub enum Move {
         delta: (Real, Real),
     },
     Touch {
-        index: u8,
+        index: i8,
         previous: (Real, Real),
         current: (Real, Real),
         delta: (Real, Real),
@@ -142,15 +142,15 @@ pub enum TouchAction {
 pub enum TouchGesture {
     Tap, // todo
     Drag {
-        index: u8,
+        index: i8,
         start: (Real, Real),
         previous: (Real, Real),
         current: (Real, Real),
         delta: (Real, Real),
     },
     Scale {
-        first: (u8, (Real, Real)),
-        second: (u8, (Real, Real)),
+        first: (i8, (Real, Real)),
+        second: (i8, (Real, Real)),
         start: Real,
         previous: Real,
         current: Real,
@@ -162,7 +162,7 @@ pub enum TouchGesture {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Touch {
     Gesture { start_time: Instant, duration: Duration, state: GestureState, gest: TouchGesture },
-    Raw { index: u8, action: TouchAction, point: (Real, Real) },
+    Raw { index: i8, action: TouchAction, point: (Real, Real) },
 }
 
 #[derive(Clone)]
