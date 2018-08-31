@@ -22,3 +22,41 @@ bitflags! {
         const NS_TRACKING_ENABLED_DURING_MOUSE_DRAG    = 0x400; // If set, mouseEntered events will be generated as mouse is dragged.  If not set, mouseEntered events will be generated as mouse is moved, and on mouseUp after a drag.  mouseExited events are paired with mouseEntered events so their delivery is affected indirectly.  That is, if a mouseEntered event is generated and the mouse subsequently moves out of the trackingArea, a mouseExited event will be generated whether the mouse is being moved or dragged, independent of this flag.
     }
 }
+
+bitflags! {
+    pub struct NSEventType: NSUInteger {
+        const NS_EVENT_TYPE_LEFT_MOUSE_DOWN = 1;
+        const NS_EVENT_TYPE_LEFT_MOUSE_UP = 2;
+        const NS_EVENT_TYPE_RIGHT_MOUSE_DOWN = 3;
+        const NS_EVENT_TYPE_RIGHT_MOUSE_UP = 4;
+        const NS_EVENT_TYPE_MOUSE_MOVED = 5;
+        const NS_EVENT_TYPE_LEFT_MOUSE_DRAGGED = 6;
+        const NS_EVENT_TYPE_RIGHT_MOUSE_DRAGGED = 7;
+        const NS_EVENT_TYPE_MOUSE_ENTERED = 8;
+        const NS_EVENT_TYPE_MOUSE_EXITED = 9;
+        const NS_EVENT_TYPE_KEY_DOWN = 10;
+        const NS_EVENT_TYPE_KEY_UP = 11;
+        const NS_EVENT_TYPE_FLAGS_CHANGED = 12;
+        const NS_EVENT_TYPE_APP_KIT_DEFINED = 13;
+        const NS_EVENT_TYPE_SYSTEM_DEFINED = 14;
+        const NS_EVENT_TYPE_APPLICATION_DEFINED = 15;
+        const NS_EVENT_TYPE_PERIODIC = 16;
+        const NS_EVENT_TYPE_CURSOR_UPDATE = 17;
+        const NS_EVENT_TYPE_SCROLL_WHEEL = 22;
+        const NS_EVENT_TYPE_TABLET_POINT = 23;
+        const NS_EVENT_TYPE_TABLET_PROXIMITY = 24;
+        const NS_EVENT_TYPE_OTHER_MOUSE_DOWN = 25;
+        const NS_EVENT_TYPE_OTHER_MOUSE_UP = 26;
+        const NS_EVENT_TYPE_OTHER_MOUSE_DRAGGED = 27;
+        const NS_EVENT_TYPE_GESTURE = 29;
+        const NS_EVENT_TYPE_MAGNIFY = 30;
+        const NS_EVENT_TYPE_SWIPE = 31;
+        const NS_EVENT_TYPE_ROTATE = 18;
+        const NS_EVENT_TYPE_BEGIN_GESTURE = 19;
+        const NS_EVENT_TYPE_END_GESTURE = 20;
+        const NS_EVENT_TYPE_SMART_MAGNIFY = 32;
+        const NS_EVENT_TYPE_QUICK_LOOK = 33;
+        const NS_EVENT_TYPE_PRESSURE = 34;
+        const NS_EVENT_TYPE_DIRECT_TOUCH = 37;
+    }
+}

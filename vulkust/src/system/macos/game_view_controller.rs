@@ -64,26 +64,26 @@ extern "C" fn deallocate(this: &mut Object, _cmd: Sel) {
 }
 
 //-(void) keyDown:(NSEvent*) theEvent
-extern "C" fn key_down(_this: &mut Object, _cmd: Sel, _event: apple::Id) {}
+extern "C" fn key_down(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
+    vxlogi!("keyboard key pressed");
+}
 
 // - (void)mouseDown:(NSEvent *)event
-extern "C" fn mouse_down(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
-    vxlogi!("1111111111111111111111111111111111111");
+extern "C" fn mouse_down(_this: &mut Object, _cmd: Sel, event: apple::Id) {
+    let et: apple::NSUInteger = unsafe { msg_send![event, type] };
+    if et == apple::app_kit::NSEventType::NS_EVENT_TYPE_LEFT_MOUSE_DOWN.bits() {
+        vxlogi!("left mouse button pressed");
+    }
 }
 
 // - (void)mouseUp:(NSEvent *)event
 extern "C" fn mouse_up(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
-    vxlogi!("2222222222222222222222222222222222222");
-}
-
-// - (void)mouseDragged:(NSEvent *)event
-extern "C" fn mouse_dragged(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
-    vxlogi!("333333333333333333333333333333333");
+    // vxlogi!("mouse button released");
 }
 
 // - (void)mouseMoved:(NSEvent *)event
 extern "C" fn mouse_moved(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
-    vxlogi!("444444444444444444444444444444444");
+    // vxlogi!("mouse moved");
 }
 
 // -(BOOL) acceptsFirstResponder { return YES; }
@@ -124,10 +124,6 @@ pub fn register() {
         self_class.add_method(
             sel!(mouseUp:),
             mouse_up as extern "C" fn(&mut Object, Sel, apple::Id),
-        );
-        self_class.add_method(
-            sel!(mouseDragged:),
-            mouse_dragged as extern "C" fn(&mut Object, Sel, apple::Id),
         );
         self_class.add_method(
             sel!(mouseMoved:),

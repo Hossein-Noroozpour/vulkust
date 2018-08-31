@@ -39,11 +39,6 @@ extern "C" fn accepts_mouse_moved_events(_this: &mut Object, _cmd: Sel) -> BOOL 
     YES
 }
 
-// - (void)mouseMoved:(NSEvent *)event
-extern "C" fn mouse_moved(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
-    vxlogi!("444444444444444444444444444444444");
-}
-
 pub fn register() {
     let mut self_class = apple::dec_class_s(CLASS_NAME, SUPER_CLASS_NAME);
     unsafe {
@@ -66,10 +61,6 @@ pub fn register() {
         self_class.add_method(
             sel!(acceptsMouseMovedEvents),
             accepts_mouse_moved_events as extern "C" fn(&mut Object, Sel) -> BOOL,
-        );
-        self_class.add_method(
-            sel!(mouseMoved:),
-            mouse_moved as extern "C" fn(&mut Object, Sel, apple::Id),
         );
     }
     self_class.register();
