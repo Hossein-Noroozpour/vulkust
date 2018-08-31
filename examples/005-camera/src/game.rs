@@ -132,6 +132,7 @@ impl CoreAppTrait for MyGame {
                         camera.rotate_global_z(delta.0 * 1.5);
                     }
                 },
+                _ => (),
             },
             EventType::Button {button, action } => match action {
                 ButtonAction::Press => match button {

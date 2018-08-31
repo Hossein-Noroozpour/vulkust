@@ -114,6 +114,12 @@ pub enum Move {
         current: (Real, Real),
         delta: (Real, Real),
     },
+    Touch {
+        index: u8,
+        previous: (Real, Real),
+        current: (Real, Real),
+        delta: (Real, Real),
+    }
 }
 
 #[derive(Clone)]
