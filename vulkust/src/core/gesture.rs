@@ -43,7 +43,7 @@ pub enum State {
 pub struct TouchDragTranslator {
     pub state: State,
     pub number: i8,
-    pub index: i8,
+    pub index: i64,
     pub current: (Real, Real),
     pub start: (Real, Real),
     pub start_time: Instant,
@@ -196,9 +196,9 @@ impl TouchDragTranslator {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TouchScaleTranslator {
     pub state: State,
-    pub fingers: BTreeMap<i8, (Real, Real)>,
-    pub first: i8,
-    pub second: i8,
+    pub fingers: BTreeMap<i64, (Real, Real)>,
+    pub first: i64,
+    pub second: i64,
     pub current: Real,
     pub start: Real,
     pub start_time: Instant,

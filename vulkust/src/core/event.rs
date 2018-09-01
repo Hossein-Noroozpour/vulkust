@@ -3,6 +3,8 @@ use super::types::{Id, Real};
 use super::gesture::State as GestureState;
 use std::time::{Duration, Instant};
 
+pub type FingerIndexType = i64;
+
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Mouse {
@@ -115,7 +117,7 @@ pub enum Move {
         delta: (Real, Real),
     },
     Touch {
-        index: i8,
+        index: FingerIndexType,
         previous: (Real, Real),
         current: (Real, Real),
         delta: (Real, Real),
@@ -142,15 +144,15 @@ pub enum TouchAction {
 pub enum TouchGesture {
     Tap, // todo
     Drag {
-        index: i8,
+        index: FingerIndexType,
         start: (Real, Real),
         previous: (Real, Real),
         current: (Real, Real),
         delta: (Real, Real),
     },
     Scale {
-        first: (i8, (Real, Real)),
-        second: (i8, (Real, Real)),
+        first: (FingerIndexType, (Real, Real)),
+        second: (FingerIndexType, (Real, Real)),
         start: Real,
         previous: Real,
         current: Real,
@@ -162,7 +164,7 @@ pub enum TouchGesture {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Touch {
     Gesture { start_time: Instant, duration: Duration, state: GestureState, gest: TouchGesture },
-    Raw { index: i8, action: TouchAction, point: (Real, Real) },
+    Raw { index: FingerIndexType, action: TouchAction, point: (Real, Real) },
 }
 
 #[derive(Clone)]

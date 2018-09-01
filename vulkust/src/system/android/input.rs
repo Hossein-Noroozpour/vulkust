@@ -54,11 +54,11 @@ pub enum AKeyEventFlag {
     Tracking = 512,
 }
 
-#[repr(u32)]
+#[repr(i32)]
 #[derive(Debug, Copy, Clone)]
 pub enum AMotionEventAction {
-    Mask = 255,
-    PointerIndexMask = 65280,
+    Mask = 0xFF,
+    PointerIndexMask = 0xFF00,
     Down = 0,
     Up = 1,
     Move = 2,
@@ -117,7 +117,7 @@ pub enum AInputKeyboardType {
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
-pub enum AinputMotionRange {
+pub enum AInputMotionRange {
     X = 0,
     Y = 1,
     Pressure = 2,

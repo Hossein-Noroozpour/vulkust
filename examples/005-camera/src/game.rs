@@ -1,5 +1,6 @@
 use vulkust::core::application::Application as CoreAppTrait;
-use vulkust::core::event::{Event, Move, Type as EventType, ButtonAction, Button, Keyboard, Mouse};
+use vulkust::core::gesture;
+use vulkust::core::event::{Event, Move, Type as EventType, ButtonAction, Button, Keyboard, Mouse, Touch, TouchGesture};
 use vulkust::render::camera::Perspective;
 use vulkust::render::engine::Engine as Renderer;
 use vulkust::render::scene::{Scene, Ui as UiScene};
@@ -162,6 +163,20 @@ impl CoreAppTrait for MyGame {
                     },
                 },
             },
+            EventType::Touch(t) => match t {
+                Touch::Gesture { start_time: _, duration: _, state, gest} => match state {
+                    gesture::State::InMiddle => match gest {
+                        TouchGesture::Drag { index: _, start: _, previous: _, current: _, delta } => {
+                            let mut camera = vxresult!(vxunwrap!(&self.camera).write());
+                            camera.rotate_local_x(delta.1 * 1.5);
+                            camera.rotate_global_z(delta.0 * 1.5);
+                        },
+                        _ => (),
+                    },
+                    _ => (),
+                },
+                _ => (),
+            }
             _ => (),
         }
     }
