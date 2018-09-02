@@ -271,10 +271,9 @@ impl Loadable for Base {
     fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let mut myself = Base::new_with_id(engine, my_id);
         myself.location = math::Vector3::new(reader.read(), reader.read(), reader.read());
-        let r = [reader.read(), reader.read(), reader.read(), reader.read()];
+        let r = math::Quaternion::new(reader.read(), reader.read(), reader.read(), reader.read());
         myself.near = reader.read();
         myself.far = reader.read();
-        let r = math::Quaternion::new(r[3], r[0], r[1], r[2]);
         myself.set_orientation(&r);
         return myself;
     }
