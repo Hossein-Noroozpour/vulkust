@@ -143,14 +143,14 @@ impl Application {
                 },
                 input::AMotionEventAction::Move => {
                     let hs = unsafe { input::AMotionEvent_getHistorySize(e) };
-                    let previous = if hs > 0 { (
-                        unsafe { input::AMotionEvent_getHistoricalRawX(e, pi as usize, hs - 1) } / ww,
-                        unsafe { input::AMotionEvent_getHistoricalRawY(e, pi as usize, hs - 1) } / wh,
-                    ) } else { ( 0.0, 0.0 ) };
                     let current = (
                         unsafe { input::AMotionEvent_getRawX(e, pi as usize) } / ww,
                         unsafe { input::AMotionEvent_getRawY(e, pi as usize) } / wh,
                     );
+                    let previous = if hs > 0 { (
+                        unsafe { input::AMotionEvent_getHistoricalRawX(e, pi as usize, hs - 1) } / ww,
+                        unsafe { input::AMotionEvent_getHistoricalRawY(e, pi as usize, hs - 1) } / wh,
+                    ) } else { current };
                     let e = Event::new(EventType::Move(Move::Touch {
                         index: fi as FingerIndexType,
                         previous,
