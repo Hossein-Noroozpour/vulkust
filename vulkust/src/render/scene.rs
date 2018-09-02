@@ -30,6 +30,7 @@ pub enum TypeId {
 pub trait Scene: Object {
     fn add_camera(&mut self, Arc<RwLock<Camera>>);
     fn add_model(&mut self, Arc<RwLock<Model>>);
+    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
 }
 
 pub trait Loadable: Scene + Sized {
@@ -437,6 +438,10 @@ impl Scene for Base {
         let id = vxresult!(model.read()).get_id();
         self.models.insert(id, model);
     }
+
+    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
+        return &self.active_camera;
+    }
 }
 
 impl DefaultScene for Base {
@@ -511,6 +516,10 @@ impl Scene for Game {
     fn add_model(&mut self, model: Arc<RwLock<Model>>) {
         self.base.add_model(model);
     }
+
+    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
+        return self.base.get_active_camera();
+    }
 }
 
 impl Loadable for Game {
@@ -572,6 +581,10 @@ impl Scene for Ui {
 
     fn add_model(&mut self, model: Arc<RwLock<Model>>) {
         self.base.add_model(model);
+    }
+
+    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
+        return self.base.get_active_camera();
     }
 }
 
