@@ -289,34 +289,65 @@ impl View {
     }
 
     pub fn new_with_image(image: Arc<RwLock<Image>>) -> Self {
-        let vk_data = Self::create_vk_data_with_image(&image);
+        return Self::new_with_image_aspect(image, vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32);
+    }
+
+    pub fn new_with_image_aspect(image: Arc<RwLock<Image>>, aspect_mask: u32) -> Self {
+        let mut vk_data = 0 as vk::VkImageView;
+        {
+            let img = vxresult!(image.read());
+            let ref dev = &img.logical_device;
+            let mut view_create_info = vk::VkImageViewCreateInfo::default();
+            view_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            view_create_info.image = img.vk_data;
+            view_create_info.viewType = vk::VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+            view_create_info.format = img.format;
+            view_create_info.components.r = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R;
+            view_create_info.components.g = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G;
+            view_create_info.components.b = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B;
+            view_create_info.components.a = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A;
+            view_create_info.subresourceRange.aspectMask = aspect_mask;
+            view_create_info.subresourceRange.levelCount = img.mips_count as u32;
+            view_create_info.subresourceRange.layerCount = 1;
+            vulkan_check!(vk::vkCreateImageView(
+                dev.vk_data,
+                &view_create_info,
+                null(),
+                &mut vk_data,
+            ));
+        }
         View { image, vk_data }
     }
 
-    pub fn create_vk_data_with_image(image: &Arc<RwLock<Image>>) -> vk::VkImageView {
-        let img = vxresult!(image.read());
-        let ref dev = &img.logical_device;
-        let mut view_create_info = vk::VkImageViewCreateInfo::default();
-        view_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        view_create_info.image = img.vk_data;
-        view_create_info.viewType = vk::VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
-        view_create_info.format = img.format;
-        view_create_info.components.r = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R;
-        view_create_info.components.g = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G;
-        view_create_info.components.b = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B;
-        view_create_info.components.a = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A;
-        view_create_info.subresourceRange.aspectMask =
-            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32;
-        view_create_info.subresourceRange.levelCount = img.mips_count as u32;
-        view_create_info.subresourceRange.layerCount = 1;
-        let mut vk_data = 0 as vk::VkImageView;
-        vulkan_check!(vk::vkCreateImageView(
-            dev.vk_data,
-            &view_create_info,
-            null(),
-            &mut vk_data,
-        ));
-        vk_data
+    pub fn new_attachment(
+        logical_device: Arc<LogicalDevice>, 
+        memory_mgr: &Arc<RwLock<MemeoryManager>>,
+        format: vk::VkFormat, 
+        usage: vk::VkImageUsageFlagBits
+    ) -> Self {
+		let (aspect_mask, image_layout) = if usage as u32 & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32 != 0 {
+			(vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32, vk::VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+        } else if usage as u32 & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32 != 0 {
+			(vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32 | vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT as u32, vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+		} else {
+            vxunexpected!();
+        };
+        let surface_caps = logical_device.physical_device.surface_caps;
+        let mut image_info = vk::VkImageCreateInfo::default();
+        image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
+		image_info.format = format;
+		image_info.extent.width = surface_caps.currentExtent.width;
+		image_info.extent.height = surface_caps.currentExtent.height;
+		image_info.extent.depth = 1;
+		image_info.mipLevels = 1;
+		image_info.arrayLayers = 1;
+		image_info.samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT;
+        image_info.tiling = vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
+		image_info.usage = usage as u32 | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32;
+        image_info.initialLayout = image_layout;j
+        let image = Arc::new(RwLock::new(Image::new_with_info(&image_info, memory_mgr)));
+		return Self::new_with_image_aspect(image, aspect_mask);
     }
 }
 
