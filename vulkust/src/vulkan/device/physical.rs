@@ -1,6 +1,6 @@
 use super::super::surface::Surface;
 use super::super::vulkan as vk;
-use std::cmp::max;
+use std::cmp::{max, min};
 use std::ptr::null_mut;
 use std::sync::Arc;
 
@@ -203,10 +203,8 @@ impl Physical {
     pub fn get_supported_depth_format(&self) -> vk::VkFormat {
         let depth_formats = vec![
             vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT,
-            vk::VkFormat::VK_FORMAT_D32_SFLOAT,
             vk::VkFormat::VK_FORMAT_D24_UNORM_S8_UINT,
             vk::VkFormat::VK_FORMAT_D16_UNORM_S8_UINT,
-            vk::VkFormat::VK_FORMAT_D16_UNORM,
         ];
         for format in depth_formats {
             let mut format_props = vk::VkFormatProperties::default();
@@ -240,6 +238,7 @@ impl Physical {
         ));
         result
     }
+    
     pub fn get_memory_type_index(&self, type_bits: u32, properties: u32) -> u32 {
         // Iterate over all memory types available for the device used in this example
         let mut type_bits = type_bits;
@@ -255,6 +254,7 @@ impl Physical {
         }
         vxlogf!("Could not find the requsted memory type.");
     }
+    
     pub fn get_max_min_alignment(&self) -> u64 {
         let limits = &self.properties.limits;
         max(
@@ -276,6 +276,42 @@ impl Physical {
                 limits.bufferImageGranularity,
             ),
         )
+    }
+
+    pub fn get_max_sample_bit_with_mask(&self, mask: u32) -> vk::VkSampleCountFlagBits {
+        let counts = self.properties.limits.framebufferColorSampleCounts as u32 &
+            self.properties.limits.framebufferDepthSampleCounts as u32 & mask;
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT as u32) != 0 { 
+            return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT;
+        }
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT as u32) != 0 { 
+            return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT;
+        }
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT as u32) != 0 { 
+            return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT;
+        }
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT as u32) != 0 { 
+            return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT;
+        }
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT as u32) != 0 { 
+            return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT;
+        }
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT as u32) != 0 { 
+            return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT;
+        }
+        return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+    }
+
+    pub fn get_max_sample_bit_with_image_info(
+        &self, image_info: &vk::VkImageCreateInfo
+    ) -> vk::VkSampleCountFlagBits {
+        let mut prps = vk::VkImageFormatProperties::default();
+        vulkan_check!(vk::vkGetPhysicalDeviceImageFormatProperties(
+            self.vk_data, image_info.format, image_info.imageType,
+            image_info.tiling, image_info.usage, image_info.flags,
+            &mut prps
+        ));
+        return self.get_max_sample_bit_with_mask(prps.sampleCounts);
     }
 }
 

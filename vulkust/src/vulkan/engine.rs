@@ -35,6 +35,7 @@ pub struct Engine {
     pub graphic_cmd_pool: Arc<CmdPool>,
     pub draw_commands: Vec<Arc<RwLock<CmdBuffer>>>,
     pub memory_mgr: Arc<RwLock<MemoryManager>>,
+    pub samples_count: vk::VkSampleCountFlagBits,
     pub depth_stencil_image_view: Arc<ImageView>,
     pub render_pass: Arc<RenderPass>,
     pub descriptor_manager: Arc<RwLock<DescriptorManager>>,
@@ -74,6 +75,7 @@ impl Engine {
             logical_device.clone(),
             &memory_mgr,
         ));
+        let samples_count = vxresult!(depth_stencil_image_view.image.read()).samples;
         let render_pass = Arc::new(RenderPass::new(&swapchain));
         let mut framebuffers = Vec::new();
         for v in &swapchain.image_views {
@@ -119,6 +121,7 @@ impl Engine {
             draw_commands,
             memory_mgr,
             depth_stencil_image_view,
+            samples_count,
             render_pass,
             descriptor_manager,
             pipeline_manager,

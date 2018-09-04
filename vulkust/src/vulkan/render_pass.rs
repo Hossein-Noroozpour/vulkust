@@ -13,7 +13,7 @@ impl RenderPass {
     pub fn new(swapchain: &Arc<Swapchain>) -> Self {
         let mut attachment_descriptions = vec![vk::VkAttachmentDescription::default(); 2];
         attachment_descriptions[0].format = swapchain.surface_format.format;
-        attachment_descriptions[0].samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[0].samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT;
         attachment_descriptions[0].loadOp = vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment_descriptions[0].storeOp = vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
         attachment_descriptions[0].stencilLoadOp =
@@ -26,7 +26,7 @@ impl RenderPass {
             .logical_device
             .physical_device
             .get_supported_depth_format();
-        attachment_descriptions[1].samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[1].samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT;
         attachment_descriptions[1].loadOp = vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment_descriptions[1].storeOp =
             vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;

@@ -147,7 +147,7 @@ impl Swapchain {
                 logical_device.clone(),
                 images[i],
                 best_surface_format.format,
-                vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED, // todo: I'm not sure about it!
+                vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
             )));
         }
         Swapchain {

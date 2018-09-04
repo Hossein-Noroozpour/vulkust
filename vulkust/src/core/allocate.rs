@@ -117,11 +117,14 @@ impl Allocator for Container {
         let next_free_offset = obj_size + offset;
         if next_free_offset > self.base.end {
             vxlogf!(
-                "Out of space, {} offset_alignment: {} {} {} {}",
+                "Out of space, {} offset_alignment: {} {} {} {} {} {} {}",
                 "you probably forget to increase the size or cleaning the allocator.",
                 offset_alignment,
                 next_free_offset,
+                offset,
+                self.free_offset,
                 self.base.size,
+                self.base.offset,
                 obj_size
             );
         }
