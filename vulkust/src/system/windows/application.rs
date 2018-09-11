@@ -1,11 +1,13 @@
-use super::super::super::core::application::ApplicationTrait as CoreAppTrait;
+use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::core::constants;
+use super::super::super::core::types::Real;
 use super::super::super::core::string::string_to_cwstring;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::super::winapi;
 use std::mem::{size_of, transmute, zeroed};
 use std::ptr::{null, null_mut};
 use std::sync::{Arc, RwLock, Weak};
+use std::fmt;
 
 pub struct Application {
     pub instance: winapi::shared::minwindef::HINSTANCE,
@@ -40,7 +42,8 @@ extern "system" fn process_callback(
     }
     let os_app: &'static Arc<RwLock<Application>> = unsafe { transmute(os_app) };
     let os_app = vxresult!(os_app.read());
-    return os_app.handle_message(hwnd, msg, w_param, l_param);
+    let result = os_app.handle_message(hwnd, msg, w_param, l_param);
+    return result;
 }
 
 impl Application {
@@ -85,7 +88,7 @@ impl Application {
                 winapi::um::winuser::IDI_WINLOGO,
             )
         };
-        if unsafe { winapi::um::winuser::RegisterClassExW(&wnd_class) } == 0 as _ {
+        if unsafe { winapi::um::winuser::RegisterClassExW(&wnd_class) } == 0 as winapi::shared::minwindef::ATOM {
             vxlogf!("Could not register window class!");
         }
         let mut window_rect: winapi::shared::windef::RECT = unsafe { zeroed() };
@@ -192,7 +195,7 @@ impl Application {
         unsafe {
             winapi::um::winuser::UpdateWindow(window);
         }
-        let itself = vxunwrap!(itself.write());
+        let mut itself = vxresult!(itself.write());
         itself.instance = instance;
         itself.window = window;
     }
@@ -218,7 +221,7 @@ impl Application {
                     winapi::um::winuser::TranslateMessage(&msg);
                     winapi::um::winuser::DispatchMessageW(&msg);
                 }
-                vxresult!(vxunwrap!(self.renderer).write()).update();
+                vxresult!(vxunwrap!(&self.renderer).read()).update();
                 if msg.message == winapi::um::winuser::WM_QUIT {
                     return true;
                 }
@@ -232,9 +235,8 @@ impl Application {
         (0.0, 0.0)
     }
 
-    fn get_window_ratio(&self) -> f64 {
+    pub fn get_window_aspect_ratio(&self) -> Real {
         vxloge!("TODO");
-        // TODO
         1.7
     }
 
@@ -373,5 +375,11 @@ impl Application {
             }
         }
         return unsafe { winapi::um::winuser::DefWindowProcW(hwnd, msg, w_param, l_param) };
+    }
+}
+
+impl fmt::Debug for Application {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "OS-Application-Windows")
     }
 }
