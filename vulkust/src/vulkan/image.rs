@@ -217,7 +217,12 @@ impl View {
     ) -> Self {
         let depth_format = logical_device.physical_device.get_supported_depth_format();
         let usage = vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        Self::new_attachment(logical_device, memory_mgr, depth_format, usage)
+        Self::new_attachment(
+            logical_device, 
+            memory_mgr, 
+            depth_format, 
+            usage, 
+            vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT)
     }
 
     pub fn new_with_vk_image(
@@ -289,7 +294,8 @@ impl View {
         logical_device: Arc<LogicalDevice>, 
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
         format: vk::VkFormat, 
-        usage: vk::VkImageUsageFlagBits
+        usage: vk::VkImageUsageFlagBits,
+        samples: vk::VkSampleCountFlagBits,
     ) -> Self {
 		let aspect_mask = if usage as u32 & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32 != 0 {
 			vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
@@ -298,6 +304,11 @@ impl View {
             vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT as u32
 		} else {
             vxunexpected!();
+        };
+        let usage = if samples as u32 != vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
+            usage as u32 | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
+        } else {
+            usage as u32
         };
         let surface_caps = logical_device.physical_device.surface_caps;
         let mut image_info = vk::VkImageCreateInfo::default();
@@ -310,10 +321,9 @@ impl View {
 		image_info.mipLevels = 1;
 		image_info.arrayLayers = 1;
         image_info.tiling = vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
-		image_info.usage = usage as u32; // | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32;
-		// image_info.usage &= !(vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32);
+		image_info.usage = usage;
         image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-		image_info.samples = logical_device.physical_device.get_max_sample_bit_with_image_info(&image_info);
+		image_info.samples = samples;//logical_device.physical_device.get_max_sample_bit_with_image_info(&image_info);
         let image = Arc::new(RwLock::new(Image::new_with_info(&image_info, memory_mgr)));
 		return Self::new_with_image_aspect(image, aspect_mask);
     }
