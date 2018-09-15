@@ -22,6 +22,9 @@ use std::sync::{Arc, RwLock};
 use super::buffer::{DynamicBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
 
+const gbuff_color_fmt: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+const gbuff_depth_fmt: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
+
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Engine {
     pub os_app: Arc<RwLock<OsApp>>,
@@ -75,7 +78,7 @@ impl Engine {
             logical_device.clone(),
             &memory_mgr,
         ));
-        let samples_count = vxresult!(depth_stencil_image_view.image.read()).samples;
+        let samples_count = Self::get_max_sample_count(&physical_device);
         let render_pass = Arc::new(RenderPass::new(&swapchain));
         let mut framebuffers = Vec::new();
         for v in &swapchain.image_views {
@@ -331,8 +334,59 @@ impl Engine {
         self.wait_fences = new.wait_fences.clone();
     }
 
-    fn create_gbuffer_filler() {
+    fn create_gbuffer_filler(
+        logical_device: &Arc<LogicalDevice>,
+        memory_manager: &Arc<RwLock<MemoryManager>>,
+        sample_count: vk::VkSampleCountFlagBits) {
+        let g_pos = ImageView::new_attachment(
+            logical_device.clone(),
+            memory_manager,
+            gbuff_color_fmt,
+            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            sample_count,
+            );
+        let g_nrm = ImageView::new_attachment(
+            logical_device.clone(),
+            memory_manager,
+            gbuff_color_fmt,
+            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            sample_count,
+            );
+        let g_alb = ImageView::new_attachment(
+            logical_device.clone(),
+            memory_manager,
+            gbuff_color_fmt,
+            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            sample_count,
+            );
+        let g_dpt = ImageView::new_attachment(
+            logical_device.clone(),
+            memory_manager,
+            gbuff_depth_fmt,
+            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            sample_count,
+            );
         
+    }
+
+    fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
+        let mut sample_count = phdev.get_max_sample_bit(
+            gbuff_color_fmt,
+            vk::VkImageType::VK_IMAGE_TYPE_2D,
+            vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
+            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as vk::VkImageUsageFlags |
+                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as vk::VkImageUsageFlags,
+            0
+        );
+        sample_count &= phdev.get_max_sample_bit(
+            gbuff_depth_fmt,
+            vk::VkImageType::VK_IMAGE_TYPE_2D,
+            vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
+            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as vk::VkImageUsageFlags |
+                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as vk::VkImageUsageFlags,
+            0
+        );
+        return phdev.get_max_sample_bit_with_mask(sample_count);
     }
 }
 

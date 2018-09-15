@@ -323,7 +323,7 @@ impl View {
         image_info.tiling = vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
 		image_info.usage = usage;
         image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-		image_info.samples = samples;//logical_device.physical_device.get_max_sample_bit_with_image_info(&image_info);
+		image_info.samples = samples;
         let image = Arc::new(RwLock::new(Image::new_with_info(&image_info, memory_mgr)));
 		return Self::new_with_image_aspect(image, aspect_mask);
     }

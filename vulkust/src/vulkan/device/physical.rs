@@ -304,14 +304,22 @@ impl Physical {
 
     pub fn get_max_sample_bit_with_image_info(
         &self, image_info: &vk::VkImageCreateInfo
-    ) -> vk::VkSampleCountFlagBits {
+    ) -> vk::VkSampleCountFlags {
+        return self.get_max_sample_bit(
+            image_info.format, image_info.imageType,
+            image_info.tiling, image_info.usage, image_info.flags,
+        );
+    }
+
+    pub fn get_max_sample_bit(
+        &self, format: vk::VkFormat, image_type: vk::VkImageType,
+        tiling: vk::VkImageTiling, usage: vk::VkImageUsageFlags,
+        flags: vk::VkImageCreateFlags,
+    ) -> vk::VkSampleCountFlags {
         let mut prps = vk::VkImageFormatProperties::default();
         vulkan_check!(vk::vkGetPhysicalDeviceImageFormatProperties(
-            self.vk_data, image_info.format, image_info.imageType,
-            image_info.tiling, image_info.usage, image_info.flags,
-            &mut prps
-        ));
-        return self.get_max_sample_bit_with_mask(prps.sampleCounts);
+            self.vk_data, format, image_type, tiling, usage, flags, &mut prps));
+        return prps.sampleCounts;
     }
 }
 
