@@ -42,6 +42,7 @@ pub struct Engine {
     pub depth_stencil_image_view: Arc<ImageView>,
     pub render_pass: Arc<RenderPass>,
     pub g_render_pass: Arc<RenderPass>,
+    pub g_framebuffer: Arc<Framebuffer>,
     pub descriptor_manager: Arc<RwLock<DescriptorManager>>,
     pub pipeline_manager: Arc<RwLock<PipelineManager>>,
     pub framebuffers: Vec<Arc<Framebuffer>>,
@@ -81,11 +82,11 @@ impl Engine {
         ));
         let samples_count = Self::get_max_sample_count(&physical_device);
         let render_pass = Arc::new(RenderPass::new(&swapchain));
-        let g_render_pass = Self::create_gbuffer_filler(&logical_device, &memory_mgr, samples_count);
+        let (g_render_pass, g_framebuffer) = Self::create_gbuffer_filler(&logical_device, &memory_mgr, samples_count);
         let mut framebuffers = Vec::new();
         for v in &swapchain.image_views {
             framebuffers.push(Arc::new(Framebuffer::new(
-                v.clone(),
+                vec![v.clone()],
                 depth_stencil_image_view.clone(),
                 render_pass.clone(),
             )));
@@ -129,6 +130,7 @@ impl Engine {
             samples_count,
             render_pass,
             g_render_pass,
+            g_framebuffer,
             descriptor_manager,
             pipeline_manager,
             framebuffers,
@@ -340,7 +342,8 @@ impl Engine {
     fn create_gbuffer_filler(
         logical_device: &Arc<LogicalDevice>,
         memory_manager: &Arc<RwLock<MemoryManager>>,
-        sample_count: vk::VkSampleCountFlagBits) -> Arc<RenderPass> {
+        sample_count: vk::VkSampleCountFlagBits
+    ) -> (Arc<RenderPass>, Arc<Framebuffer>) {
         let g_pos = Arc::new(ImageView::new_attachment(
             logical_device.clone(),
             memory_manager,
@@ -370,7 +373,10 @@ impl Engine {
             sample_count,
         ));
         let views = vec![g_pos.clone(), g_nrm.clone(), g_alb.clone(), g_dpt.clone()];
-        return Arc::new(RenderPass::new_with_views(views));
+        let g_render_pass = Arc::new(RenderPass::new_with_views(views));
+        let views = vec![g_pos, g_nrm, g_alb];
+        let g_framebuffer = Arc::new(Framebuffer::new(views, g_dpt, g_render_pass.clone()));
+        return (g_render_pass, g_framebuffer);
     }
 
     fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
@@ -391,7 +397,7 @@ impl Engine {
             0
         );
         let result = phdev.get_max_sample_bit_with_mask(sample_count);
-        vxloge!("{:?}", result);
+        vxlogi!("Sample count is: {:?}", result);
         return result;
     }
 }
