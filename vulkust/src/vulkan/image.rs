@@ -223,11 +223,12 @@ impl View {
         let depth_format = logical_device.physical_device.get_supported_depth_format();
         let usage = vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
         Self::new_attachment(
-            logical_device, 
-            memory_mgr, 
-            depth_format, 
-            usage, 
-            vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT)
+            logical_device,
+            memory_mgr,
+            depth_format,
+            usage,
+            vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+        )
     }
 
     pub fn new_with_vk_image(
@@ -269,7 +270,10 @@ impl View {
     }
 
     pub fn new_with_image(image: Arc<RwLock<Image>>) -> Self {
-        return Self::new_with_image_aspect(image, vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32);
+        return Self::new_with_image_aspect(
+            image,
+            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32,
+        );
     }
 
     pub fn new_with_image_aspect(image: Arc<RwLock<Image>>, aspect_mask: u32) -> Self {
@@ -300,18 +304,24 @@ impl View {
     }
 
     pub fn new_attachment(
-        logical_device: Arc<LogicalDevice>, 
+        logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
-        format: vk::VkFormat, 
+        format: vk::VkFormat,
         usage: vk::VkImageUsageFlagBits,
         samples: vk::VkSampleCountFlagBits,
     ) -> Self {
-		let aspect_mask = if usage as u32 & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32 != 0 {
-			vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
-        } else if usage as u32 & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32 != 0 {
-			vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32 |
-            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT as u32
-		} else {
+        let aspect_mask = if usage as u32
+            & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
+            != 0
+        {
+            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
+        } else if usage as u32
+            & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
+            != 0
+        {
+            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32
+                | vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT as u32
+        } else {
             vxunexpected!();
         };
         let usage = if samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
@@ -322,19 +332,19 @@ impl View {
         let surface_caps = logical_device.physical_device.surface_caps;
         let mut image_info = vk::VkImageCreateInfo::default();
         image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
-		image_info.format = format;
-		image_info.extent.width = surface_caps.currentExtent.width;
-		image_info.extent.height = surface_caps.currentExtent.height;
-		image_info.extent.depth = 1;
-		image_info.mipLevels = 1;
-		image_info.arrayLayers = 1;
+        image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
+        image_info.format = format;
+        image_info.extent.width = surface_caps.currentExtent.width;
+        image_info.extent.height = surface_caps.currentExtent.height;
+        image_info.extent.depth = 1;
+        image_info.mipLevels = 1;
+        image_info.arrayLayers = 1;
         image_info.tiling = vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
-		image_info.usage = usage;
+        image_info.usage = usage;
         image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-		image_info.samples = samples;
+        image_info.samples = samples;
         let image = Arc::new(RwLock::new(Image::new_with_info(&image_info, memory_mgr)));
-		return Self::new_with_image_aspect(image, aspect_mask);
+        return Self::new_with_image_aspect(image, aspect_mask);
     }
 }
 

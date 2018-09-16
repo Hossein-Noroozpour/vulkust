@@ -3,8 +3,8 @@ use super::super::core::types::Id;
 use super::engine::Engine;
 use super::font::Font;
 use super::material::Material;
-use super::model::{Base as ModelBase, DefaultModel, Model};
 use super::mesh::{Base as MeshBase, Mesh};
+use super::model::{Base as ModelBase, DefaultModel, Model};
 use super::object::Object;
 use super::scene::Uniform as SceneUniform;
 use std::collections::BTreeMap;
@@ -110,14 +110,7 @@ impl Label {
         self.create_text_mesh(engine);
     }
 
-    pub fn set_text_color(
-        &mut self,
-        red: f32,
-        green: f32,
-        blue: f32,
-        alpha: f32,
-        engine: &Engine,
-    ) {
+    pub fn set_text_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32, engine: &Engine) {
         self.text_color = [red, green, blue, alpha];
         self.create_text_mesh(engine);
     }
@@ -191,10 +184,9 @@ impl Label {
             }
         }
         let vertices = [
-            w, h, 0.0,      0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     1.0, 0.0,
-            w, 0.0, 0.0,    0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     1.0, 1.0,
-            0.0, h, 0.0,    0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     0.0, 0.0, 
-            0.0, 0.0, 0.0,  0.0, 0.0, 1.0,    0.0, 0.0, 0.0, 0.0,     0.0, 1.0,
+            w, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, w, 0.0, 0.0, 0.0, 0.0, 1.0,
+            0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, h, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         ];
         let indices = [0u32, 2, 1, 1, 2, 3];
         let mut material = Material::default(engine);

@@ -1,9 +1,11 @@
 use super::super::render::config::Configurations;
 use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
+use super::buffer::{DynamicBuffer, StaticBuffer};
 use super::command::buffer::Buffer as CmdBuffer;
 use super::command::pool::{Pool as CmdPool, Type as CmdPoolType};
 use super::descriptor::Manager as DescriptorManager;
+use super::descriptor::Set as DescriptorSet;
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
@@ -19,8 +21,6 @@ use super::synchronizer::fence::Fence;
 use super::synchronizer::semaphore::Semaphore;
 use super::vulkan as vk;
 use std::sync::{Arc, RwLock};
-use super::buffer::{DynamicBuffer, StaticBuffer};
-use super::descriptor::Set as DescriptorSet;
 
 const GBUFF_COLOR_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
 const GBUFF_DEPTH_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
@@ -82,7 +82,8 @@ impl Engine {
         ));
         let samples_count = Self::get_max_sample_count(&physical_device);
         let render_pass = Arc::new(RenderPass::new(&swapchain));
-        let (g_render_pass, g_framebuffer) = Self::create_gbuffer_filler(&logical_device, &memory_mgr, samples_count);
+        let (g_render_pass, g_framebuffer) =
+            Self::create_gbuffer_filler(&logical_device, &memory_mgr, samples_count);
         let mut framebuffers = Vec::new();
         for v in &swapchain.image_views {
             framebuffers.push(Arc::new(Framebuffer::new(
@@ -254,11 +255,11 @@ impl Engine {
     ) {
         let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
         self.bound_pbr_descriptor_sets[index] = descriptor_set.vk_data;
-        self.bound_pbr_dynamic_offsets[index] = vxresult!(
-            uniform_buffer.buffers[frame_number].0.read()
-        ).info
-            .base
-            .offset as u32;
+        self.bound_pbr_dynamic_offsets[index] =
+            vxresult!(uniform_buffer.buffers[frame_number].0.read())
+                .info
+                .base
+                .offset as u32;
     }
 
     pub fn bind_pbr_pipeline(&self) {
@@ -342,7 +343,7 @@ impl Engine {
     fn create_gbuffer_filler(
         logical_device: &Arc<LogicalDevice>,
         memory_manager: &Arc<RwLock<MemoryManager>>,
-        sample_count: vk::VkSampleCountFlagBits
+        sample_count: vk::VkSampleCountFlagBits,
     ) -> (Arc<RenderPass>, Arc<Framebuffer>) {
         let g_pos = Arc::new(ImageView::new_attachment(
             logical_device.clone(),
@@ -384,17 +385,18 @@ impl Engine {
             GBUFF_COLOR_FMT,
             vk::VkImageType::VK_IMAGE_TYPE_2D,
             vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
-            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as vk::VkImageUsageFlags |
-                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as vk::VkImageUsageFlags,
-            0
+            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as vk::VkImageUsageFlags
+                | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as vk::VkImageUsageFlags,
+            0,
         );
         sample_count &= phdev.get_max_sample_bit(
             GBUFF_DEPTH_FMT,
             vk::VkImageType::VK_IMAGE_TYPE_2D,
             vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
-            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as vk::VkImageUsageFlags |
-                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as vk::VkImageUsageFlags,
-            0
+            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+                as vk::VkImageUsageFlags
+                | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as vk::VkImageUsageFlags,
+            0,
         );
         let result = phdev.get_max_sample_bit_with_mask(sample_count);
         vxlogi!("Sample count is: {:?}", result);

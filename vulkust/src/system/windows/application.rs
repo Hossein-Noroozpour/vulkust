@@ -1,13 +1,13 @@
 use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::core::constants;
-use super::super::super::core::types::Real;
 use super::super::super::core::string::string_to_cwstring;
+use super::super::super::core::types::Real;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::super::winapi;
+use std::fmt;
 use std::mem::{size_of, transmute, zeroed};
 use std::ptr::{null, null_mut};
 use std::sync::{Arc, RwLock, Weak};
-use std::fmt;
 
 pub struct Application {
     pub instance: winapi::shared::minwindef::HINSTANCE,
@@ -88,7 +88,9 @@ impl Application {
                 winapi::um::winuser::IDI_WINLOGO,
             )
         };
-        if unsafe { winapi::um::winuser::RegisterClassExW(&wnd_class) } == 0 as winapi::shared::minwindef::ATOM {
+        if unsafe { winapi::um::winuser::RegisterClassExW(&wnd_class) }
+            == 0 as winapi::shared::minwindef::ATOM
+        {
             vxlogf!("Could not register window class!");
         }
         let mut window_rect: winapi::shared::windef::RECT = unsafe { zeroed() };
@@ -170,9 +172,11 @@ impl Application {
         #[cfg(not(debug_assertions))]
         {
             let x = (winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN)
-                - window_rect.right) / 2;
+                - window_rect.right)
+                / 2;
             let y = (winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN)
-                - window_rect.bottom) / 2;
+                - window_rect.bottom)
+                / 2;
             winapi::um::winuser::SetWindowPos(
                 window,
                 0,

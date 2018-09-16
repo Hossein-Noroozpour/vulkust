@@ -4,15 +4,7 @@ extern crate vulkust;
 
 use vulkust::core::application::Application as CoreAppTrait;
 use vulkust::core::event::{
-    Event, 
-    Move, 
-    Type as EventType, 
-    ButtonAction, 
-    Button, 
-    Keyboard, 
-    Mouse, 
-    Touch, 
-    TouchGesture
+    Button, ButtonAction, Event, Keyboard, Mouse, Move, Touch, TouchGesture, Type as EventType,
 };
 use vulkust::core::gesture;
 use vulkust::core::types::Id;
@@ -86,16 +78,20 @@ impl CoreAppTrait for MyGame {
     fn on_event(&self, e: Event) {
         match e.event_type {
             EventType::Move(m) => match m {
-                Move::Mouse { previous: _, current: _, delta } => {
+                Move::Mouse {
+                    previous: _,
+                    current: _,
+                    delta,
+                } => {
                     if vxresult!(self.keys_state.read()).lm {
                         let mut camera = vxresult!(vxunwrap!(&self.camera).write());
                         camera.rotate_local_x(delta.1 * 1.5);
                         camera.rotate_global_z(delta.0 * 1.5);
                     }
-                },
+                }
                 _ => (),
             },
-            EventType::Button {button, action } => match action {
+            EventType::Button { button, action } => match action {
                 ButtonAction::Press => match button {
                     Button::Keyboard(k) => match k {
                         Keyboard::W => vxresult!(self.keys_state.write()).w = true,
@@ -124,19 +120,30 @@ impl CoreAppTrait for MyGame {
                 },
             },
             EventType::Touch(t) => match t {
-                Touch::Gesture { start_time: _, duration: _, state, gest} => match state {
+                Touch::Gesture {
+                    start_time: _,
+                    duration: _,
+                    state,
+                    gest,
+                } => match state {
                     gesture::State::InMiddle => match gest {
-                        TouchGesture::Drag { index: _, start: _, previous: _, current: _, delta } => {
+                        TouchGesture::Drag {
+                            index: _,
+                            start: _,
+                            previous: _,
+                            current: _,
+                            delta,
+                        } => {
                             let mut camera = vxresult!(vxunwrap!(&self.camera).write());
                             camera.rotate_local_x(delta.1 * 1.5);
                             camera.rotate_global_z(delta.0 * 1.5);
-                        },
+                        }
                         _ => (),
                     },
                     _ => (),
                 },
                 _ => (),
-            }
+            },
             _ => (),
         }
     }
@@ -147,7 +154,9 @@ impl CoreAppTrait for MyGame {
             let mut camera = vxresult!(vxunwrap!(&self.camera).write());
             let delta = {
                 let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-                let n = vxresult!(renderer.timing.read()).length_of_previous_frame.as_nanos();
+                let n = vxresult!(renderer.timing.read())
+                    .length_of_previous_frame
+                    .as_nanos();
                 (n as f64 / 1_000_000_000.0) as f32
             };
             if keys_state.w {

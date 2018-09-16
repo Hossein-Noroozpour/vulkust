@@ -1,5 +1,5 @@
-use super::swapchain::Swapchain;
 use super::image::View as ImageView;
+use super::swapchain::Swapchain;
 use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::Arc;
@@ -111,26 +111,38 @@ impl RenderPass {
             attachment_descriptions[i].format = img.format;
             attachment_descriptions[i].samples = img.samples;
             attachment_descriptions[i].loadOp = vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
-            attachment_descriptions[i].storeOp = vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+            attachment_descriptions[i].storeOp =
+                vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
             attachment_descriptions[i].stencilLoadOp =
                 vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             attachment_descriptions[i].stencilStoreOp =
                 vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
             attachment_descriptions[i].initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-            if img.usage & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as vk::VkImageUsageFlags != 0 {
-                attachment_descriptions[i].finalLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            if img.usage & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                as vk::VkImageUsageFlags
+                != 0
+            {
+                attachment_descriptions[i].finalLayout =
+                    vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 color_attachments_refs[color_attachments_refs_index].attachment = i as u32;
-                color_attachments_refs[color_attachments_refs_index].layout = vk::VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                color_attachments_refs[color_attachments_refs_index].layout =
+                    vk::VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                 color_attachments_refs_index += 1;
-            } else if img.usage & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as vk::VkImageUsageFlags != 0 {
-                attachment_descriptions[i].finalLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-                depth_attachment_ref.layout = vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            } else if img.usage
+                & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+                    as vk::VkImageUsageFlags
+                != 0
+            {
+                attachment_descriptions[i].finalLayout =
+                    vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                depth_attachment_ref.layout =
+                    vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 depth_attachment_ref.attachment = i as u32;
             } else {
                 vxunexpected!();
             }
         }
-        
+
         let mut subpass_description = vk::VkSubpassDescription::default();
         subpass_description.pipelineBindPoint =
             vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;

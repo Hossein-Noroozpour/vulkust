@@ -22,7 +22,8 @@ impl Timing {
     fn new() -> Self {
         let start_of_previous_frame = Instant::now();
         let start_of_current_frame = Instant::now();
-        let length_of_previous_frame = start_of_current_frame.duration_since(start_of_previous_frame);
+        let length_of_previous_frame =
+            start_of_current_frame.duration_since(start_of_previous_frame);
         Timing {
             start_of_previous_frame,
             start_of_current_frame,
@@ -33,8 +34,9 @@ impl Timing {
     pub fn update(&mut self) {
         self.start_of_previous_frame = self.start_of_current_frame;
         self.start_of_current_frame = Instant::now();
-        self.length_of_previous_frame = self.start_of_current_frame.duration_since(self.start_of_previous_frame);
-
+        self.length_of_previous_frame = self
+            .start_of_current_frame
+            .duration_since(self.start_of_previous_frame);
     }
 }
 

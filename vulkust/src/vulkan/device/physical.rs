@@ -123,13 +123,17 @@ impl Physical {
             unsafe {
                 vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
             }
-            if queue_family.queueCount > 0 && b != 0
+            if queue_family.queueCount > 0
+                && b != 0
                 && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32) != 0
+                    & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)
+                    != 0
                 && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32) != 0
+                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)
+                    != 0
                 && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32) != 0
+                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)
+                    != 0
             {
                 return Some((i, i, i, i));
             }
@@ -141,11 +145,14 @@ impl Physical {
             unsafe {
                 vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.vk_data, &mut b);
             }
-            if queue_family.queueCount > 0 && b != 0
+            if queue_family.queueCount > 0
+                && b != 0
                 && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32) != 0
+                    & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)
+                    != 0
                 && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32) != 0
+                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)
+                    != 0
             {
                 graphics_queue_node_index = i;
                 compute_queue_node_index = i;
@@ -153,7 +160,8 @@ impl Physical {
             }
             if queue_family.queueCount > 0
                 && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32) != 0
+                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)
+                    != 0
             {
                 transfer_queue_node_index = i;
             }
@@ -238,14 +246,15 @@ impl Physical {
         ));
         result
     }
-    
+
     pub fn get_memory_type_index(&self, type_bits: u32, properties: u32) -> u32 {
         // Iterate over all memory types available for the device used in this example
         let mut type_bits = type_bits;
         for i in 0..self.memory_properties.memoryTypeCount {
             if (type_bits & 1) == 1 {
                 if (self.memory_properties.memoryTypes[i as usize].propertyFlags as u32)
-                    & properties == properties
+                    & properties
+                    == properties
                 {
                     return i;
                 }
@@ -254,7 +263,7 @@ impl Physical {
         }
         vxlogf!("Could not find the requsted memory type.");
     }
-    
+
     pub fn get_max_min_alignment(&self) -> u64 {
         let limits = &self.properties.limits;
         max(
@@ -279,46 +288,63 @@ impl Physical {
     }
 
     pub fn get_max_sample_bit_with_mask(&self, mask: u32) -> vk::VkSampleCountFlagBits {
-        let counts = self.properties.limits.framebufferColorSampleCounts as u32 &
-            self.properties.limits.framebufferDepthSampleCounts as u32 & mask;
-        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT as u32) != 0 { 
+        let counts = self.properties.limits.framebufferColorSampleCounts as u32
+            & self.properties.limits.framebufferDepthSampleCounts as u32
+            & mask;
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT as u32) != 0 {
             return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT;
         }
-        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT as u32) != 0 { 
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT as u32) != 0 {
             return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT;
         }
-        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT as u32) != 0 { 
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT as u32) != 0 {
             return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT;
         }
-        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT as u32) != 0 { 
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT as u32) != 0 {
             return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT;
         }
-        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT as u32) != 0 { 
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT as u32) != 0 {
             return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT;
         }
-        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT as u32) != 0 { 
+        if counts & (vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT as u32) != 0 {
             return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT;
         }
         return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
     }
 
     pub fn get_max_sample_bit_with_image_info(
-        &self, image_info: &vk::VkImageCreateInfo
+        &self,
+        image_info: &vk::VkImageCreateInfo,
     ) -> vk::VkSampleCountFlags {
         return self.get_max_sample_bit(
-            image_info.format, image_info.imageType,
-            image_info.tiling, image_info.usage, image_info.flags,
+            image_info.format,
+            image_info.imageType,
+            image_info.tiling,
+            image_info.usage,
+            image_info.flags,
         );
     }
 
     pub fn get_max_sample_bit(
-        &self, format: vk::VkFormat, image_type: vk::VkImageType,
-        tiling: vk::VkImageTiling, usage: vk::VkImageUsageFlags,
+        &self,
+        format: vk::VkFormat,
+        image_type: vk::VkImageType,
+        tiling: vk::VkImageTiling,
+        usage: vk::VkImageUsageFlags,
         flags: vk::VkImageCreateFlags,
     ) -> vk::VkSampleCountFlags {
         let mut prps = vk::VkImageFormatProperties::default();
-        if vk::VkResult::VK_SUCCESS as u32 != unsafe { vk::vkGetPhysicalDeviceImageFormatProperties(
-            self.vk_data, format, image_type, tiling, usage, flags, &mut prps) } as u32 
+        if vk::VkResult::VK_SUCCESS as u32 != unsafe {
+            vk::vkGetPhysicalDeviceImageFormatProperties(
+                self.vk_data,
+                format,
+                image_type,
+                tiling,
+                usage,
+                flags,
+                &mut prps,
+            )
+        } as u32
         {
             return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as vk::VkSampleCountFlags;
         }

@@ -72,7 +72,9 @@ impl Manager {
     }
 
     pub fn create<M>(&mut self, eng: &Engine) -> Arc<RwLock<M>>
-    where M: 'static + DefaultModel {
+    where
+        M: 'static + DefaultModel,
+    {
         let m = M::default(eng);
         let id = m.get_id();
         let m1 = Arc::new(RwLock::new(m));
@@ -133,10 +135,7 @@ impl Uniform {
 
     fn default() -> Self {
         let m = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0,
+            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
         Uniform {
             model: m,

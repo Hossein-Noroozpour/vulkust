@@ -60,16 +60,16 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
         this.set_ivar(WINDOW_VAR_NAME, window);
         this.set_ivar(VIEW_VAR_NAME, view);
         this.set_ivar(CONTROLLER_VAR_NAME, gvc);
-        let options = (
-            apple::app_kit::NSTrackingAreaOptions::NS_TRACKING_MOUSE_MOVED | 
-            apple::app_kit::NSTrackingAreaOptions::NS_TRACKING_ACTIVE_ALWAYS).bits();
+        let options = (apple::app_kit::NSTrackingAreaOptions::NS_TRACKING_MOUSE_MOVED
+            | apple::app_kit::NSTrackingAreaOptions::NS_TRACKING_ACTIVE_ALWAYS)
+            .bits();
         let tracker_area: apple::Id = msg_send![
             apple::alloc("NSTrackingArea"), 
-            initWithRect:frame 
+            initWithRect:frame
             options:options
             owner:gvc
             userInfo:apple::NIL];
-        let _: () = msg_send![view, addTrackingArea:tracker_area];
+        let _: () = msg_send![view, addTrackingArea: tracker_area];
         let _: () = msg_send![gvc, setView: view];
         let _: () = msg_send![window, setContentView: view];
         let _: () = msg_send![window, setContentViewController: gvc];
@@ -86,7 +86,7 @@ extern "C" fn application_will_finish_launching(_this: &Object, _cmd: Sel, _n: a
 extern "C" fn application_did_finish_launching(this: &Object, _cmd: Sel, _n: apple::Id) {
     unsafe {
         let window: apple::Id = *this.get_ivar(WINDOW_VAR_NAME);
-        let _: () = msg_send![window, setAcceptsMouseMovedEvents:YES];
+        let _: () = msg_send![window, setAcceptsMouseMovedEvents: YES];
     }
 }
 

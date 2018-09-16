@@ -1,7 +1,7 @@
 use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
-use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
 use super::super::super::core::event;
+use super::super::super::core::event::{Button, Event, Keyboard, Mouse, Type as EventType, Window};
 use super::super::super::core::types::Real;
 use super::super::super::libc;
 use super::super::super::render::engine::Engine as RenderEngine;
@@ -120,7 +120,8 @@ impl Application {
             xcb::xcb_map_window(connection, window);
             xcb::xcb_flush(connection);
         }
-        let current_mouse_position = Arc::new(RwLock::new(get_mouse_position(connection, window, screen)));
+        let current_mouse_position =
+            Arc::new(RwLock::new(get_mouse_position(connection, window, screen)));
         Application {
             renderer: None,
             core_app: Some(core_app),
@@ -201,9 +202,9 @@ impl Application {
                     && ((*transmute::<
                         *mut xcb::xcb_generic_event_t,
                         *mut xcb::xcb_client_message_event_t,
-                    >(e))
-                        .data
-                        .data[0] == (*self.atom_wm_delete_window).atom))
+                    >(e)).data
+                    .data[0]
+                        == (*self.atom_wm_delete_window).atom))
             {
                 return Some(EventType::Quit);
             }
@@ -274,12 +275,12 @@ impl Application {
                     }
                 });
                 return Some(if a == xproto::XCB_KEY_RELEASE {
-                    EventType::Button { 
+                    EventType::Button {
                         button: b,
                         action: event::ButtonAction::Release,
                     }
                 } else {
-                    EventType::Button { 
+                    EventType::Button {
                         button: b,
                         action: event::ButtonAction::Press,
                     }
@@ -318,14 +319,17 @@ impl Application {
 }
 
 fn get_mouse_position(
-    connection: *mut xcb::xcb_connection_t, 
-    window: xcb::xcb_window_t, 
-    screen: *mut xcb::xcb_screen_t) -> (Real, Real) {
+    connection: *mut xcb::xcb_connection_t,
+    window: xcb::xcb_window_t,
+    screen: *mut xcb::xcb_screen_t,
+) -> (Real, Real) {
     unsafe {
         let coockie = xcb::xcb_query_pointer(connection, window);
-        let reply: &mut xcb::xcb_query_pointer_reply_t = transmute(
-            xcb::xcb_query_pointer_reply(connection, coockie, null_mut()),
-        );
+        let reply: &mut xcb::xcb_query_pointer_reply_t = transmute(xcb::xcb_query_pointer_reply(
+            connection,
+            coockie,
+            null_mut(),
+        ));
         let x = reply.root_x as Real / (*screen).width_in_pixels as Real;
         let y = reply.root_y as Real / (*screen).height_in_pixels as Real;
         libc::free(transmute(reply));

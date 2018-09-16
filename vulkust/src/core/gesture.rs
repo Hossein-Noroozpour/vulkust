@@ -1,8 +1,8 @@
+use super::event::{Event, Move, Touch, TouchAction, TouchGesture, Type as EventType};
 use super::types::Real;
-use super::event::{Event, Type as EventType, Touch, TouchAction, TouchGesture, Move};
 
-use std::time::Instant;
 use std::collections::BTreeMap;
+use std::time::Instant;
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Translator {
@@ -64,13 +64,17 @@ impl TouchDragTranslator {
     pub fn receive(&mut self, e: &Event) -> Option<Event> {
         match &e.event_type {
             EventType::Touch(t) => match t {
-                Touch::Raw { index: _, action, point: _ } => match action {
+                Touch::Raw {
+                    index: _,
+                    action,
+                    point: _,
+                } => match action {
                     TouchAction::Press => {
                         self.number += 1;
-                    },
+                    }
                     TouchAction::Release => {
                         self.number -= 1;
-                    },
+                    }
                     _ => (),
                 },
                 _ => (),
@@ -81,7 +85,11 @@ impl TouchDragTranslator {
         match state {
             State::Started => match &e.event_type {
                 EventType::Touch(t) => match t {
-                    Touch::Raw { index, action, point } => {
+                    Touch::Raw {
+                        index,
+                        action,
+                        point,
+                    } => {
                         if *index == self.index {
                             match action {
                                 TouchAction::Release => {
@@ -94,7 +102,10 @@ impl TouchDragTranslator {
                                             start: self.start,
                                             previous: self.current,
                                             current: *point,
-                                            delta: (point.0 - self.current.0, point.1 - self.current.1),
+                                            delta: (
+                                                point.0 - self.current.0,
+                                                point.1 - self.current.1,
+                                            ),
                                         },
                                     }));
                                     self.index = -1;
@@ -102,7 +113,7 @@ impl TouchDragTranslator {
                                     self.current = (0.0, 0.0);
                                     self.start = (0.0, 0.0);
                                     return Some(result);
-                                },
+                                }
                                 _ => (),
                             }
                         } else {
@@ -125,15 +136,20 @@ impl TouchDragTranslator {
                                     self.current = (0.0, 0.0);
                                     self.start = (0.0, 0.0);
                                     return Some(result);
-                                },
+                                }
                                 _ => (),
                             }
                         }
-                    },
+                    }
                     _ => (),
                 },
                 EventType::Move(m) => match m {
-                    Move::Touch { index, previous, current, delta } => {
+                    Move::Touch {
+                        index,
+                        previous,
+                        current,
+                        delta,
+                    } => {
                         if *index != self.index {
                             vxunexpected!();
                         }
@@ -150,7 +166,7 @@ impl TouchDragTranslator {
                                 delta: *delta,
                             },
                         })));
-                    },
+                    }
                     _ => (),
                 },
                 _ => (),
@@ -158,7 +174,11 @@ impl TouchDragTranslator {
             State::InMiddle => vxunexpected!(),
             State::Ended => match &e.event_type {
                 EventType::Touch(t) => match t {
-                    Touch::Raw { index, action, point } => match action {
+                    Touch::Raw {
+                        index,
+                        action,
+                        point,
+                    } => match action {
                         TouchAction::Press => {
                             if self.number == 1 {
                                 let result = Event::new(EventType::Touch(Touch::Gesture {
@@ -180,7 +200,7 @@ impl TouchDragTranslator {
                                 self.start_time = Instant::now();
                                 return Some(result);
                             }
-                        },
+                        }
                         _ => (),
                     },
                     _ => (),
@@ -220,13 +240,17 @@ impl TouchScaleTranslator {
     pub fn receive(&mut self, e: &Event) -> Option<Event> {
         match &e.event_type {
             EventType::Touch(t) => match t {
-                Touch::Raw { index, action, point } => match action {
+                Touch::Raw {
+                    index,
+                    action,
+                    point,
+                } => match action {
                     TouchAction::Press => {
                         self.fingers.insert(*index, *point);
-                    },
+                    }
                     TouchAction::Release => {
                         self.fingers.remove(index);
-                    },
+                    }
                     _ => (),
                 },
                 _ => (),
@@ -259,7 +283,12 @@ impl TouchScaleTranslator {
                 }
                 match &e.event_type {
                     EventType::Move(m) => match m {
-                        Move::Touch {index, previous: _, current, delta: _} => {
+                        Move::Touch {
+                            index,
+                            previous: _,
+                            current,
+                            delta: _,
+                        } => {
                             self.fingers.insert(*index, *current);
                             let f1 = vxunwrap!(self.fingers.get(&self.first));
                             let f2 = vxunwrap!(self.fingers.get(&self.second));
@@ -283,12 +312,12 @@ impl TouchScaleTranslator {
                                 self.current = cs;
                                 return Some(result);
                             }
-                        },
+                        }
                         _ => (),
                     },
                     _ => (),
                 }
-            },
+            }
             State::Ended => {
                 if self.fingers.len() == 2 {
                     let mut fi = 0;
@@ -321,7 +350,7 @@ impl TouchScaleTranslator {
                         },
                     })));
                 }
-            },
+            }
             _ => vxunexpected!(),
         }
         return None;

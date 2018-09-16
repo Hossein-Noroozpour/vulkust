@@ -58,7 +58,8 @@ impl Swapchain {
             );
         };
         if ((format_props.optimalTilingFeatures as u32)
-            & (vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_BLIT_DST_BIT as u32)) != 0
+            & (vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_BLIT_DST_BIT as u32))
+            != 0
         {
             image_usage |= vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT as u32;
         }
@@ -148,7 +149,8 @@ impl Swapchain {
                 images[i],
                 best_surface_format.format,
                 vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
-                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as vk::VkImageUsageFlags,
+                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                    as vk::VkImageUsageFlags,
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
             )));
         }

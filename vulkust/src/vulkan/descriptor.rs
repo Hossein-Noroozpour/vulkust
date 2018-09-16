@@ -217,7 +217,8 @@ impl Set {
         let mut img_infos = vec![vk::VkDescriptorImageInfo::default(); textures.len()];
         for texture in textures {
             let texture = vxresult!(texture.read());
-            img_infos[last_img_info_i].imageLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            img_infos[last_img_info_i].imageLayout =
+                vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             img_infos[last_img_info_i].imageView = texture.get_image_view().vk_data;
             img_infos[last_img_info_i].sampler = texture.get_sampler().vk_data;
             infos[last_info_i].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

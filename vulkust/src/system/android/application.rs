@@ -1,11 +1,6 @@
 use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::core::event::{
-    Event,
-    Move,
-    Type as EventType,
-    Touch,
-    FingerIndexType,
-    TouchAction,
+    Event, FingerIndexType, Move, Touch, TouchAction, Type as EventType,
 };
 use super::super::super::core::gesture;
 use super::super::super::core::types::Real;
@@ -14,12 +9,12 @@ use super::super::super::render::engine::Engine as RenderEngine;
 use super::file::AASSET_MANAGER;
 use super::glue::{AndroidApp, AndroidPollSource, AppCmd};
 use super::input;
-use super::window;
 use super::looper::ALooper_pollAll;
+use super::window;
+use std::fmt;
 use std::mem::transmute;
 use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
-use std::fmt;
 
 pub struct Application {
     pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
@@ -123,7 +118,7 @@ impl Application {
                         core_app.on_event(e);
                     }
                     return 1;
-                },
+                }
                 input::AMotionEventAction::PointerUp | input::AMotionEventAction::Up => {
                     let e = Event::new(EventType::Touch(Touch::Raw {
                         index: fi as FingerIndexType,
@@ -140,17 +135,25 @@ impl Application {
                         core_app.on_event(e);
                     }
                     return 1;
-                },
+                }
                 input::AMotionEventAction::Move => {
                     let hs = unsafe { input::AMotionEvent_getHistorySize(e) };
                     let current = (
                         unsafe { input::AMotionEvent_getRawX(e, pi as usize) } / ww,
                         unsafe { input::AMotionEvent_getRawY(e, pi as usize) } / wh,
                     );
-                    let previous = if hs > 0 { (
-                        unsafe { input::AMotionEvent_getHistoricalRawX(e, pi as usize, hs - 1) } / ww,
-                        unsafe { input::AMotionEvent_getHistoricalRawY(e, pi as usize, hs - 1) } / wh,
-                    ) } else { current };
+                    let previous = if hs > 0 {
+                        (
+                            unsafe {
+                                input::AMotionEvent_getHistoricalRawX(e, pi as usize, hs - 1)
+                            } / ww,
+                            unsafe {
+                                input::AMotionEvent_getHistoricalRawY(e, pi as usize, hs - 1)
+                            } / wh,
+                        )
+                    } else {
+                        current
+                    };
                     let e = Event::new(EventType::Move(Move::Touch {
                         index: fi as FingerIndexType,
                         previous,
@@ -164,7 +167,7 @@ impl Application {
                         core_app.on_event(e);
                     }
                     return 1;
-                },
+                }
                 _ => (),
             }
         } else if et & input::AInputEventType::Key as i32 != 0 {
@@ -172,7 +175,6 @@ impl Application {
         } else {
             vxunexpected!();
         }
-        
 
         0
     }
@@ -199,13 +201,13 @@ impl Application {
     }
 }
 
-extern fn handle_cmd(android_app: *mut AndroidApp, cmd: i32) {
+extern "C" fn handle_cmd(android_app: *mut AndroidApp, cmd: i32) {
     unsafe {
         vxresult!(vxunwrap!(&(*android_app).os_app).read()).handle_cmd(cmd);
     }
 }
 
-extern fn handle_input(android_app: *mut AndroidApp, event: *mut input::AInputEvent) -> i32 {
+extern "C" fn handle_input(android_app: *mut AndroidApp, event: *mut input::AInputEvent) -> i32 {
     unsafe {
         return vxresult!(vxunwrap!(&(*android_app).os_app).read()).handle_input(transmute(event));
     }

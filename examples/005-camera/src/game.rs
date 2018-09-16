@@ -1,14 +1,16 @@
 use vulkust::core::application::Application as CoreAppTrait;
+use vulkust::core::event::{
+    Button, ButtonAction, Event, Keyboard, Mouse, Move, Touch, TouchGesture, Type as EventType,
+};
 use vulkust::core::gesture;
-use vulkust::core::event::{Event, Move, Type as EventType, ButtonAction, Button, Keyboard, Mouse, Touch, TouchGesture};
+use vulkust::math;
 use vulkust::render::camera::Perspective;
 use vulkust::render::engine::Engine as Renderer;
-use vulkust::render::scene::{Scene, Ui as UiScene};
-use vulkust::render::model::{Base as ModelBase, Model};
-use vulkust::system::os::application::Application as OsApp;
-use vulkust::render::object::Transferable;
 use vulkust::render::material::Material;
-use vulkust::math;
+use vulkust::render::model::{Base as ModelBase, Model};
+use vulkust::render::object::Transferable;
+use vulkust::render::scene::{Scene, Ui as UiScene};
+use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
 
@@ -70,44 +72,37 @@ impl CoreAppTrait for MyGame {
         let model: Arc<RwLock<Model>> = renderer.create_model::<ModelBase>();
         {
             let vertices = [
-                -1.0, -1.0, 1.0,    0.0, 0.0, 1.0,    1.0, 0.0, 0.0, 1.0,     0.0, 0.0,
-                1.0, -1.0, 1.0,     0.0, 0.0, 1.0,    1.0, 0.0, 0.0, 1.0,     0.0, 0.0,
-                -1.0, 1.0, 1.0,     0.0, 0.0, 1.0,    1.0, 0.0, 0.0, 1.0,     0.0, 0.0, 
-                1.0, 1.0, 1.0,      0.0, 0.0, 1.0,    1.0, 0.0, 0.0, 1.0,     0.0, 0.0,
+                -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
+                0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0,
+                0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
                 //----------------------------------------------------------------------------------
-                -1.0, -1.0, -1.0,   0.0, 0.0, -1.0,  -1.0, 0.0, 0.0, 1.0,     0.0, 0.0,
-                1.0, -1.0, -1.0,    0.0, 0.0, -1.0,  -1.0, 0.0, 0.0, 1.0,     0.0, 0.0,
-                -1.0, 1.0, -1.0,    0.0, 0.0, -1.0,  -1.0, 0.0, 0.0, 1.0,     0.0, 0.0, 
-                1.0, 1.0, -1.0,     0.0, 0.0, -1.0,  -1.0, 0.0, 0.0, 1.0,     0.0, 0.0,
+                -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, -1.0, -1.0,
+                0.0, 0.0, -1.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 1.0, -1.0, 0.0, 0.0, -1.0,
+                -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, -1.0, 0.0, 0.0, -1.0, -1.0, 0.0, 0.0, 1.0,
+                0.0, 0.0,
                 //----------------------------------------------------------------------------------
-                1.0, -1.0, -1.0,    1.0, 0.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
-                1.0, 1.0, -1.0,     1.0, 0.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
-                1.0, -1.0, 1.0,     1.0, 0.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0, 
-                1.0, 1.0, 1.0,      1.0, 0.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
+                1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, -1.0, 1.0,
+                0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+                1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0,
                 //----------------------------------------------------------------------------------
-                -1.0, -1.0, -1.0,  -1.0, 0.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
-                -1.0, 1.0, -1.0,   -1.0, 0.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
-                -1.0, -1.0, 1.0,   -1.0, 0.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0, 
-                -1.0, 1.0, 1.0,    -1.0, 0.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
+                -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, -1.0, 1.0, -1.0,
+                -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, -1.0, -1.0, 1.0, -1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0,
+                0.0,
                 //----------------------------------------------------------------------------------
-                -1.0, 1.0, -1.0,    0.0, 1.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
-                1.0, 1.0, -1.0,     0.0, 1.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
-                -1.0, 1.0, 1.0,     0.0, 1.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0, 
-                1.0, 1.0, 1.0,      0.0, 1.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
+                -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, -1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+                1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0,
                 //----------------------------------------------------------------------------------
-                -1.0, -1.0, -1.0,   0.0, -1.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
-                1.0, -1.0, -1.0,    0.0, -1.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
-                -1.0, -1.0, 1.0,    0.0, -1.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0, 
-                1.0, -1.0, 1.0,     0.0, -1.0, 0.0,    0.0, 0.0, 1.0, 1.0,     0.0, 0.0,
+                -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, -1.0, -1.0,
+                0.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, -1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 0.0,
+                0.0, 1.0, 1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0,
+                0.0,
                 //----------------------------------------------------------------------------------
             ];
             let indices = [
-                0, 1, 2,      1, 3, 2,
-                4, 6, 5,      5, 6, 7,
-                8, 9, 10,     9, 11, 10,
-                12, 14, 13,   13, 14, 15,
-                16, 18, 17,   17, 18, 19,
-                20, 21, 22,   21, 23, 22,
+                0, 1, 2, 1, 3, 2, 4, 6, 5, 5, 6, 7, 8, 9, 10, 9, 11, 10, 12, 14, 13, 13, 14, 15,
+                16, 18, 17, 17, 18, 19, 20, 21, 22, 21, 23, 22,
             ];
             let material = Material::default(&*renderer);
             let scnmgr = vxresult!(renderer.scene_manager.read());
@@ -126,16 +121,20 @@ impl CoreAppTrait for MyGame {
     fn on_event(&self, e: Event) {
         match e.event_type {
             EventType::Move(m) => match m {
-                Move::Mouse { previous: _, current: _, delta } => {
+                Move::Mouse {
+                    previous: _,
+                    current: _,
+                    delta,
+                } => {
                     if vxresult!(self.keys_state.read()).lm {
                         let mut camera = vxresult!(vxunwrap!(&self.camera).write());
                         camera.rotate_local_x(delta.1 * 1.5);
                         camera.rotate_global_z(delta.0 * 1.5);
                     }
-                },
+                }
                 _ => (),
             },
-            EventType::Button {button, action } => match action {
+            EventType::Button { button, action } => match action {
                 ButtonAction::Press => match button {
                     Button::Keyboard(k) => match k {
                         Keyboard::W => vxresult!(self.keys_state.write()).w = true,
@@ -164,19 +163,30 @@ impl CoreAppTrait for MyGame {
                 },
             },
             EventType::Touch(t) => match t {
-                Touch::Gesture { start_time: _, duration: _, state, gest} => match state {
+                Touch::Gesture {
+                    start_time: _,
+                    duration: _,
+                    state,
+                    gest,
+                } => match state {
                     gesture::State::InMiddle => match gest {
-                        TouchGesture::Drag { index: _, start: _, previous: _, current: _, delta } => {
+                        TouchGesture::Drag {
+                            index: _,
+                            start: _,
+                            previous: _,
+                            current: _,
+                            delta,
+                        } => {
                             let mut camera = vxresult!(vxunwrap!(&self.camera).write());
                             camera.rotate_local_x(delta.1 * 1.5);
                             camera.rotate_global_z(delta.0 * 1.5);
-                        },
+                        }
                         _ => (),
                     },
                     _ => (),
                 },
                 _ => (),
-            }
+            },
             _ => (),
         }
     }
@@ -187,7 +197,9 @@ impl CoreAppTrait for MyGame {
             let mut camera = vxresult!(vxunwrap!(&self.camera).write());
             let delta = {
                 let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-                let n = vxresult!(renderer.timing.read()).length_of_previous_frame.as_nanos();
+                let n = vxresult!(renderer.timing.read())
+                    .length_of_previous_frame
+                    .as_nanos();
                 (n as f64 / 1_000_000_000.0) as f32
             };
             if keys_state.w {

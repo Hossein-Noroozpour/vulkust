@@ -1,6 +1,6 @@
+use super::gesture::State as GestureState;
 use super::object::{create_id, Object};
 use super::types::{Id, Real};
-use super::gesture::State as GestureState;
 use std::time::{Duration, Instant};
 
 pub type FingerIndexType = i64;
@@ -121,7 +121,7 @@ pub enum Move {
         previous: (Real, Real),
         current: (Real, Real),
         delta: (Real, Real),
-    }
+    },
 }
 
 #[derive(Clone)]
@@ -163,15 +163,27 @@ pub enum TouchGesture {
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Touch {
-    Gesture { start_time: Instant, duration: Duration, state: GestureState, gest: TouchGesture },
-    Raw { index: FingerIndexType, action: TouchAction, point: (Real, Real) },
+    Gesture {
+        start_time: Instant,
+        duration: Duration,
+        state: GestureState,
+        gest: TouchGesture,
+    },
+    Raw {
+        index: FingerIndexType,
+        action: TouchAction,
+        point: (Real, Real),
+    },
 }
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Type {
     Move(Move),
-    Button { button: Button, action: ButtonAction },
+    Button {
+        button: Button,
+        action: ButtonAction,
+    },
     Touch(Touch),
     Window(Window),
     Quit,

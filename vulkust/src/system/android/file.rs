@@ -1,9 +1,9 @@
 use super::asset as aas;
 use std::ffi::CString;
-use std::io::{Read, Result, Seek, SeekFrom, Error, ErrorKind};
+use std::fmt;
+use std::io::{Error, ErrorKind, Read, Result, Seek, SeekFrom};
 use std::mem::transmute;
 use std::ptr::null_mut;
-use std::fmt;
 
 pub struct File {
     pub asset: *mut aas::AAsset,
@@ -28,7 +28,10 @@ impl File {
             )
         };
         if asset == null_mut() {
-            return Err(Error::new(ErrorKind::NotFound, format!("File {} not found!", file_name)));
+            return Err(Error::new(
+                ErrorKind::NotFound,
+                format!("File {} not found!", file_name),
+            ));
         }
         Ok(File { asset: asset })
     }

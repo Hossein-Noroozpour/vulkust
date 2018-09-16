@@ -160,7 +160,8 @@ impl Base {
     pub fn update_view_projection(&mut self) {
         self.view_projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-        ) * self.projection * self.view;
+        ) * self.projection
+            * self.view;
     }
 
     pub fn update_location(&mut self) {
@@ -308,7 +309,6 @@ impl Perspective {
         return myself;
     }
 
-
     pub fn new_with_base(base: Base) -> Self {
         Perspective {
             base,
@@ -402,11 +402,11 @@ impl Transferable for Perspective {
     fn set_location(&mut self, l: &math::Vector3<f32>) {
         self.base.set_location(l);
     }
-    
+
     fn move_local_z(&mut self, v: f32) {
         self.base.move_local_z(v);
     }
-    
+
     fn move_local_x(&mut self, v: f32) {
         self.base.move_local_x(v);
     }
@@ -549,11 +549,11 @@ impl Transferable for Orthographic {
     fn set_location(&mut self, l: &math::Vector3<f32>) {
         self.base.set_location(l);
     }
-    
+
     fn move_local_z(&mut self, v: f32) {
         self.base.move_local_z(v);
     }
-    
+
     fn move_local_x(&mut self, v: f32) {
         self.base.move_local_x(v);
     }

@@ -1,4 +1,4 @@
-use super::super::super::objc::runtime::{Object, Sel, YES, BOOL};
+use super::super::super::objc::runtime::{Object, Sel, BOOL, YES};
 use super::super::apple;
 use super::application::Application as OsApp;
 use std::mem::transmute;

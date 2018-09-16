@@ -139,12 +139,7 @@ pub struct Texture2D {
 }
 
 impl Texture2D {
-    pub fn new_with_pixels(
-        width: u32,
-        height: u32,
-        engine: &Engine,
-        data: &[u8],
-    ) -> Self {
+    pub fn new_with_pixels(width: u32, height: u32, engine: &Engine, data: &[u8]) -> Self {
         Self::new_with_base_pixels(ObjectBase::new(), width, height, engine, data)
     }
 

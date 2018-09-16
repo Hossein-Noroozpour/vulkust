@@ -6,9 +6,9 @@ use super::gx3d::Gx3DReader;
 use super::model::Uniform as ModelUniform;
 use super::scene::Uniform as SceneUniform;
 use super::texture::{Manager as TextureManager, Texture};
+use std::default::Default;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
-use std::default::Default;
 
 use gltf;
 
@@ -95,18 +95,17 @@ impl Material {
                 ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
             ]
         };
-        let read_tex = |engine: &Engine,
-                        reader: &mut Gx3DReader,
-                        texture_manager: &mut TextureManager| {
-            let t = reader.read_type_id();
-            if t == Field::Texture as TypeId {
-                texture_manager.load_gx3d(engine, reader.read())
-            } else if t == Field::Vector as TypeId {
-                texture_manager.create_2d_with_color(engine, read_color(reader))
-            } else {
-                vxunexpected!()
-            }
-        };
+        let read_tex =
+            |engine: &Engine, reader: &mut Gx3DReader, texture_manager: &mut TextureManager| {
+                let t = reader.read_type_id();
+                if t == Field::Texture as TypeId {
+                    texture_manager.load_gx3d(engine, reader.read())
+                } else if t == Field::Vector as TypeId {
+                    texture_manager.create_2d_with_color(engine, read_color(reader))
+                } else {
+                    vxunexpected!()
+                }
+            };
         let read_value = |reader: &mut Gx3DReader| {
             let t = reader.read_type_id();
             if t != Field::Float as TypeId {
@@ -262,7 +261,8 @@ impl Material {
         ];
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
-        let descriptor_set = descriptor_manager.create_pbr_set(self.uniform_buffer.clone(), &textures);
+        let descriptor_set =
+            descriptor_manager.create_pbr_set(self.uniform_buffer.clone(), &textures);
         self.descriptor_set = Arc::new(descriptor_set);
     }
 
