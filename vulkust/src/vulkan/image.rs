@@ -20,6 +20,7 @@ pub struct Image {
     pub format: vk::VkFormat,
     pub mips_count: u8,
     pub samples: vk::VkSampleCountFlagBits,
+    pub usage: vk::VkImageUsageFlags,
     pub memory: Option<Arc<RwLock<Memory>>>,
 }
 
@@ -59,23 +60,27 @@ impl Image {
             format: info.format,
             mips_count: info.mipLevels as u8,
             samples: info.samples,
+            usage: info.usage,
             memory: Some(memory),
         }
     }
 
     pub fn new_with_vk_data(
         logical_device: Arc<LogicalDevice>,
-        vk_image: vk::VkImage,
+        vk_data: vk::VkImage,
         layout: vk::VkImageLayout,
         format: vk::VkFormat,
+        usage: vk::VkImageUsageFlags,
+        samples: vk::VkSampleCountFlagBits,
     ) -> Self {
         Image {
             logical_device,
             layout,
             format,
             mips_count: 1,
-            vk_data: vk_image,
-            samples: vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+            vk_data,
+            usage,
+            samples,
             memory: None,
         }
     }
@@ -230,12 +235,16 @@ impl View {
         vk_image: vk::VkImage,
         format: vk::VkFormat,
         layout: vk::VkImageLayout,
+        usage: vk::VkImageUsageFlags,
+        samples: vk::VkSampleCountFlagBits,
     ) -> Self {
         Self::new_with_image(Arc::new(RwLock::new(Image::new_with_vk_data(
-            logical_device.clone(),
+            logical_device,
             vk_image,
             layout,
             format,
+            usage,
+            samples,
         ))))
     }
 
@@ -305,7 +314,7 @@ impl View {
 		} else {
             vxunexpected!();
         };
-        let usage = if samples as u32 != vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
+        let usage = if samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
             usage as u32 | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
         } else {
             usage as u32

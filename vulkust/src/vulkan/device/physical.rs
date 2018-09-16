@@ -1,6 +1,6 @@
 use super::super::surface::Surface;
 use super::super::vulkan as vk;
-use std::cmp::{max, min};
+use std::cmp::max;
 use std::ptr::null_mut;
 use std::sync::Arc;
 
@@ -317,8 +317,11 @@ impl Physical {
         flags: vk::VkImageCreateFlags,
     ) -> vk::VkSampleCountFlags {
         let mut prps = vk::VkImageFormatProperties::default();
-        vulkan_check!(vk::vkGetPhysicalDeviceImageFormatProperties(
-            self.vk_data, format, image_type, tiling, usage, flags, &mut prps));
+        if vk::VkResult::VK_SUCCESS as u32 != unsafe { vk::vkGetPhysicalDeviceImageFormatProperties(
+            self.vk_data, format, image_type, tiling, usage, flags, &mut prps) } as u32 
+        {
+            return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as vk::VkSampleCountFlags;
+        }
         return prps.sampleCounts;
     }
 }

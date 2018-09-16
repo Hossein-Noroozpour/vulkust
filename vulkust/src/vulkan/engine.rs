@@ -22,8 +22,8 @@ use std::sync::{Arc, RwLock};
 use super::buffer::{DynamicBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
 
-const gbuff_color_fmt: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
-const gbuff_depth_fmt: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
+const GBUFF_COLOR_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+const GBUFF_DEPTH_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Engine {
@@ -41,6 +41,7 @@ pub struct Engine {
     pub samples_count: vk::VkSampleCountFlagBits,
     pub depth_stencil_image_view: Arc<ImageView>,
     pub render_pass: Arc<RenderPass>,
+    pub g_render_pass: Arc<RenderPass>,
     pub descriptor_manager: Arc<RwLock<DescriptorManager>>,
     pub pipeline_manager: Arc<RwLock<PipelineManager>>,
     pub framebuffers: Vec<Arc<Framebuffer>>,
@@ -80,6 +81,7 @@ impl Engine {
         ));
         let samples_count = Self::get_max_sample_count(&physical_device);
         let render_pass = Arc::new(RenderPass::new(&swapchain));
+        let g_render_pass = Self::create_gbuffer_filler(&logical_device, &memory_mgr, samples_count);
         let mut framebuffers = Vec::new();
         for v in &swapchain.image_views {
             framebuffers.push(Arc::new(Framebuffer::new(
@@ -126,6 +128,7 @@ impl Engine {
             depth_stencil_image_view,
             samples_count,
             render_pass,
+            g_render_pass,
             descriptor_manager,
             pipeline_manager,
             framebuffers,
@@ -337,41 +340,42 @@ impl Engine {
     fn create_gbuffer_filler(
         logical_device: &Arc<LogicalDevice>,
         memory_manager: &Arc<RwLock<MemoryManager>>,
-        sample_count: vk::VkSampleCountFlagBits) {
-        let g_pos = ImageView::new_attachment(
+        sample_count: vk::VkSampleCountFlagBits) -> Arc<RenderPass> {
+        let g_pos = Arc::new(ImageView::new_attachment(
             logical_device.clone(),
             memory_manager,
-            gbuff_color_fmt,
+            GBUFF_COLOR_FMT,
             vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             sample_count,
-            );
-        let g_nrm = ImageView::new_attachment(
+        ));
+        let g_nrm = Arc::new(ImageView::new_attachment(
             logical_device.clone(),
             memory_manager,
-            gbuff_color_fmt,
+            GBUFF_COLOR_FMT,
             vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             sample_count,
-            );
-        let g_alb = ImageView::new_attachment(
+        ));
+        let g_alb = Arc::new(ImageView::new_attachment(
             logical_device.clone(),
             memory_manager,
-            gbuff_color_fmt,
+            GBUFF_COLOR_FMT,
             vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             sample_count,
-            );
-        let g_dpt = ImageView::new_attachment(
+        ));
+        let g_dpt = Arc::new(ImageView::new_attachment(
             logical_device.clone(),
             memory_manager,
-            gbuff_depth_fmt,
+            GBUFF_DEPTH_FMT,
             vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
             sample_count,
-            );
-        
+        ));
+        let views = vec![g_pos.clone(), g_nrm.clone(), g_alb.clone(), g_dpt.clone()];
+        return Arc::new(RenderPass::new_with_views(views));
     }
 
     fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
         let mut sample_count = phdev.get_max_sample_bit(
-            gbuff_color_fmt,
+            GBUFF_COLOR_FMT,
             vk::VkImageType::VK_IMAGE_TYPE_2D,
             vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
             vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as vk::VkImageUsageFlags |
@@ -379,14 +383,16 @@ impl Engine {
             0
         );
         sample_count &= phdev.get_max_sample_bit(
-            gbuff_depth_fmt,
+            GBUFF_DEPTH_FMT,
             vk::VkImageType::VK_IMAGE_TYPE_2D,
             vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
             vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as vk::VkImageUsageFlags |
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as vk::VkImageUsageFlags,
             0
         );
-        return phdev.get_max_sample_bit_with_mask(sample_count);
+        let result = phdev.get_max_sample_bit_with_mask(sample_count);
+        vxloge!("{:?}", result);
+        return result;
     }
 }
 

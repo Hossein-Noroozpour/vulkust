@@ -148,6 +148,8 @@ impl Swapchain {
                 images[i],
                 best_surface_format.format,
                 vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as vk::VkImageUsageFlags,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
             )));
         }
         Swapchain {
