@@ -4,6 +4,7 @@ use super::super::render::texture::Texture;
 use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
+use std::cmp::max;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
@@ -26,7 +27,7 @@ impl Pool {
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptor_pool_info.poolSizeCount = type_counts.len() as u32;
         descriptor_pool_info.pPoolSizes = type_counts.as_ptr();
-        descriptor_pool_info.maxSets = buffers_count as u32 + 1; // todo find a better solution for this
+        descriptor_pool_info.maxSets = buffers_count as u32 + 1; // todo I must find the exact number after everything got stable
         let mut vk_data = 0 as vk::VkDescriptorPool;
         vulkan_check!(vk::vkCreateDescriptorPool(
             logical_device.vk_data,
@@ -56,17 +57,22 @@ pub struct SetLayout {
 }
 
 impl SetLayout {
-    pub fn new_pbr(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_bindings_info_pbr();
+    pub fn new_gbuff(logical_device: Arc<LogicalDevice>) -> Self {
+        let layout_bindings = Self::create_binding_info(7);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
     pub fn new_buffer_only(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_bindings_info_buffer_only();
+        let layout_bindings = Self::create_binding_info(0);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
-    pub fn new_with_bindings_info(
+    pub fn new_deferred(logical_device: Arc<LogicalDevice>) -> Self {
+        let layout_bindings = Self::create_binding_info(4);
+        return Self::new_with_bindings_info(logical_device, &layout_bindings);
+    }
+
+    fn new_with_bindings_info(
         logical_device: Arc<LogicalDevice>,
         layout_bindings: &Vec<vk::VkDescriptorSetLayoutBinding>,
     ) -> Self {
@@ -88,26 +94,17 @@ impl SetLayout {
         }
     }
 
-    pub fn create_bindings_info_buffer_only() -> Vec<vk::VkDescriptorSetLayoutBinding> {
-        let mut layout_bindings = vec![vk::VkDescriptorSetLayoutBinding::default(); 1];
+    fn create_binding_info(images_count: usize) {
+        let mut layout_bindings =
+            vec![vk::VkDescriptorSetLayoutBinding::default(); 1 + images_count];
         layout_bindings[0].binding = 0;
         layout_bindings[0].descriptorType =
             vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         layout_bindings[0].descriptorCount = 1;
-        layout_bindings[0].stageFlags =
-            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32;
-        return layout_bindings;
-    }
-
-    pub fn create_bindings_info_pbr() -> Vec<vk::VkDescriptorSetLayoutBinding> {
-        let mut layout_bindings = vec![vk::VkDescriptorSetLayoutBinding::default(); 8];
-        layout_bindings[0].binding = 0;
-        layout_bindings[0].descriptorType =
-            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        layout_bindings[0].descriptorCount = 1;
-        layout_bindings[0].stageFlags =
-            vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT as u32;
-        for i in 1..8 {
+        layout_bindings[0].stageFlags = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT
+            as u32
+            | vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32;
+        for i in 1..(images_count + 1) {
             layout_bindings[i].binding = i as u32;
             layout_bindings[i].descriptorCount = 1;
             layout_bindings[i].descriptorType =
@@ -137,38 +134,45 @@ pub struct Set {
 }
 
 impl Set {
-    fn new_buffer_only(
+    pub fn new_buffer_only(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: Arc<RwLock<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
     ) -> Self {
-        let vk_data = Self::allocate_set(&pool, &layout);
-        let buff_info = Self::create_buffer_info(&*vxresult!(uniform.read()), buffer_manager);
-        let mut infos = vec![vk::VkWriteDescriptorSet::default(); 1];
-        infos[0].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        infos[0].dstSet = vk_data;
-        infos[0].descriptorCount = 1;
-        infos[0].descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        infos[0].pBufferInfo = &buff_info;
-        infos[0].dstBinding = 0;
-        unsafe {
-            vk::vkUpdateDescriptorSets(
-                pool.logical_device.vk_data,
-                infos.len() as u32,
-                infos.as_ptr(),
-                0,
-                null(),
-            );
+        Self::new(pool, layout, uniform, buffer_manager, Vec::new())
+    }
+
+    pub fn new_gbuff(
+        pool: Arc<Pool>,
+        layout: Arc<SetLayout>,
+        uniform: Arc<RwLock<DynamicBuffer>>,
+        buffer_manager: &Arc<RwLock<BufferManager>>,
+        textures: Vec<Arc<RwLock<Texture>>>,
+    ) -> Self {
+        #[cfg(debug_assertions)]
+        {
+            if texture.len() != 7 {
+                vxlogf!("For gbuffer filler descriptor you need 7 textures.");
+            }
         }
-        let textures = Vec::new();
-        Set {
-            pool,
-            layout,
-            uniform,
-            textures,
-            vk_data,
+        Self::new(pool, layout, uniform, buffer_manager, textures)
+    }
+
+    pub fn new_deferred(
+        pool: Arc<Pool>,
+        layout: Arc<SetLayout>,
+        uniform: Arc<RwLock<DynamicBuffer>>,
+        buffer_manager: &Arc<RwLock<BufferManager>>,
+        textures: Vec<Arc<RwLock<Texture>>>,
+    ) -> Self {
+        #[cfg(debug_assertions)]
+        {
+            if texture.len() != 4 {
+                vxlogf!("For deferred descriptor you need 4 textures.");
+            }
         }
+        Self::new(pool, layout, uniform, buffer_manager, textures)
     }
 
     fn create_buffer_info(
@@ -178,6 +182,7 @@ impl Set {
         let mut buff_info = vk::VkDescriptorBufferInfo::default();
         buff_info.buffer = vxresult!(buffer_manager.read()).cpu_buffer.vk_data;
         buff_info.range = vxresult!(uniform.buffers[0].0.read()).get_size() as vk::VkDeviceSize;
+        // for offset: it is dynamic uniform buffer, it will be fill later
         return buff_info;
     }
 
@@ -196,12 +201,12 @@ impl Set {
         return vk_data;
     }
 
-    fn new_pbr(
+    fn new(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: Arc<RwLock<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
-        textures: &[Arc<RwLock<Texture>>; 7],
+        textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
         let vk_data = Self::allocate_set(&pool, &layout);
         let buff_info = Self::create_buffer_info(&*vxresult!(uniform.read()), buffer_manager);
@@ -215,7 +220,7 @@ impl Set {
         let mut last_info_i = 1;
         let mut last_img_info_i = 0;
         let mut img_infos = vec![vk::VkDescriptorImageInfo::default(); textures.len()];
-        for texture in textures {
+        for texture in &textures {
             let texture = vxresult!(texture.read());
             img_infos[last_img_info_i].imageLayout =
                 vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -240,8 +245,6 @@ impl Set {
                 null(),
             );
         }
-        let mut textures = textures.to_vec();
-        textures.shrink_to_fit();
         Set {
             pool,
             layout,
@@ -259,10 +262,13 @@ impl Drop for Set {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Manager {
     pub buffer_manager: Arc<RwLock<BufferManager>>,
-    pub pbr_set_layout: Arc<SetLayout>,
+    pub gbuff_set_layout: Arc<SetLayout>,
     pub buffer_only_set_layout: Arc<SetLayout>,
+    pub deferred_set_layout: Arc<SetLayout>,
     pub pool: Arc<Pool>,
 }
+
+// todo it can in future cache the sets based on their buffer id and size and texture ids and samplers
 
 impl Manager {
     pub fn new(
@@ -271,25 +277,27 @@ impl Manager {
         conf: &Configurations,
     ) -> Self {
         let pool = Arc::new(Pool::new(logical_device.clone(), conf));
-        let pbr_set_layout = Arc::new(SetLayout::new_pbr(logical_device.clone()));
+        let gbuff_set_layout = Arc::new(SetLayout::new_gbuff(logical_device.clone()));
         let buffer_only_set_layout = Arc::new(SetLayout::new_buffer_only(logical_device.clone()));
+        let deferred_set_layout = Arc::new(SetLayout::new_deferred(logical_device.clone()));
         let buffer_manager = buffer_manager.clone();
         Manager {
             buffer_manager,
-            pbr_set_layout,
+            gbuff_set_layout,
             buffer_only_set_layout,
+            deferred_set_layout,
             pool,
         }
     }
 
-    pub fn create_pbr_set(
+    pub fn create_gbuff_set(
         &mut self,
         uniform: Arc<RwLock<DynamicBuffer>>,
         textures: &[Arc<RwLock<Texture>>; 7],
     ) -> Set {
-        Set::new_pbr(
+        Set::new_gbuff(
             self.pool.clone(),
-            self.pbr_set_layout.clone(),
+            self.gbuff_set_layout.clone(),
             uniform,
             &self.buffer_manager,
             textures,
@@ -302,6 +310,20 @@ impl Manager {
             self.buffer_only_set_layout.clone(),
             uniform,
             &self.buffer_manager,
+        )
+    }
+
+    pub fn create_deferred_set(
+        &mut self,
+        uniform: Arc<RwLock<DynamicBuffer>>,
+        textures: Vec<Arc<RwLock<Texture>>>,
+    ) -> Set {
+        Set::new_deferred(
+            self.pool.clone(),
+            self.deferred_set_layout.clone(),
+            uniform,
+            &self.buffer_manager,
+            textures,
         )
     }
 }

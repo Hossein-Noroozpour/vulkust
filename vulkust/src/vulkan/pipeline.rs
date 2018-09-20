@@ -4,14 +4,14 @@ use super::render_pass::RenderPass;
 use super::shader::Module;
 use super::vulkan as vk;
 use std::ffi::CString;
+use std::mem::{size_of, transmute};
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
-use std::mem::{size_of, transmute};
 
 macro_rules! include_shader {
     ($name:expr) => {
         include_bytes!(concat!(env!("OUT_DIR"), "/vulkan/shaders/", $name, ".spv"))
-    }
+    };
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -133,7 +133,7 @@ impl Pipeline {
         let fragment_shader = Module::new(frag_bytes, device.clone());
         let shader = vec![vertex_shader, fragment_shader];
         let layout = Layout::new_pbr(device.clone(), descriptor_manager);
-        
+
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
         input_assembly_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -158,7 +158,7 @@ impl Pipeline {
         for i in 0..blend_attachment_state_size {
             blend_attachment_state[i].colorWriteMask = 0xF;
         }
-        
+
         let mut color_blend_state = vk::VkPipelineColorBlendStateCreateInfo::default();
         color_blend_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -170,7 +170,7 @@ impl Pipeline {
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         viewport_state.viewportCount = 1;
         viewport_state.scissorCount = 1;
-        
+
         let dynamic_state_enables = [
             vk::VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT,
             vk::VkDynamicState::VK_DYNAMIC_STATE_SCISSOR,
@@ -181,7 +181,7 @@ impl Pipeline {
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         dynamic_state.pDynamicStates = dynamic_state_enables.as_ptr();
         dynamic_state.dynamicStateCount = dynamic_state_enables.len() as u32;
-        
+
         let mut depth_stencil_state = vk::VkPipelineDepthStencilStateCreateInfo::default();
         depth_stencil_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -194,26 +194,27 @@ impl Pipeline {
         depth_stencil_state.back.compareOp = vk::VkCompareOp::VK_COMPARE_OP_ALWAYS;
         depth_stencil_state.stencilTestEnable = 0;
         depth_stencil_state.front = depth_stencil_state.back;
-        
+
         let mut multisample_state = vk::VkPipelineMultisampleStateCreateInfo::default();
         multisample_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         if is_gbuff && samples as u32 > vk::VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX as u32 {
             multisample_state.rasterizationSamples = samples;
             multisample_state.sampleShadingEnable = vk::VK_TRUE;
-		    multisample_state.minSampleShading = 0.25;
+            multisample_state.minSampleShading = 0.25;
             // todo alph coverage does not included because I gonna use alpha channel for something else
             // todo it must be tested
             // multisample_state.alphaToCoverageEnable = vk::VK_TRUE;
             vxtodo!();
         } else {
-            multisample_state.rasterizationSamples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+            multisample_state.rasterizationSamples =
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         }
-        
+
         let mut vertex_input_binding = vk::VkVertexInputBindingDescription::default();
         vertex_input_binding.stride = 48; // bytes of vertex
         vertex_input_binding.inputRate = vk::VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
-        
+
         let mut vertex_attributes = vec![vk::VkVertexInputAttributeDescription::default(); 4];
         vertex_attributes[0].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
         vertex_attributes[1].location = 1;
@@ -225,11 +226,12 @@ impl Pipeline {
         vertex_attributes[3].location = 3;
         vertex_attributes[3].offset = 40;
         vertex_attributes[3].format = vk::VkFormat::VK_FORMAT_R32G32_SFLOAT;
-        
+
         let mut vertex_input_state = vk::VkPipelineVertexInputStateCreateInfo::default();
         vertex_input_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        if is_gbuff { // g-buff
+        if is_gbuff {
+            // g-buff
             vertex_input_state.vertexBindingDescriptionCount = 1;
             vertex_input_state.pVertexBindingDescriptions = &vertex_input_binding;
             vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.len() as u32;
@@ -237,17 +239,17 @@ impl Pipeline {
         }
 
         let mut specialization_entry = vk::VkSpecializationMapEntry::default();
-		specialization_entry.constantID = 0;
-		specialization_entry.offset = 0;
-		specialization_entry.size = size_of::<u32>();
-		
-		let specialization_data = samples as u32;
+        specialization_entry.constantID = 0;
+        specialization_entry.offset = 0;
+        specialization_entry.size = size_of::<u32>();
 
-		let mut specialization_info = vk::VkSpecializationInfo::default();
-		specialization_info.mapEntryCount = 1;
-		specialization_info.pMapEntries = &specialization_entry;
-		specialization_info.dataSize = size_of::<u32>();
-		specialization_info.pData = unsafe { transmute(&specialization_data) };
+        let specialization_data = samples as u32;
+
+        let mut specialization_info = vk::VkSpecializationInfo::default();
+        specialization_info.mapEntryCount = 1;
+        specialization_info.pMapEntries = &specialization_entry;
+        specialization_info.dataSize = size_of::<u32>();
+        specialization_info.pData = unsafe { transmute(&specialization_data) };
 
         let stage_name = CString::new("main").unwrap();
         let stages_count = shader.len();
@@ -260,18 +262,18 @@ impl Pipeline {
             match i {
                 0 => {
                     shader_stages[i].stage = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
-                },
+                }
                 1 => {
-                    shader_stages[i].stage = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+                    shader_stages[i].stage =
+                        vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
                     if !is_gbuff {
                         shader_stages[i].pSpecializationInfo = &specialization_info;
                     }
-                },
+                }
                 n @ _ => {
                     vxlogf!("Stage {} is not implemented yet!", n);
                 }
             };
-
         }
 
         let mut pipeline_create_info = vk::VkGraphicsPipelineCreateInfo::default();
