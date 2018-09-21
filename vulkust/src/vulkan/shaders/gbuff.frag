@@ -13,20 +13,20 @@ layout (location = 4) in vec2 uv;
 layout (location = 0) out vec4 out_color;
 
 layout (set = 0, binding = 0) uniform SceneUBO {
-	mat4 view;
-	mat4 projection;
-	mat4 view_projection;
-  vec3 camera_pos;
+    mat4 view;
+    mat4 projection;
+    mat4 view_projection;
+    vec3 camera_pos;
 } scene_ubo;
 
 layout (set = 1, binding = 0) uniform ModelUBO {
-	mat4 model;
+    mat4 model;
 } model_ubo;
 
 layout (set = 2, binding = 0) uniform MaterialUBO {
     float alpha;
     float alpha_cutoff;
-	  float metallic_factor;
+    float metallic_factor;
     float normal_scale;
     float occlusion_strength;
     float roughness_factor;
