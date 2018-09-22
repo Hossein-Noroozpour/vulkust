@@ -167,23 +167,27 @@ impl Engine {
             &self.wait_fences[current_buffer].vk_data,
         ));
         *vxresult!(self.frame_number.write()) = current_buffer as u32;
-        let mut clear_values = [vk::VkClearValue::default(); 2];
-        clear_values[0].data = [0.2, 0.2, 0.2, 1.0];
-        clear_values[1].data = [1.0, 0.0, 0.0, 0.0];
+        let clear_values = [
+            vk::VkClearValue { data: [0.0, 0.0, 0.0, 0.0], },
+            vk::VkClearValue { data: [0.0, 0.0, 0.0, 0.0], },
+            vk::VkClearValue { data: [0.0, 0.0, 0.0, 0.0], },
+            vk::VkClearValue { data: [1.0, 0.0, 0.0, 0.0], },
+        ];
         let surface_caps = &self.physical_device.surface_caps;
+        let frame_number = *vxresult!(self.frame_number.read()) as usize;
+
         let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
         render_pass_begin_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_begin_info.renderPass = self.render_pass.vk_data;
+        render_pass_begin_info.renderPass = self.g_render_pass.vk_data;
         render_pass_begin_info.renderArea.offset.x = 0;
         render_pass_begin_info.renderArea.offset.y = 0;
         render_pass_begin_info.renderArea.extent.width = surface_caps.currentExtent.width;
         render_pass_begin_info.renderArea.extent.height = surface_caps.currentExtent.height;
         render_pass_begin_info.clearValueCount = clear_values.len() as u32;
         render_pass_begin_info.pClearValues = clear_values.as_ptr();
-        let frame_number = vxresult!(self.frame_number.read());
-        let frame_number = *frame_number as usize;
-        render_pass_begin_info.framebuffer = self.framebuffers[frame_number].vk_data;
+        render_pass_begin_info.framebuffer = self.g_framebuffer.vk_data;
+
         let mut viewport = vk::VkViewport::default();
         viewport.x = 0.0;
         viewport.y = 0.0;
@@ -191,14 +195,15 @@ impl Engine {
         viewport.width = surface_caps.currentExtent.width as f32;
         viewport.minDepth = 0.0;
         viewport.maxDepth = 1.0;
+
         let mut scissor = vk::VkRect2D::default();
         scissor.extent.width = surface_caps.currentExtent.width;
         scissor.extent.height = surface_caps.currentExtent.height;
         scissor.offset.x = 0;
         scissor.offset.y = 0;
-        let draw_command = &self.draw_commands[frame_number];
-        let mut draw_command = vxresult!(draw_command.write());
-        draw_command.reset();
+
+        let mut draw_command = vxresult!(self.draw_commands[frame_number].write());
+        // draw_command.reset(); // todo I don't think it is necessary
         draw_command.begin();
         draw_command.begin_render_pass_with_info(render_pass_begin_info);
         draw_command.set_viewport(viewport);
