@@ -34,9 +34,10 @@ pub struct Engine {
     pub logical_device: Arc<LogicalDevice>,
     pub swapchain: Arc<Swapchain>,
     pub present_complete_semaphore: Arc<Semaphore>,
+    pub gbuff_complete_semaphore: Arc<Semaphore>,
     pub render_complete_semaphore: Arc<Semaphore>,
     pub graphic_cmd_pool: Arc<CmdPool>,
-    pub draw_commands: Vec<Arc<RwLock<CmdBuffer>>>,
+    pub draw_commands: Vec<Arc<RwLock<(CmdBuffer, CmdBuffer)>>>, // gbuff, deferred
     pub memory_mgr: Arc<RwLock<MemoryManager>>,
     pub samples_count: vk::VkSampleCountFlagBits,
     pub depth_stencil_image_view: Arc<ImageView>,
@@ -62,12 +63,16 @@ impl Engine {
         let logical_device = Arc::new(LogicalDevice::new(&physical_device));
         let swapchain = Arc::new(Swapchain::new(&logical_device));
         let present_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
+        let gbuff_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let render_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let graphic_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Graphic, 0));
         let mut draw_commands = Vec::new();
         let mut wait_fences = Vec::new();
         for _ in 0..swapchain.image_views.len() {
-            let draw_command = Arc::new(RwLock::new(CmdBuffer::new(graphic_cmd_pool.clone())));
+            let draw_command = Arc::new(RwLock::new((
+                CmdBuffer::new(graphic_cmd_pool.clone()),
+                CmdBuffer::new(graphic_cmd_pool.clone()),
+            )));
             draw_commands.push(draw_command);
             wait_fences.push(Arc::new(Fence::new_signaled(logical_device.clone())));
         }
@@ -111,8 +116,10 @@ impl Engine {
         )));
         let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(
             &logical_device,
-            &descriptor_manager,
-            &render_pass,
+            descriptor_manager.clone(),
+            render_pass.clone(),
+            g_render_pass.clone(),
+            samples_count,
         )));
         let os_app = os_app.clone();
         Engine {
@@ -123,6 +130,7 @@ impl Engine {
             logical_device,
             swapchain,
             present_complete_semaphore,
+            gbuff_complete_semaphore,
             render_complete_semaphore,
             graphic_cmd_pool,
             draw_commands,
@@ -144,7 +152,7 @@ impl Engine {
         }
     }
 
-    pub fn start_recording(&mut self) {
+    fn wait_for_preset_frame(&self) -> usize {
         let current_buffer = match self
             .swapchain
             .get_next_image_index(&self.present_complete_semaphore)
@@ -167,56 +175,28 @@ impl Engine {
             &self.wait_fences[current_buffer].vk_data,
         ));
         *vxresult!(self.frame_number.write()) = current_buffer as u32;
-        let clear_values = [
-            vk::VkClearValue { data: [0.0, 0.0, 0.0, 0.0], },
-            vk::VkClearValue { data: [0.0, 0.0, 0.0, 0.0], },
-            vk::VkClearValue { data: [0.0, 0.0, 0.0, 0.0], },
-            vk::VkClearValue { data: [1.0, 0.0, 0.0, 0.0], },
-        ];
-        let surface_caps = &self.physical_device.surface_caps;
-        let frame_number = *vxresult!(self.frame_number.read()) as usize;
-
-        let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
-        render_pass_begin_info.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_begin_info.renderPass = self.g_render_pass.vk_data;
-        render_pass_begin_info.renderArea.offset.x = 0;
-        render_pass_begin_info.renderArea.offset.y = 0;
-        render_pass_begin_info.renderArea.extent.width = surface_caps.currentExtent.width;
-        render_pass_begin_info.renderArea.extent.height = surface_caps.currentExtent.height;
-        render_pass_begin_info.clearValueCount = clear_values.len() as u32;
-        render_pass_begin_info.pClearValues = clear_values.as_ptr();
-        render_pass_begin_info.framebuffer = self.g_framebuffer.vk_data;
-
-        let mut viewport = vk::VkViewport::default();
-        viewport.x = 0.0;
-        viewport.y = 0.0;
-        viewport.height = surface_caps.currentExtent.height as f32;
-        viewport.width = surface_caps.currentExtent.width as f32;
-        viewport.minDepth = 0.0;
-        viewport.maxDepth = 1.0;
-
-        let mut scissor = vk::VkRect2D::default();
-        scissor.extent.width = surface_caps.currentExtent.width;
-        scissor.extent.height = surface_caps.currentExtent.height;
-        scissor.offset.x = 0;
-        scissor.offset.y = 0;
-
-        let mut draw_command = vxresult!(self.draw_commands[frame_number].write());
-        // draw_command.reset(); // todo I don't think it is necessary
-        draw_command.begin();
-        draw_command.begin_render_pass_with_info(render_pass_begin_info);
-        draw_command.set_viewport(viewport);
-        draw_command.set_scissor(scissor);
+        return current_buffer;
     }
 
-    pub fn end_recording(&mut self) {
-        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
-        let draw_command = &self.draw_commands[frame_number];
-        let mut draw_command = vxresult!(draw_command.write());
-        draw_command.end_render_pass();
-        draw_command.end();
+    pub fn start_recording(&self) {
         vxresult!(self.buffer_manager.write()).update();
+        let frame_number = self.wait_for_preset_frame();
+
+        let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
+        // draw_command.reset(); // todo I don't think it is necessary
+        cmd_buffers.0.begin();
+
+        self.g_framebuffer.begin_render(&mut cmd_buffers.0);
+    }
+
+    pub fn start_deferred(&self) {
+        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+        let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
+
+        self.g_framebuffer.end_render(&mut cmd_buffers.0);
+
+        cmd_buffers.0.end();
+
         let wait_stage_mask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
         let mut submit_info = vk::VkSubmitInfo::default();
@@ -224,9 +204,41 @@ impl Engine {
         submit_info.pWaitDstStageMask = &wait_stage_mask;
         submit_info.pWaitSemaphores = &self.present_complete_semaphore.vk_data;
         submit_info.waitSemaphoreCount = 1;
+        submit_info.pSignalSemaphores = &self.gbuff_complete_semaphore.vk_data;
+        submit_info.signalSemaphoreCount = 1;
+        submit_info.pCommandBuffers = &cmd_buffers.0.vk_data;
+        submit_info.commandBufferCount = 1;
+        vulkan_check!(vk::vkQueueSubmit(
+            self.logical_device.vk_graphic_queue,
+            1,
+            &submit_info,
+            0 as vk::VkFence,
+        ));
+
+        cmd_buffers.1.begin();
+        self.framebuffers[frame_number].begin_render(&mut cmd_buffers.1);
+    }
+
+    pub fn end_recording(&mut self) {
+        let frame_number = *vxresult!(self.frame_number.read()) as usize;
+        let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
+        // vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, useMSAA ? pipelines.deferred : pipelines.deferredNoMSAA);
+        // vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
+
+        self.framebuffers[frame_number].end_render(&mut cmd_buffers.1);
+
+        cmd_buffers.1.end();
+
+        let wait_stage_mask =
+            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+        let mut submit_info = vk::VkSubmitInfo::default();
+        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.pWaitDstStageMask = &wait_stage_mask;
+        submit_info.pWaitSemaphores = &self.gbuff_complete_semaphore.vk_data;
+        submit_info.waitSemaphoreCount = 1;
         submit_info.pSignalSemaphores = &self.render_complete_semaphore.vk_data;
         submit_info.signalSemaphoreCount = 1;
-        submit_info.pCommandBuffers = &draw_command.vk_data;
+        submit_info.pCommandBuffers = &cmd_buffers.1.vk_data;
         submit_info.commandBufferCount = 1;
         vulkan_check!(vk::vkQueueSubmit(
             self.logical_device.vk_graphic_queue,
@@ -234,6 +246,7 @@ impl Engine {
             &submit_info,
             self.wait_fences[frame_number].vk_data,
         ));
+
         let image_index = frame_number as u32;
         let mut present_info = vk::VkPresentInfoKHR::default();
         present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -258,7 +271,7 @@ impl Engine {
         uniform_buffer: &DynamicBuffer,
         index: usize,
     ) {
-        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize; // todo temporary
         self.bound_pbr_descriptor_sets[index] = descriptor_set.vk_data;
         self.bound_pbr_dynamic_offsets[index] =
             vxresult!(uniform_buffer.buffers[frame_number].0.read())
@@ -268,11 +281,11 @@ impl Engine {
     }
 
     pub fn bind_pbr_pipeline(&self) {
-        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize; // todo temporary
         let draw_command = &self.draw_commands[frame_number];
         let mut draw_command = vxresult!(draw_command.write());
         let pipemgr = vxresult!(self.pipeline_manager.read());
-        draw_command.bind_pipeline(&pipemgr.pbr_pipeline);
+        draw_command.0.bind_pipeline(&pipemgr.gbuff_pipeline);
     }
 
     pub fn render_pbr(
@@ -285,14 +298,14 @@ impl Engine {
         let draw_command = &self.draw_commands[frame_number];
         let mut draw_command = vxresult!(draw_command.write());
         let pipemgr = vxresult!(self.pipeline_manager.read());
-        draw_command.bind_descriptor_sets(
-            &pipemgr.pbr_pipeline.layout,
+        draw_command.0.bind_descriptor_sets(
+            &pipemgr.gbuff_pipeline.layout,
             &self.bound_pbr_descriptor_sets,
             &self.bound_pbr_dynamic_offsets,
         );
-        draw_command.bind_vertex_buffer(&vertex_buffer.buffer);
-        draw_command.bind_index_buffer(&index_buffer.buffer);
-        draw_command.draw_index(indices_count);
+        draw_command.0.bind_vertex_buffer(&vertex_buffer.buffer);
+        draw_command.0.bind_index_buffer(&index_buffer.buffer);
+        draw_command.0.draw_index(indices_count);
     }
 
     pub fn create_texture(&self, file_name: &str) -> Arc<ImageView> {

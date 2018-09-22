@@ -28,7 +28,7 @@ impl Layout {
     ) -> Self {
         let mut vk_data = 0 as vk::VkPipelineLayout;
         let descriptor_manager = vxresult!(descriptor_manager.read());
-        let pbr_descriptor_set_layout = descriptor_manager.pbr_set_layout.clone();
+        let pbr_descriptor_set_layout = descriptor_manager.gbuff_set_layout.clone();
         let buffer_only_descriptor_set_layout = descriptor_manager.buffer_only_set_layout.clone();
         let set_layouts = [
             buffer_only_descriptor_set_layout.vk_data,

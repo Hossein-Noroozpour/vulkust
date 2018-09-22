@@ -178,7 +178,7 @@ impl Material {
         uniform.occlusion_strength = read_value(reader);
         // RoughnessFactor
         uniform.roughness_factor = read_value(reader);
-        let textures = [
+        let textures = vec![
             base_color.clone(),
             base_color_factor.clone(),
             metallic_roughness.clone(),
@@ -189,7 +189,7 @@ impl Material {
         ];
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
-        let descriptor_set = descriptor_manager.create_pbr_set(uniform_buffer.clone(), &textures);
+        let descriptor_set = descriptor_manager.create_gbuff_set(uniform_buffer.clone(), textures);
         let descriptor_set = Arc::new(descriptor_set);
         Material {
             base_color,
@@ -222,7 +222,7 @@ impl Material {
         let metallic_roughness = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
         let normal = texture_manager.create_2d_with_color(&*eng, [127, 127, 255, 255]);
         let occlusion = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
-        let textures = [
+        let textures = vec![
             base_color.clone(),
             base_color_factor.clone(),
             metallic_roughness.clone(),
@@ -232,7 +232,7 @@ impl Material {
             emissive_factor.clone(),
         ];
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
-        let descriptor_set = descriptor_manager.create_pbr_set(uniform_buffer.clone(), &textures);
+        let descriptor_set = descriptor_manager.create_gbuff_set(uniform_buffer.clone(), textures);
         let descriptor_set = Arc::new(descriptor_set);
         Material {
             base_color,
@@ -250,7 +250,7 @@ impl Material {
     }
 
     pub fn finalize_textures_change(&mut self, eng: &Engine) {
-        let textures = [
+        let textures = vec![
             self.base_color.clone(),
             self.base_color_factor.clone(),
             self.metallic_roughness.clone(),
@@ -262,7 +262,7 @@ impl Material {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
         let descriptor_set =
-            descriptor_manager.create_pbr_set(self.uniform_buffer.clone(), &textures);
+            descriptor_manager.create_gbuff_set(self.uniform_buffer.clone(), textures);
         self.descriptor_set = Arc::new(descriptor_set);
     }
 

@@ -1,5 +1,4 @@
 #version 450
-#define VULKAN 110
 
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
@@ -9,8 +8,6 @@ layout (location = 1) in vec3 nrm;
 layout (location = 2) in vec3 tng;
 layout (location = 3) in vec3 btg;
 layout (location = 4) in vec2 uv;
-
-layout (location = 0) out vec4 out_color;
 
 layout (set = 0, binding = 0) uniform SceneUBO {
     mat4 view;

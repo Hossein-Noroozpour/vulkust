@@ -15,13 +15,15 @@ use std::sync::{Arc, RwLock};
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Image {
     pub logical_device: Arc<LogicalDevice>,
-    pub vk_data: vk::VkImage,
     pub layout: vk::VkImageLayout,
     pub format: vk::VkFormat,
     pub mips_count: u8,
     pub samples: vk::VkSampleCountFlagBits,
     pub usage: vk::VkImageUsageFlags,
     pub memory: Option<Arc<RwLock<Memory>>>,
+    width: u32,
+    height: u32,
+    pub vk_data: vk::VkImage,
 }
 
 impl Image {
@@ -61,6 +63,8 @@ impl Image {
             mips_count: info.mipLevels as u8,
             samples: info.samples,
             usage: info.usage,
+            width: info.extent.width,
+            height: info.extent.height,
             memory: Some(memory),
         }
     }
@@ -71,6 +75,8 @@ impl Image {
         layout: vk::VkImageLayout,
         format: vk::VkFormat,
         usage: vk::VkImageUsageFlags,
+        width: u32,
+        height: u32,
         samples: vk::VkSampleCountFlagBits,
     ) -> Self {
         Image {
@@ -81,6 +87,8 @@ impl Image {
             vk_data,
             usage,
             samples,
+            width,
+            height,
             memory: None,
         }
     }
@@ -197,6 +205,10 @@ impl Image {
         cmd.pipeline_image_barrier(src_stage, dst_stage, 0, &barrier);
         self.layout = new_layout;
     }
+
+    pub fn get_dimensions(&self) -> (u32, u32) {
+        return (self.width, self.height);
+    }
 }
 
 impl Drop for Image {
@@ -237,6 +249,8 @@ impl View {
         format: vk::VkFormat,
         layout: vk::VkImageLayout,
         usage: vk::VkImageUsageFlags,
+        width: u32,
+        height: u32,
         samples: vk::VkSampleCountFlagBits,
     ) -> Self {
         Self::new_with_image(Arc::new(RwLock::new(Image::new_with_vk_data(
@@ -245,6 +259,8 @@ impl View {
             layout,
             format,
             usage,
+            width,
+            height,
             samples,
         ))))
     }

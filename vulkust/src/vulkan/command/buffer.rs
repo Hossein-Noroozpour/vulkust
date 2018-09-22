@@ -53,14 +53,14 @@ impl Buffer {
             );
         }
     }
-    pub fn set_viewport(&mut self, viewport: vk::VkViewport) {
+    pub fn set_viewport(&mut self, viewport: &vk::VkViewport) {
         unsafe {
-            vk::vkCmdSetViewport(self.vk_data, 0, 1, &viewport);
+            vk::vkCmdSetViewport(self.vk_data, 0, 1, viewport);
         }
     }
-    pub fn set_scissor(&mut self, rec: vk::VkRect2D) {
+    pub fn set_scissor(&mut self, rec: &vk::VkRect2D) {
         unsafe {
-            vk::vkCmdSetScissor(self.vk_data, 0, 1, &rec);
+            vk::vkCmdSetScissor(self.vk_data, 0, 1, rec);
         }
     }
 

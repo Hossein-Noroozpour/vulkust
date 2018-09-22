@@ -73,8 +73,9 @@ impl Engine {
     }
 
     pub fn update(&self) {
-        vxresult!(self.gapi_engine.write()).start_recording();
+        vxresult!(self.gapi_engine.read()).start_recording();
         vxresult!(self.scene_manager.read()).render();
+        vxresult!(self.gapi_engine.read()).start_deferred();
         vxresult!(self.gapi_engine.write()).end_recording();
     }
 

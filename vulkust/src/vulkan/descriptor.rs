@@ -4,7 +4,6 @@ use super::super::render::texture::Texture;
 use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
-use std::cmp::max;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
@@ -94,7 +93,7 @@ impl SetLayout {
         }
     }
 
-    fn create_binding_info(images_count: usize) {
+    fn create_binding_info(images_count: usize) -> Vec<vk::VkDescriptorSetLayoutBinding> {
         let mut layout_bindings =
             vec![vk::VkDescriptorSetLayoutBinding::default(); 1 + images_count];
         layout_bindings[0].binding = 0;
@@ -152,7 +151,7 @@ impl Set {
     ) -> Self {
         #[cfg(debug_assertions)]
         {
-            if texture.len() != 7 {
+            if textures.len() != 7 {
                 vxlogf!("For gbuffer filler descriptor you need 7 textures.");
             }
         }
@@ -168,7 +167,7 @@ impl Set {
     ) -> Self {
         #[cfg(debug_assertions)]
         {
-            if texture.len() != 4 {
+            if textures.len() != 4 {
                 vxlogf!("For deferred descriptor you need 4 textures.");
             }
         }
@@ -293,7 +292,7 @@ impl Manager {
     pub fn create_gbuff_set(
         &mut self,
         uniform: Arc<RwLock<DynamicBuffer>>,
-        textures: &[Arc<RwLock<Texture>>; 7],
+        textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Set {
         Set::new_gbuff(
             self.pool.clone(),
