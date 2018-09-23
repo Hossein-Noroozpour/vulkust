@@ -1,5 +1,5 @@
 use super::super::core::object::Object as CoreObject;
-use super::super::core::types::{ Id, Real };
+use super::super::core::types::{Id, Real};
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
@@ -8,7 +8,6 @@ use math;
 use std::collections::BTreeMap;
 use std::convert::From;
 use std::sync::{Arc, RwLock, Weak};
-
 
 #[repr(C)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -28,7 +27,12 @@ impl Uniform {
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         );
         let position = math::Vector3::new(0.0, 0.0, 0.0);
-        Uniform { view, projection, view_projection: projection, position, }
+        Uniform {
+            view,
+            projection,
+            view_projection: projection,
+            position,
+        }
     }
 }
 

@@ -2,18 +2,18 @@ use super::buffer::DynamicBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::GraphicApiEngine;
 use super::scene::Manager as SceneManager;
-use std::sync::{Arc, RwLock};
 use std::mem::size_of;
+use std::sync::{Arc, RwLock};
 
 #[repr(C)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
     samples_count: u32,
-	inverse_samples_count: f32,
-	window_width: f32,
-	window_height: f32,
-	pixel_x_step: f32,
-	pixel_y_step: f32,
+    inverse_samples_count: f32,
+    window_width: f32,
+    window_height: f32,
+    pixel_x_step: f32,
+    pixel_y_step: f32,
 }
 
 impl Uniform {
@@ -49,13 +49,13 @@ impl Deferred {
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let mut textures = Vec::new();
         for v in vxunwrap!(&gapi_engine.g_render_pass.views) {
-            textures.push(texture_manager.create_2d_with_view_sampler(
-                v.clone(), sampler.clone()));
+            textures.push(texture_manager.create_2d_with_view_sampler(v.clone(), sampler.clone()));
         }
         textures.shrink_to_fit();
-        let descriptor_set = descriptor_manager.create_deferred_set(uniform_buffer.clone(), textures);
+        let descriptor_set =
+            descriptor_manager.create_deferred_set(uniform_buffer.clone(), textures);
         let descriptor_set = Arc::new(descriptor_set);
-        
+
         Deferred {
             uniform,
             uniform_buffer,

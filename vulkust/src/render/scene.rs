@@ -1,9 +1,6 @@
+use super::super::core::constants::{MAX_DIRECTIONAL_LIGHTS_COUNT, MAX_POINT_LIGHTS_COUNT};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, TypeId as CoreTypeId};
-use super::super::core::constants::{
-    MAX_DIRECTIONAL_LIGHTS_COUNT,
-    MAX_POINT_LIGHTS_COUNT
-};
 use super::super::system::file::File;
 use super::buffer::DynamicBuffer;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager, Uniform as CameraUniform};
@@ -11,7 +8,7 @@ use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::font::Manager as FontManager;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::light::{Light, DirectionalUniform, Manager as LightManager, PointUniform};
+use super::light::{DirectionalUniform, Light, Manager as LightManager, PointUniform};
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
@@ -227,7 +224,7 @@ pub struct Uniform {
 impl Uniform {
     pub fn new() -> Self {
         let camera = CameraUniform::new();
-        Uniform { 
+        Uniform {
             camera,
             directional_lights: [DirectionalUniform::new(); MAX_DIRECTIONAL_LIGHTS_COUNT],
             directional_lights_count: 0,

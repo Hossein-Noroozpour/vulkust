@@ -394,6 +394,7 @@ impl Manager {
             return;
         }
         let mut cmd = CmdBuffer::new(self.cmd_pool.clone());
+        cmd.begin();
         if self.copy_ranges.len() != 0 {
             cmd.copy_buffer(
                 self.cpu_buffer.vk_data,

@@ -40,6 +40,7 @@ impl Logical {
         }
         let mut features = vk::VkPhysicalDeviceFeatures::default();
         features.samplerAnisotropy = vk::VK_TRUE;
+        features.sampleRateShading = vk::VK_TRUE;
         let mut device_create_info = vk::VkDeviceCreateInfo::default();
         device_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         device_create_info.queueCreateInfoCount = queue_create_info_s.len() as u32;

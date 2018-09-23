@@ -58,7 +58,10 @@ impl Engine {
         let gapi_engine = GraphicApiEngine::new(os_app, &config.render);
         let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
         gx3d_import(&scene_manager);
-        let deferred = Arc::new(RwLock::new(Deferred::new(&gapi_engine, &*vxresult!(scene_manager.read()))));
+        let deferred = Arc::new(RwLock::new(Deferred::new(
+            &gapi_engine,
+            &*vxresult!(scene_manager.read()),
+        )));
         let gapi_engine = Arc::new(RwLock::new(gapi_engine));
         let myself = None;
         Engine {

@@ -20,9 +20,7 @@ pub struct Layout {
 }
 
 impl Layout {
-    pub fn new_gbuff(
-        descriptor_manager: &Arc<RwLock<DescriptorManager>>,
-    ) -> Self {
+    pub fn new_gbuff(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
         let gbuff_descriptor_set_layout = descriptor_manager.gbuff_set_layout.clone();
         let buffer_only_descriptor_set_layout = descriptor_manager.buffer_only_set_layout.clone();
@@ -32,21 +30,22 @@ impl Layout {
             gbuff_descriptor_set_layout.vk_data,
         ];
         let descriptor_set_layouts = vec![
-            gbuff_descriptor_set_layout, 
-            buffer_only_descriptor_set_layout
+            gbuff_descriptor_set_layout,
+            buffer_only_descriptor_set_layout,
         ];
         Self::new(&layout, descriptor_set_layouts)
     }
 
-    pub fn new_deferred(
-        descriptor_manager: &Arc<RwLock<DescriptorManager>>,
-    ) -> Self {
+    pub fn new_deferred(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
         let deferred_descriptor_set_layout = descriptor_manager.deferred_set_layout.clone();
+        let buffer_only_descriptor_set_layout = descriptor_manager.buffer_only_set_layout.clone();
         let layout = [
+            buffer_only_descriptor_set_layout.vk_data,
             deferred_descriptor_set_layout.vk_data,
         ];
         let descriptor_set_layouts = vec![
+            buffer_only_descriptor_set_layout,
             deferred_descriptor_set_layout,
         ];
         Self::new(&layout, descriptor_set_layouts)
@@ -195,7 +194,7 @@ impl Pipeline {
         rasterization_state.lineWidth = 1.0f32;
 
         let blend_attachment_state_size = if let Some(views) = &render_pass.views {
-            views.len()
+            views.len() - 1
         } else {
             1
         };

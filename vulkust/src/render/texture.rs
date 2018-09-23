@@ -129,7 +129,11 @@ impl Manager {
         return tex;
     }
 
-    pub fn create_2d_with_view_sampler(&mut self, image_view: Arc<ImageView>, sampler: Arc<Sampler>) -> Arc<RwLock<Texture>> {
+    pub fn create_2d_with_view_sampler(
+        &mut self,
+        image_view: Arc<ImageView>,
+        sampler: Arc<Sampler>,
+    ) -> Arc<RwLock<Texture>> {
         let tex = Texture2D::new_with_view_sampler(image_view, sampler);
         let id = tex.get_id();
         let tex: Arc<RwLock<Texture>> = Arc::new(RwLock::new(tex));
@@ -178,7 +182,7 @@ impl Texture2D {
             image_view,
             sampler,
         }
-    } 
+    }
 }
 
 impl CoreObject for Texture2D {

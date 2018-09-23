@@ -26,9 +26,6 @@ impl Buffer {
             &cmd_buf_allocate_info,
             &mut vk_data,
         ));
-        let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
-        cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        vulkan_check!(vk::vkBeginCommandBuffer(vk_data, &cmd_buf_info));
         Buffer {
             pool: pool.clone(),
             vk_data: vk_data,
