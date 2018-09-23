@@ -1,5 +1,5 @@
 use super::super::core::object::Object as CoreObject;
-use super::super::core::types::Id;
+use super::super::core::types::{Id, Real};
 use super::camera::Orthographic;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
@@ -146,5 +146,44 @@ impl Manager {
         };
         self.lights.insert(id, Arc::downgrade(&result));
         return result;
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct PointUniform {
+	color: math::Vector3<Real>,
+	radius: Real,
+	position: math::Vector3<Real>,
+}
+
+impl PointUniform {
+    pub fn new() -> Self {
+        PointUniform {
+            color: math::Vector3::new(0.0, 0.0, 0.0),
+            radius: 0.0,
+            position: math::Vector3::new(0.0, 0.0, 0.0),
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct DirectionalUniform {
+	color: math::Vector3<Real>,
+	direction: math::Vector3<Real>,
+	view_projection_biased: math::Matrix4<Real>,
+}
+
+impl DirectionalUniform {
+    pub fn new() -> Self {
+        DirectionalUniform {
+            color: math::Vector3::new(0.0, 0.0, 0.0),
+            direction: math::Vector3::new(0.0, 0.0, -1.0),
+            view_projection_biased: math::Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0),
+        }
     }
 }

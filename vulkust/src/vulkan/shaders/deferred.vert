@@ -6,29 +6,40 @@
 #define MAX_POINT_LIGHTS_COUNT 32
 #define MAX_DIRECTIONAL_LIGHTS_COUNT 8
 
-struct PointLight {
+struct Camera {
 	vec3 position;
+	mat4 projection;
+	mat4 view;
+	mat4 view_projection;
+};
+
+struct PointLight {
 	vec3 color;
+	vec3 position;
 	float radius;
 };
 
 struct DirectionalLight {
-	vec3 direction;
 	vec3 color;
+	vec3 direction;
 	mat4 view_projection_biased;
 };
 
-layout (set = 0, binding = 0) uniform UBO {
-	PointLight point_lights[MAX_POINT_LIGHTS_COUNT];
+layout (set = 0, binding = 0) uniform SceneUBO {
+	Camera camera;
 	DirectionalLight directional_lights[MAX_DIRECTIONAL_LIGHTS_COUNT];
-	uint point_lights_count;
 	uint directional_lights_count;
-	uint samples_count;
+	PointLight point_lights[MAX_POINT_LIGHTS_COUNT];
+	uint point_lights_count;
+} scene_ubo;
+
+layout (set = 1, binding = 0) uniform UBO {
 	float inverse_samples_count;
-	float window_width;
-	float window_height;
 	float pixel_x_step;
 	float pixel_y_step;
+	uint samples_count;
+	float window_height;
+	float window_width;
 } deferred_ubo;
 
 layout (location = 0) out vec2 out_uv;

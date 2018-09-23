@@ -13,10 +13,10 @@ use std::sync::{Arc, RwLock, Weak};
 #[repr(C)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
-    pub view: math::Matrix4<Real>,
-    pub projection: math::Matrix4<Real>,
-    pub view_projection: math::Matrix4<Real>,
     pub position: math::Vector3<Real>,
+    pub projection: math::Matrix4<Real>,
+    pub view: math::Matrix4<Real>,
+    pub view_projection: math::Matrix4<Real>,
 }
 
 impl Uniform {

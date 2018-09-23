@@ -2,6 +2,7 @@ use super::super::core::application::Application as CoreAppTrait;
 use super::super::core::event::Event;
 use super::super::system::os::application::Application as OsApp;
 use super::camera::DefaultCamera;
+use super::deferred::Deferred;
 use super::gx3d::import as gx3d_import;
 use super::model::DefaultModel;
 use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
@@ -47,15 +48,18 @@ pub struct Engine {
     pub os_app: Weak<RwLock<OsApp>>,
     pub core_app: Arc<RwLock<CoreAppTrait>>,
     pub scene_manager: Arc<RwLock<SceneManager>>,
+    pub deferred: Arc<RwLock<Deferred>>,
     pub timing: Arc<RwLock<Timing>>,
 }
 
 impl Engine {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let config = &vxresult!(core_app.read()).get_config();
-        let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app, &config.render)));
+        let gapi_engine = GraphicApiEngine::new(os_app, &config.render);
         let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
         gx3d_import(&scene_manager);
+        let deferred = Arc::new(RwLock::new(Deferred::new(&gapi_engine, &*vxresult!(scene_manager.read()))));
+        let gapi_engine = Arc::new(RwLock::new(gapi_engine));
         let myself = None;
         Engine {
             myself,
@@ -63,6 +67,7 @@ impl Engine {
             os_app: Arc::downgrade(os_app),
             core_app,
             scene_manager,
+            deferred,
             timing: Arc::new(RwLock::new(Timing::new())),
         }
     }
