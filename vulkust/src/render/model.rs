@@ -88,7 +88,6 @@ impl Manager {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
     pub model: math::Matrix4<f32>,
-    pub model_view_projection: math::Matrix4<f32>,
     // todo, I think its not gonna be needed,
     // because of cascaded shadow
     // pub directional_biased_model: math::Matrix4<f32>,
@@ -104,7 +103,6 @@ impl Uniform {
         );
         Uniform {
             model,
-            model_view_projection: model,
         }
     }
 
@@ -129,7 +127,6 @@ impl Uniform {
         );
         Uniform {
             model,
-            model_view_projection: model,
         }
     }
 
@@ -139,7 +136,6 @@ impl Uniform {
         );
         Uniform {
             model: m,
-            model_view_projection: m,
         }
     }
 }
@@ -324,7 +320,6 @@ impl Loadable for Base {
 
 impl Model for Base {
     fn update(&mut self, scene_uniform: &SceneUniform) {
-        self.uniform.model_view_projection = scene_uniform.view_projection * self.uniform.model;
         for (_, model) in &self.children {
             let mut model = vxresult!(model.write());
             Model::update(&mut *model, scene_uniform);

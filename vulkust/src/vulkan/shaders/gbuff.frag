@@ -9,11 +9,15 @@ layout (location = 2) in vec3 tng;
 layout (location = 3) in vec3 btg;
 layout (location = 4) in vec2 uv;
 
+struct Camera {
+	mat4 view;
+	mat4 projection;
+	mat4 view_projection;
+	vec3 position;
+};
+
 layout (set = 0, binding = 0) uniform SceneUBO {
-    mat4 view;
-    mat4 projection;
-    mat4 view_projection;
-    vec3 camera_pos;
+	Camera camera;
 } scene_ubo;
 
 layout (set = 1, binding = 0) uniform ModelUBO {
@@ -41,11 +45,10 @@ layout (location = 0) out vec4 out_pos;
 layout (location = 1) out vec4 out_nrm;
 layout (location = 2) out vec4 out_alb;
 
-void main() 
-{
+void main() {
   out_pos.xyz = pos;
-  out_nrm.xyz = mat3(tng, btg, nrm) * ((texture(normal, uv).xyz * 2.0) - vec3(1));
-  out_alb.xyz = (texture(base_color, uv) * texture(base_color_factor, uv)).xyz;
+  out_nrm.xyz = mat3(tng, btg, nrm) * ((texture(normal, uv).xyz - 0.5) * 2.0);
+  out_alb = texture(base_color, uv) * texture(base_color_factor, uv);
   // todo lots of work must be done in here
   // I must add any needed output for deferred part
   // w channel can hold useful info for deferred

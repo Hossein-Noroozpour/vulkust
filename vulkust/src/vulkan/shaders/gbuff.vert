@@ -8,11 +8,15 @@ layout (location = 1) in vec3 nrm;
 layout (location = 2) in vec4 tng;
 layout (location = 3) in vec2 uv;
 
-layout (set = 0, binding = 0) uniform SceneUBO {
+struct Camera {
 	mat4 view;
 	mat4 projection;
 	mat4 view_projection;
-  	vec3 camera_pos;
+	vec3 position;
+};
+
+layout (set = 0, binding = 0) uniform SceneUBO {
+	Camera camera;
 } scene_ubo;
 
 layout (set = 1, binding = 0) uniform ModelUBO {
@@ -34,21 +38,20 @@ layout (location = 2) out vec3 out_tng;
 layout (location = 3) out vec3 out_btg;
 layout (location = 4) out vec2 out_uv;
 
-out gl_PerVertex 
-{
+out gl_PerVertex {
     vec4 gl_Position;
 };
 
-void main()
-{
+void main() {
 	out_pos = (model_ubo.model * vec4(pos, 1.0)).xyz;
-	out_nrm = normalize((model_ubo.model * vec4(nrm, 0.0)).xyz);
-	out_tng = normalize((model_ubo.model * vec4(tng.xyz, 0.0)).xyz);
+	mat3 m3_model = mat3(model_ubo.model);
+	out_nrm = normalize(m3_model * nrm);
+	out_tng = normalize(m3_model * tng.xyz);
 	if ( tng.w < 0.0 ) {
 		out_btg = cross(out_tng, out_nrm);
 	} else {
 		out_btg = cross(out_nrm, out_tng);
 	}
 	out_uv = uv;
-	gl_Position = scene_ubo.view_projection * vec4(pos, 1.0);
+	gl_Position = scene_ubo.camera.view_projection * vec4(pos, 1.0);
 }

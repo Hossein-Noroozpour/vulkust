@@ -1,5 +1,5 @@
 use super::super::core::object::Object as CoreObject;
-use super::super::core::types::Id;
+use super::super::core::types::{ Id, Real };
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
@@ -8,6 +8,29 @@ use math;
 use std::collections::BTreeMap;
 use std::convert::From;
 use std::sync::{Arc, RwLock, Weak};
+
+
+#[repr(C)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct Uniform {
+    pub view: math::Matrix4<Real>,
+    pub projection: math::Matrix4<Real>,
+    pub view_projection: math::Matrix4<Real>,
+    pub position: math::Vector3<Real>,
+}
+
+impl Uniform {
+    pub fn new() -> Self {
+        let view = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+        );
+        let projection = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
+        );
+        let position = math::Vector3::new(0.0, 0.0, 0.0);
+        Uniform { view, projection, view_projection: projection, position, }
+    }
+}
 
 pub trait Camera: Object + Transferable {
     fn get_view_projection(&self) -> &math::Matrix4<f32>;

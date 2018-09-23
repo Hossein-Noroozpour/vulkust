@@ -2,7 +2,7 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, TypeId as CoreTypeId};
 use super::super::system::file::File;
 use super::buffer::DynamicBuffer;
-use super::camera::{Camera, DefaultCamera, Manager as CameraManager};
+use super::camera::{Camera, DefaultCamera, Manager as CameraManager, Uniform as CameraUniform};
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::font::Manager as FontManager;
@@ -18,7 +18,6 @@ use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
 
 use gltf;
-use math;
 
 #[repr(u8)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -214,16 +213,13 @@ impl Manager {
 #[repr(C)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
-    pub view_projection: math::Matrix4<f32>,
+    pub camera: CameraUniform,
 }
 
 impl Uniform {
     pub fn new() -> Self {
-        let view_projection = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
-            1.0, // todo default view projection
-        );
-        Uniform { view_projection }
+        let camera = CameraUniform::new();
+        Uniform { camera }
     }
 }
 
@@ -408,7 +404,7 @@ impl Object for Base {
             None => return,
         };
         let camera = vxresult!(camera.read());
-        self.uniform.view_projection = *camera.get_view_projection();
+        self.uniform.camera.view_projection = *camera.get_view_projection();
         for (_, model) in &mut self.models {
             let mut model = vxresult!(model.write());
             Object::update(&mut *model);

@@ -4,7 +4,6 @@ use super::render_pass::RenderPass;
 use super::shader::Module;
 use super::vulkan as vk;
 use std::ffi::CString;
-use std::mem::{size_of, transmute};
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
@@ -16,39 +15,62 @@ macro_rules! include_shader {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Layout {
-    pub pbr_descriptor_set_layout: Arc<DescriptorSetLayout>,
-    pub buffer_only_descriptor_set_layout: Arc<DescriptorSetLayout>,
+    pub descriptor_set_layouts: Vec<Arc<DescriptorSetLayout>>,
     pub vk_data: vk::VkPipelineLayout,
 }
 
 impl Layout {
-    pub fn new_pbr(
-        logical_device: Arc<LogicalDevice>,
+    pub fn new_gbuff(
         descriptor_manager: &Arc<RwLock<DescriptorManager>>,
     ) -> Self {
-        let mut vk_data = 0 as vk::VkPipelineLayout;
         let descriptor_manager = vxresult!(descriptor_manager.read());
-        let pbr_descriptor_set_layout = descriptor_manager.gbuff_set_layout.clone();
+        let gbuff_descriptor_set_layout = descriptor_manager.gbuff_set_layout.clone();
         let buffer_only_descriptor_set_layout = descriptor_manager.buffer_only_set_layout.clone();
-        let set_layouts = [
+        let layout = [
             buffer_only_descriptor_set_layout.vk_data,
             buffer_only_descriptor_set_layout.vk_data,
-            pbr_descriptor_set_layout.vk_data,
+            gbuff_descriptor_set_layout.vk_data,
         ];
+        let descriptor_set_layouts = vec![
+            gbuff_descriptor_set_layout, 
+            buffer_only_descriptor_set_layout
+        ];
+        Self::new(&layout, descriptor_set_layouts)
+    }
+
+    pub fn new_deferred(
+        descriptor_manager: &Arc<RwLock<DescriptorManager>>,
+    ) -> Self {
+        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let deferred_descriptor_set_layout = descriptor_manager.deferred_set_layout.clone();
+        let layout = [
+            deferred_descriptor_set_layout.vk_data,
+        ];
+        let descriptor_set_layouts = vec![
+            deferred_descriptor_set_layout,
+        ];
+        Self::new(&layout, descriptor_set_layouts)
+    }
+
+    fn new(
+        layout: &[vk::VkDescriptorSetLayout],
+        descriptor_set_layouts: Vec<Arc<DescriptorSetLayout>>,
+    ) -> Self {
+        let mut vk_data = 0 as vk::VkPipelineLayout;
+        let vkdev = descriptor_set_layouts[0].logical_device.vk_data;
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipeline_layout_create_info.setLayoutCount = set_layouts.len() as u32;
-        pipeline_layout_create_info.pSetLayouts = set_layouts.as_ptr();
+        pipeline_layout_create_info.setLayoutCount = layout.len() as u32;
+        pipeline_layout_create_info.pSetLayouts = layout.as_ptr();
         vulkan_check!(vk::vkCreatePipelineLayout(
-            logical_device.vk_data,
+            vkdev,
             &pipeline_layout_create_info,
             null(),
             &mut vk_data,
         ));
         Layout {
-            pbr_descriptor_set_layout,
-            buffer_only_descriptor_set_layout,
+            descriptor_set_layouts,
             vk_data,
         }
     }
@@ -58,7 +80,7 @@ impl Drop for Layout {
     fn drop(&mut self) {
         unsafe {
             vk::vkDestroyPipelineLayout(
-                self.pbr_descriptor_set_layout.logical_device.vk_data,
+                self.descriptor_set_layouts[0].logical_device.vk_data,
                 self.vk_data,
                 null(),
             );
@@ -103,7 +125,7 @@ impl Drop for Cache {
 pub struct Pipeline {
     pub cache: Arc<Cache>,
     pub layout: Layout,
-    pub shader: Vec<Module>,
+    pub shaders: Vec<Module>,
     pub render_pass: Arc<RenderPass>,
     pub vk_data: vk::VkPipeline,
 }
@@ -115,24 +137,48 @@ impl Pipeline {
         cache: Arc<Cache>,
         samples: vk::VkSampleCountFlagBits,
     ) -> Self {
-        let is_gbuff = if render_pass.swapchain.is_none() && render_pass.views.is_some() {
-            true
+        let mut is_gbuff = false;
+        let mut is_deferred = false;
+        // todo this criteria is not accurate enough change it in future
+        // render pass must hold a enum for its purpose
+        if render_pass.swapchain.is_none() && render_pass.views.is_some() {
+            is_gbuff = true;
         } else if render_pass.swapchain.is_some() && render_pass.views.is_none() {
-            false
+            is_deferred = true;
         } else {
             vxunexpected!();
-        };
+        }
 
         let device = vxresult!(descriptor_manager.read())
             .pool
             .logical_device
             .clone();
-        let vert_bytes = include_shader!("pbr.vert");
-        let frag_bytes = include_shader!("pbr.frag");
+
+        let vert_bytes: &'static [u8] = if is_gbuff {
+            include_shader!("gbuff.vert")
+        } else if is_deferred {
+            include_shader!("deferred.vert")
+        } else {
+            vxunexpected!();
+        };
+        let frag_bytes: &'static [u8] = if is_gbuff {
+            include_shader!("gbuff.frag")
+        } else if is_deferred {
+            include_shader!("deferred.frag")
+        } else {
+            vxunexpected!();
+        };
+
         let vertex_shader = Module::new(vert_bytes, device.clone());
         let fragment_shader = Module::new(frag_bytes, device.clone());
-        let shader = vec![vertex_shader, fragment_shader];
-        let layout = Layout::new_pbr(device.clone(), descriptor_manager);
+        let shaders = vec![vertex_shader, fragment_shader];
+        let layout = if is_gbuff {
+            Layout::new_gbuff(descriptor_manager)
+        } else if is_deferred {
+            Layout::new_deferred(descriptor_manager)
+        } else {
+            vxunexpected!();
+        };
 
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
         input_assembly_state.sType =
@@ -202,10 +248,7 @@ impl Pipeline {
             multisample_state.rasterizationSamples = samples;
             multisample_state.sampleShadingEnable = vk::VK_TRUE;
             multisample_state.minSampleShading = 0.25;
-            // todo alph coverage does not included because I gonna use alpha channel for something else
-            // todo it must be tested
-            // multisample_state.alphaToCoverageEnable = vk::VK_TRUE;
-            vxtodo!();
+            multisample_state.alphaToCoverageEnable = vk::VK_TRUE;
         } else {
             multisample_state.rasterizationSamples =
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
@@ -238,27 +281,14 @@ impl Pipeline {
             vertex_input_state.pVertexAttributeDescriptions = vertex_attributes.as_ptr();
         }
 
-        let mut specialization_entry = vk::VkSpecializationMapEntry::default();
-        specialization_entry.constantID = 0;
-        specialization_entry.offset = 0;
-        specialization_entry.size = size_of::<u32>();
-
-        let specialization_data = samples as u32;
-
-        let mut specialization_info = vk::VkSpecializationInfo::default();
-        specialization_info.mapEntryCount = 1;
-        specialization_info.pMapEntries = &specialization_entry;
-        specialization_info.dataSize = size_of::<u32>();
-        specialization_info.pData = unsafe { transmute(&specialization_data) };
-
         let stage_name = CString::new("main").unwrap();
-        let stages_count = shader.len();
+        let stages_count = shaders.len();
         let mut shader_stages = vec![vk::VkPipelineShaderStageCreateInfo::default(); stages_count];
         for i in 0..stages_count {
             shader_stages[i].sType =
                 vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             shader_stages[i].pName = stage_name.as_ptr();
-            shader_stages[i].module = shader[i].vk_data;
+            shader_stages[i].module = shaders[i].vk_data;
             match i {
                 0 => {
                     shader_stages[i].stage = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
@@ -266,9 +296,6 @@ impl Pipeline {
                 1 => {
                     shader_stages[i].stage =
                         vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
-                    if !is_gbuff {
-                        shader_stages[i].pSpecializationInfo = &specialization_info;
-                    }
                 }
                 n @ _ => {
                     vxlogf!("Stage {} is not implemented yet!", n);
@@ -305,7 +332,7 @@ impl Pipeline {
         Pipeline {
             cache,
             layout,
-            shader,
+            shaders,
             render_pass,
             vk_data,
         }

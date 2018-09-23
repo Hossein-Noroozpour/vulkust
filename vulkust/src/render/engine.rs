@@ -73,9 +73,14 @@ impl Engine {
     }
 
     pub fn update(&self) {
+        // todo it must iterate over scenes
+        // it require separate command buffer for each scene
+        // it gonna help the multithread rendering part
+        // tmporary it must change in future
         vxresult!(self.gapi_engine.read()).start_recording();
         vxresult!(self.scene_manager.read()).render();
         vxresult!(self.gapi_engine.read()).start_deferred();
+        // todo update deferred buffer in scene
         vxresult!(self.gapi_engine.write()).end_recording();
     }
 
