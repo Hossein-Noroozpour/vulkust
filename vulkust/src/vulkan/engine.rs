@@ -198,7 +198,8 @@ impl Engine {
     }
 
     pub fn start_deferred(&self) {
-        let mut cmd_buffers = vxresult!(self.draw_commands[self.current_frame_number as usize].write());
+        let mut cmd_buffers =
+            vxresult!(self.draw_commands[self.current_frame_number as usize].write());
 
         self.g_framebuffer.end_render(&mut cmd_buffers.0);
 
@@ -230,7 +231,7 @@ impl Engine {
         let frame_number = self.current_frame_number as usize;
 
         let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
-        
+
         let pipemgr = vxresult!(self.pipeline_manager.read());
         cmd_buffers.1.bind_descriptor_sets(
             &pipemgr.deferred_pipeline.layout,

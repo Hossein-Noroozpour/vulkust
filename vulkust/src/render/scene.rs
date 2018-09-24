@@ -102,8 +102,6 @@ impl Manager {
         }
     }
 
-
-
     pub fn render_deferred(&self) {
         let engine = vxunwrap!(&self.engine); // todo remove these lines i'm not happy with
         let engine = vxunwrap!(engine.upgrade()); //

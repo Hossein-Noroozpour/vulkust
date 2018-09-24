@@ -64,5 +64,8 @@ void main() {
 	ivec2 int_texel_coord = ivec2(texel_coord); 
 	vec4 ms_albedo = resolve_multisample(albedo, int_texel_coord);
 	out_color = ms_albedo;
+	out_color *= 0.0001;
+	out_color.r = 1.0;
+	out_color.a = 1.0;
 	// todo lot of work must be done in here
 }

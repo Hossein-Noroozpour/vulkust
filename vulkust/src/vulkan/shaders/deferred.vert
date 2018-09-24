@@ -50,6 +50,6 @@ out gl_PerVertex {
 
 void main() {
 	out_uv = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);
-	gl_Position = vec4(out_uv * 2.0f - 1.0f, 0.0f, 1.0f);
+	gl_Position = vec4(out_uv.yx * 2.0f - 1.0f, 0.999f, 1.0f);
 	out_texel_coord = vec2(deferred_ubo.window_width, deferred_ubo.window_height) * out_uv;
 }
