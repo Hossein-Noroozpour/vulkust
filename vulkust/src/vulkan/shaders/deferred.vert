@@ -7,21 +7,20 @@
 #define MAX_DIRECTIONAL_LIGHTS_COUNT 8
 
 struct Camera {
-	vec3 position;
+	vec4 position_radius;
 	mat4 projection;
 	mat4 view;
 	mat4 view_projection;
 };
 
 struct PointLight {
-	vec3 color;
-	vec3 position;
-	float radius;
+	vec4 color;
+	vec4 position_radius;
 };
 
 struct DirectionalLight {
-	vec3 color;
-	vec3 direction;
+	vec4 color;
+	vec4 direction;
 	mat4 view_projection_biased;
 };
 

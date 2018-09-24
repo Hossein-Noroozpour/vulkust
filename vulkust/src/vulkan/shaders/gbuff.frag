@@ -13,21 +13,20 @@ layout (location = 3) in vec3 btg;
 layout (location = 4) in vec2 uv;
 
 struct Camera {
-	vec3 position;
+	vec4 position_radius;
 	mat4 projection;
 	mat4 view;
 	mat4 view_projection;
 };
 
 struct PointLight {
-	vec3 color;
-	float radius;
-	vec3 position;
+	vec4 color;
+	vec4 position_radius;
 };
 
 struct DirectionalLight {
-	vec3 color;
-	vec3 direction;
+	vec4 color;
+	vec4 direction;
 	mat4 view_projection_biased;
 };
 

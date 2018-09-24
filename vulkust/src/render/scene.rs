@@ -31,6 +31,7 @@ pub trait Scene: Object {
     fn add_camera(&mut self, Arc<RwLock<Camera>>);
     fn add_model(&mut self, Arc<RwLock<Model>>);
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
+    fn render_deferred(&self, &Engine);
 }
 
 pub trait Loadable: Scene + Sized {
@@ -96,6 +97,20 @@ impl Manager {
         for (_, scene) in &*vxresult!(self.scenes.read()) {
             if let Some(scene) = scene.upgrade() {
                 vxresult!(scene.read()).render(&engine);
+            }
+            // todo depth cleaning, and other related things in here
+        }
+    }
+
+
+
+    pub fn render_deferred(&self) {
+        let engine = vxunwrap!(&self.engine); // todo remove these lines i'm not happy with
+        let engine = vxunwrap!(engine.upgrade()); //
+        let engine = vxresult!(engine.read()); //
+        for (_, scene) in &*vxresult!(self.scenes.read()) {
+            if let Some(scene) = scene.upgrade() {
+                vxresult!(scene.read()).render_deferred(&engine);
             }
             // todo depth cleaning, and other related things in here
         }
@@ -397,8 +412,8 @@ impl Object for Base {
             let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
             uniform_buffer.update(&self.uniform);
             let mut gapi_engine = vxresult!(engine.gapi_engine.write());
-            gapi_engine.bind_pbr_pipeline();
-            gapi_engine.bind_pbr_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 0);
+            gapi_engine.bind_gbuff_pipeline();
+            gapi_engine.bind_gbuff_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 0);
         }
         for (_, model) in &self.models {
             vxresult!(model.read()).render(engine);
@@ -448,6 +463,12 @@ impl Scene for Base {
 
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
         return &self.active_camera;
+    }
+
+    fn render_deferred(&self, engine: &Engine) {
+        let uniform_buffer = vxresult!(self.uniform_buffer.read());
+        let mut gapi_engine = vxresult!(engine.gapi_engine.write());
+        gapi_engine.bind_deferred_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 0);
     }
 }
 
@@ -527,6 +548,10 @@ impl Scene for Game {
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
         return self.base.get_active_camera();
     }
+
+    fn render_deferred(&self, engine: &Engine) {
+        self.base.render_deferred(engine);
+    }
 }
 
 impl Loadable for Game {
@@ -592,6 +617,10 @@ impl Scene for Ui {
 
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
         return self.base.get_active_camera();
+    }
+
+    fn render_deferred(&self, engine: &Engine) {
+        self.base.render_deferred(engine);
     }
 }
 

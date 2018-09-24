@@ -153,17 +153,15 @@ impl Manager {
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct PointUniform {
-    color: math::Vector3<Real>,
-    radius: Real,
-    position: math::Vector3<Real>,
+    color: math::Vector4<Real>,
+    position_radius: math::Vector4<Real>,
 }
 
 impl PointUniform {
     pub fn new() -> Self {
         PointUniform {
-            color: math::Vector3::new(0.0, 0.0, 0.0),
-            radius: 0.0,
-            position: math::Vector3::new(0.0, 0.0, 0.0),
+            color: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
+            position_radius: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
         }
     }
 }
@@ -172,16 +170,16 @@ impl PointUniform {
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct DirectionalUniform {
-    color: math::Vector3<Real>,
-    direction: math::Vector3<Real>,
+    color: math::Vector4<Real>,
+    direction: math::Vector4<Real>,
     view_projection_biased: math::Matrix4<Real>,
 }
 
 impl DirectionalUniform {
     pub fn new() -> Self {
         DirectionalUniform {
-            color: math::Vector3::new(0.0, 0.0, 0.0),
-            direction: math::Vector3::new(0.0, 0.0, -1.0),
+            color: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
+            direction: math::Vector4::new(0.0, 0.0, -1.0, 0.0),
             view_projection_biased: math::Matrix4::new(
                 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
             ),

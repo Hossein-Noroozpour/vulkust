@@ -1,4 +1,5 @@
 use super::super::system::file::File;
+use super::super::render::image::AttachmentType;
 use super::buffer::Manager as BufferManager;
 use super::command::buffer::Buffer as CmdBuffer;
 use super::device::logical::Logical as LogicalDevice;
@@ -233,13 +234,12 @@ impl View {
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
     ) -> Self {
         let depth_format = logical_device.physical_device.get_supported_depth_format();
-        let usage = vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
         Self::new_attachment(
             logical_device,
             memory_mgr,
             depth_format,
-            usage,
             vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+            AttachmentType::DepthStencilDisplay,
         )
     }
 
@@ -323,28 +323,31 @@ impl View {
         logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
         format: vk::VkFormat,
-        usage: vk::VkImageUsageFlagBits,
         samples: vk::VkSampleCountFlagBits,
+        attachment_type: AttachmentType,
     ) -> Self {
-        let aspect_mask = if usage as u32
-            & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
-            != 0
-        {
-            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
-        } else if usage as u32
-            & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
-            != 0
-        {
-            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32
-                | vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT as u32
-        } else {
-            vxunexpected!();
+        let aspect_mask = match attachment_type {
+            AttachmentType::ColorGBuffer | AttachmentType::ColorDisplay =>
+                vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32,
+            AttachmentType::DepthGBuffer =>
+                vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32,
+            AttachmentType::DepthStencilDisplay =>
+                vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32 |
+                    vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT as u32,
         };
-        let usage = if samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
-            usage as u32 | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
-        } else {
-            usage as u32
+        let usage = match attachment_type {
+            AttachmentType::ColorGBuffer => 
+                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32 |
+                    vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32,
+            AttachmentType::ColorDisplay =>
+                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32,
+            AttachmentType::DepthGBuffer =>
+                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32 |
+                    vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32,
+            AttachmentType::DepthStencilDisplay =>
+                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32,
         };
+
         let surface_caps = logical_device.physical_device.surface_caps;
         let mut image_info = vk::VkImageCreateInfo::default();
         image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

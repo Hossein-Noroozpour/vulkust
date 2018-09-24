@@ -182,6 +182,12 @@ impl Buffer {
         }
     }
 
+    pub fn draw(&mut self, vertices_count: u32) {
+        unsafe {
+            vk::vkCmdDraw(self.vk_data, vertices_count, 1, 0, 0);
+        }
+    }
+
     pub fn pipeline_image_barrier(
         &mut self,
         src_stage: vk::VkPipelineStageFlags,

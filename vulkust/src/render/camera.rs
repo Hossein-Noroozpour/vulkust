@@ -12,7 +12,7 @@ use std::sync::{Arc, RwLock, Weak};
 #[repr(C)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
-    pub position: math::Vector3<Real>,
+    pub position_radius: math::Vector4<Real>,
     pub projection: math::Matrix4<Real>,
     pub view: math::Matrix4<Real>,
     pub view_projection: math::Matrix4<Real>,
@@ -26,12 +26,12 @@ impl Uniform {
         let projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         );
-        let position = math::Vector3::new(0.0, 0.0, 0.0);
+        let position_radius = math::Vector4::new(0.0, 0.0, 0.0, 0.0);
         Uniform {
             view,
             projection,
             view_projection: projection,
-            position,
+            position_radius,
         }
     }
 }

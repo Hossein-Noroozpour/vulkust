@@ -1,6 +1,6 @@
 pub mod buffer;
 pub mod camera;
-// pub mod command;
+pub mod command;
 pub mod config;
 pub mod deferred;
 pub mod descriptor;

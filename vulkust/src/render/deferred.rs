@@ -62,4 +62,12 @@ impl Deferred {
             descriptor_set,
         }
     }
+
+    pub fn render(&self, gapi_engine: &mut GraphicApiEngine) {
+        gapi_engine.bind_deferred_descriptor(
+            &self.descriptor_set,
+            &*vxresult!(self.uniform_buffer.read()),
+            1,
+        );
+    }
 }

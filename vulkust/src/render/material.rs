@@ -272,6 +272,6 @@ impl Material {
         let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
         uniform_buffer.update(&self.uniform);
         let mut gapi_engine = vxresult!(engine.gapi_engine.write());
-        gapi_engine.bind_pbr_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 2);
+        gapi_engine.bind_gbuff_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 2);
     }
 }

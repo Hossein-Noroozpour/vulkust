@@ -289,7 +289,7 @@ impl Object for Base {
 
     fn render(&self, engine: &Engine) {
         self.material.bind(engine);
-        vxresult!(engine.gapi_engine.read()).render_pbr(
+        vxresult!(engine.gapi_engine.read()).render_gbuff(
             &self.vertex_buffer,
             &self.index_buffer,
             self.indices_count,
