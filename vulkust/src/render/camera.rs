@@ -28,10 +28,10 @@ impl Uniform {
         );
         let position_radius = math::Vector4::new(0.0, 0.0, 0.0, 0.0);
         Uniform {
-            view,
-            projection,
-            view_projection: projection,
             position_radius,
+            projection,
+            view,
+            view_projection: projection,
         }
     }
 }

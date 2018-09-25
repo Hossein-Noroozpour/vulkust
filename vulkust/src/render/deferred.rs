@@ -8,23 +8,23 @@ use std::sync::{Arc, RwLock};
 #[repr(C)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Uniform {
-    samples_count: u32,
     inverse_samples_count: f32,
-    window_width: f32,
-    window_height: f32,
     pixel_x_step: f32,
     pixel_y_step: f32,
+    samples_count: u32,
+    window_height: f32,
+    window_width: f32,
 }
 
 impl Uniform {
     pub fn new(samples_count: u32, window_width: f32, window_height: f32) -> Self {
         Uniform {
-            samples_count,
             inverse_samples_count: 1f32 / (samples_count as f32),
-            window_width,
-            window_height,
             pixel_x_step: 2f32 / window_width,
             pixel_y_step: 2f32 / window_height,
+            samples_count,
+            window_height,
+            window_width,
         }
     }
 }
@@ -64,9 +64,11 @@ impl Deferred {
     }
 
     pub fn render(&self, gapi_engine: &mut GraphicApiEngine) {
+        let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
+        uniform_buffer.update(&self.uniform);
         gapi_engine.bind_deferred_descriptor(
             &self.descriptor_set,
-            &*vxresult!(self.uniform_buffer.read()),
+            &*uniform_buffer,
             1,
         );
     }

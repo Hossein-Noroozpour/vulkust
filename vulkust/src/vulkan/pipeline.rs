@@ -243,11 +243,12 @@ impl Pipeline {
         let mut multisample_state = vk::VkPipelineMultisampleStateCreateInfo::default();
         multisample_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        if is_gbuff && samples as u32 > vk::VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX as u32 {
+        if is_gbuff && samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
             multisample_state.rasterizationSamples = samples;
             multisample_state.sampleShadingEnable = vk::VK_TRUE;
             multisample_state.minSampleShading = 0.25;
             multisample_state.alphaToCoverageEnable = vk::VK_TRUE;
+            // multisample_state.alphaToOneEnable = vk::VK_TRUE;
         } else {
             multisample_state.rasterizationSamples =
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;

@@ -65,7 +65,9 @@ layout (location = 2) out vec4 out_alb;
 
 void main() {
   out_pos.xyz = pos;
+  out_pos.w = 1.0;
   out_nrm.xyz = mat3(tng, btg, nrm) * ((texture(normal, uv).xyz - 0.5) * 2.0);
+  out_nrm.w = 1.0;
   out_alb = texture(base_color, uv) * texture(base_color_factor, uv);
   // todo lots of work must be done in here
   // I must add any needed output for deferred part

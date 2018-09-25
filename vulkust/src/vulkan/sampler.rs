@@ -16,8 +16,8 @@ impl Sampler {
         info.magFilter = vk::VkFilter::VK_FILTER_LINEAR;
         info.minFilter = vk::VkFilter::VK_FILTER_LINEAR;
         info.addressModeU = vk::VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        info.addressModeV = vk::VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        info.addressModeW = vk::VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        info.addressModeV = info.addressModeU;
+        info.addressModeW = info.addressModeU;
         info.anisotropyEnable = vk::VK_TRUE;
         info.maxAnisotropy = logical_device
             .physical_device

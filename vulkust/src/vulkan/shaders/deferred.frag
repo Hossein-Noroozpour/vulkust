@@ -49,8 +49,8 @@ layout (set = 1, binding = 0) uniform UBO {
 layout (set = 1, binding = 1) uniform sampler2DMS position;
 layout (set = 1, binding = 2) uniform sampler2DMS normal;
 layout (set = 1, binding = 3) uniform sampler2DMS albedo;
-layout (set = 1, binding = 4) uniform sampler2D screen_space_depth;
-// layout (set = 1, binding = 5) uniform sampler2D soft_shadow; // todo add soft shadow pass too
+layout (set = 1, binding = 4) uniform sampler2DMS screen_space_depth;
+layout (set = 1, binding = 5) uniform sampler2DMS soft_shadow; // todo add soft shadow pass too
 
 vec4 resolve_multisample(sampler2DMS tex, ivec2 int_texel_coord) {
 	vec4 result = vec4(0.0);
@@ -64,8 +64,5 @@ void main() {
 	ivec2 int_texel_coord = ivec2(texel_coord); 
 	vec4 ms_albedo = resolve_multisample(albedo, int_texel_coord);
 	out_color = ms_albedo;
-	out_color *= 0.0001;
-	out_color.r = 1.0;
-	out_color.a = 1.0;
-	// todo lot of work must be done in here
+	// todo lots of work must be done in here
 }
