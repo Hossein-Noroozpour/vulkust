@@ -66,10 +66,6 @@ impl Deferred {
     pub fn render(&self, gapi_engine: &mut GraphicApiEngine) {
         let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
         uniform_buffer.update(&self.uniform);
-        gapi_engine.bind_deferred_descriptor(
-            &self.descriptor_set,
-            &*uniform_buffer,
-            1,
-        );
+        gapi_engine.bind_deferred_descriptor(&self.descriptor_set, &*uniform_buffer, 1);
     }
 }

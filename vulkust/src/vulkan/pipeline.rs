@@ -191,7 +191,7 @@ impl Pipeline {
         rasterization_state.polygonMode = vk::VkPolygonMode::VK_POLYGON_MODE_FILL;
         rasterization_state.cullMode = vk::VkCullModeFlagBits::VK_CULL_MODE_FRONT_BIT as u32;
         rasterization_state.frontFace = vk::VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
-        rasterization_state.lineWidth = 1.0f32;
+        rasterization_state.lineWidth = 1f32;
 
         let blend_attachment_state_size = if let Some(views) = &render_pass.views {
             views.len() - 1
@@ -201,7 +201,22 @@ impl Pipeline {
         let mut blend_attachment_state =
             vec![vk::VkPipelineColorBlendAttachmentState::default(); blend_attachment_state_size];
         for i in 0..blend_attachment_state_size {
-            blend_attachment_state[i].colorWriteMask = 0xF;
+            // todo temporary for test
+            // for g buffer it is not good
+            blend_attachment_state[i].blendEnable = vk::VK_TRUE;
+            blend_attachment_state[i].srcColorBlendFactor =
+                vk::VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
+            blend_attachment_state[i].dstColorBlendFactor =
+                vk::VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+            blend_attachment_state[i].colorBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
+            blend_attachment_state[i].srcAlphaBlendFactor = vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
+            blend_attachment_state[i].dstAlphaBlendFactor = vk::VkBlendFactor::VK_BLEND_FACTOR_ZERO;
+            blend_attachment_state[i].alphaBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
+            blend_attachment_state[i].colorWriteMask =
+                vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as u32
+                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT as u32
+                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT as u32
+                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT as u32;
         }
 
         let mut color_blend_state = vk::VkPipelineColorBlendStateCreateInfo::default();
@@ -248,7 +263,7 @@ impl Pipeline {
             multisample_state.sampleShadingEnable = vk::VK_TRUE;
             multisample_state.minSampleShading = 0.25;
             multisample_state.alphaToCoverageEnable = vk::VK_TRUE;
-            // multisample_state.alphaToOneEnable = vk::VK_TRUE;
+        // multisample_state.alphaToOneEnable = vk::VK_TRUE;
         } else {
             multisample_state.rasterizationSamples =
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
