@@ -1,7 +1,6 @@
 use super::super::core::allocate as alc;
 use super::super::core::allocate::{Allocator, Object};
-use super::command::buffer::Buffer as CmdBuffer;
-use super::command::pool::Pool as CmdPool;
+use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::device::logical::Logical as LogicalDevice;
 use super::image::Image;
 use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};

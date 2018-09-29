@@ -1,7 +1,7 @@
 use super::super::render::image::AttachmentType;
 use super::super::system::file::File;
 use super::buffer::Manager as BufferManager;
-use super::command::buffer::Buffer as CmdBuffer;
+use super::command::Buffer as CmdBuffer;
 use super::device::logical::Logical as LogicalDevice;
 use super::memory::{Location as MemeoryLocation, Manager as MemeoryManager, Memory};
 use super::vulkan as vk;

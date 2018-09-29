@@ -36,5 +36,7 @@ impl Renderer {
         Renderer { index, engine }
     }
 
-    pub fn render(&mut self) {}
+    pub fn render(&mut self) {
+        let engine = vxunwrap!(self.engine.upgrade());
+    }
 }

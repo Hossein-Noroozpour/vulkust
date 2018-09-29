@@ -1,4 +1,4 @@
-use super::command::buffer::Buffer as CmdBuffer;
+use super::command::Buffer as CmdBuffer;
 use super::image::View;
 use super::render_pass::RenderPass;
 use super::vulkan as vk;
