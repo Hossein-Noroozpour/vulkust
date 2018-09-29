@@ -163,6 +163,9 @@ impl Base {
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
+        let img_transform = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
+        );
         let eng = vxresult!(eng.read());
         let eng = vxunwrap!(eng.os_app.upgrade());
         let os_app = vxresult!(eng.read());
@@ -178,9 +181,7 @@ impl Base {
             direction: identity,
             view: identity,
             projection: identity,
-            view_projection: math::Matrix4::new(
-                1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-            ),
+            view_projection: img_transform,
         }
     }
 
