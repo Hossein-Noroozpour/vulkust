@@ -9,7 +9,7 @@ use vulkust::render::engine::Engine as Renderer;
 use vulkust::render::material::Material;
 use vulkust::render::model::{Base as ModelBase, Model};
 use vulkust::render::object::Transferable;
-use vulkust::render::scene::{Scene, Ui as UiScene, Game as GameScene};
+use vulkust::render::scene::{Game as GameScene, Scene, Ui as UiScene};
 use vulkust::render::widget::Label;
 use vulkust::system::os::application::Application as OsApp;
 
@@ -119,7 +119,7 @@ impl CoreAppTrait for MyGame {
             scn.add_model(model);
         }
         self.scene = Some(scene);
-        let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene(); 
+        let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene();
         let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
         let label: Arc<RwLock<Label>> = renderer.create_model();
         {

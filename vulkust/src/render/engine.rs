@@ -4,13 +4,13 @@ use super::super::core::timing::Timing;
 use super::super::system::os::application::Application as OsApp;
 use super::camera::DefaultCamera;
 use super::deferred::Deferred;
-use super::gx3d::import as gx3d_import;
-use super::model::DefaultModel;
-use super::kernel::Kernel;
 use super::gapi::GraphicApiEngine;
+use super::gx3d::import as gx3d_import;
+use super::kernel::Kernel;
+use super::model::DefaultModel;
 use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
-use std::sync::{Arc, RwLock, Weak};
 use num_cpus;
+use std::sync::{Arc, RwLock, Weak};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {
@@ -45,7 +45,7 @@ impl Engine {
             scene_manager,
             deferred,
             timing: Arc::new(RwLock::new(Timing::new())),
-            kernels
+            kernels,
         }
     }
 

@@ -7,8 +7,8 @@ pub extern crate cgmath as math;
 pub extern crate gltf;
 pub extern crate image;
 pub extern crate libc;
-pub extern crate rusttype;
 pub extern crate num_cpus;
+pub extern crate rusttype;
 
 #[cfg(apple_os)]
 #[macro_use]

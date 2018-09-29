@@ -204,21 +204,26 @@ impl Pipeline {
             // todo temporary for test
             // for g buffer it is not good
             if blend_attachment_state_size == 1 || i == 2 {
-            blend_attachment_state[i].blendEnable = vk::VK_TRUE;
-            blend_attachment_state[i].srcColorBlendFactor =
-                vk::VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
-            blend_attachment_state[i].dstColorBlendFactor =
-                vk::VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-            blend_attachment_state[i].colorBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
-            blend_attachment_state[i].srcAlphaBlendFactor = vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
-            blend_attachment_state[i].dstAlphaBlendFactor = vk::VkBlendFactor::VK_BLEND_FACTOR_ZERO;
-            blend_attachment_state[i].alphaBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
+                blend_attachment_state[i].blendEnable = vk::VK_TRUE;
+                blend_attachment_state[i].srcColorBlendFactor =
+                    vk::VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
+                blend_attachment_state[i].dstColorBlendFactor =
+                    vk::VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+                blend_attachment_state[i].colorBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
+                blend_attachment_state[i].srcAlphaBlendFactor =
+                    vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
+                blend_attachment_state[i].dstAlphaBlendFactor =
+                    vk::VkBlendFactor::VK_BLEND_FACTOR_ZERO;
+                blend_attachment_state[i].alphaBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
             }
             blend_attachment_state[i].colorWriteMask =
                 vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as vk::VkColorComponentFlags
-                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT as vk::VkColorComponentFlags
-                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT as vk::VkColorComponentFlags
-                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT as vk::VkColorComponentFlags;
+                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT
+                        as vk::VkColorComponentFlags
+                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
+                        as vk::VkColorComponentFlags
+                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT
+                        as vk::VkColorComponentFlags;
         }
 
         let mut color_blend_state = vk::VkPipelineColorBlendStateCreateInfo::default();
@@ -265,7 +270,7 @@ impl Pipeline {
             multisample_state.sampleShadingEnable = vk::VK_TRUE;
             multisample_state.minSampleShading = 0.25;
             multisample_state.alphaToCoverageEnable = vk::VK_TRUE;
-            // multisample_state.alphaToOneEnable = vk::VK_TRUE;
+        // multisample_state.alphaToOneEnable = vk::VK_TRUE;
         } else {
             multisample_state.rasterizationSamples =
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;

@@ -1,10 +1,10 @@
 use super::engine::Engine;
-use std::sync::{RwLock, Weak};
 use std::sync::mpsc::{channel, Sender};
+use std::sync::{RwLock, Weak};
 use std::thread::{spawn, JoinHandle};
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub (in super) struct Kernel {
+pub(super) struct Kernel {
     loop_signaler: Sender<bool>,
     handle: JoinHandle<()>,
 }
@@ -29,19 +29,12 @@ impl Kernel {
 struct Renderer {
     index: usize,
     engine: Weak<RwLock<Engine>>,
-} 
+}
 
 impl Renderer {
-    pub fn new(
-    index: usize,
-    engine: Weak<RwLock<Engine>>) -> Self {
-        Renderer {
-            index,
-            engine,
-        }
+    pub fn new(index: usize, engine: Weak<RwLock<Engine>>) -> Self {
+        Renderer { index, engine }
     }
 
-    pub fn render(&mut self) {
-
-    }
+    pub fn render(&mut self) {}
 }
