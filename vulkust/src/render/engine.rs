@@ -6,10 +6,9 @@ use super::camera::DefaultCamera;
 use super::deferred::Deferred;
 use super::gapi::GraphicApiEngine;
 use super::gx3d::import as gx3d_import;
-use super::kernel::Kernel;
 use super::model::DefaultModel;
+use super::multithreaded::Engine as MultithreadedEngine;
 use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
-use num_cpus;
 use std::sync::{Arc, RwLock, Weak};
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -21,7 +20,7 @@ pub struct Engine {
     pub scene_manager: Arc<RwLock<SceneManager>>,
     pub deferred: Arc<RwLock<Deferred>>,
     pub timing: Arc<RwLock<Timing>>,
-    kernels: Vec<Kernel>,
+    multithreaded_engine: MultithreadedEngine,
 }
 
 impl Engine {
@@ -36,7 +35,7 @@ impl Engine {
         )));
         let gapi_engine = Arc::new(RwLock::new(gapi_engine));
         let myself = None;
-        let kernels = Vec::new();
+        let multithreaded_engine = MultithreadedEngine::new(gapi_engine.clone());
         Engine {
             myself,
             gapi_engine,
@@ -45,17 +44,12 @@ impl Engine {
             scene_manager,
             deferred,
             timing: Arc::new(RwLock::new(Timing::new())),
-            kernels,
+            multithreaded_engine,
         }
     }
 
     pub fn set_myself(&mut self, myself: Weak<RwLock<Engine>>) {
         vxresult!(self.scene_manager.write()).set_engine(myself.clone());
-        let kernels_count = num_cpus::get();
-        for ki in 0..kernels_count {
-            self.kernels.push(Kernel::new(ki, myself.clone()));
-        }
-        self.kernels.shrink_to_fit();
         self.myself = Some(myself);
     }
 

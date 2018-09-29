@@ -68,7 +68,11 @@ impl Engine {
         let present_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let gbuff_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let render_complete_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
-        let graphic_cmd_pool = Arc::new(CmdPool::new(&logical_device, CmdPoolType::Graphic, 0));
+        let graphic_cmd_pool = Arc::new(CmdPool::new(
+            logical_device.clone(),
+            CmdPoolType::Graphic,
+            0,
+        ));
         let mut draw_commands = Vec::new();
         let mut wait_fences = Vec::new();
         for _ in 0..swapchain.image_views.len() {
@@ -424,6 +428,22 @@ impl Engine {
         let views = vec![g_pos, g_nrm, g_alb];
         let g_framebuffer = Arc::new(Framebuffer::new(views, g_dpt, g_render_pass.clone()));
         return (g_render_pass, g_framebuffer);
+    }
+
+    pub(crate) fn create_command_pool(&self) -> Arc<CmdPool> {
+        return Arc::new(CmdPool::new(
+            self.logical_device.clone(),
+            CmdPoolType::Graphic,
+            0,
+        ));
+    }
+
+    pub(crate) fn create_command_buffer(&self, cmd_pool: Arc<CmdPool>) -> CmdBuffer {
+        return CmdBuffer::new(cmd_pool);
+    }
+
+    pub(crate) fn get_frames_count(&self) -> usize {
+        return self.framebuffers.len();
     }
 
     fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {

@@ -244,7 +244,7 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn new(logical_device: &Arc<LogicalDevice>, pool_type: Type, flags: u32) -> Self {
+    pub fn new(logical_device: Arc<LogicalDevice>, pool_type: Type, flags: u32) -> Self {
         let mut vk_cmd_pool_info = vk::VkCommandPoolCreateInfo::default();
         vk_cmd_pool_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         match pool_type {
@@ -269,7 +269,7 @@ impl Pool {
         ));
         Pool {
             pool_type,
-            logical_device: logical_device.clone(),
+            logical_device,
             vk_data: vk_data,
         }
     }
