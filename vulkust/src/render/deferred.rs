@@ -6,7 +6,7 @@ use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
 #[repr(C)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
     inverse_samples_count: f32,
     pixel_x_step: f32,
@@ -29,7 +29,7 @@ impl Uniform {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Deferred {
     uniform: Uniform,
     uniform_buffer: Arc<RwLock<DynamicBuffer>>,

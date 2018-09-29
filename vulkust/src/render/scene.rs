@@ -21,7 +21,7 @@ use std::sync::{Arc, RwLock, Weak};
 use gltf;
 
 #[repr(u8)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum TypeId {
     GAME = 1,
     UI = 2,
@@ -43,7 +43,7 @@ pub trait DefaultScene: Scene + Sized {
     fn default(&Arc<RwLock<Engine>>) -> Self;
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     pub engine: Option<Weak<RwLock<Engine>>>,
     pub scenes: Arc<RwLock<BTreeMap<Id, Weak<RwLock<Scene>>>>>,
@@ -197,9 +197,9 @@ impl Manager {
 
     pub fn load_gltf_struct(file_name: &str) -> gltf::Gltf {
         let file = BufReader::new(vxresult!(File::open(file_name)));
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         return vxresult!(gltf::Gltf::from_reader(file));
-        #[cfg(not(debug_assertions))]
+        #[cfg(not(debug_mode))]
         return vxresult!(gltf::Gltf::from_reader_without_validation(file));
     }
 
@@ -225,7 +225,7 @@ impl Manager {
 }
 
 #[repr(C)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
     pub camera: CameraUniform,
     pub directional_lights: [DirectionalUniform; MAX_DIRECTIONAL_LIGHTS_COUNT],
@@ -247,7 +247,7 @@ impl Uniform {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     pub obj_base: ObjectBase,
     pub uniform: Uniform,
@@ -494,7 +494,7 @@ impl DefaultScene for Base {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Game {
     pub base: Base,
 }
@@ -571,7 +571,7 @@ impl DefaultScene for Game {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Ui {
     pub base: Base,
 }

@@ -29,7 +29,7 @@ pub trait Transferable {
     fn rotate_global_z(&mut self, f32);
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     pub name: Option<String>,
     pub renderable: bool,
@@ -76,7 +76,7 @@ impl Object for Base {
     }
 
     fn render(&self, _engine: &Engine) {
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if !self.renderable {
                 vxunexpected!();

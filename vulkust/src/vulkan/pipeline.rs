@@ -13,7 +13,7 @@ macro_rules! include_shader {
     };
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Layout {
     pub descriptor_set_layouts: Vec<Arc<DescriptorSetLayout>>,
     pub vk_data: vk::VkPipelineLayout,
@@ -87,7 +87,7 @@ impl Drop for Layout {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Cache {
     pub logical_device: Arc<LogicalDevice>,
     pub vk_data: vk::VkPipelineCache,
@@ -120,7 +120,7 @@ impl Drop for Cache {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Pipeline {
     pub cache: Arc<Cache>,
     pub layout: Layout,
@@ -364,7 +364,7 @@ impl Drop for Pipeline {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     pub cache: Arc<Cache>,
     pub deferred_pipeline: Arc<Pipeline>,

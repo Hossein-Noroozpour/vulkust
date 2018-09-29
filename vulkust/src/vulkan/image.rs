@@ -13,7 +13,7 @@ use std::io::Read;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Image {
     pub logical_device: Arc<LogicalDevice>,
     pub layout: vk::VkImageLayout,
@@ -222,7 +222,7 @@ impl Drop for Image {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct View {
     pub image: Arc<RwLock<Image>>,
     pub vk_data: vk::VkImageView,

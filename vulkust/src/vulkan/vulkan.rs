@@ -4,7 +4,7 @@
 extern crate winapi;
 
 use std::default::Default;
-#[cfg(debug_assertions)]
+#[cfg(debug_mode)]
 use std::fmt;
 use std::mem::{transmute, zeroed};
 use std::os::raw::{
@@ -1759,7 +1759,7 @@ pub struct VkPhysicalDeviceProperties {
     pub sparseProperties: VkPhysicalDeviceSparseProperties,
 }
 
-#[cfg(debug_assertions)]
+#[cfg(debug_mode)]
 impl fmt::Debug for VkPhysicalDeviceProperties {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "")

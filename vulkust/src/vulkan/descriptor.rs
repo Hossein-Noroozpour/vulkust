@@ -7,7 +7,7 @@ use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Pool {
     pub logical_device: Arc<LogicalDevice>,
     pub vk_data: vk::VkDescriptorPool,
@@ -49,7 +49,7 @@ impl Drop for Pool {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct SetLayout {
     pub logical_device: Arc<LogicalDevice>,
     pub vk_data: vk::VkDescriptorSetLayout,
@@ -123,7 +123,7 @@ impl Drop for SetLayout {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Set {
     pub pool: Arc<Pool>,
     pub layout: Arc<SetLayout>,
@@ -149,7 +149,7 @@ impl Set {
         buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if textures.len() != 7 {
                 vxlogf!("For gbuffer filler descriptor you need 7 textures.");
@@ -165,7 +165,7 @@ impl Set {
         buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if textures.len() != 4 {
                 vxlogf!("For deferred descriptor you need 4 textures.");
@@ -258,7 +258,7 @@ impl Drop for Set {
     fn drop(&mut self) {}
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     pub buffer_manager: Arc<RwLock<BufferManager>>,
     pub gbuff_set_layout: Arc<SetLayout>,

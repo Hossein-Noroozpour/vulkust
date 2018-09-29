@@ -14,7 +14,7 @@ use rusttype::{point, Scale};
 
 pub trait Widget: Model {}
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     pub model_base: ModelBase,
     pub sensitive: bool,
@@ -74,7 +74,7 @@ impl DefaultModel for Base {
 
 impl Widget for Base {}
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Label {
     pub base: Base,
     pub background_color: [f32; 4],

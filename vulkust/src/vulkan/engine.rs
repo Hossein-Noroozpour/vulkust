@@ -26,7 +26,7 @@ use std::sync::{Arc, RwLock};
 const GBUFF_COLOR_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
 const GBUFF_DEPTH_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT;
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {
     pub os_app: Arc<RwLock<OsApp>>,
     pub instance: Arc<Instance>,

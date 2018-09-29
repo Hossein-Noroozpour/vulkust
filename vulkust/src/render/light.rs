@@ -10,7 +10,7 @@ use std::sync::{Arc, RwLock, Weak};
 use gltf;
 use math;
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 #[repr(u8)]
 pub enum TypeId {
     Sun = 1,
@@ -24,7 +24,7 @@ pub trait DefaultLighting {
     fn default(eng: &Arc<RwLock<Engine>>, size: f32) -> Self;
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Sun {
     camera: Orthographic,
     color: (f32, f32, f32),
@@ -100,7 +100,7 @@ impl Loadable for Sun {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     pub lights: BTreeMap<Id, Weak<RwLock<Light>>>,
     pub name_to_id: BTreeMap<String, Id>,
@@ -151,7 +151,7 @@ impl Manager {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct PointUniform {
     color: math::Vector4<Real>,
     position_radius: math::Vector4<Real>,
@@ -168,7 +168,7 @@ impl PointUniform {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct DirectionalUniform {
     color: math::Vector4<Real>,
     direction: math::Vector4<Real>,

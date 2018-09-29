@@ -5,13 +5,13 @@ use super::vulkan as vk;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum NextImageResult {
     NeedsRefresh,
     Next(u32),
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Swapchain {
     pub logical_device: Arc<LogicalDevice>,
     pub surface_format: vk::VkSurfaceFormatKHR,

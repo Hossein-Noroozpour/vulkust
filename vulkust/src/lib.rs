@@ -8,6 +8,7 @@ pub extern crate gltf;
 pub extern crate image;
 pub extern crate libc;
 pub extern crate rusttype;
+pub extern crate num_cpus;
 
 #[cfg(apple_os)]
 #[macro_use]

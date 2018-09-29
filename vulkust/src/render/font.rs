@@ -13,7 +13,7 @@ pub trait Font: CoreObject {
     fn get_font(&self) -> &TypeFont;
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     pub fonts: BTreeMap<Id, Weak<RwLock<Font>>>,
     pub name_to_id: BTreeMap<String, Id>,
@@ -55,7 +55,7 @@ pub struct Base {
     pub font: TypeFont<'static>,
 }
 
-#[cfg(debug_assertions)]
+#[cfg(debug_mode)]
 impl fmt::Debug for Base {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(

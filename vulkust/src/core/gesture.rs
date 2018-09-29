@@ -4,7 +4,7 @@ use super::types::Real;
 use std::collections::BTreeMap;
 use std::time::Instant;
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Translator {
     pub drag: TouchDragTranslator,
     pub scale: TouchScaleTranslator,
@@ -31,7 +31,7 @@ impl Translator {
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum State {
     Started,
     InMiddle,
@@ -39,7 +39,7 @@ pub enum State {
     Canceled,
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct TouchDragTranslator {
     pub state: State,
     pub number: i8,
@@ -213,7 +213,7 @@ impl TouchDragTranslator {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct TouchScaleTranslator {
     pub state: State,
     pub fingers: BTreeMap<i64, (Real, Real)>,

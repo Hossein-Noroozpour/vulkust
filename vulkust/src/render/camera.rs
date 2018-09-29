@@ -10,7 +10,7 @@ use std::convert::From;
 use std::sync::{Arc, RwLock, Weak};
 
 #[repr(C)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
     pub position_radius: math::Vector4<Real>,
     pub projection: math::Matrix4<Real>,
@@ -45,14 +45,14 @@ pub trait DefaultCamera: Camera {
     fn default(&Arc<RwLock<Engine>>) -> Self;
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 #[repr(u8)]
 pub enum TypeId {
     Perspective = 1,
     Orthographic = 2,
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     pub cameras: BTreeMap<Id, Weak<RwLock<Camera>>>,
     pub name_to_id: BTreeMap<String, Id>,
@@ -86,7 +86,7 @@ impl Manager {
             }
         };
         let id = vxresult!(camera.read()).get_id();
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         vxlogi!("Camera is: {:?}", &camera);
         self.cameras.insert(id, Arc::downgrade(&camera));
         if let Some(name) = n.name() {
@@ -134,7 +134,7 @@ impl Manager {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     pub obj_base: ObjectBase,
     pub near: f32,
@@ -318,7 +318,7 @@ impl Camera for Base {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Perspective {
     pub base: Base,
     pub fov_vertical: f32,
@@ -454,7 +454,7 @@ impl Camera for Perspective {
     }
 
     fn get_cascaded_shadow_points(&self, sections_count: usize) -> Vec<math::Vector3<f32>> {
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if sections_count < 1 {
                 vxlogf!("sections_count must be greater than zero.");
@@ -489,7 +489,7 @@ impl DefaultCamera for Perspective {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Orthographic {
     pub base: Base,
     pub size: f32,
@@ -601,7 +601,7 @@ impl Camera for Orthographic {
     }
 
     fn get_cascaded_shadow_points(&self, sections_count: usize) -> Vec<math::Vector3<f32>> {
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if sections_count < 1 {
                 vxlogf!("sections_count must be greater than zero.");

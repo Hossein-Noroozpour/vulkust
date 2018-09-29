@@ -5,7 +5,7 @@ use super::super::apple;
 use super::app_delegate;
 use super::game_view;
 use super::game_view_controller;
-#[cfg(debug_assertions)]
+#[cfg(debug_mode)]
 use std::fmt;
 use std::mem::transmute;
 use std::os::raw::c_void;
@@ -21,7 +21,7 @@ pub struct Application {
     pub view: *mut c_void,
 }
 
-#[cfg(debug_assertions)]
+#[cfg(debug_mode)]
 impl fmt::Debug for Application {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "MacOSApplication")

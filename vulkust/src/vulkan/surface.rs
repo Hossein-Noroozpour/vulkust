@@ -5,7 +5,7 @@ use std::default::Default;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Surface {
     pub instance: Arc<Instance>,
     pub vk_data: vk::VkSurfaceKHR,

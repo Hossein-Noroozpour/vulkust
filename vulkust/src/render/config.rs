@@ -1,4 +1,4 @@
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Configurations {
     pub enable_anistropic_texture: bool,
     pub max_number_mesh: u64,

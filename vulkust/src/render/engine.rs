@@ -1,5 +1,6 @@
 use super::super::core::application::Application as CoreAppTrait;
 use super::super::core::event::Event;
+use super::super::core::timing::Timing;
 use super::super::system::os::application::Application as OsApp;
 use super::camera::DefaultCamera;
 use super::deferred::Deferred;
@@ -7,41 +8,13 @@ use super::gx3d::import as gx3d_import;
 use super::model::DefaultModel;
 use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
 use std::sync::{Arc, RwLock, Weak};
-use std::time::{Duration, Instant};
 // use super::command::buffer::Buffer as CmdBuff;
 
+#[cfg(vulkan_api)]
 pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
+// maybe a day I forced to implement with other API
 
-#[cfg_attr(debug_assertions, derive(Debug))]
-pub struct Timing {
-    pub start_of_previous_frame: Instant,
-    pub start_of_current_frame: Instant,
-    pub length_of_previous_frame: Duration,
-}
-
-impl Timing {
-    fn new() -> Self {
-        let start_of_previous_frame = Instant::now();
-        let start_of_current_frame = Instant::now();
-        let length_of_previous_frame =
-            start_of_current_frame.duration_since(start_of_previous_frame);
-        Timing {
-            start_of_previous_frame,
-            start_of_current_frame,
-            length_of_previous_frame,
-        }
-    }
-
-    pub fn update(&mut self) {
-        self.start_of_previous_frame = self.start_of_current_frame;
-        self.start_of_current_frame = Instant::now();
-        self.length_of_previous_frame = self
-            .start_of_current_frame
-            .duration_since(self.start_of_previous_frame);
-    }
-}
-
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {
     pub myself: Option<Weak<RwLock<Engine>>>,
     pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,

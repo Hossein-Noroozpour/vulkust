@@ -11,7 +11,7 @@ use gltf;
 use image;
 
 #[repr(u8)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum TextureType {
     T2D = 1,
     T3D = 2,
@@ -28,7 +28,7 @@ pub trait Loadable: Sized {
     fn new_with_gx3d(&Engine, &mut Gx3DReader, Id) -> Self;
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     textures: BTreeMap<Id, Weak<RwLock<Texture>>>,
     name_to_id: BTreeMap<String, Id>,
@@ -144,7 +144,7 @@ impl Manager {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Texture2D {
     pub obj_base: ObjectBase,
     pub name: Option<String>,

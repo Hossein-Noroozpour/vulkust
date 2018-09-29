@@ -13,7 +13,7 @@ use std::sync::{Arc, RwLock};
 use gltf;
 
 #[repr(u8)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum Field {
     Float = 1,
     Texture = 2,
@@ -21,7 +21,7 @@ pub enum Field {
 }
 
 #[repr(C)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
     pub alpha: f32,
     pub alpha_cutoff: f32,
@@ -44,7 +44,7 @@ impl Uniform {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum TranslucencyMode {
     Cutoff,
     Tansparent,
@@ -57,7 +57,7 @@ impl Default for TranslucencyMode {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Material {
     pub base_color: Arc<RwLock<Texture>>,
     pub base_color_factor: Arc<RwLock<Texture>>,

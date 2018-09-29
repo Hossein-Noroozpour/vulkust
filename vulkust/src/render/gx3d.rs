@@ -9,7 +9,7 @@ use std::ptr::copy;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, RwLock};
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Gx3DReader {
     file: BufReader<File>,
     different_endianness: bool,
@@ -43,13 +43,13 @@ impl Gx3DReader {
 
     pub fn read_u8(&mut self) -> u8 {
         let mut d = [0u8; 1];
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if 1 != vxresult!(self.file.read(&mut d)) {
                 vxunexpected!();
             }
         }
-        #[cfg(not(debug_assertions))]
+        #[cfg(not(debug_mode))]
         vxresult!(self.file.read(&mut d));
         return d[0];
     }
@@ -65,7 +65,7 @@ impl Gx3DReader {
     fn read_typed_bytes(&mut self, dest: *mut u8, count: usize) {
         let mut bytes = vec![0u8; count];
         let _n = vxresult!(self.file.read(&mut bytes));
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if _n != count {
                 vxunexpected!();
@@ -91,7 +91,7 @@ impl Gx3DReader {
         let size = esize * count;
         let mut bytes = vec![0u8; size];
         let _n = vxresult!(self.file.read(&mut bytes));
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if _n != size {
                 vxunexpected!();
@@ -140,12 +140,12 @@ impl Gx3DReader {
         return ts;
     }
 
-    #[cfg(not(debug_assertions))]
+    #[cfg(not(debug_mode))]
     pub fn seek(&mut self, offset: Offset) {
         vxresult!(self.file.seek(SeekFrom::Start(offset)));
     }
 
-    #[cfg(debug_assertions)]
+    #[cfg(debug_mode)]
     pub fn seek(&mut self, offset: Offset) {
         if offset != vxresult!(self.file.seek(SeekFrom::Start(offset))) {
             vxunexpected!();
@@ -155,7 +155,7 @@ impl Gx3DReader {
     pub fn read_bytes(&mut self, count: Size) -> Vec<u8> {
         let mut data = vec![0u8; count as usize];
         let _n = vxresult!(self.file.read(&mut data));
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if _n as Size != count {
                 vxunexpected!();
@@ -165,7 +165,7 @@ impl Gx3DReader {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Table {
     pub reader: Gx3DReader,
     pub id_offset: BTreeMap<Id, Offset>,

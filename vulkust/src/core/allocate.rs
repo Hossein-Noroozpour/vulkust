@@ -23,7 +23,7 @@ pub trait Allocator: Debug {
     fn clean(&mut self);
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Memory {
     pub offset: isize,
     pub end: isize,
@@ -56,7 +56,7 @@ impl Object for Memory {
     }
 
     fn place(&mut self, offset: isize) {
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if (offset / self.offset_alignment) * self.offset_alignment != offset {
                 vxlogf!("offset i not aligned. {} {}", offset, self.offset_alignment);
@@ -67,7 +67,7 @@ impl Object for Memory {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Container {
     pub base: Memory,
     pub free_offset: isize,

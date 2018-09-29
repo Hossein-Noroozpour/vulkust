@@ -13,7 +13,7 @@ pub const VIEW_VAR_NAME: &str = "view";
 pub const CONTROLLER_VAR_NAME: &str = "controller";
 pub const APP_VAR_NAME: &str = "os_app";
 
-#[cfg(debug_assertions)]
+#[cfg(debug_mode)]
 fn create_frame() -> apple::NSRect {
     use super::super::super::core::constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH};
     apple::NSRect::new(
@@ -24,7 +24,7 @@ fn create_frame() -> apple::NSRect {
     )
 }
 
-#[cfg(not(debug_assertions))]
+#[cfg(not(debug_mode))]
 fn create_frame() -> apple::NSRect {
     let main_screen: apple::Id = unsafe { msg_send![apple::get_class("NSScreen"), mainScreen] };
     let frame: apple::NSRect = unsafe { msg_send![main_screen, frame] };
@@ -39,7 +39,7 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
         | apple::NsWindowStyleMask::NS_RESIZABLE_WINDOW_MASK
         | apple::NsWindowStyleMask::NS_MINIATURIZABLE_WINDOW_MASK
         | apple::NsWindowStyleMask::NS_UNIFIED_TITLE_AND_TOOLBAR_WINDOW_MASK;
-    #[cfg(not(debug_assertions))]
+    #[cfg(not(debug_mode))]
     let style_mask = style_mask | apple::NsWindowStyleMask::NS_FULLSCREEN_WINDOW_MASK;
     let style_mask = style_mask.bits() as apple::NSUInteger;
     let backing = apple::NsBackingStoreType::NS_BACKING_STORE_BUFFERED;

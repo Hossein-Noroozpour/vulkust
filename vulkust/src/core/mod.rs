@@ -8,4 +8,5 @@ pub mod event;
 pub mod gesture;
 pub mod object;
 pub mod string;
+pub mod timing;
 pub mod types;

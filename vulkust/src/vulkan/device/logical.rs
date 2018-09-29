@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::ptr::null;
 use std::sync::Arc;
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Logical {
     pub physical_device: Arc<Physical>,
     pub vk_data: vk::VkDevice,

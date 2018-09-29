@@ -94,25 +94,25 @@ impl Application {
             vxlogf!("Could not register window class!");
         }
         let mut window_rect: winapi::shared::windef::RECT = unsafe { zeroed() };
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             window_rect.right = constants::DEFAULT_WINDOW_WIDTH as winapi::um::winnt::LONG;
             window_rect.bottom = constants::DEFAULT_WINDOW_HEIGHT as winapi::um::winnt::LONG;
         }
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         let dwex_style =
             winapi::um::winuser::WS_EX_APPWINDOW | winapi::um::winuser::WS_EX_WINDOWEDGE;
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         let dw_style = winapi::um::winuser::WS_OVERLAPPEDWINDOW
             | winapi::um::winuser::WS_CLIPSIBLINGS
             | winapi::um::winuser::WS_CLIPCHILDREN;
-        #[cfg(not(debug_assertions))]
+        #[cfg(not(debug_mode))]
         let dwex_style = winapi::um::winuser::WS_EX_APPWINDOW;
-        #[cfg(not(debug_assertions))]
+        #[cfg(not(debug_mode))]
         let dw_style = winapi::um::winuser::WS_POPUP
             | winapi::um::winuser::WS_CLIPSIBLINGS
             | winapi::um::winuser::WS_CLIPCHILDREN;
-        #[cfg(not(debug_assertions))]
+        #[cfg(not(debug_mode))]
         {
             let screen_width =
                 unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN) };
@@ -169,7 +169,7 @@ impl Application {
         if window == null_mut() {
             vxlogf!("Could not create window!");
         }
-        #[cfg(not(debug_assertions))]
+        #[cfg(not(debug_mode))]
         {
             let x = (winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN)
                 - window_rect.right)

@@ -6,7 +6,7 @@ use math;
 
 pub trait Collider: Debug {}
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 #[repr(u8)]
 pub enum TypeId {
     Mesh = 2,
@@ -24,7 +24,7 @@ pub fn read(reader: &mut Gx3DReader) -> Arc<RwLock<Collider>> {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Mesh {
     pub vertices: Vec<math::Vector3<f32>>,
     pub indices: Vec<u32>,
@@ -44,7 +44,7 @@ impl Mesh {
 
 impl Collider for Mesh {}
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Ghost {}
 
 impl Ghost {

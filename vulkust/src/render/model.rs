@@ -25,14 +25,14 @@ pub trait DefaultModel: Model + Sized {
 }
 
 #[repr(u8)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum TypeId {
     Dynamic = 1,
     Static = 2,
     Widget = 3,
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     pub models: BTreeMap<Id, Weak<RwLock<Model>>>,
     pub name_to_id: BTreeMap<String, Id>,
@@ -85,7 +85,7 @@ impl Manager {
 }
 
 #[repr(C)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
     pub model: math::Matrix4<f32>,
     // todo, I think its not gonna be needed,
@@ -134,7 +134,7 @@ impl Uniform {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     pub obj_base: ObjectBase,
     pub is_dynamic: bool,

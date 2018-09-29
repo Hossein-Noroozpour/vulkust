@@ -6,7 +6,7 @@ use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::Arc;
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Framebuffer {
     pub clear_values: Vec<vk::VkClearValue>,
     pub color_buffers: Vec<Arc<View>>,

@@ -12,7 +12,7 @@ pub trait Object: Debug {
     fn get_id(&self) -> Id;
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     pub id: Id,
 }

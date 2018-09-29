@@ -4,7 +4,7 @@ use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::Arc;
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct RenderPass {
     pub swapchain: Option<Arc<Swapchain>>,
     pub views: Option<Vec<Arc<ImageView>>>,

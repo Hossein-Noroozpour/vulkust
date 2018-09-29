@@ -45,6 +45,7 @@ fn main() {
     #[cfg(debug_assertions)]
     {
         println!("cargo:rustc-cfg=debug_gx3d");
+        println!("cargo:rustc-cfg=debug_mode");
     }
     check_shaders();
     check_fonts();

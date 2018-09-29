@@ -5,7 +5,7 @@ use std::ptr::{null, null_mut};
 use super::super::core::string::{cstrings_to_ptrs, slice_to_string, strings_to_cstrings};
 use super::vulkan as vk;
 
-#[cfg(debug_assertions)]
+#[cfg(debug_mode)]
 mod debug {
     use std::collections::BTreeMap;
     use std::ffi::{CStr, CString};
@@ -189,7 +189,7 @@ mod debug {
 
 }
 
-#[cfg(not(debug_assertions))]
+#[cfg(not(debug_mode))]
 mod debug {
     use super::vk;
     use std::ffi::CString;
@@ -246,7 +246,7 @@ fn enumerate_extensions() -> Vec<String> {
                 vxlogi!("Extension importing {}", name);
                 extensions.push(name.to_string());
             }
-            #[cfg(debug_assertions)]
+            #[cfg(debug_mode)]
             "VK_EXT_debug_report" => {
                 vxlogi!("Extension importing {}", name);
                 extensions.push(name.to_string());
@@ -270,7 +270,7 @@ pub fn contain_extension(s: &str) -> bool {
     return false;
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Instance {
     pub vk_data: vk::VkInstance,
     debugger: debug::Debugger,

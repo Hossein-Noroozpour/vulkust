@@ -15,7 +15,7 @@ use std::sync::{Arc, RwLock, Weak};
 use gltf;
 
 #[repr(u8)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum TypeId {
     Base = 1,
 }
@@ -27,7 +27,7 @@ pub trait Mesh: Object {
     fn update(&mut self, scene_uniform: &SceneUniform, model_uniform: &ModelUniform);
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     pub meshes: BTreeMap<Id, Weak<RwLock<Mesh>>>,
     pub name_to_id: BTreeMap<String, Id>,
@@ -99,7 +99,7 @@ impl Manager {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     pub obj_base: ObjectBase,
     pub material: Material,
@@ -236,7 +236,7 @@ impl Base {
 
     pub fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let number_of_vertex_attribute = reader.read_u8() as usize;
-        #[cfg(debug_assertions)]
+        #[cfg(debug_mode)]
         {
             if number_of_vertex_attribute != 12 {
                 vxunexpected!();

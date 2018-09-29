@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 pub type FingerIndexType = i64;
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum Mouse {
     Left,
     Right,
@@ -17,7 +17,7 @@ pub enum Mouse {
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum Keyboard {
     A,
     B,
@@ -89,14 +89,14 @@ pub enum Keyboard {
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum Button {
     Mouse(Mouse),
     Keyboard(Keyboard),
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum Window {
     SizeChange {
         w: Real,
@@ -109,7 +109,7 @@ pub enum Window {
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum Move {
     Mouse {
         previous: (Real, Real),
@@ -125,14 +125,14 @@ pub enum Move {
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum ButtonAction {
     Press,
     Release,
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum TouchAction {
     Press,
     HardPress,
@@ -140,7 +140,7 @@ pub enum TouchAction {
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum TouchGesture {
     Tap, // todo
     Drag {
@@ -161,7 +161,7 @@ pub enum TouchGesture {
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum Touch {
     Gesture {
         start_time: Instant,
@@ -177,7 +177,7 @@ pub enum Touch {
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum Type {
     Move(Move),
     Button {
@@ -190,7 +190,7 @@ pub enum Type {
 }
 
 #[derive(Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Event {
     id: Id,
     pub event_type: Type,
