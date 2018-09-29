@@ -1,6 +1,6 @@
 use super::buffer::DynamicBuffer;
 use super::descriptor::Set as DescriptorSet;
-use super::engine::GraphicApiEngine;
+use super::gapi::GraphicApiEngine;
 use super::scene::Manager as SceneManager;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};

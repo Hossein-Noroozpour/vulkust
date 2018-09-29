@@ -6,13 +6,11 @@ use super::camera::DefaultCamera;
 use super::deferred::Deferred;
 use super::gx3d::import as gx3d_import;
 use super::model::DefaultModel;
+use super::kernel::Kernel;
+use super::gapi::GraphicApiEngine;
 use super::scene::{DefaultScene, Loadable as LoadableScene, Manager as SceneManager};
 use std::sync::{Arc, RwLock, Weak};
-// use super::command::buffer::Buffer as CmdBuff;
-
-#[cfg(vulkan_api)]
-pub use super::super::vulkan::engine::Engine as GraphicApiEngine;
-// maybe a day I forced to implement with other API
+use num_cpus;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {
@@ -23,6 +21,7 @@ pub struct Engine {
     pub scene_manager: Arc<RwLock<SceneManager>>,
     pub deferred: Arc<RwLock<Deferred>>,
     pub timing: Arc<RwLock<Timing>>,
+    kernels: Vec<Kernel>,
 }
 
 impl Engine {
@@ -37,6 +36,7 @@ impl Engine {
         )));
         let gapi_engine = Arc::new(RwLock::new(gapi_engine));
         let myself = None;
+        let kernels = Vec::new();
         Engine {
             myself,
             gapi_engine,
@@ -45,12 +45,18 @@ impl Engine {
             scene_manager,
             deferred,
             timing: Arc::new(RwLock::new(Timing::new())),
+            kernels
         }
     }
 
     pub fn set_myself(&mut self, myself: Weak<RwLock<Engine>>) {
-        self.myself = Some(myself.clone());
-        vxresult!(self.scene_manager.write()).set_engine(myself);
+        vxresult!(self.scene_manager.write()).set_engine(myself.clone());
+        let kernels_count = num_cpus::get();
+        for ki in 0..kernels_count {
+            self.kernels.push(Kernel::new(ki, myself.clone()));
+        }
+        self.kernels.shrink_to_fit();
+        self.myself = Some(myself);
     }
 
     pub fn update(&self) {
