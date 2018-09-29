@@ -56,3 +56,7 @@ impl Drop for Pool {
         }
     }
 }
+
+unsafe impl Send for Pool {}
+
+unsafe impl Sync for Pool {}

@@ -54,6 +54,10 @@ impl Object for Memory {
     }
 }
 
+unsafe impl Send for Memory {}
+
+unsafe impl Sync for Memory {}
+
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct RootMemory {
     pub alignment: isize,
@@ -123,6 +127,10 @@ impl Drop for RootMemory {
         }
     }
 }
+
+unsafe impl Send for RootMemory {}
+
+unsafe impl Sync for RootMemory {}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub enum Location {
@@ -195,3 +203,7 @@ impl Manager {
         return allocated;
     }
 }
+
+unsafe impl Send for Manager {}
+
+unsafe impl Sync for Manager {}

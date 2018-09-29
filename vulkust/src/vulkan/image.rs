@@ -222,6 +222,10 @@ impl Drop for Image {
     }
 }
 
+unsafe impl Send for Image {}
+
+unsafe impl Sync for Image {}
+
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct View {
     pub image: Arc<RwLock<Image>>,
@@ -382,3 +386,7 @@ impl Drop for View {
         }
     }
 }
+
+unsafe impl Send for View {}
+
+unsafe impl Sync for View {}

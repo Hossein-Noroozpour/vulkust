@@ -336,3 +336,7 @@ fn get_mouse_position(
         (x, y)
     }
 }
+
+unsafe impl Send for Application {}
+
+unsafe impl Sync for Application {}

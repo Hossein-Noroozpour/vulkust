@@ -321,3 +321,7 @@ impl Drop for Instance {
         self.vk_data = 0 as vk::VkInstance;
     }
 }
+
+unsafe impl Send for Instance {}
+
+unsafe impl Sync for Instance {}

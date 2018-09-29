@@ -106,3 +106,7 @@ impl Engine {
 
     pub fn on_event(&self, _e: Event) {}
 }
+
+unsafe impl Send for Engine {}
+
+unsafe impl Sync for Engine {}

@@ -355,3 +355,7 @@ impl Physical {
 impl Drop for Physical {
     fn drop(&mut self) {}
 }
+
+unsafe impl Send for Physical {}
+
+unsafe impl Sync for Physical {}

@@ -76,6 +76,10 @@ impl Allocator for Buffer {
     }
 }
 
+unsafe impl Send for Buffer {}
+
+unsafe impl Sync for Buffer {}
+
 #[cfg_attr(debug_mode, derive(Debug))]
 pub enum Location {
     CPU,
@@ -160,6 +164,10 @@ impl Drop for RootBuffer {
         }
     }
 }
+
+unsafe impl Send for RootBuffer {}
+
+unsafe impl Sync for RootBuffer {}
 
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -429,3 +437,7 @@ impl Manager {
         // todo I have to clean the static uploader container in here
     }
 }
+
+unsafe impl Send for Manager {}
+
+unsafe impl Sync for Manager {}

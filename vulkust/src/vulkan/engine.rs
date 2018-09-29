@@ -456,3 +456,7 @@ impl Drop for Engine {
         self.logical_device.wait_idle();
     }
 }
+
+unsafe impl Send for Engine {}
+
+unsafe impl Sync for Engine {}
