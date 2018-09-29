@@ -1,8 +1,8 @@
 [package]
-name = "camera"
+name = "more-things"
 version = "0.1.0"
 authors = ["Hossein Noroozpour <hossein.noroozpour@gmail.com>"]
-description = "A camera manipulating example for Vulkust game engine"
+description = "A more things example for Vulkust game engine"
 license = "MIT"
 
 [dependencies]

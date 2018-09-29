@@ -4,7 +4,7 @@ members = [
     "examples/002-android-empty-window",
     "examples/003-ios-empty-window",
     "examples/004-hello-world",
-    "examples/005-camera",
+    "examples/005-more-things",
     "examples/006-gx3d-loading",
     "vulkust",
 ]

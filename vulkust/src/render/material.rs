@@ -39,7 +39,7 @@ impl Uniform {
             normal_scale: 1.0,
             occlusion_strength: 1.0,
             alpha: 1.0,
-            alpha_cutoff: 0.0,
+            alpha_cutoff: 1.0 / 256.0,
         }
     }
 }

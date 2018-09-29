@@ -64,11 +64,18 @@ layout (location = 1) out vec4 out_nrm;
 layout (location = 2) out vec4 out_alb;
 
 void main() {
-  out_pos.xyz = pos;
-  out_pos.w = 1.0;
-  out_nrm.xyz = mat3(tng, btg, nrm) * ((texture(normal, uv).xyz - 0.5) * 2.0);
-  out_nrm.w = 1.0;
-  out_alb = texture(base_color, uv) * texture(base_color_factor, uv);
+    vec4 alb = texture(base_color, uv) * texture(base_color_factor, uv);
+    alb.w *= material_ubo.alpha;
+    if(alb.w < material_ubo.alpha_cutoff) {
+        discard;
+    }
+    out_alb = alb;
+    out_pos.xyz = pos;
+//   out_pos.w = out_alb.a;
+    out_pos.w = 1.0;
+    out_nrm.xyz = mat3(tng, btg, nrm) * ((texture(normal, uv).xyz - 0.5) * 2.0);
+//   out_nrm.w = out_alb.a;
+    out_nrm.w = 1.0;
   // todo lots of work must be done in here
   // I must add any needed output for deferred part
   // w channel can hold useful info for deferred

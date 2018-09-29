@@ -4,12 +4,13 @@ use vulkust::core::event::{
 };
 use vulkust::core::gesture;
 use vulkust::math;
-use vulkust::render::camera::Perspective;
+use vulkust::render::camera::{Orthographic, Perspective};
 use vulkust::render::engine::Engine as Renderer;
 use vulkust::render::material::Material;
 use vulkust::render::model::{Base as ModelBase, Model};
 use vulkust::render::object::Transferable;
-use vulkust::render::scene::{Scene, Ui as UiScene};
+use vulkust::render::scene::{Scene, Ui as UiScene, Game as GameScene};
+use vulkust::render::widget::Label;
 use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
@@ -18,7 +19,8 @@ use std::sync::{Arc, RwLock};
 pub struct MyGame {
     pub os_app: Option<Arc<RwLock<OsApp>>>,
     pub renderer: Option<Arc<RwLock<Renderer>>>,
-    pub scene: Option<Arc<RwLock<UiScene>>>,
+    pub scene: Option<Arc<RwLock<GameScene>>>,
+    pub ui_scene: Option<Arc<RwLock<UiScene>>>,
     pub camera: Option<Arc<RwLock<Perspective>>>,
     keys_state: Arc<RwLock<KeysState>>,
 }
@@ -38,6 +40,7 @@ impl MyGame {
             os_app: None,
             renderer: None,
             scene: None,
+            ui_scene: None,
             camera: None,
             keys_state: Arc::new(RwLock::new(KeysState {
                 w: false,
@@ -62,11 +65,11 @@ impl CoreAppTrait for MyGame {
     fn initialize(&mut self) {
         let renderer = vxunwrap!(&self.renderer);
         let renderer = vxresult!(renderer.read());
-        let scene: Arc<RwLock<UiScene>> = renderer.create_scene();
+        let scene: Arc<RwLock<GameScene>> = renderer.create_scene();
         let camera: Arc<RwLock<Perspective>> = renderer.create_camera();
         {
             let mut camera = vxresult!(camera.write());
-            camera.set_location(&math::Vector3::new(0.0, 0.0, 3.0));
+            camera.set_location(&math::Vector3::new(0.0, 0.0, 4.0));
         }
         self.camera = Some(camera.clone());
         let model: Arc<RwLock<Model>> = renderer.create_model::<ModelBase>();
@@ -111,11 +114,28 @@ impl CoreAppTrait for MyGame {
             vxresult!(model.write()).add_mesh(mesh);
         }
         {
-            let mut uiscn = vxresult!(scene.write());
-            uiscn.add_camera(camera);
-            uiscn.add_model(model);
+            let mut scn = vxresult!(scene.write());
+            scn.add_camera(camera);
+            scn.add_model(model);
         }
         self.scene = Some(scene);
+        let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene(); 
+        let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
+        let label: Arc<RwLock<Label>> = renderer.create_model();
+        {
+            let mut label = vxresult!(label.write());
+            label.set_size(0.05, &renderer);
+            label.set_text_size(50.0, &renderer);
+            label.set_text_color(1.0, 0.0, 0.0, 1.0, &renderer);
+            label.set_background_color(0.0, 0.0, 0.0, 0.0, &renderer);
+            label.set_text("More things from Vulkust!", &renderer);
+        }
+        {
+            let mut uiscn = vxresult!(ui_scene.write());
+            uiscn.add_camera(camera);
+            uiscn.add_model(label);
+        }
+        self.ui_scene = Some(ui_scene);
     }
 
     fn on_event(&self, e: Event) {

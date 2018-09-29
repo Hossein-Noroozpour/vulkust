@@ -144,10 +144,31 @@ impl Label {
         let v_metrics = font.v_metrics(scale);
         let point = point(0.0, 0.0 + v_metrics.ascent);
         let glyphs: Vec<_> = font.layout(&self.text, scale, point).collect();
-        let glyphs_len = glyphs.len();
-        let imgbb = vxunwrap!(glyphs[glyphs_len - 1].pixel_bounding_box()).max;
-        let imgw = imgbb.x as i32 + 5;
-        let imgh = imgbb.y as i32 + 5;
+        let mut max_x = 0;
+        let mut max_y = 0;
+        let mut min_x = 0;
+        let mut min_y = 0;
+        for glyph in &glyphs {
+            if let Some(bb) = glyph.pixel_bounding_box() {
+                let max = &bb.max;
+                let min = &bb.min;
+                if min.x < min_x {
+                    min_x = min.x;
+                } 
+                if min.y < min_y {
+                    min_y = min.y;
+                } 
+                if max.x > max_x {
+                    max_x = max.x;
+                } 
+                if max.y > max_y {
+                    max_y = max.y;
+                } 
+            }
+        }
+        vxlogi!("{}-{}-{}-{}", max_x, max_y, min_x, min_y);
+        let imgw = max_x as i32 + 5;
+        let imgh = max_y as i32 + 5;
         let w = self.size * (imgw as f32 / imgh as f32);
         let h = self.size;
         let bg = [
@@ -184,13 +205,13 @@ impl Label {
             }
         }
         let vertices = [
-            w,   h,   -1.50, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 
+            w,   h,   -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 
             //-----------------------------------------------------------------------
-            w,   0.0, -1.50, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 
+            w,   0.0, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 
             //-----------------------------------------------------------------------
-            0.0, h,   -1.50, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, h,   -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
             //-----------------------------------------------------------------------
-            0.0, 0.0, -1.50, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+            0.0, 0.0, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
         ];
         let indices = [0u32, 2, 1, 1, 2, 3];
         let mut material = Material::default(engine);

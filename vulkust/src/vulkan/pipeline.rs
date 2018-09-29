@@ -203,6 +203,7 @@ impl Pipeline {
         for i in 0..blend_attachment_state_size {
             // todo temporary for test
             // for g buffer it is not good
+            if blend_attachment_state_size == 1 || i == 2 {
             blend_attachment_state[i].blendEnable = vk::VK_TRUE;
             blend_attachment_state[i].srcColorBlendFactor =
                 vk::VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
@@ -212,11 +213,12 @@ impl Pipeline {
             blend_attachment_state[i].srcAlphaBlendFactor = vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
             blend_attachment_state[i].dstAlphaBlendFactor = vk::VkBlendFactor::VK_BLEND_FACTOR_ZERO;
             blend_attachment_state[i].alphaBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
+            }
             blend_attachment_state[i].colorWriteMask =
-                vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as u32
-                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT as u32
-                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT as u32
-                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT as u32;
+                vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as vk::VkColorComponentFlags
+                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT as vk::VkColorComponentFlags
+                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT as vk::VkColorComponentFlags
+                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT as vk::VkColorComponentFlags;
         }
 
         let mut color_blend_state = vk::VkPipelineColorBlendStateCreateInfo::default();
@@ -245,14 +247,14 @@ impl Pipeline {
         let mut depth_stencil_state = vk::VkPipelineDepthStencilStateCreateInfo::default();
         depth_stencil_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depth_stencil_state.depthTestEnable = 1;
-        depth_stencil_state.depthWriteEnable = 1;
+        depth_stencil_state.depthTestEnable = vk::VK_TRUE;
+        depth_stencil_state.depthWriteEnable = vk::VK_TRUE;
         depth_stencil_state.depthCompareOp = vk::VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL;
-        depth_stencil_state.depthBoundsTestEnable = 0;
+        depth_stencil_state.depthBoundsTestEnable = vk::VK_FALSE;
         depth_stencil_state.back.failOp = vk::VkStencilOp::VK_STENCIL_OP_KEEP;
         depth_stencil_state.back.passOp = vk::VkStencilOp::VK_STENCIL_OP_KEEP;
         depth_stencil_state.back.compareOp = vk::VkCompareOp::VK_COMPARE_OP_ALWAYS;
-        depth_stencil_state.stencilTestEnable = 0;
+        depth_stencil_state.stencilTestEnable = vk::VK_FALSE;
         depth_stencil_state.front = depth_stencil_state.back;
 
         let mut multisample_state = vk::VkPipelineMultisampleStateCreateInfo::default();
@@ -263,7 +265,7 @@ impl Pipeline {
             multisample_state.sampleShadingEnable = vk::VK_TRUE;
             multisample_state.minSampleShading = 0.25;
             multisample_state.alphaToCoverageEnable = vk::VK_TRUE;
-        // multisample_state.alphaToOneEnable = vk::VK_TRUE;
+            // multisample_state.alphaToOneEnable = vk::VK_TRUE;
         } else {
             multisample_state.rasterizationSamples =
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;

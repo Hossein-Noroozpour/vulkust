@@ -564,6 +564,13 @@ impl Loadable for Game {
     }
 }
 
+impl DefaultScene for Game {
+    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
+        let base = Base::default(engine);
+        Game { base }
+    }
+}
+
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct Ui {
     pub base: Base,
