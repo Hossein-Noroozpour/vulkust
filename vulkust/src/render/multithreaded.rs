@@ -66,6 +66,13 @@ impl Renderer {
         let eng = g_engine.clone();
         let eng = vxresult!(eng.read());
         let cmd_pool = eng.create_command_pool();
+        let frames_count = eng.get_frames_count();
+        let cmdsss = cmd_buffers.clone();
+        let cmdsss = vxresult!(cmdsss.lock());
+        for _ in 0..frames_count {
+            cmdsss.push(BTreeMap::new());
+        }
+        cmdsss.shrink_to_fit();
         Renderer {
             index,
             kernels_count,
@@ -111,6 +118,7 @@ impl Renderer {
                 let mut model = vxresult!(model.write());
                 Object::update(&mut *model);
                 Model::update(&mut *model, &*scene);
+                // todo add command fillers in here
             }
         }
     }

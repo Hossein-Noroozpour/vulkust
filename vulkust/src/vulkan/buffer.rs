@@ -12,7 +12,7 @@ use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Buffer {
+pub(crate) struct Buffer {
     pub memory_offset: isize,
     pub info: alc::Container,
     pub vk_data: vk::VkBuffer,
@@ -184,31 +184,28 @@ impl StaticBuffer {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct DynamicBuffer {
     pub buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
-    pub frame_number: Arc<RwLock<u32>>,
     pub actual_size: isize,
 }
 
 impl DynamicBuffer {
     pub fn new(
         buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
-        frame_number: Arc<RwLock<u32>>,
         actual_size: isize,
     ) -> Self {
         DynamicBuffer {
             buffers,
-            frame_number,
             actual_size,
         }
     }
 
-    pub fn update_with_ptr(&mut self, data: *const c_void) {
-        let ptr = self.buffers[*vxresult!(self.frame_number.read()) as usize].1;
+    pub fn update_with_ptr(&mut self, data: *const c_void, frame_number: usize) {
+        let ptr = self.buffers[frame_number].1;
         unsafe {
             libc::memcpy(transmute(ptr), transmute(data), self.actual_size as usize);
         }
     }
 
-    pub fn update<T>(&mut self, data: &T)
+    pub fn update<T>(&mut self, data: &T, frame_number: usize)
     where
         T: Sized,
     {
@@ -218,7 +215,11 @@ impl DynamicBuffer {
                 vxlogf!("Data must have same size of buffer.");
             }
         }
-        self.update_with_ptr(unsafe { transmute(data) });
+        self.update_with_ptr(unsafe { transmute(data) }, frame_number);
+    }
+
+    pub(crate) fn get_buffer(&self, frame_number: usize) -> &Arc<RwLock<Buffer>> {
+        return &self.buffers[frame_number].0;
     }
 }
 
@@ -393,7 +394,7 @@ impl Manager {
             buffers.push((buffer, ptr));
         }
         buffers.shrink_to_fit();
-        DynamicBuffer::new(buffers, self.frame_number.clone(), actual_size)
+        DynamicBuffer::new(buffers, actual_size)
     }
 
     pub fn update(&mut self) {

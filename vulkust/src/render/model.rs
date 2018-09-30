@@ -2,6 +2,7 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::super::physics::collider::{read as read_collider, Collider, Ghost as GhostCollider};
 use super::buffer::DynamicBuffer;
+use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
@@ -170,22 +171,23 @@ impl Object for Base {
         vxunimplemented!();
     }
 
-    fn render(&self, engine: &Engine) {
+    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         if !self.obj_base.renderable {
             return;
         }
-        self.obj_base.render(engine);
+        self.obj_base.render(cmd, frame_number);
         {
             let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
-            uniform_buffer.update(&self.uniform);
-            let mut gapi_engine = vxresult!(engine.gapi_engine.write());
-            gapi_engine.bind_gbuff_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 1);
+            uniform_buffer.update(&self.uniform, frame_number);
+            let buffer = uniform_buffer.get_buffer(frame_number);
+            let buffer = vxresult!(buffer.read());
+            cmd.bind_model_descriptor(&*self.descriptor_set, &*buffer);
         }
         for (_, mesh) in &self.meshes {
-            vxresult!(mesh.read()).render(engine);
+            vxresult!(mesh.read()).render(cmd, frame_number);
         }
         for (_, model) in &self.children {
-            vxresult!(model.read()).render(engine);
+            vxresult!(model.read()).render(cmd, frame_number);
         }
     }
 

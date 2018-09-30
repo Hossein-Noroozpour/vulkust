@@ -1,4 +1,6 @@
+use super::super::core::allocate::Object as CoreAllocObj;
 use super::buffer::Buffer as BufBuffer;
+use super::descriptor::Set as DescriptorSet;
 use super::device::logical::Logical as LogicalDevice;
 use super::pipeline::{Layout as PipelineLayout, Pipeline};
 use super::synchronizer::fence::Fence;
@@ -11,7 +13,13 @@ use std::sync::{Arc, RwLock};
 pub struct Buffer {
     pub pool: Arc<Pool>,
     pub vk_data: vk::VkCommandBuffer,
+    pub vk_descriptor_sets: [vk::VkDescriptorSet; 3],
+    pub dynamic_buffer_offsets: [u32; 3], 
 }
+
+const SCENE_DESCRIPTOR_OFFSET: usize = 0;
+const MODEL_DESCRIPTOR_OFFSET: usize = 1;
+const MATERIAL_DESCRIPTOR_OFFSET: usize = 2;
 
 impl Buffer {
     pub fn new(pool: Arc<Pool>) -> Self {
@@ -30,6 +38,8 @@ impl Buffer {
         Buffer {
             pool: pool.clone(),
             vk_data: vk_data,
+            vk_descriptor_sets: [0 as vk::VkDescriptorSet; 3],
+            dynamic_buffer_offsets: [0; 3], 
         }
     }
 
@@ -210,6 +220,33 @@ impl Buffer {
                 info,
             );
         }
+    }
+
+    pub(crate) fn bind_model_descriptor(&mut self, descriptor_set: &DescriptorSet, buffer: &BufBuffer) {
+        self.vk_descriptor_sets[MODEL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.dynamic_buffer_offsets[MODEL_DESCRIPTOR_OFFSET] = buffer.get_offset() as u32;
+    }
+
+    pub(crate) fn bind_material_descriptor(&mut self, descriptor_set: &DescriptorSet, buffer: &BufBuffer) {
+        self.vk_descriptor_sets[MATERIAL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.dynamic_buffer_offsets[MATERIAL_DESCRIPTOR_OFFSET] = buffer.get_offset() as u32;
+    }
+
+    pub(crate) fn render_gbuff(
+        &mut self,
+        vertex_buffer: &StaticBuffer,
+        index_buffer: &StaticBuffer,
+        indices_count: u32,
+    ) {
+        let pipemgr = vxresult!(self.pipeline_manager.read());
+        self.bind_descriptor_sets(
+            &pipemgr.gbuff_pipeline.layout,
+            &self.bound_gbuff_descriptor_sets,
+            &self.bound_gbuff_dynamic_offsets,
+        );
+        self.bind_vertex_buffer(&vertex_buffer.buffer);
+        self.bind_index_buffer(&index_buffer.buffer);
+        self.draw_index(indices_count);
     }
 }
 

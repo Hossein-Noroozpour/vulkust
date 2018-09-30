@@ -1,6 +1,9 @@
 use super::debug::Debug;
 use std::sync::{Arc, RwLock, Weak};
 
+// todo maybe RwLock is not necessary, this is slow down our render commands
+// for passive garbage collection I think Mutex is sufficient  
+
 pub fn align(size: isize, alignment: isize) -> isize {
     let tmp = size / alignment;
     let aligned_size = tmp * alignment;

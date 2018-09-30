@@ -1,6 +1,7 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::buffer::StaticBuffer;
+use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::material::Material;
@@ -287,9 +288,9 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, engine: &Engine) {
-        self.material.bind(engine);
-        vxresult!(engine.gapi_engine.read()).render_gbuff(
+    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.material.bind(cmd, frame_number);
+        cmd.render_gbuff(
             &self.vertex_buffer,
             &self.index_buffer,
             self.indices_count,

@@ -5,7 +5,7 @@ use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::ptr::null;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Mutex};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Pool {
@@ -136,7 +136,7 @@ impl Set {
     pub fn new_buffer_only(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: Arc<Mutex<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
     ) -> Self {
         Self::new(pool, layout, uniform, buffer_manager, Vec::new())
@@ -145,7 +145,7 @@ impl Set {
     pub fn new_gbuff(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: Arc<Mutex<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
@@ -161,7 +161,7 @@ impl Set {
     pub fn new_deferred(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: Arc<Mutex<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
@@ -291,7 +291,7 @@ impl Manager {
 
     pub fn create_gbuff_set(
         &mut self,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: Arc<Mutex<DynamicBuffer>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Set {
         Set::new_gbuff(

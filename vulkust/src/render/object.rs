@@ -1,6 +1,7 @@
 use super::super::core::object::{Base as CoreBase, Object as CoreObject};
 use super::super::core::types::Id;
 use super::engine::Engine;
+use super::command::Buffer as CmdBuffer;
 use super::gx3d::Gx3DReader;
 use gltf;
 use math;
@@ -9,7 +10,7 @@ use std::sync::{Arc, RwLock};
 pub trait Object: CoreObject {
     fn get_name(&self) -> Option<String>;
     fn set_name(&mut self, name: &str);
-    fn render(&self, &Engine);
+    fn render(&self, &mut CmdBuffer, usize);
     fn disable_rendering(&mut self);
     fn enable_rendering(&mut self);
     fn update(&mut self);
@@ -75,7 +76,7 @@ impl Object for Base {
         self.name = Some(name.to_string());
     }
 
-    fn render(&self, _engine: &Engine) {
+    fn render(&self, _cmd: &mut CmdBuffer, _: usize) {
         #[cfg(debug_mode)]
         {
             if !self.renderable {
