@@ -1,14 +1,14 @@
 use super::super::core::types::Id;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::gapi::GraphicApiEngine;
-use super::scene::Manager as SceneManager;
-use super::object::Object;
 use super::model::Model;
+use super::object::Object;
+use super::scene::Manager as SceneManager;
 use super::scene::Scene;
 use num_cpus;
 use std::collections::BTreeMap;
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, Mutex, RwLock, Weak};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread::{spawn, JoinHandle};
 
 const PASSES_COUNT: usize = 2;
@@ -24,7 +24,12 @@ struct Kernel {
 }
 
 impl Kernel {
-    pub fn new(index: usize, kernels_count: usize, engine: Arc<RwLock<GraphicApiEngine>>, scene_manager: Arc<RwLock<SceneManager>>) -> Self {
+    pub fn new(
+        index: usize,
+        kernels_count: usize,
+        engine: Arc<RwLock<GraphicApiEngine>>,
+        scene_manager: Arc<RwLock<SceneManager>>,
+    ) -> Self {
         let (loop_signaler, rcv) = channel();
         let (ready_sig, ready_notifier) = channel();
         let cmd_buffers = Arc::new(Mutex::new(Vec::new()));
@@ -131,13 +136,18 @@ pub(super) struct Engine {
 
 impl Engine {
     pub fn new(
-        engine: Arc<RwLock<GraphicApiEngine>>, 
+        engine: Arc<RwLock<GraphicApiEngine>>,
         scene_manager: Arc<RwLock<SceneManager>>,
     ) -> Self {
         let kernels_count = num_cpus::get();
         let mut kernels = Vec::new();
         for ki in 0..kernels_count {
-            kernels.push(Kernel::new(ki, kernels_count, engine.clone(), scene_manager.clone()));
+            kernels.push(Kernel::new(
+                ki,
+                kernels_count,
+                engine.clone(),
+                scene_manager.clone(),
+            ));
         }
         kernels.shrink_to_fit();
         Engine { kernels }

@@ -147,8 +147,8 @@ pub struct Base {
     pub distance_from_cameras: Vec<f32>,
     pub collider: Arc<RwLock<Collider>>,
     pub uniform: Uniform,
-    pub uniform_buffer: Arc<RwLock<DynamicBuffer>>,
-    pub descriptor_set: Arc<DescriptorSet>,
+    uniform_buffer: Arc<RwLock<DynamicBuffer>>,
+    pub(crate) descriptor_set: Arc<DescriptorSet>,
     pub meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
     pub children: BTreeMap<Id, Arc<RwLock<Model>>>,
 }
@@ -181,7 +181,7 @@ impl Object for Base {
             uniform_buffer.update(&self.uniform, frame_number);
             let buffer = uniform_buffer.get_buffer(frame_number);
             let buffer = vxresult!(buffer.read());
-            cmd.bind_model_descriptor(&*self.descriptor_set, &*buffer);
+            cmd.bind_gbuff_model_descriptor(&*self.descriptor_set, &*buffer);
         }
         for (_, mesh) in &self.meshes {
             vxresult!(mesh.read()).render(cmd, frame_number);

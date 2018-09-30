@@ -35,7 +35,8 @@ impl Engine {
         )));
         let gapi_engine = Arc::new(RwLock::new(gapi_engine));
         let myself = None;
-        let multithreaded_engine = MultithreadedEngine::new(gapi_engine.clone(), scene_manager.clone());
+        let multithreaded_engine =
+            MultithreadedEngine::new(gapi_engine.clone(), scene_manager.clone());
         Engine {
             myself,
             gapi_engine,
@@ -58,13 +59,13 @@ impl Engine {
         // it require separate command buffer for each scene
         // it gonna help the multithread rendering part
         // tmporary it must change in future
-        vxresult!(self.gapi_engine.write()).start_recording();
-        vxresult!(self.scene_manager.read()).render(); // temp
-        vxresult!(self.gapi_engine.read()).start_deferred();
+        // vxresult!(self.gapi_engine.write()).start_recording();
+        // vxresult!(self.scene_manager.read()).render(); // temp
+        // vxresult!(self.gapi_engine.read()).start_deferred();
         // todo update deferred buffer in scene
-        vxresult!(self.scene_manager.read()).render_deferred();
-        vxresult!(self.deferred.read()).render(&mut *vxresult!(self.gapi_engine.write()));
-        vxresult!(self.gapi_engine.write()).end_recording();
+        // vxresult!(self.scene_manager.read()).render_deferred();
+        // vxresult!(self.deferred.read()).render(&mut *vxresult!(self.gapi_engine.write()));
+        // vxresult!(self.gapi_engine.write()).end_recording();
     }
 
     pub fn load_gltf_scene<S>(&self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>

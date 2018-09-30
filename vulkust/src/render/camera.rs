@@ -1,7 +1,7 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
-use super::engine::Engine;
 use super::command::Buffer as CmdBuffer;
+use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use gltf;
@@ -216,7 +216,7 @@ impl Object for Base {
         vxunimplemented!(); // It must update corresponding manager
     }
 
-    fn render(&self, _: &CmdBuffer, frame_number: usize) {
+    fn render(&self, _: &mut CmdBuffer, frame_number: usize) {
         vxlogf!("Base camera does not implement rendering.");
     }
 
@@ -383,7 +383,7 @@ impl Object for Perspective {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, _: &CmdBuffer, frame_number: usize) {
+    fn render(&self, _: &mut CmdBuffer, frame_number: usize) {
         vxlogf!("Perspective camera does not implement rendering.");
     }
 
@@ -534,7 +534,7 @@ impl Object for Orthographic {
         self.base.set_name(name);
     }
 
-    fn render(&self, _: &CmdBuffer, frame_number: usize) {
+    fn render(&self, _: &mut CmdBuffer, _: usize) {
         vxlogf!("Orthographic camera does not implement rendering.");
     }
 

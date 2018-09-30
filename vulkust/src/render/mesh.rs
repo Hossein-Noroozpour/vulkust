@@ -104,9 +104,9 @@ impl Manager {
 pub struct Base {
     pub obj_base: ObjectBase,
     pub material: Material,
-    pub vertex_buffer: StaticBuffer,
-    pub index_buffer: StaticBuffer,
-    pub indices_count: u32,
+    vertex_buffer: StaticBuffer,
+    index_buffer: StaticBuffer,
+    indices_count: u32,
 }
 
 impl Base {
@@ -290,11 +290,7 @@ impl Object for Base {
 
     fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         self.material.bind(cmd, frame_number);
-        cmd.render_gbuff(
-            &self.vertex_buffer,
-            &self.index_buffer,
-            self.indices_count,
-        );
+        cmd.render_gbuff(&self.vertex_buffer, &self.index_buffer, self.indices_count);
     }
 
     fn update(&mut self) {}

@@ -219,15 +219,16 @@ impl Loadable for Texture2D {
             _ => vxlogf!("Only embeded and view texture resources is acceptable."),
         }
         let engine = vxresult!(engine.gapi_engine.read());
-        let image_view = engine.create_texture_with_bytes(&data[offset..offset + length]);
-        let sampler = engine.sampler.clone();
-        // todo call new_with_pixels do not create it your self
-        Texture2D {
-            obj_base,
-            name: Some(name),
-            image_view,
-            sampler,
-        }
+        vxunimplemented!();
+        // let image_view = engine.create_texture_with_bytes(&data[offset..offset + length]);
+        // let sampler = engine.sampler.clone();
+        // // todo call new_with_pixels do not create it your self
+        // Texture2D {
+        //     obj_base,
+        //     name: Some(name),
+        //     image_view,
+        //     sampler,
+        // }
     }
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {

@@ -4,6 +4,7 @@ use super::super::core::types::{Id, TypeId as CoreTypeId};
 use super::super::system::file::File;
 use super::buffer::DynamicBuffer;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager, Uniform as CameraUniform};
+use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::font::Manager as FontManager;
@@ -31,7 +32,7 @@ pub trait Scene: Object {
     fn add_camera(&mut self, Arc<RwLock<Camera>>);
     fn add_model(&mut self, Arc<RwLock<Model>>);
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
-    fn render_deferred(&self, &Engine);
+    fn render_deferred(&self, cmd: &mut CmdBuffer, frame_buffer: usize);
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
 }
 
@@ -86,34 +87,17 @@ impl Manager {
         self.engine = Some(engine);
     }
 
-    pub fn render(&self) {
-        for (_, scene) in &*vxresult!(self.scenes.read()) {
-            if let Some(scene) = scene.upgrade() {
-                vxresult!(scene.write()).update(); // todo temporary works, physics related things
-            }
-        }
-        let engine = vxunwrap!(&self.engine); // todo remove these lines i'm not happy with
-        let engine = vxunwrap!(engine.upgrade()); //
-        let engine = vxresult!(engine.read()); //
-        for (_, scene) in &*vxresult!(self.scenes.read()) {
-            if let Some(scene) = scene.upgrade() {
-                vxresult!(scene.read()).render(&engine);
-            }
-            // todo depth cleaning, and other related things in here
-        }
-    }
-
-    pub fn render_deferred(&self) {
-        let engine = vxunwrap!(&self.engine); // todo remove these lines i'm not happy with
-        let engine = vxunwrap!(engine.upgrade()); //
-        let engine = vxresult!(engine.read()); //
-        for (_, scene) in &*vxresult!(self.scenes.read()) {
-            if let Some(scene) = scene.upgrade() {
-                vxresult!(scene.read()).render_deferred(&engine);
-            }
-            // todo depth cleaning, and other related things in here
-        }
-    }
+    // pub fn render_deferred(&self) {
+    //     let engine = vxunwrap!(&self.engine); // todo remove these lines i'm not happy with
+    //     let engine = vxunwrap!(engine.upgrade()); //
+    //     let engine = vxresult!(engine.read()); //
+    //     for (_, scene) in &*vxresult!(self.scenes.read()) {
+    //         if let Some(scene) = scene.upgrade() {
+    //             vxresult!(scene.read()).render_deferred(&engine);
+    //         }
+    //         // todo depth cleaning, and other related things in here
+    //     }
+    // }
 
     pub fn load_gltf<S>(&self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
     where
@@ -224,7 +208,7 @@ impl Manager {
         self.remove_with_id(vxresult!(scene.read()).get_id());
     }
 
-    pub(in super) fn get_scenes(&self) -> &Arc<RwLock<BTreeMap<Id, Weak<RwLock<Scene>>>>> {
+    pub(super) fn get_scenes(&self) -> &Arc<RwLock<BTreeMap<Id, Weak<RwLock<Scene>>>>> {
         return &self.scenes;
     }
 }
@@ -260,12 +244,12 @@ impl Uniform {
 pub struct Base {
     pub obj_base: ObjectBase,
     pub uniform: Uniform,
-    pub uniform_buffer: Arc<RwLock<DynamicBuffer>>,
+    uniform_buffer: Arc<RwLock<DynamicBuffer>>,
     pub cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
     pub active_camera: Option<Weak<RwLock<Camera>>>,
     pub lights: BTreeMap<Id, Arc<RwLock<Light>>>,
     pub models: BTreeMap<Id, Arc<RwLock<Model>>>,
-    pub descriptor_set: Arc<DescriptorSet>,
+    pub(crate) descriptor_set: Arc<DescriptorSet>,
     // pub skybox: Option<Arc<RwLock<Skybox>>>, // todo, maybe its not gonna be needed in GI PBR
     // pub constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
 }
@@ -399,10 +383,13 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, engine: &Engine) {
+    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         // todo get directional light
         // then create light frustums
         // then rendering meshes with light
+        if !self.obj_base.renderable {
+            return;
+        }
         let camera = match &self.active_camera {
             Some(c) => c,
             None => return,
@@ -411,19 +398,13 @@ impl Object for Base {
             Some(c) => c,
             None => return,
         };
-        if !self.obj_base.renderable {
-            return;
-        }
-        self.obj_base.render(engine);
+        self.obj_base.render(cmd, frame_number);
         {
             let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
-            uniform_buffer.update(&self.uniform);
-            let mut gapi_engine = vxresult!(engine.gapi_engine.write());
-            gapi_engine.bind_gbuff_pipeline();
-            gapi_engine.bind_gbuff_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 0);
-        }
-        for (_, model) in &self.models {
-            vxresult!(model.read()).render(engine);
+            uniform_buffer.update(&self.uniform, frame_number);
+            let buffer = uniform_buffer.get_buffer(frame_number);
+            let buffer = vxresult!(buffer.read());
+            cmd.bind_gbuff_scene_descriptor(&*self.descriptor_set, &*buffer);
         }
     }
 
@@ -472,10 +453,11 @@ impl Scene for Base {
         return &self.active_camera;
     }
 
-    fn render_deferred(&self, engine: &Engine) {
+    fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let uniform_buffer = vxresult!(self.uniform_buffer.read());
-        let mut gapi_engine = vxresult!(engine.gapi_engine.write());
-        gapi_engine.bind_deferred_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 0);
+        let buffer = uniform_buffer.get_buffer(frame_number);
+        let buffer = vxresult!(buffer.read());
+        cmd.bind_deferred_scene_descriptor(&*self.descriptor_set, &*buffer);
     }
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
@@ -530,8 +512,8 @@ impl Object for Game {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, engine: &Engine) {
-        self.base.render(engine);
+    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.base.render(cmd, frame_number);
     }
 
     fn update(&mut self) {
@@ -560,8 +542,8 @@ impl Scene for Game {
         return self.base.get_active_camera();
     }
 
-    fn render_deferred(&self, engine: &Engine) {
-        self.base.render_deferred(engine);
+    fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.base.render_deferred(cmd, frame_number);
     }
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
@@ -611,8 +593,8 @@ impl Object for Ui {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, engine: &Engine) {
-        self.base.render(engine);
+    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.base.render(cmd, frame_number);
     }
 
     fn update(&mut self) {
@@ -641,8 +623,8 @@ impl Scene for Ui {
         return self.base.get_active_camera();
     }
 
-    fn render_deferred(&self, engine: &Engine) {
-        self.base.render_deferred(engine);
+    fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.base.render_deferred(cmd, frame_number);
     }
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {

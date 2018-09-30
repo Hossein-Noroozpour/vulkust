@@ -5,7 +5,7 @@ use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::ptr::null;
-use std::sync::{Arc, RwLock, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Pool {
@@ -124,10 +124,10 @@ impl Drop for SetLayout {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Set {
+pub(crate) struct Set {
     pub pool: Arc<Pool>,
     pub layout: Arc<SetLayout>,
-    pub uniform: Arc<RwLock<DynamicBuffer>>,
+    uniform: Arc<RwLock<DynamicBuffer>>,
     pub textures: Vec<Arc<RwLock<Texture>>>,
     pub vk_data: vk::VkDescriptorSet,
 }
@@ -136,7 +136,7 @@ impl Set {
     pub fn new_buffer_only(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<Mutex<DynamicBuffer>>,
+        uniform: Arc<RwLock<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
     ) -> Self {
         Self::new(pool, layout, uniform, buffer_manager, Vec::new())
@@ -145,7 +145,7 @@ impl Set {
     pub fn new_gbuff(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<Mutex<DynamicBuffer>>,
+        uniform: Arc<RwLock<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
@@ -161,7 +161,7 @@ impl Set {
     pub fn new_deferred(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<Mutex<DynamicBuffer>>,
+        uniform: Arc<RwLock<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
@@ -259,8 +259,8 @@ impl Drop for Set {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Manager {
-    pub buffer_manager: Arc<RwLock<BufferManager>>,
+pub(crate) struct Manager {
+    buffer_manager: Arc<RwLock<BufferManager>>,
     pub gbuff_set_layout: Arc<SetLayout>,
     pub buffer_only_set_layout: Arc<SetLayout>,
     pub deferred_set_layout: Arc<SetLayout>,
@@ -291,7 +291,7 @@ impl Manager {
 
     pub fn create_gbuff_set(
         &mut self,
-        uniform: Arc<Mutex<DynamicBuffer>>,
+        uniform: Arc<RwLock<DynamicBuffer>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Set {
         Set::new_gbuff(

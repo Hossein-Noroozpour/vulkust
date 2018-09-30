@@ -1,4 +1,5 @@
 use super::buffer::DynamicBuffer;
+use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::gapi::GraphicApiEngine;
 use super::scene::Manager as SceneManager;
@@ -63,9 +64,11 @@ impl Deferred {
         }
     }
 
-    pub fn render(&self, gapi_engine: &mut GraphicApiEngine) {
+    pub fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
-        uniform_buffer.update(&self.uniform);
-        gapi_engine.bind_deferred_descriptor(&self.descriptor_set, &*uniform_buffer, 1);
+        uniform_buffer.update(&self.uniform, frame_number);
+        let buffer = uniform_buffer.get_buffer(frame_number);
+        let buffer = vxresult!(buffer.read());
+        cmd.bind_deferred_deferred_descriptor(&*self.descriptor_set, &*buffer);
     }
 }

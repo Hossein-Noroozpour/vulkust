@@ -1,8 +1,8 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::camera::Orthographic;
-use super::engine::Engine;
 use super::command::Buffer as CmdBuffer;
+use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Loadable, Object, Transferable};
 use std::collections::BTreeMap;
@@ -50,7 +50,7 @@ impl Object for Sun {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, _: &CmdBuffer) {
+    fn render(&self, _: &mut CmdBuffer, frame_number: usize) {
         vxlogf!("Sun light does not implement rendering.");
     }
 

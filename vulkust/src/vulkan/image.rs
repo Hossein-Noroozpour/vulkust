@@ -94,24 +94,24 @@ impl Image {
         }
     }
 
-    pub fn new_with_file_name(
-        file: &str,
-        buffmgr: &Arc<RwLock<BufferManager>>,
-    ) -> Arc<RwLock<Self>> {
-        let mut file = vxresult!(File::open(file));
-        let mut data = Vec::new();
-        let _ = vxresult!(file.read_to_end(&mut data));
-        Self::new_with_bytes(&data, buffmgr)
-    }
+    // pub fn new_with_file_name(
+    //     file: &str,
+    //     buffmgr: &Arc<RwLock<BufferManager>>,
+    // ) -> Arc<RwLock<Self>> {
+    //     let mut file = vxresult!(File::open(file));
+    //     let mut data = Vec::new();
+    //     let _ = vxresult!(file.read_to_end(&mut data));
+    //     Self::new_with_bytes(&data, buffmgr)
+    // }
 
-    pub fn new_with_bytes(data: &[u8], buffmgr: &Arc<RwLock<BufferManager>>) -> Arc<RwLock<Self>> {
-        let img = vxresult!(image::load_from_memory(&data)).to_rgba();
-        let (width, height) = img.dimensions();
-        let img = img.into_raw();
-        Self::new_2d_with_pixels(width, height, &img, buffmgr)
-    }
+    // pub fn new_with_bytes(data: &[u8], buffmgr: &Arc<RwLock<BufferManager>>) -> Arc<RwLock<Self>> {
+    //     let img = vxresult!(image::load_from_memory(&data)).to_rgba();
+    //     let (width, height) = img.dimensions();
+    //     let img = img.into_raw();
+    //     Self::new_2d_with_pixels(width, height, &img, buffmgr)
+    // }
 
-    pub fn new_2d_with_pixels(
+    pub(crate) fn new_2d_with_pixels(
         width: u32,
         height: u32,
         data: &[u8],
@@ -143,7 +143,7 @@ impl Image {
         myself
     }
 
-    pub fn change_layout(&mut self, cmd: &mut CmdBuffer, new_layout: vk::VkImageLayout) {
+    pub(crate) fn change_layout(&mut self, cmd: &mut CmdBuffer, new_layout: vk::VkImageLayout) {
         let mut dst_stage = vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT as u32;
         let mut barrier = vk::VkImageMemoryBarrier::default();
         barrier.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -269,17 +269,20 @@ impl View {
         ))))
     }
 
-    pub fn new_texture_with_file(file: &str, buffmgr: &Arc<RwLock<BufferManager>>) -> Self {
-        let image = Image::new_with_file_name(file, buffmgr);
-        Self::new_with_image(image)
-    }
+    // pub(crate) fn new_texture_with_file(file: &str, buffmgr: &Arc<RwLock<BufferManager>>) -> Self {
+    //     let image = Image::new_with_file_name(file, buffmgr);
+    //     Self::new_with_image(image)
+    // }
 
-    pub fn new_texture_with_bytes(data: &[u8], buffmgr: &Arc<RwLock<BufferManager>>) -> Self {
-        let image = Image::new_with_bytes(data, buffmgr);
-        Self::new_with_image(image)
-    }
+    // pub(crate) fn new_texture_with_bytes(
+    //     data: &[u8],
+    //     buffmgr: &Arc<RwLock<BufferManager>>,
+    // ) -> Self {
+    //     let image = Image::new_with_bytes(data, buffmgr);
+    //     Self::new_with_image(image)
+    // }
 
-    pub fn new_texture_2d_with_pixels(
+    pub(crate) fn new_texture_2d_with_pixels(
         width: u32,
         height: u32,
         data: &[u8],

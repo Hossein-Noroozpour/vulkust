@@ -9,7 +9,7 @@ use super::scene::Scene;
 use super::texture::{Manager as TextureManager, Texture};
 use std::default::Default;
 use std::mem::size_of;
-use std::sync::{Arc, RwLock, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 use gltf;
 
@@ -69,8 +69,8 @@ pub struct Material {
     pub emissive_factor: Arc<RwLock<Texture>>,
     pub translucency: TranslucencyMode,
     pub uniform: Uniform,
-    pub uniform_buffer: Arc<Mutex<DynamicBuffer>>,
-    pub descriptor_set: Arc<DescriptorSet>,
+    uniform_buffer: Arc<RwLock<DynamicBuffer>>,
+    pub(crate) descriptor_set: Arc<DescriptorSet>,
 }
 
 impl Material {
@@ -83,7 +83,7 @@ impl Material {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let uniform_buffer = Arc::new(Mutex::new(uniform_buffer));
+        let uniform_buffer = Arc::new(RwLock::new(uniform_buffer));
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let mut uniform = Uniform::new();
@@ -211,7 +211,7 @@ impl Material {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let uniform_buffer = Arc::new(Mutex::new(uniform_buffer));
+        let uniform_buffer = Arc::new(RwLock::new(uniform_buffer));
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let uniform = Uniform::new();
@@ -270,9 +270,9 @@ impl Material {
     pub fn update(&mut self, _scene: &Scene, _model: &Model) {}
 
     pub fn bind(&self, cmd: &CmdBuffer, frame_number: usize) {
-        let mut ub = vxresult!(self.uniform_buffer.lock());
+        let mut ub = vxresult!(self.uniform_buffer.write());
         ub.update(&self.uniform, frame_number);
         let buffer = vxresult!(ub.get_buffer(frame_number).read());
-        cmd.bind_material_descriptor(&*self.descriptor_set, &*buffer);
+        cmd.bind_gbuff_material_descriptor(&*self.descriptor_set, &*buffer);
     }
 }

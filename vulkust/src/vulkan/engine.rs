@@ -27,35 +27,35 @@ const GBUFF_DEPTH_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {
-    pub os_app: Arc<RwLock<OsApp>>,
-    pub instance: Arc<Instance>,
-    pub surface: Arc<Surface>,
-    pub physical_device: Arc<PhysicalDevice>,
-    pub logical_device: Arc<LogicalDevice>,
-    pub swapchain: Arc<Swapchain>,
-    pub present_complete_semaphore: Arc<Semaphore>,
-    pub gbuff_complete_semaphore: Arc<Semaphore>,
-    pub render_complete_semaphore: Arc<Semaphore>,
-    pub graphic_cmd_pool: Arc<CmdPool>,
-    pub draw_commands: Vec<Arc<RwLock<(CmdBuffer, CmdBuffer)>>>, // gbuff, deferred
-    pub memory_mgr: Arc<RwLock<MemoryManager>>,
-    pub samples_count: vk::VkSampleCountFlagBits,
-    pub depth_stencil_image_view: Arc<ImageView>,
-    pub render_pass: Arc<RenderPass>,
-    pub g_render_pass: Arc<RenderPass>,
-    pub g_framebuffer: Arc<Framebuffer>,
-    pub descriptor_manager: Arc<RwLock<DescriptorManager>>,
-    pub pipeline_manager: Arc<RwLock<PipelineManager>>,
-    pub framebuffers: Vec<Arc<Framebuffer>>,
-    pub frame_number: Arc<RwLock<u32>>,
-    pub current_frame_number: u32,
-    pub buffer_manager: Arc<RwLock<BufferManager>>,
-    pub wait_fences: Vec<Arc<Fence>>,
-    pub sampler: Arc<Sampler>,
-    pub bound_gbuff_descriptor_sets: [vk::VkDescriptorSet; 3],
-    pub bound_gbuff_dynamic_offsets: [u32; 3],
-    pub bound_deferred_descriptor_sets: [vk::VkDescriptorSet; 2],
-    pub bound_deferred_dynamic_offsets: [u32; 2],
+    pub(crate) os_app: Arc<RwLock<OsApp>>,
+    pub(crate) instance: Arc<Instance>,
+    pub(crate) surface: Arc<Surface>,
+    pub(crate) physical_device: Arc<PhysicalDevice>,
+    pub(crate) logical_device: Arc<LogicalDevice>,
+    pub(crate) swapchain: Arc<Swapchain>,
+    pub(crate) present_complete_semaphore: Arc<Semaphore>,
+    pub(crate) gbuff_complete_semaphore: Arc<Semaphore>,
+    pub(crate) render_complete_semaphore: Arc<Semaphore>,
+    pub(crate) graphic_cmd_pool: Arc<CmdPool>,
+    pub(crate) draw_commands: Vec<Arc<RwLock<(CmdBuffer, CmdBuffer)>>>, // gbuff, deferred
+    pub(crate) memory_mgr: Arc<RwLock<MemoryManager>>,
+    pub(crate) samples_count: vk::VkSampleCountFlagBits,
+    pub(crate) depth_stencil_image_view: Arc<ImageView>,
+    pub(crate) render_pass: Arc<RenderPass>,
+    pub(crate) g_render_pass: Arc<RenderPass>,
+    pub(crate) g_framebuffer: Arc<Framebuffer>,
+    pub(crate) descriptor_manager: Arc<RwLock<DescriptorManager>>,
+    pub(crate) pipeline_manager: Arc<RwLock<PipelineManager>>,
+    pub(crate) framebuffers: Vec<Arc<Framebuffer>>,
+    pub(crate) frame_number: Arc<RwLock<u32>>,
+    pub(crate) current_frame_number: u32,
+    pub(crate) buffer_manager: Arc<RwLock<BufferManager>>,
+    pub(crate) wait_fences: Vec<Arc<Fence>>,
+    pub(crate) sampler: Arc<Sampler>,
+    pub(crate) bound_gbuff_descriptor_sets: [vk::VkDescriptorSet; 3],
+    pub(crate) bound_gbuff_dynamic_offsets: [u32; 3],
+    pub(crate) bound_deferred_descriptor_sets: [vk::VkDescriptorSet; 2],
+    pub(crate) bound_deferred_dynamic_offsets: [u32; 2],
 }
 
 impl Engine {
@@ -236,11 +236,11 @@ impl Engine {
         let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
 
         let pipemgr = vxresult!(self.pipeline_manager.read());
-        cmd_buffers.1.bind_descriptor_sets(
-            &pipemgr.deferred_pipeline.layout,
-            &self.bound_deferred_descriptor_sets,
-            &self.bound_deferred_dynamic_offsets,
-        );
+        // cmd_buffers.1.bind_descriptor_sets(
+        //     &pipemgr.deferred_pipeline.layout,
+        //     &self.bound_deferred_descriptor_sets,
+        //     &self.bound_deferred_dynamic_offsets,
+        // );
         cmd_buffers.1.bind_pipeline(&pipemgr.deferred_pipeline);
         cmd_buffers.1.draw(3);
         self.framebuffers[frame_number].end_render(&mut cmd_buffers.1);
@@ -282,35 +282,35 @@ impl Engine {
         self.logical_device.wait_idle();
     }
 
-    pub fn bind_gbuff_descriptor(
-        &mut self,
-        descriptor_set: &DescriptorSet,
-        uniform_buffer: &DynamicBuffer,
-        index: usize,
-    ) {
-        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize; // todo temporary
-        self.bound_gbuff_descriptor_sets[index] = descriptor_set.vk_data;
-        self.bound_gbuff_dynamic_offsets[index] =
-            vxresult!(uniform_buffer.buffers[frame_number].0.read())
-                .info
-                .base
-                .offset as u32; // todo move this to dynamicbuffer
-    }
+    // pub fn bind_gbuff_descriptor(
+    //     &mut self,
+    //     descriptor_set: &DescriptorSet,
+    //     uniform_buffer: &DynamicBuffer,
+    //     index: usize,
+    // ) {
+    //     let frame_number: usize = *vxresult!(self.frame_number.read()) as usize; // todo temporary
+    //     self.bound_gbuff_descriptor_sets[index] = descriptor_set.vk_data;
+    //     self.bound_gbuff_dynamic_offsets[index] =
+    //         vxresult!(uniform_buffer.buffers[frame_number].0.read())
+    //             .info
+    //             .base
+    //             .offset as u32; // todo move this to dynamicbuffer
+    // }
 
-    pub fn bind_deferred_descriptor(
-        &mut self,
-        descriptor_set: &DescriptorSet,
-        uniform_buffer: &DynamicBuffer,
-        index: usize,
-    ) {
-        let frame_number = self.current_frame_number as usize;
-        self.bound_deferred_descriptor_sets[index] = descriptor_set.vk_data;
-        self.bound_deferred_dynamic_offsets[index] =
-            vxresult!(uniform_buffer.buffers[frame_number].0.read())
-                .info
-                .base
-                .offset as u32; // todo move this to dynamicbuffer
-    }
+    // pub fn bind_deferred_descriptor(
+    //     &mut self,
+    //     descriptor_set: &DescriptorSet,
+    //     uniform_buffer: &DynamicBuffer,
+    //     index: usize,
+    // ) {
+    //     let frame_number = self.current_frame_number as usize;
+    //     self.bound_deferred_descriptor_sets[index] = descriptor_set.vk_data;
+    //     self.bound_deferred_dynamic_offsets[index] =
+    //         vxresult!(uniform_buffer.buffers[frame_number].0.read())
+    //             .info
+    //             .base
+    //             .offset as u32; // todo move this to dynamicbuffer
+    // }
 
     pub fn bind_gbuff_pipeline(&self) {
         let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
@@ -320,39 +320,39 @@ impl Engine {
         draw_command.0.bind_pipeline(&pipemgr.gbuff_pipeline);
     }
 
-    pub fn render_gbuff(
-        &self,
-        vertex_buffer: &StaticBuffer,
-        index_buffer: &StaticBuffer,
-        indices_count: u32,
-    ) {
-        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
-        let draw_command = &self.draw_commands[frame_number];
-        let mut draw_command = vxresult!(draw_command.write());
-        let pipemgr = vxresult!(self.pipeline_manager.read());
-        draw_command.0.bind_descriptor_sets(
-            &pipemgr.gbuff_pipeline.layout,
-            &self.bound_gbuff_descriptor_sets,
-            &self.bound_gbuff_dynamic_offsets,
-        );
-        draw_command.0.bind_vertex_buffer(&vertex_buffer.buffer);
-        draw_command.0.bind_index_buffer(&index_buffer.buffer);
-        draw_command.0.draw_index(indices_count);
-    }
+    // pub fn render_gbuff(
+    //     &self,
+    //     vertex_buffer: &StaticBuffer,
+    //     index_buffer: &StaticBuffer,
+    //     indices_count: u32,
+    // ) {
+    //     let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+    //     let draw_command = &self.draw_commands[frame_number];
+    //     let mut draw_command = vxresult!(draw_command.write());
+    //     let pipemgr = vxresult!(self.pipeline_manager.read());
+    //     draw_command.0.bind_descriptor_sets(
+    //         &pipemgr.gbuff_pipeline.layout,
+    //         &self.bound_gbuff_descriptor_sets,
+    //         &self.bound_gbuff_dynamic_offsets,
+    //     );
+    //     draw_command.0.bind_vertex_buffer(&vertex_buffer.buffer);
+    //     draw_command.0.bind_index_buffer(&index_buffer.buffer);
+    //     draw_command.0.draw_index(indices_count);
+    // }
 
-    pub fn create_texture(&self, file_name: &str) -> Arc<ImageView> {
-        Arc::new(ImageView::new_texture_with_file(
-            file_name,
-            &self.buffer_manager,
-        ))
-    }
+    // pub fn create_texture(&self, file_name: &str) -> Arc<ImageView> {
+    //     Arc::new(ImageView::new_texture_with_file(
+    //         file_name,
+    //         &self.buffer_manager,
+    //     ))
+    // }
 
-    pub fn create_texture_with_bytes(&self, data: &[u8]) -> Arc<ImageView> {
-        Arc::new(ImageView::new_texture_with_bytes(
-            data,
-            &self.buffer_manager,
-        ))
-    }
+    // pub fn create_texture_with_bytes(&self, data: &[u8]) -> Arc<ImageView> {
+    //     Arc::new(ImageView::new_texture_with_bytes(
+    //         data,
+    //         &self.buffer_manager,
+    //     ))
+    // }
 
     pub fn create_texture_2d_with_pixels(
         &self,

@@ -1,8 +1,8 @@
 use super::super::core::allocate::Object as CoreAllocObj;
-use super::buffer::Buffer as BufBuffer;
+use super::buffer::{Buffer as BufBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
 use super::device::logical::Logical as LogicalDevice;
-use super::pipeline::{Layout as PipelineLayout, Pipeline};
+use super::pipeline::Pipeline;
 use super::synchronizer::fence::Fence;
 use super::vulkan as vk;
 use std::default::Default;
@@ -10,16 +10,29 @@ use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Buffer {
+pub(crate) struct Buffer {
     pub pool: Arc<Pool>,
     pub vk_data: vk::VkCommandBuffer,
-    pub vk_descriptor_sets: [vk::VkDescriptorSet; 3],
-    pub dynamic_buffer_offsets: [u32; 3], 
+    pub bound_pipeline_layout: vk::VkPipelineLayout,
+    pub bound_descriptor_sets: [vk::VkDescriptorSet; 3],
+    pub bound_dynamic_buffer_offsets: [u32; 3],
 }
 
-const SCENE_DESCRIPTOR_OFFSET: usize = 0;
-const MODEL_DESCRIPTOR_OFFSET: usize = 1;
-const MATERIAL_DESCRIPTOR_OFFSET: usize = 2;
+const GBUFF_SCENE_DESCRIPTOR_OFFSET: usize = 0;
+const GBUFF_MODEL_DESCRIPTOR_OFFSET: usize = 1;
+const GBUFF_MATERIAL_DESCRIPTOR_OFFSET: usize = 2;
+
+const GBUFF_DESCRIPTOR_SETS_COUNT: usize = 3;
+const GBUFF_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 3;
+
+const DEFERRED_SCENE_DESCRIPTOR_OFFSET: usize = 0;
+const DEFERRED_DEFERRED_DESCRIPTOR_OFFSET: usize = 1;
+
+const DEFERRED_DESCRIPTOR_SETS_COUNT: usize = 2;
+const DEFERRED_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 2;
+
+const MAX_DESCRIPTOR_SETS_COUNT: usize = 3;
+const MAX_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 3;
 
 impl Buffer {
     pub fn new(pool: Arc<Pool>) -> Self {
@@ -38,8 +51,9 @@ impl Buffer {
         Buffer {
             pool: pool.clone(),
             vk_data: vk_data,
-            vk_descriptor_sets: [0 as vk::VkDescriptorSet; 3],
-            dynamic_buffer_offsets: [0; 3], 
+            bound_pipeline_layout: 0 as vk::VkPipelineLayout,
+            bound_descriptor_sets: [0 as vk::VkDescriptorSet; MAX_DESCRIPTOR_SETS_COUNT],
+            bound_dynamic_buffer_offsets: [0; MAX_DYNAMIC_BUFFER_OFFSETS_COUNT],
         }
     }
 
@@ -139,26 +153,6 @@ impl Buffer {
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
     }
 
-    pub fn bind_descriptor_sets(
-        &mut self,
-        pipeline_layout: &PipelineLayout,
-        descriptor_sets: &[vk::VkDescriptorSet],
-        offsets: &[u32],
-    ) {
-        unsafe {
-            vk::vkCmdBindDescriptorSets(
-                self.vk_data,
-                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipeline_layout.vk_data,
-                0,
-                descriptor_sets.len() as u32,
-                descriptor_sets.as_ptr(),
-                offsets.len() as u32,
-                offsets.as_ptr(),
-            );
-        }
-    }
-
     pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
         let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
         unsafe {
@@ -222,14 +216,34 @@ impl Buffer {
         }
     }
 
-    pub(crate) fn bind_model_descriptor(&mut self, descriptor_set: &DescriptorSet, buffer: &BufBuffer) {
-        self.vk_descriptor_sets[MODEL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
-        self.dynamic_buffer_offsets[MODEL_DESCRIPTOR_OFFSET] = buffer.get_offset() as u32;
+    pub(crate) fn bind_gbuff_scene_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[GBUFF_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[GBUFF_SCENE_DESCRIPTOR_OFFSET] =
+            buffer.get_offset() as u32;
     }
 
-    pub(crate) fn bind_material_descriptor(&mut self, descriptor_set: &DescriptorSet, buffer: &BufBuffer) {
-        self.vk_descriptor_sets[MATERIAL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
-        self.dynamic_buffer_offsets[MATERIAL_DESCRIPTOR_OFFSET] = buffer.get_offset() as u32;
+    pub(crate) fn bind_gbuff_model_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[GBUFF_MODEL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[GBUFF_MODEL_DESCRIPTOR_OFFSET] =
+            buffer.get_offset() as u32;
+    }
+
+    pub(crate) fn bind_gbuff_material_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[GBUFF_MATERIAL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[GBUFF_MATERIAL_DESCRIPTOR_OFFSET] =
+            buffer.get_offset() as u32;
     }
 
     pub(crate) fn render_gbuff(
@@ -238,15 +252,41 @@ impl Buffer {
         index_buffer: &StaticBuffer,
         indices_count: u32,
     ) {
-        let pipemgr = vxresult!(self.pipeline_manager.read());
-        self.bind_descriptor_sets(
-            &pipemgr.gbuff_pipeline.layout,
-            &self.bound_gbuff_descriptor_sets,
-            &self.bound_gbuff_dynamic_offsets,
-        );
-        self.bind_vertex_buffer(&vertex_buffer.buffer);
-        self.bind_index_buffer(&index_buffer.buffer);
+        unsafe {
+            vk::vkCmdBindDescriptorSets(
+                self.vk_data,
+                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                self.bound_pipeline_layout,
+                0,
+                GBUFF_DESCRIPTOR_SETS_COUNT as u32,
+                self.bound_descriptor_sets.as_ptr(),
+                GBUFF_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
+                self.bound_dynamic_buffer_offsets.as_ptr(),
+            );
+        }
+        self.bind_vertex_buffer(vertex_buffer.get_buffer());
+        self.bind_index_buffer(index_buffer.get_buffer());
         self.draw_index(indices_count);
+    }
+
+    pub(crate) fn bind_deferred_scene_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] =
+            buffer.get_offset() as u32;
+    }
+
+    pub(crate) fn bind_deferred_deferred_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] =
+            buffer.get_offset() as u32;
     }
 }
 

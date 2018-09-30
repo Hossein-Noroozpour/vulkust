@@ -7,7 +7,7 @@ use std::ptr::null;
 use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Framebuffer {
+pub(crate) struct Framebuffer {
     pub clear_values: Vec<vk::VkClearValue>,
     pub color_buffers: Vec<Arc<View>>,
     pub depth_buffer: Arc<View>,

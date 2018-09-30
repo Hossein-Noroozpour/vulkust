@@ -86,7 +86,7 @@ pub enum Location {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct RootBuffer {
+pub(crate) struct RootBuffer {
     pub logical_device: Arc<LogicalDevice>,
     pub memory: Arc<RwLock<Memory>>,
     pub vk_data: vk::VkBuffer,
@@ -170,28 +170,29 @@ unsafe impl Sync for RootBuffer {}
 
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct StaticBuffer {
-    pub buffer: Arc<RwLock<Buffer>>,
+pub(crate) struct StaticBuffer {
+    buffer: Arc<RwLock<Buffer>>,
 }
 
 impl StaticBuffer {
     pub fn new(buffer: Arc<RwLock<Buffer>>) -> Self {
         StaticBuffer { buffer }
     }
+
+    pub fn get_buffer(&self) -> &Arc<RwLock<Buffer>> {
+        return &self.buffer;
+    }
 }
 
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct DynamicBuffer {
+pub(crate) struct DynamicBuffer {
     pub buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
     pub actual_size: isize,
 }
 
 impl DynamicBuffer {
-    pub fn new(
-        buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
-        actual_size: isize,
-    ) -> Self {
+    pub fn new(buffers: Vec<(Arc<RwLock<Buffer>>, isize)>, actual_size: isize) -> Self {
         DynamicBuffer {
             buffers,
             actual_size,
@@ -224,7 +225,7 @@ impl DynamicBuffer {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Manager {
+pub(crate) struct Manager {
     pub alignment: isize,
     pub cpu_buffer: RootBuffer,
     pub gpu_buffer: RootBuffer,

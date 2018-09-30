@@ -1,5 +1,6 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
+use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::font::Font;
 use super::material::Material;
@@ -36,8 +37,8 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, engine: &Engine) {
-        self.model_base.render(engine);
+    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.model_base.render(cmd, frame_number);
     }
 
     fn disable_rendering(&mut self) {
@@ -244,8 +245,8 @@ impl Object for Label {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, engine: &Engine) {
-        self.base.render(engine);
+    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.base.render(cmd, frame_number);
     }
 
     fn disable_rendering(&mut self) {
