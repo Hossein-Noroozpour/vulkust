@@ -6,7 +6,7 @@ use super::material::Material;
 use super::mesh::{Base as MeshBase, Mesh};
 use super::model::{Base as ModelBase, DefaultModel, Model};
 use super::object::Object;
-use super::scene::Uniform as SceneUniform;
+use super::scene::Scene;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 
@@ -54,8 +54,8 @@ impl Object for Base {
 }
 
 impl Model for Base {
-    fn update(&mut self, scene_uniform: &SceneUniform) {
-        Model::update(&mut self.model_base, scene_uniform);
+    fn update(&mut self, scene: &Scene) {
+        Model::update(&mut self.model_base, scene);
     }
 
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
@@ -262,8 +262,8 @@ impl Object for Label {
 }
 
 impl Model for Label {
-    fn update(&mut self, scene_uniform: &SceneUniform) {
-        Model::update(&mut self.base, scene_uniform);
+    fn update(&mut self, scene: &Scene) {
+        Model::update(&mut self.base, scene);
     }
 
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {

@@ -7,7 +7,7 @@ use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::mesh::Mesh;
 use super::object::{Base as ObjectBase, Loadable, Object};
-use super::scene::Uniform as SceneUniform;
+use super::scene::Scene;
 use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
@@ -16,7 +16,7 @@ use gltf;
 use math;
 
 pub trait Model: Object {
-    fn update(&mut self, scene_uniform: &SceneUniform);
+    fn update(&mut self, scene: &Scene);
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>);
 }
 
@@ -313,14 +313,14 @@ impl Loadable for Base {
 }
 
 impl Model for Base {
-    fn update(&mut self, scene_uniform: &SceneUniform) {
+    fn update(&mut self, scene: &Scene) {
         for (_, model) in &self.children {
             let mut model = vxresult!(model.write());
-            Model::update(&mut *model, scene_uniform);
+            Model::update(&mut *model, scene);
         }
         for (_, mesh) in &self.meshes {
             let mut mesh = vxresult!(mesh.write());
-            Mesh::update(&mut *mesh, scene_uniform, &self.uniform);
+            Mesh::update(&mut *mesh, scene, self);
         }
     }
 

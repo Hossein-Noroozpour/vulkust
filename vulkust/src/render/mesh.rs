@@ -4,9 +4,9 @@ use super::buffer::StaticBuffer;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::material::Material;
-use super::model::Uniform as ModelUniform;
+use super::model::Model;
 use super::object::{Base as ObjectBase, Object};
-use super::scene::Uniform as SceneUniform;
+use super::scene::Scene;
 use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
@@ -24,7 +24,7 @@ pub trait Mesh: Object {
     fn is_shadow_caster(&self) -> bool;
     fn is_transparent(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> f32;
-    fn update(&mut self, scene_uniform: &SceneUniform, model_uniform: &ModelUniform);
+    fn update(&mut self, scene: &Scene, model: &Model);
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -322,8 +322,8 @@ impl Mesh for Base {
         vxunimplemented!()
     } // todo
 
-    fn update(&mut self, scene_uniform: &SceneUniform, model_uniform: &ModelUniform) {
-        self.material.update(scene_uniform, model_uniform);
+    fn update(&mut self, scene: &Scene, model: &Model) {
+        self.material.update(scene, model);
     }
 
     //     fn render(&mut self, scene_uniform: &SceneUniform) {

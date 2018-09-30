@@ -3,8 +3,8 @@ use super::buffer::DynamicBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::gx3d::Gx3DReader;
-use super::model::Uniform as ModelUniform;
-use super::scene::Uniform as SceneUniform;
+use super::model::Model;
+use super::scene::Scene;
 use super::texture::{Manager as TextureManager, Texture};
 use std::default::Default;
 use std::mem::size_of;
@@ -266,7 +266,7 @@ impl Material {
         self.descriptor_set = Arc::new(descriptor_set);
     }
 
-    pub fn update(&mut self, _scene_uniform: &SceneUniform, _model_uniform: &ModelUniform) {}
+    pub fn update(&mut self, _scene: &Scene, _model: &Model) {}
 
     pub fn bind(&self, engine: &Engine) {
         let mut uniform_buffer = vxresult!(self.uniform_buffer.write());

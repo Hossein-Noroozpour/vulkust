@@ -446,6 +446,10 @@ impl Engine {
         return self.framebuffers.len();
     }
 
+    pub(crate) fn get_frame_number(&self) -> usize {
+        return self.current_frame_number as usize;
+    }
+
     fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
         let mut sample_count = phdev.get_max_sample_bit(
             GBUFF_COLOR_FMT,

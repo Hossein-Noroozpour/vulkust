@@ -32,6 +32,7 @@ pub trait Scene: Object {
     fn add_model(&mut self, Arc<RwLock<Model>>);
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
     fn render_deferred(&self, &Engine);
+    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
 }
 
 pub trait Loadable: Scene + Sized {
@@ -222,7 +223,15 @@ impl Manager {
     pub fn remove(&self, scene: Arc<RwLock<Scene>>) {
         self.remove_with_id(vxresult!(scene.read()).get_id());
     }
+
+    pub(in super) fn get_scenes(&self) -> &Arc<RwLock<BTreeMap<Id, Weak<RwLock<Scene>>>>> {
+        return &self.scenes;
+    }
 }
+
+unsafe impl Send for Manager {}
+
+unsafe impl Sync for Manager {}
 
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -429,10 +438,10 @@ impl Object for Base {
         };
         let camera = vxresult!(camera.read());
         self.uniform.camera.view_projection = *camera.get_view_projection();
-        for (_, model) in &mut self.models {
+        for (_, model) in &self.models {
             let mut model = vxresult!(model.write());
             Object::update(&mut *model);
-            Model::update(&mut *model, &self.uniform);
+            Model::update(&mut *model, self);
         }
     }
 
@@ -467,6 +476,10 @@ impl Scene for Base {
         let uniform_buffer = vxresult!(self.uniform_buffer.read());
         let mut gapi_engine = vxresult!(engine.gapi_engine.write());
         gapi_engine.bind_deferred_descriptor(self.descriptor_set.as_ref(), &*uniform_buffer, 0);
+    }
+
+    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
+        return &self.models;
     }
 }
 
@@ -550,6 +563,10 @@ impl Scene for Game {
     fn render_deferred(&self, engine: &Engine) {
         self.base.render_deferred(engine);
     }
+
+    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
+        return self.base.get_models();
+    }
 }
 
 impl Loadable for Game {
@@ -626,6 +643,10 @@ impl Scene for Ui {
 
     fn render_deferred(&self, engine: &Engine) {
         self.base.render_deferred(engine);
+    }
+
+    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
+        return self.base.get_models();
     }
 }
 

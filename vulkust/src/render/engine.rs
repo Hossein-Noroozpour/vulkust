@@ -35,7 +35,7 @@ impl Engine {
         )));
         let gapi_engine = Arc::new(RwLock::new(gapi_engine));
         let myself = None;
-        let multithreaded_engine = MultithreadedEngine::new(gapi_engine.clone());
+        let multithreaded_engine = MultithreadedEngine::new(gapi_engine.clone(), scene_manager.clone());
         Engine {
             myself,
             gapi_engine,
