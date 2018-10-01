@@ -2,10 +2,8 @@ use super::super::render::config::Configurations;
 use super::super::render::image::AttachmentType;
 use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
-use super::buffer::{DynamicBuffer, StaticBuffer};
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool, Type as CmdPoolType};
 use super::descriptor::Manager as DescriptorManager;
-use super::descriptor::Set as DescriptorSet;
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
@@ -217,8 +215,7 @@ impl Engine {
         submit_info.waitSemaphoreCount = 1;
         submit_info.pSignalSemaphores = &self.gbuff_complete_semaphore.vk_data;
         submit_info.signalSemaphoreCount = 1;
-        submit_info.pCommandBuffers = &cmd_buffers.0.vk_data;
-        submit_info.commandBufferCount = 1;
+        cmd_buffers.0.fill_submit_info(&mut submit_info);
         vulkan_check!(vk::vkQueueSubmit(
             self.logical_device.vk_graphic_queue,
             1,
@@ -255,8 +252,7 @@ impl Engine {
         submit_info.waitSemaphoreCount = 1;
         submit_info.pSignalSemaphores = &self.render_complete_semaphore.vk_data;
         submit_info.signalSemaphoreCount = 1;
-        submit_info.pCommandBuffers = &cmd_buffers.1.vk_data;
-        submit_info.commandBufferCount = 1;
+        cmd_buffers.1.fill_submit_info(&mut submit_info);
         vulkan_check!(vk::vkQueueSubmit(
             self.logical_device.vk_graphic_queue,
             1,

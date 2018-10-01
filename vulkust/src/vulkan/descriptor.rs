@@ -5,7 +5,7 @@ use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::ptr::null;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Pool {

@@ -216,7 +216,7 @@ impl Object for Base {
         vxunimplemented!(); // It must update corresponding manager
     }
 
-    fn render(&self, _: &mut CmdBuffer, frame_number: usize) {
+    fn render(&self, _: &mut CmdBuffer, _: usize) {
         vxlogf!("Base camera does not implement rendering.");
     }
 
@@ -383,7 +383,7 @@ impl Object for Perspective {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, _: &mut CmdBuffer, frame_number: usize) {
+    fn render(&self, _: &mut CmdBuffer, _: usize) {
         vxlogf!("Perspective camera does not implement rendering.");
     }
 

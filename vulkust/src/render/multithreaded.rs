@@ -4,7 +4,6 @@ use super::gapi::GraphicApiEngine;
 use super::model::Model;
 use super::object::Object;
 use super::scene::Manager as SceneManager;
-use super::scene::Scene;
 use num_cpus;
 use std::collections::BTreeMap;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -73,7 +72,7 @@ impl Renderer {
         let cmd_pool = eng.create_command_pool();
         let frames_count = eng.get_frames_count();
         let cmdsss = cmd_buffers.clone();
-        let cmdsss = vxresult!(cmdsss.lock());
+        let mut cmdsss = vxresult!(cmdsss.lock());
         for _ in 0..frames_count {
             cmdsss.push(BTreeMap::new());
         }

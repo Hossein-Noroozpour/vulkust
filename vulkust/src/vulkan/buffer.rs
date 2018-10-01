@@ -12,10 +12,10 @@ use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct Buffer {
-    pub memory_offset: isize,
-    pub info: alc::Container,
-    pub vk_data: vk::VkBuffer,
+pub struct Buffer {
+    memory_offset: isize,
+    info: alc::Container,
+    vk_data: vk::VkBuffer,
 }
 
 impl Buffer {
@@ -37,6 +37,13 @@ impl Buffer {
         let obj: Arc<RwLock<Object>> = buffer.clone();
         self.info.allocate(&obj);
         return buffer;
+    }
+
+    pub(crate) fn get_info_for_binding(&self) -> (vk::VkDeviceSize, vk::VkBuffer) {
+        return (
+            self.get_offset() as vk::VkDeviceSize,
+            self.vk_data
+        );
     }
 }
 

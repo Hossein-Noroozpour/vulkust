@@ -1,15 +1,11 @@
 use super::super::render::image::AttachmentType;
-use super::super::system::file::File;
 use super::buffer::Manager as BufferManager;
 use super::command::Buffer as CmdBuffer;
 use super::device::logical::Logical as LogicalDevice;
 use super::memory::{Location as MemeoryLocation, Manager as MemeoryManager, Memory};
 use super::vulkan as vk;
 
-use image;
-
 use std::default::Default;
-use std::io::Read;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 

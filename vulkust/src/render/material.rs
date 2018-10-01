@@ -9,7 +9,7 @@ use super::scene::Scene;
 use super::texture::{Manager as TextureManager, Texture};
 use std::default::Default;
 use std::mem::size_of;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 
 use gltf;
 
@@ -269,7 +269,7 @@ impl Material {
 
     pub fn update(&mut self, _scene: &Scene, _model: &Model) {}
 
-    pub fn bind(&self, cmd: &CmdBuffer, frame_number: usize) {
+    pub fn bind(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let mut ub = vxresult!(self.uniform_buffer.write());
         ub.update(&self.uniform, frame_number);
         let buffer = vxresult!(ub.get_buffer(frame_number).read());

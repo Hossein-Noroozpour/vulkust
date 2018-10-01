@@ -121,12 +121,12 @@ impl Drop for Cache {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct Pipeline {
-    pub cache: Arc<Cache>,
-    pub layout: Layout,
-    pub shaders: Vec<Module>,
-    pub render_pass: Arc<RenderPass>,
-    pub vk_data: vk::VkPipeline,
+pub struct Pipeline {
+    cache: Arc<Cache>,
+    layout: Layout,
+    shaders: Vec<Module>,
+    render_pass: Arc<RenderPass>,
+    vk_data: vk::VkPipeline,
 }
 
 impl Pipeline {
@@ -358,6 +358,10 @@ impl Pipeline {
             render_pass,
             vk_data,
         }
+    }
+
+    pub(super) fn get_info_for_binding(&self) -> (vk::VkPipelineBindPoint, vk::VkPipeline) {
+        return (vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, self.vk_data);
     }
 }
 

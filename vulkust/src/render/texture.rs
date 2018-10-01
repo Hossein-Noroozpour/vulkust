@@ -157,6 +157,25 @@ impl Texture2D {
         Self::new_with_base_pixels(ObjectBase::new(), width, height, engine, data)
     }
 
+    pub fn new_with_base_pixels_name(
+        obj_base: ObjectBase,
+        width: u32,
+        height: u32,
+        engine: &Engine,
+        data: &[u8],
+        name: Option<String>
+    ) -> Self {
+        let engine = vxresult!(engine.gapi_engine.read());
+        let image_view = engine.create_texture_2d_with_pixels(width, height, data);
+        let sampler = engine.sampler.clone();
+        Texture2D {
+            obj_base,
+            name,
+            image_view,
+            sampler,
+        }
+    }
+
     pub fn new_with_base_pixels(
         obj_base: ObjectBase,
         width: u32,
@@ -164,15 +183,13 @@ impl Texture2D {
         engine: &Engine,
         data: &[u8],
     ) -> Self {
-        let engine = vxresult!(engine.gapi_engine.read());
-        let image_view = engine.create_texture_2d_with_pixels(width, height, data);
-        let sampler = engine.sampler.clone();
-        Texture2D {
-            obj_base,
-            name: None,
-            image_view,
-            sampler,
-        }
+        return Self::new_with_base_pixels_name(
+        obj_base,
+        width,
+        height,
+        engine,
+        data,
+        None);
     }
 
     fn new_with_view_sampler(image_view: Arc<ImageView>, sampler: Arc<Sampler>) -> Self {
@@ -218,17 +235,10 @@ impl Loadable for Texture2D {
             gltf::buffer::Source::Bin => {}
             _ => vxlogf!("Only embeded and view texture resources is acceptable."),
         }
-        let engine = vxresult!(engine.gapi_engine.read());
-        vxunimplemented!();
-        // let image_view = engine.create_texture_with_bytes(&data[offset..offset + length]);
-        // let sampler = engine.sampler.clone();
-        // // todo call new_with_pixels do not create it your self
-        // Texture2D {
-        //     obj_base,
-        //     name: Some(name),
-        //     image_view,
-        //     sampler,
-        // }
+        let img = vxresult!(image::load_from_memory(&data[offset..offset + length])).to_rgba();
+        let (width, height) = img.dimensions();
+        let img = img.into_raw();
+        Self::new_with_base_pixels_name(obj_base, width, height, engine, &img, Some(name))
     }
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {

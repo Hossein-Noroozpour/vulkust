@@ -50,7 +50,7 @@ impl Object for Sun {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, _: &mut CmdBuffer, frame_number: usize) {
+    fn render(&self, _: &mut CmdBuffer, _: usize) {
         vxlogf!("Sun light does not implement rendering.");
     }
 

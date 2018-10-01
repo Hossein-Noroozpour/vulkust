@@ -10,12 +10,12 @@ use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct Buffer {
-    pub pool: Arc<Pool>,
-    pub vk_data: vk::VkCommandBuffer,
-    pub bound_pipeline_layout: vk::VkPipelineLayout,
-    pub bound_descriptor_sets: [vk::VkDescriptorSet; 3],
-    pub bound_dynamic_buffer_offsets: [u32; 3],
+pub struct Buffer {
+    pool: Arc<Pool>,
+    vk_data: vk::VkCommandBuffer,
+    bound_pipeline_layout: vk::VkPipelineLayout,
+    bound_descriptor_sets: [vk::VkDescriptorSet; 3],
+    bound_dynamic_buffer_offsets: [u32; 3],
 }
 
 const GBUFF_SCENE_DESCRIPTOR_OFFSET: usize = 0;
@@ -55,6 +55,11 @@ impl Buffer {
             bound_descriptor_sets: [0 as vk::VkDescriptorSet; MAX_DESCRIPTOR_SETS_COUNT],
             bound_dynamic_buffer_offsets: [0; MAX_DYNAMIC_BUFFER_OFFSETS_COUNT],
         }
+    }
+
+    pub fn fill_submit_info(&self, subinfo: &mut vk::VkSubmitInfo) {
+        subinfo.pCommandBuffers = &self.vk_data;
+        subinfo.commandBufferCount = 1;
     }
 
     pub fn begin(&mut self) {
@@ -154,28 +159,28 @@ impl Buffer {
     }
 
     pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
-        let bind_point = vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+        let info = p.get_info_for_binding();
         unsafe {
-            vk::vkCmdBindPipeline(self.vk_data, bind_point, p.vk_data);
+            vk::vkCmdBindPipeline(self.vk_data, info.0, info.1);
         }
     }
 
     pub fn bind_vertex_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
-        let offset = buffer.info.base.offset as vk::VkDeviceSize;
+        let info = buffer.get_info_for_binding();
         unsafe {
-            vk::vkCmdBindVertexBuffers(self.vk_data, 0, 1, &buffer.vk_data, &offset);
+            vk::vkCmdBindVertexBuffers(self.vk_data, 0, 1, &info.1, &info.0);
         }
     }
 
     pub fn bind_index_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
-        let offset = buffer.info.base.offset as vk::VkDeviceSize;
+        let info = buffer.get_info_for_binding();
         unsafe {
             vk::vkCmdBindIndexBuffer(
                 self.vk_data,
-                buffer.vk_data,
-                offset,
+                info.1,
+                info.0,
                 vk::VkIndexType::VK_INDEX_TYPE_UINT32,
             );
         }
