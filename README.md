@@ -7,7 +7,7 @@ An experimental tiny engine for **Vulkan in Rust**.
 <br>
 <br>
 
-## 1-Missions
+## 1- Missions
 
  1. Safety
  2. Performance
@@ -16,15 +16,15 @@ An experimental tiny engine for **Vulkan in Rust**.
  5. Cross-platform
  6. Maintainable code
 
-### 2-Status:
+### 2- Status:
 
 It is under lots of changes, there is lots of work to be done!
 
 (Until current milestone feature is not implemented it is not stable.)
 
-### 2-1-Current milestone
+### 2-1- Current milestone
 
-#### 2-1-1-Current features:
+#### 2-1-1- Current features:
 
 - Support current version of GX3D.
 - Supports font rendering
@@ -34,19 +34,19 @@ It is under lots of changes, there is lots of work to be done!
 - Vulkan Memory management (early version)
 - Cross platform (Linux, Windows, MacOs, Android, iOS)
 
-#### 2-1-2-Underdeveloment features:
+#### 2-1-2- Underdeveloment features:
 
 - Multithreaded Rendering
 - Supporting GLTF
 
-#### 2-1-3-Near Future:
+#### 2-1-3- Near Future:
 
 - Shadowing
 - Soft Shadowing
 - SSAO
 - PBR rendering
 
-## 3-Examples
+## 3- Examples
 
 - First of all master branch may become unstable or even uncompilable. 
   (I'm gonna create a release branch in the first stable version)
@@ -56,7 +56,7 @@ It is under lots of changes, there is lots of work to be done!
   [vulkust-android](https://github.com/Hossein-Noroozpour/vulkust-android)
   projects next to the vulkust root.
 
-## 4-License
+## 4- License
 
 - You can do whatever you want to do with it, but every consequences are on you.
 - You can not say that you have written this.
