@@ -40,10 +40,7 @@ impl Buffer {
     }
 
     pub(crate) fn get_info_for_binding(&self) -> (vk::VkDeviceSize, vk::VkBuffer) {
-        return (
-            self.get_offset() as vk::VkDeviceSize,
-            self.vk_data
-        );
+        return (self.get_offset() as vk::VkDeviceSize, self.vk_data);
     }
 }
 

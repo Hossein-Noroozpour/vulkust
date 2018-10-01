@@ -65,6 +65,10 @@ impl Object for Sun {
     fn update(&mut self) {
         self.camera.update();
     }
+
+    fn is_rendarable(&self) -> bool {
+        return self.camera.is_rendarable();
+    }
 }
 
 impl Light for Sun {}

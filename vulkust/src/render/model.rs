@@ -172,9 +172,6 @@ impl Object for Base {
     }
 
     fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        if !self.obj_base.renderable {
-            return;
-        }
         self.obj_base.render(cmd, frame_number);
         {
             let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
@@ -208,6 +205,10 @@ impl Object for Base {
             let mut mesh = vxresult!(mesh.write());
             Object::update(&mut *mesh);
         }
+    }
+
+    fn is_rendarable(&self) -> bool {
+        return self.obj_base.is_rendarable();
     }
 }
 

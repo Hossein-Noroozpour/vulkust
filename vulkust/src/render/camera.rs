@@ -40,6 +40,7 @@ impl Uniform {
 pub trait Camera: Object + Transferable {
     fn get_view_projection(&self) -> &math::Matrix4<f32>;
     fn get_cascaded_shadow_points(&self, _sections_count: usize) -> Vec<math::Vector3<f32>>;
+    fn update_uniform(&self, &mut Uniform);
 }
 
 pub trait DefaultCamera: Camera {
@@ -228,6 +229,10 @@ impl Object for Base {
         self.obj_base.enable_rendering()
     }
 
+    fn is_rendarable(&self) -> bool {
+        return self.obj_base.is_rendarable();
+    }
+
     fn update(&mut self) {}
 }
 
@@ -317,6 +322,13 @@ impl Camera for Base {
     fn get_cascaded_shadow_points(&self, _: usize) -> Vec<math::Vector3<f32>> {
         vxlogf!("Base camera does not implement cascading.");
     }
+
+    fn update_uniform(&self, uniform: &mut Uniform) {
+        uniform.position_radius = self.location.extend(self.near); // todo more accurate bounding shere radius
+        uniform.projection = self.projection;
+        uniform.view = self.view;
+        uniform.view_projection = self.view_projection;
+    }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -393,6 +405,10 @@ impl Object for Perspective {
 
     fn enable_rendering(&mut self) {
         self.base.enable_rendering()
+    }
+
+    fn is_rendarable(&self) -> bool {
+        return self.base.is_rendarable();
     }
 
     fn update(&mut self) {
@@ -482,6 +498,10 @@ impl Camera for Perspective {
         result[sections_count] = self.base.location + self.base.z * self.base.far;
         return result;
     }
+
+    fn update_uniform(&self, uniform: &mut Uniform) {
+        self.base.update_uniform(uniform);
+    }
 }
 
 impl DefaultCamera for Perspective {
@@ -544,6 +564,10 @@ impl Object for Orthographic {
 
     fn enable_rendering(&mut self) {
         self.base.enable_rendering()
+    }
+
+    fn is_rendarable(&self) -> bool {
+        return self.base.is_rendarable();
     }
 
     fn update(&mut self) {
@@ -619,6 +643,10 @@ impl Camera for Orthographic {
             result[i] = previous;
         }
         return result;
+    }
+
+    fn update_uniform(&self, uniform: &mut Uniform) {
+        self.base.update_uniform(uniform);
     }
 }
 

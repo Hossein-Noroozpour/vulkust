@@ -361,7 +361,10 @@ impl Pipeline {
     }
 
     pub(super) fn get_info_for_binding(&self) -> (vk::VkPipelineBindPoint, vk::VkPipeline) {
-        return (vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, self.vk_data);
+        return (
+            vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+            self.vk_data,
+        );
     }
 }
 

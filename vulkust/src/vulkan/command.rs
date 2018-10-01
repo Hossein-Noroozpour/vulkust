@@ -36,13 +36,19 @@ const MAX_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 3;
 
 impl Buffer {
     pub fn new_primary(pool: Arc<Pool>) -> Self {
-        return Self::new(pool, vk::VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        return Self::new(
+            pool,
+            vk::VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        );
     }
 
     pub fn new_secondary(pool: Arc<Pool>) -> Self {
-        return Self::new(pool, vk::VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+        return Self::new(
+            pool,
+            vk::VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY,
+        );
     }
-    
+
     fn new(pool: Arc<Pool>, level: vk::VkCommandBufferLevel) -> Self {
         let mut cmd_buf_allocate_info = vk::VkCommandBufferAllocateInfo::default();
         cmd_buf_allocate_info.sType =

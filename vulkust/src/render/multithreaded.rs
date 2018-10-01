@@ -239,4 +239,25 @@ impl Engine {
             }
         }
     }
+
+    fn update_scenes(&self) {
+        let scnmgr = vxresult!(self.scene_manager.read());
+        let scenes = scnmgr.get_scenes();
+        let mut scenes = vxresult!(scenes.write());
+        let mut ids = Vec::new();
+        for (id, scene) in &*scenes {
+            let scene = scene.upgrade();
+            if scene.is_none() {
+                ids.push(id);
+                continue;
+            }
+            let mut scene = vxresult!(vxunwrap!(scene).write());
+            if scene.is_rendarable() {
+                scene.update();
+            }
+        }
+        for id in ids {
+            scenes.remove(id);
+        }
+    }
 }

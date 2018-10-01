@@ -302,6 +302,10 @@ impl Object for Base {
     fn enable_rendering(&mut self) {
         self.obj_base.enable_rendering()
     }
+
+    fn is_rendarable(&self) -> bool {
+        return self.obj_base.is_rendarable();
+    }
 }
 
 impl Mesh for Base {

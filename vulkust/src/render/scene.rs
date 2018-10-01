@@ -387,9 +387,7 @@ impl Object for Base {
         // todo get directional light
         // then create light frustums
         // then rendering meshes with light
-        if !self.obj_base.renderable {
-            return;
-        }
+        self.obj_base.render(cmd, frame_number);
         let camera = match &self.active_camera {
             Some(c) => c,
             None => return,
@@ -398,7 +396,6 @@ impl Object for Base {
             Some(c) => c,
             None => return,
         };
-        self.obj_base.render(cmd, frame_number);
         {
             let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
             uniform_buffer.update(&self.uniform, frame_number);
@@ -418,7 +415,8 @@ impl Object for Base {
             None => return,
         };
         let camera = vxresult!(camera.read());
-        self.uniform.camera.view_projection = *camera.get_view_projection();
+        camera.update_uniform(&mut self.uniform.camera);
+        // todo update lights
     }
 
     fn disable_rendering(&mut self) {
@@ -427,6 +425,17 @@ impl Object for Base {
 
     fn enable_rendering(&mut self) {
         self.obj_base.enable_rendering()
+    }
+
+    fn is_rendarable(&self) -> bool {
+        if self.obj_base.is_rendarable() {
+            if let Some(camera) = &self.active_camera {
+                if let Some(camera) = camera.upgrade() {
+                    return vxresult!(camera.read()).is_rendarable();
+                }
+            }
+        }
+        return false;
     }
 }
 
@@ -522,6 +531,10 @@ impl Object for Game {
     fn enable_rendering(&mut self) {
         self.base.enable_rendering()
     }
+
+    fn is_rendarable(&self) -> bool {
+        return self.base.is_rendarable();
+    }
 }
 
 impl Scene for Game {
@@ -602,6 +615,10 @@ impl Object for Ui {
 
     fn enable_rendering(&mut self) {
         self.base.enable_rendering()
+    }
+
+    fn is_rendarable(&self) -> bool {
+        return self.base.is_rendarable();
     }
 }
 

@@ -163,7 +163,7 @@ impl Texture2D {
         height: u32,
         engine: &Engine,
         data: &[u8],
-        name: Option<String>
+        name: Option<String>,
     ) -> Self {
         let engine = vxresult!(engine.gapi_engine.read());
         let image_view = engine.create_texture_2d_with_pixels(width, height, data);
@@ -183,13 +183,7 @@ impl Texture2D {
         engine: &Engine,
         data: &[u8],
     ) -> Self {
-        return Self::new_with_base_pixels_name(
-        obj_base,
-        width,
-        height,
-        engine,
-        data,
-        None);
+        return Self::new_with_base_pixels_name(obj_base, width, height, engine, data, None);
     }
 
     fn new_with_view_sampler(image_view: Arc<ImageView>, sampler: Arc<Sampler>) -> Self {

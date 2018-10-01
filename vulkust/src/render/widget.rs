@@ -52,6 +52,10 @@ impl Object for Base {
     fn update(&mut self) {
         Object::update(&mut self.model_base);
     }
+
+    fn is_rendarable(&self) -> bool {
+        return self.model_base.is_rendarable();
+    }
 }
 
 impl Model for Base {
@@ -255,6 +259,10 @@ impl Object for Label {
 
     fn enable_rendering(&mut self) {
         self.base.enable_rendering()
+    }
+
+    fn is_rendarable(&self) -> bool {
+        return self.base.is_rendarable();
     }
 
     fn update(&mut self) {
