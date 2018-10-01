@@ -66,6 +66,7 @@ impl Engine {
         // vxresult!(self.scene_manager.read()).render_deferred();
         // vxresult!(self.deferred.read()).render(&mut *vxresult!(self.gapi_engine.write()));
         // vxresult!(self.gapi_engine.write()).end_recording();
+        self.multithreaded_engine.render();
     }
 
     pub fn load_gltf_scene<S>(&self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>

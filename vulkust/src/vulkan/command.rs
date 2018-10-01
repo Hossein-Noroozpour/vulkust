@@ -35,12 +35,20 @@ const MAX_DESCRIPTOR_SETS_COUNT: usize = 3;
 const MAX_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 3;
 
 impl Buffer {
-    pub fn new(pool: Arc<Pool>) -> Self {
+    pub fn new_primary(pool: Arc<Pool>) -> Self {
+        return Self::new(pool, vk::VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    }
+
+    pub fn new_secondary(pool: Arc<Pool>) -> Self {
+        return Self::new(pool, vk::VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    }
+    
+    fn new(pool: Arc<Pool>, level: vk::VkCommandBufferLevel) -> Self {
         let mut cmd_buf_allocate_info = vk::VkCommandBufferAllocateInfo::default();
         cmd_buf_allocate_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         cmd_buf_allocate_info.commandPool = pool.vk_data;
-        cmd_buf_allocate_info.level = vk::VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        cmd_buf_allocate_info.level = level;
         cmd_buf_allocate_info.commandBufferCount = 1;
         let mut vk_data = 0 as vk::VkCommandBuffer;
         vulkan_check!(vk::vkAllocateCommandBuffers(

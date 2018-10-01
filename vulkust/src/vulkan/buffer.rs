@@ -406,10 +406,11 @@ impl Manager {
     }
 
     pub fn update(&mut self) {
+        // todo it should change very soon
         if self.copy_buffers.len() == 0 {
             return;
         }
-        let mut cmd = CmdBuffer::new(self.cmd_pool.clone());
+        let mut cmd = CmdBuffer::new_primary(self.cmd_pool.clone());
         cmd.begin();
         if self.copy_ranges.len() != 0 {
             cmd.copy_buffer(

@@ -91,7 +91,7 @@ impl Framebuffer {
         return vxresult!(self.depth_buffer.image.read()).get_dimensions();
     }
 
-    pub fn begin_render(&self, cmd_buffer: &mut CmdBuffer) {
+    pub fn begin(&self, cmd_buffer: &mut CmdBuffer) {
         let (width, height) = self.get_dimensions();
 
         let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
@@ -109,10 +109,6 @@ impl Framebuffer {
         cmd_buffer.begin_render_pass_with_info(render_pass_begin_info);
         cmd_buffer.set_viewport(&self.viewport);
         cmd_buffer.set_scissor(&self.scissor);
-    }
-
-    pub fn end_render(&self, cmd_buffer: &mut CmdBuffer) {
-        cmd_buffer.end_render_pass();
     }
 }
 

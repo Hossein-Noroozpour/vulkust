@@ -35,7 +35,7 @@ pub struct Engine {
     pub(crate) gbuff_complete_semaphore: Arc<Semaphore>,
     pub(crate) render_complete_semaphore: Arc<Semaphore>,
     pub(crate) graphic_cmd_pool: Arc<CmdPool>,
-    pub(crate) draw_commands: Vec<Arc<RwLock<(CmdBuffer, CmdBuffer)>>>, // gbuff, deferred
+    // pub(crate) draw_commands: Vec<Arc<RwLock<(CmdBuffer, CmdBuffer)>>>, // gbuff, deferred
     pub(crate) memory_mgr: Arc<RwLock<MemoryManager>>,
     pub(crate) samples_count: vk::VkSampleCountFlagBits,
     pub(crate) depth_stencil_image_view: Arc<ImageView>,
@@ -71,17 +71,17 @@ impl Engine {
             CmdPoolType::Graphic,
             0,
         ));
-        let mut draw_commands = Vec::new();
+        // let mut draw_commands = Vec::new();
         let mut wait_fences = Vec::new();
         for _ in 0..swapchain.image_views.len() {
-            let draw_command = Arc::new(RwLock::new((
-                CmdBuffer::new(graphic_cmd_pool.clone()),
-                CmdBuffer::new(graphic_cmd_pool.clone()),
-            )));
-            draw_commands.push(draw_command);
+            // let draw_command = Arc::new(RwLock::new((
+            //     CmdBuffer::new(graphic_cmd_pool.clone()),
+            //     CmdBuffer::new(graphic_cmd_pool.clone()),
+            // )));
+            // draw_commands.push(draw_command);
             wait_fences.push(Arc::new(Fence::new_signaled(logical_device.clone())));
         }
-        draw_commands.shrink_to_fit();
+        // draw_commands.shrink_to_fit();
         wait_fences.shrink_to_fit();
         let memory_mgr = Arc::new(RwLock::new(MemoryManager::new(&logical_device)));
         let memory_mgr_w = Arc::downgrade(&memory_mgr);
@@ -138,7 +138,7 @@ impl Engine {
             gbuff_complete_semaphore,
             render_complete_semaphore,
             graphic_cmd_pool,
-            draw_commands,
+            // draw_commands,
             memory_mgr,
             depth_stencil_image_view,
             samples_count,
@@ -187,92 +187,91 @@ impl Engine {
         return current_buffer;
     }
 
-    pub fn start_recording(&mut self) {
-        vxresult!(self.buffer_manager.write()).update();
-        let frame_number = self.wait_for_preset_frame();
+    // pub fn start_recording(&mut self) {
+    //     vxresult!(self.buffer_manager.write()).update();
+    //     let frame_number = self.wait_for_preset_frame();
 
-        let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
-        // draw_command.reset(); // todo I don't think it is necessary
-        cmd_buffers.0.begin();
+    //     let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
+    //     cmd_buffers.0.begin();
 
-        self.g_framebuffer.begin_render(&mut cmd_buffers.0);
-    }
+    //     self.g_framebuffer.begin_render(&mut cmd_buffers.0);
+    // }
 
-    pub fn start_deferred(&self) {
-        let mut cmd_buffers =
-            vxresult!(self.draw_commands[self.current_frame_number as usize].write());
+    // pub fn start_deferred(&self) {
+    //     let mut cmd_buffers =
+    //         vxresult!(self.draw_commands[self.current_frame_number as usize].write());
 
-        self.g_framebuffer.end_render(&mut cmd_buffers.0);
+    //     self.g_framebuffer.end_render(&mut cmd_buffers.0);
 
-        cmd_buffers.0.end();
+    //     cmd_buffers.0.end();
 
-        let wait_stage_mask =
-            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
-        let mut submit_info = vk::VkSubmitInfo::default();
-        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.pWaitDstStageMask = &wait_stage_mask;
-        submit_info.pWaitSemaphores = &self.present_complete_semaphore.vk_data;
-        submit_info.waitSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = &self.gbuff_complete_semaphore.vk_data;
-        submit_info.signalSemaphoreCount = 1;
-        cmd_buffers.0.fill_submit_info(&mut submit_info);
-        vulkan_check!(vk::vkQueueSubmit(
-            self.logical_device.vk_graphic_queue,
-            1,
-            &submit_info,
-            0 as vk::VkFence,
-        ));
+    //     let wait_stage_mask =
+    //         vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+    //     let mut submit_info = vk::VkSubmitInfo::default();
+    //     submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    //     submit_info.pWaitDstStageMask = &wait_stage_mask;
+    //     submit_info.pWaitSemaphores = &self.present_complete_semaphore.vk_data;
+    //     submit_info.waitSemaphoreCount = 1;
+    //     submit_info.pSignalSemaphores = &self.gbuff_complete_semaphore.vk_data;
+    //     submit_info.signalSemaphoreCount = 1;
+    //     cmd_buffers.0.fill_submit_info(&mut submit_info);
+    //     vulkan_check!(vk::vkQueueSubmit(
+    //         self.logical_device.vk_graphic_queue,
+    //         1,
+    //         &submit_info,
+    //         0 as vk::VkFence,
+    //     ));
 
-        cmd_buffers.1.begin();
-        self.framebuffers[self.current_frame_number as usize].begin_render(&mut cmd_buffers.1);
-    }
+    //     cmd_buffers.1.begin();
+    //     self.framebuffers[self.current_frame_number as usize].begin_render(&mut cmd_buffers.1);
+    // }
 
-    pub fn end_recording(&mut self) {
-        let frame_number = self.current_frame_number as usize;
+    // pub fn end_recording(&mut self) {
+    //     let frame_number = self.current_frame_number as usize;
 
-        let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
+    //     let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
 
-        let pipemgr = vxresult!(self.pipeline_manager.read());
-        // cmd_buffers.1.bind_descriptor_sets(
-        //     &pipemgr.deferred_pipeline.layout,
-        //     &self.bound_deferred_descriptor_sets,
-        //     &self.bound_deferred_dynamic_offsets,
-        // );
-        cmd_buffers.1.bind_pipeline(&pipemgr.deferred_pipeline);
-        cmd_buffers.1.draw(3);
-        self.framebuffers[frame_number].end_render(&mut cmd_buffers.1);
-        cmd_buffers.1.end();
+    //     let pipemgr = vxresult!(self.pipeline_manager.read());
+    //     // cmd_buffers.1.bind_descriptor_sets(
+    //     //     &pipemgr.deferred_pipeline.layout,
+    //     //     &self.bound_deferred_descriptor_sets,
+    //     //     &self.bound_deferred_dynamic_offsets,
+    //     // );
+    //     cmd_buffers.1.bind_pipeline(&pipemgr.deferred_pipeline);
+    //     cmd_buffers.1.draw(3);
+    //     self.framebuffers[frame_number].end_render(&mut cmd_buffers.1);
+    //     cmd_buffers.1.end();
 
-        let wait_stage_mask =
-            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
-        let mut submit_info = vk::VkSubmitInfo::default();
-        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.pWaitDstStageMask = &wait_stage_mask;
-        submit_info.pWaitSemaphores = &self.gbuff_complete_semaphore.vk_data;
-        submit_info.waitSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = &self.render_complete_semaphore.vk_data;
-        submit_info.signalSemaphoreCount = 1;
-        cmd_buffers.1.fill_submit_info(&mut submit_info);
-        vulkan_check!(vk::vkQueueSubmit(
-            self.logical_device.vk_graphic_queue,
-            1,
-            &submit_info,
-            self.wait_fences[frame_number].vk_data,
-        ));
+    //     let wait_stage_mask =
+    //         vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
+    //     let mut submit_info = vk::VkSubmitInfo::default();
+    //     submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    //     submit_info.pWaitDstStageMask = &wait_stage_mask;
+    //     submit_info.pWaitSemaphores = &self.gbuff_complete_semaphore.vk_data;
+    //     submit_info.waitSemaphoreCount = 1;
+    //     submit_info.pSignalSemaphores = &self.render_complete_semaphore.vk_data;
+    //     submit_info.signalSemaphoreCount = 1;
+    //     cmd_buffers.1.fill_submit_info(&mut submit_info);
+    //     vulkan_check!(vk::vkQueueSubmit(
+    //         self.logical_device.vk_graphic_queue,
+    //         1,
+    //         &submit_info,
+    //         self.wait_fences[frame_number].vk_data,
+    //     ));
 
-        let image_index = frame_number as u32;
-        let mut present_info = vk::VkPresentInfoKHR::default();
-        present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present_info.swapchainCount = 1;
-        present_info.pSwapchains = &self.swapchain.vk_data;
-        present_info.pImageIndices = &image_index;
-        present_info.pWaitSemaphores = &self.render_complete_semaphore.vk_data;
-        present_info.waitSemaphoreCount = 1;
-        vulkan_check!(vk::vkQueuePresentKHR(
-            self.logical_device.vk_graphic_queue,
-            &present_info,
-        ));
-    }
+    //     let image_index = frame_number as u32;
+    //     let mut present_info = vk::VkPresentInfoKHR::default();
+    //     present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    //     present_info.swapchainCount = 1;
+    //     present_info.pSwapchains = &self.swapchain.vk_data;
+    //     present_info.pImageIndices = &image_index;
+    //     present_info.pWaitSemaphores = &self.render_complete_semaphore.vk_data;
+    //     present_info.waitSemaphoreCount = 1;
+    //     vulkan_check!(vk::vkQueuePresentKHR(
+    //         self.logical_device.vk_graphic_queue,
+    //         &present_info,
+    //     ));
+    // }
 
     pub fn terminate(&mut self) {
         self.logical_device.wait_idle();
@@ -308,13 +307,13 @@ impl Engine {
     //             .offset as u32; // todo move this to dynamicbuffer
     // }
 
-    pub fn bind_gbuff_pipeline(&self) {
-        let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
-        let draw_command = &self.draw_commands[frame_number];
-        let mut draw_command = vxresult!(draw_command.write());
-        let pipemgr = vxresult!(self.pipeline_manager.read());
-        draw_command.0.bind_pipeline(&pipemgr.gbuff_pipeline);
-    }
+    // pub fn bind_gbuff_pipeline(&self) {
+    //     let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
+    //     let draw_command = &self.draw_commands[frame_number];
+    //     let mut draw_command = vxresult!(draw_command.write());
+    //     let pipemgr = vxresult!(self.pipeline_manager.read());
+    //     draw_command.0.bind_pipeline(&pipemgr.gbuff_pipeline);
+    // }
 
     // pub fn render_gbuff(
     //     &self,
@@ -375,7 +374,7 @@ impl Engine {
         self.present_complete_semaphore = new.present_complete_semaphore.clone();
         self.render_complete_semaphore = new.render_complete_semaphore.clone();
         self.graphic_cmd_pool = new.graphic_cmd_pool.clone();
-        self.draw_commands = new.draw_commands.clone();
+        // self.draw_commands = new.draw_commands.clone();
         self.memory_mgr = new.memory_mgr.clone();
         self.depth_stencil_image_view = new.depth_stencil_image_view.clone();
         self.render_pass = new.render_pass.clone();
@@ -434,8 +433,12 @@ impl Engine {
         ));
     }
 
-    pub(crate) fn create_command_buffer(&self, cmd_pool: Arc<CmdPool>) -> CmdBuffer {
-        return CmdBuffer::new(cmd_pool);
+    pub(crate) fn create_secondary_command_buffer(&self, cmd_pool: Arc<CmdPool>) -> CmdBuffer {
+        return CmdBuffer::new_secondary(cmd_pool);
+    }
+
+    pub(crate) fn create_primary_command_buffer(&self, cmd_pool: Arc<CmdPool>) -> CmdBuffer {
+        return CmdBuffer::new_primary(cmd_pool);
     }
 
     pub(crate) fn get_frames_count(&self) -> usize {
@@ -444,6 +447,10 @@ impl Engine {
 
     pub(crate) fn get_frame_number(&self) -> usize {
         return self.current_frame_number as usize;
+    }
+
+    pub(crate) fn get_gbuff_framebuffer(&self) -> &Arc<Framebuffer> {
+        return &self.g_framebuffer;
     }
 
     fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
