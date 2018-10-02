@@ -79,6 +79,16 @@ impl Buffer {
         }
     }
 
+    pub(crate) fn get_data(&self) -> vk::VkCommandBuffer {
+        return self.vk_data;
+    }
+
+    pub(crate) fn exe_cmds_with_data(&mut self, datas: &Vec<vk::VkCommandBuffer>) {
+        unsafe {
+            vk::vkCmdExecuteCommands(self.vk_data, datas.len() as u32, datas.as_ptr());
+        }
+    }
+
     pub fn fill_submit_info(&self, subinfo: &mut vk::VkSubmitInfo) {
         subinfo.pCommandBuffers = &self.vk_data;
         subinfo.commandBufferCount = 1;
@@ -116,7 +126,7 @@ impl Buffer {
             vk::vkCmdBeginRenderPass(
                 self.vk_data,
                 &render_pass_begin_info,
-                vk::VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE,
+                vk::VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS,
             );
         }
     }

@@ -267,7 +267,7 @@ impl Engine {
         for k in &self.kernels {
             k.wait_rendering();
         }
-        for (scene_id, scene) in &*scenes {
+        'scenes: for (scene_id, scene) in &*scenes {
             let scene = scene.upgrade();
             if scene.is_none() {
                 cmdss.remove(scene_id);
@@ -283,18 +283,33 @@ impl Engine {
             if cmds.is_none() {
                 continue;
             }
+            let mut kcmdsdatas = vec![Vec::new(), Vec::new()];
+            for k in &self.kernels {
+                let kcmdsss = vxresult!(k.cmd_buffers.lock());
+                let kcmdss = &kcmdsss[frame_number];
+                let kcmds = kcmdss.get(scene_id);
+                if kcmds.is_none() {
+                    continue 'scenes;
+                }
+                let kcmds = vxunwrap!(kcmds);
+                kcmdsdatas[SECONDARY_GBUFF_PASS_INDEX].push(kcmds[SECONDARY_GBUFF_PASS_INDEX].get_data());
+            }
             let cmds = vxunwrap!(cmds);
             {
                 let cmd = &mut cmds[PRIMARY_GBUFF_PASS_INDEX];
+                cmd.exe_cmds_with_data(&kcmdsdatas[SECONDARY_GBUFF_PASS_INDEX]);
                 cmd.end_render_pass();
                 cmd.end();
             }
+            vxlogi!("rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
             {
                 let cmd = &mut cmds[PRIMARY_DEFERRED_PASS_INDEX];
                 cmd.end_render_pass();
                 cmd.end();
             }
+            vxlogi!("????????????????????????????????????????????????????????????????????????");
         }
+
     }
 
     fn update_scenes(&self) {
