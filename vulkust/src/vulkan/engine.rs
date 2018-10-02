@@ -10,7 +10,7 @@ use super::framebuffer::Framebuffer;
 use super::image::View as ImageView;
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
-use super::pipeline::Manager as PipelineManager;
+use super::pipeline::{Pipeline, Manager as PipelineManager};
 use super::render_pass::RenderPass;
 use super::sampler::Sampler;
 use super::surface::Surface;
@@ -451,6 +451,11 @@ impl Engine {
 
     pub(crate) fn get_gbuff_framebuffer(&self) -> &Arc<Framebuffer> {
         return &self.g_framebuffer;
+    }
+
+    pub(crate) fn get_gbuff_pipeline(&self) -> Arc<Pipeline> {
+        let pipmgr = vxresult!(self.pipeline_manager.read());
+        return pipmgr.gbuff_pipeline.clone();
     }
 
     fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {

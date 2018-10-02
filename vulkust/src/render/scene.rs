@@ -34,6 +34,8 @@ pub trait Scene: Object {
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
     fn render_deferred(&self, cmd: &mut CmdBuffer, frame_buffer: usize);
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
+    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
+    fn clean(&mut self);
 }
 
 pub trait Loadable: Scene + Sized {
@@ -242,14 +244,15 @@ impl Uniform {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
-    pub obj_base: ObjectBase,
-    pub uniform: Uniform,
+    obj_base: ObjectBase,
+    uniform: Uniform,
     uniform_buffer: Arc<RwLock<DynamicBuffer>>,
-    pub cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
-    pub active_camera: Option<Weak<RwLock<Camera>>>,
-    pub lights: BTreeMap<Id, Arc<RwLock<Light>>>,
-    pub models: BTreeMap<Id, Arc<RwLock<Model>>>,
-    pub(crate) descriptor_set: Arc<DescriptorSet>,
+    cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
+    active_camera: Option<Weak<RwLock<Camera>>>,
+    lights: BTreeMap<Id, Arc<RwLock<Light>>>,
+    models: BTreeMap<Id, Arc<RwLock<Model>>>,
+    all_models: BTreeMap<Id, Weak<RwLock<Model>>>,
+    descriptor_set: Arc<DescriptorSet>,
     // pub skybox: Option<Arc<RwLock<Skybox>>>, // todo, maybe its not gonna be needed in GI PBR
     // pub constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
 }
@@ -266,6 +269,7 @@ impl Base {
         let mut cameras = BTreeMap::new();
         let mut active_camera = None;
         let mut models = BTreeMap::new();
+        let mut all_models = BTreeMap::new();
         let lights = BTreeMap::new();
         for node in scene.nodes() {
             if node.camera().is_some() {
@@ -276,8 +280,13 @@ impl Base {
                 active_camera = Some(w);
             } else if let Some(_) = node.mesh() {
                 let model = ModelBase::new_with_gltf(&node, engine, data);
+                let child_models = model.bring_all_child_models();
+                for (id, model) in child_models {
+                    all_models.insert(id, Arc::downgrade(&model));
+                }
                 let id = model.get_id();
                 let model: Arc<RwLock<Model>> = Arc::new(RwLock::new(model));
+                all_models.insert(id, Arc::downgrade(&model));
                 models.insert(id, model);
             } // todo read lights
         }
@@ -298,6 +307,7 @@ impl Base {
             cameras,
             active_camera,
             models,
+            all_models,
             lights,
         }
     }
@@ -338,8 +348,18 @@ impl Base {
             None
         };
         let mut models = BTreeMap::new();
+        let mut all_models = BTreeMap::new();
         for id in models_ids {
-            models.insert(id, vxresult!(model_manager.write()).load_gx3d(engine, id));
+            let model = vxresult!(model_manager.write()).load_gx3d(engine, id);
+            {
+                let model = vxresult!(model.read());
+                let child_models = model.bring_all_child_models();
+                for (id, model) in child_models {
+                    all_models.insert(id, Arc::downgrade(&model));
+                }
+            }
+            all_models.insert(id, Arc::downgrade(&model));
+            models.insert(id, model);
         }
         let mut lights = BTreeMap::new();
         for id in lights_ids {
@@ -359,6 +379,7 @@ impl Base {
             cameras,
             active_camera,
             models,
+            all_models,
             lights,
             uniform,
             uniform_buffer,
@@ -449,7 +470,16 @@ impl Scene for Base {
     }
 
     fn add_model(&mut self, model: Arc<RwLock<Model>>) {
-        let id = vxresult!(model.read()).get_id();
+        let id = {
+            let model = vxresult!(model.read());
+            let child_models = model.bring_all_child_models();
+            for (id, model) in child_models {
+                self.all_models.insert(id, Arc::downgrade(&model));
+            }
+            let id = model.get_id();
+            id
+        };
+        self.all_models.insert(id, Arc::downgrade(&model));
         self.models.insert(id, model);
     }
 
@@ -466,6 +496,22 @@ impl Scene for Base {
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
         return &self.models;
+    }
+
+    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
+        return &self.all_models;
+    }
+
+    fn clean(&mut self) {
+        let mut ids = Vec::<Id>::new();
+        for (id, model) in &self.all_models {
+            if model.upgrade().is_none() {
+                ids.push(*id);
+            }
+        }
+        for id in ids {
+            self.all_models.remove(&id);
+        }
     }
 }
 
@@ -489,6 +535,7 @@ impl DefaultScene for Base {
             active_camera: None,
             lights: BTreeMap::new(),
             models: BTreeMap::new(),
+            all_models: BTreeMap::new(),
         }
     }
 }
@@ -556,6 +603,14 @@ impl Scene for Game {
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
         return self.base.get_models();
+    }
+
+    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
+        return self.base.get_all_models();
+    }
+
+    fn clean(&mut self) {
+        self.base.clean();
     }
 }
 
@@ -641,6 +696,14 @@ impl Scene for Ui {
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
         return self.base.get_models();
+    }
+
+    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
+        return self.base.get_all_models();
+    }
+
+    fn clean(&mut self) {
+        self.base.clean();
     }
 }
 

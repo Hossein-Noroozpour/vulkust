@@ -66,6 +66,10 @@ impl Model for Base {
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
         self.model_base.add_mesh(mesh);
     }
+
+    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)> {
+        return self.model_base.bring_all_child_models();
+    }
 }
 
 impl DefaultModel for Base {
@@ -277,6 +281,10 @@ impl Model for Label {
 
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
         self.base.add_mesh(mesh);
+    }
+
+    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)> {
+        return self.base.bring_all_child_models();
     }
 }
 

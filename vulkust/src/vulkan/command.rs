@@ -174,6 +174,7 @@ impl Buffer {
 
     pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
         let info = p.get_info_for_binding();
+        self.bound_pipeline_layout = p.get_layout().vk_data;
         unsafe {
             vk::vkCmdBindPipeline(self.vk_data, info.0, info.1);
         }

@@ -19,6 +19,7 @@ use math;
 pub trait Model: Object {
     fn update(&mut self, scene: &Scene);
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>);
+    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)>;
 }
 
 pub trait DefaultModel: Model + Sized {
@@ -183,9 +184,6 @@ impl Object for Base {
         for (_, mesh) in &self.meshes {
             vxresult!(mesh.read()).render(cmd, frame_number);
         }
-        for (_, model) in &self.children {
-            vxresult!(model.read()).render(cmd, frame_number);
-        }
     }
 
     fn disable_rendering(&mut self) {
@@ -197,14 +195,7 @@ impl Object for Base {
     }
 
     fn update(&mut self) {
-        for (_, model) in &self.children {
-            let mut model = vxresult!(model.write());
-            Object::update(&mut *model);
-        }
-        for (_, mesh) in &self.meshes {
-            let mut mesh = vxresult!(mesh.write());
-            Object::update(&mut *mesh);
-        }
+        self.obj_base.update();
     }
 
     fn is_rendarable(&self) -> bool {
@@ -317,12 +308,9 @@ impl Loadable for Base {
 
 impl Model for Base {
     fn update(&mut self, scene: &Scene) {
-        for (_, model) in &self.children {
-            let mut model = vxresult!(model.write());
-            Model::update(&mut *model, scene);
-        }
         for (_, mesh) in &self.meshes {
             let mut mesh = vxresult!(mesh.write());
+            Object::update(&mut *mesh);
             Mesh::update(&mut *mesh, scene, self);
         }
     }
@@ -330,6 +318,16 @@ impl Model for Base {
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
         let id = vxresult!(mesh.read()).get_id();
         self.meshes.insert(id, mesh);
+    }
+
+    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)> {
+        let mut result = Vec::new();
+        for (id, model) in &self.children {
+            result.push((*id, model.clone()));
+            let mut models = vxresult!(model.read()).bring_all_child_models();
+            result.append(&mut models);
+        }
+        return result;
     }
 }
 

@@ -366,6 +366,10 @@ impl Pipeline {
             self.vk_data,
         );
     }
+
+    pub(crate) fn get_layout(&self) -> &Layout {
+        return &self.layout;
+    }
 }
 
 impl Drop for Pipeline {

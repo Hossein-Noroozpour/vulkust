@@ -112,6 +112,8 @@ impl Renderer {
 
     pub fn render(&mut self) {
         let g_engine = vxresult!(self.g_engine.read());
+        let gbuff_framebuffer = g_engine.get_gbuff_framebuffer();
+        let gbuff_pipeline = g_engine.get_gbuff_pipeline();
         let frame_number = g_engine.get_frame_number();
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
@@ -125,6 +127,12 @@ impl Renderer {
                 cmdss.remove(scene_id);
                 continue;
             }
+            let scene = vxunwrap!(scene);
+            let scene = vxresult!(scene.read());
+            if !scene.is_rendarable() {
+                cmdss.remove(scene_id);
+                continue;
+            }
             if !cmdss.contains_key(scene_id) {
                 let mut cmds = Vec::new();
                 for _ in 0..SECONDARY_PASSES_COUNT {
@@ -134,19 +142,31 @@ impl Renderer {
                 cmdss.insert(*scene_id, cmds);
             }
             let cmds = vxunwrap!(cmdss.get_mut(scene_id));
-            let scene = vxunwrap!(scene);
-            let scene = vxresult!(scene.read());
-            let models = scene.get_models();
+            let models = scene.get_all_models();
+            cmds[SECONDARY_GBUFF_PASS_INDEX].begin();
+            gbuff_framebuffer.begin(&mut cmds[SECONDARY_GBUFF_PASS_INDEX]);
+            cmds[SECONDARY_GBUFF_PASS_INDEX].bind_pipeline(&gbuff_pipeline);
+            scene.render(&mut cmds[SECONDARY_GBUFF_PASS_INDEX], frame_number);
             for (_, model) in &*models {
                 task_index += 1;
                 if task_index % self.kernels_count != self.index {
                     continue;
                 }
+                let model = model.upgrade();
+                if model.is_none() {
+                    continue;
+                }
+                let model = vxunwrap!(model);
                 let mut model = vxresult!(model.write());
+                if !model.is_rendarable() {
+                    continue;
+                }
                 Object::update(&mut *model);
                 Model::update(&mut *model, &*scene);
-                // todo add command fillers in here
+                Object::render(&mut *model, &mut cmds[SECONDARY_GBUFF_PASS_INDEX], frame_number);
             }
+            cmds[SECONDARY_GBUFF_PASS_INDEX].end_render_pass();
+            cmds[SECONDARY_GBUFF_PASS_INDEX].end();
         }
     }
 }
@@ -196,6 +216,7 @@ impl Engine {
     }
 
     pub(crate) fn render(&self) {
+        self.update_scenes();
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         let scenes = vxresult!(scenes.read());
@@ -211,6 +232,12 @@ impl Engine {
                 cmdss.remove(scene_id);
                 continue;
             }
+            let scene = vxunwrap!(scene);
+            let scene = vxresult!(scene.read());
+            if !scene.is_rendarable() {
+                cmdss.remove(scene_id);
+                continue;
+            }
             if !cmdss.contains_key(scene_id) {
                 let mut cmds = Vec::new();
                 for _ in 0..PRIMARY_PASSES_COUNT {
@@ -220,8 +247,6 @@ impl Engine {
                 cmdss.insert(*scene_id, cmds);
             }
             let cmds = vxunwrap!(cmdss.get_mut(scene_id));
-            let scene = vxunwrap!(scene);
-            let scene = vxresult!(scene.read());
             let mut cmd = &mut cmds[PRIMARY_GBUFF_PASS_INDEX];
             cmd.begin();
             engine.get_gbuff_framebuffer().begin(cmd);
@@ -230,9 +255,22 @@ impl Engine {
             k.wait_rendering();
         }
         for (scene_id, scene) in &*scenes {
-            let scene = vxunwrap!(scene.upgrade());
+            let scene = scene.upgrade();
+            if scene.is_none() {
+                cmdss.remove(scene_id);
+                continue;
+            }
+            let scene = vxunwrap!(scene);
             let scene = vxresult!(scene.read());
-            let cmds = vxunwrap!(cmdss.get_mut(scene_id));
+            if !scene.is_rendarable() {
+                cmdss.remove(scene_id);
+                continue;
+            }
+            let cmds = cmdss.get_mut(scene_id);
+            if cmds.is_none() {
+                continue;
+            }
+            let cmds = vxunwrap!(cmds);
             for cmd in cmds {
                 cmd.end_render_pass();
                 cmd.end();
@@ -245,19 +283,24 @@ impl Engine {
         let scenes = scnmgr.get_scenes();
         let mut scenes = vxresult!(scenes.write());
         let mut ids = Vec::new();
-        for (id, scene) in &*scenes {
-            let scene = scene.upgrade();
-            if scene.is_none() {
-                ids.push(id);
-                continue;
-            }
-            let mut scene = vxresult!(vxunwrap!(scene).write());
-            if scene.is_rendarable() {
+        {
+            for (id, scene) in &*scenes {
+                let scene = scene.upgrade();
+                if scene.is_none() {
+                    ids.push(*id);
+                    continue;
+                }
+                let scene = vxunwrap!(&scene);
+                let mut scene = vxresult!(scene.write());
+                if scene.is_rendarable() {
+                    continue;
+                }
                 scene.update();
+                scene.clean();
             }
         }
         for id in ids {
-            scenes.remove(id);
+            scenes.remove(&id);
         }
     }
 }
