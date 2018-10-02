@@ -143,8 +143,10 @@ impl Renderer {
             }
             let cmds = vxunwrap!(cmdss.get_mut(scene_id));
             let models = scene.get_all_models();
-            cmds[SECONDARY_GBUFF_PASS_INDEX].begin();
-            gbuff_framebuffer.begin(&mut cmds[SECONDARY_GBUFF_PASS_INDEX]);
+            cmds[SECONDARY_GBUFF_PASS_INDEX].begin_secondary(&gbuff_framebuffer);
+            // cmds[SECONDARY_SHADOW_PASS_INDEX].begin();
+            cmds[SECONDARY_GBUFF_PASS_INDEX].set_viewport(&gbuff_framebuffer.viewport);
+            cmds[SECONDARY_GBUFF_PASS_INDEX].set_scissor(&gbuff_framebuffer.scissor);
             cmds[SECONDARY_GBUFF_PASS_INDEX].bind_pipeline(&gbuff_pipeline);
             scene.render(&mut cmds[SECONDARY_GBUFF_PASS_INDEX], frame_number);
             for (_, model) in &*models {
@@ -165,8 +167,8 @@ impl Renderer {
                 Model::update(&mut *model, &*scene);
                 Object::render(&mut *model, &mut cmds[SECONDARY_GBUFF_PASS_INDEX], frame_number);
             }
-            cmds[SECONDARY_GBUFF_PASS_INDEX].end_render_pass();
             cmds[SECONDARY_GBUFF_PASS_INDEX].end();
+            // cmds[SECONDARY_SHADOW_PASS_INDEX].begin();
         }
     }
 }
@@ -224,6 +226,10 @@ impl Engine {
             k.start_rendering();
         }
         let engine = vxresult!(self.engine.read());
+        let gbuff_framebuffer = engine.get_gbuff_framebuffer();
+        let gbuff_pipeline = engine.get_gbuff_pipeline();
+        let deferred_framebuffer = engine.get_deferred_framebuffer();
+        let deferred_pipeline = engine.get_deferred_pipeline();
         let frame_number = engine.get_frame_number();
         let cmdss = &mut vxresult!(self.cmdsss.lock())[frame_number];
         for (scene_id, scene) in &*scenes {
@@ -247,9 +253,16 @@ impl Engine {
                 cmdss.insert(*scene_id, cmds);
             }
             let cmds = vxunwrap!(cmdss.get_mut(scene_id));
-            let mut cmd = &mut cmds[PRIMARY_GBUFF_PASS_INDEX];
-            cmd.begin();
-            engine.get_gbuff_framebuffer().begin(cmd);
+            {
+                let cmd = &mut cmds[PRIMARY_GBUFF_PASS_INDEX];
+                cmd.begin();
+                gbuff_framebuffer.begin(cmd);
+            }
+            {
+                let cmd = &mut cmds[PRIMARY_DEFERRED_PASS_INDEX];
+                cmd.begin();
+                deferred_framebuffer.begin(cmd);
+            }
         }
         for k in &self.kernels {
             k.wait_rendering();
@@ -271,7 +284,13 @@ impl Engine {
                 continue;
             }
             let cmds = vxunwrap!(cmds);
-            for cmd in cmds {
+            {
+                let cmd = &mut cmds[PRIMARY_GBUFF_PASS_INDEX];
+                cmd.end_render_pass();
+                cmd.end();
+            }
+            {
+                let cmd = &mut cmds[PRIMARY_DEFERRED_PASS_INDEX];
                 cmd.end_render_pass();
                 cmd.end();
             }

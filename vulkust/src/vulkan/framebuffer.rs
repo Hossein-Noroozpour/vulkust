@@ -7,18 +7,18 @@ use std::ptr::null;
 use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct Framebuffer {
-    pub clear_values: Vec<vk::VkClearValue>,
-    pub color_buffers: Vec<Arc<View>>,
-    pub depth_buffer: Arc<View>,
-    pub render_pass: Arc<RenderPass>,
-    pub viewport: vk::VkViewport,
-    pub scissor: vk::VkRect2D,
-    pub vk_data: vk::VkFramebuffer,
+pub struct Framebuffer {
+    pub(crate) clear_values: Vec<vk::VkClearValue>,
+    pub(crate) color_buffers: Vec<Arc<View>>,
+    pub(crate) depth_buffer: Arc<View>,
+    pub(crate) render_pass: Arc<RenderPass>,
+    pub(crate) viewport: vk::VkViewport,
+    pub(crate) scissor: vk::VkRect2D,
+    pub(crate) vk_data: vk::VkFramebuffer,
 }
 
 impl Framebuffer {
-    pub fn new(
+    pub(crate) fn new(
         color_buffers: Vec<Arc<View>>,
         depth_buffer: Arc<View>,
         render_pass: Arc<RenderPass>,
@@ -87,11 +87,11 @@ impl Framebuffer {
         }
     }
 
-    pub fn get_dimensions(&self) -> (u32, u32) {
+    pub(crate) fn get_dimensions(&self) -> (u32, u32) {
         return vxresult!(self.depth_buffer.image.read()).get_dimensions();
     }
 
-    pub fn begin(&self, cmd_buffer: &mut CmdBuffer) {
+    pub(crate) fn begin(&self, cmd_buffer: &mut CmdBuffer) {
         let (width, height) = self.get_dimensions();
 
         let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();

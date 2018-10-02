@@ -458,6 +458,15 @@ impl Engine {
         return pipmgr.gbuff_pipeline.clone();
     }
 
+    pub(crate) fn get_deferred_framebuffer(&self) -> &Arc<Framebuffer> {
+        return &self.framebuffers[self.current_frame_number as usize];
+    }
+
+    pub(crate) fn get_deferred_pipeline(&self) -> Arc<Pipeline> {
+        let pipmgr = vxresult!(self.pipeline_manager.read());
+        return pipmgr.deferred_pipeline.clone();
+    }
+
     fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
         let mut sample_count = phdev.get_max_sample_bit(
             GBUFF_COLOR_FMT,
