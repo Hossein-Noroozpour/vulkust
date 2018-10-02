@@ -107,8 +107,8 @@ impl Framebuffer {
         render_pass_begin_info.framebuffer = self.vk_data;
 
         cmd_buffer.begin_render_pass_with_info(render_pass_begin_info);
-        cmd_buffer.set_viewport(&self.viewport);
-        cmd_buffer.set_scissor(&self.scissor);
+        // cmd_buffer.set_viewport(&self.viewport);
+        // cmd_buffer.set_scissor(&self.scissor);
     }
 }
 
