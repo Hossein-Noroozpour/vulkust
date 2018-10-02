@@ -144,7 +144,7 @@ impl Renderer {
             let cmds = vxunwrap!(cmdss.get_mut(scene_id));
             let models = scene.get_all_models();
             cmds[SECONDARY_GBUFF_PASS_INDEX].begin_secondary(&gbuff_framebuffer);
-            // cmds[SECONDARY_SHADOW_PASS_INDEX].begin();
+            // cmds[SECONDARY_SHADOW_PASS_INDEX].begin_secondary();
             cmds[SECONDARY_GBUFF_PASS_INDEX].set_viewport(&gbuff_framebuffer.viewport);
             cmds[SECONDARY_GBUFF_PASS_INDEX].set_scissor(&gbuff_framebuffer.scissor);
             cmds[SECONDARY_GBUFF_PASS_INDEX].bind_pipeline(&gbuff_pipeline);
@@ -165,10 +165,14 @@ impl Renderer {
                 }
                 Object::update(&mut *model);
                 Model::update(&mut *model, &*scene);
-                Object::render(&mut *model, &mut cmds[SECONDARY_GBUFF_PASS_INDEX], frame_number);
+                Object::render(
+                    &mut *model,
+                    &mut cmds[SECONDARY_GBUFF_PASS_INDEX],
+                    frame_number,
+                );
             }
             cmds[SECONDARY_GBUFF_PASS_INDEX].end();
-            // cmds[SECONDARY_SHADOW_PASS_INDEX].begin();
+            // cmds[SECONDARY_SHADOW_PASS_INDEX].end();
         }
     }
 }
@@ -279,22 +283,25 @@ impl Engine {
                 cmdss.remove(scene_id);
                 continue;
             }
-            let cmds = cmdss.get_mut(scene_id);
-            if cmds.is_none() {
-                continue;
-            }
             let mut kcmdsdatas = vec![Vec::new(), Vec::new()];
             for k in &self.kernels {
                 let kcmdsss = vxresult!(k.cmd_buffers.lock());
                 let kcmdss = &kcmdsss[frame_number];
                 let kcmds = kcmdss.get(scene_id);
                 if kcmds.is_none() {
+                    cmdss.remove(scene_id);
                     continue 'scenes;
                 }
                 let kcmds = vxunwrap!(kcmds);
-                kcmdsdatas[SECONDARY_GBUFF_PASS_INDEX].push(kcmds[SECONDARY_GBUFF_PASS_INDEX].get_data());
+                kcmdsdatas[SECONDARY_GBUFF_PASS_INDEX]
+                    .push(kcmds[SECONDARY_GBUFF_PASS_INDEX].get_data());
+            }
+            let cmds = cmdss.get_mut(scene_id);
+            if cmds.is_none() {
+                continue;
             }
             let cmds = vxunwrap!(cmds);
+            vxlogi!("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
             {
                 let cmd = &mut cmds[PRIMARY_GBUFF_PASS_INDEX];
                 cmd.exe_cmds_with_data(&kcmdsdatas[SECONDARY_GBUFF_PASS_INDEX]);
@@ -309,7 +316,6 @@ impl Engine {
             }
             vxlogi!("????????????????????????????????????????????????????????????????????????");
         }
-
     }
 
     fn update_scenes(&self) {

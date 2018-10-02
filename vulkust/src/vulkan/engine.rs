@@ -10,7 +10,7 @@ use super::framebuffer::Framebuffer;
 use super::image::View as ImageView;
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
-use super::pipeline::{Pipeline, Manager as PipelineManager};
+use super::pipeline::{Manager as PipelineManager, Pipeline};
 use super::render_pass::RenderPass;
 use super::sampler::Sampler;
 use super::surface::Surface;

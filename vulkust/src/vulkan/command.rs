@@ -2,10 +2,10 @@ use super::super::core::allocate::Object as CoreAllocObj;
 use super::buffer::{Buffer as BufBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
 use super::device::logical::Logical as LogicalDevice;
+use super::framebuffer::Framebuffer;
 use super::pipeline::Pipeline;
 use super::synchronizer::fence::Fence;
 use super::vulkan as vk;
-use super::framebuffer::Framebuffer;
 use std::default::Default;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
@@ -17,6 +17,7 @@ pub struct Buffer {
     bound_pipeline_layout: vk::VkPipelineLayout,
     bound_descriptor_sets: [vk::VkDescriptorSet; 3],
     bound_dynamic_buffer_offsets: [u32; 3],
+    #[cfg(debug_mode)]
     is_secondary: bool,
 }
 
@@ -38,17 +39,11 @@ const MAX_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 3;
 
 impl Buffer {
     pub fn new_primary(pool: Arc<Pool>) -> Self {
-        return Self::new(
-            pool,
-            false,
-        );
+        return Self::new(pool, false);
     }
 
     pub fn new_secondary(pool: Arc<Pool>) -> Self {
-        return Self::new(
-            pool,
-            true,  
-        );
+        return Self::new(pool, true);
     }
 
     fn new(pool: Arc<Pool>, is_secondary: bool) -> Self {
@@ -96,7 +91,11 @@ impl Buffer {
 
     pub fn begin(&mut self) {
         #[cfg(debug_mode)]
-        { if self.is_secondary { vxunexpected!(); } }
+        {
+            if self.is_secondary {
+                vxunexpected!();
+            }
+        }
         let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
         cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         vulkan_check!(vk::vkBeginCommandBuffer(self.vk_data, &cmd_buf_info));
@@ -104,17 +103,24 @@ impl Buffer {
 
     pub fn begin_secondary(&mut self, framebuffer: &Framebuffer) {
         #[cfg(debug_mode)]
-        { if !self.is_secondary { vxunexpected!(); } }
+        {
+            if !self.is_secondary {
+                vxunexpected!();
+            }
+        }
 
         let mut inheritance_info = vk::VkCommandBufferInheritanceInfo::default();
-        inheritance_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+        inheritance_info.sType =
+            vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
         inheritance_info.framebuffer = framebuffer.vk_data;
         inheritance_info.renderPass = framebuffer.render_pass.vk_data;
-        
+
         let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
         cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         cmd_buf_info.pInheritanceInfo = &inheritance_info;
-        cmd_buf_info.flags = vk::VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT as vk::VkCommandBufferUsageFlags;
+        cmd_buf_info.flags =
+            vk::VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT
+                as vk::VkCommandBufferUsageFlags;
         vulkan_check!(vk::vkBeginCommandBuffer(self.vk_data, &cmd_buf_info));
     }
 
@@ -130,6 +136,7 @@ impl Buffer {
             );
         }
     }
+
     pub fn set_viewport(&mut self, viewport: &vk::VkViewport) {
         unsafe {
             vk::vkCmdSetViewport(self.vk_data, 0, 1, viewport);
