@@ -4,7 +4,7 @@ use super::descriptor::Set as DescriptorSet;
 use super::device::logical::Logical as LogicalDevice;
 use super::framebuffer::Framebuffer;
 use super::pipeline::Pipeline;
-use super::synchronizer::fence::Fence;
+use super::sync::Fence;
 use super::vulkan as vk;
 use std::default::Default;
 use std::ptr::null;
@@ -78,10 +78,15 @@ impl Buffer {
         return self.vk_data;
     }
 
-    pub(crate) fn exe_cmds_with_data(&mut self, datas: &Vec<vk::VkCommandBuffer>) {
+    pub(crate) fn exe_cmds_with_data(&mut self, data: &[vk::VkCommandBuffer]) {
         unsafe {
-            vk::vkCmdExecuteCommands(self.vk_data, datas.len() as u32, datas.as_ptr());
+            vk::vkCmdExecuteCommands(self.vk_data, data.len() as u32, data.as_ptr());
         }
+    }
+
+    pub(crate) fn exe_cmd(&mut self, other: &Self) {
+        let data = [other.vk_data];
+        self.exe_cmds_with_data(&data);
     }
 
     pub fn fill_submit_info(&self, subinfo: &mut vk::VkSubmitInfo) {
@@ -330,6 +335,24 @@ impl Buffer {
         self.bind_vertex_buffer(vertex_buffer.get_buffer());
         self.bind_index_buffer(index_buffer.get_buffer());
         self.draw_index(indices_count);
+    }
+
+    pub(crate) fn render_deferred(
+        &mut self,
+    ) {
+        unsafe {
+            vk::vkCmdBindDescriptorSets(
+                self.vk_data,
+                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                self.bound_pipeline_layout,
+                0,
+                DEFERRED_DESCRIPTOR_SETS_COUNT as u32,
+                self.bound_descriptor_sets.as_ptr(),
+                DEFERRED_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
+                self.bound_dynamic_buffer_offsets.as_ptr(),
+            );
+        }
+        self.draw(3);
     }
 
     pub(crate) fn bind_deferred_scene_descriptor(

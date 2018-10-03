@@ -1,6 +1,6 @@
 use super::device::logical::Logical as LogicalDevice;
 use super::image::View as ImageView;
-use super::synchronizer::semaphore::Semaphore;
+use super::sync::Semaphore;
 use super::vulkan as vk;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;

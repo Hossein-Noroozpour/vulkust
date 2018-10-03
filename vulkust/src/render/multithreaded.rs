@@ -3,30 +3,74 @@ use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::gapi::GraphicApiEngine;
 use super::model::Model;
 use super::object::Object;
+use super::deferred::Deferred;
 use super::scene::Manager as SceneManager;
+use super::sync::Semaphore;
 use num_cpus;
 use std::collections::BTreeMap;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread::{spawn, JoinHandle};
 
-const SECONDARY_PASSES_COUNT: usize = 2;
-const SECONDARY_SHADOW_PASS_INDEX: usize = 0;
-const SECONDARY_GBUFF_PASS_INDEX: usize = 1;
+#[cfg_attr(debug_mode, derive(Debug))]
+struct KernelPassesCommands {
+    shadow: CmdBuffer,
+    gbuff: CmdBuffer,
+    is_filled: bool,
+}
 
-const PRIMARY_PASSES_COUNT: usize = 3; // add transparent and soft shadow in future
-const PRIMARY_SHADOW_PASS_INDEX: usize = 0;
-const PRIMARY_GBUFF_PASS_INDEX: usize = 1;
-// soft shadow places in here
-const PRIMARY_DEFERRED_PASS_INDEX: usize = 2;
-// forward trnasparent places in here
+impl KernelPassesCommands {
+    fn new(engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
+        let shadow = engine.create_secondary_command_buffer(cmd_pool.clone());
+        let gbuff = engine.create_secondary_command_buffer(cmd_pool.clone());
+        let is_filled = false;
+        Self {
+            shadow,
+            gbuff,
+            is_filled,
+        }
+    }
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
+struct KernelFrameData {
+    scenes_commands: BTreeMap<Id, KernelPassesCommands>,
+}
+
+impl KernelFrameData {
+    fn new() -> Self {
+        Self {
+            scenes_commands: BTreeMap::new()
+        }
+    }
+
+    fn remove_scene(&mut self, id: &Id) {
+        self.scenes_commands.remove(id);
+    }
+
+    fn has_scene(&self, id: &Id) -> bool {
+        return self.scenes_commands.contains_key(id);
+    }
+
+    fn add_scene(&mut self, id: Id, kernel_passes_commands: KernelPassesCommands) {
+        self.scenes_commands.insert(id, kernel_passes_commands);
+    }
+
+    fn get_mut_scene(&mut self, id: &Id) -> Option<&mut KernelPassesCommands> {
+        return self.scenes_commands.get_mut(id);
+    }
+
+    fn get_scene(&self, id: &Id) -> Option<&KernelPassesCommands> {
+        return self.scenes_commands.get(id);
+    }
+}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Kernel {
     loop_signaler: Sender<bool>,
     ready_notifier: Receiver<()>,
     handle: JoinHandle<()>,
-    cmd_buffers: Arc<Mutex<Vec<BTreeMap<Id, Vec<CmdBuffer>>>>>, // frame->scenes->pass
+    cmd_buffers: Arc<Mutex<Vec<KernelFrameData>>>,
 }
 
 impl Kernel {
@@ -79,14 +123,14 @@ struct Renderer {
     g_engine: Arc<RwLock<GraphicApiEngine>>,
     scene_manager: Arc<RwLock<SceneManager>>,
     cmd_pool: Arc<CmdPool>,
-    cmd_buffers: Arc<Mutex<Vec<BTreeMap<Id, Vec<CmdBuffer>>>>>, // frame->scene->pass
+    cmd_buffers: Arc<Mutex<Vec<KernelFrameData>>>,
 }
 
 impl Renderer {
     pub fn new(
         index: usize,
         kernels_count: usize,
-        cmd_buffers: Arc<Mutex<Vec<BTreeMap<Id, Vec<CmdBuffer>>>>>,
+        cmd_buffers: Arc<Mutex<Vec<KernelFrameData>>>,
         g_engine: Arc<RwLock<GraphicApiEngine>>,
         scene_manager: Arc<RwLock<SceneManager>>,
     ) -> Self {
@@ -97,7 +141,7 @@ impl Renderer {
         let cmdsss = cmd_buffers.clone();
         let mut cmdsss = vxresult!(cmdsss.lock());
         for _ in 0..frames_count {
-            cmdsss.push(BTreeMap::new());
+            cmdsss.push(KernelFrameData::new());
         }
         cmdsss.shrink_to_fit();
         Renderer {
@@ -124,31 +168,26 @@ impl Renderer {
         for (scene_id, scene) in &*scenes {
             let scene = scene.upgrade();
             if scene.is_none() {
-                cmdss.remove(scene_id);
+                cmdss.remove_scene(scene_id);
                 continue;
             }
             let scene = vxunwrap!(scene);
             let scene = vxresult!(scene.read());
             if !scene.is_rendarable() {
-                cmdss.remove(scene_id);
+                cmdss.remove_scene(scene_id);
                 continue;
             }
-            if !cmdss.contains_key(scene_id) {
-                let mut cmds = Vec::new();
-                for _ in 0..SECONDARY_PASSES_COUNT {
-                    cmds.push(g_engine.create_secondary_command_buffer(self.cmd_pool.clone()));
-                }
-                cmds.shrink_to_fit();
-                cmdss.insert(*scene_id, cmds);
+            if !cmdss.has_scene(scene_id) {
+                cmdss.add_scene(*scene_id, KernelPassesCommands::new(&*g_engine, self.cmd_pool.clone()));
             }
-            let cmds = vxunwrap!(cmdss.get_mut(scene_id));
+            let cmds = vxunwrap!(cmdss.get_mut_scene(scene_id));
             let models = scene.get_all_models();
-            cmds[SECONDARY_GBUFF_PASS_INDEX].begin_secondary(&gbuff_framebuffer);
+            cmds.gbuff.begin_secondary(&gbuff_framebuffer);
             // cmds[SECONDARY_SHADOW_PASS_INDEX].begin_secondary();
-            cmds[SECONDARY_GBUFF_PASS_INDEX].set_viewport(&gbuff_framebuffer.viewport);
-            cmds[SECONDARY_GBUFF_PASS_INDEX].set_scissor(&gbuff_framebuffer.scissor);
-            cmds[SECONDARY_GBUFF_PASS_INDEX].bind_pipeline(&gbuff_pipeline);
-            scene.render(&mut cmds[SECONDARY_GBUFF_PASS_INDEX], frame_number);
+            cmds.gbuff.set_viewport(&gbuff_framebuffer.viewport);
+            cmds.gbuff.set_scissor(&gbuff_framebuffer.scissor);
+            cmds.gbuff.bind_pipeline(&gbuff_pipeline);
+            scene.render(&mut cmds.gbuff, frame_number);
             for (_, model) in &*models {
                 task_index += 1;
                 if task_index % self.kernels_count != self.index {
@@ -167,13 +206,79 @@ impl Renderer {
                 Model::update(&mut *model, &*scene);
                 Object::render(
                     &mut *model,
-                    &mut cmds[SECONDARY_GBUFF_PASS_INDEX],
+                    &mut cmds.gbuff,
                     frame_number,
                 );
+                cmds.is_filled = true;
             }
-            cmds[SECONDARY_GBUFF_PASS_INDEX].end();
+            cmds.gbuff.end();
             // cmds[SECONDARY_SHADOW_PASS_INDEX].end();
         }
+    }
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
+struct PrimaryPassesCommands {
+    shadow: CmdBuffer,
+    shadow_semaphore: Arc<Semaphore>,
+    gbuff: CmdBuffer,
+    gbuff_semaphore: Arc<Semaphore>,
+    deferred: CmdBuffer,
+    deferred_secondary: CmdBuffer,
+    deferred_semaphore: Arc<Semaphore>,
+}
+
+impl PrimaryPassesCommands {
+    fn new(engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
+        let shadow = engine.create_primary_command_buffer(cmd_pool.clone());
+        let gbuff = engine.create_primary_command_buffer(cmd_pool.clone());
+        let deferred = engine.create_primary_command_buffer(cmd_pool.clone());
+        let deferred_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
+        let shadow_semaphore = Arc::new(engine.create_semaphore());
+        let gbuff_semaphore = Arc::new(engine.create_semaphore());
+        let deferred_semaphore = Arc::new(engine.create_semaphore());
+        Self {
+            shadow,
+            shadow_semaphore,
+            gbuff,
+            gbuff_semaphore,
+            deferred,
+            deferred_secondary,
+            deferred_semaphore,
+        }
+    }
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
+struct FrameData {
+    scenes_commands: BTreeMap<Id, PrimaryPassesCommands>,
+}
+
+impl FrameData {
+    fn new(engine: &GraphicApiEngine) -> Self {
+        Self {
+            scenes_commands: BTreeMap::new()
+        }
+    }
+
+    fn remove_scene(&mut self, id: &Id) {
+        self.scenes_commands.remove(id);
+    }
+
+    fn has_scene(&self, id: &Id) -> bool {
+        return self.scenes_commands.contains_key(id);
+    }
+
+    fn add_scene(&mut self, id: Id, primary_passes_commands: PrimaryPassesCommands) {
+        self.scenes_commands.insert(id, primary_passes_commands);
+    }
+
+    fn get_mut_scene(&mut self, id: &Id) -> Option<&mut PrimaryPassesCommands> {
+        return self.scenes_commands.get_mut(id);
+    }
+
+    fn get_scene(&mut self, id: &Id) -> Option<&PrimaryPassesCommands> {
+        return self.scenes_commands.get(id);
     }
 }
 
@@ -183,7 +288,8 @@ pub(super) struct Engine {
     engine: Arc<RwLock<GraphicApiEngine>>,
     scene_manager: Arc<RwLock<SceneManager>>,
     cmd_pool: Arc<CmdPool>,
-    cmdsss: Mutex<Vec<BTreeMap<Id, Vec<CmdBuffer>>>>, // frame->scene->pass
+    deferred: Mutex<Deferred>,
+    cmdsss: Mutex<Vec<FrameData>>,
 }
 
 impl Engine {
@@ -208,20 +314,24 @@ impl Engine {
         let frames_count = eng.get_frames_count();
         let mut cmdsss = Vec::new();
         for _ in 0..frames_count {
-            cmdsss.push(BTreeMap::new());
+            cmdsss.push(FrameData::new(&*eng));
         }
         cmdsss.shrink_to_fit();
         let cmdsss = Mutex::new(cmdsss);
+        let deferred = Mutex::new(Deferred::new(&eng, &*vxresult!(scene_manager.read())));
         Engine {
             kernels,
             engine,
             scene_manager,
             cmd_pool,
             cmdsss,
+            deferred,
         }
     }
 
     pub(crate) fn render(&self) {
+        vxresult!(self.engine.write()).start_rendering();
+        let deferred = vxresult!(self.deferred.lock());
         self.update_scenes();
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
@@ -230,6 +340,7 @@ impl Engine {
             k.start_rendering();
         }
         let engine = vxresult!(self.engine.read());
+        let last_semaphore = engine.get_starting_semaphore().clone();
         let gbuff_framebuffer = engine.get_gbuff_framebuffer();
         let gbuff_pipeline = engine.get_gbuff_pipeline();
         let deferred_framebuffer = engine.get_deferred_framebuffer();
@@ -239,33 +350,36 @@ impl Engine {
         for (scene_id, scene) in &*scenes {
             let scene = scene.upgrade();
             if scene.is_none() {
-                cmdss.remove(scene_id);
+                cmdss.remove_scene(scene_id);
                 continue;
             }
             let scene = vxunwrap!(scene);
             let scene = vxresult!(scene.read());
             if !scene.is_rendarable() {
-                cmdss.remove(scene_id);
+                cmdss.remove_scene(scene_id);
                 continue;
             }
-            if !cmdss.contains_key(scene_id) {
-                let mut cmds = Vec::new();
-                for _ in 0..PRIMARY_PASSES_COUNT {
-                    cmds.push(engine.create_primary_command_buffer(self.cmd_pool.clone()));
-                }
-                cmds.shrink_to_fit();
-                cmdss.insert(*scene_id, cmds);
+            if !cmdss.has_scene(scene_id) {
+                cmdss.add_scene(*scene_id, PrimaryPassesCommands::new(&*engine, self.cmd_pool.clone()));
             }
-            let cmds = vxunwrap!(cmdss.get_mut(scene_id));
+            let cmds = vxunwrap!(cmdss.get_mut_scene(scene_id));
             {
-                let cmd = &mut cmds[PRIMARY_GBUFF_PASS_INDEX];
+                let cmd = &mut cmds.gbuff;
                 cmd.begin();
                 gbuff_framebuffer.begin(cmd);
             }
             {
-                let cmd = &mut cmds[PRIMARY_DEFERRED_PASS_INDEX];
+                let cmd = &mut cmds.deferred;
                 cmd.begin();
                 deferred_framebuffer.begin(cmd);
+            }
+            {
+                let cmd = &mut cmds.deferred_secondary;
+                cmd.begin_secondary(&deferred_framebuffer);
+                cmd.set_viewport(&deferred_framebuffer.viewport);
+                cmd.set_scissor(&deferred_framebuffer.scissor);
+                cmd.bind_pipeline(&deferred_pipeline);
+                deferred.render(cmd, frame_number);
             }
         }
         for k in &self.kernels {
@@ -274,48 +388,55 @@ impl Engine {
         'scenes: for (scene_id, scene) in &*scenes {
             let scene = scene.upgrade();
             if scene.is_none() {
-                cmdss.remove(scene_id);
+                cmdss.remove_scene(scene_id);
                 continue;
             }
             let scene = vxunwrap!(scene);
             let scene = vxresult!(scene.read());
             if !scene.is_rendarable() {
-                cmdss.remove(scene_id);
+                cmdss.remove_scene(scene_id);
                 continue;
             }
-            let mut kcmdsdatas = vec![Vec::new(), Vec::new()];
+            let mut kcmdsgbuffdatas = Vec::new();
             for k in &self.kernels {
                 let kcmdsss = vxresult!(k.cmd_buffers.lock());
                 let kcmdss = &kcmdsss[frame_number];
-                let kcmds = kcmdss.get(scene_id);
+                let kcmds = kcmdss.get_scene(scene_id);
                 if kcmds.is_none() {
-                    cmdss.remove(scene_id);
+                    cmdss.remove_scene(scene_id);
                     continue 'scenes;
                 }
                 let kcmds = vxunwrap!(kcmds);
-                kcmdsdatas[SECONDARY_GBUFF_PASS_INDEX]
-                    .push(kcmds[SECONDARY_GBUFF_PASS_INDEX].get_data());
+                if !kcmds.is_filled {
+                    continue;
+                }
+                kcmdsgbuffdatas.push(kcmds.gbuff.get_data());
             }
-            let cmds = cmdss.get_mut(scene_id);
+            let cmds = cmdss.get_mut_scene(scene_id);
             if cmds.is_none() {
                 continue;
             }
             let cmds = vxunwrap!(cmds);
-            vxlogi!("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
             {
-                let cmd = &mut cmds[PRIMARY_GBUFF_PASS_INDEX];
-                cmd.exe_cmds_with_data(&kcmdsdatas[SECONDARY_GBUFF_PASS_INDEX]);
+                let cmd = &mut cmds.gbuff;
+                cmd.exe_cmds_with_data(&kcmdsgbuffdatas);
                 cmd.end_render_pass();
                 cmd.end();
             }
-            vxlogi!("rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
             {
-                let cmd = &mut cmds[PRIMARY_DEFERRED_PASS_INDEX];
+                let cmd = &mut cmds.deferred_secondary;
+                scene.render_deferred(cmd, frame_number);
+                cmd.render_deferred();
+                cmd.end();
+            }
+            {
+                let cmd = &mut cmds.deferred;
+                cmd.exe_cmds_with_data(&[cmds.deferred_secondary.get_data()]);
                 cmd.end_render_pass();
                 cmd.end();
             }
-            vxlogi!("????????????????????????????????????????????????????????????????????????");
         }
+        engine.end(&last_semaphore);
     }
 
     fn update_scenes(&self) {

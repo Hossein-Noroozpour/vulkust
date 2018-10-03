@@ -56,7 +56,6 @@ impl Deferred {
         let descriptor_set =
             descriptor_manager.create_deferred_set(uniform_buffer.clone(), textures);
         let descriptor_set = Arc::new(descriptor_set);
-
         Deferred {
             uniform,
             uniform_buffer,

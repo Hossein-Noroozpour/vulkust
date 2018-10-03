@@ -237,10 +237,11 @@ pub(crate) struct Manager {
     pub static_buffer: Arc<RwLock<Buffer>>,
     pub static_uploader_buffer: Arc<RwLock<Buffer>>,
     pub dynamic_buffers: Vec<Arc<RwLock<Buffer>>>,
-    pub copy_buffers: Vec<Arc<RwLock<Buffer>>>,
     pub copy_ranges: Vec<vk::VkBufferCopy>,
+    pub copy_buffers: Vec<Arc<RwLock<Buffer>>>,
     pub copy_to_image_ranges: Vec<(vk::VkBufferImageCopy, Arc<RwLock<Image>>)>,
-    pub frame_number: Arc<RwLock<u32>>,
+    pub frame_copy_buffers: Vec<Vec<Arc<RwLock<Buffer>>>>,
+    pub frame_copy_to_image_ranges: Vec<Vec<(vk::VkBufferImageCopy, Arc<RwLock<Image>>)>>,
     pub cmd_pool: Arc<CmdPool>,
 }
 
@@ -248,7 +249,6 @@ impl Manager {
     pub fn new(
         memmgr: &Arc<RwLock<MemoryManager>>,
         cmd_pool: &Arc<CmdPool>,
-        frame_number: &Arc<RwLock<u32>>,
         static_size: isize,
         static_uploader_size: isize,
         dynamics_size: isize,
@@ -297,8 +297,15 @@ impl Manager {
         let copy_buffers = Vec::new();
         let copy_ranges = Vec::new();
         let copy_to_image_ranges = Vec::new();
+        let mut frame_copy_buffers = Vec::new();
+        let mut frame_copy_to_image_ranges = Vec::new();
+        for _ in 0..frames_count {
+            frame_copy_buffers.push(Vec::new());
+            frame_copy_to_image_ranges.push(Vec::new());
+        }
+        frame_copy_buffers.shrink_to_fit();
+        frame_copy_to_image_ranges.shrink_to_fit();
         let cmd_pool = cmd_pool.clone();
-        let frame_number = frame_number.clone();
         Manager {
             alignment,
             cpu_buffer,
@@ -311,7 +318,8 @@ impl Manager {
             copy_ranges,
             copy_to_image_ranges,
             cmd_pool,
-            frame_number,
+            frame_copy_buffers,
+            frame_copy_to_image_ranges,
         }
     }
 
@@ -402,13 +410,12 @@ impl Manager {
         DynamicBuffer::new(buffers, actual_size)
     }
 
-    pub fn update(&mut self) {
-        // todo it should change very soon
+    pub fn update(&mut self, cmd: &mut CmdBuffer, frame_number: usize) -> bool {
+        self.frame_copy_buffers[frame_number].clear();
+        self.frame_copy_to_image_ranges[frame_number].clear();
         if self.copy_buffers.len() == 0 {
-            return;
+            return false;
         }
-        let mut cmd = CmdBuffer::new_primary(self.cmd_pool.clone());
-        cmd.begin();
         if self.copy_ranges.len() != 0 {
             cmd.copy_buffer(
                 self.cpu_buffer.vk_data,
@@ -421,7 +428,7 @@ impl Manager {
             for copy_img in &self.copy_to_image_ranges {
                 let mut image = vxresult!(copy_img.1.write());
                 image.change_layout(
-                    &mut cmd,
+                    cmd,
                     vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 );
             }
@@ -432,15 +439,14 @@ impl Manager {
             for copy_img in &self.copy_to_image_ranges {
                 let mut image = vxresult!(copy_img.1.write());
                 image.change_layout(
-                    &mut cmd,
+                    cmd,
                     vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                 );
             }
         }
-        cmd.flush();
-        self.copy_buffers.clear();
-        self.copy_to_image_ranges.clear();
-        // todo I have to clean the static uploader container in here
+        self.frame_copy_buffers[frame_number].append(&mut self.copy_buffers);
+        self.frame_copy_to_image_ranges[frame_number].append(&mut self.copy_to_image_ranges);
+        return true;
     }
 }
 

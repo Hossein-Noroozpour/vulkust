@@ -19,5 +19,6 @@ pub mod object;
 pub mod pipeline;
 pub mod sampler;
 pub mod scene;
+pub mod sync;
 pub mod texture;
 pub mod widget;
