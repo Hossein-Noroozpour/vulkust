@@ -70,6 +70,7 @@ impl Buffer {
             bound_pipeline_layout: 0 as vk::VkPipelineLayout,
             bound_descriptor_sets: [0 as vk::VkDescriptorSet; MAX_DESCRIPTOR_SETS_COUNT],
             bound_dynamic_buffer_offsets: [0; MAX_DYNAMIC_BUFFER_OFFSETS_COUNT],
+            #[cfg(debug_mode)]
             is_secondary,
         }
     }
@@ -337,9 +338,7 @@ impl Buffer {
         self.draw_index(indices_count);
     }
 
-    pub(crate) fn render_deferred(
-        &mut self,
-    ) {
+    pub(crate) fn render_deferred(&mut self) {
         unsafe {
             vk::vkCmdBindDescriptorSets(
                 self.vk_data,

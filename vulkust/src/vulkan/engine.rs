@@ -18,8 +18,8 @@ use super::swapchain::{NextImageResult, Swapchain};
 use super::sync::Fence;
 use super::sync::Semaphore;
 use super::vulkan as vk;
-use std::sync::{Arc, RwLock, Mutex};
 use std::ptr::null_mut;
+use std::sync::{Arc, Mutex, RwLock};
 
 const GBUFF_COLOR_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
 const GBUFF_DEPTH_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT;
@@ -71,7 +71,9 @@ impl Engine {
         let mut data_primary_cmds = Vec::new();
         let mut wait_fences = Vec::new();
         for _ in 0..swapchain.image_views.len() {
-            data_primary_cmds.push(Arc::new(Mutex::new(CmdBuffer::new_primary(graphic_cmd_pool.clone()))));
+            data_primary_cmds.push(Arc::new(Mutex::new(CmdBuffer::new_primary(
+                graphic_cmd_pool.clone(),
+            ))));
             wait_fences.push(Arc::new(Fence::new_signaled(logical_device.clone())));
         }
         wait_fences.shrink_to_fit();
@@ -148,10 +150,7 @@ impl Engine {
     }
 
     pub fn start_rendering(&mut self) {
-        let current_buffer = match self
-            .swapchain
-            .get_next_image_index(&self.present_semaphore)
-        {
+        let current_buffer = match self.swapchain.get_next_image_index(&self.present_semaphore) {
             NextImageResult::Next(c) => c,
             NextImageResult::NeedsRefresh => {
                 vxlogf!("Problem with rereshing screen, engine needs refreshing.");
@@ -173,7 +172,8 @@ impl Engine {
 
         let mut pcmd = vxresult!(self.data_primary_cmds[self.current_frame_number as usize].lock());
         pcmd.begin();
-        self.has_data_copy = vxresult!(self.buffer_manager.write()).update(&mut *pcmd, self.current_frame_number as usize);
+        self.has_data_copy = vxresult!(self.buffer_manager.write())
+            .update(&mut *pcmd, self.current_frame_number as usize);
         pcmd.end();
         if self.has_data_copy {
             self.submit(&self.present_semaphore, &pcmd, &self.data_semaphore);
@@ -184,7 +184,13 @@ impl Engine {
         self.submit_with_fence(wait, Some(cmd), signal, None);
     }
 
-    pub fn submit_with_fence(&self, wait: &Semaphore, cmd: Option<&CmdBuffer>, signal: &Semaphore, fence: Option<&Fence>) {
+    pub fn submit_with_fence(
+        &self,
+        wait: &Semaphore,
+        cmd: Option<&CmdBuffer>,
+        signal: &Semaphore,
+        fence: Option<&Fence>,
+    ) {
         let wait_stage_mask =
             vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
         let mut submit_info = vk::VkSubmitInfo::default();
@@ -252,10 +258,12 @@ impl Engine {
 
     pub fn end(&self, wait: &Semaphore) {
         self.submit_with_fence(
-            wait, None, 
-            &self.render_semaphore, 
-            Some(&self.wait_fences[self.current_frame_number as usize]));
-            
+            wait,
+            None,
+            &self.render_semaphore,
+            Some(&self.wait_fences[self.current_frame_number as usize]),
+        );
+
         let mut present_info = vk::VkPresentInfoKHR::default();
         present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         present_info.swapchainCount = 1;
