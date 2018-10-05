@@ -10,11 +10,12 @@ An experimental tiny engine for **Vulkan in Rust**.
 ## 1- Missions
 
  1. Safety
- 2. Performance
- 3. Fast development
- 4. Small executable binary file
- 5. Cross-platform
- 6. Maintainable code
+ 2. Quality
+ 3. Performance
+ 4. Fast development
+ 5. Small executable binary file
+ 6. Cross-platform
+ 7. Maintainable code
 
 ### 2- Status:
 
