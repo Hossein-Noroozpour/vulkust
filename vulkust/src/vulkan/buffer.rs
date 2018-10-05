@@ -410,11 +410,11 @@ impl Manager {
         DynamicBuffer::new(buffers, actual_size)
     }
 
-    pub fn update(&mut self, cmd: &mut CmdBuffer, frame_number: usize) -> bool {
+    pub fn update(&mut self, cmd: &mut CmdBuffer, frame_number: usize) {
         self.frame_copy_buffers[frame_number].clear();
         self.frame_copy_to_image_ranges[frame_number].clear();
         if self.copy_buffers.len() == 0 {
-            return false;
+            return;
         }
         if self.copy_ranges.len() != 0 {
             cmd.copy_buffer(
@@ -443,7 +443,6 @@ impl Manager {
         }
         self.frame_copy_buffers[frame_number].append(&mut self.copy_buffers);
         self.frame_copy_to_image_ranges[frame_number].append(&mut self.copy_to_image_ranges);
-        return true;
     }
 }
 

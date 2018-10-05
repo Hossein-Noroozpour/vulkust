@@ -37,7 +37,6 @@ pub struct Engine {
     render_semaphore: Arc<Semaphore>,
     graphic_cmd_pool: Arc<CmdPool>,
     data_primary_cmds: Vec<Arc<Mutex<CmdBuffer>>>,
-    has_data_copy: bool,
     pub(crate) memory_mgr: Arc<RwLock<MemoryManager>>,
     pub(crate) buffer_manager: Arc<RwLock<BufferManager>>,
     pub(crate) descriptor_manager: Arc<RwLock<DescriptorManager>>,
@@ -45,8 +44,10 @@ pub struct Engine {
     pub(crate) depth_stencil_image_view: Arc<ImageView>,
     pub(crate) g_render_pass: Arc<RenderPass>,
     pub(crate) render_pass: Arc<RenderPass>,
+    clear_render_pass: Arc<RenderPass>,
     pub(crate) g_framebuffer: Arc<Framebuffer>,
     pub(crate) framebuffers: Vec<Arc<Framebuffer>>,
+    pub(crate) clear_framebuffers: Vec<Arc<Framebuffer>>,
     pub(crate) wait_fences: Vec<Arc<Fence>>,
     pub(crate) sampler: Arc<Sampler>,
     pub(crate) samples_count: vk::VkSampleCountFlagBits,
@@ -86,18 +87,26 @@ impl Engine {
             &memory_mgr,
         ));
         let samples_count = Self::get_max_sample_count(&physical_device);
-        let render_pass = Arc::new(RenderPass::new(&swapchain));
+        let render_pass = Arc::new(RenderPass::new(&swapchain, false));
+        let clear_render_pass = Arc::new(RenderPass::new(&swapchain, true));
         let (g_render_pass, g_framebuffer) =
             Self::create_gbuffer_filler(&logical_device, &memory_mgr, samples_count);
         let mut framebuffers = Vec::new();
+        let mut clear_framebuffers = Vec::new();
         for v in &swapchain.image_views {
             framebuffers.push(Arc::new(Framebuffer::new(
                 vec![v.clone()],
                 depth_stencil_image_view.clone(),
                 render_pass.clone(),
             )));
+            clear_framebuffers.push(Arc::new(Framebuffer::new(
+                vec![v.clone()],
+                depth_stencil_image_view.clone(),
+                clear_render_pass.clone(),
+            )));
         }
         framebuffers.shrink_to_fit();
+        clear_framebuffers.shrink_to_fit();
         let sampler = Arc::new(Sampler::new(logical_device.clone()));
         let buffer_manager = Arc::new(RwLock::new(BufferManager::new(
             &memory_mgr,
@@ -136,16 +145,17 @@ impl Engine {
             depth_stencil_image_view,
             samples_count,
             render_pass,
+            clear_render_pass,
             g_render_pass,
             g_framebuffer,
             descriptor_manager,
             pipeline_manager,
             framebuffers,
+            clear_framebuffers,
             current_frame_number: 0,
             buffer_manager,
             wait_fences,
             sampler,
-            has_data_copy: false,
         }
     }
 
@@ -172,12 +182,12 @@ impl Engine {
 
         let mut pcmd = vxresult!(self.data_primary_cmds[self.current_frame_number as usize].lock());
         pcmd.begin();
-        self.has_data_copy = vxresult!(self.buffer_manager.write())
+        vxresult!(self.buffer_manager.write())
             .update(&mut *pcmd, self.current_frame_number as usize);
+        self.clear_framebuffers[self.current_frame_number as usize].begin(&mut *pcmd);
+        pcmd.end_render_pass();
         pcmd.end();
-        if self.has_data_copy {
-            self.submit(&self.present_semaphore, &pcmd, &self.data_semaphore);
-        }
+        self.submit(&self.present_semaphore, &pcmd, &self.data_semaphore);
     }
 
     pub fn submit(&self, wait: &Semaphore, cmd: &CmdBuffer, signal: &Semaphore) {
@@ -454,11 +464,7 @@ impl Engine {
     }
 
     pub(crate) fn get_starting_semaphore(&self) -> &Arc<Semaphore> {
-        if self.has_data_copy {
-            return &self.data_semaphore;
-        } else {
-            return &self.present_semaphore;
-        }
+        return &self.data_semaphore;
     }
 
     fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {

@@ -26,25 +26,27 @@ It is under lots of changes, there is lots of work to be done!
 
 #### 2-1-1- Current features:
 
+- Cross platform (Linux, Windows, MacOs, Android, iOS)
+- Deferred Rendering
+- Multithreaded Rendering
 - Support current version of GX3D.
 - Supports font rendering
-- Ui system (early version)
-- Deferred Rendering
+- UI system (early version)
 - A safe interface over Vulkan
 - Vulkan Memory management (early version)
-- Cross platform (Linux, Windows, MacOs, Android, iOS)
 
 #### 2-1-2- Underdeveloment features:
 
-- Multithreaded Rendering
-- Supporting GLTF
-
-#### 2-1-3- Near Future:
-
 - Shadowing
 - Soft Shadowing
+- Supporting GLTF
+
+#### 2-1-3- In near future:
+
 - SSAO
 - PBR rendering
+- SSR reflection
+- More UI widgets
 
 ## 3- Examples
 
