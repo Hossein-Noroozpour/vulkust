@@ -334,12 +334,11 @@ impl Camera for Base {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Perspective {
     pub base: Base,
-    pub fov_vertical: f32,
-    pub fov_horizontal: f32,
-    pub tan_vertical: f32,
-    pub tan_horizontal: f32,
-    pub div_cos_vertical: f32,
-    pub div_cos_horizontal: f32,
+    pub fovx: Real,
+    pub fovy: Real,
+    pub tanx: Real,
+    pub tany: Real,
+    lambda: Real,
 }
 
 impl Perspective {
@@ -353,24 +352,21 @@ impl Perspective {
     pub fn new_with_base(base: Base) -> Self {
         Perspective {
             base,
-            fov_vertical: 0.785398163,
-            fov_horizontal: 0.785398163,
-            tan_vertical: 1.0,
-            tan_horizontal: 1.0,
-            div_cos_vertical: 0.707106781,
-            div_cos_horizontal: 0.707106781,
+            fovy: 0.785398163,
+            fovx: 0.785398163,
+            tanx: 1.0,
+            tany: 1.0,
+            lambda: 0.785398163, // (cos(fovy) + cos(fovx)) / 2 -no proof for it just my gut, let see what I get
         }
     }
 
-    pub fn set_fov_vertical(&mut self, fov_vertical: f32) {
-        self.fov_vertical = fov_vertical;
-        self.tan_vertical = (fov_vertical / 2.0).tan();
-        self.tan_horizontal = self.tan_vertical * self.base.aspect_ratio;
-        self.fov_horizontal = self.tan_horizontal.atan() * 2.0;
-        self.div_cos_vertical = (self.tan_vertical * self.tan_vertical + 1.0).sqrt();
-        self.div_cos_horizontal = (self.tan_horizontal * self.tan_horizontal + 1.0).sqrt();
+    pub fn set_fov_vertical(&mut self, fovx: f32) {
+        self.fovx = fovx;
+        self.tanx = (fovx * 0.5).tan();
+        self.tany = self.tanx * self.base.aspect_ratio;
+        self.fovy = self.fovy.atan() * 2.0;
         self.base.projection = math::perspective(
-            math::Rad(fov_vertical),
+            math::Rad(fovx),
             self.base.aspect_ratio,
             self.base.near,
             self.base.far,
@@ -479,23 +475,30 @@ impl Camera for Perspective {
         }
         let mut result = vec![math::Vector3::new(0.0f32, 0.0f32, 0.0f32); sections_count + 1];
         result[0] = self.base.location + self.base.z * self.base.near;
-        if sections_count > 1 {
-            let oneminlambda = 0.5 / self.div_cos_horizontal + 0.5 / self.div_cos_horizontal;
-            let lambda = 1.0 - oneminlambda;
-            let onedivcn = 1.0 / sections_count as f32;
-            let unisecinc = oneminlambda * onedivcn * (self.base.far - self.base.near);
-            let fdivn = self.base.far / self.base.near;
-            let logsecmul = fdivn.powf(onedivcn);
-            let mut unisec = oneminlambda * self.base.near + unisecinc;
-            let mut logsec = lambda * self.base.near * logsecmul;
-            result[1] = self.base.location + self.base.z * (logsec + unisec);
-            for i in 2..sections_count {
-                logsec *= logsecmul;
-                unisec += unisecinc;
-                result[i] = self.base.location + self.base.z * (logsec + unisec);
-            }
-        }
         result[sections_count] = self.base.location + self.base.z * self.base.far;
+        if sections_count < 2 {
+            return result;
+        }
+        // Zi = yn(f/n)^(i/N) + (1-y)(n+(i/N)(f-n))
+        // Zi = yn((f/n)^(1/N))^i + (1-y)n + (1-y)((f-n)/N)i
+        let oneminlambda = 1.0 - self.lambda;
+        let lambda = self.lambda;
+        let onedivcn = 1.0 / sections_count as f32;
+        // uniform increament
+        let unisecinc = oneminlambda * onedivcn * (self.base.far - self.base.near);
+        let fdivn = self.base.far / self.base.near;
+        // logarithmic multiplication
+        let logsecmul = fdivn.powf(onedivcn);
+        // uniform sector
+        let mut unisec = oneminlambda * self.base.near + unisecinc;
+        // logarithmic sector
+        let mut logsec = lambda * self.base.near * logsecmul;
+        result[1] = self.base.location + self.base.z * (logsec + unisec);
+        for i in 2..sections_count {
+            logsec *= logsecmul;
+            unisec += unisecinc;
+            result[i] = self.base.location + self.base.z * (logsec + unisec);
+        }
         return result;
     }
 

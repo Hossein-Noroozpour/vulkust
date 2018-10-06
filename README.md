@@ -39,6 +39,7 @@ It is under lots of changes, there is lots of work to be done!
 #### 2-1-2- Underdeveloment features:
 
 - Shadowing
+- Cascaded Shadow
 - Soft Shadowing
 - Supporting GLTF
 
