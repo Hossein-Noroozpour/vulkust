@@ -119,20 +119,20 @@ impl Application {
             let screen_height =
                 unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN) };
             let mut dm_screen_settings: winapi::um::wingdi::DEVMODEW = unsafe { zeroed() };
-            dm_screen_settings.dmSize = size_of::<winapi::um::wingdi::DEVMODEW>();
-            dm_screen_settings.dmPelsWidth = screen_width;
-            dm_screen_settings.dmPelsHeight = screen_height;
+            dm_screen_settings.dmSize = size_of::<winapi::um::wingdi::DEVMODEW>() as u16;
+            dm_screen_settings.dmPelsWidth = screen_width as u32;
+            dm_screen_settings.dmPelsHeight = screen_height as u32;
             dm_screen_settings.dmBitsPerPel = 32;
             dm_screen_settings.dmFields = winapi::um::wingdi::DM_BITSPERPEL
                 | winapi::um::wingdi::DM_PELSWIDTH
                 | winapi::um::wingdi::DM_PELSHEIGHT;
-            if screen_width != constants::DEFAULT_WINDOW_WIDTH
-                && screen_height != constants::DEFAULT_WINDOW_HEIGHT
+            if screen_width != constants::DEFAULT_WINDOW_WIDTH as i32
+                && screen_height != constants::DEFAULT_WINDOW_HEIGHT as i32
             {
-                if winapi::um::winuser::ChangeDisplaySettingsW(
-                    &dm_screen_settings,
+                if unsafe { winapi::um::winuser::ChangeDisplaySettingsW(
+                    &mut dm_screen_settings,
                     winapi::um::winuser::CDS_FULLSCREEN,
-                ) != winapi::um::winuser::DISP_CHANGE_SUCCESSFUL
+                ) } != winapi::um::winuser::DISP_CHANGE_SUCCESSFUL
                 {
                     vxlogf!("Fullscreen Mode not supported!");
                 }
@@ -171,21 +171,23 @@ impl Application {
         }
         #[cfg(not(debug_mode))]
         {
-            let x = (winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN)
+            let x = (unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN) }
                 - window_rect.right)
                 / 2;
-            let y = (winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN)
+            let y = ( unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN) }
                 - window_rect.bottom)
                 / 2;
-            winapi::um::winuser::SetWindowPos(
-                window,
-                0,
-                x,
-                y,
-                0,
-                0,
-                winapi::um::winuser::SWP_NOZORDER | winapi::um::winuser::SWP_NOSIZE,
-            );
+            unsafe { 
+                winapi::um::winuser::SetWindowPos(
+                    window,
+                    null_mut(),
+                    x,
+                    y,
+                    0,
+                    0,
+                    winapi::um::winuser::SWP_NOZORDER | winapi::um::winuser::SWP_NOSIZE,
+                );
+            }
         }
         unsafe {
             winapi::um::winuser::ShowWindow(window, winapi::um::winuser::SW_SHOW);
