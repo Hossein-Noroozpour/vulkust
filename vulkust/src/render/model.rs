@@ -1,7 +1,8 @@
 use super::super::core::object::Object as CoreObject;
-use super::super::core::types::Id;
+use super::super::core::types::{Id, Real};
 use super::super::physics::collider::{read as read_collider, Collider, Ghost as GhostCollider};
 use super::buffer::DynamicBuffer;
+use super::camera::Camera;
 use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
@@ -17,8 +18,10 @@ use gltf;
 use math;
 
 pub trait Model: Object {
-    fn update(&mut self, scene: &Scene);
+    fn update(&mut self, scene: &Scene, camera: &Camera);
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>);
+    fn clear_meshes(&mut self);
+    fn get_meshes_count(&self) -> usize;
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)>;
 }
 
@@ -89,11 +92,11 @@ impl Manager {
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
-    pub model: math::Matrix4<f32>,
+    pub model: math::Matrix4<Real>,
     // todo, I think its not gonna be needed,
     // because of cascaded shadow
-    // pub directional_biased_model: math::Matrix4<f32>,
-    // pub sun_mvp: math::Matrix4<f32>,
+    // pub directional_biased_model: math::Matrix4<Real>,
+    // pub sun_mvp: math::Matrix4<Real>,
 }
 
 impl Uniform {
@@ -138,20 +141,19 @@ impl Uniform {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
-    pub obj_base: ObjectBase,
-    pub is_dynamic: bool,
-    pub has_shadow_caster: bool,
-    pub has_transparent: bool,
-    pub occlusion_culling_radius: f32,
-    pub is_in_sun: Vec<bool>,
-    pub is_in_camera: Vec<bool>,
-    pub distance_from_cameras: Vec<f32>,
-    pub collider: Arc<RwLock<Collider>>,
-    pub uniform: Uniform,
+    obj_base: ObjectBase,
+    is_dynamic: bool,
+    has_shadow_caster: bool,
+    has_transparent: bool,
+    occlusion_culling_radius: Real,
+    is_in_sun: BTreeMap<Id, bool>,
+    is_in_distance_camera: BTreeMap<Id, (Real, bool)>,
+    collider: Arc<RwLock<Collider>>,
+    uniform: Uniform,
     uniform_buffer: Arc<RwLock<DynamicBuffer>>,
-    pub(crate) descriptor_set: Arc<DescriptorSet>,
-    pub meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
-    pub children: BTreeMap<Id, Arc<RwLock<Model>>>,
+    descriptor_set: Arc<DescriptorSet>,
+    meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
+    children: BTreeMap<Id, Arc<RwLock<Model>>>,
 }
 
 impl Base {}
@@ -246,9 +248,8 @@ impl Loadable for Base {
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
-            is_in_sun: Vec::new(),
-            is_in_camera: Vec::new(),
-            distance_from_cameras: Vec::new(),
+            is_in_sun: BTreeMap::new(),
+            is_in_distance_camera: BTreeMap::new(),
             collider: Arc::new(RwLock::new(GhostCollider::new())),
             uniform: Uniform::new_with_gltf(node),
             uniform_buffer,
@@ -293,9 +294,8 @@ impl Loadable for Base {
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
-            is_in_sun: Vec::new(),
-            is_in_camera: Vec::new(),
-            distance_from_cameras: Vec::new(),
+            is_in_sun: BTreeMap::new(),
+            is_in_distance_camera: BTreeMap::new(),
             collider,
             uniform,
             uniform_buffer,
@@ -307,12 +307,25 @@ impl Loadable for Base {
 }
 
 impl Model for Base {
-    fn update(&mut self, scene: &Scene) {
+    fn update(&mut self, scene: &Scene, camera: &Camera) {
         for (_, mesh) in &self.meshes {
             let mut mesh = vxresult!(mesh.write());
             Object::update(&mut *mesh);
             Mesh::update(&mut *mesh, scene, self);
         }
+    }
+
+    fn clear_meshes(&mut self) {
+        self.meshes.clear();
+        self.has_shadow_caster = false;
+        self.has_transparent = false;
+        self.occlusion_culling_radius = 0.0;
+        self.is_in_sun.clear();
+        self.is_in_distance_camera.clear();
+    }
+
+    fn get_meshes_count(&self) -> usize {
+        return self.meshes.len();
     }
 
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
@@ -347,9 +360,8 @@ impl DefaultModel for Base {
             has_shadow_caster: false,
             has_transparent: false,
             occlusion_culling_radius: 1.0,
-            is_in_sun: Vec::new(),
-            is_in_camera: Vec::new(),
-            distance_from_cameras: Vec::new(),
+            is_in_sun: BTreeMap::new(),
+            is_in_distance_camera: BTreeMap::new(),
             collider: Arc::new(RwLock::new(GhostCollider::new())),
             uniform: Uniform::default(),
             uniform_buffer,

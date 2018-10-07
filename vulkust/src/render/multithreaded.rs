@@ -192,6 +192,9 @@ impl Renderer {
             cmds.gbuff.bind_pipeline(&gbuff_pipeline);
             scene.render(&mut cmds.gbuff, frame_number);
             for (_, model) in &*models {
+                let camera = vxunwrap!(scene.get_active_camera()).upgrade();
+                let camera = vxunwrap!(camera);
+                let camera = vxresult!(camera.read());
                 task_index += 1;
                 if task_index % self.kernels_count != self.index {
                     continue;
@@ -206,7 +209,7 @@ impl Renderer {
                     continue;
                 }
                 Object::update(&mut *model);
-                Model::update(&mut *model, &*scene);
+                Model::update(&mut *model, &*scene, &*camera);
                 Object::render(&mut *model, &mut cmds.gbuff, frame_number);
                 cmds.is_filled = true;
             }

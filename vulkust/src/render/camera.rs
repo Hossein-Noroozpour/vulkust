@@ -189,7 +189,7 @@ impl Plane {
         self.d = -self.n.dot(self.p);
     }
 
-    fn transform(&mut self, m: &math::Matrix4<Real>) {
+    fn _transform(&mut self, m: &math::Matrix4<Real>) {
         self.p = (m * self.p.extend(1.0)).truncate();
         self.n = (m * self.n.extend(0.0)).truncate().normalize();
         self.d = -self.n.dot(self.p);

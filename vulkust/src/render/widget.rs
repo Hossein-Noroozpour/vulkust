@@ -1,6 +1,7 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
 use super::command::Buffer as CmdBuffer;
+use super::camera::Camera;
 use super::engine::Engine;
 use super::font::Font;
 use super::material::Material;
@@ -8,7 +9,6 @@ use super::mesh::{Base as MeshBase, Mesh};
 use super::model::{Base as ModelBase, DefaultModel, Model};
 use super::object::Object;
 use super::scene::Scene;
-use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 
 use rusttype::{point, Scale};
@@ -59,12 +59,20 @@ impl Object for Base {
 }
 
 impl Model for Base {
-    fn update(&mut self, scene: &Scene) {
-        Model::update(&mut self.model_base, scene);
+    fn update(&mut self, scene: &Scene, camera: &Camera) {
+        Model::update(&mut self.model_base, scene, camera);
     }
 
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
         self.model_base.add_mesh(mesh);
+    }
+
+    fn get_meshes_count(&self) -> usize {
+        return self.model_base.get_meshes_count();
+    }
+
+    fn clear_meshes(&mut self) {
+        self.model_base.clear_meshes();
     }
 
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)> {
@@ -140,11 +148,12 @@ impl Label {
         // todo margin
         // todo alignment
         // todo multiline support
+        let mesh = {
         if self.text.len() < 1 {
-            if self.base.model_base.meshes.len() < 1 {
+            if self.get_meshes_count() < 1 {
                 return;
             }
-            self.base.model_base.meshes = BTreeMap::new();
+            self.clear_meshes();
             return;
         }
         let scale = Scale::uniform(self.text_size);
@@ -230,10 +239,11 @@ impl Label {
             texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, engine, &img);
         material.finalize_textures_change(engine);
         let mesh = MeshBase::new_with_material(material, &vertices, &indices, engine);
-        let mesh_id = mesh.get_id();
         let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
         vxresult!(scene_manager.mesh_manager.write()).add(&mesh);
-        self.base.model_base.meshes.insert(mesh_id, mesh);
+        mesh
+    };
+        self.add_mesh(mesh);
     }
 }
 
@@ -275,8 +285,16 @@ impl Object for Label {
 }
 
 impl Model for Label {
-    fn update(&mut self, scene: &Scene) {
-        Model::update(&mut self.base, scene);
+    fn update(&mut self, scene: &Scene, camera: &Camera) {
+        Model::update(&mut self.base, scene, camera);
+    }
+
+    fn get_meshes_count(&self) -> usize {
+        return self.base.get_meshes_count();
+    }
+
+    fn clear_meshes(&mut self) {
+        self.base.clear_meshes();
     }
 
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {

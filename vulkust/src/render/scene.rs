@@ -89,18 +89,6 @@ impl Manager {
         self.engine = Some(engine);
     }
 
-    // pub fn render_deferred(&self) {
-    //     let engine = vxunwrap!(&self.engine); // todo remove these lines i'm not happy with
-    //     let engine = vxunwrap!(engine.upgrade()); //
-    //     let engine = vxresult!(engine.read()); //
-    //     for (_, scene) in &*vxresult!(self.scenes.read()) {
-    //         if let Some(scene) = scene.upgrade() {
-    //             vxresult!(scene.read()).render_deferred(&engine);
-    //         }
-    //         // todo depth cleaning, and other related things in here
-    //     }
-    // }
-
     pub fn load_gltf<S>(&self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
     where
         S: 'static + Loadable,
