@@ -6,6 +6,7 @@ use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use gltf;
 use math;
+use math::prelude::*;
 use std::collections::BTreeMap;
 use std::convert::From;
 use std::sync::{Arc, RwLock, Weak};
@@ -38,8 +39,9 @@ impl Uniform {
 }
 
 pub trait Camera: Object + Transferable {
-    fn get_view_projection(&self) -> &math::Matrix4<f32>;
-    fn get_cascaded_shadow_points(&self, _sections_count: usize) -> Vec<math::Vector3<f32>>;
+    fn get_view_projection(&self) -> &math::Matrix4<Real>;
+    fn get_cascaded_shadow_frustum_partitions(&self, usize) -> Vec<[math::Vector3<Real>; 4]>;
+    fn is_in_frustum(&self, Real, math::Vector3<Real>) -> bool;
     fn update_uniform(&self, &mut Uniform);
 }
 
@@ -137,19 +139,64 @@ impl Manager {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
+struct Plane {
+    n: math::Vector3<Real>,
+    p: math::Vector3<Real>,
+    d: Real,
+}
+
+enum PlaneIntersectStatue {
+    Above,
+    Intersecting,
+    Under,
+}
+
+impl Plane {
+    fn new(p: math::Vector3<Real>, f: math::Vector3<Real>, s: math::Vector3<Real>) -> Self {
+        let pf = f - p;
+        let ps = s - p;
+        let n = pf.cross(ps).normalize();
+        let d = -(n.dot(p));
+        Self {n, p, d}
+    }
+
+    fn intersect_sphere(&self, radius: Real, center: math::Vector3<Real>) -> PlaneIntersectStatue {
+        let dis = self.n.dot(center);
+        if radius < dis {
+            return PlaneIntersectStatue::Above;
+        }
+        if radius < -dis {
+            return PlaneIntersectStatue::Under;
+        }
+        return PlaneIntersectStatue::Intersecting;
+    }
+}
+
+impl Default for Plane {
+    fn default() -> Self {
+        Self {
+            n: math::Vector3::new(0.0, 0.0, 1.0),
+            p: math::Vector3::new(0.0, 0.0, 0.0),
+            d: 0.0,
+        }
+    }
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     pub obj_base: ObjectBase,
-    pub near: f32,
-    pub far: f32,
-    pub aspect_ratio: f32,
-    pub x: math::Vector3<f32>,
-    pub y: math::Vector3<f32>,
-    pub z: math::Vector3<f32>,
-    pub location: math::Vector3<f32>,
-    pub direction: math::Matrix4<f32>,
-    pub view: math::Matrix4<f32>,
-    pub projection: math::Matrix4<f32>,
-    pub view_projection: math::Matrix4<f32>,
+    pub near: Real,
+    pub far: Real,
+    pub aspect_ratio: Real,
+    pub x: math::Vector3<Real>,
+    pub y: math::Vector3<Real>,
+    pub z: math::Vector3<Real>,
+    pub location: math::Vector3<Real>,
+    pub direction: math::Matrix4<Real>,
+    pub view: math::Matrix4<Real>,
+    pub projection: math::Matrix4<Real>,
+    pub view_projection: math::Matrix4<Real>,
+    frustum_planes: [Plane; 6],
 }
 
 impl Base {
@@ -184,6 +231,14 @@ impl Base {
             view: identity,
             projection: identity,
             view_projection: img_transform,
+            frustum_planes: [
+                Plane::default(),
+                Plane::default(),
+                Plane::default(),
+                Plane::default(),
+                Plane::default(),
+                Plane::default(),
+            ],
         }
     }
 
@@ -237,7 +292,7 @@ impl Object for Base {
 }
 
 impl Transferable for Base {
-    fn set_orientation(&mut self, q: &math::Quaternion<f32>) {
+    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
         let rotation = math::Matrix4::from(*q);
         self.x = (rotation * self.x.extend(1.0)).truncate();
         self.y = (rotation * self.y.extend(1.0)).truncate();
@@ -251,22 +306,22 @@ impl Transferable for Base {
         self.update_view_projection();
     }
 
-    fn set_location(&mut self, l: &math::Vector3<f32>) {
+    fn set_location(&mut self, l: &math::Vector3<Real>) {
         self.location = *l;
         self.update_location();
     }
 
-    fn move_local_z(&mut self, v: f32) {
+    fn move_local_z(&mut self, v: Real) {
         self.location = self.location + self.z * v;
         self.update_location();
     }
 
-    fn move_local_x(&mut self, v: f32) {
+    fn move_local_x(&mut self, v: Real) {
         self.location = self.location + self.x * v;
         self.update_location();
     }
 
-    fn rotate_local_x(&mut self, v: f32) {
+    fn rotate_local_x(&mut self, v: Real) {
         let rot = math::Matrix4::from_axis_angle(self.x, math::Rad(-v));
         let irot = math::Matrix4::from_axis_angle(self.x, math::Rad(v));
         self.y = (irot * self.y.extend(0.0)).truncate();
@@ -275,7 +330,7 @@ impl Transferable for Base {
         self.update_location();
     }
 
-    fn rotate_global_z(&mut self, v: f32) {
+    fn rotate_global_z(&mut self, v: Real) {
         let ax = math::Vector3::new(0.0, 0.0, 1.0);
         let rot = math::Matrix4::from_axis_angle(ax, math::Rad(-v));
         let irot = math::Matrix4::from_axis_angle(ax, math::Rad(v));
@@ -315,12 +370,24 @@ impl Loadable for Base {
 }
 
 impl Camera for Base {
-    fn get_view_projection(&self) -> &math::Matrix4<f32> {
+    fn get_view_projection(&self) -> &math::Matrix4<Real> {
         &self.view_projection
     }
 
-    fn get_cascaded_shadow_points(&self, _: usize) -> Vec<math::Vector3<f32>> {
+    fn get_cascaded_shadow_frustum_partitions(&self, _: usize) -> Vec<[math::Vector3<Real>; 4]> {
         vxlogf!("Base camera does not implement cascading.");
+    }
+
+    fn is_in_frustum(&self, radius: Real, location: math::Vector3<Real>) -> bool {
+        for f in &self.frustum_planes {
+            let s = f.intersect_sphere(radius, location);
+            match s {
+                PlaneIntersectStatue::Above => return false,
+                PlaneIntersectStatue::Intersecting => return true,
+                _ => (),
+            }
+        }
+        return true;
     }
 
     fn update_uniform(&self, uniform: &mut Uniform) {
@@ -360,7 +427,7 @@ impl Perspective {
         }
     }
 
-    pub fn set_fov_vertical(&mut self, fovx: f32) {
+    pub fn set_fov_vertical(&mut self, fovx: Real) {
         self.fovx = fovx;
         self.tanx = (fovx * 0.5).tan();
         self.tany = self.tanx * self.base.aspect_ratio;
@@ -436,46 +503,64 @@ impl Loadable for Perspective {
 }
 
 impl Transferable for Perspective {
-    fn set_orientation(&mut self, q: &math::Quaternion<f32>) {
+    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
         self.base.set_orientation(q);
     }
 
-    fn set_location(&mut self, l: &math::Vector3<f32>) {
+    fn set_location(&mut self, l: &math::Vector3<Real>) {
         self.base.set_location(l);
     }
 
-    fn move_local_z(&mut self, v: f32) {
+    fn move_local_z(&mut self, v: Real) {
         self.base.move_local_z(v);
     }
 
-    fn move_local_x(&mut self, v: f32) {
+    fn move_local_x(&mut self, v: Real) {
         self.base.move_local_x(v);
     }
 
-    fn rotate_local_x(&mut self, v: f32) {
+    fn rotate_local_x(&mut self, v: Real) {
         self.base.rotate_local_x(v);
     }
 
-    fn rotate_global_z(&mut self, v: f32) {
+    fn rotate_global_z(&mut self, v: Real) {
         self.base.rotate_global_z(v);
     }
 }
 
 impl Camera for Perspective {
-    fn get_view_projection(&self) -> &math::Matrix4<f32> {
+    fn get_view_projection(&self) -> &math::Matrix4<Real> {
         self.base.get_view_projection()
     }
 
-    fn get_cascaded_shadow_points(&self, sections_count: usize) -> Vec<math::Vector3<f32>> {
+    fn get_cascaded_shadow_frustum_partitions(&self, sections_count: usize) -> Vec<[math::Vector3<Real>;4]> {
         #[cfg(debug_mode)]
         {
             if sections_count < 1 {
                 vxlogf!("sections_count must be greater than zero.");
             }
         }
-        let mut result = vec![math::Vector3::new(0.0f32, 0.0f32, 0.0f32); sections_count + 1];
-        result[0] = self.base.location + self.base.z * self.base.near;
-        result[sections_count] = self.base.location + self.base.z * self.base.far;
+        
+        let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
+
+        let x = self.base.x * (self.tanx * self.base.near);
+        let y = self.base.y * (self.tany * self.base.near);
+        let z = self.base.location + self.base.z * self.base.near;
+
+        result[0][0] = z - x - y;
+        result[0][1] = z + x - y;
+        result[0][2] = z + x + y;
+        result[0][3] = z - x + y;
+
+        let x = self.base.x * (self.tanx * self.base.far);
+        let y = self.base.y * (self.tany * self.base.far);
+        let z = self.base.location + self.base.z * self.base.far;
+
+        result[sections_count][0] = z - x - y;
+        result[sections_count][1] = z + x - y;
+        result[sections_count][2] = z + x + y;
+        result[sections_count][3] = z - x + y;
+
         if sections_count < 2 {
             return result;
         }
@@ -483,7 +568,7 @@ impl Camera for Perspective {
         // Zi = yn((f/n)^(1/N))^i + (1-y)n + (1-y)((f-n)/N)i
         let oneminlambda = 1.0 - self.lambda;
         let lambda = self.lambda;
-        let onedivcn = 1.0 / sections_count as f32;
+        let onedivcn = 1.0 / sections_count as Real;
         // uniform increament
         let unisecinc = oneminlambda * onedivcn * (self.base.far - self.base.near);
         let fdivn = self.base.far / self.base.near;
@@ -493,13 +578,36 @@ impl Camera for Perspective {
         let mut unisec = oneminlambda * self.base.near + unisecinc;
         // logarithmic sector
         let mut logsec = lambda * self.base.near * logsecmul;
-        result[1] = self.base.location + self.base.z * (logsec + unisec);
+
+        let l = logsec + unisec;
+        let x = self.base.x * (self.tanx * l);
+        let y = self.base.y * (self.tany * l);
+        let z = self.base.location + self.base.z * l;
+
+        result[1][0] = z - x - y;
+        result[1][1] = z + x - y;
+        result[1][2] = z + x + y;
+        result[1][3] = z - x + y;
+        
         for i in 2..sections_count {
             logsec *= logsecmul;
             unisec += unisecinc;
-            result[i] = self.base.location + self.base.z * (logsec + unisec);
+
+            let l = logsec + unisec;
+            let x = self.base.x * (self.tanx * l);
+            let y = self.base.y * (self.tany * l);
+            let z = self.base.location + self.base.z * l;
+
+            result[i][0] = z - x - y;
+            result[i][1] = z + x - y;
+            result[i][2] = z + x + y;
+            result[i][3] = z - x + y;
         }
         return result;
+    }
+
+    fn is_in_frustum(&self, radius: Real, location: math::Vector3<Real>) -> bool {
+        return self.base.is_in_frustum(radius, location);
     }
 
     fn update_uniform(&self, uniform: &mut Uniform) {
@@ -516,15 +624,15 @@ impl DefaultCamera for Perspective {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Orthographic {
     pub base: Base,
-    pub size: f32,
+    pub size: Real,
 }
 
 impl Orthographic {
-    pub fn new(eng: &Arc<RwLock<Engine>>, size: f32) -> Self {
+    pub fn new(eng: &Arc<RwLock<Engine>>, size: Real) -> Self {
         Self::new_with_base(Base::new(eng), size)
     }
 
-    pub fn new_with_base(mut base: Base, size: f32) -> Self {
+    pub fn new_with_base(mut base: Base, size: Real) -> Self {
         let size = size * 0.5;
         let w = base.aspect_ratio * size;
         base.projection = math::ortho(-w, w, -size, size, base.near, base.far);
@@ -598,54 +706,78 @@ impl Loadable for Orthographic {
 }
 
 impl Transferable for Orthographic {
-    fn set_orientation(&mut self, q: &math::Quaternion<f32>) {
+    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
         self.base.set_orientation(q);
     }
 
-    fn set_location(&mut self, l: &math::Vector3<f32>) {
+    fn set_location(&mut self, l: &math::Vector3<Real>) {
         self.base.set_location(l);
     }
 
-    fn move_local_z(&mut self, v: f32) {
+    fn move_local_z(&mut self, v: Real) {
         self.base.move_local_z(v);
     }
 
-    fn move_local_x(&mut self, v: f32) {
+    fn move_local_x(&mut self, v: Real) {
         self.base.move_local_x(v);
     }
 
-    fn rotate_local_x(&mut self, v: f32) {
+    fn rotate_local_x(&mut self, v: Real) {
         self.base.rotate_local_x(v);
     }
 
-    fn rotate_global_z(&mut self, v: f32) {
+    fn rotate_global_z(&mut self, v: Real) {
         self.base.rotate_global_z(v);
     }
 }
 
 impl Camera for Orthographic {
-    fn get_view_projection(&self) -> &math::Matrix4<f32> {
+    fn get_view_projection(&self) -> &math::Matrix4<Real> {
         &self.base.view_projection
     }
 
-    fn get_cascaded_shadow_points(&self, sections_count: usize) -> Vec<math::Vector3<f32>> {
+    fn get_cascaded_shadow_frustum_partitions(&self, sections_count: usize) -> Vec<[math::Vector3<Real>;4]> {
         #[cfg(debug_mode)]
         {
             if sections_count < 1 {
                 vxlogf!("sections_count must be greater than zero.");
             }
         }
-        let mut result = vec![math::Vector3::new(0.0f32, 0.0f32, 0.0f32); sections_count + 1];
-        let mut previous = self.base.location + self.base.z * self.base.near;
-        result[0] = previous;
-        let unisecinc = (self.base.far - self.base.near) / sections_count as f32;
-        let unisecinc = self.base.z * unisecinc;
+        let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0);4]; sections_count + 1];
+
+        let w = self.size * self.base.aspect_ratio;
+
+        let mut l = self.base.near;
+        let x = self.base.x * w;
+        let y = self.base.y * self.size;
+        let z = self.base.location + self.base.z * l;
+
+        result[0][0] = z - x - y;
+        result[0][1] = z + x - y;
+        result[0][2] = z + x + y;
+        result[0][3] = z - x + y;
+
+        let unisecinc = (self.base.far - self.base.near) / sections_count as Real;
+
         let sections_count = sections_count + 1;
+        
         for i in 1..sections_count {
-            previous += unisecinc;
-            result[i] = previous;
+            l += unisecinc;
+
+            let x = self.base.x * w;
+            let y = self.base.y * self.size;
+            let z = self.base.location + self.base.z * l;
+
+            result[i][0] = z - x - y;
+            result[i][1] = z + x - y;
+            result[i][2] = z + x + y;
+            result[i][3] = z - x + y;
         }
         return result;
+    }
+
+    fn is_in_frustum(&self, radius: Real, location: math::Vector3<Real>) -> bool {
+        return self.base.is_in_frustum(radius, location);
     }
 
     fn update_uniform(&self, uniform: &mut Uniform) {

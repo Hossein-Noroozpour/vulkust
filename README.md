@@ -38,6 +38,7 @@ It is under lots of changes, there is lots of work to be done!
 
 #### 2-1-2- Underdeveloment features:
 
+- Frustum culling
 - Shadowing
 - Cascaded Shadow
 - Soft Shadowing
