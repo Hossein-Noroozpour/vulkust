@@ -160,6 +160,11 @@ impl Plane {
         Self {n, p, d}
     }
 
+    fn new_with_point_normal(p: math::Vector3<Real>, n: math::Vector3<Real>) -> Self {
+        let d = -(n.dot(p));
+        Self {n, p, d}
+    }
+
     fn intersect_sphere(&self, radius: Real, center: math::Vector3<Real>) -> PlaneIntersectStatue {
         let dis = self.n.dot(center);
         if radius < dis {
@@ -169,6 +174,25 @@ impl Plane {
             return PlaneIntersectStatue::Under;
         }
         return PlaneIntersectStatue::Intersecting;
+    }
+
+    fn translate(&mut self, l: &math::Vector3<Real>) {
+        self.p += *l;
+        self.d = -self.n.dot(self.p);
+    }
+
+    fn rotate_around(&mut self, l: &math::Vector3<Real>, m: &math::Matrix4<Real>) {
+        let mut lp = self.p - l;
+        lp = (m * lp.extend(0.0)).truncate();
+        self.n = (m * self.n.extend(0.0)).truncate().normalize();
+        self.p = lp + l;
+        self.d = -self.n.dot(self.p);
+    }
+
+    fn transform(&mut self, m: &math::Matrix4<Real>) {
+        self.p = (m * self.p.extend(1.0)).truncate();
+        self.n = (m * self.n.extend(0.0)).truncate().normalize();
+        self.d = -self.n.dot(self.p);
     }
 }
 
@@ -297,6 +321,9 @@ impl Transferable for Base {
         self.x = (rotation * self.x.extend(1.0)).truncate();
         self.y = (rotation * self.y.extend(1.0)).truncate();
         self.z = (rotation * self.z.extend(1.0)).truncate();
+        for fp in &mut self.frustum_planes {
+            fp.rotate_around(&self.location, &rotation);
+        }
         let mut q = *q;
         q.s = -q.s;
         let rotation = math::Matrix4::from(q);
@@ -307,17 +334,29 @@ impl Transferable for Base {
     }
 
     fn set_location(&mut self, l: &math::Vector3<Real>) {
+        let t = l - self.location;
+        for fp in &mut self.frustum_planes {
+            fp.translate(&t);
+        }
         self.location = *l;
         self.update_location();
     }
 
     fn move_local_z(&mut self, v: Real) {
-        self.location = self.location + self.z * v;
+        let t = self.z * v;
+        for fp in &mut self.frustum_planes {
+            fp.translate(&t);
+        }
+        self.location = self.location + t;
         self.update_location();
     }
 
     fn move_local_x(&mut self, v: Real) {
-        self.location = self.location + self.x * v;
+        let t = self.x * v;
+        for fp in &mut self.frustum_planes {
+            fp.translate(&t);
+        }
+        self.location = self.location + t;
         self.update_location();
     }
 
@@ -326,6 +365,9 @@ impl Transferable for Base {
         let irot = math::Matrix4::from_axis_angle(self.x, math::Rad(v));
         self.y = (irot * self.y.extend(0.0)).truncate();
         self.z = (irot * self.z.extend(0.0)).truncate();
+        for fp in &mut self.frustum_planes {
+            fp.rotate_around(&self.location, &irot);
+        }
         self.direction = self.direction * rot;
         self.update_location();
     }
@@ -337,6 +379,9 @@ impl Transferable for Base {
         self.x = (irot * self.x.extend(0.0)).truncate();
         self.y = (irot * self.y.extend(0.0)).truncate();
         self.z = (irot * self.z.extend(0.0)).truncate();
+        for fp in &mut self.frustum_planes {
+            fp.rotate_around(&self.location, &irot);
+        }
         self.direction = self.direction * rot;
         self.update_location();
     }
@@ -405,7 +450,7 @@ pub struct Perspective {
     pub fovy: Real,
     pub tanx: Real,
     pub tany: Real,
-    lambda: Real,
+    lambda: Real, // (cos(fovy) + cos(fovx)) / 2 -no proof for it just my gut, let see what I get
 }
 
 impl Perspective {
@@ -417,14 +462,17 @@ impl Perspective {
     }
 
     pub fn new_with_base(base: Base) -> Self {
-        Perspective {
+        let mut s = Self {
             base,
-            fovy: 0.785398163,
-            fovx: 0.785398163,
-            tanx: 1.0,
-            tany: 1.0,
-            lambda: 0.785398163, // (cos(fovy) + cos(fovx)) / 2 -no proof for it just my gut, let see what I get
-        }
+            fovy: 0.0,
+            fovx: 0.0,
+            tanx: 0.0,
+            tany: 0.0,
+            lambda: 0.0,
+        };
+        let fovx = 0.785398163; // 45
+        s.set_fov_vertical(fovx);
+        return s;
     }
 
     pub fn set_fov_vertical(&mut self, fovx: Real) {
@@ -438,7 +486,39 @@ impl Perspective {
             self.base.near,
             self.base.far,
         );
+        self.lambda = (self.fovx + self.fovy) * 0.5;
         self.base.update_view_projection();
+        self.update_frustum_planes();
+    }
+
+    fn update_frustum_planes(&mut self) {
+        let zn = self.base.z * self.base.near;
+        let zf = self.base.z * self.base.far;
+        let xn = self.base.x * (self.base.near * self.tanx);
+        let yn = self.base.y * (self.base.near * self.tany);
+        let xf = self.base.x * (self.base.far * self.tanx);
+        let yf = self.base.y * (self.base.far * self.tany);
+        let znpxn = zn + xn;
+        let znmxn = zn - xn;
+        let np1 = znpxn + yn;
+        let np2 = znpxn - yn;
+        let np3 = znmxn + yn;
+        let np4 = znmxn - yn;
+        let zfpxf = zf + xf;
+        let zfmxf = zf - xf;
+        let fp1 = zfpxf + yf;
+        let fp2 = zfpxf - yf;
+        let fp3 = zfmxf + yf;
+        let fp4 = zfmxf - yf;
+        self.base.frustum_planes[0] = Plane::new(np1, np3, np2);
+        self.base.frustum_planes[1] = Plane::new(np1, fp1, np3);
+        self.base.frustum_planes[2] = Plane::new(np1, np2, fp1);
+        self.base.frustum_planes[3] = Plane::new(fp4, np2, fp3);
+        self.base.frustum_planes[4] = Plane::new(fp4, fp2, np4);
+        self.base.frustum_planes[5] = Plane::new(fp4, fp3, np4);
+        for fp in &mut self.base.frustum_planes {
+            fp.translate(&self.base.location);
+        }
     }
 }
 
@@ -632,12 +712,30 @@ impl Orthographic {
         Self::new_with_base(Base::new(eng), size)
     }
 
+    fn update_frustum_planes(&mut self) {
+        let zn = self.base.location + self.base.z * self.base.near;
+        let zf = self.base.location + self.base.z * self.base.far;
+        let x = self.base.location + self.base.x * (self.base.aspect_ratio * self.size);
+        let y = self.base.location + self.base.y * self.size;
+        let np1 = zn + x + y;
+        let np2 = zn - x - y;
+        let fp1 = zf + x + y;
+        self.base.frustum_planes[0] = Plane::new_with_point_normal(np1, -self.base.z);
+        self.base.frustum_planes[1] = Plane::new_with_point_normal(np1, self.base.x);
+        self.base.frustum_planes[2] = Plane::new_with_point_normal(np1, self.base.y);
+        self.base.frustum_planes[3] = Plane::new_with_point_normal(np2, -self.base.x);
+        self.base.frustum_planes[4] = Plane::new_with_point_normal(np2, -self.base.y);
+        self.base.frustum_planes[5] = Plane::new_with_point_normal(fp1, self.base.z);
+    }
+
     pub fn new_with_base(mut base: Base, size: Real) -> Self {
         let size = size * 0.5;
         let w = base.aspect_ratio * size;
         base.projection = math::ortho(-w, w, -size, size, base.near, base.far);
         base.update_view_projection();
-        Orthographic { base, size }
+        let mut s = Orthographic { base, size };
+        s.update_frustum_planes();
+        return s;
     }
 
     pub fn new_with_id(eng: &Arc<RwLock<Engine>>, id: Id) -> Self {
@@ -646,7 +744,9 @@ impl Orthographic {
         let w = base.aspect_ratio * size;
         base.projection = math::ortho(-w, w, -size, size, base.near, base.far);
         base.update_view_projection();
-        Orthographic { base, size }
+        let mut s = Orthographic { base, size };
+        s.update_frustum_planes();
+        return s;
     }
 }
 
