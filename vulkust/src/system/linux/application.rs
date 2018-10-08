@@ -144,11 +144,6 @@ impl Application {
 
     pub fn run(&self) {
         'main_loop: loop {
-            {
-                let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-                let mut timing = vxresult!(renderer.timing.write());
-                timing.update();
-            }
             let events = self.fetch_events();
             for e in events {
                 match e.event_type {

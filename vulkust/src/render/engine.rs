@@ -55,6 +55,7 @@ impl Engine {
     }
 
     pub fn update(&self) {
+        vxresult!(self.timing.write()).update();
         // todo it must iterate over scenes
         // it require separate command buffer for each scene
         // it gonna help the multithread rendering part

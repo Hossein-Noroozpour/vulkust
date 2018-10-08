@@ -8,7 +8,7 @@ use super::super::super::winapi;
 use std::fmt;
 use std::mem::{size_of, transmute, zeroed};
 use std::ptr::{null, null_mut};
-use std::sync::{Arc, RwLock, Weak};
+use std::sync::{Arc, RwLock};
 
 pub struct Application {
     pub instance: winapi::shared::minwindef::HINSTANCE,
@@ -196,15 +196,9 @@ impl Application {
         }
         unsafe {
             winapi::um::winuser::ShowWindow(window, winapi::um::winuser::SW_SHOW);
-        }
-        unsafe {
             winapi::um::winuser::SetForegroundWindow(window);
-        }
-        unsafe {
             winapi::um::winuser::SetFocus(window);
-        }
-        unsafe {
-            winapi::um::winuser::UpdateWindow(window);
+            // winapi::um::winuser::UpdateWindow(window);
         }
         let mut itself = vxresult!(itself.write());
         itself.instance = instance;
