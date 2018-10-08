@@ -178,10 +178,8 @@ impl Object for Base {
 
     fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         if !self.is_visible {
-            vxlogi!("Not in");
             return;
         }
-        vxlogi!("In");
         self.obj_base.render(cmd, frame_number);
         {
             let mut uniform_buffer = vxresult!(self.uniform_buffer.write());

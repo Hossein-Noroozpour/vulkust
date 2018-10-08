@@ -1,6 +1,7 @@
 use vulkust::core::application::Application as CoreAppTrait;
 use vulkust::core::event::Event;
 use vulkust::render::camera::Orthographic;
+use vulkust::render::object::Transferable;
 use vulkust::render::engine::Engine as Renderer;
 use vulkust::render::scene::{Scene, Ui as UiScene};
 use vulkust::render::widget::Label;
@@ -39,6 +40,10 @@ impl CoreAppTrait for MyGame {
         let renderer = vxresult!(renderer.read());
         let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene();
         let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
+        {
+            let mut camera = vxresult!(camera.write());
+            camera.move_local_z(-2.0);
+        }
         let label: Arc<RwLock<Label>> = renderer.create_model();
         {
             let mut label = vxresult!(label.write());
@@ -50,7 +55,7 @@ impl CoreAppTrait for MyGame {
             label.set_size(0.05, &renderer);
             label.set_text_size(50.0, &renderer);
             label.set_text_color(1.0, 1.0, 1.0, 1.0, &renderer);
-            label.set_background_color(0.0, 0.0, 0.0, 0.0, &renderer);
+            label.set_background_color(1.0, 1.0, 1.0, 0.0, &renderer);
             label.set_text("Hello Vulkust!", &renderer);
         }
         {
