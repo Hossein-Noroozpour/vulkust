@@ -202,7 +202,8 @@ impl Application {
                     && ((*transmute::<
                         *mut xcb::xcb_generic_event_t,
                         *mut xcb::xcb_client_message_event_t,
-                    >(e)).data
+                    >(e))
+                    .data
                     .data[0]
                         == (*self.atom_wm_delete_window).atom))
             {

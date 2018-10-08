@@ -1,5 +1,6 @@
 use super::super::super::core::application::Application as CoreAppTrait;
 use super::super::super::core::constants;
+use super::super::super::core::event;
 use super::super::super::core::string::string_to_cwstring;
 use super::super::super::core::types::Real;
 use super::super::super::render::engine::Engine as RenderEngine;
@@ -129,12 +130,14 @@ impl Application {
             if screen_width != constants::DEFAULT_WINDOW_WIDTH as i32
                 && screen_height != constants::DEFAULT_WINDOW_HEIGHT as i32
             {
-                if unsafe { winapi::um::winuser::ChangeDisplaySettingsW(
-                    &mut dm_screen_settings,
-                    winapi::um::winuser::CDS_FULLSCREEN,
-                ) } != winapi::um::winuser::DISP_CHANGE_SUCCESSFUL
-                {
-                    vxlogf!("Fullscreen Mode not supported!");
+                let result = unsafe {
+                    winapi::um::winuser::ChangeDisplaySettingsW(
+                        &mut dm_screen_settings,
+                        winapi::um::winuser::CDS_FULLSCREEN,
+                    )
+                };
+                if result != winapi::um::winuser::DISP_CHANGE_SUCCESSFUL {
+                    vxloge!("ChangeDisplaySettingsW result: {:?}", result);
                 }
             }
             window_rect.right = screen_width;
@@ -171,13 +174,15 @@ impl Application {
         }
         #[cfg(not(debug_mode))]
         {
-            let x = (unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN) }
-                - window_rect.right)
+            let x = (unsafe {
+                winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN)
+            } - window_rect.right)
                 / 2;
-            let y = ( unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN) }
-                - window_rect.bottom)
+            let y = (unsafe {
+                winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CYSCREEN)
+            } - window_rect.bottom)
                 / 2;
-            unsafe { 
+            unsafe {
                 winapi::um::winuser::SetWindowPos(
                     window,
                     null_mut(),
@@ -227,6 +232,7 @@ impl Application {
                     winapi::um::winuser::TranslateMessage(&msg);
                     winapi::um::winuser::DispatchMessageW(&msg);
                 }
+                vxresult!(vxunwrap!(&self.core_app).write()).update();
                 vxresult!(vxunwrap!(&self.renderer).read()).update();
                 if msg.message == winapi::um::winuser::WM_QUIT {
                     return true;
@@ -235,15 +241,26 @@ impl Application {
         }
     }
 
-    fn get_mouse_position(&self) -> (f64, f64) {
+    fn get_mouse_position(&self) -> (Real, Real) {
         vxloge!("TODO");
         // TODO
         (0.0, 0.0)
     }
 
     pub fn get_window_aspect_ratio(&self) -> Real {
-        vxloge!("TODO");
-        1.7
+        let mut rect = winapi::shared::windef::RECT {
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+        };
+        unsafe {
+            winapi::um::winuser::GetWindowRect(self.window, &mut rect);
+        }
+        let w = (rect.left - rect.right) as Real;
+        let h = (rect.bottom - rect.top) as Real;
+        let a = (w / h).abs();
+        return a;
     }
 
     fn handle_message(
@@ -263,59 +280,45 @@ impl Application {
             winapi::um::winuser::WM_PAINT => unsafe {
                 winapi::um::winuser::ValidateRect(hwnd, null());
             },
-            winapi::um::winuser::WM_KEYDOWN => {
-                let vk_f1 = winapi::um::winuser::VK_F1 as winapi::shared::minwindef::WPARAM;
-                let vk_escape = winapi::um::winuser::VK_ESCAPE as winapi::shared::minwindef::WPARAM;
-                if w_param == 0x50 {
-                    // p
-                    // TODO pause
-                } else if w_param == vk_f1 {
-                    /*if (enableTextOverlay) {
-        				textOverlay->visible = !textOverlay->visible;
-        			}*/
-                } else if w_param == vk_escape {
-                    unsafe {
-                        winapi::um::winuser::PostQuitMessage(0);
-                    }
-                } else {
-
-                }
-                /*if (camera.firstperson) {
-        			switch (wParam)
-        			{
-        			case KEY_W:
-        				camera.keys.up = true;
-        				break;
-        			case KEY_S:
-        				camera.keys.down = true;
-        				break;
-        			case KEY_A:
-        				camera.keys.left = true;
-        				break;
-        			case KEY_D:
-        				camera.keys.right = true;
-        				break;
-        			}
-        		}*/
-            }
-            winapi::um::winuser::WM_KEYUP => {
-                //if (camera.firstperson) {
-                //	switch (wParam)
-                //	{
-                //	case 0x57: // W
-                //		camera.keys.up = false;
-                //		break;
-                //	case 0x53: // S
-                //		camera.keys.down = false;
-                //		break;
-                //	case 0x41: // A
-                //		camera.keys.left = false;
-                //		break;
-                //	case 0x44: // D
-                //		camera.keys.right = false;
-                //		break;
-                //	}
-                //}
+            we @ winapi::um::winuser::WM_KEYDOWN | we @ winapi::um::winuser::WM_KEYUP => {
+                let button = match w_param {
+                    0x41 => event::Button::Keyboard(event::Keyboard::A),
+                    0x42 => event::Button::Keyboard(event::Keyboard::B),
+                    0x43 => event::Button::Keyboard(event::Keyboard::C),
+                    0x44 => event::Button::Keyboard(event::Keyboard::D),
+                    0x45 => event::Button::Keyboard(event::Keyboard::E),
+                    0x46 => event::Button::Keyboard(event::Keyboard::F),
+                    0x47 => event::Button::Keyboard(event::Keyboard::G),
+                    0x48 => event::Button::Keyboard(event::Keyboard::H),
+                    0x49 => event::Button::Keyboard(event::Keyboard::I),
+                    0x4A => event::Button::Keyboard(event::Keyboard::J),
+                    0x4B => event::Button::Keyboard(event::Keyboard::K),
+                    0x4C => event::Button::Keyboard(event::Keyboard::L),
+                    0x4D => event::Button::Keyboard(event::Keyboard::M),
+                    0x4E => event::Button::Keyboard(event::Keyboard::N),
+                    0x4F => event::Button::Keyboard(event::Keyboard::O),
+                    0x50 => event::Button::Keyboard(event::Keyboard::P),
+                    0x51 => event::Button::Keyboard(event::Keyboard::Q),
+                    0x52 => event::Button::Keyboard(event::Keyboard::R),
+                    0x53 => event::Button::Keyboard(event::Keyboard::S),
+                    0x54 => event::Button::Keyboard(event::Keyboard::T),
+                    0x55 => event::Button::Keyboard(event::Keyboard::U),
+                    0x56 => event::Button::Keyboard(event::Keyboard::V),
+                    0x57 => event::Button::Keyboard(event::Keyboard::W),
+                    0x58 => event::Button::Keyboard(event::Keyboard::X),
+                    0x59 => event::Button::Keyboard(event::Keyboard::Y),
+                    0x5A => event::Button::Keyboard(event::Keyboard::Z),
+                    _ => event::Button::Keyboard(event::Keyboard::Unknown),
+                };
+                let action = match we {
+                    winapi::um::winuser::WM_KEYDOWN => event::ButtonAction::Press,
+                    winapi::um::winuser::WM_KEYUP => event::ButtonAction::Release,
+                    _ => vxunexpected!(),
+                };
+                let e = event::Event::new(event::Type::Button { button, action });
+                let core_app = vxunwrap!(&self.core_app);
+                let core_app = vxresult!(core_app.read());
+                core_app.on_event(e);
             }
             winapi::um::winuser::WM_RBUTTONDOWN => {}
             winapi::um::winuser::WM_LBUTTONDOWN => {}

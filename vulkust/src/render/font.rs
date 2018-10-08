@@ -5,10 +5,10 @@ use super::gx3d::Table as Gx3dTable;
 use rusttype::Font as TypeFont;
 use std::collections::BTreeMap;
 use std::default::Default;
-use std::io::Read;
-use std::sync::{Arc, RwLock, Weak};
 #[cfg(debug_mode)]
 use std::fmt;
+use std::io::Read;
+use std::sync::{Arc, RwLock, Weak};
 
 pub trait Font: CoreObject {
     fn get_font(&self) -> &TypeFont;

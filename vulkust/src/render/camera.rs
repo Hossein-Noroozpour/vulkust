@@ -157,16 +157,16 @@ impl Plane {
         let ps = s - p;
         let n = pf.cross(ps).normalize();
         let d = -(n.dot(p));
-        Self {n, p, d}
+        Self { n, p, d }
     }
 
     fn new_with_point_normal(p: math::Vector3<Real>, n: math::Vector3<Real>) -> Self {
         let d = -(n.dot(p));
-        Self {n, p, d}
+        Self { n, p, d }
     }
 
     fn intersect_sphere(&self, radius: Real, center: math::Vector3<Real>) -> PlaneIntersectStatue {
-        let dis = self.n.dot(center);
+        let dis = self.n.dot(center) + self.d;
         if radius < dis {
             return PlaneIntersectStatue::Above;
         }
@@ -178,7 +178,7 @@ impl Plane {
 
     fn translate(&mut self, l: &math::Vector3<Real>) {
         self.p += *l;
-        self.d = -self.n.dot(self.p);
+        self.d = -(self.n.dot(self.p));
     }
 
     fn rotate_around(&mut self, l: &math::Vector3<Real>, m: &math::Matrix4<Real>) {
@@ -186,13 +186,13 @@ impl Plane {
         lp = (m * lp.extend(0.0)).truncate();
         self.n = (m * self.n.extend(0.0)).truncate().normalize();
         self.p = lp + l;
-        self.d = -self.n.dot(self.p);
+        self.d = -(self.n.dot(self.p));
     }
 
     fn _transform(&mut self, m: &math::Matrix4<Real>) {
         self.p = (m * self.p.extend(1.0)).truncate();
         self.n = (m * self.n.extend(0.0)).truncate().normalize();
-        self.d = -self.n.dot(self.p);
+        self.d = -(self.n.dot(self.p));
     }
 }
 
@@ -613,14 +613,17 @@ impl Camera for Perspective {
         self.base.get_view_projection()
     }
 
-    fn get_cascaded_shadow_frustum_partitions(&self, sections_count: usize) -> Vec<[math::Vector3<Real>;4]> {
+    fn get_cascaded_shadow_frustum_partitions(
+        &self,
+        sections_count: usize,
+    ) -> Vec<[math::Vector3<Real>; 4]> {
         #[cfg(debug_mode)]
         {
             if sections_count < 1 {
                 vxlogf!("sections_count must be greater than zero.");
             }
         }
-        
+
         let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
 
         let x = self.base.x * (self.tanx * self.base.near);
@@ -668,7 +671,7 @@ impl Camera for Perspective {
         result[1][1] = z + x - y;
         result[1][2] = z + x + y;
         result[1][3] = z - x + y;
-        
+
         for i in 2..sections_count {
             logsec *= logsecmul;
             unisec += unisecinc;
@@ -836,14 +839,17 @@ impl Camera for Orthographic {
         &self.base.view_projection
     }
 
-    fn get_cascaded_shadow_frustum_partitions(&self, sections_count: usize) -> Vec<[math::Vector3<Real>;4]> {
+    fn get_cascaded_shadow_frustum_partitions(
+        &self,
+        sections_count: usize,
+    ) -> Vec<[math::Vector3<Real>; 4]> {
         #[cfg(debug_mode)]
         {
             if sections_count < 1 {
                 vxlogf!("sections_count must be greater than zero.");
             }
         }
-        let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0);4]; sections_count + 1];
+        let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
 
         let w = self.size * self.base.aspect_ratio;
 
@@ -860,7 +866,7 @@ impl Camera for Orthographic {
         let unisecinc = (self.base.far - self.base.near) / sections_count as Real;
 
         let sections_count = sections_count + 1;
-        
+
         for i in 1..sections_count {
             l += unisecinc;
 

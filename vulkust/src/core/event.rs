@@ -86,6 +86,7 @@ pub enum Keyboard {
     ArrowLeft,
     ArrowRight,
     Equal,
+    Unknown,
 }
 
 #[derive(Clone)]

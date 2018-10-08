@@ -1,7 +1,7 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::Id;
-use super::command::Buffer as CmdBuffer;
 use super::camera::Camera;
+use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::font::Font;
 use super::material::Material;
@@ -149,100 +149,100 @@ impl Label {
         // todo alignment
         // todo multiline support
         let mesh = {
-        if self.text.len() < 1 {
-            if self.get_meshes_count() < 1 {
+            if self.text.len() < 1 {
+                if self.get_meshes_count() < 1 {
+                    return;
+                }
+                self.clear_meshes();
                 return;
             }
-            self.clear_meshes();
-            return;
-        }
-        let scale = Scale::uniform(self.text_size);
-        let font = vxresult!(self.font.read());
-        let font = font.get_font();
-        let v_metrics = font.v_metrics(scale);
-        let point = point(0.0, 0.0 + v_metrics.ascent);
-        let glyphs: Vec<_> = font.layout(&self.text, scale, point).collect();
-        let mut max_x = 0;
-        let mut max_y = 0;
-        let mut min_x = 0;
-        let mut min_y = 0;
-        for glyph in &glyphs {
-            if let Some(bb) = glyph.pixel_bounding_box() {
-                let max = &bb.max;
-                let min = &bb.min;
-                if min.x < min_x {
-                    min_x = min.x;
-                }
-                if min.y < min_y {
-                    min_y = min.y;
-                }
-                if max.x > max_x {
-                    max_x = max.x;
-                }
-                if max.y > max_y {
-                    max_y = max.y;
+            let scale = Scale::uniform(self.text_size);
+            let font = vxresult!(self.font.read());
+            let font = font.get_font();
+            let v_metrics = font.v_metrics(scale);
+            let point = point(0.0, 0.0 + v_metrics.ascent);
+            let glyphs: Vec<_> = font.layout(&self.text, scale, point).collect();
+            let mut max_x = 0;
+            let mut max_y = 0;
+            let mut min_x = 0;
+            let mut min_y = 0;
+            for glyph in &glyphs {
+                if let Some(bb) = glyph.pixel_bounding_box() {
+                    let max = &bb.max;
+                    let min = &bb.min;
+                    if min.x < min_x {
+                        min_x = min.x;
+                    }
+                    if min.y < min_y {
+                        min_y = min.y;
+                    }
+                    if max.x > max_x {
+                        max_x = max.x;
+                    }
+                    if max.y > max_y {
+                        max_y = max.y;
+                    }
                 }
             }
-        }
-        vxlogi!("{}-{}-{}-{}", max_x, max_y, min_x, min_y);
-        let imgw = max_x as i32 + 5;
-        let imgh = max_y as i32 + 5;
-        let w = self.size * (imgw as f32 / imgh as f32);
-        let h = self.size;
-        let bg = [
-            (self.background_color[0] * 255.0) as u32,
-            (self.background_color[1] * 255.0) as u32,
-            (self.background_color[2] * 255.0) as u32,
-            (self.background_color[3] * 255.0) as u32,
-        ];
-        let fc = [
-            (self.text_color[0] * 255.0) as u32,
-            (self.text_color[1] * 255.0) as u32,
-            (self.text_color[2] * 255.0) as u32,
-            (self.text_color[3] * 255.0) as u32,
-        ];
-        let pixels_count = (imgw * imgh) as usize;
-        let bytes_count = pixels_count << 2;
-        let mut img = vec![0u8; bytes_count];
-        for i in 0..bytes_count {
-            img[i] = bg[i & 3] as u8;
-        }
-        for glyph in &glyphs {
-            if let Some(bounding_box) = glyph.pixel_bounding_box() {
-                glyph.draw(|x, y, v| {
-                    let x = (x + bounding_box.min.x as u32) as usize;
-                    let y = (y + bounding_box.min.y as u32) as usize;
-                    let i = (y * imgw as usize + x) << 2;
-                    let v = (v * 255.0) as u32;
-                    let inv = 255 - v;
-                    img[i] = ((bg[0] * inv + fc[0] * v) >> 8) as u8;
-                    img[i + 1] = ((bg[1] * inv + fc[1] * v) >> 8) as u8;
-                    img[i + 2] = ((bg[2] * inv + fc[2] * v) >> 8) as u8;
-                    img[i + 3] = ((bg[3] * inv + fc[3] * v) >> 8) as u8;
-                });
+            vxlogi!("{}-{}-{}-{}", max_x, max_y, min_x, min_y);
+            let imgw = max_x as i32 + 5;
+            let imgh = max_y as i32 + 5;
+            let w = self.size * (imgw as f32 / imgh as f32);
+            let h = self.size;
+            let bg = [
+                (self.background_color[0] * 255.0) as u32,
+                (self.background_color[1] * 255.0) as u32,
+                (self.background_color[2] * 255.0) as u32,
+                (self.background_color[3] * 255.0) as u32,
+            ];
+            let fc = [
+                (self.text_color[0] * 255.0) as u32,
+                (self.text_color[1] * 255.0) as u32,
+                (self.text_color[2] * 255.0) as u32,
+                (self.text_color[3] * 255.0) as u32,
+            ];
+            let pixels_count = (imgw * imgh) as usize;
+            let bytes_count = pixels_count << 2;
+            let mut img = vec![0u8; bytes_count];
+            for i in 0..bytes_count {
+                img[i] = bg[i & 3] as u8;
             }
-        }
-        let vertices = [
-            w, h, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-            //-----------------------------------------------------------------------
-            w, 0.0, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
-            //-----------------------------------------------------------------------
-            0.0, h, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
-            //-----------------------------------------------------------------------
-            0.0, 0.0, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
-        ];
-        let indices = [0u32, 2, 1, 1, 2, 3];
-        let mut material = Material::default(engine);
-        let scene_manager = vxresult!(engine.scene_manager.read());
-        let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
-        material.base_color =
-            texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, engine, &img);
-        material.finalize_textures_change(engine);
-        let mesh = MeshBase::new_with_material(material, &vertices, &indices, engine);
-        let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
-        vxresult!(scene_manager.mesh_manager.write()).add(&mesh);
-        mesh
-    };
+            for glyph in &glyphs {
+                if let Some(bounding_box) = glyph.pixel_bounding_box() {
+                    glyph.draw(|x, y, v| {
+                        let x = (x + bounding_box.min.x as u32) as usize;
+                        let y = (y + bounding_box.min.y as u32) as usize;
+                        let i = (y * imgw as usize + x) << 2;
+                        let v = (v * 255.0) as u32;
+                        let inv = 255 - v;
+                        img[i] = ((bg[0] * inv + fc[0] * v) >> 8) as u8;
+                        img[i + 1] = ((bg[1] * inv + fc[1] * v) >> 8) as u8;
+                        img[i + 2] = ((bg[2] * inv + fc[2] * v) >> 8) as u8;
+                        img[i + 3] = ((bg[3] * inv + fc[3] * v) >> 8) as u8;
+                    });
+                }
+            }
+            let vertices = [
+                w, h, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                //-----------------------------------------------------------------------
+                w, 0.0, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+                //-----------------------------------------------------------------------
+                0.0, h, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+                //-----------------------------------------------------------------------
+                0.0, 0.0, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+            ];
+            let indices = [0u32, 2, 1, 1, 2, 3];
+            let mut material = Material::default(engine);
+            let scene_manager = vxresult!(engine.scene_manager.read());
+            let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
+            material.base_color =
+                texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, engine, &img);
+            material.finalize_textures_change(engine);
+            let mesh = MeshBase::new_with_material(material, &vertices, &indices, engine);
+            let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
+            vxresult!(scene_manager.mesh_manager.write()).add(&mesh);
+            mesh
+        };
         self.add_mesh(mesh);
     }
 }
