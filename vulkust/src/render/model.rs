@@ -147,7 +147,7 @@ pub struct Base {
     has_transparent: bool,
     occlusion_culling_radius: Real,
     is_in_sun: bool,
-    is_visible: bool, 
+    is_visible: bool,
     distance_from_camera: Real,
     collider: Arc<RwLock<Collider>>,
     uniform: Uniform,
@@ -248,11 +248,7 @@ impl Loadable for Base {
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
         let uniform = Uniform::new_with_gltf(node);
-        let center = math::Vector3::new(
-            uniform.model.w.x,
-            uniform.model.w.y,
-            uniform.model.w.z,
-        );
+        let center = math::Vector3::new(uniform.model.w.x, uniform.model.w.y, uniform.model.w.z);
         vxtodo!(); // not tested
         Base {
             obj_base,
@@ -302,11 +298,7 @@ impl Loadable for Base {
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
-        let center = math::Vector3::new(
-            uniform.model.w.x,
-            uniform.model.w.y,
-            uniform.model.w.z,
-        );
+        let center = math::Vector3::new(uniform.model.w.x, uniform.model.w.y, uniform.model.w.z);
         vxtodo!(); // not tested
         Base {
             obj_base,

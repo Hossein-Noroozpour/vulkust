@@ -95,7 +95,13 @@ impl Manager {
         occlusion_culling_radius: Real,
         engine: &Engine,
     ) -> Arc<RwLock<Mesh>> {
-        let mesh = Base::new_with_material(material, vertices, indices, occlusion_culling_radius, engine);
+        let mesh = Base::new_with_material(
+            material,
+            vertices,
+            indices,
+            occlusion_culling_radius,
+            engine,
+        );
         let mesh_id = mesh.get_id();
         let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
         self.meshes.insert(mesh_id, Arc::downgrade(&mesh));

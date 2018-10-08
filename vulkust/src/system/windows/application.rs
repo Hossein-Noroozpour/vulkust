@@ -10,11 +10,20 @@ use std::mem::{size_of, transmute, zeroed};
 use std::ptr::{null, null_mut};
 use std::sync::{Arc, RwLock};
 
+struct AppData {
+    width: Real,
+    height: Real,
+    mouse_x: Real,
+    mouse_y: Real,
+}
+
+#[cfg(debug_mode)]
 pub struct Application {
     pub instance: winapi::shared::minwindef::HINSTANCE,
     pub window: winapi::shared::windef::HWND,
     pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
     pub renderer: Option<Arc<RwLock<RenderEngine>>>,
+    data: Arc<RwLock<AppData>>,
 }
 
 extern "system" fn process_callback(
@@ -54,6 +63,12 @@ impl Application {
             window: 0 as winapi::shared::windef::HWND,
             core_app: Some(core_app),
             renderer: None,
+            data: Arc::new(RwLock::new(AppData {
+                width: constants::DEFAULT_WINDOW_WIDTH as Real,
+                height: constants::DEFAULT_WINDOW_HEIGHT as Real,
+                mouse_x: 0.0,
+                mouse_y: 0.0,
+            })),
         }
     }
 
@@ -198,11 +213,17 @@ impl Application {
             winapi::um::winuser::ShowWindow(window, winapi::um::winuser::SW_SHOW);
             winapi::um::winuser::SetForegroundWindow(window);
             winapi::um::winuser::SetFocus(window);
-            // winapi::um::winuser::UpdateWindow(window);
+            winapi::um::winuser::UpdateWindow(window);
         }
         let mut itself = vxresult!(itself.write());
         itself.instance = instance;
         itself.window = window;
+        {
+            let mut data = vxresult!(itself.data.write());
+            data.width = window_rect.right as Real;
+            data.width = window_rect.bottom as Real;
+        }
+        itself.get_mouse_position();
     }
 
     pub fn set_renderer(&mut self, r: Arc<RwLock<RenderEngine>>) {
@@ -235,10 +256,18 @@ impl Application {
         }
     }
 
-    fn get_mouse_position(&self) -> (Real, Real) {
-        vxloge!("TODO");
-        // TODO
-        (0.0, 0.0)
+    pub fn get_mouse_position(&self) -> (Real, Real) {
+        let mut data = vxresult!(self.data.write());
+        let mut p = winapi::shared::windef::POINT { x: 0, y: 0 };
+        if unsafe { winapi::um::winuser::GetCursorPos(&mut p) } == 0 {
+            vxloge!("GetCursorPos failed");
+        }
+        if unsafe { winapi::um::winuser::ScreenToClient(self.window, &mut p) } != 0 {
+            vxloge!("ScreenToClient failed");
+        }
+        data.mouse_x = p.x as Real / data.width;
+        data.mouse_y = p.y as Real / data.width;
+        return (data.mouse_x, data.mouse_y);
     }
 
     pub fn get_window_aspect_ratio(&self) -> Real {
@@ -314,11 +343,41 @@ impl Application {
                 let core_app = vxresult!(core_app.read());
                 core_app.on_event(e);
             }
-            winapi::um::winuser::WM_RBUTTONDOWN => {}
-            winapi::um::winuser::WM_LBUTTONDOWN => {}
+            winapi::um::winuser::WM_RBUTTONDOWN => {
+                let action = event::ButtonAction::Press;
+                let button = event::Button::Mouse(event::Mouse::Right);
+                let e = event::Event::new(event::Type::Button { button, action });
+                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+            }
+            winapi::um::winuser::WM_LBUTTONDOWN => {
+                let action = event::ButtonAction::Press;
+                let button = event::Button::Mouse(event::Mouse::Left);
+                let e = event::Event::new(event::Type::Button { button, action });
+                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+            }
             winapi::um::winuser::WM_MBUTTONDOWN => {
-                //mousePos.x = (float)LOWORD(lParam);
-                //mousePos.y = (float)HIWORD(lParam);
+                let action = event::ButtonAction::Press;
+                let button = event::Button::Mouse(event::Mouse::Middle);
+                let e = event::Event::new(event::Type::Button { button, action });
+                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+            }
+            winapi::um::winuser::WM_RBUTTONUP => {
+                let action = event::ButtonAction::Release;
+                let button = event::Button::Mouse(event::Mouse::Right);
+                let e = event::Event::new(event::Type::Button { button, action });
+                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+            }
+            winapi::um::winuser::WM_LBUTTONUP => {
+                let action = event::ButtonAction::Release;
+                let button = event::Button::Mouse(event::Mouse::Left);
+                let e = event::Event::new(event::Type::Button { button, action });
+                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+            }
+            winapi::um::winuser::WM_MBUTTONUP => {
+                let action = event::ButtonAction::Release;
+                let button = event::Button::Mouse(event::Mouse::Middle);
+                let e = event::Event::new(event::Type::Button { button, action });
+                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
             }
             winapi::um::winuser::WM_MOUSEWHEEL => {
                 //short wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
@@ -327,33 +386,19 @@ impl Application {
                 //viewUpdated = true;
             }
             winapi::um::winuser::WM_MOUSEMOVE => {
-                if w_param & winapi::um::winuser::MK_RBUTTON != 0 {
-                    //int32_t posx = LOWORD(lParam);
-                    //int32_t posy = HIWORD(lParam);
-                    //zoom += (mousePos.y - (float)posy) * .005f * zoomSpeed;
-                    //camera.translate(glm::vec3(-0.0f, 0.0f, (mousePos.y - (float)posy) * .005f * zoomSpeed));
-                    //mousePos = glm::vec2((float)posx, (float)posy);
-                    //viewUpdated = true;
-                }
-                if w_param & winapi::um::winuser::MK_LBUTTON != 0 {
-                    //int32_t posx = LOWORD(lParam);
-                    //int32_t posy = HIWORD(lParam);
-                    //rotation.x += (mousePos.y - (float)posy) * 1.25f * rotationSpeed;
-                    //rotation.y -= (mousePos.x - (float)posx) * 1.25f * rotationSpeed;
-                    //camera.rotate(glm::vec3((mousePos.y - (float)posy) * camera.rotationSpeed, -(mousePos.x - (float)posx) * camera.rotationSpeed, 0.0f));
-                    //mousePos = glm::vec2((float)posx, (float)posy);
-                    //viewUpdated = true;
-                }
-                if w_param & winapi::um::winuser::MK_MBUTTON != 0 {
-                    //int32_t posx = LOWORD(lParam);
-                    //int32_t posy = HIWORD(lParam);
-                    //cameraPos.x -= (mousePos.x - (float)posx) * 0.01f;
-                    //cameraPos.y -= (mousePos.y - (float)posy) * 0.01f;
-                    //camera.translate(glm::vec3(-(mousePos.x - (float)posx) * 0.01f, -(mousePos.y - (float)posy) * 0.01f, 0.0f));
-                    //viewUpdated = true;
-                    //mousePos.x = (float)posx;
-                    //mousePos.y = (float)posy;
-                }
+                let previous = {
+                    let data = vxresult!(self.data.read());
+                    (data.mouse_x, data.mouse_y)
+                };
+                let current = self.get_mouse_position();
+                let delta = (current.0 - previous.0, current.1 - previous.1);
+                let m = event::Move::Mouse {
+                    previous,
+                    current,
+                    delta,
+                };
+                let e = event::Event::new(event::Type::Move(m));
+                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
             }
             winapi::um::winuser::WM_SIZE => {
                 //if ((prepared) && (wParam != SIZE_MINIMIZED))
@@ -373,14 +418,13 @@ impl Application {
             winapi::um::winuser::WM_EXITSIZEMOVE => {
                 //resizing = false;
             }
-            _ => {
-                return unsafe { winapi::um::winuser::DefWindowProcW(hwnd, msg, w_param, l_param) };
-            }
+            _ => {}
         }
         return unsafe { winapi::um::winuser::DefWindowProcW(hwnd, msg, w_param, l_param) };
     }
 }
 
+#[cfg(debug_mode)]
 impl fmt::Debug for Application {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "OS-Application-Windows")
