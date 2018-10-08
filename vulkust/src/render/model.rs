@@ -146,14 +146,16 @@ pub struct Base {
     has_shadow_caster: bool,
     has_transparent: bool,
     occlusion_culling_radius: Real,
-    is_in_sun: BTreeMap<Id, bool>,
-    is_in_distance_camera: BTreeMap<Id, (Real, bool)>,
+    is_in_sun: bool,
+    is_visible: bool, 
+    distance_from_camera: Real,
     collider: Arc<RwLock<Collider>>,
     uniform: Uniform,
     uniform_buffer: Arc<RwLock<DynamicBuffer>>,
     descriptor_set: Arc<DescriptorSet>,
     meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
     children: BTreeMap<Id, Arc<RwLock<Model>>>,
+    center: math::Vector3<Real>,
 }
 
 impl Base {}
@@ -175,6 +177,11 @@ impl Object for Base {
     }
 
     fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        if !self.is_visible {
+            vxlogi!("Not in");
+            return;
+        }
+        vxlogi!("In");
         self.obj_base.render(cmd, frame_number);
         {
             let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
@@ -242,20 +249,29 @@ impl Loadable for Base {
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
+        let uniform = Uniform::new_with_gltf(node);
+        let center = math::Vector3::new(
+            uniform.model.w.x,
+            uniform.model.w.y,
+            uniform.model.w.z,
+        );
+        vxtodo!(); // not tested
         Base {
             obj_base,
             is_dynamic: true,
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
-            is_in_sun: BTreeMap::new(),
-            is_in_distance_camera: BTreeMap::new(),
+            is_in_sun: false,
+            is_visible: false,
+            distance_from_camera: 100000000000000000.0,
             collider: Arc::new(RwLock::new(GhostCollider::new())),
-            uniform: Uniform::new_with_gltf(node),
+            uniform,
             uniform_buffer,
             descriptor_set,
             meshes,
             children: BTreeMap::new(),
+            center,
         }
     }
 
@@ -288,26 +304,42 @@ impl Loadable for Base {
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
+        let center = math::Vector3::new(
+            uniform.model.w.x,
+            uniform.model.w.y,
+            uniform.model.w.z,
+        );
+        vxtodo!(); // not tested
         Base {
             obj_base,
             is_dynamic: false, // todo there must be a dynamic struct
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
-            is_in_sun: BTreeMap::new(),
-            is_in_distance_camera: BTreeMap::new(),
+            is_in_sun: false,
+            is_visible: false,
+            distance_from_camera: 10000000.0,
             collider,
             uniform,
             uniform_buffer,
             descriptor_set,
             meshes,
             children: BTreeMap::new(),
+            center,
         }
     }
 }
 
 impl Model for Base {
     fn update(&mut self, scene: &Scene, camera: &Camera) {
+        self.is_visible = camera.is_in_frustum(self.occlusion_culling_radius, &self.center);
+        if !self.is_visible {
+            return;
+        }
+        if self.has_transparent {
+            let dis = camera.get_location() - self.center;
+            self.distance_from_camera = math::dot(dis, dis);
+        }
         for (_, mesh) in &self.meshes {
             let mut mesh = vxresult!(mesh.write());
             Object::update(&mut *mesh);
@@ -320,8 +352,8 @@ impl Model for Base {
         self.has_shadow_caster = false;
         self.has_transparent = false;
         self.occlusion_culling_radius = 0.0;
-        self.is_in_sun.clear();
-        self.is_in_distance_camera.clear();
+        self.is_in_sun = false;
+        self.is_visible = false;
     }
 
     fn get_meshes_count(&self) -> usize {
@@ -329,7 +361,14 @@ impl Model for Base {
     }
 
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
-        let id = vxresult!(mesh.read()).get_id();
+        let id = {
+            let mesh = vxresult!(mesh.read());
+            let radius = mesh.get_occlusion_culling_radius();
+            if self.occlusion_culling_radius < radius {
+                self.occlusion_culling_radius = radius;
+            }
+            mesh.get_id()
+        };
         self.meshes.insert(id, mesh);
     }
 
@@ -359,15 +398,17 @@ impl DefaultModel for Base {
             is_dynamic: true,
             has_shadow_caster: false,
             has_transparent: false,
-            occlusion_culling_radius: 1.0,
-            is_in_sun: BTreeMap::new(),
-            is_in_distance_camera: BTreeMap::new(),
+            occlusion_culling_radius: 0.0,
+            is_in_sun: false,
+            is_visible: false,
+            distance_from_camera: 100000.0,
             collider: Arc::new(RwLock::new(GhostCollider::new())),
             uniform: Uniform::default(),
             uniform_buffer,
             descriptor_set,
             meshes: BTreeMap::new(),
             children: BTreeMap::new(),
+            center: math::Vector3::new(0.0, 0.0, 0.0),
         }
     }
 }

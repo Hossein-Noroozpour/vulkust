@@ -1,5 +1,5 @@
 use super::super::core::object::Object as CoreObject;
-use super::super::core::types::Id;
+use super::super::core::types::{Id, Real};
 use super::buffer::StaticBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
@@ -14,6 +14,8 @@ use std::sync::{Arc, RwLock, Weak};
 // use super::material::Material;
 
 use gltf;
+use math;
+use math::prelude::*;
 
 #[repr(u8)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -24,7 +26,7 @@ pub enum TypeId {
 pub trait Mesh: Object {
     fn is_shadow_caster(&self) -> bool;
     fn is_transparent(&self) -> bool;
-    fn get_occlusion_culling_radius(&self) -> f32;
+    fn get_occlusion_culling_radius(&self) -> Real;
     fn update(&mut self, scene: &Scene, model: &Model);
 }
 
@@ -88,11 +90,12 @@ impl Manager {
     pub fn create_with_material(
         &mut self,
         material: Material,
-        vertices: &[f32],
+        vertices: &[Real],
         indices: &[u32],
+        occlusion_culling_radius: Real,
         engine: &Engine,
     ) -> Arc<RwLock<Mesh>> {
-        let mesh = Base::new_with_material(material, vertices, indices, engine);
+        let mesh = Base::new_with_material(material, vertices, indices, occlusion_culling_radius, engine);
         let mesh_id = mesh.get_id();
         let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
         self.meshes.insert(mesh_id, Arc::downgrade(&mesh));
@@ -107,6 +110,7 @@ pub struct Base {
     vertex_buffer: StaticBuffer,
     index_buffer: StaticBuffer,
     indices_count: u32,
+    occlusion_culling_radius: Real,
 }
 
 impl Base {
@@ -117,7 +121,17 @@ impl Base {
     ) -> Self {
         let material = Material::new_with_gltf(engine, &primitive.material());
         let count = vxunwrap!(primitive.get(&gltf::Semantic::Positions)).count();
-        let mut vertex_buffer = vec![0u8; count * size_of::<f32>() * 12];
+        let mut vertex_buffer = vec![0u8; count * size_of::<Real>() * 12];
+        let occlusion_culling_radius = {
+            let mut center = math::Vector3::new(0.0, 0.0, 0.0);
+            let p1 = &primitive.bounding_box().max;
+            let p1 = math::Vector3::new(p1[0], p1[1], p1[2]);
+            center += p1;
+            let p2 = &primitive.bounding_box().max;
+            center += math::Vector3::new(p2[0], p2[1], p2[2]);
+            center *= 0.5;
+            p1.distance(center)
+        };
         for (sem, acc) in primitive.attributes() {
             let view = acc.view();
             match acc.data_type() {
@@ -212,13 +226,15 @@ impl Base {
             vertex_buffer,
             index_buffer,
             indices_count,
+            occlusion_culling_radius,
         }
     }
 
     pub fn new_with_material(
         material: Material,
-        vertices: &[f32],
+        vertices: &[Real],
         indices: &[u32],
+        occlusion_culling_radius: Real,
         engine: &Engine,
     ) -> Self {
         let gapi_engine = vxresult!(engine.gapi_engine.read());
@@ -232,6 +248,7 @@ impl Base {
             vertex_buffer,
             index_buffer,
             indices_count: indices.len() as u32,
+            occlusion_culling_radius,
         }
     }
 
@@ -247,11 +264,13 @@ impl Base {
         #[cfg(debug_gx3d)]
         vxlogi!("Number of vertices is: {}", vertex_count);
         let number_of_floats = vertex_count * number_of_vertex_attribute;
-        let mut vertices = vec![0f32; number_of_floats];
+        let mut vertices = vec![0.0; number_of_floats];
         for i in 0..number_of_floats {
             vertices[i] = reader.read();
         }
         let indices = reader.read_array::<u32>();
+        let occlusion_culling_radius = reader.read();
+        vxtodo!();
         let material = Material::new_with_gx3d(engine, reader);
         let obj_base = ObjectBase::new_with_id(my_id);
         let engine = vxresult!(engine.read());
@@ -268,6 +287,7 @@ impl Base {
             vertex_buffer,
             index_buffer,
             indices_count,
+            occlusion_culling_radius,
         }
     }
 }
@@ -319,9 +339,9 @@ impl Mesh for Base {
         // todo
     }
 
-    fn get_occlusion_culling_radius(&self) -> f32 {
-        vxunimplemented!()
-    } // todo
+    fn get_occlusion_culling_radius(&self) -> Real {
+        return self.occlusion_culling_radius;
+    }
 
     fn update(&mut self, scene: &Scene, model: &Model) {
         self.material.update(scene, model);

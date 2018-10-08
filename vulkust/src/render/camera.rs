@@ -41,7 +41,7 @@ impl Uniform {
 pub trait Camera: Object + Transferable {
     fn get_view_projection(&self) -> &math::Matrix4<Real>;
     fn get_cascaded_shadow_frustum_partitions(&self, usize) -> Vec<[math::Vector3<Real>; 4]>;
-    fn is_in_frustum(&self, Real, math::Vector3<Real>) -> bool;
+    fn is_in_frustum(&self, Real, &math::Vector3<Real>) -> bool;
     fn update_uniform(&self, &mut Uniform);
 }
 
@@ -161,16 +161,17 @@ impl Plane {
     }
 
     fn new_with_point_normal(p: math::Vector3<Real>, n: math::Vector3<Real>) -> Self {
+        let n = n.normalize();
         let d = -(n.dot(p));
         Self { n, p, d }
     }
 
-    fn intersect_sphere(&self, radius: Real, center: math::Vector3<Real>) -> PlaneIntersectStatue {
-        let dis = self.n.dot(center) + self.d;
-        if radius < dis {
+    fn intersect_sphere(&self, radius: Real, center: &math::Vector3<Real>) -> PlaneIntersectStatue {
+        let dis = self.n.dot(*center) + self.d;
+        if radius <= dis {
             return PlaneIntersectStatue::Above;
         }
-        if radius < -dis {
+        if radius <= -dis {
             return PlaneIntersectStatue::Under;
         }
         return PlaneIntersectStatue::Intersecting;
@@ -183,7 +184,7 @@ impl Plane {
 
     fn rotate_around(&mut self, l: &math::Vector3<Real>, m: &math::Matrix4<Real>) {
         let mut lp = self.p - l;
-        lp = (m * lp.extend(0.0)).truncate();
+        lp = (m * lp.extend(1.0)).truncate();
         self.n = (m * self.n.extend(0.0)).truncate().normalize();
         self.p = lp + l;
         self.d = -(self.n.dot(self.p));
@@ -342,6 +343,10 @@ impl Transferable for Base {
         self.update_location();
     }
 
+    fn get_location(&self) -> &math::Vector3<Real> {
+        return &self.location;
+    }
+
     fn move_local_z(&mut self, v: Real) {
         let t = self.z * v;
         for fp in &mut self.frustum_planes {
@@ -423,12 +428,11 @@ impl Camera for Base {
         vxlogf!("Base camera does not implement cascading.");
     }
 
-    fn is_in_frustum(&self, radius: Real, location: math::Vector3<Real>) -> bool {
+    fn is_in_frustum(&self, radius: Real, location: &math::Vector3<Real>) -> bool {
         for f in &self.frustum_planes {
             let s = f.intersect_sphere(radius, location);
             match s {
                 PlaneIntersectStatue::Above => return false,
-                PlaneIntersectStatue::Intersecting => return true,
                 _ => (),
             }
         }
@@ -453,11 +457,13 @@ pub struct Perspective {
     lambda: Real, // (cos(fovy) + cos(fovx)) / 2 -no proof for it just my gut, let see what I get
 }
 
+const DEFAULT_FOVX: Real = 1.396263402; // 80 degree
+
 impl Perspective {
     pub fn new(eng: &Arc<RwLock<Engine>>) -> Self {
         let base = Base::new_with_obj_base(eng, ObjectBase::new());
         let mut myself = Self::new_with_base(base);
-        myself.set_fov_vertical(1.0);
+        myself.set_fov_vertical(DEFAULT_FOVX);
         return myself;
     }
 
@@ -470,18 +476,17 @@ impl Perspective {
             tany: 0.0,
             lambda: 0.0,
         };
-        let fovx = 0.785398163; // 45
-        s.set_fov_vertical(fovx);
+        s.set_fov_vertical(DEFAULT_FOVX);
         return s;
     }
 
     pub fn set_fov_vertical(&mut self, fovx: Real) {
         self.fovx = fovx;
         self.tanx = (fovx * 0.5).tan();
-        self.tany = self.tanx * self.base.aspect_ratio;
-        self.fovy = self.fovy.atan() * 2.0;
+        self.tany = self.tanx / self.base.aspect_ratio;
+        self.fovy = self.tany.atan() * 2.0;
         self.base.projection = math::perspective(
-            math::Rad(fovx),
+            math::Rad(self.fovy),
             self.base.aspect_ratio,
             self.base.near,
             self.base.far,
@@ -492,8 +497,8 @@ impl Perspective {
     }
 
     fn update_frustum_planes(&mut self) {
-        let zn = self.base.z * self.base.near;
-        let zf = self.base.z * self.base.far;
+        let zn = self.base.location + (self.base.z * self.base.near);
+        let zf = self.base.location + (self.base.z * self.base.far);
         let xn = self.base.x * (self.base.near * self.tanx);
         let yn = self.base.y * (self.base.near * self.tany);
         let xf = self.base.x * (self.base.far * self.tanx);
@@ -513,12 +518,9 @@ impl Perspective {
         self.base.frustum_planes[0] = Plane::new(np1, np3, np2);
         self.base.frustum_planes[1] = Plane::new(np1, fp1, np3);
         self.base.frustum_planes[2] = Plane::new(np1, np2, fp1);
-        self.base.frustum_planes[3] = Plane::new(fp4, np2, fp3);
+        self.base.frustum_planes[3] = Plane::new(fp4, fp3, fp2);
         self.base.frustum_planes[4] = Plane::new(fp4, fp2, np4);
-        self.base.frustum_planes[5] = Plane::new(fp4, fp3, np4);
-        for fp in &mut self.base.frustum_planes {
-            fp.translate(&self.base.location);
-        }
+        self.base.frustum_planes[5] = Plane::new(fp4, np4, fp3);
     }
 }
 
@@ -589,6 +591,10 @@ impl Transferable for Perspective {
 
     fn set_location(&mut self, l: &math::Vector3<Real>) {
         self.base.set_location(l);
+    }
+
+    fn get_location(&self) -> &math::Vector3<Real> {
+        return self.base.get_location();
     }
 
     fn move_local_z(&mut self, v: Real) {
@@ -689,7 +695,7 @@ impl Camera for Perspective {
         return result;
     }
 
-    fn is_in_frustum(&self, radius: Real, location: math::Vector3<Real>) -> bool {
+    fn is_in_frustum(&self, radius: Real, location: &math::Vector3<Real>) -> bool {
         return self.base.is_in_frustum(radius, location);
     }
 
@@ -716,19 +722,19 @@ impl Orthographic {
     }
 
     fn update_frustum_planes(&mut self) {
-        let zn = self.base.location + self.base.z * self.base.near;
-        let zf = self.base.location + self.base.z * self.base.far;
-        let x = self.base.location + self.base.x * (self.base.aspect_ratio * self.size);
-        let y = self.base.location + self.base.y * self.size;
-        let np1 = zn + x + y;
-        let np2 = zn - x - y;
-        let fp1 = zf + x + y;
-        self.base.frustum_planes[0] = Plane::new_with_point_normal(np1, -self.base.z);
-        self.base.frustum_planes[1] = Plane::new_with_point_normal(np1, self.base.x);
-        self.base.frustum_planes[2] = Plane::new_with_point_normal(np1, self.base.y);
-        self.base.frustum_planes[3] = Plane::new_with_point_normal(np2, -self.base.x);
-        self.base.frustum_planes[4] = Plane::new_with_point_normal(np2, -self.base.y);
-        self.base.frustum_planes[5] = Plane::new_with_point_normal(fp1, self.base.z);
+        let zn = self.base.location + (self.base.z * self.base.near);
+        let zf = self.base.location + (self.base.z * self.base.far);
+        let x = self.base.x * (self.base.aspect_ratio * self.size);
+        let y = self.base.y * self.size;
+        let xpy = x + y;
+        let np = zn + xpy;
+        let fp = zf - xpy;
+        self.base.frustum_planes[0] = Plane::new_with_point_normal(np, -self.base.z);
+        self.base.frustum_planes[1] = Plane::new_with_point_normal(np, self.base.x);
+        self.base.frustum_planes[2] = Plane::new_with_point_normal(np, self.base.y);
+        self.base.frustum_planes[3] = Plane::new_with_point_normal(fp, -self.base.x);
+        self.base.frustum_planes[4] = Plane::new_with_point_normal(fp, -self.base.y);
+        self.base.frustum_planes[5] = Plane::new_with_point_normal(fp, self.base.z);
     }
 
     pub fn new_with_base(mut base: Base, size: Real) -> Self {
@@ -817,6 +823,10 @@ impl Transferable for Orthographic {
         self.base.set_location(l);
     }
 
+    fn get_location(&self) -> &math::Vector3<Real> {
+        return self.base.get_location();
+    }
+
     fn move_local_z(&mut self, v: Real) {
         self.base.move_local_z(v);
     }
@@ -882,7 +892,7 @@ impl Camera for Orthographic {
         return result;
     }
 
-    fn is_in_frustum(&self, radius: Real, location: math::Vector3<Real>) -> bool {
+    fn is_in_frustum(&self, radius: Real, location: &math::Vector3<Real>) -> bool {
         return self.base.is_in_frustum(radius, location);
     }
 

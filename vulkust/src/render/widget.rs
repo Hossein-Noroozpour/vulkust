@@ -11,6 +11,7 @@ use super::object::Object;
 use super::scene::Scene;
 use std::sync::{Arc, RwLock};
 
+use math;
 use rusttype::{point, Scale};
 
 pub trait Widget: Model {}
@@ -223,13 +224,13 @@ impl Label {
                 }
             }
             let vertices = [
-                w, h, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                w, h, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
                 //-----------------------------------------------------------------------
-                w, 0.0, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+                w, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
                 //-----------------------------------------------------------------------
-                0.0, h, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, h, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
                 //-----------------------------------------------------------------------
-                0.0, 0.0, -1.001, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
             ];
             let indices = [0u32, 2, 1, 1, 2, 3];
             let mut material = Material::default(engine);
@@ -238,7 +239,9 @@ impl Label {
             material.base_color =
                 texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, engine, &img);
             material.finalize_textures_change(engine);
-            let mesh = MeshBase::new_with_material(material, &vertices, &indices, engine);
+            let radius = math::Vector2::new(w, h);
+            let radius = math::dot(radius, radius).sqrt();
+            let mesh = MeshBase::new_with_material(material, &vertices, &indices, radius, engine);
             let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
             vxresult!(scene_manager.mesh_manager.write()).add(&mesh);
             mesh

@@ -1,5 +1,5 @@
 use super::super::core::object::{Base as CoreBase, Object as CoreObject};
-use super::super::core::types::Id;
+use super::super::core::types::{Id, Real};
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::gx3d::Gx3DReader;
@@ -23,12 +23,13 @@ pub trait Loadable: Sized {
 }
 
 pub trait Transferable {
-    fn set_orientation(&mut self, &math::Quaternion<f32>);
-    fn set_location(&mut self, &math::Vector3<f32>);
-    fn move_local_z(&mut self, f32);
-    fn move_local_x(&mut self, f32);
-    fn rotate_local_x(&mut self, f32);
-    fn rotate_global_z(&mut self, f32);
+    fn set_orientation(&mut self, &math::Quaternion<Real>);
+    fn set_location(&mut self, &math::Vector3<Real>);
+    fn get_location(&self) -> &math::Vector3<Real>;
+    fn move_local_z(&mut self, Real);
+    fn move_local_x(&mut self, Real);
+    fn rotate_local_x(&mut self, Real);
+    fn rotate_global_z(&mut self, Real);
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]

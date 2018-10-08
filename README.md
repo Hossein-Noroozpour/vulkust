@@ -36,10 +36,10 @@ It is under lots of changes.
 - UI system (early version)
 - A safe interface over Vulkan
 - Vulkan Memory management (early version)
+- Occlusion culling (Frustum culling)
 
 #### 2-1-2- Underdeveloment features:
 
-- Frustum culling
 - Shadowing
 - Cascaded Shadow
 - Soft Shadowing
