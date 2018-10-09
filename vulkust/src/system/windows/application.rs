@@ -5,6 +5,7 @@ use super::super::super::core::string::string_to_cwstring;
 use super::super::super::core::types::Real;
 use super::super::super::render::engine::Engine as RenderEngine;
 use super::super::super::winapi;
+#[cfg(debug_mode)]
 use std::fmt;
 use std::mem::{size_of, transmute, zeroed};
 use std::ptr::{null, null_mut};
@@ -17,7 +18,6 @@ struct AppData {
     mouse_y: Real,
 }
 
-#[cfg(debug_mode)]
 pub struct Application {
     pub instance: winapi::shared::minwindef::HINSTANCE,
     pub window: winapi::shared::windef::HWND,
@@ -262,7 +262,7 @@ impl Application {
         if unsafe { winapi::um::winuser::GetCursorPos(&mut p) } == 0 {
             vxloge!("GetCursorPos failed");
         }
-        if unsafe { winapi::um::winuser::ScreenToClient(self.window, &mut p) } != 0 {
+        if unsafe { winapi::um::winuser::ScreenToClient(self.window, &mut p) } == 0 {
             vxloge!("ScreenToClient failed");
         }
         data.mouse_x = p.x as Real / data.width;

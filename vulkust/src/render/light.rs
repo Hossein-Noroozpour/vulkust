@@ -4,7 +4,7 @@ use super::camera::Orthographic;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::object::{Loadable, Object, Transferable, Base as ObjectBase};
+use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 
@@ -51,9 +51,15 @@ struct SunCam {
 impl SunCam {
     fn new() -> Self {
         Self {
-            r: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
-            v: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
-            p: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
+            r: math::Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+            ),
+            v: math::Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+            ),
+            p: math::Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+            ),
             max_x: -99999999999.9,
             min_x: 99999999999.9,
             max_y: -99999999999.9,
@@ -119,7 +125,7 @@ impl Light for Sun {
     fn to_directional(&self) -> Option<&Directional> {
         return Some(self);
     }
-     
+
     fn to_mut_directional(&mut self) -> Option<&mut Directional> {
         return Some(self);
     }
@@ -128,9 +134,7 @@ impl Light for Sun {
 impl Directional for Sun {
     fn update_cascaded_shadow_map_cameras(&mut self, walls: &Vec<[math::Vector3<Real>; 4]>) {
         let ccdsc = self.ccds.len();
-        for i in 0..ccdsc {
-
-        }
+        for i in 0..ccdsc {}
     }
 }
 
@@ -144,7 +148,9 @@ impl DefaultLighting for Sun {
         ccds.shrink_to_fit();
         Sun {
             obj_base: ObjectBase::new(),
-            ccr: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
+            ccr: math::Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+            ),
             ccds,
             direction: math::Vector3::new(0.0, 0.0, -1.0),
             color: (1.0, 1.0, 1.0),
@@ -172,7 +178,9 @@ impl Loadable for Sun {
         vxtodo!(); // direction is not correct
         Sun {
             obj_base: ObjectBase::new_with_id(id),
-            ccr: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
+            ccr: math::Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+            ),
             ccds: Vec::new(),
             direction: math::Vector3::new(0.0, 0.0, -1.0),
             color,

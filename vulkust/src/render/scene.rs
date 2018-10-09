@@ -9,7 +9,10 @@ use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::font::Manager as FontManager;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::light::{Directional as DirectionalLight, DirectionalUniform, Light, Manager as LightManager, PointUniform};
+use super::light::{
+    Directional as DirectionalLight, DirectionalUniform, Light, Manager as LightManager,
+    PointUniform,
+};
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
@@ -331,10 +334,7 @@ impl Base {
         };
         let mut cameras = BTreeMap::new();
         for id in &cameras_ids {
-            cameras.insert(
-                *id,
-                vxresult!(camera_manager.write()).load_gx3d(eng, *id),
-            );
+            cameras.insert(*id, vxresult!(camera_manager.write()).load_gx3d(eng, *id));
         }
         let active_camera = if cameras_ids.len() > 0 {
             Some(Arc::downgrade(
@@ -436,7 +436,7 @@ impl Object for Base {
         };
         let camera = vxresult!(camera.read());
         camera.update_uniform(&mut self.uniform.camera);
-        
+
         let csmws = camera.get_cascaded_shadow_frustum_partitions(self.cascaded_shadow_maps_count);
         for (id, shadow_maker) in &self.shadow_makers {
             let mut shadow_maker = vxresult!(shadow_maker.write());
