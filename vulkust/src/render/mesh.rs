@@ -63,7 +63,7 @@ impl Manager {
         return mesh;
     }
 
-    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Mesh>> {
+    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<Mesh>> {
         if let Some(mesh) = self.meshes.get(&id) {
             if let Some(mesh) = mesh.upgrade() {
                 return mesh;
@@ -258,7 +258,7 @@ impl Base {
         }
     }
 
-    pub fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+    pub fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let number_of_vertex_attribute = reader.read_u8() as usize;
         #[cfg(debug_mode)]
         {
@@ -279,7 +279,6 @@ impl Base {
         vxtodo!();
         let material = Material::new_with_gx3d(engine, reader);
         let obj_base = ObjectBase::new_with_id(my_id);
-        let engine = vxresult!(engine.read());
         let gapi_engine = vxresult!(engine.gapi_engine.read());
         let mut buffer_manager = vxresult!(gapi_engine.buffer_manager.write());
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(&vertices);

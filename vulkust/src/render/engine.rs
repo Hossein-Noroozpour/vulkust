@@ -3,6 +3,7 @@ use super::super::core::event::Event;
 use super::super::core::timing::Timing;
 use super::super::system::os::application::Application as OsApp;
 use super::camera::DefaultCamera;
+use super::config::Configurations;
 use super::deferred::Deferred;
 use super::gapi::GraphicApiEngine;
 use super::gx3d::import as gx3d_import;
@@ -20,13 +21,15 @@ pub struct Engine {
     pub scene_manager: Arc<RwLock<SceneManager>>,
     pub deferred: Arc<RwLock<Deferred>>,
     pub timing: Arc<RwLock<Timing>>,
+    config: Configurations,
     multithreaded_engine: MultithreadedEngine,
 }
 
 impl Engine {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let config = &vxresult!(core_app.read()).get_config();
-        let gapi_engine = GraphicApiEngine::new(os_app, &config.render);
+        let config = config.render.clone();
+        let gapi_engine = GraphicApiEngine::new(os_app, &config);
         let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
         gx3d_import(&scene_manager);
         let deferred = Arc::new(RwLock::new(Deferred::new(
@@ -36,7 +39,7 @@ impl Engine {
         let gapi_engine = Arc::new(RwLock::new(gapi_engine));
         let myself = None;
         let multithreaded_engine =
-            MultithreadedEngine::new(gapi_engine.clone(), scene_manager.clone());
+            MultithreadedEngine::new(gapi_engine.clone(), scene_manager.clone(), &config);
         Engine {
             myself,
             gapi_engine,
@@ -45,6 +48,7 @@ impl Engine {
             scene_manager,
             deferred,
             timing: Arc::new(RwLock::new(Timing::new())),
+            config,
             multithreaded_engine,
         }
     }
@@ -54,19 +58,12 @@ impl Engine {
         self.myself = Some(myself);
     }
 
+    pub fn get_config(&self) -> &Configurations {
+        return &self.config;
+    }
+
     pub fn update(&self) {
         vxresult!(self.timing.write()).update();
-        // todo it must iterate over scenes
-        // it require separate command buffer for each scene
-        // it gonna help the multithread rendering part
-        // tmporary it must change in future
-        // vxresult!(self.gapi_engine.write()).start_recording();
-        // vxresult!(self.scene_manager.read()).render(); // temp
-        // vxresult!(self.gapi_engine.read()).start_deferred();
-        // todo update deferred buffer in scene
-        // vxresult!(self.scene_manager.read()).render_deferred();
-        // vxresult!(self.deferred.read()).render(&mut *vxresult!(self.gapi_engine.write()));
-        // vxresult!(self.gapi_engine.write()).end_recording();
         self.multithreaded_engine.render();
     }
 

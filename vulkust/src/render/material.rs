@@ -78,8 +78,7 @@ impl Material {
         vxunimplemented!();
     }
 
-    pub fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader) -> Self {
-        let eng = vxresult!(engine.read());
+    pub fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader) -> Self {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);

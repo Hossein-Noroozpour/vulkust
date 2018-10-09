@@ -5,7 +5,6 @@ use super::engine::Engine;
 use super::gx3d::Gx3DReader;
 use gltf;
 use math;
-use std::sync::{Arc, RwLock};
 
 pub trait Object: CoreObject {
     fn get_name(&self) -> Option<String>;
@@ -18,8 +17,8 @@ pub trait Object: CoreObject {
 }
 
 pub trait Loadable: Sized {
-    fn new_with_gltf(&gltf::Node, &Arc<RwLock<Engine>>, &[u8]) -> Self;
-    fn new_with_gx3d(&Arc<RwLock<Engine>>, &mut Gx3DReader, Id) -> Self;
+    fn new_with_gltf(&gltf::Node, &Engine, &[u8]) -> Self;
+    fn new_with_gx3d(&Engine, &mut Gx3DReader, Id) -> Self;
 }
 
 pub trait Transferable {
@@ -102,7 +101,7 @@ impl Object for Base {
 }
 
 impl Loadable for Base {
-    fn new_with_gltf(node: &gltf::Node, _: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
+    fn new_with_gltf(node: &gltf::Node, _: &Engine, _: &[u8]) -> Self {
         let name = match node.name() {
             Some(s) => Some(s.to_string()),
             None => None,
@@ -116,7 +115,7 @@ impl Loadable for Base {
         }
     }
 
-    fn new_with_gx3d(_: &Arc<RwLock<Engine>>, _: &mut Gx3DReader, my_id: Id) -> Self {
+    fn new_with_gx3d(_: &Engine, _: &mut Gx3DReader, my_id: Id) -> Self {
         Self::new_with_id(my_id)
     }
 }

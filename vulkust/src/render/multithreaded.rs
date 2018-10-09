@@ -1,5 +1,6 @@
 use super::super::core::types::Id;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
+use super::config::Configurations;
 use super::deferred::Deferred;
 use super::gapi::GraphicApiEngine;
 use super::model::Model;
@@ -288,15 +289,18 @@ pub(super) struct Engine {
     cmd_pool: Arc<CmdPool>,
     deferred: Mutex<Deferred>,
     cmdsss: Mutex<Vec<FrameData>>,
+    cascaded_count: usize,
 }
 
 impl Engine {
     pub(crate) fn new(
         engine: Arc<RwLock<GraphicApiEngine>>,
         scene_manager: Arc<RwLock<SceneManager>>,
+        config: &Configurations,
     ) -> Self {
         let kernels_count = num_cpus::get();
         let mut kernels = Vec::new();
+        let cascaded_count = config.cascaded_shadows_count as usize;
         for ki in 0..kernels_count {
             kernels.push(Kernel::new(
                 ki,
@@ -324,6 +328,7 @@ impl Engine {
             cmd_pool,
             cmdsss,
             deferred,
+            cascaded_count,
         }
     }
 

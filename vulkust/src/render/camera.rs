@@ -46,7 +46,7 @@ pub trait Camera: Object + Transferable {
 }
 
 pub trait DefaultCamera: Camera {
-    fn default(&Arc<RwLock<Engine>>) -> Self;
+    fn default(&Engine) -> Self;
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -74,7 +74,7 @@ impl Manager {
         }
     }
 
-    pub fn load_gltf(&mut self, n: &gltf::Node, eng: &Arc<RwLock<Engine>>) -> Arc<RwLock<Camera>> {
+    pub fn load_gltf(&mut self, n: &gltf::Node, eng: &Engine) -> Arc<RwLock<Camera>> {
         let c = vxunwrap!(n.camera());
         let data = Vec::new();
         let camera = match c.projection() {
@@ -100,7 +100,7 @@ impl Manager {
         camera
     }
 
-    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Camera>> {
+    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<Camera>> {
         if let Some(camera) = self.cameras.get(&id) {
             if let Some(camera) = camera.upgrade() {
                 return camera;
@@ -121,7 +121,7 @@ impl Manager {
         camera
     }
 
-    pub fn create<C>(&mut self, eng: &Arc<RwLock<Engine>>) -> Arc<RwLock<C>>
+    pub fn create<C>(&mut self, eng: &Engine) -> Arc<RwLock<C>>
     where
         C: 'static + DefaultCamera,
     {
@@ -225,24 +225,23 @@ pub struct Base {
 }
 
 impl Base {
-    pub fn new(eng: &Arc<RwLock<Engine>>) -> Self {
+    pub fn new(eng: &Engine) -> Self {
         Self::new_with_obj_base(eng, ObjectBase::new())
     }
 
-    pub fn new_with_id(eng: &Arc<RwLock<Engine>>, id: Id) -> Self {
+    pub fn new_with_id(eng: &Engine, id: Id) -> Self {
         Self::new_with_obj_base(eng, ObjectBase::new_with_id(id))
     }
 
-    pub fn new_with_obj_base(eng: &Arc<RwLock<Engine>>, obj_base: ObjectBase) -> Self {
+    pub fn new_with_obj_base(eng: &Engine, obj_base: ObjectBase) -> Self {
         let identity = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
         let img_transform = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         );
-        let eng = vxresult!(eng.read());
-        let eng = vxunwrap!(eng.os_app.upgrade());
-        let os_app = vxresult!(eng.read());
+        let os_app = vxunwrap!(eng.os_app.upgrade());
+        let os_app = vxresult!(os_app.read());
         Base {
             obj_base,
             near: 1.0,
@@ -393,7 +392,7 @@ impl Transferable for Base {
 }
 
 impl Loadable for Base {
-    fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
+    fn new_with_gltf(node: &gltf::Node, eng: &Engine, _: &[u8]) -> Self {
         let (near, far) = match vxunwrap!(node.camera()).projection() {
             gltf::camera::Projection::Perspective(p) => (p.znear(), vxunwrap!(p.zfar())),
             gltf::camera::Projection::Orthographic(p) => (p.znear(), p.zfar()),
@@ -408,7 +407,7 @@ impl Loadable for Base {
         return myself;
     }
 
-    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let mut myself = Base::new_with_id(engine, my_id);
         myself.location = math::Vector3::new(reader.read(), reader.read(), reader.read());
         let r = math::Quaternion::new(reader.read(), reader.read(), reader.read(), reader.read());
@@ -460,7 +459,7 @@ pub struct Perspective {
 const DEFAULT_FOVX: Real = 1.396263402; // 80 degree
 
 impl Perspective {
-    pub fn new(eng: &Arc<RwLock<Engine>>) -> Self {
+    pub fn new(eng: &Engine) -> Self {
         let base = Base::new_with_obj_base(eng, ObjectBase::new());
         let mut myself = Self::new_with_base(base);
         myself.set_fov_vertical(DEFAULT_FOVX);
@@ -562,7 +561,7 @@ impl Object for Perspective {
 }
 
 impl Loadable for Perspective {
-    fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
+    fn new_with_gltf(n: &gltf::Node, eng: &Engine, data: &[u8]) -> Self {
         let c = vxunwrap!(n.camera());
         let p = match c.projection() {
             gltf::camera::Projection::Perspective(p) => p,
@@ -576,7 +575,7 @@ impl Loadable for Perspective {
         return myself;
     }
 
-    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let base = Base::new_with_gx3d(engine, reader, my_id);
         let mut myself = Self::new_with_base(base);
         myself.set_fov_vertical(reader.read());
@@ -705,7 +704,7 @@ impl Camera for Perspective {
 }
 
 impl DefaultCamera for Perspective {
-    fn default(eng: &Arc<RwLock<Engine>>) -> Self {
+    fn default(eng: &Engine) -> Self {
         Perspective::new(eng)
     }
 }
@@ -717,7 +716,7 @@ pub struct Orthographic {
 }
 
 impl Orthographic {
-    pub fn new(eng: &Arc<RwLock<Engine>>, size: Real) -> Self {
+    pub fn new(eng: &Engine, size: Real) -> Self {
         Self::new_with_base(Base::new(eng), size)
     }
 
@@ -747,7 +746,7 @@ impl Orthographic {
         return s;
     }
 
-    pub fn new_with_id(eng: &Arc<RwLock<Engine>>, id: Id) -> Self {
+    pub fn new_with_id(eng: &Engine, id: Id) -> Self {
         let mut base = Base::new_with_id(eng, id);
         let size = 0.5;
         let w = base.aspect_ratio * size;
@@ -796,7 +795,7 @@ impl Object for Orthographic {
 }
 
 impl Loadable for Orthographic {
-    fn new_with_gltf(n: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
+    fn new_with_gltf(n: &gltf::Node, eng: &Engine, data: &[u8]) -> Self {
         let c = vxunwrap!(n.camera());
         let o = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
@@ -808,7 +807,7 @@ impl Loadable for Orthographic {
         Self::new_with_base(base, o.ymag())
     }
 
-    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let base = Base::new_with_gx3d(engine, reader, my_id);
         Self::new_with_base(base, reader.read())
     }
@@ -902,7 +901,7 @@ impl Camera for Orthographic {
 }
 
 impl DefaultCamera for Orthographic {
-    fn default(eng: &Arc<RwLock<Engine>>) -> Self {
+    fn default(eng: &Engine) -> Self {
         Orthographic::new(eng, 1.0)
     }
 }

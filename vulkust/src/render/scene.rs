@@ -39,12 +39,12 @@ pub trait Scene: Object {
 }
 
 pub trait Loadable: Scene + Sized {
-    fn new_with_gltf(&Arc<RwLock<Engine>>, &gltf::Scene, &[u8]) -> Self;
-    fn new_with_gx3d(&Arc<RwLock<Engine>>, &mut Gx3DReader, Id) -> Self;
+    fn new_with_gltf(&Engine, &gltf::Scene, &[u8]) -> Self;
+    fn new_with_gx3d(&Engine, &mut Gx3DReader, Id) -> Self;
 }
 
 pub trait DefaultScene: Scene + Sized {
-    fn default(&Arc<RwLock<Engine>>) -> Self;
+    fn default(&Engine) -> Self;
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -98,8 +98,9 @@ impl Manager {
         let scene = {
             let engine = vxunwrap!(&self.engine);
             let engine = vxunwrap!(engine.upgrade());
+            let engine = vxresult!(engine.read());
             Arc::new(RwLock::new(S::new_with_gltf(
-                &engine,
+                &*engine,
                 &scene,
                 vxunwrap!(&file.blob),
             )))
@@ -124,10 +125,12 @@ impl Manager {
             if type_id == TypeId::GAME as CoreTypeId {
                 let engine = vxunwrap!(&self.engine);
                 let engine = vxunwrap!(engine.upgrade());
+                let engine = vxresult!(engine.read());
                 Arc::new(RwLock::new(Game::new_with_gx3d(&engine, &mut reader, id)))
             } else if type_id == TypeId::UI as CoreTypeId {
                 let engine = vxunwrap!(&self.engine);
                 let engine = vxunwrap!(engine.upgrade());
+                let engine = vxresult!(engine.read());
                 Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, &mut reader, id)))
             } else {
                 vxunexpected!();
@@ -144,6 +147,7 @@ impl Manager {
         let scene = {
             let engine = vxunwrap!(&self.engine);
             let engine = vxunwrap!(engine.upgrade());
+            let engine = vxresult!(engine.read());
             Arc::new(RwLock::new(S::default(&engine)))
         };
         let s: Arc<RwLock<Scene>> = scene.clone();
@@ -157,7 +161,8 @@ impl Manager {
     {
         let engine = vxunwrap!(&self.engine);
         let engine = vxunwrap!(engine.upgrade());
-        vxresult!(self.camera_manager.write()).create(&engine)
+        let engine = vxresult!(engine.read());
+        vxresult!(self.camera_manager.write()).create(&*engine)
     }
 
     pub fn fetch_gltf_scene<'a>(file: &'a gltf::Gltf, scene_name: &str) -> gltf::Scene<'a> {
@@ -246,9 +251,8 @@ pub struct Base {
 }
 
 impl Base {
-    pub fn new_with_gltf(engine: &Arc<RwLock<Engine>>, scene: &gltf::Scene, data: &[u8]) -> Self {
+    pub fn new_with_gltf(engine: &Engine, scene: &gltf::Scene, data: &[u8]) -> Self {
         let camera_manager = {
-            let engine = vxresult!(engine.read());
             let manager = vxresult!(engine.scene_manager.read());
             manager.camera_manager.clone()
         };
@@ -278,7 +282,6 @@ impl Base {
                 models.insert(id, model);
             } // todo read lights
         }
-        let engine = vxresult!(engine.read());
         let gapi_engine = vxresult!(engine.gapi_engine.read());
         let uniform_buffer = Arc::new(RwLock::new(
             vxresult!(gapi_engine.buffer_manager.write())
@@ -300,7 +303,7 @@ impl Base {
         }
     }
 
-    pub fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+    pub fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let cameras_ids = reader.read_array::<Id>();
         let _audios_ids = reader.read_array::<Id>(); // todo
         let lights_ids = reader.read_array::<Id>();
@@ -312,7 +315,6 @@ impl Base {
         if reader.read_bool() {
             vxunimplemented!(); // todo
         }
-        let eng = vxresult!(engine.read());
         let manager = vxresult!(eng.scene_manager.read());
         let (camera_manager, light_manager, model_manager) = {
             (
@@ -325,12 +327,12 @@ impl Base {
         for id in &cameras_ids {
             cameras.insert(
                 *id,
-                vxresult!(camera_manager.write()).load_gx3d(engine, *id),
+                vxresult!(camera_manager.write()).load_gx3d(eng, *id),
             );
         }
         let active_camera = if cameras_ids.len() > 0 {
             Some(Arc::downgrade(
-                &vxresult!(camera_manager.write()).load_gx3d(engine, cameras_ids[0]),
+                &vxresult!(camera_manager.write()).load_gx3d(eng, cameras_ids[0]),
             ))
         } else {
             None
@@ -338,7 +340,7 @@ impl Base {
         let mut models = BTreeMap::new();
         let mut all_models = BTreeMap::new();
         for id in models_ids {
-            let model = vxresult!(model_manager.write()).load_gx3d(engine, id);
+            let model = vxresult!(model_manager.write()).load_gx3d(eng, id);
             {
                 let model = vxresult!(model.read());
                 let child_models = model.bring_all_child_models();
@@ -351,7 +353,7 @@ impl Base {
         }
         let mut lights = BTreeMap::new();
         for id in lights_ids {
-            lights.insert(id, vxresult!(light_manager.write()).load_gx3d(engine, id));
+            lights.insert(id, vxresult!(light_manager.write()).load_gx3d(eng, id));
         }
         let uniform = Uniform::new();
         let gapi_engine = vxresult!(eng.gapi_engine.read());
@@ -504,8 +506,7 @@ impl Scene for Base {
 }
 
 impl DefaultScene for Base {
-    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
-        let engine = vxresult!(engine.read());
+    fn default(engine: &Engine) -> Self {
         let gapi_engine = vxresult!(engine.gapi_engine.read());
         let uniform_buffer = Arc::new(RwLock::new(
             vxresult!(gapi_engine.buffer_manager.write())
@@ -603,19 +604,19 @@ impl Scene for Game {
 }
 
 impl Loadable for Game {
-    fn new_with_gltf(engine: &Arc<RwLock<Engine>>, scene: &gltf::Scene, data: &[u8]) -> Self {
+    fn new_with_gltf(engine: &Engine, scene: &gltf::Scene, data: &[u8]) -> Self {
         let base = Base::new_with_gltf(engine, scene, data);
         Game { base }
     }
 
-    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let base = Base::new_with_gx3d(engine, reader, my_id);
         Game { base }
     }
 }
 
 impl DefaultScene for Game {
-    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
+    fn default(engine: &Engine) -> Self {
         let base = Base::default(engine);
         Game { base }
     }
@@ -696,19 +697,19 @@ impl Scene for Ui {
 }
 
 impl Loadable for Ui {
-    fn new_with_gltf(engine: &Arc<RwLock<Engine>>, scene: &gltf::Scene, data: &[u8]) -> Self {
+    fn new_with_gltf(engine: &Engine, scene: &gltf::Scene, data: &[u8]) -> Self {
         let base = Base::new_with_gltf(engine, scene, data);
         Ui { base }
     }
 
-    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let base = Base::new_with_gx3d(engine, reader, my_id);
         Ui { base }
     }
 }
 
 impl DefaultScene for Ui {
-    fn default(engine: &Arc<RwLock<Engine>>) -> Self {
+    fn default(engine: &Engine) -> Self {
         let base = Base::default(engine);
         Ui { base }
     }

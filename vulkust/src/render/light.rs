@@ -18,16 +18,23 @@ pub enum TypeId {
 }
 
 pub trait Light: Object {
-    // fn set_cascaded_frustums() // todo
+    fn to_directional(&self) -> Option<&Directional> {
+        return None;
+    } 
+}
+
+pub trait Directional: Light {
+
 }
 
 pub trait DefaultLighting {
-    fn default(eng: &Arc<RwLock<Engine>>, size: f32) -> Self;
+    fn default(eng: &Engine) -> Self;
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Sun {
     camera: Orthographic,
+    cascaded_cameras: Vec<Orthographic>,
     color: (f32, f32, f32),
     strength: f32,
 }
@@ -71,12 +78,27 @@ impl Object for Sun {
     }
 }
 
-impl Light for Sun {}
+impl Light for Sun {
+    fn to_directional(&self) -> Option<&Directional> {
+        return Some(self);
+    } 
+}
+
+impl Directional for Sun {
+
+}
 
 impl DefaultLighting for Sun {
-    fn default(eng: &Arc<RwLock<Engine>>, size: f32) -> Self {
+    fn default(eng: &Engine) -> Self {
+        let mut cascaded_cameras = Vec::new();
+        let csc = eng.get_config().cascaded_shadows_count;
+        for _ in 0..csc {
+            cascaded_cameras.push(Orthographic::new(eng, 1.0));
+        }
+        cascaded_cameras.shrink_to_fit();
         Sun {
-            camera: Orthographic::new(eng, size),
+            camera: Orthographic::new(eng, 1.0),
+            cascaded_cameras,
             color: (1.0, 1.0, 1.0),
             strength: 1.0,
         }
@@ -84,11 +106,11 @@ impl DefaultLighting for Sun {
 }
 
 impl Loadable for Sun {
-    fn new_with_gltf(_node: &gltf::Node, _eng: &Arc<RwLock<Engine>>, _: &[u8]) -> Self {
+    fn new_with_gltf(_node: &gltf::Node, _eng: &Engine, _: &[u8]) -> Self {
         vxunimplemented!();
     }
 
-    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, id: Id) -> Self {
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
         let location = math::Vector3::new(reader.read(), reader.read(), reader.read());
         let r = [reader.read(), reader.read(), reader.read(), reader.read()];
         let r = math::Quaternion::new(r[3], r[0], r[1], r[2]);
@@ -99,6 +121,7 @@ impl Loadable for Sun {
         let strength = reader.read();
         Sun {
             camera,
+            cascaded_cameras: Vec::new(),
             color,
             strength,
         }
@@ -121,11 +144,11 @@ impl Manager {
         }
     }
 
-    pub fn create<L>(&mut self, eng: &Arc<RwLock<Engine>>, name: &str) -> Arc<RwLock<L>>
+    pub fn create<L>(&mut self, eng: &Engine, name: &str) -> Arc<RwLock<L>>
     where
         L: 'static + Light + DefaultLighting,
     {
-        let result = L::default(eng, 1.0);
+        let result = L::default(eng);
         let id = result.get_id();
         let result = Arc::new(RwLock::new(result));
         let light: Arc<RwLock<Light>> = result.clone();
@@ -134,7 +157,7 @@ impl Manager {
         return result;
     }
 
-    pub fn load_gx3d(&mut self, eng: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Light>> {
+    pub fn load_gx3d(&mut self, eng: &Engine, id: Id) -> Arc<RwLock<Light>> {
         if let Some(light) = self.lights.get(&id) {
             if let Some(light) = light.upgrade() {
                 return light;

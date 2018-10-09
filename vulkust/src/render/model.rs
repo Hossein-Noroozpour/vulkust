@@ -53,7 +53,7 @@ impl Manager {
         }
     }
 
-    pub fn load_gx3d(&mut self, engine: &Arc<RwLock<Engine>>, id: Id) -> Arc<RwLock<Model>> {
+    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<Model>> {
         if let Some(model) = self.models.get(&id) {
             if let Some(model) = model.upgrade() {
                 return model;
@@ -211,9 +211,8 @@ impl Object for Base {
 }
 
 impl Loadable for Base {
-    fn new_with_gltf(node: &gltf::Node, eng: &Arc<RwLock<Engine>>, data: &[u8]) -> Self {
+    fn new_with_gltf(node: &gltf::Node, engine: &Engine, data: &[u8]) -> Self {
         let obj_base = ObjectBase::new();
-        let engine = vxresult!(eng.read());
         let scene_manager = vxresult!(engine.scene_manager.read());
         let mut mesh_manager = vxresult!(scene_manager.mesh_manager.write());
         let model = vxunwrap!(node.mesh());
@@ -269,20 +268,19 @@ impl Loadable for Base {
         }
     }
 
-    fn new_with_gx3d(engine: &Arc<RwLock<Engine>>, reader: &mut Gx3DReader, my_id: Id) -> Self {
+    fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let obj_base = ObjectBase::new_with_id(my_id);
         let uniform = Uniform::new_with_gx3d(reader);
         let occlusion_culling_radius = reader.read();
         let collider = read_collider(reader);
         let meshes_ids = reader.read_array();
-        let eng = vxresult!(engine.read());
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut mesh_manager = vxresult!(scene_manager.mesh_manager.write());
         let mut meshes = BTreeMap::new();
         let mut has_shadow_caster = false;
         let mut has_transparent = false;
         for mesh_id in meshes_ids {
-            let mesh = mesh_manager.load_gx3d(engine, mesh_id);
+            let mesh = mesh_manager.load_gx3d(eng, mesh_id);
             {
                 let mesh = vxresult!(mesh.read());
                 has_shadow_caster |= mesh.is_shadow_caster();
