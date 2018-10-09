@@ -9,7 +9,7 @@ use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::font::Manager as FontManager;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::light::{DirectionalUniform, Light, Manager as LightManager, PointUniform};
+use super::light::{Directional as DirectionalLight, DirectionalUniform, Light, Manager as LightManager, PointUniform};
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
@@ -242,16 +242,19 @@ pub struct Base {
     uniform_buffer: Arc<RwLock<DynamicBuffer>>,
     cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
     active_camera: Option<Weak<RwLock<Camera>>>,
+    shadow_makers: BTreeMap<Id, Arc<RwLock<Light>>>,
     lights: BTreeMap<Id, Arc<RwLock<Light>>>,
     models: BTreeMap<Id, Arc<RwLock<Model>>>,
     all_models: BTreeMap<Id, Weak<RwLock<Model>>>,
     descriptor_set: Arc<DescriptorSet>,
+    cascaded_shadow_maps_count: usize,
     // pub skybox: Option<Arc<RwLock<Skybox>>>, // todo, maybe its not gonna be needed in GI PBR
     // pub constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
 }
 
 impl Base {
     pub fn new_with_gltf(engine: &Engine, scene: &gltf::Scene, data: &[u8]) -> Self {
+        let cascaded_shadow_maps_count = engine.get_config().cascaded_shadows_count as usize;
         let camera_manager = {
             let manager = vxresult!(engine.scene_manager.read());
             manager.camera_manager.clone()
@@ -297,13 +300,16 @@ impl Base {
             descriptor_set,
             cameras,
             active_camera,
+            shadow_makers: BTreeMap::new(),
             models,
             all_models,
             lights,
+            cascaded_shadow_maps_count,
         }
     }
 
     pub fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
+        let cascaded_shadow_maps_count = eng.get_config().cascaded_shadows_count as usize;
         let cameras_ids = reader.read_array::<Id>();
         let _audios_ids = reader.read_array::<Id>(); // todo
         let lights_ids = reader.read_array::<Id>();
@@ -364,6 +370,7 @@ impl Base {
         let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
+        vxtodo!(); // pick one of the directional lights as shadow maker
         Base {
             obj_base: ObjectBase::new_with_id(my_id),
             cameras,
@@ -371,9 +378,11 @@ impl Base {
             models,
             all_models,
             lights,
+            shadow_makers: BTreeMap::new(),
             uniform,
             uniform_buffer,
             descriptor_set,
+            cascaded_shadow_maps_count,
         }
     }
 }
@@ -427,6 +436,14 @@ impl Object for Base {
         };
         let camera = vxresult!(camera.read());
         camera.update_uniform(&mut self.uniform.camera);
+        
+        let csmws = camera.get_cascaded_shadow_frustum_partitions(self.cascaded_shadow_maps_count);
+        for (id, shadow_maker) in &self.shadow_makers {
+            let mut shadow_maker = vxresult!(shadow_maker.write());
+            // shadow maker must be directional (maybe in far future I gonna add others)
+            let shadow_maker = vxunwrap!(shadow_maker.to_mut_directional());
+            shadow_maker.update_cascaded_shadow_map_cameras(&csmws);
+        }
         // todo update lights
     }
 
@@ -507,6 +524,7 @@ impl Scene for Base {
 
 impl DefaultScene for Base {
     fn default(engine: &Engine) -> Self {
+        let cascaded_shadow_maps_count = engine.get_config().cascaded_shadows_count as usize;
         let gapi_engine = vxresult!(engine.gapi_engine.read());
         let uniform_buffer = Arc::new(RwLock::new(
             vxresult!(gapi_engine.buffer_manager.write())
@@ -525,6 +543,8 @@ impl DefaultScene for Base {
             lights: BTreeMap::new(),
             models: BTreeMap::new(),
             all_models: BTreeMap::new(),
+            shadow_makers: BTreeMap::new(),
+            cascaded_shadow_maps_count,
         }
     }
 }

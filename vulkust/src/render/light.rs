@@ -4,7 +4,7 @@ use super::camera::Orthographic;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::object::{Loadable, Object, Transferable};
+use super::object::{Loadable, Object, Transferable, Base as ObjectBase};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 
@@ -20,11 +20,15 @@ pub enum TypeId {
 pub trait Light: Object {
     fn to_directional(&self) -> Option<&Directional> {
         return None;
-    } 
+    }
+
+    fn to_mut_directional(&mut self) -> Option<&mut Directional> {
+        return None;
+    }
 }
 
 pub trait Directional: Light {
-
+    fn update_cascaded_shadow_map_cameras(&mut self, &Vec<[math::Vector3<Real>; 4]>);
 }
 
 pub trait DefaultLighting {
@@ -32,9 +36,42 @@ pub trait DefaultLighting {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
+struct SunCam {
+    r: math::Matrix4<Real>,
+    v: math::Matrix4<Real>,
+    p: math::Matrix4<Real>,
+    max_x: Real,
+    min_x: Real,
+    max_y: Real,
+    min_y: Real,
+    max_z: Real,
+    min_z: Real,
+}
+
+impl SunCam {
+    fn new() -> Self {
+        Self {
+            r: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
+            v: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
+            p: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
+            max_x: -99999999999.9,
+            min_x: 99999999999.9,
+            max_y: -99999999999.9,
+            min_y: 99999999999.9,
+            max_z: -99999999999.9,
+            min_z: 99999999999.9,
+        }
+    }
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Sun {
-    camera: Orthographic,
-    cascaded_cameras: Vec<Orthographic>,
+    obj_base: ObjectBase,
+    // cascaded camera rotation
+    ccr: math::Matrix4<Real>,
+    // cascaded camera data s
+    ccds: Vec<SunCam>,
+    direction: math::Vector3<Real>,
     color: (f32, f32, f32),
     strength: f32,
 }
@@ -43,17 +80,17 @@ impl Sun {}
 
 impl CoreObject for Sun {
     fn get_id(&self) -> Id {
-        self.camera.get_id()
+        self.obj_base.get_id()
     }
 }
 
 impl Object for Sun {
     fn get_name(&self) -> Option<String> {
-        self.camera.get_name()
+        self.obj_base.get_name()
     }
 
     fn set_name(&mut self, name: &str) {
-        self.camera.set_name(name);
+        self.obj_base.set_name(name);
         vxunimplemented!(); //it must update corresponding manager
     }
 
@@ -62,43 +99,54 @@ impl Object for Sun {
     }
 
     fn disable_rendering(&mut self) {
-        self.camera.disable_rendering()
+        self.obj_base.disable_rendering()
     }
 
     fn enable_rendering(&mut self) {
-        self.camera.enable_rendering()
+        self.obj_base.enable_rendering()
     }
 
     fn update(&mut self) {
-        self.camera.update();
+        self.obj_base.update();
     }
 
     fn is_rendarable(&self) -> bool {
-        return self.camera.is_rendarable();
+        return self.obj_base.is_rendarable();
     }
 }
 
 impl Light for Sun {
     fn to_directional(&self) -> Option<&Directional> {
         return Some(self);
-    } 
+    }
+     
+    fn to_mut_directional(&mut self) -> Option<&mut Directional> {
+        return Some(self);
+    }
 }
 
 impl Directional for Sun {
+    fn update_cascaded_shadow_map_cameras(&mut self, walls: &Vec<[math::Vector3<Real>; 4]>) {
+        let ccdsc = self.ccds.len();
+        for i in 0..ccdsc {
 
+        }
+    }
 }
 
 impl DefaultLighting for Sun {
     fn default(eng: &Engine) -> Self {
-        let mut cascaded_cameras = Vec::new();
+        let mut ccds = Vec::new();
         let csc = eng.get_config().cascaded_shadows_count;
         for _ in 0..csc {
-            cascaded_cameras.push(Orthographic::new(eng, 1.0));
+            ccds.push(SunCam::new());
         }
-        cascaded_cameras.shrink_to_fit();
+        ccds.shrink_to_fit();
         Sun {
-            camera: Orthographic::new(eng, 1.0),
-            cascaded_cameras,
+            obj_base: ObjectBase::new(),
+            ccr: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
+            ccds,
+            direction: math::Vector3::new(0.0, 0.0, -1.0),
             color: (1.0, 1.0, 1.0),
             strength: 1.0,
         }
@@ -119,9 +167,14 @@ impl Loadable for Sun {
         camera.set_orientation(&r);
         let color = (reader.read(), reader.read(), reader.read());
         let strength = reader.read();
+        vxtodo!(); // ccr is not correct
+        vxtodo!(); // ccds is not correct
+        vxtodo!(); // direction is not correct
         Sun {
-            camera,
-            cascaded_cameras: Vec::new(),
+            obj_base: ObjectBase::new_with_id(id),
+            ccr: math::Matrix4::new(     1.0, 0.0, 0.0, 0.0,     0.0, 1.0, 0.0, 0.0,     0.0, 0.0, 1.0, 0.0,     0.0, 0.0, 0.0, 1.0, ),
+            ccds: Vec::new(),
+            direction: math::Vector3::new(0.0, 0.0, -1.0),
             color,
             strength,
         }
