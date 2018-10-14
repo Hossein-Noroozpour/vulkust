@@ -43,6 +43,8 @@ pub trait Scene: Object {
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
     fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>>;
+    fn update_shadow_maker_lights_data(&self, &BTreeMap<Id, Box<ShadowMakerData>>);
+    fn update_shadow_makers(&self);
     fn clean(&mut self);
 }
 
@@ -528,6 +530,23 @@ impl Scene for Base {
         return result;
     }
 
+    fn update_shadow_maker_lights_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
+        for (id, smd) in smds {
+            let sm = self.shadow_makers.get(id);
+            if let Some(sm) = sm {
+                let mut sm = vxresult!(sm.write());
+                sm.update_shadow_maker_data(smd);
+            }
+        }
+    }
+
+    fn update_shadow_makers(&self) {
+        for (_, sm) in &self.shadow_makers {
+            let mut sm = vxresult!(sm.write());
+            sm.update();
+        }
+    }
+
     fn clean(&mut self) {
         let mut ids = Vec::<Id>::new();
         for (id, model) in &self.all_models {
@@ -641,6 +660,14 @@ impl Scene for Game {
         return self.base.get_shadow_maker_lights_data();
     }
 
+    fn update_shadow_maker_lights_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
+        self.base.update_shadow_maker_lights_data(smds);
+    }
+
+    fn update_shadow_makers(&self) {
+        self.base.update_shadow_makers();
+    }
+
     fn clean(&mut self) {
         self.base.clean();
     }
@@ -736,6 +763,14 @@ impl Scene for Ui {
 
     fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>> {
         return self.base.get_shadow_maker_lights_data();
+    }
+
+    fn update_shadow_maker_lights_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
+        self.base.update_shadow_maker_lights_data(smds);
+    }
+
+    fn update_shadow_makers(&self) {
+        self.base.update_shadow_makers();
     }
 
     fn clean(&mut self) {

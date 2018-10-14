@@ -84,7 +84,7 @@ struct Kernel {
     loop_signaler: Sender<bool>,
     ready_notifier: Receiver<()>,
     handle: JoinHandle<()>,
-    cmd_buffers: Arc<Mutex<Vec<KernelFrameData>>>,
+    frame_datas: Arc<Mutex<Vec<KernelFrameData>>>,
 }
 
 impl Kernel {
@@ -96,12 +96,14 @@ impl Kernel {
     ) -> Self {
         let (loop_signaler, rcv) = channel();
         let (ready_sig, ready_notifier) = channel();
-        let cmd_buffers = Arc::new(Mutex::new(Vec::new()));
-        let cmdbuffs = cmd_buffers.clone();
+        let frame_datas = Arc::new(Mutex::new(Vec::new()));
+        let cmdbuffs = frame_datas.clone();
         let handle = spawn(move || {
             let mut renderer = Renderer::new(index, kernels_count, cmdbuffs, engine, scene_manager);
             while vxresult!(rcv.recv()) {
                 renderer.render();
+                vxresult!(ready_sig.send(()));
+                renderer.shadow();
                 vxresult!(ready_sig.send(()));
             }
             vxresult!(ready_sig.send(()));
@@ -110,7 +112,7 @@ impl Kernel {
             loop_signaler,
             ready_notifier,
             handle,
-            cmd_buffers,
+            frame_datas,
         }
     }
 
@@ -236,6 +238,8 @@ impl Renderer {
             // cmds[SECONDARY_SHADOW_PASS_INDEX].end();
         }
     }
+
+    pub fn shadow(&mut self) {}
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -422,19 +426,21 @@ impl Engine {
             }
             let mut kcmdsgbuffdatas = Vec::new();
             for k in &self.kernels {
-                let kcmdsss = vxresult!(k.cmd_buffers.lock());
-                let kcmdss = &kcmdsss[frame_number];
-                let kcmds = kcmdss.get_scene(scene_id);
-                if kcmds.is_none() {
+                let frame_datas = vxresult!(k.frame_datas.lock());
+                let frame_data = &frame_datas[frame_number];
+                let scene_frame_data = frame_data.get_scene(scene_id);
+                if scene_frame_data.is_none() {
                     cmdss.remove_scene(scene_id);
                     continue 'scenes;
                 }
-                let scene_data = vxunwrap!(kcmds);
-                if !scene_data.cmds.is_filled {
+                let scene_frame_data = vxunwrap!(scene_frame_data);
+                if !scene_frame_data.cmds.is_filled {
                     continue;
                 }
-                kcmdsgbuffdatas.push(scene_data.cmds.gbuff.get_data());
+                kcmdsgbuffdatas.push(scene_frame_data.cmds.gbuff.get_data());
+                scene.update_shadow_maker_lights_data(&scene_frame_data.shadow_maker_lights_data);
             }
+            scene.update_shadow_makers();
             let cmds = cmdss.get_mut_scene(scene_id);
             if cmds.is_none() {
                 continue;

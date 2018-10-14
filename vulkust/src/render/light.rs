@@ -23,6 +23,9 @@ pub enum TypeId {
 
 pub trait ShadowMakerData: CoreDebug + Send {
     fn check_shadowability(&mut self, &mut Model);
+    fn to_sun(&self) -> &SunShadowMakerData {
+        vxunexpected!();
+    }
 }
 
 pub trait VisibilityData : CoreDebug + Send {}
@@ -39,6 +42,10 @@ pub trait Light: Object {
     fn get_shadow_maker_data(&self) -> Option<Box<ShadowMakerData>> {
         return None;
     }
+
+    fn update_shadow_maker_data(&mut self, _: &Box<ShadowMakerData>) {
+        vxunexpected!();
+    }
 }
 
 pub trait Directional: Light {
@@ -51,7 +58,6 @@ pub trait DefaultLighting {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct SunCam {
-    p: math::Matrix4<Real>,
     vp: math::Matrix4<Real>,
     max_x: Real,
     min_x: Real,
@@ -64,9 +70,6 @@ struct SunCam {
 impl SunCam {
     fn new() -> Self {
         Self {
-            p: math::Matrix4::new(
-                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-            ),
             vp: math::Matrix4::new(
                 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
             ),
@@ -101,7 +104,7 @@ impl VisibilityData for SunVisibilityData {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-struct SunShadowMakerData {
+pub struct SunShadowMakerData {
     id: Id,
     r: math::Matrix4<Real>,
     cascades: Vec<SunShadowMakerDataPart>,
@@ -203,6 +206,21 @@ impl Object for Sun {
 
     fn update(&mut self) {
         self.obj_base.update();
+        for ccd in &mut self.ccds {
+            let mmx = (ccd.max_x - ccd.min_x) * 0.02;
+            let mmy = (ccd.max_y - ccd.min_y) * 0.02;
+            let mz = ccd.max_z - ccd.min_z;
+            let mmz = mz * 0.02;
+            let p = math::ortho(
+                ccd.min_x - mmx, 
+                ccd.max_x + mmx, 
+                ccd.min_y - mmy, 
+                ccd.min_y + mmy, 
+                mmz, 
+                mz + mmz);
+            let t = math::Matrix4::from_translation(math::Vector3::new(0.0, 0.0, -(ccd.max_z + mmz)));
+            ccd.vp = p * self.ccr * t;
+        }
     }
 
     fn is_rendarable(&self) -> bool {
@@ -221,6 +239,18 @@ impl Light for Sun {
 
     fn get_shadow_maker_data(&self) -> Option<Box<ShadowMakerData>> {
         return Some(Box::new(SunShadowMakerData::new(self.get_id(), &self.ccds, self.ccr)));
+    }
+
+    fn update_shadow_maker_data(&mut self, smd: &Box<ShadowMakerData>) {
+        let smd = smd.to_sun();
+        let cc = self.ccds.len();
+        for i in 0..cc {
+            let ccd = &mut self.ccds[i];
+            let smdccd = &smd.cascades[i];
+            if ccd.max_z < smdccd.max_z {
+                ccd.max_z = smdccd.max_z;
+            }
+        }
     }
 }
 
