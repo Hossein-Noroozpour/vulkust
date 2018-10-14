@@ -8,21 +8,26 @@ use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::mesh::Mesh;
-use super::object::{Base as ObjectBase, Loadable, Object};
+use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::scene::Scene;
+use super::light::VisibilityData as LightVisibilityData;
 use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
+use std::f32::MAX as F32MAX;
 
 use gltf;
 use math;
 
-pub trait Model: Object {
+pub trait Model: Object + Transferable {
     fn update(&mut self, scene: &Scene, camera: &Camera);
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>);
     fn clear_meshes(&mut self);
     fn get_meshes_count(&self) -> usize;
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)>;
+    fn has_shadow(&self) -> bool;
+    fn get_occlusion_culling_radius(&self) -> Real;
+    fn set_light_visibility_data(&mut self, Id, Box<LightVisibilityData>);
 }
 
 pub trait DefaultModel: Model + Sized {
@@ -146,7 +151,7 @@ pub struct Base {
     has_shadow_caster: bool,
     has_transparent: bool,
     occlusion_culling_radius: Real,
-    is_in_sun: bool,
+    is_in_light: BTreeMap<Id, Box<LightVisibilityData>>,
     is_visible: bool,
     distance_from_camera: Real,
     collider: Arc<RwLock<Collider>>,
@@ -255,9 +260,9 @@ impl Loadable for Base {
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
-            is_in_sun: false,
+            is_in_light: BTreeMap::new(),
             is_visible: false,
-            distance_from_camera: 100000000000000000.0,
+            distance_from_camera: F32MAX,
             collider: Arc::new(RwLock::new(GhostCollider::new())),
             uniform,
             uniform_buffer,
@@ -304,9 +309,9 @@ impl Loadable for Base {
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
-            is_in_sun: false,
+            is_in_light: BTreeMap::new(),
             is_visible: false,
-            distance_from_camera: 10000000.0,
+            distance_from_camera: F32MAX,
             collider,
             uniform,
             uniform_buffer,
@@ -315,6 +320,36 @@ impl Loadable for Base {
             children: BTreeMap::new(),
             center,
         }
+    }
+}
+
+impl Transferable for Base {
+    fn set_orientation(&mut self, _: &math::Quaternion<Real>) {
+        vxunimplemented!();
+    }
+
+    fn set_location(&mut self, _: &math::Vector3<Real>) {
+        vxunimplemented!();
+    }
+
+    fn get_location(&self) -> &math::Vector3<Real> {
+        return &self.center;
+    }
+
+    fn move_local_z(&mut self, _: Real) {
+        vxunimplemented!();
+    }
+
+    fn move_local_x(&mut self, _: Real) {
+        vxunimplemented!();
+    }
+
+    fn rotate_local_x(&mut self, _: Real) {
+        vxunimplemented!();
+    }
+
+    fn rotate_global_z(&mut self, _: Real) {
+        vxunimplemented!();
     }
 }
 
@@ -340,7 +375,7 @@ impl Model for Base {
         self.has_shadow_caster = false;
         self.has_transparent = false;
         self.occlusion_culling_radius = 0.0;
-        self.is_in_sun = false;
+        self.is_in_light.clear();
         self.is_visible = false;
     }
 
@@ -369,6 +404,18 @@ impl Model for Base {
         }
         return result;
     }
+
+    fn has_shadow(&self) -> bool {
+        return self.has_shadow_caster;
+    }
+
+    fn get_occlusion_culling_radius(&self) -> Real {
+        return self.occlusion_culling_radius;
+    }
+
+    fn set_light_visibility_data(&mut self, id: Id, lvd: Box<LightVisibilityData>) {
+        self.is_in_light.insert(id, lvd);
+    }
 }
 
 impl DefaultModel for Base {
@@ -387,7 +434,7 @@ impl DefaultModel for Base {
             has_shadow_caster: false,
             has_transparent: false,
             occlusion_culling_radius: 0.0,
-            is_in_sun: false,
+            is_in_light: BTreeMap::new(),
             is_visible: false,
             distance_from_camera: 100000.0,
             collider: Arc::new(RwLock::new(GhostCollider::new())),

@@ -6,6 +6,7 @@ use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
+use super::model::Model;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 use std::f32::MAX as F32MAX;
@@ -21,8 +22,10 @@ pub enum TypeId {
 }
 
 pub trait ShadowMakerData: CoreDebug + Send {
-
+    fn check_shadowability(&mut self, &mut Model);
 }
+
+pub trait VisibilityData : CoreDebug + Send {}
 
 pub trait Light: Object {
     fn to_directional(&self) -> Option<&Directional> {
@@ -79,7 +82,6 @@ impl SunCam {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct SunShadowMakerDataPart {
-    r: math::Matrix4<Real>,
     max_x: Real,
     min_x: Real,
     max_y: Real,
@@ -88,17 +90,28 @@ struct SunShadowMakerDataPart {
     min_z: Real,
 }
 
+
+#[cfg_attr(debug_mode, derive(Debug))]
+struct SunVisibilityData {
+    is_in_cascades: Vec<bool>,
+}
+
+impl VisibilityData for SunVisibilityData {
+
+}
+
 #[cfg_attr(debug_mode, derive(Debug))]
 struct SunShadowMakerData {
+    id: Id,
+    r: math::Matrix4<Real>,
     cascades: Vec<SunShadowMakerDataPart>,
 }
 
 impl SunShadowMakerData {
-    fn new(datas: &[SunCam], r: math::Matrix4<Real>) -> Self {
+    fn new(id: Id, datas: &[SunCam], r: math::Matrix4<Real>) -> Self {
         let mut cascades = Vec::new();
         for data in datas {
             cascades.push(SunShadowMakerDataPart {
-                r,
                 max_x: data.max_x,
                 min_x: data.min_x,
                 max_y: data.max_y,
@@ -108,7 +121,41 @@ impl SunShadowMakerData {
             });
         }
         cascades.shrink_to_fit();
-        Self { cascades }
+        Self { id, r, cascades }
+    }
+}
+
+impl ShadowMakerData for SunShadowMakerData {
+    fn check_shadowability(&mut self, m: &mut Model) {
+        let rd = m.get_occlusion_culling_radius();
+        let mut is_in_cascades = vec![false; self.cascades.len()];
+        let mut ci = 0;
+        for c in &mut self.cascades {
+            let v = self.r * m.get_location().extend(1.0);
+            if v.x + rd < c.min_x {
+                continue;
+            }
+            if v.y + rd < c.min_y {
+                continue;
+            }
+            if v.z + rd < c.min_z {
+                continue;
+            }
+            if c.max_x + rd < v.x {
+                continue;
+            }
+            if c.max_y + rd < v.y {
+                continue;
+            }
+            if c.max_z < v.z + rd {
+                c.max_z = v.z + rd;
+            }
+            is_in_cascades[ci] = true;
+            ci += 1;
+        }
+        m.set_light_visibility_data(self.id, Box::new(SunVisibilityData {
+            is_in_cascades,
+        }));
     }
 }
 
@@ -171,6 +218,10 @@ impl Light for Sun {
     fn to_mut_directional(&mut self) -> Option<&mut Directional> {
         return Some(self);
     }
+
+    fn get_shadow_maker_data(&self) -> Option<Box<ShadowMakerData>> {
+        return Some(Box::new(SunShadowMakerData::new(self.get_id(), &self.ccds, self.ccr)));
+    }
 }
 
 impl Directional for Sun {
@@ -193,8 +244,8 @@ impl Directional for Sun {
                 if max.y < p.y {
                     max.y = p.y;
                 }
-                if max.z < p.z {
-                    max.z = p.z;
+                if p.z < min.z {
+                    min.z = p.z;
                 }
             }
             walls_bnds.push((max, min));
@@ -225,10 +276,10 @@ impl Directional for Sun {
                 ccd.max_y = walls_bnds[i].0.y;
             }
 
-            if walls_bnds[i].0.z < walls_bnds[ii].0.z {
-                ccd.max_z = walls_bnds[ii].0.z;
+            if walls_bnds[i].1.z < walls_bnds[ii].1.z {
+                ccd.min_z = walls_bnds[i].1.z;
             } else {
-                ccd.max_z = walls_bnds[i].0.z;
+                ccd.min_z = walls_bnds[ii].1.z;
             }
         }
     }

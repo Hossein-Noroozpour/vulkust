@@ -16,18 +16,15 @@ use std::thread::{spawn, JoinHandle};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct KernelPassesCommands {
-    shadow: CmdBuffer,
     gbuff: CmdBuffer,
     is_filled: bool,
 }
 
 impl KernelPassesCommands {
     fn new(engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
-        let shadow = engine.create_secondary_command_buffer(cmd_pool.clone());
         let gbuff = engine.create_secondary_command_buffer(cmd_pool.clone());
         let is_filled = false;
         Self {
-            shadow,
             gbuff,
             is_filled,
         }
@@ -229,6 +226,11 @@ impl Renderer {
                 Model::update(&mut *model, &*scene, &*camera);
                 Object::render(&mut *model, &mut scene_data.cmds.gbuff, frame_number);
                 scene_data.cmds.is_filled = true;
+                if model.has_shadow() {
+                    for (_, shm) in &mut scene_data.shadow_maker_lights_data {
+                        shm.check_shadowability(&mut *model);
+                    }
+                }
             }
             scene_data.cmds.gbuff.end();
             // cmds[SECONDARY_SHADOW_PASS_INDEX].end();
@@ -274,7 +276,7 @@ struct FrameData {
 }
 
 impl FrameData {
-    fn new(engine: &GraphicApiEngine) -> Self {
+    fn new() -> Self {
         Self {
             scenes_commands: BTreeMap::new(),
         }
@@ -332,7 +334,7 @@ impl Engine {
         let frames_count = eng.get_frames_count();
         let mut cmdsss = Vec::new();
         for _ in 0..frames_count {
-            cmdsss.push(FrameData::new(&*eng));
+            cmdsss.push(FrameData::new());
         }
         cmdsss.shrink_to_fit();
         let cmdsss = Mutex::new(cmdsss);
@@ -361,7 +363,6 @@ impl Engine {
         let engine = vxresult!(self.engine.read());
         let mut last_semaphore = engine.get_starting_semaphore().clone();
         let gbuff_framebuffer = engine.get_gbuff_framebuffer();
-        let gbuff_pipeline = engine.get_gbuff_pipeline();
         let deferred_framebuffer = engine.get_deferred_framebuffer();
         let deferred_pipeline = engine.get_deferred_pipeline();
         let frame_number = engine.get_frame_number();
