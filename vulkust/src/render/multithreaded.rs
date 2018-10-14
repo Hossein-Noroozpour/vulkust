@@ -4,8 +4,9 @@ use super::config::Configurations;
 use super::deferred::Deferred;
 use super::gapi::GraphicApiEngine;
 use super::model::Model;
+use super::light::ShadowMakerData;
 use super::object::Object;
-use super::scene::Manager as SceneManager;
+use super::scene::{Scene, Manager as SceneManager};
 use super::sync::Semaphore;
 use num_cpus;
 use std::collections::BTreeMap;
@@ -34,35 +35,50 @@ impl KernelPassesCommands {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
+struct KernelSceneData {
+    cmds: KernelPassesCommands,
+    shadow_maker_lights_data: BTreeMap<Id, Box<ShadowMakerData>>,
+}
+
+impl KernelSceneData {
+    fn new(scene: &Scene, g_engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
+        Self {
+            cmds: KernelPassesCommands::new(g_engine, cmd_pool),
+            shadow_maker_lights_data: scene.get_shadow_maker_lights_data(),
+        }
+    }
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
 struct KernelFrameData {
-    scenes_commands: BTreeMap<Id, KernelPassesCommands>,
+    scenes: BTreeMap<Id, KernelSceneData>,
 }
 
 impl KernelFrameData {
     fn new() -> Self {
         Self {
-            scenes_commands: BTreeMap::new(),
+            scenes: BTreeMap::new(),
         }
     }
 
     fn remove_scene(&mut self, id: &Id) {
-        self.scenes_commands.remove(id);
+        self.scenes.remove(id);
     }
 
     fn has_scene(&self, id: &Id) -> bool {
-        return self.scenes_commands.contains_key(id);
+        return self.scenes.contains_key(id);
     }
 
-    fn add_scene(&mut self, id: Id, kernel_passes_commands: KernelPassesCommands) {
-        self.scenes_commands.insert(id, kernel_passes_commands);
+    fn add_scene(&mut self, id: Id, kernel_scene_data: KernelSceneData) {
+        self.scenes.insert(id, kernel_scene_data);
     }
 
-    fn get_mut_scene(&mut self, id: &Id) -> Option<&mut KernelPassesCommands> {
-        return self.scenes_commands.get_mut(id);
+    fn get_mut_scene(&mut self, id: &Id) -> Option<&mut KernelSceneData> {
+        return self.scenes.get_mut(id);
     }
 
-    fn get_scene(&self, id: &Id) -> Option<&KernelPassesCommands> {
-        return self.scenes_commands.get(id);
+    fn get_scene(&self, id: &Id) -> Option<&KernelSceneData> {
+        return self.scenes.get(id);
     }
 }
 
@@ -181,17 +197,17 @@ impl Renderer {
             if !cmdss.has_scene(scene_id) {
                 cmdss.add_scene(
                     *scene_id,
-                    KernelPassesCommands::new(&*g_engine, self.cmd_pool.clone()),
+                    KernelSceneData::new(&*scene, &*g_engine, self.cmd_pool.clone()),
                 );
             }
-            let cmds = vxunwrap!(cmdss.get_mut_scene(scene_id));
+            let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
             let models = scene.get_all_models();
-            cmds.gbuff.begin_secondary(&gbuff_framebuffer);
+            scene_data.cmds.gbuff.begin_secondary(&gbuff_framebuffer);
             // cmds[SECONDARY_SHADOW_PASS_INDEX].begin_secondary();
-            cmds.gbuff.set_viewport(&gbuff_framebuffer.viewport);
-            cmds.gbuff.set_scissor(&gbuff_framebuffer.scissor);
-            cmds.gbuff.bind_pipeline(&gbuff_pipeline);
-            scene.render(&mut cmds.gbuff, frame_number);
+            scene_data.cmds.gbuff.set_viewport(&gbuff_framebuffer.viewport);
+            scene_data.cmds.gbuff.set_scissor(&gbuff_framebuffer.scissor);
+            scene_data.cmds.gbuff.bind_pipeline(&gbuff_pipeline);
+            scene.render(&mut scene_data.cmds.gbuff, frame_number);
             for (_, model) in &*models {
                 let camera = vxunwrap!(scene.get_active_camera()).upgrade();
                 let camera = vxunwrap!(camera);
@@ -211,10 +227,10 @@ impl Renderer {
                 }
                 Object::update(&mut *model);
                 Model::update(&mut *model, &*scene, &*camera);
-                Object::render(&mut *model, &mut cmds.gbuff, frame_number);
-                cmds.is_filled = true;
+                Object::render(&mut *model, &mut scene_data.cmds.gbuff, frame_number);
+                scene_data.cmds.is_filled = true;
             }
-            cmds.gbuff.end();
+            scene_data.cmds.gbuff.end();
             // cmds[SECONDARY_SHADOW_PASS_INDEX].end();
         }
     }
@@ -412,11 +428,11 @@ impl Engine {
                     cmdss.remove_scene(scene_id);
                     continue 'scenes;
                 }
-                let kcmds = vxunwrap!(kcmds);
-                if !kcmds.is_filled {
+                let scene_data = vxunwrap!(kcmds);
+                if !scene_data.cmds.is_filled {
                     continue;
                 }
-                kcmdsgbuffdatas.push(kcmds.gbuff.get_data());
+                kcmdsgbuffdatas.push(scene_data.cmds.gbuff.get_data());
             }
             let cmds = cmdss.get_mut_scene(scene_id);
             if cmds.is_none() {

@@ -1,5 +1,6 @@
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
+use super::super::core::debug::Debug as CoreDebug;
 use super::camera::Orthographic;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
@@ -7,6 +8,8 @@ use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
+use std::f32::MAX as F32MAX;
+use std::f32::MIN as F32MIN;
 
 use gltf;
 use math;
@@ -17,12 +20,20 @@ pub enum TypeId {
     Sun = 1,
 }
 
+pub trait ShadowMakerData: CoreDebug + Send {
+
+}
+
 pub trait Light: Object {
     fn to_directional(&self) -> Option<&Directional> {
         return None;
     }
 
     fn to_mut_directional(&mut self) -> Option<&mut Directional> {
+        return None;
+    }
+
+    fn get_shadow_maker_data(&self) -> Option<Box<ShadowMakerData>> {
         return None;
     }
 }
@@ -37,9 +48,8 @@ pub trait DefaultLighting {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct SunCam {
-    r: math::Matrix4<Real>,
-    v: math::Matrix4<Real>,
     p: math::Matrix4<Real>,
+    vp: math::Matrix4<Real>,
     max_x: Real,
     min_x: Real,
     max_y: Real,
@@ -51,22 +61,54 @@ struct SunCam {
 impl SunCam {
     fn new() -> Self {
         Self {
-            r: math::Matrix4::new(
-                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-            ),
-            v: math::Matrix4::new(
-                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-            ),
             p: math::Matrix4::new(
                 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
             ),
-            max_x: -99999999999.9,
-            min_x: 99999999999.9,
-            max_y: -99999999999.9,
-            min_y: 99999999999.9,
-            max_z: -99999999999.9,
-            min_z: 99999999999.9,
+            vp: math::Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+            ),
+            max_x: F32MIN,
+            min_x: F32MAX,
+            max_y: F32MIN,
+            min_y: F32MAX,
+            max_z: F32MIN,
+            min_z: F32MAX,
         }
+    }
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
+struct SunShadowMakerDataPart {
+    r: math::Matrix4<Real>,
+    max_x: Real,
+    min_x: Real,
+    max_y: Real,
+    min_y: Real,
+    max_z: Real,
+    min_z: Real,
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
+struct SunShadowMakerData {
+    cascades: Vec<SunShadowMakerDataPart>,
+}
+
+impl SunShadowMakerData {
+    fn new(datas: &[SunCam], r: math::Matrix4<Real>) -> Self {
+        let mut cascades = Vec::new();
+        for data in datas {
+            cascades.push(SunShadowMakerDataPart {
+                r,
+                max_x: data.max_x,
+                min_x: data.min_x,
+                max_y: data.max_y,
+                min_y: data.min_y,
+                max_z: data.max_z,
+                min_z: data.min_z,
+            });
+        }
+        cascades.shrink_to_fit();
+        Self { cascades }
     }
 }
 
@@ -78,8 +120,8 @@ pub struct Sun {
     // cascaded camera data s
     ccds: Vec<SunCam>,
     direction: math::Vector3<Real>,
-    color: (f32, f32, f32),
-    strength: f32,
+    color: (Real, Real, Real),
+    strength: Real,
 }
 
 impl Sun {}
@@ -133,8 +175,62 @@ impl Light for Sun {
 
 impl Directional for Sun {
     fn update_cascaded_shadow_map_cameras(&mut self, walls: &Vec<[math::Vector3<Real>; 4]>) {
+        let mut walls_bnds = Vec::new();
+        for w in walls {
+            let mut max = math::Vector3::new(F32MIN, F32MIN, F32MIN);
+            let mut min = math::Vector3::new(F32MAX, F32MAX, F32MAX);
+            for p in w {
+                let p = self.ccr * p.extend(1.0);
+                if p.x < min.x {
+                    min.x = p.x;
+                }
+                if max.x < p.x {
+                    max.x = p.x;
+                }
+                if p.y < min.y {
+                    min.y = p.y;
+                }
+                if max.y < p.y {
+                    max.y = p.y;
+                }
+                if max.z < p.z {
+                    max.z = p.z;
+                }
+            }
+            walls_bnds.push((max, min));
+        }
         let ccdsc = self.ccds.len();
-        for i in 0..ccdsc {}
+        for i in 0..ccdsc {
+            let ccd = &mut self.ccds[i];
+            let ii = i + 1;
+            if walls_bnds[i].1.x < walls_bnds[ii].1.x {
+                ccd.min_x = walls_bnds[i].1.x;
+            } else {
+                ccd.min_x = walls_bnds[ii].1.x;
+            }
+            if walls_bnds[i].0.x < walls_bnds[ii].0.x {
+                ccd.max_x = walls_bnds[ii].0.x;
+            } else {
+                ccd.max_x = walls_bnds[i].0.x;
+            }
+
+            if walls_bnds[i].1.y < walls_bnds[ii].1.y {
+                ccd.min_y = walls_bnds[i].1.y;
+            } else {
+                ccd.min_y = walls_bnds[ii].1.y;
+            }
+            if walls_bnds[i].0.y < walls_bnds[ii].0.y {
+                ccd.max_y = walls_bnds[ii].0.y;
+            } else {
+                ccd.max_y = walls_bnds[i].0.y;
+            }
+
+            if walls_bnds[i].0.z < walls_bnds[ii].0.z {
+                ccd.max_z = walls_bnds[ii].0.z;
+            } else {
+                ccd.max_z = walls_bnds[i].0.z;
+            }
+        }
     }
 }
 

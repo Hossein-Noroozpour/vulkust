@@ -10,8 +10,12 @@ use super::engine::Engine;
 use super::font::Manager as FontManager;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::light::{
-    Directional as DirectionalLight, DirectionalUniform, Light, Manager as LightManager,
-    PointUniform,
+    Directional as DirectionalLight, 
+    DirectionalUniform, 
+    Light, 
+    Manager as LightManager,
+    PointUniform, 
+    ShadowMakerData,
 };
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
@@ -38,6 +42,7 @@ pub trait Scene: Object {
     fn render_deferred(&self, cmd: &mut CmdBuffer, frame_buffer: usize);
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
+    fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>>;
     fn clean(&mut self);
 }
 
@@ -438,8 +443,11 @@ impl Object for Base {
         camera.update_uniform(&mut self.uniform.camera);
 
         let csmws = camera.get_cascaded_shadow_frustum_partitions(self.cascaded_shadow_maps_count);
-        for (id, shadow_maker) in &self.shadow_makers {
+        for (_, shadow_maker) in &self.shadow_makers {
             let mut shadow_maker = vxresult!(shadow_maker.write());
+            if !shadow_maker.is_rendarable() {
+                continue;
+            }
             // shadow maker must be directional (maybe in far future I gonna add others)
             let shadow_maker = vxunwrap!(shadow_maker.to_mut_directional());
             shadow_maker.update_cascaded_shadow_map_cameras(&csmws);
@@ -507,6 +515,17 @@ impl Scene for Base {
 
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
         return &self.all_models;
+    }
+
+    fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>> {
+        let mut result = BTreeMap::new();
+        for (id, shm) in &self.shadow_makers {
+            let l = vxresult!(shm.read());
+            if l.is_rendarable() {
+                result.insert(*id, vxunwrap!(l.get_shadow_maker_data()));
+            }
+        }
+        return result;
     }
 
     fn clean(&mut self) {
@@ -618,6 +637,10 @@ impl Scene for Game {
         return self.base.get_all_models();
     }
 
+    fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>> {
+        return self.base.get_shadow_maker_lights_data();
+    }
+
     fn clean(&mut self) {
         self.base.clean();
     }
@@ -709,6 +732,10 @@ impl Scene for Ui {
 
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
         return self.base.get_all_models();
+    }
+
+    fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>> {
+        return self.base.get_shadow_maker_lights_data();
     }
 
     fn clean(&mut self) {
