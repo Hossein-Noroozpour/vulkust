@@ -10,12 +10,8 @@ use super::engine::Engine;
 use super::font::Manager as FontManager;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::light::{
-    Directional as DirectionalLight, 
-    DirectionalUniform, 
-    Light, 
-    Manager as LightManager,
-    PointUniform, 
-    ShadowMakerData,
+    Directional as DirectionalLight, DirectionalUniform, Light, Manager as LightManager,
+    PointUniform, ShadowMakerData,
 };
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};

@@ -4,12 +4,12 @@ use super::camera::Camera;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::font::Font;
+use super::light::VisibilityData as LightVisibilityData;
 use super::material::Material;
 use super::mesh::{Base as MeshBase, Mesh};
 use super::model::{Base as ModelBase, DefaultModel, Model};
 use super::object::{Object, Transferable};
 use super::scene::Scene;
-use super::light::VisibilityData as LightVisibilityData;
 use std::sync::{Arc, RwLock};
 
 use math;
@@ -359,7 +359,6 @@ impl Transferable for Label {
         self.base.rotate_global_z(d);
     }
 }
-
 
 impl Model for Label {
     fn update(&mut self, scene: &Scene, camera: &Camera) {

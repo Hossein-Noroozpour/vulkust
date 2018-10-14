@@ -3,10 +3,10 @@ use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::config::Configurations;
 use super::deferred::Deferred;
 use super::gapi::GraphicApiEngine;
-use super::model::Model;
 use super::light::ShadowMakerData;
+use super::model::Model;
 use super::object::Object;
-use super::scene::{Scene, Manager as SceneManager};
+use super::scene::{Manager as SceneManager, Scene};
 use super::sync::Semaphore;
 use num_cpus;
 use std::collections::BTreeMap;
@@ -24,10 +24,7 @@ impl KernelPassesCommands {
     fn new(engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
         let gbuff = engine.create_secondary_command_buffer(cmd_pool.clone());
         let is_filled = false;
-        Self {
-            gbuff,
-            is_filled,
-        }
+        Self { gbuff, is_filled }
     }
 }
 
@@ -203,8 +200,14 @@ impl Renderer {
             let models = scene.get_all_models();
             scene_data.cmds.gbuff.begin_secondary(&gbuff_framebuffer);
             // cmds[SECONDARY_SHADOW_PASS_INDEX].begin_secondary();
-            scene_data.cmds.gbuff.set_viewport(&gbuff_framebuffer.viewport);
-            scene_data.cmds.gbuff.set_scissor(&gbuff_framebuffer.scissor);
+            scene_data
+                .cmds
+                .gbuff
+                .set_viewport(&gbuff_framebuffer.viewport);
+            scene_data
+                .cmds
+                .gbuff
+                .set_scissor(&gbuff_framebuffer.scissor);
             scene_data.cmds.gbuff.bind_pipeline(&gbuff_pipeline);
             scene.render(&mut scene_data.cmds.gbuff, frame_number);
             for (_, model) in &*models {

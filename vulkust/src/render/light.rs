@@ -1,16 +1,16 @@
+use super::super::core::debug::Debug as CoreDebug;
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
-use super::super::core::debug::Debug as CoreDebug;
 use super::camera::Orthographic;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::model::Model;
+use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use std::collections::BTreeMap;
-use std::sync::{Arc, RwLock, Weak};
 use std::f32::MAX as F32MAX;
 use std::f32::MIN as F32MIN;
+use std::sync::{Arc, RwLock, Weak};
 
 use gltf;
 use math;
@@ -28,7 +28,7 @@ pub trait ShadowMakerData: CoreDebug + Send {
     }
 }
 
-pub trait VisibilityData : CoreDebug + Send {}
+pub trait VisibilityData: CoreDebug + Send {}
 
 pub trait Light: Object {
     fn to_directional(&self) -> Option<&Directional> {
@@ -93,15 +93,12 @@ struct SunShadowMakerDataPart {
     min_z: Real,
 }
 
-
 #[cfg_attr(debug_mode, derive(Debug))]
 struct SunVisibilityData {
     is_in_cascades: Vec<bool>,
 }
 
-impl VisibilityData for SunVisibilityData {
-
-}
+impl VisibilityData for SunVisibilityData {}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct SunShadowMakerData {
@@ -156,9 +153,7 @@ impl ShadowMakerData for SunShadowMakerData {
             is_in_cascades[ci] = true;
             ci += 1;
         }
-        m.set_light_visibility_data(self.id, Box::new(SunVisibilityData {
-            is_in_cascades,
-        }));
+        m.set_light_visibility_data(self.id, Box::new(SunVisibilityData { is_in_cascades }));
     }
 }
 
@@ -212,13 +207,15 @@ impl Object for Sun {
             let mz = ccd.max_z - ccd.min_z;
             let mmz = mz * 0.02;
             let p = math::ortho(
-                ccd.min_x - mmx, 
-                ccd.max_x + mmx, 
-                ccd.min_y - mmy, 
-                ccd.min_y + mmy, 
-                mmz, 
-                mz + mmz);
-            let t = math::Matrix4::from_translation(math::Vector3::new(0.0, 0.0, -(ccd.max_z + mmz)));
+                ccd.min_x - mmx,
+                ccd.max_x + mmx,
+                ccd.min_y - mmy,
+                ccd.min_y + mmy,
+                mmz,
+                mz + mmz,
+            );
+            let t =
+                math::Matrix4::from_translation(math::Vector3::new(0.0, 0.0, -(ccd.max_z + mmz)));
             ccd.vp = p * self.ccr * t;
         }
     }
@@ -238,7 +235,11 @@ impl Light for Sun {
     }
 
     fn get_shadow_maker_data(&self) -> Option<Box<ShadowMakerData>> {
-        return Some(Box::new(SunShadowMakerData::new(self.get_id(), &self.ccds, self.ccr)));
+        return Some(Box::new(SunShadowMakerData::new(
+            self.get_id(),
+            &self.ccds,
+            self.ccr,
+        )));
     }
 
     fn update_shadow_maker_data(&mut self, smd: &Box<ShadowMakerData>) {

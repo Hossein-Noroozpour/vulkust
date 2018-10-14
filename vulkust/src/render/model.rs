@@ -7,14 +7,14 @@ use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
+use super::light::VisibilityData as LightVisibilityData;
 use super::mesh::Mesh;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::scene::Scene;
-use super::light::VisibilityData as LightVisibilityData;
 use std::collections::BTreeMap;
+use std::f32::MAX as F32MAX;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
-use std::f32::MAX as F32MAX;
 
 use gltf;
 use math;
