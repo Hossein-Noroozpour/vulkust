@@ -46,8 +46,9 @@ pub struct Engine {
     pub(crate) g_render_pass: Arc<RenderPass>,
     pub(crate) render_pass: Arc<RenderPass>,
     clear_render_pass: Arc<RenderPass>,
-    // clear_black_accumulator_render_pass: Arc<RenderPass>,
-    // black_accumulator_render_pass: Arc<RenderPass>,
+    clear_black_accumulator_render_pass: Arc<RenderPass>,
+    black_accumulator_render_pass: Arc<RenderPass>,
+    shadow_map_render_pass: Arc<RenderPass>,
     pub(crate) g_framebuffer: Arc<Framebuffer>,
     pub(crate) framebuffers: Vec<Arc<Framebuffer>>,
     pub(crate) clear_framebuffers: Vec<Arc<Framebuffer>>,
@@ -149,6 +150,21 @@ impl Engine {
             vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
             AttachmentType::ColorDisplay,
         ));
+        let clear_black_accumulator_render_pass = Arc::new(RenderPass::new(
+            vec![black_accumulator_buffer.clone()],
+            true,
+            false,
+        ));
+        let black_accumulator_render_pass = Arc::new(RenderPass::new(
+            vec![black_accumulator_buffer.clone()],
+            false,
+            true,
+        ));
+        let shadow_map_render_pass = Arc::new(RenderPass::new(
+            vec![shadow_map_buffers[0].clone()],
+            true,
+            true,
+        ));
         let os_app = os_app.clone();
         Engine {
             os_app,
@@ -178,6 +194,9 @@ impl Engine {
             sampler,
             shadow_map_buffers,
             black_accumulator_buffer,
+            clear_black_accumulator_render_pass,
+            black_accumulator_render_pass,
+            shadow_map_render_pass,
         }
     }
 
