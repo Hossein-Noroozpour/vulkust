@@ -52,6 +52,9 @@ pub struct Engine {
     pub(crate) g_framebuffer: Arc<Framebuffer>,
     pub(crate) framebuffers: Vec<Arc<Framebuffer>>,
     pub(crate) clear_framebuffers: Vec<Arc<Framebuffer>>,
+    clear_black_accumulator_framebuffer: Arc<Framebuffer>,
+    black_accumulator_framebuffer: Arc<Framebuffer>,
+    shadow_map_framebuffers: Vec<Arc<Framebuffer>>,
     pub(crate) wait_fences: Vec<Arc<Fence>>,
     pub(crate) sampler: Arc<Sampler>,
     pub(crate) samples_count: vk::VkSampleCountFlagBits,
@@ -163,6 +166,22 @@ impl Engine {
             true,
             true,
         ));
+        let clear_black_accumulator_framebuffer = Arc::new(Framebuffer::new(
+            vec![black_accumulator_buffer.clone()],
+            black_accumulator_render_pass.clone(),
+        ));
+        let black_accumulator_framebuffer = Arc::new(Framebuffer::new(
+            vec![black_accumulator_buffer.clone()],
+            clear_black_accumulator_render_pass.clone(),
+        ));
+        let mut shadow_map_framebuffers = Vec::new();
+        for v in &shadow_map_buffers {
+            shadow_map_framebuffers.push(Arc::new(Framebuffer::new(
+                vec![v.clone()],
+                shadow_map_render_pass.clone(),
+            )));
+        }
+        shadow_map_buffers.shrink_to_fit();
         let os_app = os_app.clone();
         Engine {
             os_app,
@@ -195,6 +214,9 @@ impl Engine {
             clear_black_accumulator_render_pass,
             black_accumulator_render_pass,
             shadow_map_render_pass,
+            clear_black_accumulator_framebuffer,
+            black_accumulator_framebuffer,
+            shadow_map_framebuffers,
         }
     }
 
