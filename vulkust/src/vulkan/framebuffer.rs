@@ -9,47 +9,35 @@ use std::sync::Arc;
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Framebuffer {
     pub(crate) clear_values: Vec<vk::VkClearValue>,
-    pub(crate) color_buffers: Vec<Arc<ImageView>>,
-    pub(crate) depth_buffer: Option<Arc<ImageView>>,
+    pub(crate) buffers: Vec<Arc<ImageView>>,
     pub(crate) render_pass: Arc<RenderPass>,
     pub(crate) viewport: vk::VkViewport,
     pub(crate) scissor: vk::VkRect2D,
     pub(crate) vk_data: vk::VkFramebuffer,
-    width: u32,
-    height: u32,
 }
 
 impl Framebuffer {
-    pub(crate) fn new(
-        color_buffers: Vec<Arc<ImageView>>,
-        depth_buffer: Option<Arc<ImageView>>,
-        render_pass: Arc<RenderPass>,
-    ) -> Self {
+    pub(crate) fn new(buffers: Vec<Arc<ImageView>>, render_pass: Arc<RenderPass>) -> Self {
         let mut width: u32 = 0;
         let mut height: u32 = 0;
         let mut vkdev = 0 as vk::VkDevice;
-        //vxresult!(depth_buffer.image.read()).get_dimensions();
+        let mut has_depth = false;
 
         let mut attachments = Vec::<vk::VkImageView>::new();
-        {
-            let mut push_view = |v: &Arc<ImageView>| {
-                attachments.push(v.vk_data);
-                let img = vxresult!(v.image.read());
-                let a = img.get_dimensions();
-                width = a.0;
-                height = a.1;
-                vkdev = img.logical_device.vk_data;
-            };
-            for v in &color_buffers {
-                vxlogi!("cccccccccccccccccccccccccccccc");
-                push_view(v);
+        for v in &buffers {
+            attachments.push(v.vk_data);
+            let img = vxresult!(v.image.read());
+            let a = img.get_dimensions();
+            if img.usage & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+                as vk::VkImageUsageFlags
+                != 0
+            {
+                has_depth = true;
             }
-            if let Some(v) = &depth_buffer {
-                vxlogi!("dddddddddddddddddddddddddddddd");
-                push_view(v);
-            }
+            width = a.0;
+            height = a.1;
+            vkdev = img.logical_device.vk_data;
         }
-        vxlogi!("{}", attachments.len());
 
         let mut fb_create_info = vk::VkFramebufferCreateInfo::default();
         fb_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -67,16 +55,15 @@ impl Framebuffer {
             &mut vk_data,
         ));
 
-        let mut clear_values = Vec::new();
-        for _ in 0..color_buffers.len() {
-            clear_values.push(vk::VkClearValue {
+        let mut clear_values = vec![
+            vk::VkClearValue {
                 data: [0.0, 0.0, 0.0, 0.0],
-            });
+            };
+            buffers.len()
+        ];
+        if has_depth {
+            clear_values[buffers.len() - 1].data[0] = 1.0;
         }
-        clear_values.push(vk::VkClearValue {
-            data: [1.0, 0.0, 0.0, 0.0],
-        });
-        clear_values.shrink_to_fit();
 
         let mut viewport = vk::VkViewport::default();
         viewport.x = 0.0;
@@ -94,19 +81,16 @@ impl Framebuffer {
 
         Framebuffer {
             clear_values,
-            color_buffers,
-            depth_buffer,
+            buffers,
             render_pass,
             viewport,
             scissor,
             vk_data,
-            width,
-            height,
         }
     }
 
     pub(crate) fn get_dimensions(&self) -> (u32, u32) {
-        return (self.width, self.height);
+        return vxresult!(self.buffers[0].image.read()).get_dimensions();
     }
 
     pub(crate) fn begin(&self, cmd_buffer: &mut CmdBuffer) {
@@ -130,15 +114,9 @@ impl Framebuffer {
 
 impl Drop for Framebuffer {
     fn drop(&mut self) {
-        let vkdev = if self.color_buffers.len() > 0 {
-            vxresult!(self.color_buffers[0].image.read())
-                .logical_device
-                .vk_data
-        } else if let Some(v) = &self.depth_buffer {
-            vxresult!(v.image.read()).logical_device.vk_data
-        } else {
-            vxunexpected!();
-        };
+        let vkdev = vxresult!(self.buffers[0].image.read())
+            .logical_device
+            .vk_data;
         unsafe {
             vk::vkDestroyFramebuffer(vkdev, self.vk_data, null());
         }

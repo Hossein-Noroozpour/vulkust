@@ -98,12 +98,10 @@ impl Engine {
         for v in &swapchain.image_views {
             framebuffers.push(Arc::new(Framebuffer::new(
                 vec![v.clone()],
-                None,
                 render_pass.clone(),
             )));
             clear_framebuffers.push(Arc::new(Framebuffer::new(
                 vec![v.clone()],
-                None,
                 clear_render_pass.clone(),
             )));
         }
@@ -341,9 +339,8 @@ impl Engine {
             AttachmentType::DepthGBuffer,
         ));
         let views = vec![g_pos.clone(), g_nrm.clone(), g_alb.clone(), g_dpt.clone()];
-        let g_render_pass = Arc::new(RenderPass::new(views, true, true));
-        let views = vec![g_pos, g_nrm, g_alb];
-        let g_framebuffer = Arc::new(Framebuffer::new(views, Some(g_dpt), g_render_pass.clone()));
+        let g_render_pass = Arc::new(RenderPass::new(views.clone(), true, true));
+        let g_framebuffer = Arc::new(Framebuffer::new(views, g_render_pass.clone()));
         return (g_render_pass, g_framebuffer);
     }
 
