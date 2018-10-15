@@ -234,7 +234,7 @@ impl View {
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
     ) -> Self {
         let depth_format = logical_device.physical_device.get_supported_depth_format();
-        Self::new_attachment(
+        Self::new_surface_attachment(
             logical_device,
             memory_mgr,
             depth_format,
@@ -322,18 +322,38 @@ impl View {
         View { image, vk_data }
     }
 
-    pub fn new_attachment(
+    pub fn new_surface_attachment(
         logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
         format: vk::VkFormat,
         samples: vk::VkSampleCountFlagBits,
         attachment_type: AttachmentType,
     ) -> Self {
+        let surface_caps = logical_device.physical_device.surface_caps;
+        return Self::new_attachment(
+            logical_device,
+            memory_mgr,
+            format,
+            samples,
+            attachment_type,
+            surface_caps.currentExtent.width,
+            surface_caps.currentExtent.height);
+    }
+
+    pub fn new_attachment(
+        logical_device: Arc<LogicalDevice>,
+        memory_mgr: &Arc<RwLock<MemeoryManager>>,
+        format: vk::VkFormat,
+        samples: vk::VkSampleCountFlagBits,
+        attachment_type: AttachmentType,
+        width: u32,
+        height: u32,
+    ) -> Self {
         let aspect_mask = match attachment_type {
             AttachmentType::ColorGBuffer | AttachmentType::ColorDisplay => {
                 vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
             }
-            AttachmentType::DepthGBuffer => {
+            AttachmentType::DepthGBuffer | AttachmentType::DepthShadowBuffer => {
                 vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32
             }
             AttachmentType::DepthStencilDisplay => {
@@ -353,18 +373,17 @@ impl View {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
                     | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
             }
-            AttachmentType::DepthStencilDisplay => {
+            AttachmentType::DepthStencilDisplay | AttachmentType::DepthShadowBuffer => {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
             }
         };
 
-        let surface_caps = logical_device.physical_device.surface_caps;
         let mut image_info = vk::VkImageCreateInfo::default();
         image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
         image_info.format = format;
-        image_info.extent.width = surface_caps.currentExtent.width;
-        image_info.extent.height = surface_caps.currentExtent.height;
+        image_info.extent.width = width;
+        image_info.extent.height = height;
         image_info.extent.depth = 1;
         image_info.mipLevels = 1;
         image_info.arrayLayers = 1;

@@ -99,8 +99,8 @@ impl Kernel {
             let mut renderer = Renderer::new(index, kernels_count, cmdbuffs, engine, scene_manager);
             while vxresult!(rcv.recv()) {
                 renderer.render();
-                vxresult!(ready_sig.send(()));
-                renderer.shadow();
+                // vxresult!(ready_sig.send(()));
+                // renderer.shadow();
                 vxresult!(ready_sig.send(()));
             }
             vxresult!(ready_sig.send(()));

@@ -9,6 +9,7 @@ pub use super::super::vulkan::image::*;
 pub enum AttachmentType {
     ColorGBuffer,
     DepthGBuffer,
+    DepthShadowBuffer,
     ColorDisplay,
     DepthStencilDisplay,
 }

@@ -23,6 +23,8 @@ use std::sync::{Arc, Mutex, RwLock};
 
 const GBUFF_COLOR_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
 const GBUFF_DEPTH_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT;
+const SHADOW_MAP_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT;
+const SHADOW_ACCUMULATOR_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32_SFLOAT;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {
@@ -52,6 +54,9 @@ pub struct Engine {
     pub(crate) sampler: Arc<Sampler>,
     pub(crate) samples_count: vk::VkSampleCountFlagBits,
     pub(crate) current_frame_number: u32,
+    shadow_map_buffers: [Arc<ImageView>; 6], // it an strict maximum number (99% off all use cases, other have to change it for them selves)
+    shadow_accumulator_buffer: Arc<ImageView>,
+
 }
 
 impl Engine {
@@ -128,6 +133,56 @@ impl Engine {
             g_render_pass.clone(),
             samples_count,
         )));
+        let shadow_map_buffers = [
+            Arc::new(ImageView::new_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                SHADOW_MAP_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::DepthShadowBuffer,
+                conf.shadow_map_aspect, conf.shadow_map_aspect)),
+            Arc::new(ImageView::new_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                SHADOW_MAP_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::DepthShadowBuffer,
+                conf.shadow_map_aspect, conf.shadow_map_aspect)),
+            Arc::new(ImageView::new_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                SHADOW_MAP_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::DepthShadowBuffer,
+                conf.shadow_map_aspect, conf.shadow_map_aspect)),
+            Arc::new(ImageView::new_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                SHADOW_MAP_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::DepthShadowBuffer,
+                conf.shadow_map_aspect, conf.shadow_map_aspect)),
+            Arc::new(ImageView::new_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                SHADOW_MAP_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::DepthShadowBuffer,
+                conf.shadow_map_aspect, conf.shadow_map_aspect)),
+            Arc::new(ImageView::new_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                SHADOW_MAP_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::DepthShadowBuffer,
+                conf.shadow_map_aspect, conf.shadow_map_aspect)),
+        ];
+        let shadow_accumulator_buffer = Arc::new(ImageView::new_surface_attachment(
+            logical_device.clone(),
+            &memory_mgr,
+            SHADOW_ACCUMULATOR_FMT,
+            vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+            AttachmentType::ColorDisplay));
         let os_app = os_app.clone();
         Engine {
             os_app,
@@ -156,6 +211,8 @@ impl Engine {
             buffer_manager,
             wait_fences,
             sampler,
+            shadow_map_buffers,
+            shadow_accumulator_buffer,
         }
     }
 
@@ -382,28 +439,28 @@ impl Engine {
         memory_manager: &Arc<RwLock<MemoryManager>>,
         sample_count: vk::VkSampleCountFlagBits,
     ) -> (Arc<RenderPass>, Arc<Framebuffer>) {
-        let g_pos = Arc::new(ImageView::new_attachment(
+        let g_pos = Arc::new(ImageView::new_surface_attachment(
             logical_device.clone(),
             memory_manager,
             GBUFF_COLOR_FMT,
             sample_count,
             AttachmentType::ColorGBuffer,
         ));
-        let g_nrm = Arc::new(ImageView::new_attachment(
+        let g_nrm = Arc::new(ImageView::new_surface_attachment(
             logical_device.clone(),
             memory_manager,
             GBUFF_COLOR_FMT,
             sample_count,
             AttachmentType::ColorGBuffer,
         ));
-        let g_alb = Arc::new(ImageView::new_attachment(
+        let g_alb = Arc::new(ImageView::new_surface_attachment(
             logical_device.clone(),
             memory_manager,
             GBUFF_COLOR_FMT,
             sample_count,
             AttachmentType::ColorGBuffer,
         ));
-        let g_dpt = Arc::new(ImageView::new_attachment(
+        let g_dpt = Arc::new(ImageView::new_surface_attachment(
             logical_device.clone(),
             memory_manager,
             GBUFF_DEPTH_FMT,
