@@ -3,6 +3,7 @@ use super::device::logical::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
 use super::shader::Module;
 use super::vulkan as vk;
+use super::super::render::pipeline::PipelineType;
 use std::ffi::CString;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
@@ -135,48 +136,31 @@ impl Pipeline {
         render_pass: Arc<RenderPass>,
         cache: Arc<Cache>,
         samples: vk::VkSampleCountFlagBits,
+        pipeline_type: PipelineType,
     ) -> Self {
-        let mut is_gbuff = false;
-        let mut is_deferred = false;
-        // todo this criteria is not accurate enough change it in future
-        // render pass must hold a enum for its purpose
-        if render_pass.swapchain.is_none() && render_pass.views.is_some() {
-            is_gbuff = true;
-        } else if render_pass.swapchain.is_some() && render_pass.views.is_none() {
-            is_deferred = true;
-        } else {
-            vxunexpected!();
-        }
-
         let device = vxresult!(descriptor_manager.read())
             .pool
             .logical_device
             .clone();
 
-        let vert_bytes: &'static [u8] = if is_gbuff {
-            include_shader!("gbuff.vert")
-        } else if is_deferred {
-            include_shader!("deferred.vert")
-        } else {
-            vxunexpected!();
+        let vert_bytes: &'static [u8] = match pipeline_type {
+            PipelineType::GBuffer => include_shader!("gbuff.vert"),
+            PipelineType::Deferred => include_shader!("deferred.vert"),
+            _ => vxunimplemented!(),
         };
-        let frag_bytes: &'static [u8] = if is_gbuff {
-            include_shader!("gbuff.frag")
-        } else if is_deferred {
-            include_shader!("deferred.frag")
-        } else {
-            vxunexpected!();
+        let frag_bytes: &'static [u8] = match pipeline_type {
+            PipelineType::GBuffer => include_shader!("gbuff.frag"),
+            PipelineType::Deferred => include_shader!("deferred.frag"),
+            _ => vxunimplemented!(),
         };
 
         let vertex_shader = Module::new(vert_bytes, device.clone());
         let fragment_shader = Module::new(frag_bytes, device.clone());
         let shaders = vec![vertex_shader, fragment_shader];
-        let layout = if is_gbuff {
-            Layout::new_gbuff(descriptor_manager)
-        } else if is_deferred {
-            Layout::new_deferred(descriptor_manager)
-        } else {
-            vxunexpected!();
+        let layout = match pipeline_type {
+            PipelineType::GBuffer => Layout::new_gbuff(descriptor_manager),
+            PipelineType::Deferred => Layout::new_deferred(descriptor_manager),
+            _ => vxunimplemented!(),
         };
 
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
@@ -193,16 +177,11 @@ impl Pipeline {
         rasterization_state.frontFace = vk::VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
         rasterization_state.lineWidth = 1f32;
 
-        let blend_attachment_state_size = if let Some(views) = &render_pass.views {
-            views.len() - 1
-        } else {
-            1
-        };
+        let blend_attachment_state_size = render_pass.get_color_attachments().len();
         let mut blend_attachment_state =
             vec![vk::VkPipelineColorBlendAttachmentState::default(); blend_attachment_state_size];
         for i in 0..blend_attachment_state_size {
-            // todo temporary for test
-            // for g buffer it is not good
+            // todo it will be removed because some of the devices (including my phone does not support independant blending)
             if blend_attachment_state_size == 1 || i == 2 {
                 blend_attachment_state[i].blendEnable = vk::VK_TRUE;
                 blend_attachment_state[i].srcColorBlendFactor =
@@ -265,7 +244,7 @@ impl Pipeline {
         let mut multisample_state = vk::VkPipelineMultisampleStateCreateInfo::default();
         multisample_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        if is_gbuff && samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
+        if PipelineType::GBuffer == pipeline_type && samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
             multisample_state.rasterizationSamples = samples;
             multisample_state.sampleShadingEnable = vk::VK_TRUE;
             multisample_state.minSampleShading = 0.25;
@@ -295,7 +274,7 @@ impl Pipeline {
         let mut vertex_input_state = vk::VkPipelineVertexInputStateCreateInfo::default();
         vertex_input_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        if is_gbuff {
+        if PipelineType::GBuffer == pipeline_type {
             // g-buff
             vertex_input_state.vertexBindingDescriptionCount = 1;
             vertex_input_state.pVertexBindingDescriptions = &vertex_input_binding;
@@ -404,12 +383,14 @@ impl Manager {
             render_pass.clone(),
             cache.clone(),
             samples,
+            PipelineType::Deferred,
         ));
         let gbuff_pipeline = Arc::new(Pipeline::new(
             &descriptor_manager,
             g_render_pass.clone(),
             cache.clone(),
             samples,
+            PipelineType::GBuffer,
         ));
         Manager {
             render_pass,

@@ -43,10 +43,11 @@ pub struct Engine {
     pub(crate) buffer_manager: Arc<RwLock<BufferManager>>,
     pub(crate) descriptor_manager: Arc<RwLock<DescriptorManager>>,
     pub(crate) pipeline_manager: Arc<RwLock<PipelineManager>>,
-    pub(crate) depth_stencil_image_view: Arc<ImageView>,
     pub(crate) g_render_pass: Arc<RenderPass>,
     pub(crate) render_pass: Arc<RenderPass>,
     clear_render_pass: Arc<RenderPass>,
+    // clear_black_accumulator_render_pass: Arc<RenderPass>,
+    // black_accumulator_render_pass: Arc<RenderPass>,
     pub(crate) g_framebuffer: Arc<Framebuffer>,
     pub(crate) framebuffers: Vec<Arc<Framebuffer>>,
     pub(crate) clear_framebuffers: Vec<Arc<Framebuffer>>,
@@ -54,13 +55,13 @@ pub struct Engine {
     pub(crate) sampler: Arc<Sampler>,
     pub(crate) samples_count: vk::VkSampleCountFlagBits,
     pub(crate) current_frame_number: u32,
-    shadow_map_buffers: [Arc<ImageView>; 6], // it an strict maximum number (99% off all use cases, other have to change it for them selves)
-    shadow_accumulator_buffer: Arc<ImageView>,
+    shadow_map_buffers: Vec<Arc<ImageView>>,
+    black_accumulator_buffer: Arc<ImageView>,
 
 }
 
 impl Engine {
-    pub fn new(os_app: &Arc<RwLock<OsApp>>, conf: &Configurations) -> Self {
+    pub(crate) fn new(os_app: &Arc<RwLock<OsApp>>, conf: &Configurations) -> Self {
         let instance = Arc::new(Instance::new());
         let surface = Arc::new(Surface::new(&instance, os_app));
         let physical_device = Arc::new(PhysicalDevice::new(&surface));
@@ -87,13 +88,9 @@ impl Engine {
         let memory_mgr = Arc::new(RwLock::new(MemoryManager::new(&logical_device)));
         let memory_mgr_w = Arc::downgrade(&memory_mgr);
         vxresult!(memory_mgr.write()).set_itself(memory_mgr_w);
-        let depth_stencil_image_view = Arc::new(ImageView::new_depth_stencil(
-            logical_device.clone(),
-            &memory_mgr,
-        ));
         let samples_count = Self::get_max_sample_count(&physical_device);
-        let render_pass = Arc::new(RenderPass::new(&swapchain, false));
-        let clear_render_pass = Arc::new(RenderPass::new(&swapchain, true));
+        let render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), false));
+        let clear_render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), true));
         let (g_render_pass, g_framebuffer) =
             Self::create_gbuffer_filler(&logical_device, &memory_mgr, samples_count);
         let mut framebuffers = Vec::new();
@@ -101,12 +98,12 @@ impl Engine {
         for v in &swapchain.image_views {
             framebuffers.push(Arc::new(Framebuffer::new(
                 vec![v.clone()],
-                depth_stencil_image_view.clone(),
+                None,
                 render_pass.clone(),
             )));
             clear_framebuffers.push(Arc::new(Framebuffer::new(
                 vec![v.clone()],
-                depth_stencil_image_view.clone(),
+                None,
                 clear_render_pass.clone(),
             )));
         }
@@ -133,51 +130,18 @@ impl Engine {
             g_render_pass.clone(),
             samples_count,
         )));
-        let shadow_map_buffers = [
-            Arc::new(ImageView::new_attachment(
+        let mut shadow_map_buffers = Vec::new();
+        for _ in 0..conf.max_shadow_maps_count {
+            shadow_map_buffers.push(Arc::new(ImageView::new_attachment(
                 logical_device.clone(),
                 &memory_mgr,
                 SHADOW_MAP_FMT,
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
                 AttachmentType::DepthShadowBuffer,
-                conf.shadow_map_aspect, conf.shadow_map_aspect)),
-            Arc::new(ImageView::new_attachment(
-                logical_device.clone(),
-                &memory_mgr,
-                SHADOW_MAP_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-                AttachmentType::DepthShadowBuffer,
-                conf.shadow_map_aspect, conf.shadow_map_aspect)),
-            Arc::new(ImageView::new_attachment(
-                logical_device.clone(),
-                &memory_mgr,
-                SHADOW_MAP_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-                AttachmentType::DepthShadowBuffer,
-                conf.shadow_map_aspect, conf.shadow_map_aspect)),
-            Arc::new(ImageView::new_attachment(
-                logical_device.clone(),
-                &memory_mgr,
-                SHADOW_MAP_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-                AttachmentType::DepthShadowBuffer,
-                conf.shadow_map_aspect, conf.shadow_map_aspect)),
-            Arc::new(ImageView::new_attachment(
-                logical_device.clone(),
-                &memory_mgr,
-                SHADOW_MAP_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-                AttachmentType::DepthShadowBuffer,
-                conf.shadow_map_aspect, conf.shadow_map_aspect)),
-            Arc::new(ImageView::new_attachment(
-                logical_device.clone(),
-                &memory_mgr,
-                SHADOW_MAP_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-                AttachmentType::DepthShadowBuffer,
-                conf.shadow_map_aspect, conf.shadow_map_aspect)),
-        ];
-        let shadow_accumulator_buffer = Arc::new(ImageView::new_surface_attachment(
+                conf.shadow_map_aspect, conf.shadow_map_aspect)));
+        }
+        shadow_map_buffers.shrink_to_fit();
+        let black_accumulator_buffer = Arc::new(ImageView::new_surface_attachment(
             logical_device.clone(),
             &memory_mgr,
             SHADOW_ACCUMULATOR_FMT,
@@ -197,7 +161,6 @@ impl Engine {
             graphic_cmd_pool,
             data_primary_cmds,
             memory_mgr,
-            depth_stencil_image_view,
             samples_count,
             render_pass,
             clear_render_pass,
@@ -212,11 +175,11 @@ impl Engine {
             wait_fences,
             sampler,
             shadow_map_buffers,
-            shadow_accumulator_buffer,
+            black_accumulator_buffer,
         }
     }
 
-    pub fn start_rendering(&mut self) {
+    pub(crate) fn start_rendering(&mut self) {
         let current_buffer = match self.swapchain.get_next_image_index(&self.present_semaphore) {
             NextImageResult::Next(c) => c,
             NextImageResult::NeedsRefresh => {
@@ -247,11 +210,11 @@ impl Engine {
         self.submit(&self.present_semaphore, &pcmd, &self.data_semaphore);
     }
 
-    pub fn submit(&self, wait: &Semaphore, cmd: &CmdBuffer, signal: &Semaphore) {
+    pub(crate) fn submit(&self, wait: &Semaphore, cmd: &CmdBuffer, signal: &Semaphore) {
         self.submit_with_fence(wait, Some(cmd), signal, None);
     }
 
-    pub fn submit_with_fence(
+    pub(crate) fn submit_with_fence(
         &self,
         wait: &Semaphore,
         cmd: Option<&CmdBuffer>,
@@ -284,46 +247,7 @@ impl Engine {
         ));
     }
 
-    // pub fn start_recording(&mut self) {
-    //     vxresult!(self.buffer_manager.write()).update();
-    //     let frame_number = self.wait_for_preset_frame();
-
-    //     let mut cmd_buffers = vxresult!(self.draw_commands[frame_number].write());
-    //     cmd_buffers.0.begin();
-
-    //     self.g_framebuffer.begin_render(&mut cmd_buffers.0);
-    // }
-
-    // pub fn start_deferred(&self) {
-    //     let mut cmd_buffers =
-    //         vxresult!(self.draw_commands[self.current_frame_number as usize].write());
-
-    //     self.g_framebuffer.end_render(&mut cmd_buffers.0);
-
-    //     cmd_buffers.0.end();
-
-    //     let wait_stage_mask =
-    //         vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
-    //     let mut submit_info = vk::VkSubmitInfo::default();
-    //     submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    //     submit_info.pWaitDstStageMask = &wait_stage_mask;
-    //     submit_info.pWaitSemaphores = &self.present_complete_semaphore.vk_data;
-    //     submit_info.waitSemaphoreCount = 1;
-    //     submit_info.pSignalSemaphores = &self.gbuff_complete_semaphore.vk_data;
-    //     submit_info.signalSemaphoreCount = 1;
-    //     cmd_buffers.0.fill_submit_info(&mut submit_info);
-    //     vulkan_check!(vk::vkQueueSubmit(
-    //         self.logical_device.vk_graphic_queue,
-    //         1,
-    //         &submit_info,
-    //         0 as vk::VkFence,
-    //     ));
-
-    //     cmd_buffers.1.begin();
-    //     self.framebuffers[self.current_frame_number as usize].begin_render(&mut cmd_buffers.1);
-    // }
-
-    pub fn end(&self, wait: &Semaphore) {
+    pub(crate) fn end(&self, wait: &Semaphore) {
         self.submit_with_fence(
             wait,
             None,
@@ -344,83 +268,11 @@ impl Engine {
         ));
     }
 
-    pub fn terminate(&mut self) {
+    pub(crate) fn terminate(&mut self) {
         self.logical_device.wait_idle();
     }
 
-    // pub fn bind_gbuff_descriptor(
-    //     &mut self,
-    //     descriptor_set: &DescriptorSet,
-    //     uniform_buffer: &DynamicBuffer,
-    //     index: usize,
-    // ) {
-    //     let frame_number: usize = *vxresult!(self.frame_number.read()) as usize; // todo temporary
-    //     self.bound_gbuff_descriptor_sets[index] = descriptor_set.vk_data;
-    //     self.bound_gbuff_dynamic_offsets[index] =
-    //         vxresult!(uniform_buffer.buffers[frame_number].0.read())
-    //             .info
-    //             .base
-    //             .offset as u32; // todo move this to dynamicbuffer
-    // }
-
-    // pub fn bind_deferred_descriptor(
-    //     &mut self,
-    //     descriptor_set: &DescriptorSet,
-    //     uniform_buffer: &DynamicBuffer,
-    //     index: usize,
-    // ) {
-    //     let frame_number = self.current_frame_number as usize;
-    //     self.bound_deferred_descriptor_sets[index] = descriptor_set.vk_data;
-    //     self.bound_deferred_dynamic_offsets[index] =
-    //         vxresult!(uniform_buffer.buffers[frame_number].0.read())
-    //             .info
-    //             .base
-    //             .offset as u32; // todo move this to dynamicbuffer
-    // }
-
-    // pub fn bind_gbuff_pipeline(&self) {
-    //     let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
-    //     let draw_command = &self.draw_commands[frame_number];
-    //     let mut draw_command = vxresult!(draw_command.write());
-    //     let pipemgr = vxresult!(self.pipeline_manager.read());
-    //     draw_command.0.bind_pipeline(&pipemgr.gbuff_pipeline);
-    // }
-
-    // pub fn render_gbuff(
-    //     &self,
-    //     vertex_buffer: &StaticBuffer,
-    //     index_buffer: &StaticBuffer,
-    //     indices_count: u32,
-    // ) {
-    //     let frame_number: usize = *vxresult!(self.frame_number.read()) as usize;
-    //     let draw_command = &self.draw_commands[frame_number];
-    //     let mut draw_command = vxresult!(draw_command.write());
-    //     let pipemgr = vxresult!(self.pipeline_manager.read());
-    //     draw_command.0.bind_descriptor_sets(
-    //         &pipemgr.gbuff_pipeline.layout,
-    //         &self.bound_gbuff_descriptor_sets,
-    //         &self.bound_gbuff_dynamic_offsets,
-    //     );
-    //     draw_command.0.bind_vertex_buffer(&vertex_buffer.buffer);
-    //     draw_command.0.bind_index_buffer(&index_buffer.buffer);
-    //     draw_command.0.draw_index(indices_count);
-    // }
-
-    // pub fn create_texture(&self, file_name: &str) -> Arc<ImageView> {
-    //     Arc::new(ImageView::new_texture_with_file(
-    //         file_name,
-    //         &self.buffer_manager,
-    //     ))
-    // }
-
-    // pub fn create_texture_with_bytes(&self, data: &[u8]) -> Arc<ImageView> {
-    //     Arc::new(ImageView::new_texture_with_bytes(
-    //         data,
-    //         &self.buffer_manager,
-    //     ))
-    // }
-
-    pub fn create_texture_2d_with_pixels(
+    pub(crate) fn create_texture_2d_with_pixels(
         &self,
         width: u32,
         height: u32,
@@ -468,9 +320,9 @@ impl Engine {
             AttachmentType::DepthGBuffer,
         ));
         let views = vec![g_pos.clone(), g_nrm.clone(), g_alb.clone(), g_dpt.clone()];
-        let g_render_pass = Arc::new(RenderPass::new_with_views(views));
+        let g_render_pass = Arc::new(RenderPass::new(views, true, true));
         let views = vec![g_pos, g_nrm, g_alb];
-        let g_framebuffer = Arc::new(Framebuffer::new(views, g_dpt, g_render_pass.clone()));
+        let g_framebuffer = Arc::new(Framebuffer::new(views, Some(g_dpt), g_render_pass.clone()));
         return (g_render_pass, g_framebuffer);
     }
 

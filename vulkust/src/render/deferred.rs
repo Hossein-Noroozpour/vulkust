@@ -49,7 +49,11 @@ impl Deferred {
         let sampler = &gapi_engine.sampler;
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let mut textures = Vec::new();
-        for v in vxunwrap!(&gapi_engine.g_render_pass.views) {
+        for v in gapi_engine.g_render_pass.get_color_attachments() {
+            textures.push(texture_manager.create_2d_with_view_sampler(v.clone(), sampler.clone()));
+        }
+        {
+            let v = vxunwrap!(gapi_engine.g_render_pass.get_depth_attachment());
             textures.push(texture_manager.create_2d_with_view_sampler(v.clone(), sampler.clone()));
         }
         textures.shrink_to_fit();

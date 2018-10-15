@@ -15,12 +15,12 @@ pub struct Pool {
 
 impl Pool {
     pub fn new(logical_device: Arc<LogicalDevice>, conf: &Configurations) -> Self {
-        let buffers_count = conf.max_number_mesh + conf.max_number_models + conf.max_number_scene;
+        let buffers_count = conf.max_meshes_count + conf.max_models_count + conf.max_scenes_count;
         let mut type_counts = [vk::VkDescriptorPoolSize::default(); 2];
         type_counts[0].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         type_counts[0].descriptorCount = buffers_count as u32;
         type_counts[1].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        type_counts[1].descriptorCount = conf.max_number_texture as u32;
+        type_counts[1].descriptorCount = conf.max_textures_count as u32;
         let mut descriptor_pool_info = vk::VkDescriptorPoolCreateInfo::default();
         descriptor_pool_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
