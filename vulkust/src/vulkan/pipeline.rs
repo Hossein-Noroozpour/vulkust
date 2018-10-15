@@ -1,9 +1,9 @@
+use super::super::render::pipeline::PipelineType;
 use super::descriptor::{Manager as DescriptorManager, SetLayout as DescriptorSetLayout};
 use super::device::logical::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
 use super::shader::Module;
 use super::vulkan as vk;
-use super::super::render::pipeline::PipelineType;
 use std::ffi::CString;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
@@ -244,7 +244,9 @@ impl Pipeline {
         let mut multisample_state = vk::VkPipelineMultisampleStateCreateInfo::default();
         multisample_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        if PipelineType::GBuffer == pipeline_type && samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
+        if PipelineType::GBuffer == pipeline_type
+            && samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32
+        {
             multisample_state.rasterizationSamples = samples;
             multisample_state.sampleShadingEnable = vk::VK_TRUE;
             multisample_state.minSampleShading = 0.25;

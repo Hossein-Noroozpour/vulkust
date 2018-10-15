@@ -25,7 +25,7 @@ impl Framebuffer {
         depth_buffer: Option<Arc<ImageView>>,
         render_pass: Arc<RenderPass>,
     ) -> Self {
-        let mut width: u32 = 0; 
+        let mut width: u32 = 0;
         let mut height: u32 = 0;
         let mut vkdev = 0 as vk::VkDevice;
         //vxresult!(depth_buffer.image.read()).get_dimensions();
@@ -131,7 +131,9 @@ impl Framebuffer {
 impl Drop for Framebuffer {
     fn drop(&mut self) {
         let vkdev = if self.color_buffers.len() > 0 {
-            vxresult!(self.color_buffers[0].image.read()).logical_device.vk_data
+            vxresult!(self.color_buffers[0].image.read())
+                .logical_device
+                .vk_data
         } else if let Some(v) = &self.depth_buffer {
             vxresult!(v.image.read()).logical_device.vk_data
         } else {

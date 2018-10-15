@@ -57,7 +57,6 @@ pub struct Engine {
     pub(crate) current_frame_number: u32,
     shadow_map_buffers: Vec<Arc<ImageView>>,
     black_accumulator_buffer: Arc<ImageView>,
-
 }
 
 impl Engine {
@@ -138,7 +137,9 @@ impl Engine {
                 SHADOW_MAP_FMT,
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
                 AttachmentType::DepthShadowBuffer,
-                conf.shadow_map_aspect, conf.shadow_map_aspect)));
+                conf.shadow_map_aspect,
+                conf.shadow_map_aspect,
+            )));
         }
         shadow_map_buffers.shrink_to_fit();
         let black_accumulator_buffer = Arc::new(ImageView::new_surface_attachment(
@@ -146,7 +147,8 @@ impl Engine {
             &memory_mgr,
             SHADOW_ACCUMULATOR_FMT,
             vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-            AttachmentType::ColorDisplay));
+            AttachmentType::ColorDisplay,
+        ));
         let os_app = os_app.clone();
         Engine {
             os_app,

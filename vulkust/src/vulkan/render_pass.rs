@@ -39,8 +39,7 @@ impl RenderPass {
             } else {
                 vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD
             };
-            attachment_description.storeOp =
-                vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+            attachment_description.storeOp = vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
             attachment_description.stencilLoadOp =
                 vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             attachment_description.stencilStoreOp =
@@ -70,8 +69,11 @@ impl RenderPass {
                     as vk::VkImageUsageFlags
                 != 0
             {
-                attachment_description.finalLayout =
-                    vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                attachment_description.finalLayout = if has_reader {
+                    vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                } else {
+                    vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                };
                 depth_attachment_ref.layout =
                     vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 depth_attachment_ref.attachment = attachment_descriptions.len() as u32;

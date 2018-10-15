@@ -337,7 +337,8 @@ impl View {
             samples,
             attachment_type,
             surface_caps.currentExtent.width,
-            surface_caps.currentExtent.height);
+            surface_caps.currentExtent.height,
+        );
     }
 
     pub fn new_attachment(
