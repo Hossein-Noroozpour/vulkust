@@ -90,23 +90,6 @@ impl Image {
         }
     }
 
-    // pub fn new_with_file_name(
-    //     file: &str,
-    //     buffmgr: &Arc<RwLock<BufferManager>>,
-    // ) -> Arc<RwLock<Self>> {
-    //     let mut file = vxresult!(File::open(file));
-    //     let mut data = Vec::new();
-    //     let _ = vxresult!(file.read_to_end(&mut data));
-    //     Self::new_with_bytes(&data, buffmgr)
-    // }
-
-    // pub fn new_with_bytes(data: &[u8], buffmgr: &Arc<RwLock<BufferManager>>) -> Arc<RwLock<Self>> {
-    //     let img = vxresult!(image::load_from_memory(&data)).to_rgba();
-    //     let (width, height) = img.dimensions();
-    //     let img = img.into_raw();
-    //     Self::new_2d_with_pixels(width, height, &img, buffmgr)
-    // }
-
     pub(crate) fn new_2d_with_pixels(
         width: u32,
         height: u32,
@@ -265,19 +248,6 @@ impl View {
         ))))
     }
 
-    // pub(crate) fn new_texture_with_file(file: &str, buffmgr: &Arc<RwLock<BufferManager>>) -> Self {
-    //     let image = Image::new_with_file_name(file, buffmgr);
-    //     Self::new_with_image(image)
-    // }
-
-    // pub(crate) fn new_texture_with_bytes(
-    //     data: &[u8],
-    //     buffmgr: &Arc<RwLock<BufferManager>>,
-    // ) -> Self {
-    //     let image = Image::new_with_bytes(data, buffmgr);
-    //     Self::new_with_image(image)
-    // }
-
     pub(crate) fn new_texture_2d_with_pixels(
         width: u32,
         height: u32,
@@ -351,7 +321,9 @@ impl View {
         height: u32,
     ) -> Self {
         let aspect_mask = match attachment_type {
-            AttachmentType::ColorGBuffer | AttachmentType::ColorDisplay => {
+            AttachmentType::ColorGBuffer
+            | AttachmentType::ColorDisplay
+            | AttachmentType::ResolverBuffer => {
                 vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
             }
             AttachmentType::DepthGBuffer | AttachmentType::DepthShadowBuffer => {
@@ -367,7 +339,7 @@ impl View {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
                     | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
             }
-            AttachmentType::ColorDisplay => {
+            AttachmentType::ColorDisplay | AttachmentType::ResolverBuffer => {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
             }
             AttachmentType::DepthGBuffer => {

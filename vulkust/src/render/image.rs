@@ -12,4 +12,5 @@ pub enum AttachmentType {
     DepthShadowBuffer,
     ColorDisplay,
     DepthStencilDisplay,
+    ResolverBuffer,
 }

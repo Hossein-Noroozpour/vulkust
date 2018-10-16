@@ -61,6 +61,7 @@ pub struct Engine {
     pub(crate) current_frame_number: u32,
     shadow_map_buffers: Vec<Arc<ImageView>>,
     black_accumulator_buffer: Arc<ImageView>,
+    resolver_buffers: Vec<Arc<ImageView>>,
 }
 
 impl Engine {
@@ -182,6 +183,36 @@ impl Engine {
             )));
         }
         shadow_map_buffers.shrink_to_fit();
+        let resolver_buffers = vec![
+            Arc::new(ImageView::new_surface_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                GBUFF_COLOR_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::ResolverBuffer,
+            )),
+            Arc::new(ImageView::new_surface_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                GBUFF_COLOR_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::ResolverBuffer,
+            )),
+            Arc::new(ImageView::new_surface_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                GBUFF_COLOR_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::ResolverBuffer,
+            )),
+            Arc::new(ImageView::new_surface_attachment(
+                logical_device.clone(),
+                &memory_mgr,
+                SHADOW_ACCUMULATOR_FMT,
+                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                AttachmentType::ResolverBuffer,
+            )),
+        ];
         let os_app = os_app.clone();
         Engine {
             os_app,
@@ -217,6 +248,7 @@ impl Engine {
             clear_black_accumulator_framebuffer,
             black_accumulator_framebuffer,
             shadow_map_framebuffers,
+            resolver_buffers,
         }
     }
 
