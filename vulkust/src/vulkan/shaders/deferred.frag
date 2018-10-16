@@ -50,7 +50,7 @@ layout (set = 1, binding = 1) uniform sampler2DMS position;
 layout (set = 1, binding = 2) uniform sampler2DMS normal;
 layout (set = 1, binding = 3) uniform sampler2DMS albedo;
 layout (set = 1, binding = 4) uniform sampler2DMS screen_space_depth;
-layout (set = 1, binding = 5) uniform sampler2DMS soft_shadow; // todo add soft shadow pass too
+layout (set = 1, binding = 5) uniform sampler2D darkness;
 
 vec4 resolve_multisample(sampler2DMS tex, ivec2 int_texel_coord) {
 	vec4 result = vec4(0.0);
