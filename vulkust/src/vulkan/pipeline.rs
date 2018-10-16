@@ -144,12 +144,12 @@ impl Pipeline {
             .clone();
 
         let vert_bytes: &'static [u8] = match pipeline_type {
-            PipelineType::GBuffer => include_shader!("gbuff.vert"),
+            PipelineType::GBuffer => include_shader!("g-buffers-filler.vert"),
             PipelineType::Deferred => include_shader!("deferred.vert"),
             _ => vxunimplemented!(),
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
-            PipelineType::GBuffer => include_shader!("gbuff.frag"),
+            PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
             PipelineType::Deferred => include_shader!("deferred.frag"),
             _ => vxunimplemented!(),
         };
