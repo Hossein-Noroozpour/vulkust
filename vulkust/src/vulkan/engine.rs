@@ -67,6 +67,7 @@ pub struct Engine {
     //---------------------------------------
     resolver_buffers: Vec<Arc<ImageView>>,
     resolver_render_pass: Arc<RenderPass>,
+    resolver_framebuffer: Arc<Framebuffer>,
     //---------------------------------------
     pub(crate) current_frame_number: u32,
 }
@@ -221,6 +222,7 @@ impl Engine {
             )),
         ];
         let resolver_render_pass = Arc::new(RenderPass::new(resolver_buffers.clone(), true, true));
+        let resolver_framebuffers = Arc::new(Framebuffer::new(resolver_buffers.clone(), resolver_render_pass.clone()));
         let os_app = os_app.clone();
         Engine {
             os_app,
@@ -258,6 +260,7 @@ impl Engine {
             shadow_map_framebuffers,
             resolver_buffers,
             resolver_render_pass,
+            resolver_framebuffers,
         }
     }
 
