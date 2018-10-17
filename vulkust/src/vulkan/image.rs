@@ -1,4 +1,4 @@
-use super::super::render::image::AttachmentType;
+use super::super::render::image::{AttachmentType, Format};
 use super::buffer::Manager as BufferManager;
 use super::command::Buffer as CmdBuffer;
 use super::device::logical::Logical as LogicalDevice;
@@ -8,6 +8,28 @@ use super::vulkan as vk;
 use std::default::Default;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
+
+pub(super) fn convert_format(f: Format) -> vk::VkFormat {
+    match f {
+        Format::RgbaFloat => return vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT,
+        Format::DepthFloat => return vk::VkFormat::VK_FORMAT_D32_SFLOAT,
+        Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
+        _ => vxunexpected!(),
+    }
+}
+
+pub(super) fn convert_samples(s: u8) -> vk::VkSampleCountFlagBits {
+    match s {        
+        1 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+        2 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT,
+        4 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT,
+        8 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT,
+        16 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT,
+        32 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT,
+        64 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT,
+        _ => vxunexpected!(),
+    }
+}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Image {
@@ -216,12 +238,11 @@ impl View {
         logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
     ) -> Self {
-        let depth_format = logical_device.physical_device.get_supported_depth_format();
         Self::new_surface_attachment(
             logical_device,
             memory_mgr,
-            depth_format,
-            vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+            Format::DepthFloat,
+            1,
             AttachmentType::DepthStencilDisplay,
         )
     }
@@ -295,10 +316,12 @@ impl View {
     pub fn new_surface_attachment(
         logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
-        format: vk::VkFormat,
-        samples: vk::VkSampleCountFlagBits,
+        format: Format,
+        samples: u8,
         attachment_type: AttachmentType,
     ) -> Self {
+        let format = convert_format(format);
+        let samples = convert_samples(samples);
         let surface_caps = logical_device.physical_device.surface_caps;
         return Self::new_attachment(
             logical_device,

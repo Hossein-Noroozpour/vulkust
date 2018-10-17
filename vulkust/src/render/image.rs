@@ -14,3 +14,11 @@ pub enum AttachmentType {
     DepthStencilDisplay,
     ResolverBuffer,
 }
+
+#[cfg_attr(debug_mode, derive(Debug))]
+pub enum Format {
+    RgbaFloat,
+    RgbaByte,
+    DepthFloat,
+    Float,
+}

@@ -1,5 +1,5 @@
 use super::super::render::config::Configurations;
-use super::super::render::image::AttachmentType;
+use super::super::render::image::{AttachmentType, Format as ImageFormat};
 use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool, Type as CmdPoolType};
@@ -7,7 +7,7 @@ use super::descriptor::Manager as DescriptorManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
-use super::image::View as ImageView;
+use super::image::{View as ImageView, convert_format};
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
 use super::pipeline::{Manager as PipelineManager, Pipeline};
@@ -21,10 +21,10 @@ use super::vulkan as vk;
 use std::ptr::null_mut;
 use std::sync::{Arc, Mutex, RwLock};
 
-const GBUFF_COLOR_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
-const GBUFF_DEPTH_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT;
+const GBUFF_COLOR_FMT: ImageFormat = ImageFormat::RgbaFloat;
+const GBUFF_DEPTH_FMT: ImageFormat = ImageFormat::DepthFloat;
 const SHADOW_MAP_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT;
-const SHADOW_ACCUMULATOR_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_R32_SFLOAT;
+const SHADOW_ACCUMULATOR_FMT: ImageFormat = ImageFormat::Float;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {
@@ -157,7 +157,7 @@ impl Engine {
             logical_device.clone(),
             &memory_mgr,
             SHADOW_ACCUMULATOR_FMT,
-            vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+            1,
             AttachmentType::ColorDisplay,
         ));
         let clear_black_accumulator_render_pass = Arc::new(RenderPass::new(
@@ -196,33 +196,33 @@ impl Engine {
                 logical_device.clone(),
                 &memory_mgr,
                 GBUFF_COLOR_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                1,
                 AttachmentType::ResolverBuffer,
             )),
             Arc::new(ImageView::new_surface_attachment(
                 logical_device.clone(),
                 &memory_mgr,
                 GBUFF_COLOR_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                1,
                 AttachmentType::ResolverBuffer,
             )),
             Arc::new(ImageView::new_surface_attachment(
                 logical_device.clone(),
                 &memory_mgr,
                 GBUFF_COLOR_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                1,
                 AttachmentType::ResolverBuffer,
             )),
             Arc::new(ImageView::new_surface_attachment(
                 logical_device.clone(),
                 &memory_mgr,
                 SHADOW_ACCUMULATOR_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+                1,
                 AttachmentType::ResolverBuffer,
             )),
         ];
         let resolver_render_pass = Arc::new(RenderPass::new(resolver_buffers.clone(), true, true));
-        let resolver_framebuffers = Arc::new(Framebuffer::new(resolver_buffers.clone(), resolver_render_pass.clone()));
+        let resolver_framebuffer = Arc::new(Framebuffer::new(resolver_buffers.clone(), resolver_render_pass.clone()));
         let os_app = os_app.clone();
         Engine {
             os_app,
@@ -260,7 +260,7 @@ impl Engine {
             shadow_map_framebuffers,
             resolver_buffers,
             resolver_render_pass,
-            resolver_framebuffers,
+            resolver_framebuffer,
         }
     }
 
@@ -380,28 +380,28 @@ impl Engine {
             logical_device.clone(),
             memory_manager,
             GBUFF_COLOR_FMT,
-            sample_count,
+            sample_count as u8,
             AttachmentType::ColorGBuffer,
         ));
         let g_nrm = Arc::new(ImageView::new_surface_attachment(
             logical_device.clone(),
             memory_manager,
             GBUFF_COLOR_FMT,
-            sample_count,
+            sample_count as u8,
             AttachmentType::ColorGBuffer,
         ));
         let g_alb = Arc::new(ImageView::new_surface_attachment(
             logical_device.clone(),
             memory_manager,
             GBUFF_COLOR_FMT,
-            sample_count,
+            sample_count as u8,
             AttachmentType::ColorGBuffer,
         ));
         let g_dpt = Arc::new(ImageView::new_surface_attachment(
             logical_device.clone(),
             memory_manager,
             GBUFF_DEPTH_FMT,
-            sample_count,
+            sample_count as u8,
             AttachmentType::DepthGBuffer,
         ));
         let views = vec![g_pos.clone(), g_nrm.clone(), g_alb.clone(), g_dpt.clone()];
@@ -460,9 +460,17 @@ impl Engine {
         return &self.data_semaphore;
     }
 
+    pub(crate) fn get_device(&self) -> &Arc<LogicalDevice> {
+        return &self.logical_device;
+    }
+
+    pub(crate) fn get_memory_manager(&self) -> &Arc<RwLock<MemoryManager>> {
+        return &self.memory_mgr;
+    }
+
     fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
         let mut sample_count = phdev.get_max_sample_bit(
-            GBUFF_COLOR_FMT,
+            convert_format(GBUFF_COLOR_FMT),
             vk::VkImageType::VK_IMAGE_TYPE_2D,
             vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
             vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as vk::VkImageUsageFlags
@@ -470,7 +478,7 @@ impl Engine {
             0,
         );
         sample_count &= phdev.get_max_sample_bit(
-            GBUFF_DEPTH_FMT,
+            convert_format(GBUFF_DEPTH_FMT),
             vk::VkImageType::VK_IMAGE_TYPE_2D,
             vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
             vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
