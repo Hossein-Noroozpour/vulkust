@@ -43,25 +43,32 @@ pub struct Engine {
     pub(crate) buffer_manager: Arc<RwLock<BufferManager>>,
     pub(crate) descriptor_manager: Arc<RwLock<DescriptorManager>>,
     pub(crate) pipeline_manager: Arc<RwLock<PipelineManager>>,
-    pub(crate) g_render_pass: Arc<RenderPass>,
-    pub(crate) render_pass: Arc<RenderPass>,
-    clear_render_pass: Arc<RenderPass>,
-    clear_black_accumulator_render_pass: Arc<RenderPass>,
-    black_accumulator_render_pass: Arc<RenderPass>,
-    shadow_map_render_pass: Arc<RenderPass>,
-    pub(crate) g_framebuffer: Arc<Framebuffer>,
-    pub(crate) framebuffers: Vec<Arc<Framebuffer>>,
-    pub(crate) clear_framebuffers: Vec<Arc<Framebuffer>>,
-    clear_black_accumulator_framebuffer: Arc<Framebuffer>,
-    black_accumulator_framebuffer: Arc<Framebuffer>,
-    shadow_map_framebuffers: Vec<Arc<Framebuffer>>,
     pub(crate) wait_fences: Vec<Arc<Fence>>,
     pub(crate) sampler: Arc<Sampler>,
     pub(crate) samples_count: vk::VkSampleCountFlagBits,
-    pub(crate) current_frame_number: u32,
+    //---------------------------------------
+    pub(crate) g_render_pass: Arc<RenderPass>,
+    pub(crate) g_framebuffer: Arc<Framebuffer>,
+    //---------------------------------------
+    clear_render_pass: Arc<RenderPass>,
+    pub(crate) clear_framebuffers: Vec<Arc<Framebuffer>>,
+    pub(crate) render_pass: Arc<RenderPass>,
+    pub(crate) framebuffers: Vec<Arc<Framebuffer>>,
+    //---------------------------------------
     shadow_map_buffers: Vec<Arc<ImageView>>,
+    shadow_map_render_pass: Arc<RenderPass>,
+    shadow_map_framebuffers: Vec<Arc<Framebuffer>>,
+    //---------------------------------------
     black_accumulator_buffer: Arc<ImageView>,
+    black_accumulator_render_pass: Arc<RenderPass>,
+    black_accumulator_framebuffer: Arc<Framebuffer>,
+    clear_black_accumulator_render_pass: Arc<RenderPass>,
+    clear_black_accumulator_framebuffer: Arc<Framebuffer>,
+    //---------------------------------------
     resolver_buffers: Vec<Arc<ImageView>>,
+    resolver_render_pass: Arc<RenderPass>,
+    //---------------------------------------
+    pub(crate) current_frame_number: u32,
 }
 
 impl Engine {
@@ -213,6 +220,7 @@ impl Engine {
                 AttachmentType::ResolverBuffer,
             )),
         ];
+        let resolver_render_pass = Arc::new(RenderPass::new(resolver_buffers.clone(), true, true));
         let os_app = os_app.clone();
         Engine {
             os_app,
@@ -249,6 +257,7 @@ impl Engine {
             black_accumulator_framebuffer,
             shadow_map_framebuffers,
             resolver_buffers,
+            resolver_render_pass,
         }
     }
 
