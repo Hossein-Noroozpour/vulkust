@@ -5,22 +5,22 @@ use std::ptr::null;
 use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct RenderPass {
+pub(crate) struct RenderPass {
     swapchain: Option<Arc<Swapchain>>,
     colors: Vec<Arc<ImageView>>,
     depth: Option<Arc<ImageView>>,
-    pub vk_data: vk::VkRenderPass,
+    vk_data: vk::VkRenderPass,
 }
 
 impl RenderPass {
-    pub fn new_with_swapchain(swapchain: Arc<Swapchain>, clear: bool) -> Self {
+    pub(crate) fn new_with_swapchain(swapchain: Arc<Swapchain>, clear: bool) -> Self {
         let vs = vec![swapchain.image_views[0].clone()];
         let mut result = Self::new(vs, clear, false);
         result.swapchain = Some(swapchain);
         return result;
     }
 
-    pub fn new(views: Vec<Arc<ImageView>>, clear: bool, has_reader: bool) -> Self {
+    pub(crate) fn new(views: Vec<Arc<ImageView>>, clear: bool, has_reader: bool) -> Self {
         let mut attachment_descriptions = Vec::new(); // vec![vk::VkAttachmentDescription::default(); views_len];
         let mut color_attachments_refs = Vec::new(); // vec![vk::VkAttachmentReference::default(); views_len - 1];
         let mut depth_attachment_ref = vk::VkAttachmentReference::default();
@@ -28,12 +28,12 @@ impl RenderPass {
         let mut depth = None;
         let mut colors = Vec::new();
         for v in &views {
-            let img = vxresult!(v.image.read());
-            vkdev = img.logical_device.vk_data;
+            let img = vxresult!(v.get_image().read());
+            vkdev = img.get_device().vk_data;
 
             let mut attachment_description = vk::VkAttachmentDescription::default();
-            attachment_description.format = img.format;
-            attachment_description.samples = img.samples;
+            attachment_description.format = img.get_vk_format();
+            attachment_description.samples = img.get_vk_samples();
             attachment_description.loadOp = if clear {
                 vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR
             } else {
@@ -49,7 +49,7 @@ impl RenderPass {
             } else {
                 vk::VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
             };
-            if img.usage & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+            if img.get_vk_usage() & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
                 as vk::VkImageUsageFlags
                 != 0
             {
@@ -64,7 +64,7 @@ impl RenderPass {
                     vk::VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                 color_attachments_refs.push(color_attachment_ref);
                 colors.push(v.clone());
-            } else if img.usage
+            } else if img.get_vk_usage()
                 & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
                     as vk::VkImageUsageFlags
                 != 0
@@ -144,12 +144,26 @@ impl RenderPass {
         }
     }
 
-    pub fn get_color_attachments(&self) -> &[Arc<ImageView>] {
+    pub(crate) fn get_color_attachments(&self) -> &[Arc<ImageView>] {
         return &self.colors;
     }
 
-    pub fn get_depth_attachment(&self) -> Option<&Arc<ImageView>> {
+    pub(crate) fn get_depth_attachment(&self) -> Option<&Arc<ImageView>> {
         return self.depth.as_ref();
+    }
+
+    pub(crate) fn get_data(&self) -> vk::VkRenderPass {
+        return self.vk_data;
+    }
+
+    pub(super) fn get_vk_samples(&self) -> vk::VkSampleCountFlagBits {
+        if self.colors.len() > 0 {
+            return vxresult!(self.colors[0].get_image().read()).get_vk_samples();
+        } else if let Some(d) = &self.depth {
+            return vxresult!(d.get_image().read()).get_vk_samples();
+        } else {
+            vxunexpected!();
+        }
     }
 }
 
@@ -158,11 +172,11 @@ impl Drop for RenderPass {
         let vkdev = if let Some(swapchain) = &self.swapchain {
             swapchain.logical_device.vk_data
         } else if self.colors.len() > 0 {
-            let i = vxresult!(self.colors[0].image.read());
-            i.logical_device.vk_data
+            let i = vxresult!(self.colors[0].get_image().read());
+            i.get_device().vk_data
         } else if let Some(depth) = &self.depth {
-            let i = vxresult!(depth.image.read());
-            i.logical_device.vk_data
+            let i = vxresult!(depth.get_image().read());
+            i.get_device().vk_data
         } else {
             vxunexpected!();
         };

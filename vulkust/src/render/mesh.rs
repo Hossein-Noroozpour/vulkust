@@ -221,9 +221,9 @@ impl Base {
         let index_buffer = &data[offset..end];
         let indices_count = indices_count as u32;
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let vertex_buffer = vxresult!(gapi_engine.buffer_manager.write())
+        let vertex_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_static_buffer_with_vec(&vertex_buffer);
-        let index_buffer = vxresult!(gapi_engine.buffer_manager.write())
+        let index_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_static_buffer_with_vec(&index_buffer);
         let obj_base = ObjectBase::new();
         Base {
@@ -244,7 +244,7 @@ impl Base {
         engine: &Engine,
     ) -> Self {
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let mut buffer_manager = vxresult!(gapi_engine.buffer_manager.write());
+        let mut buffer_manager = vxresult!(gapi_engine.get_buffer_manager().write());
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(indices);
         let obj_base = ObjectBase::new();
@@ -280,7 +280,7 @@ impl Base {
         let material = Material::new_with_gx3d(engine, reader);
         let obj_base = ObjectBase::new_with_id(my_id);
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let mut buffer_manager = vxresult!(gapi_engine.buffer_manager.write());
+        let mut buffer_manager = vxresult!(gapi_engine.get_buffer_manager().write());
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(&vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(&indices);
         let indices_count = indices.len() as u32;

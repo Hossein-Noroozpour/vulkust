@@ -7,7 +7,7 @@ use super::descriptor::Manager as DescriptorManager;
 use super::device::logical::Logical as LogicalDevice;
 use super::device::physical::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
-use super::image::{View as ImageView, convert_format};
+use super::image::{convert_format, View as ImageView};
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
 use super::pipeline::{Manager as PipelineManager, Pipeline};
@@ -27,33 +27,30 @@ const SHADOW_MAP_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT;
 const SHADOW_ACCUMULATOR_FMT: ImageFormat = ImageFormat::Float;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Engine {
-    pub(crate) os_app: Arc<RwLock<OsApp>>,
-    pub(crate) instance: Arc<Instance>,
-    pub(crate) surface: Arc<Surface>,
-    pub(crate) physical_device: Arc<PhysicalDevice>,
-    pub(crate) logical_device: Arc<LogicalDevice>,
-    pub(crate) swapchain: Arc<Swapchain>,
+pub(crate) struct Engine {
+    os_app: Arc<RwLock<OsApp>>,
+    instance: Arc<Instance>,
+    surface: Arc<Surface>,
+    physical_device: Arc<PhysicalDevice>,
+    logical_device: Arc<LogicalDevice>,
+    swapchain: Arc<Swapchain>,
     present_semaphore: Arc<Semaphore>,
     data_semaphore: Arc<Semaphore>,
     render_semaphore: Arc<Semaphore>,
     graphic_cmd_pool: Arc<CmdPool>,
     data_primary_cmds: Vec<Arc<Mutex<CmdBuffer>>>,
-    pub(crate) memory_mgr: Arc<RwLock<MemoryManager>>,
-    pub(crate) buffer_manager: Arc<RwLock<BufferManager>>,
-    pub(crate) descriptor_manager: Arc<RwLock<DescriptorManager>>,
-    pub(crate) pipeline_manager: Arc<RwLock<PipelineManager>>,
-    pub(crate) wait_fences: Vec<Arc<Fence>>,
-    pub(crate) sampler: Arc<Sampler>,
-    pub(crate) samples_count: vk::VkSampleCountFlagBits,
-    //---------------------------------------
-    pub(crate) g_render_pass: Arc<RenderPass>,
-    pub(crate) g_framebuffer: Arc<Framebuffer>,
+    memory_manager: Arc<RwLock<MemoryManager>>,
+    buffer_manager: Arc<RwLock<BufferManager>>,
+    descriptor_manager: Arc<RwLock<DescriptorManager>>,
+    pipeline_manager: Arc<RwLock<PipelineManager>>,
+    wait_fences: Vec<Arc<Fence>>,
+    linear_repeat_sampler: Arc<Sampler>,
+    samples_count: vk::VkSampleCountFlagBits,
     //---------------------------------------
     clear_render_pass: Arc<RenderPass>,
-    pub(crate) clear_framebuffers: Vec<Arc<Framebuffer>>,
-    pub(crate) render_pass: Arc<RenderPass>,
-    pub(crate) framebuffers: Vec<Arc<Framebuffer>>,
+    clear_framebuffers: Vec<Arc<Framebuffer>>,
+    render_pass: Arc<RenderPass>,
+    framebuffers: Vec<Arc<Framebuffer>>,
     //---------------------------------------
     shadow_map_buffers: Vec<Arc<ImageView>>,
     shadow_map_render_pass: Arc<RenderPass>,
@@ -65,11 +62,7 @@ pub struct Engine {
     clear_black_accumulator_render_pass: Arc<RenderPass>,
     clear_black_accumulator_framebuffer: Arc<Framebuffer>,
     //---------------------------------------
-    resolver_buffers: Vec<Arc<ImageView>>,
-    resolver_render_pass: Arc<RenderPass>,
-    resolver_framebuffer: Arc<Framebuffer>,
-    //---------------------------------------
-    pub(crate) current_frame_number: u32,
+    current_frame_number: u32,
 }
 
 impl Engine {
@@ -97,14 +90,12 @@ impl Engine {
         }
         wait_fences.shrink_to_fit();
         data_primary_cmds.shrink_to_fit();
-        let memory_mgr = Arc::new(RwLock::new(MemoryManager::new(&logical_device)));
-        let memory_mgr_w = Arc::downgrade(&memory_mgr);
-        vxresult!(memory_mgr.write()).set_itself(memory_mgr_w);
-        let samples_count = Self::get_max_sample_count(&physical_device);
+        let memory_manager = Arc::new(RwLock::new(MemoryManager::new(&logical_device)));
+        let memory_manager_w = Arc::downgrade(&memory_manager);
+        vxresult!(memory_manager.write()).set_itself(memory_manager_w);
+        let samples_count = Self::find_max_sample_count(&physical_device);
         let render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), false));
         let clear_render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), true));
-        let (g_render_pass, g_framebuffer) =
-            Self::create_gbuffer_filler(&logical_device, &memory_mgr, samples_count);
         let mut framebuffers = Vec::new();
         let mut clear_framebuffers = Vec::new();
         for v in &swapchain.image_views {
@@ -119,9 +110,9 @@ impl Engine {
         }
         framebuffers.shrink_to_fit();
         clear_framebuffers.shrink_to_fit();
-        let sampler = Arc::new(Sampler::new(logical_device.clone()));
+        let linear_repeat_sampler = Arc::new(Sampler::new(logical_device.clone()));
         let buffer_manager = Arc::new(RwLock::new(BufferManager::new(
-            &memory_mgr,
+            &memory_manager,
             &graphic_cmd_pool,
             32 * 1024 * 1024,
             32 * 1024 * 1024,
@@ -134,17 +125,15 @@ impl Engine {
             conf,
         )));
         let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(
-            &logical_device,
+            logical_device.clone(),
             descriptor_manager.clone(),
-            render_pass.clone(),
-            g_render_pass.clone(),
             samples_count,
         )));
         let mut shadow_map_buffers = Vec::new();
         for _ in 0..conf.max_shadow_maps_count {
             shadow_map_buffers.push(Arc::new(ImageView::new_attachment(
                 logical_device.clone(),
-                &memory_mgr,
+                &memory_manager,
                 SHADOW_MAP_FMT,
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
                 AttachmentType::DepthShadowBuffer,
@@ -155,7 +144,7 @@ impl Engine {
         shadow_map_buffers.shrink_to_fit();
         let black_accumulator_buffer = Arc::new(ImageView::new_surface_attachment(
             logical_device.clone(),
-            &memory_mgr,
+            &memory_manager,
             SHADOW_ACCUMULATOR_FMT,
             1,
             AttachmentType::ColorDisplay,
@@ -191,38 +180,6 @@ impl Engine {
             )));
         }
         shadow_map_buffers.shrink_to_fit();
-        let resolver_buffers = vec![
-            Arc::new(ImageView::new_surface_attachment(
-                logical_device.clone(),
-                &memory_mgr,
-                GBUFF_COLOR_FMT,
-                1,
-                AttachmentType::ResolverBuffer,
-            )),
-            Arc::new(ImageView::new_surface_attachment(
-                logical_device.clone(),
-                &memory_mgr,
-                GBUFF_COLOR_FMT,
-                1,
-                AttachmentType::ResolverBuffer,
-            )),
-            Arc::new(ImageView::new_surface_attachment(
-                logical_device.clone(),
-                &memory_mgr,
-                GBUFF_COLOR_FMT,
-                1,
-                AttachmentType::ResolverBuffer,
-            )),
-            Arc::new(ImageView::new_surface_attachment(
-                logical_device.clone(),
-                &memory_mgr,
-                SHADOW_ACCUMULATOR_FMT,
-                1,
-                AttachmentType::ResolverBuffer,
-            )),
-        ];
-        let resolver_render_pass = Arc::new(RenderPass::new(resolver_buffers.clone(), true, true));
-        let resolver_framebuffer = Arc::new(Framebuffer::new(resolver_buffers.clone(), resolver_render_pass.clone()));
         let os_app = os_app.clone();
         Engine {
             os_app,
@@ -236,12 +193,10 @@ impl Engine {
             render_semaphore,
             graphic_cmd_pool,
             data_primary_cmds,
-            memory_mgr,
+            memory_manager,
             samples_count,
             render_pass,
             clear_render_pass,
-            g_render_pass,
-            g_framebuffer,
             descriptor_manager,
             pipeline_manager,
             framebuffers,
@@ -249,7 +204,7 @@ impl Engine {
             current_frame_number: 0,
             buffer_manager,
             wait_fences,
-            sampler,
+            linear_repeat_sampler,
             shadow_map_buffers,
             black_accumulator_buffer,
             clear_black_accumulator_render_pass,
@@ -258,9 +213,6 @@ impl Engine {
             clear_black_accumulator_framebuffer,
             black_accumulator_framebuffer,
             shadow_map_framebuffers,
-            resolver_buffers,
-            resolver_render_pass,
-            resolver_framebuffer,
         }
     }
 
@@ -371,45 +323,6 @@ impl Engine {
         ))
     }
 
-    fn create_gbuffer_filler(
-        logical_device: &Arc<LogicalDevice>,
-        memory_manager: &Arc<RwLock<MemoryManager>>,
-        sample_count: vk::VkSampleCountFlagBits,
-    ) -> (Arc<RenderPass>, Arc<Framebuffer>) {
-        let g_pos = Arc::new(ImageView::new_surface_attachment(
-            logical_device.clone(),
-            memory_manager,
-            GBUFF_COLOR_FMT,
-            sample_count as u8,
-            AttachmentType::ColorGBuffer,
-        ));
-        let g_nrm = Arc::new(ImageView::new_surface_attachment(
-            logical_device.clone(),
-            memory_manager,
-            GBUFF_COLOR_FMT,
-            sample_count as u8,
-            AttachmentType::ColorGBuffer,
-        ));
-        let g_alb = Arc::new(ImageView::new_surface_attachment(
-            logical_device.clone(),
-            memory_manager,
-            GBUFF_COLOR_FMT,
-            sample_count as u8,
-            AttachmentType::ColorGBuffer,
-        ));
-        let g_dpt = Arc::new(ImageView::new_surface_attachment(
-            logical_device.clone(),
-            memory_manager,
-            GBUFF_DEPTH_FMT,
-            sample_count as u8,
-            AttachmentType::DepthGBuffer,
-        ));
-        let views = vec![g_pos.clone(), g_nrm.clone(), g_alb.clone(), g_dpt.clone()];
-        let g_render_pass = Arc::new(RenderPass::new(views.clone(), true, true));
-        let g_framebuffer = Arc::new(Framebuffer::new(views, g_render_pass.clone()));
-        return (g_render_pass, g_framebuffer);
-    }
-
     pub(crate) fn create_command_pool(&self) -> Arc<CmdPool> {
         return Arc::new(CmdPool::new(
             self.logical_device.clone(),
@@ -438,22 +351,8 @@ impl Engine {
         return self.current_frame_number as usize;
     }
 
-    pub(crate) fn get_gbuff_framebuffer(&self) -> &Arc<Framebuffer> {
-        return &self.g_framebuffer;
-    }
-
-    pub(crate) fn get_gbuff_pipeline(&self) -> Arc<Pipeline> {
-        let pipmgr = vxresult!(self.pipeline_manager.read());
-        return pipmgr.gbuff_pipeline.clone();
-    }
-
-    pub(crate) fn get_deferred_framebuffer(&self) -> &Arc<Framebuffer> {
+    pub(crate) fn get_current_framebuffer(&self) -> &Arc<Framebuffer> {
         return &self.framebuffers[self.current_frame_number as usize];
-    }
-
-    pub(crate) fn get_deferred_pipeline(&self) -> Arc<Pipeline> {
-        let pipmgr = vxresult!(self.pipeline_manager.read());
-        return pipmgr.deferred_pipeline.clone();
     }
 
     pub(crate) fn get_starting_semaphore(&self) -> &Arc<Semaphore> {
@@ -465,10 +364,34 @@ impl Engine {
     }
 
     pub(crate) fn get_memory_manager(&self) -> &Arc<RwLock<MemoryManager>> {
-        return &self.memory_mgr;
+        return &self.memory_manager;
     }
 
-    fn get_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
+    pub(crate) fn get_buffer_manager(&self) -> &Arc<RwLock<BufferManager>> {
+        return &self.buffer_manager;
+    }
+
+    pub(crate) fn get_descriptor_manager(&self) -> &Arc<RwLock<DescriptorManager>> {
+        return &self.descriptor_manager;
+    }
+
+    pub(crate) fn get_pipeline_manager(&self) -> &Arc<RwLock<PipelineManager>> {
+        return &self.pipeline_manager;
+    }
+
+    pub(crate) fn get_samples_count(&self) -> u8 {
+        return self.samples_count as u8;
+    }
+
+    pub(crate) fn get_linear_repeat_sampler(&self) -> &Arc<Sampler> {
+        return &self.linear_repeat_sampler;
+    }
+
+    pub(crate) fn get_render_pass(&self) -> &Arc<RenderPass> {
+        return &self.render_pass;
+    }
+
+    fn find_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
         let mut sample_count = phdev.get_max_sample_bit(
             convert_format(GBUFF_COLOR_FMT),
             vk::VkImageType::VK_IMAGE_TYPE_2D,

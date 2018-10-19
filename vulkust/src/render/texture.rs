@@ -167,7 +167,7 @@ impl Texture2D {
     ) -> Self {
         let engine = vxresult!(engine.gapi_engine.read());
         let image_view = engine.create_texture_2d_with_pixels(width, height, data);
-        let sampler = engine.sampler.clone();
+        let sampler = engine.get_linear_repeat_sampler().clone();
         Texture2D {
             obj_base,
             name,

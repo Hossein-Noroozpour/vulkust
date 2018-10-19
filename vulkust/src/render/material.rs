@@ -80,7 +80,7 @@ impl Material {
 
     pub fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader) -> Self {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let uniform_buffer = Arc::new(RwLock::new(uniform_buffer));
         let scene_manager = vxresult!(eng.scene_manager.read());
@@ -188,7 +188,7 @@ impl Material {
             emissive_factor.clone(),
         ];
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_gbuff_set(uniform_buffer.clone(), textures);
         let descriptor_set = Arc::new(descriptor_set);
         Material {
@@ -208,7 +208,7 @@ impl Material {
 
     pub fn default(eng: &Engine) -> Self {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer = vxresult!(gapi_engine.buffer_manager.write())
+        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let uniform_buffer = Arc::new(RwLock::new(uniform_buffer));
         let scene_manager = vxresult!(eng.scene_manager.read());
@@ -231,7 +231,7 @@ impl Material {
             emissive.clone(),
             emissive_factor.clone(),
         ];
-        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_gbuff_set(uniform_buffer.clone(), textures);
         let descriptor_set = Arc::new(descriptor_set);
         Material {
@@ -260,7 +260,7 @@ impl Material {
             self.emissive_factor.clone(),
         ];
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set =
             descriptor_manager.create_gbuff_set(self.uniform_buffer.clone(), textures);
         self.descriptor_set = Arc::new(descriptor_set);

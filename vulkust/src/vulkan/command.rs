@@ -34,6 +34,10 @@ const DEFERRED_DEFERRED_DESCRIPTOR_OFFSET: usize = 1;
 const DEFERRED_DESCRIPTOR_SETS_COUNT: usize = 2;
 const DEFERRED_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 2;
 
+const RESOLVER_DESCRIPTOR_SETS_COUNT: usize = 1;
+const RESOLVER_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 1;
+const RESOLVER_DESCRIPTOR_OFFSET: usize = 0;
+
 const MAX_DESCRIPTOR_SETS_COUNT: usize = 3;
 const MAX_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 3;
 
@@ -107,7 +111,7 @@ impl Buffer {
         vulkan_check!(vk::vkBeginCommandBuffer(self.vk_data, &cmd_buf_info));
     }
 
-    pub fn begin_secondary(&mut self, framebuffer: &Framebuffer) {
+    pub(crate) fn begin_secondary(&mut self, framebuffer: &Framebuffer) {
         #[cfg(debug_mode)]
         {
             if !self.is_secondary {
@@ -118,8 +122,8 @@ impl Buffer {
         let mut inheritance_info = vk::VkCommandBufferInheritanceInfo::default();
         inheritance_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-        inheritance_info.framebuffer = framebuffer.vk_data;
-        inheritance_info.renderPass = framebuffer.render_pass.vk_data;
+        inheritance_info.framebuffer = framebuffer.get_data();
+        inheritance_info.renderPass = framebuffer.get_render_pass().get_data();
 
         let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
         cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -128,6 +132,10 @@ impl Buffer {
             vk::VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT
                 as vk::VkCommandBufferUsageFlags;
         vulkan_check!(vk::vkBeginCommandBuffer(self.vk_data, &cmd_buf_info));
+        unsafe {
+            vk::vkCmdSetViewport(self.vk_data, 0, 1, framebuffer.get_vk_viewport());
+            vk::vkCmdSetScissor(self.vk_data, 0, 1, framebuffer.get_vk_scissor());
+        }
     }
 
     pub fn begin_render_pass_with_info(
@@ -140,17 +148,6 @@ impl Buffer {
                 &render_pass_begin_info,
                 vk::VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS,
             );
-        }
-    }
-
-    pub fn set_viewport(&mut self, viewport: &vk::VkViewport) {
-        unsafe {
-            vk::vkCmdSetViewport(self.vk_data, 0, 1, viewport);
-        }
-    }
-    pub fn set_scissor(&mut self, rec: &vk::VkRect2D) {
-        unsafe {
-            vk::vkCmdSetScissor(self.vk_data, 0, 1, rec);
         }
     }
 
@@ -221,7 +218,7 @@ impl Buffer {
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
     }
 
-    pub fn bind_pipeline(&mut self, p: &Arc<Pipeline>) {
+    pub fn bind_pipeline(&mut self, p: &Pipeline) {
         let info = p.get_info_for_binding();
         self.bound_pipeline_layout = p.get_layout().vk_data;
         unsafe {
@@ -338,6 +335,22 @@ impl Buffer {
         self.draw_index(indices_count);
     }
 
+    pub(crate) fn render_resolver(&mut self) {
+        unsafe {
+            vk::vkCmdBindDescriptorSets(
+                self.vk_data,
+                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                self.bound_pipeline_layout,
+                0,
+                RESOLVER_DESCRIPTOR_SETS_COUNT as u32,
+                self.bound_descriptor_sets.as_ptr(),
+                RESOLVER_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
+                self.bound_dynamic_buffer_offsets.as_ptr(),
+            );
+        }
+        self.draw(3);
+    }
+
     pub(crate) fn render_deferred(&mut self) {
         unsafe {
             vk::vkCmdBindDescriptorSets(
@@ -362,6 +375,15 @@ impl Buffer {
         self.bound_descriptor_sets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] =
             buffer.get_offset() as u32;
+    }
+
+    pub(crate) fn bind_resolver_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[RESOLVER_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[RESOLVER_DESCRIPTOR_OFFSET] = buffer.get_offset() as u32;
     }
 
     pub(crate) fn bind_deferred_deferred_descriptor(

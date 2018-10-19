@@ -431,7 +431,7 @@ impl Manager {
             }
             for copy_img in &self.copy_to_image_ranges {
                 let image = vxresult!(copy_img.1.read());
-                cmd.copy_buffer_to_image(self.cpu_buffer.vk_data, image.vk_data, &copy_img.0);
+                cmd.copy_buffer_to_image(self.cpu_buffer.vk_data, image.get_data(), &copy_img.0);
             }
             for copy_img in &self.copy_to_image_ranges {
                 let mut image = vxresult!(copy_img.1.write());

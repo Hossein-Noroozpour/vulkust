@@ -292,11 +292,12 @@ impl Base {
             } // todo read lights
         }
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer = Arc::new(RwLock::new(
-            vxresult!(gapi_engine.buffer_manager.write())
-                .create_dynamic_buffer(size_of::<Uniform>() as isize),
-        ));
-        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let uniform_buffer =
+            Arc::new(RwLock::new(
+                vxresult!(gapi_engine.get_buffer_manager().write())
+                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
+            ));
+        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
         Base {
@@ -366,11 +367,12 @@ impl Base {
         }
         let uniform = Uniform::new();
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer = Arc::new(RwLock::new(
-            vxresult!(gapi_engine.buffer_manager.write())
-                .create_dynamic_buffer(size_of::<Uniform>() as isize),
-        ));
-        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let uniform_buffer =
+            Arc::new(RwLock::new(
+                vxresult!(gapi_engine.get_buffer_manager().write())
+                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
+            ));
+        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
         vxtodo!(); // pick one of the directional lights as shadow maker
@@ -560,11 +562,12 @@ impl DefaultScene for Base {
     fn default(engine: &Engine) -> Self {
         let cascaded_shadow_maps_count = engine.get_config().cascaded_shadows_count as usize;
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer = Arc::new(RwLock::new(
-            vxresult!(gapi_engine.buffer_manager.write())
-                .create_dynamic_buffer(size_of::<Uniform>() as isize),
-        ));
-        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let uniform_buffer =
+            Arc::new(RwLock::new(
+                vxresult!(gapi_engine.get_buffer_manager().write())
+                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
+            ));
+        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
         Base {

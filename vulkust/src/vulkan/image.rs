@@ -18,8 +18,17 @@ pub(super) fn convert_format(f: Format) -> vk::VkFormat {
     }
 }
 
+pub(super) fn convert_to_format(f: vk::VkFormat) -> Format {
+    match f {
+        vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT => return Format::RgbaFloat,
+        vk::VkFormat::VK_FORMAT_D32_SFLOAT => return Format::DepthFloat,
+        vk::VkFormat::VK_FORMAT_R32_SFLOAT => return Format::Float,
+        _ => vxunexpected!(),
+    }
+}
+
 pub(super) fn convert_samples(s: u8) -> vk::VkSampleCountFlagBits {
-    match s {        
+    match s {
         1 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
         2 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT,
         4 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT,
@@ -32,21 +41,21 @@ pub(super) fn convert_samples(s: u8) -> vk::VkSampleCountFlagBits {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Image {
-    pub logical_device: Arc<LogicalDevice>,
-    pub layout: vk::VkImageLayout,
-    pub format: vk::VkFormat,
-    pub mips_count: u8,
-    pub samples: vk::VkSampleCountFlagBits,
-    pub usage: vk::VkImageUsageFlags,
-    pub memory: Option<Arc<RwLock<Memory>>>,
+pub(crate) struct Image {
+    logical_device: Arc<LogicalDevice>,
+    layout: vk::VkImageLayout,
+    format: vk::VkFormat,
+    mips_count: u8,
+    samples: vk::VkSampleCountFlagBits,
+    usage: vk::VkImageUsageFlags,
+    memory: Option<Arc<RwLock<Memory>>>,
     width: u32,
     height: u32,
-    pub vk_data: vk::VkImage,
+    vk_data: vk::VkImage,
 }
 
 impl Image {
-    pub fn new_with_info(
+    pub(crate) fn new_with_info(
         info: &vk::VkImageCreateInfo,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
     ) -> Self {
@@ -88,7 +97,7 @@ impl Image {
         }
     }
 
-    pub fn new_with_vk_data(
+    pub(crate) fn new_with_vk_data(
         logical_device: Arc<LogicalDevice>,
         vk_data: vk::VkImage,
         layout: vk::VkImageLayout,
@@ -208,8 +217,32 @@ impl Image {
         self.layout = new_layout;
     }
 
-    pub fn get_dimensions(&self) -> (u32, u32) {
+    pub(crate) fn get_dimensions(&self) -> (u32, u32) {
         return (self.width, self.height);
+    }
+
+    pub(crate) fn get_format(&self) -> Format {
+        return convert_to_format(self.format);
+    }
+
+    pub(crate) fn get_data(&self) -> vk::VkImage {
+        return self.vk_data;
+    }
+
+    pub(crate) fn get_device(&self) -> &Arc<LogicalDevice> {
+        return &self.logical_device;
+    }
+
+    pub(super) fn get_vk_usage(&self) -> vk::VkImageUsageFlags {
+        return self.usage;
+    }
+
+    pub(super) fn get_vk_format(&self) -> vk::VkFormat {
+        return self.format;
+    }
+
+    pub(super) fn get_vk_samples(&self) -> vk::VkSampleCountFlagBits {
+        return self.samples;
     }
 }
 
@@ -229,12 +262,12 @@ unsafe impl Sync for Image {}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct View {
-    pub image: Arc<RwLock<Image>>,
-    pub vk_data: vk::VkImageView,
+    image: Arc<RwLock<Image>>,
+    vk_data: vk::VkImageView,
 }
 
 impl View {
-    pub fn new_depth_stencil(
+    pub(crate) fn new_depth_stencil(
         logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
     ) -> Self {
@@ -247,7 +280,7 @@ impl View {
         )
     }
 
-    pub fn new_with_vk_image(
+    pub(crate) fn new_with_vk_image(
         logical_device: Arc<LogicalDevice>,
         vk_image: vk::VkImage,
         format: vk::VkFormat,
@@ -279,14 +312,14 @@ impl View {
         Self::new_with_image(image)
     }
 
-    pub fn new_with_image(image: Arc<RwLock<Image>>) -> Self {
+    pub(crate) fn new_with_image(image: Arc<RwLock<Image>>) -> Self {
         return Self::new_with_image_aspect(
             image,
             vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32,
         );
     }
 
-    pub fn new_with_image_aspect(image: Arc<RwLock<Image>>, aspect_mask: u32) -> Self {
+    pub(crate) fn new_with_image_aspect(image: Arc<RwLock<Image>>, aspect_mask: u32) -> Self {
         let mut vk_data = 0 as vk::VkImageView;
         {
             let img = vxresult!(image.read());
@@ -313,7 +346,7 @@ impl View {
         View { image, vk_data }
     }
 
-    pub fn new_surface_attachment(
+    pub(crate) fn new_surface_attachment(
         logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
         format: Format,
@@ -334,7 +367,7 @@ impl View {
         );
     }
 
-    pub fn new_attachment(
+    pub(crate) fn new_attachment(
         logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
         format: vk::VkFormat,
@@ -389,6 +422,14 @@ impl View {
         image_info.samples = samples;
         let image = Arc::new(RwLock::new(Image::new_with_info(&image_info, memory_mgr)));
         return Self::new_with_image_aspect(image, aspect_mask);
+    }
+
+    pub(crate) fn get_image(&self) -> &Arc<RwLock<Image>> {
+        return &self.image;
+    }
+
+    pub(crate) fn get_data(&self) -> vk::VkImageView {
+        return self.vk_data;
     }
 }
 

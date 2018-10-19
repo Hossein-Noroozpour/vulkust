@@ -37,6 +37,14 @@ impl Layout {
         Self::new(&layout, descriptor_set_layouts)
     }
 
+    pub fn new_resolver(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
+        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let resolver_descriptor_set_layout = descriptor_manager.resolver_set_layout.clone();
+        let layout = [resolver_descriptor_set_layout.vk_data];
+        let descriptor_set_layouts = vec![resolver_descriptor_set_layout];
+        Self::new(&layout, descriptor_set_layouts)
+    }
+
     pub fn new_deferred(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
         let deferred_descriptor_set_layout = descriptor_manager.deferred_set_layout.clone();
@@ -89,13 +97,13 @@ impl Drop for Layout {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Cache {
-    pub logical_device: Arc<LogicalDevice>,
-    pub vk_data: vk::VkPipelineCache,
+struct Cache {
+    logical_device: Arc<LogicalDevice>,
+    vk_data: vk::VkPipelineCache,
 }
 
 impl Cache {
-    pub fn new(logical_device: &Arc<LogicalDevice>) -> Self {
+    fn new(logical_device: Arc<LogicalDevice>) -> Self {
         let mut vk_data = 0 as vk::VkPipelineCache;
         let mut pipeline_cache_create_info = vk::VkPipelineCacheCreateInfo::default();
         pipeline_cache_create_info.sType =
@@ -107,7 +115,7 @@ impl Cache {
             &mut vk_data,
         ));
         Cache {
-            logical_device: logical_device.clone(),
+            logical_device,
             vk_data,
         }
     }
@@ -145,13 +153,13 @@ impl Pipeline {
 
         let vert_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.vert"),
+            PipelineType::Resolver => include_shader!("resolver.vert"),
             PipelineType::Deferred => include_shader!("deferred.vert"),
-            _ => vxunimplemented!(),
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
+            PipelineType::Resolver => include_shader!("resolver.vert"),
             PipelineType::Deferred => include_shader!("deferred.frag"),
-            _ => vxunimplemented!(),
         };
 
         let vertex_shader = Module::new(vert_bytes, device.clone());
@@ -159,8 +167,8 @@ impl Pipeline {
         let shaders = vec![vertex_shader, fragment_shader];
         let layout = match pipeline_type {
             PipelineType::GBuffer => Layout::new_gbuff(descriptor_manager),
+            PipelineType::Resolver => Layout::new_resolver(descriptor_manager),
             PipelineType::Deferred => Layout::new_deferred(descriptor_manager),
-            _ => vxunimplemented!(),
         };
 
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
@@ -181,8 +189,7 @@ impl Pipeline {
         let mut blend_attachment_state =
             vec![vk::VkPipelineColorBlendAttachmentState::default(); blend_attachment_state_size];
         for i in 0..blend_attachment_state_size {
-            // todo it will be removed because some of the devices (including my phone does not support independant blending)
-            if blend_attachment_state_size == 1 || i == 2 {
+            if blend_attachment_state_size == 1 {
                 blend_attachment_state[i].blendEnable = vk::VK_TRUE;
                 blend_attachment_state[i].srcColorBlendFactor =
                     vk::VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
@@ -244,9 +251,7 @@ impl Pipeline {
         let mut multisample_state = vk::VkPipelineMultisampleStateCreateInfo::default();
         multisample_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        if PipelineType::GBuffer == pipeline_type
-            && samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32
-        {
+        if samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
             multisample_state.rasterizationSamples = samples;
             multisample_state.sampleShadingEnable = vk::VK_TRUE;
             multisample_state.minSampleShading = 0.25;
@@ -276,12 +281,14 @@ impl Pipeline {
         let mut vertex_input_state = vk::VkPipelineVertexInputStateCreateInfo::default();
         vertex_input_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        if PipelineType::GBuffer == pipeline_type {
-            // g-buff
-            vertex_input_state.vertexBindingDescriptionCount = 1;
-            vertex_input_state.pVertexBindingDescriptions = &vertex_input_binding;
-            vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.len() as u32;
-            vertex_input_state.pVertexAttributeDescriptions = vertex_attributes.as_ptr();
+        match pipeline_type {
+            PipelineType::GBuffer => {
+                vertex_input_state.vertexBindingDescriptionCount = 1;
+                vertex_input_state.pVertexBindingDescriptions = &vertex_input_binding;
+                vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.len() as u32;
+                vertex_input_state.pVertexAttributeDescriptions = vertex_attributes.as_ptr();
+            }
+            _ => {}
         }
 
         let stage_name = CString::new("main").unwrap();
@@ -310,7 +317,7 @@ impl Pipeline {
         pipeline_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipeline_create_info.layout = layout.vk_data;
-        pipeline_create_info.renderPass = render_pass.vk_data;
+        pipeline_create_info.renderPass = render_pass.get_data();
         pipeline_create_info.stageCount = shader_stages.len() as u32;
         pipeline_create_info.pStages = shader_stages.as_ptr();
         pipeline_create_info.pVertexInputState = &vertex_input_state;
@@ -320,7 +327,7 @@ impl Pipeline {
         pipeline_create_info.pMultisampleState = &multisample_state;
         pipeline_create_info.pViewportState = &viewport_state;
         pipeline_create_info.pDepthStencilState = &depth_stencil_state;
-        pipeline_create_info.renderPass = render_pass.vk_data;
+        pipeline_create_info.renderPass = render_pass.get_data();
         pipeline_create_info.pDynamicState = &dynamic_state;
 
         let mut vk_data = 0 as vk::VkPipeline;
@@ -363,44 +370,35 @@ impl Drop for Pipeline {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Manager {
-    pub cache: Arc<Cache>,
-    pub deferred_pipeline: Arc<Pipeline>,
-    pub gbuff_pipeline: Arc<Pipeline>,
-    pub descriptor_manager: Arc<RwLock<DescriptorManager>>,
-    pub render_pass: Arc<RenderPass>,
-    pub g_render_pass: Arc<RenderPass>,
+    cache: Arc<Cache>,
+    descriptor_manager: Arc<RwLock<DescriptorManager>>,
 }
 
 impl Manager {
     pub fn new(
-        logical_device: &Arc<LogicalDevice>,
+        logical_device: Arc<LogicalDevice>,
         descriptor_manager: Arc<RwLock<DescriptorManager>>,
-        render_pass: Arc<RenderPass>,
-        g_render_pass: Arc<RenderPass>,
         samples: vk::VkSampleCountFlagBits,
     ) -> Self {
         let cache = Arc::new(Cache::new(logical_device));
-        let deferred_pipeline = Arc::new(Pipeline::new(
-            &descriptor_manager,
-            render_pass.clone(),
-            cache.clone(),
-            samples,
-            PipelineType::Deferred,
-        ));
-        let gbuff_pipeline = Arc::new(Pipeline::new(
-            &descriptor_manager,
-            g_render_pass.clone(),
-            cache.clone(),
-            samples,
-            PipelineType::GBuffer,
-        ));
         Manager {
-            render_pass,
-            g_render_pass,
             cache,
             descriptor_manager,
-            deferred_pipeline,
-            gbuff_pipeline,
         }
+    }
+
+    pub(crate) fn create(
+        &mut self,
+        render_pass: Arc<RenderPass>,
+        pipeline_type: PipelineType,
+    ) -> Pipeline {
+        let samples = render_pass.get_vk_samples();
+        return Pipeline::new(
+            &self.descriptor_manager,
+            render_pass,
+            self.cache.clone(),
+            samples,
+            pipeline_type,
+        );
     }
 }

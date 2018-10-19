@@ -5,12 +5,12 @@ use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Sampler {
-    pub logical_device: Arc<LogicalDevice>,
-    pub vk_data: vk::VkSampler,
+    logical_device: Arc<LogicalDevice>,
+    vk_data: vk::VkSampler,
 }
 
 impl Sampler {
-    pub fn new(logical_device: Arc<LogicalDevice>) -> Self {
+    pub(crate) fn new(logical_device: Arc<LogicalDevice>) -> Self {
         let mut info = vk::VkSamplerCreateInfo::default();
         info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         info.magFilter = vk::VkFilter::VK_FILTER_LINEAR;
@@ -43,6 +43,10 @@ impl Sampler {
             logical_device,
             vk_data,
         }
+    }
+
+    pub(crate) fn get_data(&self) -> vk::VkSampler {
+        return self.vk_data;
     }
 }
 

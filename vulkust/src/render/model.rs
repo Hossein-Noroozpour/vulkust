@@ -244,11 +244,12 @@ impl Loadable for Base {
             vxunimplemented!(); // todo support children
         }
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer = Arc::new(RwLock::new(
-            vxresult!(gapi_engine.buffer_manager.write())
-                .create_dynamic_buffer(size_of::<Uniform>() as isize),
-        ));
-        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let uniform_buffer =
+            Arc::new(RwLock::new(
+                vxresult!(gapi_engine.get_buffer_manager().write())
+                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
+            ));
+        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
         let uniform = Uniform::new_with_gltf(node);
@@ -294,11 +295,12 @@ impl Loadable for Base {
             meshes.insert(mesh_id, mesh);
         }
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer = Arc::new(RwLock::new(
-            vxresult!(gapi_engine.buffer_manager.write())
-                .create_dynamic_buffer(size_of::<Uniform>() as isize),
-        ));
-        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let uniform_buffer =
+            Arc::new(RwLock::new(
+                vxresult!(gapi_engine.get_buffer_manager().write())
+                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
+            ));
+        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
         let center = math::Vector3::new(uniform.model.w.x, uniform.model.w.y, uniform.model.w.z);
@@ -421,11 +423,12 @@ impl Model for Base {
 impl DefaultModel for Base {
     fn default(eng: &Engine) -> Self {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer = Arc::new(RwLock::new(
-            vxresult!(gapi_engine.buffer_manager.write())
-                .create_dynamic_buffer(size_of::<Uniform>() as isize),
-        ));
-        let mut descriptor_manager = vxresult!(gapi_engine.descriptor_manager.write());
+        let uniform_buffer =
+            Arc::new(RwLock::new(
+                vxresult!(gapi_engine.get_buffer_manager().write())
+                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
+            ));
+        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
         let descriptor_set = Arc::new(descriptor_set);
         Base {

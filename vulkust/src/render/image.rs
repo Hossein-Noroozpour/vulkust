@@ -22,3 +22,9 @@ pub enum Format {
     DepthFloat,
     Float,
 }
+
+#[cfg_attr(debug_mode, derive(Debug))]
+pub enum Usage {
+    Color,
+    DepthStencil,
+}

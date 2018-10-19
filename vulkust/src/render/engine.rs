@@ -15,11 +15,10 @@ use std::sync::{Arc, RwLock, Weak};
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {
     pub myself: Option<Weak<RwLock<Engine>>>,
-    pub gapi_engine: Arc<RwLock<GraphicApiEngine>>,
+    pub(crate) gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     pub os_app: Weak<RwLock<OsApp>>,
     pub core_app: Arc<RwLock<CoreAppTrait>>,
     pub scene_manager: Arc<RwLock<SceneManager>>,
-    pub deferred: Arc<RwLock<Deferred>>,
     pub timing: Arc<RwLock<Timing>>,
     config: Configurations,
     multithreaded_engine: MultithreadedEngine,
@@ -32,10 +31,6 @@ impl Engine {
         let gapi_engine = GraphicApiEngine::new(os_app, &config);
         let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
         gx3d_import(&scene_manager);
-        let deferred = Arc::new(RwLock::new(Deferred::new(
-            &gapi_engine,
-            &*vxresult!(scene_manager.read()),
-        )));
         let gapi_engine = Arc::new(RwLock::new(gapi_engine));
         let myself = None;
         let multithreaded_engine =
@@ -46,7 +41,6 @@ impl Engine {
             os_app: Arc::downgrade(os_app),
             core_app,
             scene_manager,
-            deferred,
             timing: Arc::new(RwLock::new(Timing::new())),
             config,
             multithreaded_engine,

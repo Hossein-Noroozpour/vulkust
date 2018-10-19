@@ -71,6 +71,11 @@ impl SetLayout {
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
+    pub fn new_resolver(logical_device: Arc<LogicalDevice>) -> Self {
+        let layout_bindings = Self::create_binding_info(4);
+        return Self::new_with_bindings_info(logical_device, &layout_bindings);
+    }
+
     fn new_with_bindings_info(
         logical_device: Arc<LogicalDevice>,
         layout_bindings: &Vec<vk::VkDescriptorSetLayoutBinding>,
@@ -223,8 +228,8 @@ impl Set {
             let texture = vxresult!(texture.read());
             img_infos[last_img_info_i].imageLayout =
                 vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            img_infos[last_img_info_i].imageView = texture.get_image_view().vk_data;
-            img_infos[last_img_info_i].sampler = texture.get_sampler().vk_data;
+            img_infos[last_img_info_i].imageView = texture.get_image_view().get_data();
+            img_infos[last_img_info_i].sampler = texture.get_sampler().get_data();
             infos[last_info_i].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             infos[last_info_i].dstSet = vk_data;
             infos[last_info_i].descriptorCount = 1;
@@ -261,8 +266,9 @@ impl Drop for Set {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Manager {
     buffer_manager: Arc<RwLock<BufferManager>>,
-    pub gbuff_set_layout: Arc<SetLayout>,
     pub buffer_only_set_layout: Arc<SetLayout>,
+    pub gbuff_set_layout: Arc<SetLayout>,
+    pub resolver_set_layout: Arc<SetLayout>,
     pub deferred_set_layout: Arc<SetLayout>,
     pub pool: Arc<Pool>,
 }
@@ -278,12 +284,14 @@ impl Manager {
         let pool = Arc::new(Pool::new(logical_device.clone(), conf));
         let gbuff_set_layout = Arc::new(SetLayout::new_gbuff(logical_device.clone()));
         let buffer_only_set_layout = Arc::new(SetLayout::new_buffer_only(logical_device.clone()));
+        let resolver_set_layout = Arc::new(SetLayout::new_resolver(logical_device.clone()));
         let deferred_set_layout = Arc::new(SetLayout::new_deferred(logical_device.clone()));
         let buffer_manager = buffer_manager.clone();
         Manager {
             buffer_manager,
             gbuff_set_layout,
             buffer_only_set_layout,
+            resolver_set_layout,
             deferred_set_layout,
             pool,
         }

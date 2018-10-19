@@ -2,10 +2,12 @@ use super::super::core::types::Id;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::config::Configurations;
 use super::deferred::Deferred;
+use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
 use super::light::ShadowMakerData;
 use super::model::Model;
 use super::object::Object;
+use super::resolver::Resolver;
 use super::scene::{Manager as SceneManager, Scene};
 use super::sync::Semaphore;
 use num_cpus;
@@ -90,13 +92,21 @@ impl Kernel {
         kernels_count: usize,
         engine: Arc<RwLock<GraphicApiEngine>>,
         scene_manager: Arc<RwLock<SceneManager>>,
+        g_buffer_filler: Arc<RwLock<GBufferFiller>>,
     ) -> Self {
         let (loop_signaler, rcv) = channel();
         let (ready_sig, ready_notifier) = channel();
         let frame_datas = Arc::new(Mutex::new(Vec::new()));
         let cmdbuffs = frame_datas.clone();
         let handle = spawn(move || {
-            let mut renderer = Renderer::new(index, kernels_count, cmdbuffs, engine, scene_manager);
+            let mut renderer = Renderer::new(
+                index,
+                kernels_count,
+                cmdbuffs,
+                engine,
+                scene_manager,
+                g_buffer_filler,
+            );
             while vxresult!(rcv.recv()) {
                 renderer.render();
                 // vxresult!(ready_sig.send(()));
@@ -137,6 +147,7 @@ struct Renderer {
     scene_manager: Arc<RwLock<SceneManager>>,
     cmd_pool: Arc<CmdPool>,
     cmd_buffers: Arc<Mutex<Vec<KernelFrameData>>>,
+    g_buffer_filler: Arc<RwLock<GBufferFiller>>,
 }
 
 impl Renderer {
@@ -146,6 +157,7 @@ impl Renderer {
         cmd_buffers: Arc<Mutex<Vec<KernelFrameData>>>,
         g_engine: Arc<RwLock<GraphicApiEngine>>,
         scene_manager: Arc<RwLock<SceneManager>>,
+        g_buffer_filler: Arc<RwLock<GBufferFiller>>,
     ) -> Self {
         let eng = g_engine.clone();
         let eng = vxresult!(eng.read());
@@ -164,19 +176,19 @@ impl Renderer {
             scene_manager,
             cmd_pool,
             cmd_buffers,
+            g_buffer_filler,
         }
     }
 
     pub fn render(&mut self) {
         let g_engine = vxresult!(self.g_engine.read());
-        let gbuff_framebuffer = g_engine.get_gbuff_framebuffer();
-        let gbuff_pipeline = g_engine.get_gbuff_pipeline();
         let frame_number = g_engine.get_frame_number();
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         let scenes = vxresult!(scenes.read());
         let mut cmdsss = vxresult!(self.cmd_buffers.lock());
         let cmdss = &mut cmdsss[frame_number];
+        let g_buffer_filler = vxresult!(self.g_buffer_filler.read());
         let mut task_index = 0usize;
         for (scene_id, scene) in &*scenes {
             let scene = scene.upgrade();
@@ -198,17 +210,7 @@ impl Renderer {
             }
             let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
             let models = scene.get_all_models();
-            scene_data.cmds.gbuff.begin_secondary(&gbuff_framebuffer);
-            // cmds[SECONDARY_SHADOW_PASS_INDEX].begin_secondary();
-            scene_data
-                .cmds
-                .gbuff
-                .set_viewport(&gbuff_framebuffer.viewport);
-            scene_data
-                .cmds
-                .gbuff
-                .set_scissor(&gbuff_framebuffer.scissor);
-            scene_data.cmds.gbuff.bind_pipeline(&gbuff_pipeline);
+            g_buffer_filler.begin_secondary(&mut scene_data.cmds.gbuff);
             scene.render(&mut scene_data.cmds.gbuff, frame_number);
             for (_, model) in &*models {
                 let camera = vxunwrap!(scene.get_active_camera()).upgrade();
@@ -251,6 +253,9 @@ struct PrimaryPassesCommands {
     shadow_semaphore: Arc<Semaphore>,
     gbuff: CmdBuffer,
     gbuff_semaphore: Arc<Semaphore>,
+    resolver: CmdBuffer,
+    resolver_secondary: CmdBuffer,
+    resolver_semaphore: Arc<Semaphore>,
     deferred: CmdBuffer,
     deferred_secondary: CmdBuffer,
     deferred_semaphore: Arc<Semaphore>,
@@ -259,17 +264,23 @@ struct PrimaryPassesCommands {
 impl PrimaryPassesCommands {
     fn new(engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
         let shadow = engine.create_primary_command_buffer(cmd_pool.clone());
+        let shadow_semaphore = Arc::new(engine.create_semaphore());
         let gbuff = engine.create_primary_command_buffer(cmd_pool.clone());
+        let gbuff_semaphore = Arc::new(engine.create_semaphore());
+        let resolver = engine.create_primary_command_buffer(cmd_pool.clone());
+        let resolver_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
+        let resolver_semaphore = Arc::new(engine.create_semaphore());
         let deferred = engine.create_primary_command_buffer(cmd_pool.clone());
         let deferred_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
-        let shadow_semaphore = Arc::new(engine.create_semaphore());
-        let gbuff_semaphore = Arc::new(engine.create_semaphore());
         let deferred_semaphore = Arc::new(engine.create_semaphore());
         Self {
             shadow,
             shadow_semaphore,
             gbuff,
             gbuff_semaphore,
+            resolver,
+            resolver_secondary,
+            resolver_semaphore,
             deferred,
             deferred_secondary,
             deferred_semaphore,
@@ -312,7 +323,9 @@ pub(super) struct Engine {
     engine: Arc<RwLock<GraphicApiEngine>>,
     scene_manager: Arc<RwLock<SceneManager>>,
     cmd_pool: Arc<CmdPool>,
-    deferred: Mutex<Deferred>,
+    g_buffer_filler: Arc<RwLock<GBufferFiller>>,
+    deferred: Arc<Mutex<Deferred>>,
+    resolver: Arc<Mutex<Resolver>>,
     cmdsss: Mutex<Vec<FrameData>>,
     cascaded_count: usize,
 }
@@ -323,6 +336,15 @@ impl Engine {
         scene_manager: Arc<RwLock<SceneManager>>,
         config: &Configurations,
     ) -> Self {
+        let eng = engine.clone();
+        let eng = vxresult!(eng.read());
+        let scnmgr = scene_manager.clone();
+        let scnmgr = vxresult!(scnmgr.read());
+        let g_buffer_filler = GBufferFiller::new(&eng);
+        let resolver = Resolver::new(&eng, &g_buffer_filler, &*scnmgr);
+        let deferred = Arc::new(Mutex::new(Deferred::new(&eng, &*scnmgr, &resolver)));
+        let resolver = Arc::new(Mutex::new(resolver));
+        let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
         let kernels_count = num_cpus::get();
         let mut kernels = Vec::new();
         let cascaded_count = config.cascaded_shadows_count as usize;
@@ -332,11 +354,10 @@ impl Engine {
                 kernels_count,
                 engine.clone(),
                 scene_manager.clone(),
+                g_buffer_filler.clone(),
             ));
         }
         kernels.shrink_to_fit();
-        let eng = engine.clone();
-        let eng = vxresult!(eng.read());
         let cmd_pool = eng.create_command_pool();
         let frames_count = eng.get_frames_count();
         let mut cmdsss = Vec::new();
@@ -345,33 +366,33 @@ impl Engine {
         }
         cmdsss.shrink_to_fit();
         let cmdsss = Mutex::new(cmdsss);
-        let deferred = Mutex::new(Deferred::new(&eng, &*vxresult!(scene_manager.read())));
         Engine {
             kernels,
             engine,
             scene_manager,
             cmd_pool,
             cmdsss,
+            g_buffer_filler,
             deferred,
             cascaded_count,
+            resolver,
         }
     }
 
     pub(crate) fn render(&self) {
         vxresult!(self.engine.write()).start_rendering();
-        let deferred = vxresult!(self.deferred.lock());
         self.update_scenes();
-        let scnmgr = vxresult!(self.scene_manager.read());
-        let scenes = scnmgr.get_scenes();
-        let scenes = vxresult!(scenes.read());
         for k in &self.kernels {
             k.start_rendering();
         }
+        let scnmgr = vxresult!(self.scene_manager.read());
+        let scenes = scnmgr.get_scenes();
+        let scenes = vxresult!(scenes.read());
+        let deferred = vxresult!(self.deferred.lock());
+        let resolver = vxresult!(self.resolver.lock());
         let engine = vxresult!(self.engine.read());
         let mut last_semaphore = engine.get_starting_semaphore().clone();
-        let gbuff_framebuffer = engine.get_gbuff_framebuffer();
-        let deferred_framebuffer = engine.get_deferred_framebuffer();
-        let deferred_pipeline = engine.get_deferred_pipeline();
+        let framebuffer = engine.get_current_framebuffer();
         let frame_number = engine.get_frame_number();
         let cmdss = &mut vxresult!(self.cmdsss.lock())[frame_number];
         for (scene_id, scene) in &*scenes {
@@ -396,19 +417,24 @@ impl Engine {
             {
                 let cmd = &mut cmds.gbuff;
                 cmd.begin();
-                gbuff_framebuffer.begin(cmd);
+                vxresult!(self.g_buffer_filler.read()).begin_primary(cmd);
+            }
+            resolver.begin_primary(&mut cmds.resolver);
+            resolver.begin_secondary(&mut cmds.resolver_secondary, frame_number);
+            {
+                let cmd = &mut cmds.resolver;
+                cmd.exe_cmd(&cmds.resolver_secondary);
+                cmd.end_render_pass();
+                cmd.end();
             }
             {
                 let cmd = &mut cmds.deferred;
                 cmd.begin();
-                deferred_framebuffer.begin(cmd);
+                framebuffer.begin(cmd);
             }
             {
                 let cmd = &mut cmds.deferred_secondary;
-                cmd.begin_secondary(&deferred_framebuffer);
-                cmd.set_viewport(&deferred_framebuffer.viewport);
-                cmd.set_scissor(&deferred_framebuffer.scissor);
-                cmd.bind_pipeline(&deferred_pipeline);
+                cmd.begin_secondary(&*framebuffer);
                 deferred.render(cmd, frame_number);
             }
         }
@@ -470,6 +496,11 @@ impl Engine {
             engine.submit(&last_semaphore, &cmds.gbuff, &cmds.gbuff_semaphore);
             engine.submit(
                 &cmds.gbuff_semaphore,
+                &cmds.resolver,
+                &cmds.resolver_semaphore,
+            );
+            engine.submit(
+                &cmds.resolver_semaphore,
                 &cmds.deferred,
                 &cmds.deferred_semaphore,
             );

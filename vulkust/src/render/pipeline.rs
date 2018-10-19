@@ -1,13 +1,13 @@
-#[cfg(d3d12)]
+#[cfg(directx12_api)]
 pub use super::super::d3d12::pipeline::*;
-#[cfg(metal)]
+#[cfg(metal_api)]
 pub use super::super::metal::pileline::*;
-#[cfg(vulkan)]
+#[cfg(vulkan_api)]
 pub use super::super::vulkan::pipeline::*;
 
-#[derive(PartialEq)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub enum PipelineType {
     Deferred,
+    Resolver,
     GBuffer,
 }
