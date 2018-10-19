@@ -158,7 +158,7 @@ impl Pipeline {
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
-            PipelineType::Resolver => include_shader!("resolver.vert"),
+            PipelineType::Resolver => include_shader!("resolver.frag"),
             PipelineType::Deferred => include_shader!("deferred.frag"),
         };
 
@@ -378,7 +378,6 @@ impl Manager {
     pub fn new(
         logical_device: Arc<LogicalDevice>,
         descriptor_manager: Arc<RwLock<DescriptorManager>>,
-        samples: vk::VkSampleCountFlagBits,
     ) -> Self {
         let cache = Arc::new(Cache::new(logical_device));
         Manager {

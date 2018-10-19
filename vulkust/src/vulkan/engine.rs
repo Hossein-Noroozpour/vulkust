@@ -127,7 +127,6 @@ impl Engine {
         let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(
             logical_device.clone(),
             descriptor_manager.clone(),
-            samples_count,
         )));
         let mut shadow_map_buffers = Vec::new();
         for _ in 0..conf.max_shadow_maps_count {

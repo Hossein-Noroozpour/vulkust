@@ -179,6 +179,22 @@ impl Set {
         Self::new(pool, layout, uniform, buffer_manager, textures)
     }
 
+    pub fn new_resolver(
+        pool: Arc<Pool>,
+        layout: Arc<SetLayout>,
+        uniform: Arc<RwLock<DynamicBuffer>>,
+        buffer_manager: &Arc<RwLock<BufferManager>>,
+        textures: Vec<Arc<RwLock<Texture>>>,
+    ) -> Self {
+        #[cfg(debug_mode)]
+        {
+            if textures.len() != 4 {
+                vxlogf!("For resolver descriptor you need 4 textures.");
+            }
+        }
+        Self::new(pool, layout, uniform, buffer_manager, textures)
+    }
+
     fn create_buffer_info(
         uniform: &DynamicBuffer,
         buffer_manager: &Arc<RwLock<BufferManager>>,
@@ -328,6 +344,20 @@ impl Manager {
         Set::new_deferred(
             self.pool.clone(),
             self.deferred_set_layout.clone(),
+            uniform,
+            &self.buffer_manager,
+            textures,
+        )
+    }
+
+    pub fn create_resolver_set(
+        &mut self,
+        uniform: Arc<RwLock<DynamicBuffer>>,
+        textures: Vec<Arc<RwLock<Texture>>>,
+    ) -> Set {
+        Set::new_resolver(
+            self.pool.clone(),
+            self.resolver_set_layout.clone(),
             uniform,
             &self.buffer_manager,
             textures,

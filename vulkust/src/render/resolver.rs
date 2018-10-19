@@ -89,9 +89,8 @@ impl Resolver {
             vxresult!(eng.get_buffer_manager().write())
                 .create_dynamic_buffer(size_of::<Uniform>() as isize),
         ));
-        let mut descriptor_manager = vxresult!(eng.get_descriptor_manager().write());
-        let descriptor_set =
-            descriptor_manager.create_deferred_set(uniform_buffer.clone(), textures.clone());
+        let descriptor_set = vxresult!(eng.get_descriptor_manager().write())
+            .create_resolver_set(uniform_buffer.clone(), textures.clone());
         let descriptor_set = Arc::new(descriptor_set);
         let mut pipmgr = vxresult!(eng.get_pipeline_manager().write());
         let pipeline = pipmgr.create(render_pass.clone(), PipelineType::Resolver);

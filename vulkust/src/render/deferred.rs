@@ -46,7 +46,6 @@ impl Deferred {
                 vxresult!(gapi_engine.get_buffer_manager().write())
                     .create_dynamic_buffer(size_of::<Uniform>() as isize),
             ));
-        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let sampler = gapi_engine.get_linear_repeat_sampler();
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let mut textures = Vec::new();
@@ -55,8 +54,8 @@ impl Deferred {
             textures.push(texture_manager.create_2d_with_view_sampler(v.clone(), sampler.clone()));
         }
         textures.shrink_to_fit();
-        let descriptor_set =
-            descriptor_manager.create_deferred_set(uniform_buffer.clone(), textures.clone());
+        let descriptor_set = vxresult!(gapi_engine.get_descriptor_manager().write())
+            .create_deferred_set(uniform_buffer.clone(), textures.clone());
         let descriptor_set = Arc::new(descriptor_set);
         let mut pipmgr = vxresult!(gapi_engine.get_pipeline_manager().write());
         let render_pass = gapi_engine.get_render_pass();

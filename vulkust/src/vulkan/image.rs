@@ -391,11 +391,11 @@ impl View {
             }
         };
         let usage = match attachment_type {
-            AttachmentType::ColorGBuffer => {
+            AttachmentType::ColorGBuffer | AttachmentType::ResolverBuffer => {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
                     | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
             }
-            AttachmentType::ColorDisplay | AttachmentType::ResolverBuffer => {
+            AttachmentType::ColorDisplay => {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
             }
             AttachmentType::DepthGBuffer => {
