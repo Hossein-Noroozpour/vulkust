@@ -13,6 +13,7 @@ use super::texture::Texture;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
+#[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Uniform {
     inverse_samples_count: Real,
@@ -84,7 +85,7 @@ impl Resolver {
         let framebuffer = Arc::new(Framebuffer::new(buffers.clone(), render_pass.clone()));
         let (w, h) = vxresult!(buffers[0].get_image().read()).get_dimensions();
         let s = eng.get_samples_count();
-        let uniform = Uniform::new(s as i32, w as i32, h as i32);
+        let uniform = Uniform::new(1 as i32, w as i32, h as i32);
         let uniform_buffer = Arc::new(RwLock::new(
             vxresult!(eng.get_buffer_manager().write())
                 .create_dynamic_buffer(size_of::<Uniform>() as isize),
