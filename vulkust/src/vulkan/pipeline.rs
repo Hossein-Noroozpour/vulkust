@@ -52,15 +52,15 @@ impl Layout {
         Self::new(&layout, descriptor_set_layouts)
     }
 
-    pub fn new_shadow_accumulator_directional(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
+    pub fn new_shadow_accumulator_directional(
+        descriptor_manager: &Arc<RwLock<DescriptorManager>>,
+    ) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
-        let shadow_accumulator_directional_descriptor_set_layout = descriptor_manager.shadow_accumulator_directional_set_layout.clone();
-        let layout = [
-            shadow_accumulator_directional_descriptor_set_layout.vk_data,
-        ];
-        let descriptor_set_layouts = vec![
-            shadow_accumulator_directional_descriptor_set_layout,
-        ];
+        let shadow_accumulator_directional_descriptor_set_layout = descriptor_manager
+            .shadow_accumulator_directional_set_layout
+            .clone();
+        let layout = [shadow_accumulator_directional_descriptor_set_layout.vk_data];
+        let descriptor_set_layouts = vec![shadow_accumulator_directional_descriptor_set_layout];
         Self::new(&layout, descriptor_set_layouts)
     }
 
@@ -183,14 +183,18 @@ impl Pipeline {
             PipelineType::Resolver => include_shader!("resolver.vert"),
             PipelineType::Deferred => include_shader!("deferred.vert"),
             PipelineType::ShadowMapper => include_shader!("shadow-mapper.vert"),
-            PipelineType::ShadowAccumulatorDirectional => include_shader!("shadow-accumulator-directional.vert"),
+            PipelineType::ShadowAccumulatorDirectional => {
+                include_shader!("shadow-accumulator-directional.vert")
+            }
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
             PipelineType::Resolver => include_shader!("resolver.frag"),
             PipelineType::Deferred => include_shader!("deferred.frag"),
             PipelineType::ShadowMapper => include_shader!("shadow-mapper.frag"),
-            PipelineType::ShadowAccumulatorDirectional => include_shader!("shadow-accumulator-directional.frag"),
+            PipelineType::ShadowAccumulatorDirectional => {
+                include_shader!("shadow-accumulator-directional.frag")
+            }
         };
 
         let vertex_shader = Module::new(vert_bytes, device.clone());
@@ -201,7 +205,9 @@ impl Pipeline {
             PipelineType::Resolver => Layout::new_resolver(descriptor_manager),
             PipelineType::Deferred => Layout::new_deferred(descriptor_manager),
             PipelineType::ShadowMapper => Layout::new_shadow_mapper(descriptor_manager),
-            PipelineType::ShadowAccumulatorDirectional => Layout::new_shadow_accumulator_directional(descriptor_manager),
+            PipelineType::ShadowAccumulatorDirectional => {
+                Layout::new_shadow_accumulator_directional(descriptor_manager)
+            }
         };
 
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
@@ -235,7 +241,7 @@ impl Pipeline {
                     blend_attachment_state[i].dstAlphaBlendFactor =
                         vk::VkBlendFactor::VK_BLEND_FACTOR_ZERO;
                     blend_attachment_state[i].alphaBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
-                },
+                }
                 PipelineType::ShadowAccumulatorDirectional => {
                     blend_attachment_state[i].blendEnable = vk::VK_TRUE;
                     blend_attachment_state[i].srcColorBlendFactor =
@@ -243,8 +249,8 @@ impl Pipeline {
                     blend_attachment_state[i].dstColorBlendFactor =
                         vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
                     blend_attachment_state[i].colorBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
-                },
-                _ => {},
+                }
+                _ => {}
             }
             blend_attachment_state[i].colorWriteMask =
                 vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as vk::VkColorComponentFlags

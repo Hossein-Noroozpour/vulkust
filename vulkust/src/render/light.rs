@@ -190,8 +190,8 @@ impl ShadowMakerData for SunShadowMakerData {
                 c.max_seen_y = upv.y;
             }
             if c.max_z < upv.z {
-                c.max_z = vzprd;
-                c.max_seen_z = vzprd;
+                c.max_z = upv.z;
+                c.max_seen_z = upv.z;
             }
             is_in_cascades[ci] = true;
             ci += 1;
@@ -321,14 +321,14 @@ impl Light for Sun {
                 ccd.max_seen_z = smdccd.max_seen_z;
                 ccd.max_z = smdccd.max_seen_z;
             }
-            if ccs.min_seen_x > smdccd.min_seen_x {
-                ccs.min_seen_x = smdccd.min_seen_x;
+            if ccd.min_seen_x > smdccd.min_seen_x {
+                ccd.min_seen_x = smdccd.min_seen_x;
             }
-            if ccs.min_seen_y > smdccd.min_seen_y {
-                ccs.min_seen_y = smdccd.min_seen_y;
+            if ccd.min_seen_y > smdccd.min_seen_y {
+                ccd.min_seen_y = smdccd.min_seen_y;
             }
-            if ccs.min_seen_z > smdccd.min_seen_z {
-                ccs.min_seen_z = smdccd.min_seen_z;
+            if ccd.min_seen_z > smdccd.min_seen_z {
+                ccd.min_seen_z = smdccd.min_seen_z;
             }
         }
     }
