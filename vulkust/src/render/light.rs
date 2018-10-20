@@ -60,11 +60,17 @@ pub trait DefaultLighting {
 struct SunCam {
     vp: math::Matrix4<Real>,
     max_x: Real,
+    max_seen_x: Real,
     min_x: Real,
+    min_seen_x: Real,
     max_y: Real,
+    max_seen_y: Real,
     min_y: Real,
+    min_seen_y: Real,
     max_z: Real,
+    max_seen_z: Real,
     min_z: Real,
+    min_seen_z: Real,
 }
 
 impl SunCam {
@@ -74,11 +80,17 @@ impl SunCam {
                 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
             ),
             max_x: F32MIN,
+            max_seen_x: F32MIN,
             min_x: F32MAX,
+            min_seen_x: F32MAX,
             max_y: F32MIN,
+            max_seen_y: F32MIN,
             min_y: F32MAX,
+            min_seen_y: F32MAX,
             max_z: F32MIN,
+            max_seen_z: F32MIN,
             min_z: F32MAX,
+            min_seen_z: F32MAX,
         }
     }
 }
@@ -86,11 +98,17 @@ impl SunCam {
 #[cfg_attr(debug_mode, derive(Debug))]
 struct SunShadowMakerDataPart {
     max_x: Real,
+    max_seen_x: Real,
     min_x: Real,
+    min_seen_x: Real,
     max_y: Real,
+    max_seen_y: Real,
     min_y: Real,
+    min_seen_y: Real,
     max_z: Real,
+    max_seen_z: Real,
     min_z: Real,
+    min_seen_z: Real,
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -113,11 +131,17 @@ impl SunShadowMakerData {
         for data in datas {
             cascades.push(SunShadowMakerDataPart {
                 max_x: data.max_x,
+                max_seen_x: data.min_x,
                 min_x: data.min_x,
+                min_seen_x: data.max_x,
                 max_y: data.max_y,
+                max_seen_y: data.min_y,
                 min_y: data.min_y,
+                min_seen_y: data.max_y,
                 max_z: data.max_z,
+                max_seen_z: data.min_z,
                 min_z: data.min_z,
+                min_seen_z: data.max_z,
             });
         }
         cascades.shrink_to_fit();
@@ -131,24 +155,43 @@ impl ShadowMakerData for SunShadowMakerData {
         let mut is_in_cascades = vec![false; self.cascades.len()];
         let mut ci = 0;
         for c in &mut self.cascades {
-            let v = self.r * m.get_location().extend(1.0);
-            if v.x + rd < c.min_x {
+            let v = (self.r * m.get_location().extend(1.0)).truncate();
+            let rdv = math::Vector3::new(rd, rd, rd);
+            let upv = v + rdv;
+            let dnv = v - rdv;
+            if upv.x < c.min_x {
                 continue;
             }
-            if v.y + rd < c.min_y {
+            if upv.y < c.min_y {
                 continue;
             }
-            if v.z + rd < c.min_z {
+            if upv.z < c.min_z {
                 continue;
             }
-            if c.max_x + rd < v.x {
+            if c.max_x < dnv.x {
                 continue;
             }
-            if c.max_y + rd < v.y {
+            if c.max_y < dnv.y {
                 continue;
             }
-            if c.max_z < v.z + rd {
-                c.max_z = v.z + rd;
+            if dnv.x < c.min_seen_x {
+                c.min_seen_x = dnv.x;
+            }
+            if dnv.y < c.min_seen_y {
+                c.min_seen_y = dnv.y;
+            }
+            if dnv.z < c.min_seen_z {
+                c.min_seen_z = dnv.z;
+            }
+            if c.max_seen_x < upv.x {
+                c.max_seen_x = upv.x;
+            }
+            if c.max_seen_y < upv.y {
+                c.max_seen_y = upv.y;
+            }
+            if c.max_z < upv.z {
+                c.max_z = vzprd;
+                c.max_seen_z = vzprd;
             }
             is_in_cascades[ci] = true;
             ci += 1;
@@ -202,6 +245,26 @@ impl Object for Sun {
     fn update(&mut self) {
         self.obj_base.update();
         for ccd in &mut self.ccds {
+            if ccd.max_seen_x < ccd.max_x {
+                ccd.max_x = ccd.max_seen_x;
+            }
+            if ccd.max_seen_y < ccd.max_y {
+                ccd.max_y = ccd.max_seen_y;
+            }
+            if ccd.max_seen_z < ccd.max_z {
+                ccd.max_z = ccd.max_seen_z;
+            }
+            if ccd.min_seen_x > ccd.min_x {
+                ccd.min_x = ccd.min_seen_x;
+            }
+            if ccd.min_seen_y > ccd.min_y {
+                ccd.min_y = ccd.min_seen_y;
+            }
+            if ccd.min_seen_z > ccd.min_z {
+                ccd.min_z = ccd.min_seen_z;
+            }
+        }
+        for ccd in &mut self.ccds {
             let mmx = (ccd.max_x - ccd.min_x) * 0.02;
             let mmy = (ccd.max_y - ccd.min_y) * 0.02;
             let mz = ccd.max_z - ccd.min_z;
@@ -248,8 +311,24 @@ impl Light for Sun {
         for i in 0..cc {
             let ccd = &mut self.ccds[i];
             let smdccd = &smd.cascades[i];
-            if ccd.max_z < smdccd.max_z {
-                ccd.max_z = smdccd.max_z;
+            if ccd.max_seen_x < smdccd.max_seen_x {
+                ccd.max_seen_x = smdccd.max_seen_x;
+            }
+            if ccd.max_seen_y < smdccd.max_seen_y {
+                ccd.max_seen_y = smdccd.max_seen_y;
+            }
+            if ccd.max_seen_z < smdccd.max_seen_z {
+                ccd.max_seen_z = smdccd.max_seen_z;
+                ccd.max_z = smdccd.max_seen_z;
+            }
+            if ccs.min_seen_x > smdccd.min_seen_x {
+                ccs.min_seen_x = smdccd.min_seen_x;
+            }
+            if ccs.min_seen_y > smdccd.min_seen_y {
+                ccs.min_seen_y = smdccd.min_seen_y;
+            }
+            if ccs.min_seen_z > smdccd.min_seen_z {
+                ccs.min_seen_z = smdccd.min_seen_z;
             }
         }
     }
@@ -295,7 +374,6 @@ impl Directional for Sun {
             } else {
                 ccd.max_x = walls_bnds[i].0.x;
             }
-
             if walls_bnds[i].1.y < walls_bnds[ii].1.y {
                 ccd.min_y = walls_bnds[i].1.y;
             } else {
@@ -306,12 +384,17 @@ impl Directional for Sun {
             } else {
                 ccd.max_y = walls_bnds[i].0.y;
             }
-
             if walls_bnds[i].1.z < walls_bnds[ii].1.z {
                 ccd.min_z = walls_bnds[i].1.z;
             } else {
                 ccd.min_z = walls_bnds[ii].1.z;
             }
+            ccd.max_seen_x = ccd.min_x;
+            ccd.max_seen_y = ccd.min_y;
+            ccd.max_seen_z = ccd.min_z;
+            ccd.min_seen_x = ccd.max_x;
+            ccd.min_seen_y = ccd.max_y;
+            ccd.min_seen_z = ccd.max_z;
         }
     }
 }
