@@ -3,8 +3,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (location = 0) in vec2 uv;
-layout (location = 1) in vec2 texel_coord;
+layout (location = 0) in vec2 texel_coord;
 
 layout (location = 0) out vec4 out_position;
 layout (location = 1) out vec4 out_normal;
@@ -25,6 +24,10 @@ layout (set = 0, binding = 4) uniform sampler2DMS screen_space_depth;
 
 void main() {
 	ivec2 int_texel_coord = ivec2(texel_coord);
+	out_position = vec4(0.0);
+    out_normal = vec4(0.0);
+    out_albedo = vec4(0.0);
+    out_screen_space_depth = 0.0;
 	for (int i = 0; i < resolver_ubo.samples_count; ++i) {
 		out_position += texelFetch(position, int_texel_coord, i);
 		out_normal += texelFetch(normal, int_texel_coord, i);
