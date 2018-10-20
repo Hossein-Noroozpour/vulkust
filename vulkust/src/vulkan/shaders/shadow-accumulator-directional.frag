@@ -12,7 +12,7 @@ layout (location = 0) out float black;
 layout (set = 0, binding = 0) uniform LightUBO {
 	mat4 view_projections[MAX_DIRECTIONAL_CASCADES_COUNT];
     vec4 direction_strength;
-    uint cascades_count;
+    int cascades_count;
 } light_ubo;
 
 layout (set = 0, binding = 1) uniform sampler2D position;

@@ -21,5 +21,5 @@ void main() {
 	out_texel_coord = vec2(uv * ivec2(resolver_ubo.window_width, resolver_ubo.window_height));
     uv <<= 1;
     uv -= 1;
-	gl_Position = vec4(uv, 0.999f, 1.0f);
+	gl_Position = vec4(uv, 0.999, 1.0);
 }

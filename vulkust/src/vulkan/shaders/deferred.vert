@@ -48,5 +48,5 @@ void main() {
 	out_uv = vec2(uv);
     uv <<= 1;
     uv -= 1;
-	gl_Position = vec4(uv, 0.999f, 1.0f);
+	gl_Position = vec4(uv, 0.999, 1.0);
 }

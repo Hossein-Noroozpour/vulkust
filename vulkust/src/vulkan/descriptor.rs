@@ -7,6 +7,8 @@ use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
+const MAX_DIRECTIONAL_CASCADES_COUNT: u32 = 6;
+
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Pool {
     pub logical_device: Arc<LogicalDevice>,
@@ -57,22 +59,27 @@ pub struct SetLayout {
 
 impl SetLayout {
     pub fn new_gbuff(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_binding_info(7);
+        let layout_bindings = Self::create_binding_info(&[1;7]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
     pub fn new_buffer_only(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_binding_info(0);
+        let layout_bindings = Self::create_binding_info(&[]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
     pub fn new_deferred(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_binding_info(4);
+        let layout_bindings = Self::create_binding_info(&[1;4]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
     pub fn new_resolver(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_binding_info(4);
+        let layout_bindings = Self::create_binding_info(&[1;4]);
+        return Self::new_with_bindings_info(logical_device, &layout_bindings);
+    }
+
+    pub fn new_shadow_accumulator_directional(logical_device: Arc<LogicalDevice>) -> Self {
+        let layout_bindings = Self::create_binding_info(&[1, 1, MAX_DIRECTIONAL_CASCADES_COUNT]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
@@ -98,7 +105,8 @@ impl SetLayout {
         }
     }
 
-    fn create_binding_info(images_count: usize) -> Vec<vk::VkDescriptorSetLayoutBinding> {
+    fn create_binding_info(images: &[u32]) -> Vec<vk::VkDescriptorSetLayoutBinding> {
+        let images_count = images.len();
         let mut layout_bindings =
             vec![vk::VkDescriptorSetLayoutBinding::default(); 1 + images_count];
         layout_bindings[0].binding = 0;
@@ -108,12 +116,14 @@ impl SetLayout {
         layout_bindings[0].stageFlags = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT
             as u32
             | vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32;
-        for i in 1..(images_count + 1) {
-            layout_bindings[i].binding = i as u32;
-            layout_bindings[i].descriptorCount = 1;
-            layout_bindings[i].descriptorType =
+        let mut binding_index = 0;
+        for image_count in images {
+            binding_index += 1;
+            layout_bindings[binding_index].binding = binding_index as u32;
+            layout_bindings[binding_index].descriptorCount = *image_count;
+            layout_bindings[binding_index].descriptorType =
                 vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            layout_bindings[i].stageFlags =
+            layout_bindings[binding_index].stageFlags =
                 vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32;
         }
         return layout_bindings;
@@ -133,7 +143,7 @@ pub(crate) struct Set {
     pub pool: Arc<Pool>,
     pub layout: Arc<SetLayout>,
     uniform: Arc<RwLock<DynamicBuffer>>,
-    pub textures: Vec<Arc<RwLock<Texture>>>,
+    pub texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
     pub vk_data: vk::VkDescriptorSet,
 }
 
@@ -160,7 +170,11 @@ impl Set {
                 vxlogf!("For gbuffer filler descriptor you need 7 textures.");
             }
         }
-        Self::new(pool, layout, uniform, buffer_manager, textures)
+        let mut texturess = Vec::new();
+        for t in textures {
+            texturess.push(vec![t]);
+        }
+        Self::new(pool, layout, uniform, buffer_manager, texturess)
     }
 
     pub fn new_deferred(
@@ -176,7 +190,11 @@ impl Set {
                 vxlogf!("For deferred descriptor you need 4 textures.");
             }
         }
-        Self::new(pool, layout, uniform, buffer_manager, textures)
+        let mut texturess = Vec::new();
+        for t in textures {
+            texturess.push(vec![t]);
+        }
+        Self::new(pool, layout, uniform, buffer_manager, texturess)
     }
 
     pub fn new_resolver(
@@ -192,7 +210,11 @@ impl Set {
                 vxlogf!("For resolver descriptor you need 4 textures.");
             }
         }
-        Self::new(pool, layout, uniform, buffer_manager, textures)
+        let mut texturess = Vec::new();
+        for t in textures {
+            texturess.push(vec![t]);
+        }
+        Self::new(pool, layout, uniform, buffer_manager, texturess)
     }
 
     fn create_buffer_info(
@@ -226,32 +248,39 @@ impl Set {
         layout: Arc<SetLayout>,
         uniform: Arc<RwLock<DynamicBuffer>>,
         buffer_manager: &Arc<RwLock<BufferManager>>,
-        textures: Vec<Arc<RwLock<Texture>>>,
+        texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
     ) -> Self {
         let vk_data = Self::allocate_set(&pool, &layout);
         let buff_info = Self::create_buffer_info(&*vxresult!(uniform.read()), buffer_manager);
-        let mut infos = vec![vk::VkWriteDescriptorSet::default(); 1 + textures.len()];
+        let mut infos = vec![vk::VkWriteDescriptorSet::default(); 1 + texturess.len()];
         infos[0].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         infos[0].dstSet = vk_data;
         infos[0].descriptorCount = 1;
         infos[0].descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         infos[0].pBufferInfo = &buff_info;
         infos[0].dstBinding = 0;
+        let mut img_infoss = Vec::new();
+        for textures in &texturess {
+            let mut img_infos = Vec::new();
+            for texture in textures {
+                let texture = vxresult!(texture.read());
+                let mut img_info = vk::VkDescriptorImageInfo::default();
+                img_info.imageLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                img_info.imageView = texture.get_image_view().get_data();
+                img_info.sampler = texture.get_sampler().get_data();
+                img_infos.push(img_info);
+            }
+            img_infoss.push(img_infos);
+        }
         let mut last_info_i = 1;
         let mut last_img_info_i = 0;
-        let mut img_infos = vec![vk::VkDescriptorImageInfo::default(); textures.len()];
-        for texture in &textures {
-            let texture = vxresult!(texture.read());
-            img_infos[last_img_info_i].imageLayout =
-                vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            img_infos[last_img_info_i].imageView = texture.get_image_view().get_data();
-            img_infos[last_img_info_i].sampler = texture.get_sampler().get_data();
+        for _ in &texturess {
             infos[last_info_i].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             infos[last_info_i].dstSet = vk_data;
-            infos[last_info_i].descriptorCount = 1;
+            infos[last_info_i].descriptorCount = img_infoss[last_img_info_i].len() as u32;
             infos[last_info_i].descriptorType =
                 vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            infos[last_info_i].pImageInfo = &(img_infos[last_img_info_i]);
+            infos[last_info_i].pImageInfo = img_infoss[last_img_info_i].as_ptr();
             infos[last_info_i].dstBinding = last_info_i as u32;
             last_info_i += 1;
             last_img_info_i += 1;
@@ -269,7 +298,7 @@ impl Set {
             pool,
             layout,
             uniform,
-            textures,
+            texturess,
             vk_data,
         }
     }
@@ -286,6 +315,7 @@ pub(crate) struct Manager {
     pub gbuff_set_layout: Arc<SetLayout>,
     pub resolver_set_layout: Arc<SetLayout>,
     pub deferred_set_layout: Arc<SetLayout>,
+    pub shadow_accumulator_directional_set_layout: Arc<SetLayout>,
     pub pool: Arc<Pool>,
 }
 
@@ -302,6 +332,7 @@ impl Manager {
         let buffer_only_set_layout = Arc::new(SetLayout::new_buffer_only(logical_device.clone()));
         let resolver_set_layout = Arc::new(SetLayout::new_resolver(logical_device.clone()));
         let deferred_set_layout = Arc::new(SetLayout::new_deferred(logical_device.clone()));
+        let shadow_accumulator_directional_set_layout = Arc::new(SetLayout::new_shadow_accumulator_directional(logical_device.clone()));
         let buffer_manager = buffer_manager.clone();
         Manager {
             buffer_manager,
@@ -309,6 +340,7 @@ impl Manager {
             buffer_only_set_layout,
             resolver_set_layout,
             deferred_set_layout,
+            shadow_accumulator_directional_set_layout,
             pool,
         }
     }

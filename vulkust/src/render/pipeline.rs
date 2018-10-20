@@ -10,4 +10,6 @@ pub enum PipelineType {
     Deferred,
     Resolver,
     GBuffer,
+    ShadowMapper,
+    ShadowAccumulatorDirectional,
 }
