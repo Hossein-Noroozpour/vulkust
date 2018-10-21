@@ -47,6 +47,10 @@ impl Engine {
         }
     }
 
+    pub(crate) fn get_gapi_engine(&self) -> &Arc<RwLock<GraphicApiEngine>> {
+        return &self.gapi_engine;
+    }
+
     pub fn set_myself(&mut self, myself: Weak<RwLock<Engine>>) {
         vxresult!(self.scene_manager.write()).set_engine(myself.clone());
         self.myself = Some(myself);

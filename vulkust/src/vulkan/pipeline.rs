@@ -6,7 +6,9 @@ use super::shader::Module;
 use super::vulkan as vk;
 use std::ffi::CString;
 use std::ptr::null;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Weak};
+use std::mem::transmute;
+use std::collections::BTreeMap;
 
 macro_rules! include_shader {
     ($name:expr) => {
@@ -422,6 +424,7 @@ impl Drop for Pipeline {
 pub(crate) struct Manager {
     cache: Arc<Cache>,
     descriptor_manager: Arc<RwLock<DescriptorManager>>,
+    pipelines: BTreeMap<(usize, u8), Weak<Pipeline>>, // (renderpass, pipeline-type) -> pipeline
 }
 
 impl Manager {
@@ -433,6 +436,7 @@ impl Manager {
         Manager {
             cache,
             descriptor_manager,
+            pipelines: BTreeMap::new(),
         }
     }
 
@@ -440,14 +444,24 @@ impl Manager {
         &mut self,
         render_pass: Arc<RenderPass>,
         pipeline_type: PipelineType,
-    ) -> Pipeline {
+    ) -> Arc<Pipeline> {
         let samples = render_pass.get_vk_samples();
-        return Pipeline::new(
+        let rpptr = unsafe { transmute(render_pass.get_data()) };
+        let pt = pipeline_type as u8;
+        let id = (rpptr, pt);
+        if let Some(p) = self.pipelines.get(&id) {
+            if let Some(p) = p.upgrade() {
+                return p;
+            }
+        }
+        let p = Arc::new(Pipeline::new(
             &self.descriptor_manager,
             render_pass,
             self.cache.clone(),
             samples,
             pipeline_type,
-        );
+        ));
+        self.pipelines.insert(id, Arc::downgrade(&p));
+        return p;
     }
 }

@@ -23,8 +23,6 @@ use std::sync::{Arc, Mutex, RwLock};
 
 const GBUFF_COLOR_FMT: ImageFormat = ImageFormat::RgbaFloat;
 const GBUFF_DEPTH_FMT: ImageFormat = ImageFormat::DepthFloat;
-const SHADOW_MAP_FMT: vk::VkFormat = vk::VkFormat::VK_FORMAT_D32_SFLOAT;
-const SHADOW_ACCUMULATOR_FMT: ImageFormat = ImageFormat::Float;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Engine {
@@ -51,16 +49,6 @@ pub(crate) struct Engine {
     clear_framebuffers: Vec<Arc<Framebuffer>>,
     render_pass: Arc<RenderPass>,
     framebuffers: Vec<Arc<Framebuffer>>,
-    //---------------------------------------
-    shadow_map_buffers: Vec<Arc<ImageView>>,
-    shadow_map_render_pass: Arc<RenderPass>,
-    shadow_map_framebuffers: Vec<Arc<Framebuffer>>,
-    //---------------------------------------
-    black_accumulator_buffer: Arc<ImageView>,
-    black_accumulator_render_pass: Arc<RenderPass>,
-    black_accumulator_framebuffer: Arc<Framebuffer>,
-    clear_black_accumulator_render_pass: Arc<RenderPass>,
-    clear_black_accumulator_framebuffer: Arc<Framebuffer>,
     //---------------------------------------
     current_frame_number: u32,
 }
@@ -128,57 +116,6 @@ impl Engine {
             logical_device.clone(),
             descriptor_manager.clone(),
         )));
-        let mut shadow_map_buffers = Vec::new();
-        for _ in 0..conf.max_shadow_maps_count {
-            shadow_map_buffers.push(Arc::new(ImageView::new_attachment(
-                logical_device.clone(),
-                &memory_manager,
-                SHADOW_MAP_FMT,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-                AttachmentType::DepthShadowBuffer,
-                conf.shadow_map_aspect,
-                conf.shadow_map_aspect,
-            )));
-        }
-        shadow_map_buffers.shrink_to_fit();
-        let black_accumulator_buffer = Arc::new(ImageView::new_surface_attachment(
-            logical_device.clone(),
-            &memory_manager,
-            SHADOW_ACCUMULATOR_FMT,
-            1,
-            AttachmentType::ColorDisplay,
-        ));
-        let clear_black_accumulator_render_pass = Arc::new(RenderPass::new(
-            vec![black_accumulator_buffer.clone()],
-            true,
-            false,
-        ));
-        let black_accumulator_render_pass = Arc::new(RenderPass::new(
-            vec![black_accumulator_buffer.clone()],
-            false,
-            true,
-        ));
-        let shadow_map_render_pass = Arc::new(RenderPass::new(
-            vec![shadow_map_buffers[0].clone()],
-            true,
-            true,
-        ));
-        let clear_black_accumulator_framebuffer = Arc::new(Framebuffer::new(
-            vec![black_accumulator_buffer.clone()],
-            black_accumulator_render_pass.clone(),
-        ));
-        let black_accumulator_framebuffer = Arc::new(Framebuffer::new(
-            vec![black_accumulator_buffer.clone()],
-            clear_black_accumulator_render_pass.clone(),
-        ));
-        let mut shadow_map_framebuffers = Vec::new();
-        for v in &shadow_map_buffers {
-            shadow_map_framebuffers.push(Arc::new(Framebuffer::new(
-                vec![v.clone()],
-                shadow_map_render_pass.clone(),
-            )));
-        }
-        shadow_map_buffers.shrink_to_fit();
         let os_app = os_app.clone();
         Engine {
             os_app,
@@ -204,14 +141,6 @@ impl Engine {
             buffer_manager,
             wait_fences,
             linear_repeat_sampler,
-            shadow_map_buffers,
-            black_accumulator_buffer,
-            clear_black_accumulator_render_pass,
-            black_accumulator_render_pass,
-            shadow_map_render_pass,
-            clear_black_accumulator_framebuffer,
-            black_accumulator_framebuffer,
-            shadow_map_framebuffers,
         }
     }
 
@@ -336,6 +265,14 @@ impl Engine {
 
     pub(crate) fn create_primary_command_buffer(&self, cmd_pool: Arc<CmdPool>) -> CmdBuffer {
         return CmdBuffer::new_primary(cmd_pool);
+    }
+
+    pub(crate) fn create_primary_command_buffer_from_main_graphic_pool(&self) -> CmdBuffer {
+        return CmdBuffer::new_primary(self.graphic_cmd_pool.clone());
+    }
+
+    pub(crate) fn create_secondary_command_buffer_from_main_graphic_pool(&self) -> CmdBuffer {
+        return CmdBuffer::new_secondary(self.graphic_cmd_pool.clone());
     }
 
     pub(crate) fn create_semaphore(&self) -> Semaphore {

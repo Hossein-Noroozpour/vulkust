@@ -42,7 +42,7 @@ pub(super) struct Resolver {
     uniform_buffer: Arc<RwLock<DynamicBuffer>>,
     textures: Vec<Arc<RwLock<Texture>>>,
     descriptor_set: Arc<DescriptorSet>,
-    pipeline: Pipeline,
+    pipeline: Arc<Pipeline>,
 }
 
 fn convert_format(f: Format) -> Format {

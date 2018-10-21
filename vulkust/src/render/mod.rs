@@ -23,6 +23,7 @@ pub mod render_pass;
 pub mod resolver;
 pub mod sampler;
 pub mod scene;
+pub mod shadower;
 pub mod sync;
 pub mod texture;
 pub mod widget;

@@ -353,8 +353,6 @@ impl View {
         samples: u8,
         attachment_type: AttachmentType,
     ) -> Self {
-        let format = convert_format(format);
-        let samples = convert_samples(samples);
         let surface_caps = logical_device.physical_device.surface_caps;
         return Self::new_attachment(
             logical_device,
@@ -370,8 +368,8 @@ impl View {
     pub(crate) fn new_attachment(
         logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
-        format: vk::VkFormat,
-        samples: vk::VkSampleCountFlagBits,
+        format: Format,
+        samples: u8,
         attachment_type: AttachmentType,
         width: u32,
         height: u32,
@@ -410,7 +408,7 @@ impl View {
         let mut image_info = vk::VkImageCreateInfo::default();
         image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
-        image_info.format = format;
+        image_info.format = convert_format(format);
         image_info.extent.width = width;
         image_info.extent.height = height;
         image_info.extent.depth = 1;
@@ -419,7 +417,7 @@ impl View {
         image_info.tiling = vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
         image_info.usage = usage;
         image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-        image_info.samples = samples;
+        image_info.samples = convert_samples(samples);
         let image = Arc::new(RwLock::new(Image::new_with_info(&image_info, memory_mgr)));
         return Self::new_with_image_aspect(image, aspect_mask);
     }

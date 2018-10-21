@@ -8,6 +8,7 @@ use super::light::ShadowMakerData;
 use super::model::Model;
 use super::object::Object;
 use super::resolver::Resolver;
+use super::shadower::Shadower;
 use super::scene::{Manager as SceneManager, Scene};
 use super::sync::Semaphore;
 use num_cpus;
@@ -326,6 +327,7 @@ pub(super) struct Engine {
     g_buffer_filler: Arc<RwLock<GBufferFiller>>,
     deferred: Arc<Mutex<Deferred>>,
     resolver: Arc<Mutex<Resolver>>,
+    shadower: Arc<Mutex<Shadower>>,
     cmdsss: Mutex<Vec<FrameData>>,
     cascaded_count: usize,
 }
@@ -365,6 +367,7 @@ impl Engine {
             cmdsss.push(FrameData::new());
         }
         cmdsss.shrink_to_fit();
+        let shadower = Arc::new(Mutex::new(Shadower::new(&eng, config)));
         let cmdsss = Mutex::new(cmdsss);
         Engine {
             kernels,
@@ -376,6 +379,7 @@ impl Engine {
             deferred,
             cascaded_count,
             resolver,
+            shadower,
         }
     }
 

@@ -2,10 +2,12 @@ use super::super::core::debug::Debug as CoreDebug;
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::camera::Orthographic;
-use super::command::Buffer as CmdBuffer;
+use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::engine::Engine;
+use super::gapi::GraphicApiEngine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::model::Model;
+use super::sync::Semaphore;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use std::collections::BTreeMap;
 use std::f32::MAX as F32MAX;
@@ -210,6 +212,11 @@ pub struct Sun {
     direction: math::Vector3<Real>,
     color: (Real, Real, Real),
     strength: Real,
+    shm_pcmd: CmdBuffer, // shadow mapper cmd
+    shm_sem: Semaphore,
+    acc_scmd: CmdBuffer, // secondary accumulator cmd
+    acc_pcmd: CmdBuffer, // primary accumulator cmd
+    acc_sem: Semaphore,
 }
 
 impl Sun {}
@@ -403,6 +410,7 @@ impl DefaultLighting for Sun {
     fn default(eng: &Engine) -> Self {
         let mut ccds = Vec::new();
         let csc = eng.get_config().cascaded_shadows_count;
+        let geng = vxresult!(eng.get_gapi_engine().read());
         for _ in 0..csc {
             ccds.push(SunCam::new());
         }
@@ -416,6 +424,11 @@ impl DefaultLighting for Sun {
             direction: math::Vector3::new(0.0, 0.0, -1.0),
             color: (1.0, 1.0, 1.0),
             strength: 1.0,
+            shm_pcmd: geng.create_primary_command_buffer_from_main_graphic_pool(),
+            shm_sem: geng.create_semaphore(),
+            acc_scmd: geng.create_secondary_command_buffer_from_main_graphic_pool(),
+            acc_pcmd: geng.create_primary_command_buffer_from_main_graphic_pool(),
+            acc_sem: geng.create_semaphore(),
         }
     }
 }
@@ -437,6 +450,7 @@ impl Loadable for Sun {
         vxtodo!(); // ccr is not correct
         vxtodo!(); // ccds is not correct
         vxtodo!(); // direction is not correct
+        let geng = vxresult!(engine.get_gapi_engine().read());
         Sun {
             obj_base: ObjectBase::new_with_id(id),
             ccr: math::Matrix4::new(
@@ -446,6 +460,11 @@ impl Loadable for Sun {
             direction: math::Vector3::new(0.0, 0.0, -1.0),
             color,
             strength,
+            shm_pcmd: geng.create_primary_command_buffer_from_main_graphic_pool(),
+            shm_sem: geng.create_semaphore(),
+            acc_scmd: geng.create_secondary_command_buffer_from_main_graphic_pool(),
+            acc_pcmd: geng.create_primary_command_buffer_from_main_graphic_pool(),
+            acc_sem: geng.create_semaphore(),
         }
     }
 }

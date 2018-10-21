@@ -11,7 +11,7 @@ pub(super) struct GBufferFiller {
     buffers: Vec<Arc<ImageView>>,
     render_pass: Arc<RenderPass>,
     framebuffer: Arc<Framebuffer>,
-    pipeline: Pipeline,
+    pipeline: Arc<Pipeline>,
 }
 
 impl GBufferFiller {

@@ -29,7 +29,7 @@ pub(super) struct Deferred {
     uniform: Uniform,
     uniform_buffer: Arc<RwLock<DynamicBuffer>>,
     descriptor_set: Arc<DescriptorSet>,
-    pipeline: Pipeline,
+    pipeline: Arc<Pipeline>,
 }
 
 impl Deferred {

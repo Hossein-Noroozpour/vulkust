@@ -5,6 +5,8 @@ pub use super::super::metal::pileline::*;
 #[cfg(vulkan_api)]
 pub use super::super::vulkan::pipeline::*;
 
+#[repr(u8)]
+#[derive(Clone, Copy)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub enum PipelineType {
     Deferred,
