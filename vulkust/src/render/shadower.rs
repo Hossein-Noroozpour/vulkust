@@ -1,7 +1,7 @@
-use super::gapi::GraphicApiEngine;
-use super::image::{View as ImageView, Format as ImageFormat, AttachmentType};
 use super::config::Configurations;
 use super::framebuffer::Framebuffer;
+use super::gapi::GraphicApiEngine;
+use super::image::{AttachmentType, Format as ImageFormat, View as ImageView};
 use super::render_pass::RenderPass;
 use std::sync::Arc;
 

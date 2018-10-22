@@ -4,11 +4,11 @@ use super::device::logical::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
 use super::shader::Module;
 use super::vulkan as vk;
+use std::collections::BTreeMap;
 use std::ffi::CString;
+use std::mem::transmute;
 use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
-use std::mem::transmute;
-use std::collections::BTreeMap;
 
 macro_rules! include_shader {
     ($name:expr) => {
