@@ -1,5 +1,5 @@
 use super::super::render::config::Configurations;
-use super::super::render::image::{AttachmentType, Format as ImageFormat};
+use super::super::render::image::Format as ImageFormat;
 use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool, Type as CmdPoolType};
@@ -25,7 +25,7 @@ const GBUFF_COLOR_FMT: ImageFormat = ImageFormat::RgbaFloat;
 const GBUFF_DEPTH_FMT: ImageFormat = ImageFormat::DepthFloat;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct Engine {
+pub struct Engine {
     os_app: Arc<RwLock<OsApp>>,
     instance: Arc<Instance>,
     surface: Arc<Surface>,

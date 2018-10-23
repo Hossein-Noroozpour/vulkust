@@ -28,6 +28,9 @@ pub trait ShadowMakerData: CoreDebug + Send {
     fn to_sun(&self) -> &SunShadowMakerData {
         vxunexpected!();
     }
+    fn to_mut_sun(&mut self) -> &mut SunShadowMakerData {
+        vxunexpected!();
+    }
 }
 
 pub trait VisibilityData: CoreDebug + Send {}
@@ -45,7 +48,11 @@ pub trait Light: Object {
         return None;
     }
 
-    fn update_shadow_maker_data(&mut self, _: &Box<ShadowMakerData>) {
+    fn update_shadow_maker_data(&self, _: &mut Box<ShadowMakerData>) {
+        vxunexpected!();
+    }
+
+    fn update_shadow_maker_with_data(&mut self, _: &Box<ShadowMakerData>) {
         vxunexpected!();
     }
 }
@@ -97,6 +104,7 @@ impl SunCam {
     }
 }
 
+#[derive(Default, Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
 struct SunShadowMakerDataPart {
     max_x: Real,
@@ -111,6 +119,23 @@ struct SunShadowMakerDataPart {
     max_seen_z: Real,
     min_z: Real,
     min_seen_z: Real,
+}
+
+impl SunShadowMakerDataPart {
+    fn update(&mut self, data: &SunCam) {
+        self.max_x = data.max_x;
+        self.max_seen_x = data.min_x;
+        self.min_x = data.min_x;
+        self.min_seen_x = data.max_x;
+        self.max_y = data.max_y;
+        self.max_seen_y = data.min_y;
+        self.min_y = data.min_y;
+        self.min_seen_y = data.max_y;
+        self.max_z = data.max_z;
+        self.max_seen_z = data.min_z;
+        self.min_z = data.min_z;
+        self.min_seen_z = data.max_z;
+    }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -129,25 +154,22 @@ pub struct SunShadowMakerData {
 
 impl SunShadowMakerData {
     fn new(id: Id, datas: &[SunCam], r: math::Matrix4<Real>) -> Self {
-        let mut cascades = Vec::new();
-        for data in datas {
-            cascades.push(SunShadowMakerDataPart {
-                max_x: data.max_x,
-                max_seen_x: data.min_x,
-                min_x: data.min_x,
-                min_seen_x: data.max_x,
-                max_y: data.max_y,
-                max_seen_y: data.min_y,
-                min_y: data.min_y,
-                min_seen_y: data.max_y,
-                max_z: data.max_z,
-                max_seen_z: data.min_z,
-                min_z: data.min_z,
-                min_seen_z: data.max_z,
-            });
+        let dl = datas.len();
+        let mut cascades = vec![SunShadowMakerDataPart::default(); dl];
+        for i in 0..dl {
+            cascades[i].update(&datas[i]);
         }
-        cascades.shrink_to_fit();
         Self { id, r, cascades }
+    }
+
+    fn update(&mut self, datas: &[SunCam], r: math::Matrix4<Real>) {
+        self.r = r;
+        let cc = datas.len();
+        for i in 0..cc {
+            let ccd = &datas[i];
+            let smdccd = &mut self.cascades[i];
+            smdccd.update(ccd);
+        }
     }
 }
 
@@ -312,7 +334,12 @@ impl Light for Sun {
         )));
     }
 
-    fn update_shadow_maker_data(&mut self, smd: &Box<ShadowMakerData>) {
+    fn update_shadow_maker_data(&self, smd: &mut Box<ShadowMakerData>) {
+        let smd = smd.to_mut_sun();
+        smd.update(&self.ccds, self.ccr);
+    }
+
+    fn update_shadow_maker_with_data(&mut self, smd: &Box<ShadowMakerData>) {
         let smd = smd.to_sun();
         let cc = self.ccds.len();
         for i in 0..cc {

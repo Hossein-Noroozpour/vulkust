@@ -4,7 +4,6 @@ use super::super::core::timing::Timing;
 use super::super::system::os::application::Application as OsApp;
 use super::camera::DefaultCamera;
 use super::config::Configurations;
-use super::deferred::Deferred;
 use super::gapi::GraphicApiEngine;
 use super::gx3d::import as gx3d_import;
 use super::model::DefaultModel;

@@ -20,28 +20,31 @@ use std::thread::{spawn, JoinHandle};
 #[cfg_attr(debug_mode, derive(Debug))]
 struct KernelPassesCommands {
     gbuff: CmdBuffer,
-    is_filled: bool,
+    // light->(cascaded/camera index)->cmd
+    lights: BTreeMap<Id, Vec<CmdBuffer>>,
 }
 
 impl KernelPassesCommands {
     fn new(engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
         let gbuff = engine.create_secondary_command_buffer(cmd_pool.clone());
-        let is_filled = false;
-        Self { gbuff, is_filled }
+        let lights = BTreeMap::new();
+        Self { gbuff, lights }
     }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct KernelSceneData {
     cmds: KernelPassesCommands,
-    shadow_maker_lights_data: BTreeMap<Id, Box<ShadowMakerData>>,
+    shadow_makers_data: BTreeMap<Id, Box<ShadowMakerData>>,
 }
 
 impl KernelSceneData {
     fn new(scene: &Scene, g_engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
+        let mut shadow_makers_data = BTreeMap::new();
+        scene.update_shadow_makers_data(&mut shadow_makers_data);
         Self {
             cmds: KernelPassesCommands::new(g_engine, cmd_pool),
-            shadow_maker_lights_data: scene.get_shadow_maker_lights_data(),
+            shadow_makers_data,
         }
     }
 }
@@ -81,8 +84,10 @@ impl KernelFrameData {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Kernel {
-    loop_signaler: Sender<bool>,
-    ready_notifier: Receiver<()>,
+    render_signal: Sender<bool>,
+    render_wait: Receiver<()>,
+    shadow_signal: Sender<()>,
+    shadow_wait: Receiver<()>,
     handle: JoinHandle<()>,
     frame_datas: Arc<Mutex<Vec<KernelFrameData>>>,
 }
@@ -94,9 +99,12 @@ impl Kernel {
         engine: Arc<RwLock<GraphicApiEngine>>,
         scene_manager: Arc<RwLock<SceneManager>>,
         g_buffer_filler: Arc<RwLock<GBufferFiller>>,
+        shadower: Arc<RwLock<Shadower>>,
     ) -> Self {
-        let (loop_signaler, rcv) = channel();
-        let (ready_sig, ready_notifier) = channel();
+        let (render_signal, render_receiver) = channel();
+        let (render_ready, render_wait) = channel();
+        let (shadow_signal, shadow_receiver) = channel();
+        let (shadow_ready, shadow_wait) = channel();
         let frame_datas = Arc::new(Mutex::new(Vec::new()));
         let cmdbuffs = frame_datas.clone();
         let handle = spawn(move || {
@@ -107,36 +115,48 @@ impl Kernel {
                 engine,
                 scene_manager,
                 g_buffer_filler,
+                shadower,
             );
-            while vxresult!(rcv.recv()) {
+            while vxresult!(render_receiver.recv()) {
                 renderer.render();
-                // vxresult!(ready_sig.send(()));
-                // renderer.shadow();
-                vxresult!(ready_sig.send(()));
+                vxresult!(render_ready.send(()));
+                vxresult!(shadow_receiver.recv());
+                renderer.shadow();
+                vxresult!(shadow_ready.send(()));
             }
-            vxresult!(ready_sig.send(()));
+            vxresult!(render_ready.send(()));
         });
         Self {
-            loop_signaler,
-            ready_notifier,
+            render_signal,
+            render_wait,
+            shadow_signal,
+            shadow_wait,
             handle,
             frame_datas,
         }
     }
 
     fn start_rendering(&self) {
-        vxresult!(self.loop_signaler.send(true));
+        vxresult!(self.render_signal.send(true));
     }
 
     fn wait_rendering(&self) {
-        vxresult!(self.ready_notifier.recv());
+        vxresult!(self.render_wait.recv());
+    }
+
+    fn start_shadowing(&self) {
+        vxresult!(self.shadow_signal.send(()));
+    }
+
+    fn wait_shadowing(&self) {
+        vxresult!(self.shadow_wait.recv());
     }
 }
 
 impl Drop for Kernel {
     fn drop(&mut self) {
-        vxresult!(self.loop_signaler.send(false));
-        vxresult!(self.ready_notifier.recv());
+        vxresult!(self.render_signal.send(false));
+        vxresult!(self.render_wait.recv());
     }
 }
 
@@ -149,6 +169,7 @@ struct Renderer {
     cmd_pool: Arc<CmdPool>,
     cmd_buffers: Arc<Mutex<Vec<KernelFrameData>>>,
     g_buffer_filler: Arc<RwLock<GBufferFiller>>,
+    shadower: Arc<RwLock<Shadower>>,
 }
 
 impl Renderer {
@@ -159,6 +180,7 @@ impl Renderer {
         g_engine: Arc<RwLock<GraphicApiEngine>>,
         scene_manager: Arc<RwLock<SceneManager>>,
         g_buffer_filler: Arc<RwLock<GBufferFiller>>,
+        shadower: Arc<RwLock<Shadower>>,
     ) -> Self {
         let eng = g_engine.clone();
         let eng = vxresult!(eng.read());
@@ -178,6 +200,7 @@ impl Renderer {
             cmd_pool,
             cmd_buffers,
             g_buffer_filler,
+            shadower,
         }
     }
 
@@ -203,13 +226,18 @@ impl Renderer {
                 cmdss.remove_scene(scene_id);
                 continue;
             }
+            let mut need_update_shadow_makers_data = true;
             if !cmdss.has_scene(scene_id) {
+                need_update_shadow_makers_data = false;
                 cmdss.add_scene(
                     *scene_id,
                     KernelSceneData::new(&*scene, &*g_engine, self.cmd_pool.clone()),
                 );
             }
             let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
+            if need_update_shadow_makers_data {
+                scene.update_shadow_makers_data(&mut scene_data.shadow_makers_data);
+            }
             let models = scene.get_all_models();
             g_buffer_filler.begin_secondary(&mut scene_data.cmds.gbuff);
             scene.render(&mut scene_data.cmds.gbuff, frame_number);
@@ -233,19 +261,72 @@ impl Renderer {
                 Object::update(&mut *model);
                 Model::update(&mut *model, &*scene, &*camera);
                 Object::render(&mut *model, &mut scene_data.cmds.gbuff, frame_number);
-                scene_data.cmds.is_filled = true;
                 if model.has_shadow() {
-                    for (_, shm) in &mut scene_data.shadow_maker_lights_data {
+                    for (_, shm) in &mut scene_data.shadow_makers_data {
                         shm.check_shadowability(&mut *model);
                     }
                 }
             }
             scene_data.cmds.gbuff.end();
-            // cmds[SECONDARY_SHADOW_PASS_INDEX].end();
         }
     }
 
-    pub fn shadow(&mut self) {}
+    pub fn shadow(&mut self) {
+        let g_engine = vxresult!(self.g_engine.read());
+        let frame_number = g_engine.get_frame_number();
+        let scnmgr = vxresult!(self.scene_manager.read());
+        let scenes = scnmgr.get_scenes();
+        let scenes = vxresult!(scenes.read());
+        let mut cmdsss = vxresult!(self.cmd_buffers.lock());
+        let cmdss = &mut cmdsss[frame_number];
+        let mut task_index = 0usize;
+        for (scene_id, scene) in &*scenes {
+            let scene = scene.upgrade();
+            if scene.is_none() {
+                cmdss.remove_scene(scene_id);
+                continue;
+            }
+            let scene = vxunwrap!(scene);
+            let scene = vxresult!(scene.read());
+            if !scene.is_rendarable() {
+                cmdss.remove_scene(scene_id);
+                continue;
+            }
+            if !cmdss.has_scene(scene_id) {
+                cmdss.add_scene(
+                    *scene_id,
+                    KernelSceneData::new(&*scene, &*g_engine, self.cmd_pool.clone()),
+                );
+            }
+            let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
+            let models = scene.get_all_models();
+            let shadow_makers = scene.get_shadow_makers();
+            for (id, l) in &*shadow_makers {
+                scene_data.cmds.lights.get_mut(id);
+            }
+            for (_, model) in &*models {
+                task_index += 1;
+                if task_index % self.kernels_count != self.index {
+                    continue;
+                }
+                let model = model.upgrade();
+                if model.is_none() {
+                    continue;
+                }
+                let model = vxunwrap!(model);
+                let mut model = vxresult!(model.write());
+                if !model.is_rendarable() {
+                    continue;
+                }
+                if !model.has_shadow() {
+                    continue;
+                }
+                for (_, shm) in &mut scene_data.shadow_makers_data {
+                    shm.check_shadowability(&mut *model);
+                }
+            }
+        }
+    }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -327,7 +408,7 @@ pub(super) struct Engine {
     g_buffer_filler: Arc<RwLock<GBufferFiller>>,
     deferred: Arc<Mutex<Deferred>>,
     resolver: Arc<Mutex<Resolver>>,
-    shadower: Arc<Mutex<Shadower>>,
+    shadower: Arc<RwLock<Shadower>>,
     cmdsss: Mutex<Vec<FrameData>>,
     cascaded_count: usize,
 }
@@ -347,6 +428,7 @@ impl Engine {
         let deferred = Arc::new(Mutex::new(Deferred::new(&eng, &*scnmgr, &resolver)));
         let resolver = Arc::new(Mutex::new(resolver));
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
+        let shadower = Arc::new(RwLock::new(Shadower::new(&eng, config)));
         let kernels_count = num_cpus::get();
         let mut kernels = Vec::new();
         let cascaded_count = config.cascaded_shadows_count as usize;
@@ -357,6 +439,7 @@ impl Engine {
                 engine.clone(),
                 scene_manager.clone(),
                 g_buffer_filler.clone(),
+                shadower.clone(),
             ));
         }
         kernels.shrink_to_fit();
@@ -367,7 +450,6 @@ impl Engine {
             cmdsss.push(FrameData::new());
         }
         cmdsss.shrink_to_fit();
-        let shadower = Arc::new(Mutex::new(Shadower::new(&eng, config)));
         let cmdsss = Mutex::new(cmdsss);
         Engine {
             kernels,
@@ -445,7 +527,38 @@ impl Engine {
         for k in &self.kernels {
             k.wait_rendering();
         }
-        'scenes: for (scene_id, scene) in &*scenes {
+        for (scene_id, scene) in &*scenes {
+            let scene = scene.upgrade();
+            if scene.is_none() {
+                cmdss.remove_scene(scene_id);
+                continue;
+            }
+            let scene = vxunwrap!(scene);
+            let scene = vxresult!(scene.read());
+            if !scene.is_rendarable() {
+                cmdss.remove_scene(scene_id);
+                continue;
+            }
+            for k in &self.kernels {
+                let frame_datas = vxresult!(k.frame_datas.lock());
+                let frame_data = &frame_datas[frame_number];
+                let scene_frame_data = frame_data.get_scene(scene_id);
+                if scene_frame_data.is_none() {
+                    cmdss.remove_scene(scene_id);
+                    continue;
+                }
+                let scene_frame_data = vxunwrap!(scene_frame_data);
+                scene.update_shadow_makers_with_data(&scene_frame_data.shadow_makers_data);
+            }
+            scene.update_shadow_makers();
+        }
+        for k in &self.kernels {
+            k.start_shadowing();
+        }
+        for k in &self.kernels {
+            k.wait_shadowing();
+        }
+        for (scene_id, scene) in &*scenes {
             let scene = scene.upgrade();
             if scene.is_none() {
                 cmdss.remove_scene(scene_id);
@@ -464,16 +577,11 @@ impl Engine {
                 let scene_frame_data = frame_data.get_scene(scene_id);
                 if scene_frame_data.is_none() {
                     cmdss.remove_scene(scene_id);
-                    continue 'scenes;
-                }
-                let scene_frame_data = vxunwrap!(scene_frame_data);
-                if !scene_frame_data.cmds.is_filled {
                     continue;
                 }
+                let scene_frame_data = vxunwrap!(scene_frame_data);
                 kcmdsgbuffdatas.push(scene_frame_data.cmds.gbuff.get_data());
-                scene.update_shadow_maker_lights_data(&scene_frame_data.shadow_maker_lights_data);
             }
-            scene.update_shadow_makers();
             let cmds = cmdss.get_mut_scene(scene_id);
             if cmds.is_none() {
                 continue;

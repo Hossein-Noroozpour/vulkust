@@ -93,3 +93,6 @@ impl Shadower {
     // do thread shadow gathering
     // do main thread shadow accumulating
 }
+
+unsafe impl Send for Shadower {}
+unsafe impl Sync for Shadower {}

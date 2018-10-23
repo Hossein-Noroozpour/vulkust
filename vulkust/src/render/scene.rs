@@ -4,14 +4,18 @@ use super::super::core::types::{Id, TypeId as CoreTypeId};
 use super::super::system::file::File;
 use super::buffer::DynamicBuffer;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager, Uniform as CameraUniform};
-use super::command::Buffer as CmdBuffer;
+use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
+use super::gapi::GraphicApiEngine;
 use super::font::Manager as FontManager;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::light::{
-    Directional as DirectionalLight, DirectionalUniform, Light, Manager as LightManager,
-    PointUniform, ShadowMakerData,
+    DirectionalUniform, 
+    Light, 
+    Manager as LightManager,
+    PointUniform, 
+    ShadowMakerData,
 };
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
@@ -38,8 +42,9 @@ pub trait Scene: Object {
     fn render_deferred(&self, cmd: &mut CmdBuffer, frame_buffer: usize);
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
-    fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>>;
-    fn update_shadow_maker_lights_data(&self, &BTreeMap<Id, Box<ShadowMakerData>>);
+    fn get_shadow_makers(&self) -> &BTreeMap<Id, Arc<RwLock<Light>>>;
+    fn update_shadow_makers_data(&self, &mut BTreeMap<Id, Box<ShadowMakerData>>);
+    fn update_shadow_makers_with_data(&self, &BTreeMap<Id, Box<ShadowMakerData>>);
     fn update_shadow_makers(&self);
     fn clean(&mut self);
 }
@@ -517,23 +522,54 @@ impl Scene for Base {
         return &self.all_models;
     }
 
-    fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>> {
-        let mut result = BTreeMap::new();
-        for (id, shm) in &self.shadow_makers {
-            let l = vxresult!(shm.read());
-            if l.is_rendarable() {
-                result.insert(*id, vxunwrap!(l.get_shadow_maker_data()));
-            }
-        }
-        return result;
+    fn get_shadow_makers(&self) -> &BTreeMap<Id, Arc<RwLock<Light>>> {
+        return &self.shadow_makers;
     }
 
-    fn update_shadow_maker_lights_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
+    fn update_shadow_makers_data(&self, data: &mut BTreeMap<Id, Box<ShadowMakerData>>) {
+        let data_len = data.len();
+        let mut data_ids = Vec::<Id>::with_capacity(data_len);
+        for (id, _) in &*data {
+            data_ids.push(*id);
+        }
+        let mut latest_data = 0;
+        for (id, shm) in &self.shadow_makers {
+            while latest_data < data_len && *id > data_ids[latest_data] {
+                #[cfg(debug_mode)]
+                vxunwrap!(data.remove(&data_ids[latest_data]));
+                #[cfg(not(debug_mode))]
+                data.remove(data_ids[latest_data]);
+                latest_data += 1;
+            }
+            if latest_data < data_len && *id == data_ids[latest_data] {
+                latest_data += 1;
+            }
+            let l = vxresult!(shm.read());
+            if !l.is_rendarable() {
+                data.remove(id);
+                continue;
+            }
+            if let Some(d) = data.get_mut(id) {
+                l.update_shadow_maker_data(d);
+                continue;
+            }
+            data.insert(*id, vxunwrap!(l.get_shadow_maker_data()));
+        }
+        if latest_data < data_len {
+            #[cfg(debug_mode)]
+            vxunwrap!(data.remove(&data_ids[latest_data]));
+            #[cfg(not(debug_mode))]
+            data.remove(data_ids[latest_data]);
+            latest_data += 1;
+        }
+    }
+
+    fn update_shadow_makers_with_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
         for (id, smd) in smds {
             let sm = self.shadow_makers.get(id);
             if let Some(sm) = sm {
                 let mut sm = vxresult!(sm.write());
-                sm.update_shadow_maker_data(smd);
+                sm.update_shadow_maker_with_data(smd);
             }
         }
     }
@@ -655,12 +691,16 @@ impl Scene for Game {
         return self.base.get_all_models();
     }
 
-    fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>> {
-        return self.base.get_shadow_maker_lights_data();
+    fn get_shadow_makers(&self) -> &BTreeMap<Id, Arc<RwLock<Light>>> {
+        return self.base.get_shadow_makers();
     }
 
-    fn update_shadow_maker_lights_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
-        self.base.update_shadow_maker_lights_data(smds);
+    fn update_shadow_makers_data(&self, smds: &mut BTreeMap<Id, Box<ShadowMakerData>>) {
+        return self.base.update_shadow_makers_data(smds);
+    }
+
+    fn update_shadow_makers_with_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
+        self.base.update_shadow_makers_with_data(smds);
     }
 
     fn update_shadow_makers(&self) {
@@ -760,12 +800,16 @@ impl Scene for Ui {
         return self.base.get_all_models();
     }
 
-    fn get_shadow_maker_lights_data(&self) -> BTreeMap<Id, Box<ShadowMakerData>> {
-        return self.base.get_shadow_maker_lights_data();
+    fn get_shadow_makers(&self) -> &BTreeMap<Id, Arc<RwLock<Light>>> {
+        return self.base.get_shadow_makers();
     }
 
-    fn update_shadow_maker_lights_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
-        self.base.update_shadow_maker_lights_data(smds);
+    fn update_shadow_makers_data(&self, smds: &mut BTreeMap<Id, Box<ShadowMakerData>>) {
+        return self.base.update_shadow_makers_data(smds);
+    }
+
+    fn update_shadow_makers_with_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
+        self.base.update_shadow_makers_with_data(smds);
     }
 
     fn update_shadow_makers(&self) {
