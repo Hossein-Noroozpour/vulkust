@@ -55,6 +55,10 @@ pub trait Light: Object {
     fn update_shadow_maker_with_data(&mut self, _: &Box<ShadowMakerData>) {
         vxunexpected!();
     }
+
+    fn create_shadow_mapper_commands(&self, &GraphicApiEngine, &Arc<CmdPool>) -> Vec<CmdBuffer> {
+        vxlogf!("Only shadow makers implement this function");
+    }
 }
 
 pub trait Directional: Light {
@@ -365,6 +369,20 @@ impl Light for Sun {
                 ccd.min_seen_z = smdccd.min_seen_z;
             }
         }
+    }
+
+    fn create_shadow_mapper_commands(
+        &self,
+        geng: &GraphicApiEngine,
+        pool: &Arc<CmdPool>,
+    ) -> Vec<CmdBuffer> {
+        let len = self.ccds.len();
+        let mut result = Vec::with_capacity(len);
+        for _ in 0..len {
+            result.push(geng.create_secondary_command_buffer(pool.clone()));
+        }
+        result.shrink_to_fit();
+        return result;
     }
 }
 

@@ -272,8 +272,8 @@ impl Renderer {
     }
 
     pub fn shadow(&mut self) {
-        let g_engine = vxresult!(self.g_engine.read());
-        let frame_number = g_engine.get_frame_number();
+        let geng = vxresult!(self.g_engine.read());
+        let frame_number = geng.get_frame_number();
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         let scenes = vxresult!(scenes.read());
@@ -295,14 +295,22 @@ impl Renderer {
             if !cmdss.has_scene(scene_id) {
                 cmdss.add_scene(
                     *scene_id,
-                    KernelSceneData::new(&*scene, &*g_engine, self.cmd_pool.clone()),
+                    KernelSceneData::new(&*scene, &*geng, self.cmd_pool.clone()),
                 );
             }
             let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
             let models = scene.get_all_models();
             let shadow_makers = scene.get_shadow_makers();
             for (id, l) in &*shadow_makers {
-                scene_data.cmds.lights.get_mut(id);
+                {
+                    if let Some(lights) = scene_data.cmds.lights.get_mut(id) {
+                        // do render pass begin
+                        continue;
+                    }
+                }
+                let l = vxresult!(l.read());
+                let lights = l.create_shadow_mapper_commands(&geng, &self.cmd_pool);
+                scene_data.cmds.lights.insert(*id, lights);
             }
             for (_, model) in &*models {
                 task_index += 1;
