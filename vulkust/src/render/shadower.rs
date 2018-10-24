@@ -90,6 +90,12 @@ impl Shadower {
         }
     }
 
+    pub(super) fn begin_secondary_shadow_mappers(&self, cmds: &mut [CmdBuffer]) {
+        for cmd in cmds {
+            cmd.begin_secondary(&self.shadow_map_framebuffers);
+            cmd.bind_pipeline(&self.shadow_map_pipeline);
+        }
+    }
     // do thread shadow gathering
     // do main thread shadow accumulating
 }

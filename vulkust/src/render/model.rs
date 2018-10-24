@@ -27,7 +27,9 @@ pub trait Model: Object + Transferable {
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)>;
     fn has_shadow(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
-    fn set_light_visibility_data(&mut self, Id, Box<LightVisibilityData>);
+    fn clear_light_visibilities(&mut self);
+    fn set_light_visibilities(&mut self, Id, Box<LightVisibilityData>);
+    fn get_light_visibilities(&self) -> &BTreeMap<Id, Box<LightVisibilityData>>;
 }
 
 pub trait DefaultModel: Model + Sized {
@@ -151,7 +153,7 @@ pub struct Base {
     has_shadow_caster: bool,
     has_transparent: bool,
     occlusion_culling_radius: Real,
-    is_in_light: BTreeMap<Id, Box<LightVisibilityData>>,
+    is_in_light: BTreeMap<Id, (bool, Box<LightVisibilityData>)>,
     is_visible: bool,
     distance_from_camera: Real,
     collider: Arc<RwLock<Collider>>,
@@ -415,8 +417,18 @@ impl Model for Base {
         return self.occlusion_culling_radius;
     }
 
-    fn set_light_visibility_data(&mut self, id: Id, lvd: Box<LightVisibilityData>) {
+    fn clear_light_visibilities(&mut self) {
+        for (_, av) in &mut self.is_in_light {
+            av.0 = false;
+        }
+    }
+
+    fn set_light_visibilities(&mut self, id: Id, lvd: Box<LightVisibilityData>) {
         self.is_in_light.insert(id, lvd);
+    }
+
+    fn get_light_visibilities(&self) -> &BTreeMap<Id, Box<LightVisibilityData>> {
+        return &self.is_in_light;
     }
 }
 

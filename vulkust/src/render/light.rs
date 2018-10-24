@@ -23,17 +23,14 @@ pub enum TypeId {
     Sun = 1,
 }
 
-pub trait ShadowMakerData: CoreDebug + Send {
-    fn check_shadowability(&mut self, &mut Model);
-    fn to_sun(&self) -> &SunShadowMakerData {
-        vxunexpected!();
-    }
-    fn to_mut_sun(&mut self) -> &mut SunShadowMakerData {
-        vxunexpected!();
-    }
+pub trait ShadowMakerKernelData: CoreDebug + Send {
+    fn shadow(&mut self, &mut Model); // old name was check_shadowability
 }
 
-pub trait VisibilityData: CoreDebug + Send {}
+pub trait VisibilityData: CoreDebug + Send {
+    fn get_light(&self) -> Weak<RwLock<Light>>;
+    fn create_uniform_buffer(&self);
+}
 
 pub trait Light: Object {
     fn to_directional(&self) -> Option<&Directional> {
@@ -110,7 +107,7 @@ impl SunCam {
 
 #[derive(Default, Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
-struct SunShadowMakerDataPart {
+struct SunShadowMakerKernelCascadesLimits {
     max_x: Real,
     max_seen_x: Real,
     min_x: Real,
@@ -125,7 +122,7 @@ struct SunShadowMakerDataPart {
     min_seen_z: Real,
 }
 
-impl SunShadowMakerDataPart {
+impl SunShadowMakerKernelCascadesLimits {
     fn update(&mut self, data: &SunCam) {
         self.max_x = data.max_x;
         self.max_seen_x = data.min_x;
@@ -143,17 +140,18 @@ impl SunShadowMakerDataPart {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-struct SunVisibilityData {
-    is_in_cascades: Vec<bool>,
+pub struct SunShadowMakerKernelFrameData {
+    cascades_cmds: Vec<CmdBuffer>,
+    //////////////---------------------------- uniform pool place in here
 }
 
-impl VisibilityData for SunVisibilityData {}
-
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct SunShadowMakerData {
+pub struct SunShadowMakerKernelData {
     id: Id,
-    r: math::Matrix4<Real>,
-    cascades: Vec<SunShadowMakerDataPart>,
+    zero_located_view: math::Matrix4<Real>,
+    view_projection: math::Matrix4<Real>,
+    cascades_limits: Vec<SunShadowMakerKernelLimits>,
+    frames_data: Vec<SunShadowMakerKernelFrameData>,
 }
 
 impl SunShadowMakerData {
@@ -182,6 +180,7 @@ impl ShadowMakerData for SunShadowMakerData {
         let rd = m.get_occlusion_culling_radius();
         let mut is_in_cascades = vec![false; self.cascades.len()];
         let mut ci = 0;
+        let mut is_in_light = true;
         for c in &mut self.cascades {
             let v = (self.r * m.get_location().extend(1.0)).truncate();
             let rdv = math::Vector3::new(rd, rd, rd);
@@ -222,9 +221,12 @@ impl ShadowMakerData for SunShadowMakerData {
                 c.max_seen_z = upv.z;
             }
             is_in_cascades[ci] = true;
+            is_in_light = true;
             ci += 1;
         }
-        m.set_light_visibility_data(self.id, Box::new(SunVisibilityData { is_in_cascades }));
+        if is_in_light {
+            m.set_light_visibility_data(self.id, Box::new(SunVisibilityData { is_in_cascades }));
+        }
     }
 }
 
@@ -235,6 +237,7 @@ pub struct Sun {
     ccr: math::Matrix4<Real>,
     // cascaded camera data s
     ccds: Vec<SunCam>,
+    threads_data: Vec<>
     direction: math::Vector3<Real>,
     color: (Real, Real, Real),
     strength: Real,

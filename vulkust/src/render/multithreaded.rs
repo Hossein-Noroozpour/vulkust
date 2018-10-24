@@ -21,7 +21,7 @@ use std::thread::{spawn, JoinHandle};
 struct KernelPassesCommands {
     gbuff: CmdBuffer,
     // light->(cascaded/camera index)->cmd
-    lights: BTreeMap<Id, Vec<CmdBuffer>>,
+    lights: BTreeMap<Id, Vec<CmdBuffer>>, // todo move it to the lights
 }
 
 impl KernelPassesCommands {
@@ -35,7 +35,7 @@ impl KernelPassesCommands {
 #[cfg_attr(debug_mode, derive(Debug))]
 struct KernelSceneData {
     cmds: KernelPassesCommands,
-    shadow_makers_data: BTreeMap<Id, Box<ShadowMakerData>>,
+    shadow_makers_data: BTreeMap<Id, Box<ShadowMakerKernelData>>,
 }
 
 impl KernelSceneData {
@@ -262,6 +262,7 @@ impl Renderer {
                 Model::update(&mut *model, &*scene, &*camera);
                 Object::render(&mut *model, &mut scene_data.cmds.gbuff, frame_number);
                 if model.has_shadow() {
+                    model.clear_light_visibilities();
                     for (_, shm) in &mut scene_data.shadow_makers_data {
                         shm.check_shadowability(&mut *model);
                     }
@@ -301,15 +302,17 @@ impl Renderer {
             let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
             let models = scene.get_all_models();
             let shadow_makers = scene.get_shadow_makers();
+            let shadower = vxresult!(self.shadower.read());
             for (id, l) in &*shadow_makers {
                 {
-                    if let Some(lights) = scene_data.cmds.lights.get_mut(id) {
-                        // do render pass begin
+                    if let Some(lights) = scene_data.cmds.lights.get_mut(id) { // todo 
+                        shadower.begin_secondary_shadow_mappers(lights);
                         continue;
                     }
                 }
                 let l = vxresult!(l.read());
-                let lights = l.create_shadow_mapper_commands(&geng, &self.cmd_pool);
+                let mut lights = l.create_shadow_mapper_commands(&geng, &self.cmd_pool);
+                shadower.begin_secondary_shadow_mappers(&mut lights);
                 scene_data.cmds.lights.insert(*id, lights);
             }
             for (_, model) in &*models {
@@ -329,8 +332,18 @@ impl Renderer {
                 if !model.has_shadow() {
                     continue;
                 }
-                for (_, shm) in &mut scene_data.shadow_makers_data {
-                    shm.check_shadowability(&mut *model);
+                model.update_light_visibilities();
+                let light_visibilities = model.get_light_visibilities();
+                for (_, l) in light_visibilities {
+                    l.render();
+                    model.render_shadow();
+                } 
+                ////////////////////////////////////////////////////
+            }
+            for (id, l) in &*shadow_makers {
+                if let Some(lights) = scene_data.cmds.lights.get_mut(id) {
+                    shadower.begin_secondary_shadow_mappers(lights);
+                    continue;
                 }
             }
         }
