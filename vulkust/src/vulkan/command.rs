@@ -38,15 +38,19 @@ const RESOLVER_DESCRIPTOR_SETS_COUNT: usize = 1;
 const RESOLVER_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 1;
 const RESOLVER_DESCRIPTOR_OFFSET: usize = 0;
 
+const SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT: usize = 2;
+const SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET: usize = 0;
+const SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET: usize = 1;
+
 const MAX_DESCRIPTOR_SETS_COUNT: usize = 3;
 const MAX_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 3;
 
 impl Buffer {
-    pub fn new_primary(pool: Arc<Pool>) -> Self {
+    pub(crate) fn new_primary(pool: Arc<Pool>) -> Self {
         return Self::new(pool, false);
     }
 
-    pub fn new_secondary(pool: Arc<Pool>) -> Self {
+    pub(crate) fn new_secondary(pool: Arc<Pool>) -> Self {
         return Self::new(pool, true);
     }
 
@@ -94,12 +98,12 @@ impl Buffer {
         self.exe_cmds_with_data(&data);
     }
 
-    pub fn fill_submit_info(&self, subinfo: &mut vk::VkSubmitInfo) {
+    pub(crate) fn fill_submit_info(&self, subinfo: &mut vk::VkSubmitInfo) {
         subinfo.pCommandBuffers = &self.vk_data;
         subinfo.commandBufferCount = 1;
     }
 
-    pub fn begin(&mut self) {
+    pub(crate) fn begin(&mut self) {
         #[cfg(debug_mode)]
         {
             if self.is_secondary {
@@ -138,7 +142,7 @@ impl Buffer {
         }
     }
 
-    pub fn begin_render_pass_with_info(
+    pub(crate) fn begin_render_pass_with_info(
         &mut self,
         render_pass_begin_info: vk::VkRenderPassBeginInfo,
     ) {
@@ -151,7 +155,7 @@ impl Buffer {
         }
     }
 
-    pub fn copy_buffer(
+    pub(crate) fn copy_buffer(
         &mut self,
         src: vk::VkBuffer,
         dst: vk::VkBuffer,
@@ -168,7 +172,7 @@ impl Buffer {
         }
     }
 
-    pub fn copy_buffer_to_image(
+    pub(crate) fn copy_buffer_to_image(
         &mut self,
         src: vk::VkBuffer,
         dst: vk::VkImage,
@@ -186,13 +190,13 @@ impl Buffer {
         }
     }
 
-    pub fn reset(&mut self) {
+    pub(crate) fn reset(&mut self) {
         unsafe {
             vk::vkResetCommandBuffer(self.vk_data, 0);
         }
     }
 
-    pub fn flush(&mut self) {
+    pub(crate) fn flush(&mut self) {
         let fence = Fence::new(self.pool.logical_device.clone());
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
         let mut submit_info = vk::VkSubmitInfo::default();
@@ -208,17 +212,17 @@ impl Buffer {
         fence.wait();
     }
 
-    pub fn end_render_pass(&mut self) {
+    pub(crate) fn end_render_pass(&mut self) {
         unsafe {
             vk::vkCmdEndRenderPass(self.vk_data);
         }
     }
 
-    pub fn end(&mut self) {
+    pub(crate) fn end(&mut self) {
         vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
     }
 
-    pub fn bind_pipeline(&mut self, p: &Pipeline) {
+    pub(crate) fn bind_pipeline(&mut self, p: &Pipeline) {
         let info = p.get_info_for_binding();
         self.bound_pipeline_layout = p.get_layout().vk_data;
         unsafe {
@@ -226,7 +230,7 @@ impl Buffer {
         }
     }
 
-    pub fn bind_vertex_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
+    pub(crate) fn bind_vertex_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
         let info = buffer.get_info_for_binding();
         unsafe {
@@ -234,7 +238,7 @@ impl Buffer {
         }
     }
 
-    pub fn bind_index_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
+    pub(crate) fn bind_index_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
         let info = buffer.get_info_for_binding();
         unsafe {
@@ -247,19 +251,19 @@ impl Buffer {
         }
     }
 
-    pub fn draw_index(&mut self, indices_count: u32) {
+    pub(crate) fn draw_index(&mut self, indices_count: u32) {
         unsafe {
             vk::vkCmdDrawIndexed(self.vk_data, indices_count, 1, 0, 0, 1);
         }
     }
 
-    pub fn draw(&mut self, vertices_count: u32) {
+    pub(crate) fn draw(&mut self, vertices_count: u32) {
         unsafe {
             vk::vkCmdDraw(self.vk_data, vertices_count, 1, 0, 0);
         }
     }
 
-    pub fn pipeline_image_barrier(
+    pub(crate) fn pipeline_image_barrier(
         &mut self,
         src_stage: vk::VkPipelineStageFlags,
         dst_stage: vk::VkPipelineStageFlags,
@@ -394,6 +398,50 @@ impl Buffer {
         self.bound_descriptor_sets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] =
             buffer.get_offset() as u32;
+    }
+
+    pub(crate) fn bind_shadow_mapper_light_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET] =
+            buffer.get_offset() as u32;
+    }
+
+    pub(crate) fn bind_shadow_mapper_material_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET] =
+            descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET] =
+            buffer.get_offset() as u32;
+    }
+
+    pub(crate) fn render_shadow_mapper(
+        &mut self,
+        vertex_buffer: &StaticBuffer,
+        index_buffer: &StaticBuffer,
+        indices_count: u32,
+    ) {
+        unsafe {
+            vk::vkCmdBindDescriptorSets(
+                self.vk_data,
+                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                self.bound_pipeline_layout,
+                0,
+                SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT as u32,
+                self.bound_descriptor_sets.as_ptr(),
+                SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT as u32,
+                self.bound_dynamic_buffer_offsets.as_ptr(),
+            );
+        }
+        self.bind_vertex_buffer(vertex_buffer.get_buffer());
+        self.bind_index_buffer(index_buffer.get_buffer());
+        self.draw_index(indices_count);
     }
 }
 

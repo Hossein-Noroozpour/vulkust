@@ -70,12 +70,20 @@ pub struct Material {
     pub translucency: TranslucencyMode,
     pub uniform: Uniform,
     uniform_buffer: Arc<RwLock<DynamicBuffer>>,
-    pub(crate) descriptor_set: Arc<DescriptorSet>,
+    descriptor_set: Arc<DescriptorSet>,
 }
 
 impl Material {
     pub fn new_with_gltf(_engine: &Engine, _mat: &gltf::Material) -> Self {
         vxunimplemented!();
+    }
+
+    pub(crate) fn get_uniform_buffer(&self) -> &Arc<RwLock<DynamicBuffer>> {
+        return &self.uniform_buffer;
+    }
+
+    pub(crate) fn get_descriptor_set(&self) -> &Arc<DescriptorSet> {
+        return &self.descriptor_set;
     }
 
     pub fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader) -> Self {

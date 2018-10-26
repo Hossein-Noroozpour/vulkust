@@ -361,7 +361,7 @@ impl Manager {
         )
     }
 
-    pub fn create_buffer_only_set(&mut self, uniform: Arc<RwLock<DynamicBuffer>>) -> Set {
+    pub fn create_buffer_only_set(&mut self, buffer_size: isize) -> Set {
         Set::new_buffer_only(
             self.pool.clone(),
             self.buffer_only_set_layout.clone(),

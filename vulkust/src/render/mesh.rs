@@ -28,6 +28,7 @@ pub trait Mesh: Object {
     fn is_transparent(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
     fn update(&mut self, scene: &Scene, model: &Model);
+    fn get_material(&self) -> &Material;
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -111,8 +112,8 @@ impl Manager {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
-    pub obj_base: ObjectBase,
-    pub material: Material,
+    obj_base: ObjectBase,
+    material: Material,
     vertex_buffer: StaticBuffer,
     index_buffer: StaticBuffer,
     indices_count: u32,

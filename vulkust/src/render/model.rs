@@ -7,7 +7,6 @@ use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::light::VisibilityData as LightVisibilityData;
 use super::mesh::Mesh;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::scene::Scene;
@@ -23,13 +22,11 @@ pub trait Model: Object + Transferable {
     fn update(&mut self, scene: &Scene, camera: &Camera);
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>);
     fn clear_meshes(&mut self);
-    fn get_meshes_count(&self) -> usize;
+    fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>>;
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)>;
     fn has_shadow(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
-    fn clear_light_visibilities(&mut self);
-    fn set_light_visibilities(&mut self, Id, Box<LightVisibilityData>);
-    fn get_light_visibilities(&self) -> &BTreeMap<Id, Box<LightVisibilityData>>;
+    fn get_uniform(&self) -> &Uniform;
 }
 
 pub trait DefaultModel: Model + Sized {
@@ -99,11 +96,7 @@ impl Manager {
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
-    pub model: math::Matrix4<Real>,
-    // todo, I think its not gonna be needed,
-    // because of cascaded shadow
-    // pub directional_biased_model: math::Matrix4<Real>,
-    // pub sun_mvp: math::Matrix4<Real>,
+    model: math::Matrix4<Real>,
 }
 
 impl Uniform {
@@ -138,6 +131,10 @@ impl Uniform {
         Uniform { model }
     }
 
+    pub(crate) fn get_model(&self) -> &math::Matrix4<Real> {
+        return &self.model;
+    }
+
     fn default() -> Self {
         let m = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
@@ -153,7 +150,6 @@ pub struct Base {
     has_shadow_caster: bool,
     has_transparent: bool,
     occlusion_culling_radius: Real,
-    is_in_light: BTreeMap<Id, (bool, Box<LightVisibilityData>)>,
     is_visible: bool,
     distance_from_camera: Real,
     collider: Arc<RwLock<Collider>>,
