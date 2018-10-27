@@ -7,18 +7,15 @@ use super::camera::{Camera, DefaultCamera, Manager as CameraManager, Uniform as 
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
-use super::gapi::GraphicApiEngine;
 use super::font::Manager as FontManager;
+use super::g_buffer_filler::GBufferFiller;
+use super::gapi::GraphicApiEngine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::light::{
-    DirectionalUniform, 
-    Light, 
-    Manager as LightManager,
-    PointUniform,
-};
+use super::light::{DirectionalUniform, Light, Manager as LightManager, PointUniform};
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
+use super::shadower::Shadower;
 use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
 use std::io::BufReader;
@@ -38,8 +35,15 @@ pub trait Scene: Object {
     fn add_camera(&mut self, Arc<RwLock<Camera>>);
     fn add_model(&mut self, Arc<RwLock<Model>>);
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
-    fn render_gbuffer(&self, &GraphicApiEngine, &Arc<CmdPool>, kernel_index: usize);
-    fn render_deferred(&self, cmd: &mut CmdBuffer, frame_buffer: usize);
+    fn render_gbuffer_shadow_maps(
+        &self,
+        &GraphicApiEngine,
+        &Arc<CmdPool>,
+        &GBufferFiller,
+        &Shadower,
+        usize,
+    );
+    fn render_deferred(&self, &mut CmdBuffer, usize);
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
     fn clean(&mut self);
@@ -232,7 +236,7 @@ pub struct Uniform {
 impl Uniform {
     pub fn new() -> Self {
         let camera = CameraUniform::new();
-        Uniform {
+        Self {
             camera,
             directional_lights: [DirectionalUniform::new(); MAX_DIRECTIONAL_LIGHTS_COUNT],
             directional_lights_count: 0,
@@ -259,13 +263,12 @@ pub struct Base {
     uniform_buffer: DynamicBuffer,
     cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
     active_camera: Option<Weak<RwLock<Camera>>>,
-    shadow_makers: BTreeMap<Id, Arc<RwLock<Light>>>,
+    shadow_maker_lights: BTreeMap<Id, Arc<RwLock<Light>>>,
     lights: BTreeMap<Id, Arc<RwLock<Light>>>,
     models: BTreeMap<Id, Arc<RwLock<Model>>>,
     all_models: BTreeMap<Id, Weak<RwLock<Model>>>,
     descriptor_set: Arc<DescriptorSet>,
     kernels_data: Vec<Arc<Mutex<BaseKernelData>>>,
-    cascaded_shadow_maps_count: usize,
     // pub skybox: Option<Arc<RwLock<Skybox>>>, // todo, maybe its not gonna be needed in GI PBR
     // pub constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
 }
@@ -420,52 +423,30 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        // todo get directional light
-        // then create light frustums
-        // then rendering meshes with light
-        self.obj_base.render(cmd, frame_number);
-        let camera = match &self.active_camera {
-            Some(c) => c,
-            None => return,
-        };
-        let _camera = match camera.upgrade() {
-            Some(c) => c,
-            None => return,
-        };
-        {
-            let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
-            uniform_buffer.update(&self.uniform, frame_number);
-            let buffer = uniform_buffer.get_buffer(frame_number);
-            let buffer = vxresult!(buffer.read());
-            cmd.bind_gbuff_scene_descriptor(&*self.descriptor_set, &*buffer);
-        }
-    }
+    // fn update(&mut self, frame_number: usize) {
+    //     let camera = match &self.active_camera {
+    //         Some(c) => c,
+    //         None => return,
+    //     };
+    //     let camera = match camera.upgrade() {
+    //         Some(c) => c,
+    //         None => return,
+    //     };
+    //     let camera = vxresult!(camera.read());
+    //     camera.update_uniform(&mut self.uniform.camera);
 
-    fn update(&mut self, frame_number: usize) {
-        let camera = match &self.active_camera {
-            Some(c) => c,
-            None => return,
-        };
-        let camera = match camera.upgrade() {
-            Some(c) => c,
-            None => return,
-        };
-        let camera = vxresult!(camera.read());
-        camera.update_uniform(&mut self.uniform.camera);
-
-        let csmws = camera.get_cascaded_shadow_frustum_partitions(self.cascaded_shadow_maps_count);
-        for (_, shadow_maker) in &self.shadow_makers {
-            let mut shadow_maker = vxresult!(shadow_maker.write());
-            if !shadow_maker.is_rendarable() {
-                continue;
-            }
-            // shadow maker must be directional (maybe in far future I gonna add others)
-            let shadow_maker = vxunwrap!(shadow_maker.to_mut_directional());
-            shadow_maker.update_cascaded_shadow_map_cameras(&csmws);
-        }
-        // todo update lights
-    }
+    //     let csmws = camera.get_cascaded_shadow_frustum_partitions(self.cascaded_shadow_maps_count);
+    //     for (_, shadow_maker) in &self.shadow_makers {
+    //         let mut shadow_maker = vxresult!(shadow_maker.write());
+    //         if !shadow_maker.is_rendarable() {
+    //             continue;
+    //         }
+    //         // shadow maker must be directional (maybe in far future I gonna add others)
+    //         let shadow_maker = vxunwrap!(shadow_maker.to_mut_directional());
+    //         shadow_maker.update_cascaded_shadow_map_cameras(&csmws);
+    //     }
+    //     // todo update lights
+    // }
 
     fn disable_rendering(&mut self) {
         self.obj_base.disable_rendering()
@@ -514,10 +495,21 @@ impl Scene for Base {
         return &self.active_camera;
     }
 
-    fn render_gbuffer(&self, geng: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>, kernel_index: usize) {
+    fn render_gbuffer_shadow_maps(
+        &self,
+        geng: &GraphicApiEngine,
+        cmd_pool: &Arc<CmdPool>,
+        g_buffer_filler: &GBufferFiller,
+        shadower: &Shadower,
+        kernel_index: usize,
+    ) {
         if !self.is_rendarable() {
             return;
         }
+        for (_, shm) in &self.shadow_maker_lights {
+            vxresult!(shm.read()).begin_secondary_commands(geng, cmd_pool, shadower, kernel_index);
+        }
+        let kernels_count = self.kernels_data.len();
         let mut kernel_data = vxresult!(self.kernels_data[kernel_index].lock());
         if kernel_data.frames_data.len() < 1 {
             let frames_count = geng.get_frames_count();
@@ -526,27 +518,23 @@ impl Scene for Base {
                     gbuff: geng.create_secondary_command_buffer(cmd_pool.clone()),
                 });
             }
-
-
-            need_update_shadow_makers_data = false;
-            cmdss.add_scene(
-                *scene_id,
-                KernelSceneData::new(&*scene, &*g_engine, self.cmd_pool.clone()),
-            );
         }
-        let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
-        if need_update_shadow_makers_data {
-            scene.update_shadow_makers_data(&mut scene_data.shadow_makers_data);
+        let frame_number = geng.get_frame_number();
+        let cmd = &mut kernel_data.frames_data[frame_number].gbuff;
+        self.obj_base.render(cmd, frame_number);
+        g_buffer_filler.begin_secondary(cmd);
+        {
+            let buffer = self.uniform_buffer.get_buffer(frame_number);
+            let buffer = vxresult!(buffer.read());
+            cmd.bind_gbuff_scene_descriptor(&*self.descriptor_set, &*buffer);
         }
-        let models = scene.get_all_models();
-        g_buffer_filler.begin_secondary(&mut scene_data.cmds.gbuff);
-        scene.render(&mut scene_data.cmds.gbuff, frame_number);
-        for (_, model) in &*models {
-            let camera = vxunwrap!(scene.get_active_camera()).upgrade();
+        let mut task_index = 0;
+        for (_, model) in &self.all_models {
+            let camera = vxunwrap!(self.active_camera).upgrade();
             let camera = vxunwrap!(camera);
             let camera = vxresult!(camera.read());
             task_index += 1;
-            if task_index % self.kernels_count != self.index {
+            if task_index % kernels_count != kernel_index {
                 continue;
             }
             let model = model.upgrade();
@@ -558,21 +546,22 @@ impl Scene for Base {
             if !model.is_rendarable() {
                 continue;
             }
-            Model::update(&mut *model, &*scene, &*camera);
-            Object::update(&mut *model);
-            Object::render(&mut *model, &mut scene_data.cmds.gbuff, frame_number);
+            model.update(self, &*camera);
+            model.render_gbuffer(cmd, frame_number);
             if model.has_shadow() {
-                for (_, shm) in &mut scene_data.shadow_makers_data {
-                    shm.check_shadowability(&mut *model);
+                for (_, shm) in &self.shadow_maker_lights {
+                    vxresult!(shm.read()).shadow(&mut *model, &m, kernel_index, frame_number);
                 }
             }
         }
-        scene_data.cmds.gbuff.end();
+        for (_, shm) in &self.shadow_maker_lights {
+            vxresult!(shm.read()).render_shadow_mapper(kernel_index, frame_number);
+        }
+        cmd.end();
     }
 
     fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        let uniform_buffer = vxresult!(self.uniform_buffer.read());
-        let buffer = uniform_buffer.get_buffer(frame_number);
+        let buffer = self.uniform_buffer.get_buffer(frame_number);
         let buffer = vxresult!(buffer.read());
         cmd.bind_deferred_scene_descriptor(&*self.descriptor_set, &*buffer);
     }
@@ -649,14 +638,6 @@ impl Object for Game {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.base.render(cmd, frame_number);
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        self.base.update(frame_number);
-    }
-
     fn disable_rendering(&mut self) {
         self.base.disable_rendering()
     }
@@ -681,6 +662,23 @@ impl Scene for Game {
 
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
         return self.base.get_active_camera();
+    }
+
+    fn render_gbuffer_shadow_maps(
+        &self,
+        geng: &GraphicApiEngine,
+        cmd_pool: &Arc<CmdPool>,
+        g_buffer_filler: &GBufferFiller,
+        shadower: &Shadower,
+        kernel_index: usize,
+    ) {
+        self.base.render_gbuffer_shadow_maps(
+            geng,
+            cmd_pool,
+            g_buffer_filler,
+            shadower,
+            kernel_index,
+        );
     }
 
     fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {
@@ -742,14 +740,6 @@ impl Object for Ui {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.base.render(cmd, frame_number);
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        self.base.update(frame_number);
-    }
-
     fn disable_rendering(&mut self) {
         self.base.disable_rendering()
     }
@@ -774,6 +764,23 @@ impl Scene for Ui {
 
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
         return self.base.get_active_camera();
+    }
+
+    fn render_gbuffer_shadow_maps(
+        &self,
+        geng: &GraphicApiEngine,
+        cmd_pool: &Arc<CmdPool>,
+        g_buffer_filler: &GBufferFiller,
+        shadower: &Shadower,
+        kernel_index: usize,
+    ) {
+        self.base.render_gbuffer_shadow_maps(
+            geng,
+            cmd_pool,
+            g_buffer_filler,
+            shadower,
+            kernel_index,
+        );
     }
 
     fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {

@@ -1,22 +1,23 @@
 use super::super::core::debug::Debug as CoreDebug;
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
+use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::camera::Orthographic;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
+use super::descriptor::{Manager as DescriptorManager, Set as DescriptorSet};
 use super::engine::Engine;
-use super::buffer::{DynamicBuffer, Manager as BufferManager};
-use super::descriptor::{Set as DescriptorSet, Manager as DescriptorManager};
 use super::gapi::GraphicApiEngine;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::model::Model;
 use super::mesh::Mesh;
+use super::model::Model;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
+use super::shadower::Shadower;
 use super::sync::Semaphore;
 use std::collections::BTreeMap;
 use std::f32::MAX as F32MAX;
 use std::f32::MIN as F32MIN;
-use std::sync::{Arc, Mutex, RwLock, Weak};
 use std::mem::size_of;
+use std::sync::{Arc, Mutex, RwLock, Weak};
 
 use gltf;
 use math;
@@ -29,9 +30,9 @@ pub(crate) enum TypeId {
 }
 
 pub trait ShadowMakerKernelData: CoreDebug + Send {
-    fn shadow(&mut self, &mut Model, &Arc<RwLock<Model>>, usize); // old name was check_shadowability
-    fn create_commands(&mut self, &GraphicApiEngine, &Arc<CmdPool>);
-    fn render(&mut self, usize);
+    fn shadow(&self, &mut Model, &Arc<RwLock<Model>>, usize, usize); // old name was check_shadowability
+    fn begin_secondary_commands(&self, &GraphicApiEngine, &Arc<CmdPool>, &Shadower, usize, usize);
+    fn render_shadow_mapper(&self, usize, usize);
 }
 
 pub trait Light: Object {
@@ -86,7 +87,7 @@ impl SunCascadeCamera {
             min_seen_z: F32MAX,
         }
     }
-    
+
     fn update_limits(&mut self, other: &Self) {
         self.max_x = other.max_x;
         self.max_seen_x = other.min_x;
@@ -139,14 +140,16 @@ impl SunShadowMakerKernelData {
         let mut render_data = Vec::with_capacity(max_render_data_count);
         for _ in 0..max_render_data_count {
             render_data.push(SunShadowMapperRenderData {
-                uniform_buffer: buffer_manager.create_dynamic_buffer(size_of::<math::Matrix4<Real>>() as isize),
+                uniform_buffer: buffer_manager
+                    .create_dynamic_buffer(size_of::<math::Matrix4<Real>>() as isize),
                 model: None,
                 cascade_index: 0,
             });
         }
-        let descriptor_set = descriptor_manager.create_buffer_only_set(&render_data[0].uniform_buffer);
+        let descriptor_set =
+            descriptor_manager.create_buffer_only_set(&render_data[0].uniform_buffer);
         for _ in 0..frames_count {
-            frames_data.push( SunShadowMakerKernelFrameData {
+            frames_data.push(SunShadowMakerKernelFrameData {
                 cascades_cmds: Vec::with_capacity(cascades_count),
             });
         }
@@ -161,7 +164,11 @@ impl SunShadowMakerKernelData {
     }
 
     // calls at very first time in a render loop
-    fn update_camera_limits(&mut self, cascade_cameras: &[SunCascadeCamera], zero_located_view: math::Matrix4<Real>) {
+    fn update_camera_limits(
+        &mut self,
+        cascade_cameras: &[SunCascadeCamera],
+        zero_located_view: math::Matrix4<Real>,
+    ) {
         self.zero_located_view = zero_located_view;
         let cc = cascade_cameras.len();
         for i in 0..cc {
@@ -236,7 +243,8 @@ impl ShadowMakerKernelData for SunShadowMakerKernelData {
         let cascades_count = self.cascade_cameras.len();
         for fd in &mut self.frames_data {
             for _ in 0..cascades_count {
-                fd.cascades_cmds.push(geng.create_secondary_command_buffer(cmd_pool.clone()));
+                fd.cascades_cmds
+                    .push(geng.create_secondary_command_buffer(cmd_pool.clone()));
             }
         }
     }
@@ -256,7 +264,8 @@ impl ShadowMakerKernelData for SunShadowMakerKernelData {
             let cmd = &mut self.frames_data[frame_number].cascades_cmds[ci];
             cmd.bind_shadow_mapper_light_descriptor(
                 &self.descriptor_set,
-                &*vxresult!(rd.uniform_buffer.get_buffer(frame_number).read()));
+                &*vxresult!(rd.uniform_buffer.get_buffer(frame_number).read()),
+            );
             model.render_shadow(cmd, frame_number);
         }
     }
@@ -471,7 +480,8 @@ impl Directional for Sun {
 impl DefaultLighting for Sun {
     fn default(eng: &Engine) -> Self {
         let csc = eng.get_config().cascaded_shadows_count as usize;
-        let max_render_data_count = eng.get_config().max_shadow_maker_kernek_render_data_count as usize;
+        let max_render_data_count =
+            eng.get_config().max_shadow_maker_kernek_render_data_count as usize;
         let mut cascade_cameras = Vec::with_capacity(csc);
         let geng = vxresult!(eng.get_gapi_engine().read());
         let frames_count = geng.get_frames_count();
@@ -504,10 +514,13 @@ impl DefaultLighting for Sun {
             direction: math::Vector3::new(0.0, 0.0, -1.0),
             color: (1.0, 1.0, 1.0),
             strength: 1.0,
-            shadow_mapper_primary_command: geng.create_primary_command_buffer_from_main_graphic_pool(),
+            shadow_mapper_primary_command: geng
+                .create_primary_command_buffer_from_main_graphic_pool(),
             shadow_mapper_semaphore: geng.create_semaphore(),
-            shadow_accumulator_secondary_command: geng.create_secondary_command_buffer_from_main_graphic_pool(),
-            shadow_accumulator_primary_command: geng.create_primary_command_buffer_from_main_graphic_pool(),
+            shadow_accumulator_secondary_command: geng
+                .create_secondary_command_buffer_from_main_graphic_pool(),
+            shadow_accumulator_primary_command: geng
+                .create_primary_command_buffer_from_main_graphic_pool(),
             shadow_accumulator_semaphore: geng.create_semaphore(),
         }
     }

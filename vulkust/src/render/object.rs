@@ -9,11 +9,9 @@ use math;
 pub trait Object: CoreObject {
     fn get_name(&self) -> Option<String>;
     fn set_name(&mut self, name: &str);
-    fn render(&self, &mut CmdBuffer, usize);
     fn disable_rendering(&mut self);
     fn enable_rendering(&mut self);
     fn is_rendarable(&self) -> bool;
-    fn update(&mut self, usize);
 }
 
 pub trait Loadable: Sized {
