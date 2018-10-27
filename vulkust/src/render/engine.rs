@@ -96,6 +96,10 @@ impl Engine {
     }
 
     pub fn on_event(&self, _e: Event) {}
+
+    pub(crate) fn get_multithreaded_renderer(&self) -> &MultithreadedEngine {
+        return &self.multithreaded_engine;
+    }
 }
 
 unsafe impl Send for Engine {}

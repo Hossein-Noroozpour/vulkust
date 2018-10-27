@@ -13,7 +13,7 @@ pub trait Object: CoreObject {
     fn disable_rendering(&mut self);
     fn enable_rendering(&mut self);
     fn is_rendarable(&self) -> bool;
-    fn update(&mut self);
+    fn update(&mut self, usize);
 }
 
 pub trait Loadable: Sized {
@@ -97,7 +97,7 @@ impl Object for Base {
         return self.renderable;
     }
 
-    fn update(&mut self) {}
+    fn update(&mut self, _: usize) {}
 }
 
 impl Loadable for Base {

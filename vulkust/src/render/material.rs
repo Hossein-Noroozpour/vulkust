@@ -69,16 +69,16 @@ pub struct Material {
     pub emissive_factor: Arc<RwLock<Texture>>,
     pub translucency: TranslucencyMode,
     pub uniform: Uniform,
-    uniform_buffer: Arc<RwLock<DynamicBuffer>>,
+    uniform_buffer: DynamicBuffer,
     descriptor_set: Arc<DescriptorSet>,
 }
 
 impl Material {
-    pub fn new_with_gltf(_engine: &Engine, _mat: &gltf::Material) -> Self {
+    pub(crate) fn new_with_gltf(_engine: &Engine, _mat: &gltf::Material) -> Self {
         vxunimplemented!();
     }
 
-    pub(crate) fn get_uniform_buffer(&self) -> &Arc<RwLock<DynamicBuffer>> {
+    pub(crate) fn get_uniform_buffer(&self) -> &DynamicBuffer {
         return &self.uniform_buffer;
     }
 
@@ -86,11 +86,10 @@ impl Material {
         return &self.descriptor_set;
     }
 
-    pub fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader) -> Self {
+    pub(crate) fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader) -> Self {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let uniform_buffer = Arc::new(RwLock::new(uniform_buffer));
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let mut uniform = Uniform::new();
@@ -197,7 +196,7 @@ impl Material {
         ];
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
-        let descriptor_set = descriptor_manager.create_gbuff_set(uniform_buffer.clone(), textures);
+        let descriptor_set = descriptor_manager.create_gbuff_set(&uniform_buffer, textures);
         let descriptor_set = Arc::new(descriptor_set);
         Material {
             base_color,
@@ -214,11 +213,10 @@ impl Material {
         }
     }
 
-    pub fn default(eng: &Engine) -> Self {
+    pub(crate) fn default(eng: &Engine) -> Self {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let uniform_buffer = Arc::new(RwLock::new(uniform_buffer));
         let scene_manager = vxresult!(eng.scene_manager.read());
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let uniform = Uniform::new();
@@ -240,7 +238,7 @@ impl Material {
             emissive_factor.clone(),
         ];
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
-        let descriptor_set = descriptor_manager.create_gbuff_set(uniform_buffer.clone(), textures);
+        let descriptor_set = descriptor_manager.create_gbuff_set(&uniform_buffer, textures);
         let descriptor_set = Arc::new(descriptor_set);
         Material {
             base_color,
@@ -270,16 +268,23 @@ impl Material {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set =
-            descriptor_manager.create_gbuff_set(self.uniform_buffer.clone(), textures);
+            descriptor_manager.create_gbuff_set(&self.uniform_buffer, textures);
         self.descriptor_set = Arc::new(descriptor_set);
     }
 
     pub fn update(&mut self, _scene: &Scene, _model: &Model) {}
 
+    pub fn update_uniform_buffer(&mut self, frame_number: usize) {
+        self.uniform_buffer.update(&self.uniform, frame_number);
+    }
+
     pub fn bind(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        let mut ub = vxresult!(self.uniform_buffer.write());
-        ub.update(&self.uniform, frame_number);
-        let buffer = vxresult!(ub.get_buffer(frame_number).read());
+        let buffer = vxresult!(self.uniform_buffer.get_buffer(frame_number).read());
         cmd.bind_gbuff_material_descriptor(&*self.descriptor_set, &*buffer);
+    }
+
+    pub(crate) fn bind_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        let buffer = vxresult!(self.uniform_buffer.get_buffer(frame_number).read());
+        cmd.bind_shadow_mapper_material_descriptor(&*self.descriptor_set, &*buffer);
     }
 }

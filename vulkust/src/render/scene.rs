@@ -14,8 +14,7 @@ use super::light::{
     DirectionalUniform, 
     Light, 
     Manager as LightManager,
-    PointUniform, 
-    ShadowMakerData,
+    PointUniform,
 };
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
@@ -24,7 +23,7 @@ use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
 use std::io::BufReader;
 use std::mem::size_of;
-use std::sync::{Arc, RwLock, Weak};
+use std::sync::{Arc, Mutex, RwLock, Weak};
 
 use gltf;
 
@@ -39,13 +38,10 @@ pub trait Scene: Object {
     fn add_camera(&mut self, Arc<RwLock<Camera>>);
     fn add_model(&mut self, Arc<RwLock<Model>>);
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
+    fn render_gbuffer(&self, &GraphicApiEngine, &Arc<CmdPool>, kernel_index: usize);
     fn render_deferred(&self, cmd: &mut CmdBuffer, frame_buffer: usize);
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
-    fn get_shadow_makers(&self) -> &BTreeMap<Id, Arc<RwLock<Light>>>;
-    fn update_shadow_makers_data(&self, &mut BTreeMap<Id, Box<ShadowMakerData>>);
-    fn update_shadow_makers_with_data(&self, &BTreeMap<Id, Box<ShadowMakerData>>);
-    fn update_shadow_makers(&self);
     fn clean(&mut self);
 }
 
@@ -247,10 +243,20 @@ impl Uniform {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
+struct BaseKernelFramedata {
+    gbuff: CmdBuffer,
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
+struct BaseKernelData {
+    frames_data: Vec<BaseKernelFramedata>,
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     obj_base: ObjectBase,
     uniform: Uniform,
-    uniform_buffer: Arc<RwLock<DynamicBuffer>>,
+    uniform_buffer: DynamicBuffer,
     cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
     active_camera: Option<Weak<RwLock<Camera>>>,
     shadow_makers: BTreeMap<Id, Arc<RwLock<Light>>>,
@@ -258,6 +264,7 @@ pub struct Base {
     models: BTreeMap<Id, Arc<RwLock<Model>>>,
     all_models: BTreeMap<Id, Weak<RwLock<Model>>>,
     descriptor_set: Arc<DescriptorSet>,
+    kernels_data: Vec<Arc<Mutex<BaseKernelData>>>,
     cascaded_shadow_maps_count: usize,
     // pub skybox: Option<Arc<RwLock<Skybox>>>, // todo, maybe its not gonna be needed in GI PBR
     // pub constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
@@ -435,7 +442,7 @@ impl Object for Base {
         }
     }
 
-    fn update(&mut self) {
+    fn update(&mut self, frame_number: usize) {
         let camera = match &self.active_camera {
             Some(c) => c,
             None => return,
@@ -507,6 +514,62 @@ impl Scene for Base {
         return &self.active_camera;
     }
 
+    fn render_gbuffer(&self, geng: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>, kernel_index: usize) {
+        if !self.is_rendarable() {
+            return;
+        }
+        let mut kernel_data = vxresult!(self.kernels_data[kernel_index].lock());
+        if kernel_data.frames_data.len() < 1 {
+            let frames_count = geng.get_frames_count();
+            for _ in 0..frames_count {
+                kernel_data.frames_data.push(BaseKernelFramedata {
+                    gbuff: geng.create_secondary_command_buffer(cmd_pool.clone()),
+                });
+            }
+
+
+            need_update_shadow_makers_data = false;
+            cmdss.add_scene(
+                *scene_id,
+                KernelSceneData::new(&*scene, &*g_engine, self.cmd_pool.clone()),
+            );
+        }
+        let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
+        if need_update_shadow_makers_data {
+            scene.update_shadow_makers_data(&mut scene_data.shadow_makers_data);
+        }
+        let models = scene.get_all_models();
+        g_buffer_filler.begin_secondary(&mut scene_data.cmds.gbuff);
+        scene.render(&mut scene_data.cmds.gbuff, frame_number);
+        for (_, model) in &*models {
+            let camera = vxunwrap!(scene.get_active_camera()).upgrade();
+            let camera = vxunwrap!(camera);
+            let camera = vxresult!(camera.read());
+            task_index += 1;
+            if task_index % self.kernels_count != self.index {
+                continue;
+            }
+            let model = model.upgrade();
+            if model.is_none() {
+                continue;
+            }
+            let m = vxunwrap!(model);
+            let mut model = vxresult!(m.write());
+            if !model.is_rendarable() {
+                continue;
+            }
+            Model::update(&mut *model, &*scene, &*camera);
+            Object::update(&mut *model);
+            Object::render(&mut *model, &mut scene_data.cmds.gbuff, frame_number);
+            if model.has_shadow() {
+                for (_, shm) in &mut scene_data.shadow_makers_data {
+                    shm.check_shadowability(&mut *model);
+                }
+            }
+        }
+        scene_data.cmds.gbuff.end();
+    }
+
     fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let uniform_buffer = vxresult!(self.uniform_buffer.read());
         let buffer = uniform_buffer.get_buffer(frame_number);
@@ -520,65 +583,6 @@ impl Scene for Base {
 
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
         return &self.all_models;
-    }
-
-    fn get_shadow_makers(&self) -> &BTreeMap<Id, Arc<RwLock<Light>>> {
-        return &self.shadow_makers;
-    }
-
-    fn update_shadow_makers_data(&self, data: &mut BTreeMap<Id, Box<ShadowMakerData>>) {
-        let data_len = data.len();
-        let mut data_ids = Vec::<Id>::with_capacity(data_len);
-        for (id, _) in &*data {
-            data_ids.push(*id);
-        }
-        let mut latest_data = 0;
-        for (id, shm) in &self.shadow_makers {
-            while latest_data < data_len && *id > data_ids[latest_data] {
-                #[cfg(debug_mode)]
-                vxunwrap!(data.remove(&data_ids[latest_data]));
-                #[cfg(not(debug_mode))]
-                data.remove(data_ids[latest_data]);
-                latest_data += 1;
-            }
-            if latest_data < data_len && *id == data_ids[latest_data] {
-                latest_data += 1;
-            }
-            let l = vxresult!(shm.read());
-            if !l.is_rendarable() {
-                data.remove(id);
-                continue;
-            }
-            if let Some(d) = data.get_mut(id) {
-                l.update_shadow_maker_data(d);
-                continue;
-            }
-            data.insert(*id, vxunwrap!(l.get_shadow_maker_data()));
-        }
-        if latest_data < data_len {
-            #[cfg(debug_mode)]
-            vxunwrap!(data.remove(&data_ids[latest_data]));
-            #[cfg(not(debug_mode))]
-            data.remove(data_ids[latest_data]);
-            latest_data += 1;
-        }
-    }
-
-    fn update_shadow_makers_with_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
-        for (id, smd) in smds {
-            let sm = self.shadow_makers.get(id);
-            if let Some(sm) = sm {
-                let mut sm = vxresult!(sm.write());
-                sm.update_shadow_maker_with_data(smd);
-            }
-        }
-    }
-
-    fn update_shadow_makers(&self) {
-        for (_, sm) in &self.shadow_makers {
-            let mut sm = vxresult!(sm.write());
-            sm.update();
-        }
     }
 
     fn clean(&mut self) {
@@ -649,8 +653,8 @@ impl Object for Game {
         self.base.render(cmd, frame_number);
     }
 
-    fn update(&mut self) {
-        self.base.update();
+    fn update(&mut self, frame_number: usize) {
+        self.base.update(frame_number);
     }
 
     fn disable_rendering(&mut self) {
@@ -689,22 +693,6 @@ impl Scene for Game {
 
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
         return self.base.get_all_models();
-    }
-
-    fn get_shadow_makers(&self) -> &BTreeMap<Id, Arc<RwLock<Light>>> {
-        return self.base.get_shadow_makers();
-    }
-
-    fn update_shadow_makers_data(&self, smds: &mut BTreeMap<Id, Box<ShadowMakerData>>) {
-        return self.base.update_shadow_makers_data(smds);
-    }
-
-    fn update_shadow_makers_with_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
-        self.base.update_shadow_makers_with_data(smds);
-    }
-
-    fn update_shadow_makers(&self) {
-        self.base.update_shadow_makers();
     }
 
     fn clean(&mut self) {
@@ -758,8 +746,8 @@ impl Object for Ui {
         self.base.render(cmd, frame_number);
     }
 
-    fn update(&mut self) {
-        self.base.update();
+    fn update(&mut self, frame_number: usize) {
+        self.base.update(frame_number);
     }
 
     fn disable_rendering(&mut self) {
@@ -798,22 +786,6 @@ impl Scene for Ui {
 
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
         return self.base.get_all_models();
-    }
-
-    fn get_shadow_makers(&self) -> &BTreeMap<Id, Arc<RwLock<Light>>> {
-        return self.base.get_shadow_makers();
-    }
-
-    fn update_shadow_makers_data(&self, smds: &mut BTreeMap<Id, Box<ShadowMakerData>>) {
-        return self.base.update_shadow_makers_data(smds);
-    }
-
-    fn update_shadow_makers_with_data(&self, smds: &BTreeMap<Id, Box<ShadowMakerData>>) {
-        self.base.update_shadow_makers_with_data(smds);
-    }
-
-    fn update_shadow_makers(&self) {
-        self.base.update_shadow_makers();
     }
 
     fn clean(&mut self) {

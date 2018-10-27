@@ -27,6 +27,7 @@ pub trait Model: Object + Transferable {
     fn has_shadow(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
     fn get_uniform(&self) -> &Uniform;
+    fn render_shadow(&self, &mut CmdBuffer, usize);
 }
 
 pub trait DefaultModel: Model + Sized {
@@ -154,7 +155,7 @@ pub struct Base {
     distance_from_camera: Real,
     collider: Arc<RwLock<Collider>>,
     uniform: Uniform,
-    uniform_buffer: Arc<RwLock<DynamicBuffer>>,
+    uniform_buffer: DynamicBuffer,
     descriptor_set: Arc<DescriptorSet>,
     meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
     children: BTreeMap<Id, Arc<RwLock<Model>>>,
@@ -184,13 +185,8 @@ impl Object for Base {
             return;
         }
         self.obj_base.render(cmd, frame_number);
-        {
-            let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
-            uniform_buffer.update(&self.uniform, frame_number);
-            let buffer = uniform_buffer.get_buffer(frame_number);
-            let buffer = vxresult!(buffer.read());
-            cmd.bind_gbuff_model_descriptor(&*self.descriptor_set, &*buffer);
-        }
+        let buffer = self.uniform_buffer.get_buffer(frame_number);
+        cmd.bind_gbuff_model_descriptor(&*self.descriptor_set, &vxresult!(buffer.read()));
         for (_, mesh) in &self.meshes {
             vxresult!(mesh.read()).render(cmd, frame_number);
         }
@@ -204,8 +200,12 @@ impl Object for Base {
         self.obj_base.enable_rendering();
     }
 
-    fn update(&mut self) {
-        self.obj_base.update();
+    fn update(&mut self, frame_number: usize) {
+        self.obj_base.update(frame_number);
+        self.uniform_buffer.update(&self.uniform, frame_number);
+        for (_, m) in &self.meshes {
+            vxresult!(m.write()).update(frame_number);
+        }
     }
 
     fn is_rendarable(&self) -> bool {
@@ -242,13 +242,10 @@ impl Loadable for Base {
             vxunimplemented!(); // todo support children
         }
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer =
-            Arc::new(RwLock::new(
-                vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
-            ));
+        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
-        let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
+        let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let descriptor_set = Arc::new(descriptor_set);
         let uniform = Uniform::new_with_gltf(node);
         let center = math::Vector3::new(uniform.model.w.x, uniform.model.w.y, uniform.model.w.z);
@@ -259,7 +256,6 @@ impl Loadable for Base {
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
-            is_in_light: BTreeMap::new(),
             is_visible: false,
             distance_from_camera: F32MAX,
             collider: Arc::new(RwLock::new(GhostCollider::new())),
@@ -294,12 +290,10 @@ impl Loadable for Base {
         }
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let uniform_buffer =
-            Arc::new(RwLock::new(
                 vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
-            ));
+                    .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
-        let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
+        let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let descriptor_set = Arc::new(descriptor_set);
         let center = math::Vector3::new(uniform.model.w.x, uniform.model.w.y, uniform.model.w.z);
         vxtodo!(); // not tested
@@ -309,7 +303,6 @@ impl Loadable for Base {
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
-            is_in_light: BTreeMap::new(),
             is_visible: false,
             distance_from_camera: F32MAX,
             collider,
@@ -365,7 +358,6 @@ impl Model for Base {
         }
         for (_, mesh) in &self.meshes {
             let mut mesh = vxresult!(mesh.write());
-            Object::update(&mut *mesh);
             Mesh::update(&mut *mesh, scene, self);
         }
     }
@@ -375,12 +367,15 @@ impl Model for Base {
         self.has_shadow_caster = false;
         self.has_transparent = false;
         self.occlusion_culling_radius = 0.0;
-        self.is_in_light.clear();
         self.is_visible = false;
     }
 
-    fn get_meshes_count(&self) -> usize {
-        return self.meshes.len();
+    fn get_uniform(&self) -> &Uniform {
+        return &self.uniform;
+    }
+
+    fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>> {
+        return &self.meshes;
     }
 
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
@@ -413,18 +408,11 @@ impl Model for Base {
         return self.occlusion_culling_radius;
     }
 
-    fn clear_light_visibilities(&mut self) {
-        for (_, av) in &mut self.is_in_light {
-            av.0 = false;
+    fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        for (_, mesh) in &self.meshes {
+            let mesh = vxresult!(mesh.read());
+            mesh.render_shadow(cmd, frame_number);
         }
-    }
-
-    fn set_light_visibilities(&mut self, id: Id, lvd: Box<LightVisibilityData>) {
-        self.is_in_light.insert(id, lvd);
-    }
-
-    fn get_light_visibilities(&self) -> &BTreeMap<Id, Box<LightVisibilityData>> {
-        return &self.is_in_light;
     }
 }
 

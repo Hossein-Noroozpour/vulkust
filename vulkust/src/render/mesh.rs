@@ -29,6 +29,7 @@ pub trait Mesh: Object {
     fn get_occlusion_culling_radius(&self) -> Real;
     fn update(&mut self, scene: &Scene, model: &Model);
     fn get_material(&self) -> &Material;
+    fn render_shadow(&self, &mut CmdBuffer, frame_number: usize);
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -319,7 +320,10 @@ impl Object for Base {
         cmd.render_gbuff(&self.vertex_buffer, &self.index_buffer, self.indices_count);
     }
 
-    fn update(&mut self) {}
+    fn update(&mut self, frame_number: usize) {
+        self.obj_base.update(frame_number);
+        self.material.update_uniform_buffer(frame_number);
+    }
 
     fn disable_rendering(&mut self) {
         self.obj_base.disable_rendering()
@@ -351,6 +355,15 @@ impl Mesh for Base {
 
     fn update(&mut self, scene: &Scene, model: &Model) {
         self.material.update(scene, model);
+    }
+
+    fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.material.bind_shadow(cmd, frame_number);
+        cmd.render_shadow_mapper(&self.vertex_buffer, &self.index_buffer, self.indices_count);
+    }
+
+    fn get_material(&self) -> &Material {
+        return &self.material;
     }
 
     //     fn render(&mut self, scene_uniform: &SceneUniform) {

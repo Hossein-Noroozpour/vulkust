@@ -4,12 +4,12 @@ use super::camera::Camera;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::font::Font;
-use super::light::VisibilityData as LightVisibilityData;
 use super::material::Material;
 use super::mesh::{Base as MeshBase, Mesh};
-use super::model::{Base as ModelBase, DefaultModel, Model};
+use super::model::{Base as ModelBase, DefaultModel, Model, Uniform};
 use super::object::{Object, Transferable};
 use super::scene::Scene;
+use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 
 use math;
@@ -51,8 +51,8 @@ impl Object for Base {
         self.model_base.enable_rendering()
     }
 
-    fn update(&mut self) {
-        Object::update(&mut self.model_base);
+    fn update(&mut self, frame_number: usize) {
+        Object::update(&mut self.model_base, frame_number);
     }
 
     fn is_rendarable(&self) -> bool {
@@ -99,8 +99,8 @@ impl Model for Base {
         self.model_base.add_mesh(mesh);
     }
 
-    fn get_meshes_count(&self) -> usize {
-        return self.model_base.get_meshes_count();
+    fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>> {
+        return self.model_base.get_meshes();
     }
 
     fn clear_meshes(&mut self) {
@@ -112,15 +112,19 @@ impl Model for Base {
     }
 
     fn has_shadow(&self) -> bool {
-        return self.model_base.has_shadow();
+        return false;
     }
 
     fn get_occlusion_culling_radius(&self) -> Real {
         return self.model_base.get_occlusion_culling_radius();
     }
 
-    fn set_light_visibility_data(&mut self, id: Id, lvd: Box<LightVisibilityData>) {
-        self.model_base.set_light_visibility_data(id, lvd);
+    fn get_uniform(&self) -> &Uniform {
+        return &self.model_base.get_uniform();
+    }
+    
+    fn render_shadow(&self, _: &mut CmdBuffer, _: usize) {
+        vxlogf!("Widget does not make shadow");
     }
 }
 
@@ -194,7 +198,7 @@ impl Label {
         // todo multiline support
         let mesh = {
             if self.text.len() < 1 {
-                if self.get_meshes_count() < 1 {
+                if self.get_meshes().len() < 1 {
                     return;
                 }
                 self.clear_meshes();
@@ -325,8 +329,8 @@ impl Object for Label {
         return self.base.is_rendarable();
     }
 
-    fn update(&mut self) {
-        Object::update(&mut self.base);
+    fn update(&mut self, frame_number: usize) {
+        Object::update(&mut self.base, frame_number);
     }
 }
 
@@ -365,8 +369,8 @@ impl Model for Label {
         Model::update(&mut self.base, scene, camera);
     }
 
-    fn get_meshes_count(&self) -> usize {
-        return self.base.get_meshes_count();
+    fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>> {
+        return self.base.get_meshes();
     }
 
     fn clear_meshes(&mut self) {
@@ -389,8 +393,12 @@ impl Model for Label {
         return self.base.get_occlusion_culling_radius();
     }
 
-    fn set_light_visibility_data(&mut self, id: Id, lvd: Box<LightVisibilityData>) {
-        self.base.set_light_visibility_data(id, lvd);
+    fn get_uniform(&self) -> &Uniform {
+        return self.base.get_uniform();
+    }
+    
+    fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.base.render_shadow(cmd, frame_number);
     }
 }
 

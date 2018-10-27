@@ -312,7 +312,7 @@ impl Object for Base {
         return self.obj_base.is_rendarable();
     }
 
-    fn update(&mut self) {}
+    fn update(&mut self, _: usize) {}
 }
 
 impl Transferable for Base {
@@ -555,8 +555,8 @@ impl Object for Perspective {
         return self.base.is_rendarable();
     }
 
-    fn update(&mut self) {
-        self.base.update();
+    fn update(&mut self, frame_number: usize) {
+        self.base.update(frame_number);
     }
 }
 
@@ -789,8 +789,8 @@ impl Object for Orthographic {
         return self.base.is_rendarable();
     }
 
-    fn update(&mut self) {
-        self.base.update();
+    fn update(&mut self, frame_number: usize) {
+        self.base.update(frame_number);
     }
 }
 

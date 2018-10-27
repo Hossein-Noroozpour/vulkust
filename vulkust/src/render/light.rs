@@ -20,6 +20,7 @@ use std::mem::size_of;
 
 use gltf;
 use math;
+use num_cpus;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 #[repr(u8)]
@@ -28,16 +29,15 @@ pub(crate) enum TypeId {
 }
 
 pub trait ShadowMakerKernelData: CoreDebug + Send {
-    fn shadow(&mut self, &mut Model, usize); // old name was check_shadowability
-    fn create_commands(&self, &GraphicApiEngine, &Arc<CmdPool>);
-    fn render(&self, usize);
+    fn shadow(&mut self, &mut Model, &Arc<RwLock<Model>>, usize); // old name was check_shadowability
+    fn create_commands(&mut self, &GraphicApiEngine, &Arc<CmdPool>);
+    fn render(&mut self, usize);
 }
 
 pub trait Light: Object {
     fn to_directional(&self) -> Option<&Directional>;
     fn to_mut_directional(&mut self) -> Option<&mut Directional>;
     fn has_shadow(&self) -> bool;
-    fn get_shadow_maker_kernel_data(&self, usize) -> &Arc<Mutex<ShadowMakerKernelData>>;
 }
 
 pub trait Directional: Light {
@@ -144,7 +144,7 @@ impl SunShadowMakerKernelData {
                 cascade_index: 0,
             });
         }
-        let descriptor_set = descriptor_manager.create_buffer_only_set(size_of::<math::Matrix4<Real>>() as isize);
+        let descriptor_set = descriptor_manager.create_buffer_only_set(&render_data[0].uniform_buffer);
         for _ in 0..frames_count {
             frames_data.push( SunShadowMakerKernelFrameData {
                 cascades_cmds: Vec::with_capacity(cascades_count),
@@ -178,6 +178,8 @@ impl SunShadowMakerKernelData {
         }
     }
 }
+
+unsafe impl Send for SunShadowMakerKernelData {}
 
 impl ShadowMakerKernelData for SunShadowMakerKernelData {
     fn shadow(&mut self, m: &mut Model, model: &Arc<RwLock<Model>>, frame_number: usize) {
@@ -254,7 +256,7 @@ impl ShadowMakerKernelData for SunShadowMakerKernelData {
             let cmd = &mut self.frames_data[frame_number].cascades_cmds[ci];
             cmd.bind_shadow_mapper_light_descriptor(
                 &self.descriptor_set,
-                &vxresult!(rd.uniform_buffer.get_buffer(frame_number).read()));
+                &*vxresult!(rd.uniform_buffer.get_buffer(frame_number).read()));
             model.render_shadow(cmd, frame_number);
         }
     }
@@ -263,22 +265,47 @@ impl ShadowMakerKernelData for SunShadowMakerKernelData {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Sun {
     obj_base: ObjectBase,
-    // cascaded camera rotation
-    ccr: math::Matrix4<Real>,
-    // cascaded camera data s
-    ccds: Vec<SunCam>,
-    threads_data: Vec<>
+    zero_located_view: math::Matrix4<Real>,
+    cascade_cameras: Vec<SunCascadeCamera>,
+    kernels_data: Vec<Arc<Mutex<SunShadowMakerKernelData>>>,
     direction: math::Vector3<Real>,
     color: (Real, Real, Real),
     strength: Real,
-    shm_pcmd: CmdBuffer, // shadow mapper cmd
-    shm_sem: Semaphore,
-    acc_scmd: CmdBuffer, // secondary accumulator cmd
-    acc_pcmd: CmdBuffer, // primary accumulator cmd
-    acc_sem: Semaphore,
+    shadow_mapper_primary_command: CmdBuffer,
+    shadow_mapper_semaphore: Semaphore,
+    shadow_accumulator_secondary_command: CmdBuffer,
+    shadow_accumulator_primary_command: CmdBuffer,
+    shadow_accumulator_semaphore: Semaphore,
 }
 
-impl Sun {}
+impl Sun {
+    fn update_with_kernel_data(&mut self, smd: &SunShadowMakerKernelData) {
+        let cc = self.cascade_cameras.len();
+        for i in 0..cc {
+            let ccd = &mut self.cascade_cameras[i];
+            let smdccd = &smd.cascade_cameras[i];
+            if ccd.max_seen_x < smdccd.max_seen_x {
+                ccd.max_seen_x = smdccd.max_seen_x;
+            }
+            if ccd.max_seen_y < smdccd.max_seen_y {
+                ccd.max_seen_y = smdccd.max_seen_y;
+            }
+            if ccd.max_seen_z < smdccd.max_seen_z {
+                ccd.max_seen_z = smdccd.max_seen_z;
+                ccd.max_z = smdccd.max_seen_z;
+            }
+            if ccd.min_seen_x > smdccd.min_seen_x {
+                ccd.min_seen_x = smdccd.min_seen_x;
+            }
+            if ccd.min_seen_y > smdccd.min_seen_y {
+                ccd.min_seen_y = smdccd.min_seen_y;
+            }
+            if ccd.min_seen_z > smdccd.min_seen_z {
+                ccd.min_seen_z = smdccd.min_seen_z;
+            }
+        }
+    }
+}
 
 impl CoreObject for Sun {
     fn get_id(&self) -> Id {
@@ -308,9 +335,13 @@ impl Object for Sun {
         self.obj_base.enable_rendering()
     }
 
-    fn update(&mut self) {
-        self.obj_base.update();
-        for ccd in &mut self.ccds {
+    fn update(&mut self, frame_number: usize) {
+        self.obj_base.update(frame_number);
+        for smd in &self.kernels_data {
+            let smd = vxresult!(smd.lock());
+            self.update_with_kernel_data(&*smd);
+        }
+        for ccd in &mut self.cascade_cameras {
             if ccd.max_seen_x < ccd.max_x {
                 ccd.max_x = ccd.max_seen_x;
             }
@@ -330,7 +361,7 @@ impl Object for Sun {
                 ccd.min_z = ccd.min_seen_z;
             }
         }
-        for ccd in &mut self.ccds {
+        for ccd in &mut self.cascade_cameras {
             let mmx = (ccd.max_x - ccd.min_x) * 0.02;
             let mmy = (ccd.max_y - ccd.min_y) * 0.02;
             let mz = ccd.max_z - ccd.min_z;
@@ -345,7 +376,11 @@ impl Object for Sun {
             );
             let t =
                 math::Matrix4::from_translation(math::Vector3::new(0.0, 0.0, -(ccd.max_z + mmz)));
-            ccd.vp = p * self.ccr * t;
+            ccd.vp = p * self.zero_located_view * t;
+        }
+        for smd in &self.kernels_data {
+            let smd = vxresult!(smd.lock());
+            smd.update_camera_view_projection_matrices(&self.cascade_cameras);
         }
     }
 
@@ -363,59 +398,8 @@ impl Light for Sun {
         return Some(self);
     }
 
-    fn get_shadow_maker_data(&self) -> Option<Box<ShadowMakerData>> {
-        return Some(Box::new(SunShadowMakerData::new(
-            self.get_id(),
-            &self.ccds,
-            self.ccr,
-        )));
-    }
-
-    fn update_shadow_maker_data(&self, smd: &mut Box<ShadowMakerData>) {
-        let smd = smd.to_mut_sun();
-        smd.update(&self.ccds, self.ccr);
-    }
-
-    fn update_shadow_maker_with_data(&mut self, smd: &Box<ShadowMakerData>) {
-        let smd = smd.to_sun();
-        let cc = self.ccds.len();
-        for i in 0..cc {
-            let ccd = &mut self.ccds[i];
-            let smdccd = &smd.cascades[i];
-            if ccd.max_seen_x < smdccd.max_seen_x {
-                ccd.max_seen_x = smdccd.max_seen_x;
-            }
-            if ccd.max_seen_y < smdccd.max_seen_y {
-                ccd.max_seen_y = smdccd.max_seen_y;
-            }
-            if ccd.max_seen_z < smdccd.max_seen_z {
-                ccd.max_seen_z = smdccd.max_seen_z;
-                ccd.max_z = smdccd.max_seen_z;
-            }
-            if ccd.min_seen_x > smdccd.min_seen_x {
-                ccd.min_seen_x = smdccd.min_seen_x;
-            }
-            if ccd.min_seen_y > smdccd.min_seen_y {
-                ccd.min_seen_y = smdccd.min_seen_y;
-            }
-            if ccd.min_seen_z > smdccd.min_seen_z {
-                ccd.min_seen_z = smdccd.min_seen_z;
-            }
-        }
-    }
-
-    fn create_shadow_mapper_commands(
-        &self,
-        geng: &GraphicApiEngine,
-        pool: &Arc<CmdPool>,
-    ) -> Vec<CmdBuffer> {
-        let len = self.ccds.len();
-        let mut result = Vec::with_capacity(len);
-        for _ in 0..len {
-            result.push(geng.create_secondary_command_buffer(pool.clone()));
-        }
-        result.shrink_to_fit();
-        return result;
+    fn has_shadow(&self) -> bool {
+        return true;
     }
 }
 
@@ -426,7 +410,7 @@ impl Directional for Sun {
             let mut max = math::Vector3::new(F32MIN, F32MIN, F32MIN);
             let mut min = math::Vector3::new(F32MAX, F32MAX, F32MAX);
             for p in w {
-                let p = self.ccr * p.extend(1.0);
+                let p = self.zero_located_view * p.extend(1.0);
                 if p.x < min.x {
                     min.x = p.x;
                 }
@@ -445,9 +429,9 @@ impl Directional for Sun {
             }
             walls_bnds.push((max, min));
         }
-        let ccdsc = self.ccds.len();
+        let ccdsc = self.cascade_cameras.len();
         for i in 0..ccdsc {
-            let ccd = &mut self.ccds[i];
+            let ccd = &mut self.cascade_cameras[i];
             let ii = i + 1;
             if walls_bnds[i].1.x < walls_bnds[ii].1.x {
                 ccd.min_x = walls_bnds[i].1.x;
@@ -486,27 +470,45 @@ impl Directional for Sun {
 
 impl DefaultLighting for Sun {
     fn default(eng: &Engine) -> Self {
-        let mut ccds = Vec::new();
-        let csc = eng.get_config().cascaded_shadows_count;
+        let csc = eng.get_config().cascaded_shadows_count as usize;
+        let max_render_data_count = eng.get_config().max_shadow_maker_kernek_render_data_count as usize;
+        let mut cascade_cameras = Vec::with_capacity(csc);
         let geng = vxresult!(eng.get_gapi_engine().read());
+        let frames_count = geng.get_frames_count();
         for _ in 0..csc {
-            ccds.push(SunCam::new());
+            cascade_cameras.push(SunCascadeCamera::new());
         }
-        ccds.shrink_to_fit();
+        let zero_located_view = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+        );
+        let num_cpus = num_cpus::get();
+        let mut kernels_data = Vec::with_capacity(num_cpus);
+        let buffer_manager = vxresult!(geng.get_buffer_manager().write());
+        let descriptor_manager = vxresult!(geng.get_descriptor_manager().write());
+        for _ in 0..num_cpus {
+            let kernel_data = Arc::new(Mutex::new(SunShadowMakerKernelData::new(
+                zero_located_view,
+                csc,
+                frames_count,
+                max_render_data_count,
+                &mut *buffer_manager,
+                &mut *descriptor_manager,
+            )));
+            kernels_data.push(kernel_data);
+        }
         Sun {
             obj_base: ObjectBase::new(),
-            ccr: math::Matrix4::new(
-                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-            ),
-            ccds,
+            zero_located_view,
+            cascade_cameras,
+            kernels_data,
             direction: math::Vector3::new(0.0, 0.0, -1.0),
             color: (1.0, 1.0, 1.0),
             strength: 1.0,
-            shm_pcmd: geng.create_primary_command_buffer_from_main_graphic_pool(),
-            shm_sem: geng.create_semaphore(),
-            acc_scmd: geng.create_secondary_command_buffer_from_main_graphic_pool(),
-            acc_pcmd: geng.create_primary_command_buffer_from_main_graphic_pool(),
-            acc_sem: geng.create_semaphore(),
+            shadow_mapper_primary_command: geng.create_primary_command_buffer_from_main_graphic_pool(),
+            shadow_mapper_semaphore: geng.create_semaphore(),
+            shadow_accumulator_secondary_command: geng.create_secondary_command_buffer_from_main_graphic_pool(),
+            shadow_accumulator_primary_command: geng.create_primary_command_buffer_from_main_graphic_pool(),
+            shadow_accumulator_semaphore: geng.create_semaphore(),
         }
     }
 }
@@ -517,6 +519,7 @@ impl Loadable for Sun {
     }
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
+        let mut myself = Self::default(engine);
         let location = math::Vector3::new(reader.read(), reader.read(), reader.read());
         let r = [reader.read(), reader.read(), reader.read(), reader.read()];
         let r = math::Quaternion::new(r[3], r[0], r[1], r[2]);
@@ -529,21 +532,7 @@ impl Loadable for Sun {
         vxtodo!(); // ccds is not correct
         vxtodo!(); // direction is not correct
         let geng = vxresult!(engine.get_gapi_engine().read());
-        Sun {
-            obj_base: ObjectBase::new_with_id(id),
-            ccr: math::Matrix4::new(
-                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-            ),
-            ccds: Vec::new(),
-            direction: math::Vector3::new(0.0, 0.0, -1.0),
-            color,
-            strength,
-            shm_pcmd: geng.create_primary_command_buffer_from_main_graphic_pool(),
-            shm_sem: geng.create_semaphore(),
-            acc_scmd: geng.create_secondary_command_buffer_from_main_graphic_pool(),
-            acc_pcmd: geng.create_primary_command_buffer_from_main_graphic_pool(),
-            acc_sem: geng.create_semaphore(),
-        }
+        return myself;
     }
 }
 

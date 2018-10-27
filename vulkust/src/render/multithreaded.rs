@@ -4,7 +4,7 @@ use super::config::Configurations;
 use super::deferred::Deferred;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::light::ShadowMakerData;
+use super::light::ShadowMakerKernelData;
 use super::model::Model;
 use super::object::Object;
 use super::resolver::Resolver;
@@ -14,73 +14,8 @@ use super::sync::Semaphore;
 use num_cpus;
 use std::collections::BTreeMap;
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex, RwLock, Weak};
 use std::thread::{spawn, JoinHandle};
-
-#[cfg_attr(debug_mode, derive(Debug))]
-struct KernelPassesCommands {
-    gbuff: CmdBuffer,
-    // light->(cascaded/camera index)->cmd
-    lights: BTreeMap<Id, Vec<CmdBuffer>>, // todo move it to the lights
-}
-
-impl KernelPassesCommands {
-    fn new(engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
-        let gbuff = engine.create_secondary_command_buffer(cmd_pool.clone());
-        let lights = BTreeMap::new();
-        Self { gbuff, lights }
-    }
-}
-
-#[cfg_attr(debug_mode, derive(Debug))]
-struct KernelSceneData {
-    cmds: KernelPassesCommands,
-    shadow_makers_data: BTreeMap<Id, Box<ShadowMakerKernelData>>,
-}
-
-impl KernelSceneData {
-    fn new(scene: &Scene, g_engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
-        let mut shadow_makers_data = BTreeMap::new();
-        scene.update_shadow_makers_data(&mut shadow_makers_data);
-        Self {
-            cmds: KernelPassesCommands::new(g_engine, cmd_pool),
-            shadow_makers_data,
-        }
-    }
-}
-
-#[cfg_attr(debug_mode, derive(Debug))]
-struct KernelFrameData {
-    scenes: BTreeMap<Id, KernelSceneData>,
-}
-
-impl KernelFrameData {
-    fn new() -> Self {
-        Self {
-            scenes: BTreeMap::new(),
-        }
-    }
-
-    fn remove_scene(&mut self, id: &Id) {
-        self.scenes.remove(id);
-    }
-
-    fn has_scene(&self, id: &Id) -> bool {
-        return self.scenes.contains_key(id);
-    }
-
-    fn add_scene(&mut self, id: Id, kernel_scene_data: KernelSceneData) {
-        self.scenes.insert(id, kernel_scene_data);
-    }
-
-    fn get_mut_scene(&mut self, id: &Id) -> Option<&mut KernelSceneData> {
-        return self.scenes.get_mut(id);
-    }
-
-    fn get_scene(&self, id: &Id) -> Option<&KernelSceneData> {
-        return self.scenes.get(id);
-    }
-}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Kernel {
@@ -89,13 +24,11 @@ struct Kernel {
     shadow_signal: Sender<()>,
     shadow_wait: Receiver<()>,
     handle: JoinHandle<()>,
-    frame_datas: Arc<Mutex<Vec<KernelFrameData>>>,
 }
 
 impl Kernel {
     pub fn new(
         index: usize,
-        kernels_count: usize,
         engine: Arc<RwLock<GraphicApiEngine>>,
         scene_manager: Arc<RwLock<SceneManager>>,
         g_buffer_filler: Arc<RwLock<GBufferFiller>>,
@@ -105,13 +38,9 @@ impl Kernel {
         let (render_ready, render_wait) = channel();
         let (shadow_signal, shadow_receiver) = channel();
         let (shadow_ready, shadow_wait) = channel();
-        let frame_datas = Arc::new(Mutex::new(Vec::new()));
-        let cmdbuffs = frame_datas.clone();
         let handle = spawn(move || {
             let mut renderer = Renderer::new(
                 index,
-                kernels_count,
-                cmdbuffs,
                 engine,
                 scene_manager,
                 g_buffer_filler,
@@ -132,7 +61,6 @@ impl Kernel {
             shadow_signal,
             shadow_wait,
             handle,
-            frame_datas,
         }
     }
 
@@ -163,11 +91,9 @@ impl Drop for Kernel {
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Renderer {
     index: usize,
-    kernels_count: usize,
     g_engine: Arc<RwLock<GraphicApiEngine>>,
     scene_manager: Arc<RwLock<SceneManager>>,
     cmd_pool: Arc<CmdPool>,
-    cmd_buffers: Arc<Mutex<Vec<KernelFrameData>>>,
     g_buffer_filler: Arc<RwLock<GBufferFiller>>,
     shadower: Arc<RwLock<Shadower>>,
 }
@@ -175,8 +101,6 @@ struct Renderer {
 impl Renderer {
     pub fn new(
         index: usize,
-        kernels_count: usize,
-        cmd_buffers: Arc<Mutex<Vec<KernelFrameData>>>,
         g_engine: Arc<RwLock<GraphicApiEngine>>,
         scene_manager: Arc<RwLock<SceneManager>>,
         g_buffer_filler: Arc<RwLock<GBufferFiller>>,
@@ -185,20 +109,11 @@ impl Renderer {
         let eng = g_engine.clone();
         let eng = vxresult!(eng.read());
         let cmd_pool = eng.create_command_pool();
-        let frames_count = eng.get_frames_count();
-        let cmdsss = cmd_buffers.clone();
-        let mut cmdsss = vxresult!(cmdsss.lock());
-        for _ in 0..frames_count {
-            cmdsss.push(KernelFrameData::new());
-        }
-        cmdsss.shrink_to_fit();
         Renderer {
             index,
-            kernels_count,
             g_engine,
             scene_manager,
             cmd_pool,
-            cmd_buffers,
             g_buffer_filler,
             shadower,
         }
@@ -253,16 +168,15 @@ impl Renderer {
                 if model.is_none() {
                     continue;
                 }
-                let model = vxunwrap!(model);
-                let mut model = vxresult!(model.write());
+                let m = vxunwrap!(model);
+                let mut model = vxresult!(m.write());
                 if !model.is_rendarable() {
                     continue;
                 }
-                Object::update(&mut *model);
                 Model::update(&mut *model, &*scene, &*camera);
+                Object::update(&mut *model);
                 Object::render(&mut *model, &mut scene_data.cmds.gbuff, frame_number);
                 if model.has_shadow() {
-                    model.clear_light_visibilities();
                     for (_, shm) in &mut scene_data.shadow_makers_data {
                         shm.check_shadowability(&mut *model);
                     }

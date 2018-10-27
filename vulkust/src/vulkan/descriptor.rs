@@ -142,7 +142,6 @@ impl Drop for SetLayout {
 pub(crate) struct Set {
     pub pool: Arc<Pool>,
     pub layout: Arc<SetLayout>,
-    uniform: Arc<RwLock<DynamicBuffer>>,
     pub texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
     pub vk_data: vk::VkDescriptorSet,
 }
@@ -151,7 +150,7 @@ impl Set {
     pub fn new_buffer_only(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: &DynamicBuffer,
         buffer_manager: &Arc<RwLock<BufferManager>>,
     ) -> Self {
         Self::new(pool, layout, uniform, buffer_manager, Vec::new())
@@ -160,7 +159,7 @@ impl Set {
     pub fn new_gbuff(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: &DynamicBuffer,
         buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
@@ -180,7 +179,7 @@ impl Set {
     pub fn new_deferred(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: &DynamicBuffer,
         buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
@@ -200,7 +199,7 @@ impl Set {
     pub fn new_resolver(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: &DynamicBuffer,
         buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
@@ -246,12 +245,12 @@ impl Set {
     fn new(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: &DynamicBuffer,
         buffer_manager: &Arc<RwLock<BufferManager>>,
         texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
     ) -> Self {
         let vk_data = Self::allocate_set(&pool, &layout);
-        let buff_info = Self::create_buffer_info(&*vxresult!(uniform.read()), buffer_manager);
+        let buff_info = Self::create_buffer_info(uniform, buffer_manager);
         let mut infos = vec![vk::VkWriteDescriptorSet::default(); 1 + texturess.len()];
         infos[0].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         infos[0].dstSet = vk_data;
@@ -297,7 +296,6 @@ impl Set {
         Set {
             pool,
             layout,
-            uniform,
             texturess,
             vk_data,
         }
@@ -349,7 +347,7 @@ impl Manager {
 
     pub fn create_gbuff_set(
         &mut self,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Set {
         Set::new_gbuff(
@@ -361,7 +359,7 @@ impl Manager {
         )
     }
 
-    pub fn create_buffer_only_set(&mut self, buffer_size: isize) -> Set {
+    pub fn create_buffer_only_set(&mut self, uniform: &DynamicBuffer) -> Set {
         Set::new_buffer_only(
             self.pool.clone(),
             self.buffer_only_set_layout.clone(),
@@ -372,7 +370,7 @@ impl Manager {
 
     pub fn create_deferred_set(
         &mut self,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Set {
         Set::new_deferred(
@@ -386,7 +384,7 @@ impl Manager {
 
     pub fn create_resolver_set(
         &mut self,
-        uniform: Arc<RwLock<DynamicBuffer>>,
+        uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Set {
         Set::new_resolver(

@@ -27,7 +27,7 @@ impl Uniform {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(super) struct Deferred {
     uniform: Uniform,
-    uniform_buffer: Arc<RwLock<DynamicBuffer>>,
+    uniform_buffer: DynamicBuffer,
     descriptor_set: Arc<DescriptorSet>,
     pipeline: Arc<Pipeline>,
 }
@@ -42,10 +42,8 @@ impl Deferred {
         let (w, h) = resolver_framebuffer.get_dimensions();
         let uniform = Uniform::new(w as f32, h as f32);
         let uniform_buffer =
-            Arc::new(RwLock::new(
                 vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
-            ));
+                    .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let sampler = gapi_engine.get_linear_repeat_sampler();
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let mut textures = Vec::new();
@@ -55,7 +53,7 @@ impl Deferred {
         }
         textures.shrink_to_fit();
         let descriptor_set = vxresult!(gapi_engine.get_descriptor_manager().write())
-            .create_deferred_set(uniform_buffer.clone(), textures.clone());
+            .create_deferred_set(&uniform_buffer, textures.clone());
         let descriptor_set = Arc::new(descriptor_set);
         let mut pipmgr = vxresult!(gapi_engine.get_pipeline_manager().write());
         let render_pass = gapi_engine.get_render_pass();
@@ -68,10 +66,9 @@ impl Deferred {
         }
     }
 
-    pub fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
-        uniform_buffer.update(&self.uniform, frame_number);
-        let buffer = uniform_buffer.get_buffer(frame_number);
+    pub fn render(&mut self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.uniform_buffer.update(&self.uniform, frame_number);
+        let buffer = self.uniform_buffer.get_buffer(frame_number);
         let buffer = vxresult!(buffer.read());
         cmd.bind_pipeline(&self.pipeline);
         cmd.bind_deferred_deferred_descriptor(&*self.descriptor_set, &*buffer);
