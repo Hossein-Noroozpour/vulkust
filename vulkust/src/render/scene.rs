@@ -45,11 +45,13 @@ pub trait Scene: Object {
         &Shadower,
         usize,
     );
+    fn update_shadow_makers(&self);
     fn render_shadow_maps(&self, usize, usize);
     fn render_deferred(&self, &mut CmdBuffer, usize);
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
     fn clean(&mut self);
+    fn submit(&mut self, &GraphicApiEngine, &Semaphore, usize) -> &Arc<Semaphore>;
 }
 
 pub trait Loadable: Scene + Sized {
@@ -571,6 +573,16 @@ impl Scene for Base {
         self.uniform_buffer.update(&self.uniform, frame_number);
     }
 
+    fn update_shadow_makers(&self) {
+        for (_, shm) in &self.shadow_maker_lights {
+            let mut shm = vxresult!(shm.write());
+            if !shm.is_rendarable() {
+                continue;
+            }
+            shm.update();
+        }
+    }
+
     fn render_gbuffer_shadow_maps(
         &self,
         geng: &GraphicApiEngine,
@@ -662,6 +674,11 @@ impl Scene for Base {
         for id in ids {
             self.all_models.remove(&id);
         }
+    }
+
+    fn submit(&mut self, geng: &GraphicApiEngine, sem: &Semaphore, frame_number: usize) -> &Arc<Semaphore> {
+        vxunimplemented!();
+        return &self.frames_data[frame_number].deferred_semaphore;
     }
 }
 
@@ -768,6 +785,10 @@ impl Scene for Game {
         );
     }
 
+    fn update_shadow_makers(&self) {
+        self.base.update_shadow_makers();
+    }
+
     fn render_shadow_maps(&self, kernel_index: usize, frame_number: usize) {
         self.base.render_shadow_maps(kernel_index, frame_number);
     }
@@ -786,6 +807,10 @@ impl Scene for Game {
 
     fn clean(&mut self) {
         self.base.clean();
+    }
+
+    fn submit(&mut self, geng: &GraphicApiEngine, sem: &Semaphore, frame_number: usize) -> &Arc<Semaphore> {
+        return self.base.submit(geng, sem, frame_number);
     }
 }
 
@@ -878,6 +903,10 @@ impl Scene for Ui {
         );
     }
 
+    fn update_shadow_makers(&self) {
+        self.base.update_shadow_makers();
+    }
+
     fn render_shadow_maps(&self, kernel_index: usize, frame_number: usize) {
         self.base.render_shadow_maps(kernel_index, frame_number);
     }
@@ -896,6 +925,10 @@ impl Scene for Ui {
 
     fn clean(&mut self) {
         self.base.clean();
+    }
+
+    fn submit(&mut self, geng: &GraphicApiEngine, sem: &Semaphore, frame_number: usize) -> &Arc<Semaphore> {
+        return self.base.submit(geng, sem, frame_number);
     }
 }
 

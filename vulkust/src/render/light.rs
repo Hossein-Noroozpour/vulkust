@@ -36,7 +36,7 @@ pub trait Light: Object {
     fn to_mut_point(&mut self) -> Option<&mut Point>;
     fn to_shadow_maker(&self) -> Option<&ShadowMaker>;
     fn to_mut_shadow_maker(&mut self) -> Option<&mut ShadowMaker>;
-    fn update(&mut self, usize);
+    fn update(&mut self);
 }
 
 pub trait ShadowMaker: Light {
@@ -385,7 +385,7 @@ impl Light for Sun {
         return Some(self);
     }
 
-    fn update(&mut self, frame_number: usize) {
+    fn update(&mut self) {
         self.update_with_kernels_data();
         for ccd in &mut self.cascade_cameras {
             if ccd.max_seen_x < ccd.max_x {

@@ -211,7 +211,6 @@ impl Engine {
         let scenes = vxresult!(scenes.read());
         let deferred = vxresult!(self.deferred.lock());
         let resolver = vxresult!(self.resolver.lock());
-        let mut last_semaphore = engine.get_starting_semaphore().clone();
         let framebuffer = engine.get_current_framebuffer();
         // for (scene_id, scene) in &*scenes {
         //     let scene = scene.upgrade();
@@ -259,31 +258,7 @@ impl Engine {
         for k in &self.kernels {
             k.wait_rendering();
         }
-        // for (scene_id, scene) in &*scenes {
-        //     let scene = scene.upgrade();
-        //     if scene.is_none() {
-        //         cmdss.remove_scene(scene_id);
-        //         continue;
-        //     }
-        //     let scene = vxunwrap!(scene);
-        //     let scene = vxresult!(scene.read());
-        //     if !scene.is_rendarable() {
-        //         cmdss.remove_scene(scene_id);
-        //         continue;
-        //     }
-        //     for k in &self.kernels {
-        //         let frame_datas = vxresult!(k.frame_datas.lock());
-        //         let frame_data = &frame_datas[frame_number];
-        //         let scene_frame_data = frame_data.get_scene(scene_id);
-        //         if scene_frame_data.is_none() {
-        //             cmdss.remove_scene(scene_id);
-        //             continue;
-        //         }
-        //         let scene_frame_data = vxunwrap!(scene_frame_data);
-        //         scene.update_shadow_makers_with_data(&scene_frame_data.shadow_makers_data);
-        //     }
-        //     scene.update_shadow_makers();
-        // }
+        self.update_shadow_makers();
         for k in &self.kernels {
             k.start_shadowing();
         }
@@ -350,7 +325,7 @@ impl Engine {
         //     );
         //     last_semaphore = cmds.deferred_semaphore.clone();
         // }
-        engine.end(&last_semaphore);
+        self.submit(&*engine);
     }
 
     fn update_scenes(&self, frame_number: usize) {
@@ -372,5 +347,36 @@ impl Engine {
         for id in ids {
             scenes.remove(&id);
         }
+    }
+
+    fn update_shadow_makers(&self) {
+        let scnmgr = vxresult!(self.scene_manager.read());
+        let scenes = vxresult!(scnmgr.get_scenes().read());
+        for (id, scene) in &*scenes {
+            if let Some(scene) = scene.upgrade() {
+                let mut scene = vxresult!(scene.write());
+                if !scene.is_rendarable() {
+                    continue;
+                }
+                scene.update_shadow_makers();
+            }
+        }
+    }
+
+    fn submit(&self, engine: &GraphicApiEngine) {
+        let mut last_semaphore = engine.get_starting_semaphore().clone();
+        let frame_number = engine.get_frame_number();
+        let scnmgr = vxresult!(self.scene_manager.read());
+        let scenes = vxresult!(scnmgr.get_scenes().read());
+        for (id, scene) in &*scenes {
+            if let Some(scene) = scene.upgrade() {
+                let mut scene = vxresult!(scene.write());
+                if !scene.is_rendarable() {
+                    continue;
+                }
+                last_semaphore = scene.submit(engine, &last_semaphore, frame_number).clone();
+            }
+        }
+        engine.end(&last_semaphore);
     }
 }
