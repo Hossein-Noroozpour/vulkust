@@ -2,6 +2,7 @@ use super::config::Configurations;
 use super::framebuffer::Framebuffer;
 use super::gapi::GraphicApiEngine;
 use super::command::Buffer as CmdBuffer;
+use super::pipeline::{Pipeline, PipelineType};
 use super::image::{AttachmentType, Format as ImageFormat, View as ImageView};
 use super::render_pass::RenderPass;
 use std::sync::Arc;
@@ -10,11 +11,12 @@ const SHADOW_MAP_FMT: ImageFormat = ImageFormat::Float;
 const SHADOW_ACCUMULATOR_FMT: ImageFormat = ImageFormat::Float;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(super) struct Shadower {
+pub struct Shadower {
     //---------------------------------------
     shadow_map_buffers: Vec<Arc<ImageView>>,
     shadow_map_render_pass: Arc<RenderPass>,
     shadow_map_framebuffers: Vec<Arc<Framebuffer>>,
+    shadow_map_pipeline: Arc<Pipeline>,
     //---------------------------------------
     black_accumulator_buffer: Arc<ImageView>,
     black_accumulator_render_pass: Arc<RenderPass>,
@@ -78,10 +80,13 @@ impl Shadower {
             )));
         }
         shadow_map_framebuffers.shrink_to_fit();
+        let shadow_map_pipeline = vxresult!(geng.get_pipeline_manager().write())
+            .create(shadow_map_render_pass.clone(), PipelineType::ShadowMapper);
         Self {
             shadow_map_buffers,
             shadow_map_render_pass,
             shadow_map_framebuffers,
+            shadow_map_pipeline,
             //---------------------------------------
             black_accumulator_buffer,
             black_accumulator_render_pass,
@@ -92,9 +97,10 @@ impl Shadower {
     }
 
     pub(super) fn begin_secondary_shadow_mappers(&self, cmds: &mut [CmdBuffer]) {
-        for cmd in cmds {
-            cmd.begin_secondary(&self.shadow_map_framebuffers);
-            cmd.bind_pipeline(&self.shadow_map_pipeline);
+        let cmds_len = cmds.len();
+        for i in 0..cmds_len {
+            cmds[i].begin_secondary(&self.shadow_map_framebuffers[i]);
+            cmds[i].bind_pipeline(&self.shadow_map_pipeline);
         }
     }
     // do thread shadow gathering

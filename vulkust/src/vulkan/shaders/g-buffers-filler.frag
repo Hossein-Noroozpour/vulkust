@@ -27,7 +27,6 @@ struct PointLight {
 struct DirectionalLight {
 	vec4 color;
 	vec4 direction;
-	mat4 view_projection_biased;
 };
 
 layout (set = 0, binding = 0) uniform SceneUBO {

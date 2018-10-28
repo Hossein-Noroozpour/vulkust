@@ -7,7 +7,7 @@ pub struct Configurations {
     pub(crate) max_scenes_count: u64,
     pub(crate) max_textures_count: u64,
     pub(crate) max_shadow_maps_count: u32,
-    pub(crate) cascaded_shadows_count: u8,
+    cascaded_shadows_count: u8,
     pub(crate) shadow_map_aspect: u32,
     pub(crate) max_shadow_maker_kernek_render_data_count: u64,
 }
@@ -26,4 +26,43 @@ impl Default for Configurations {
             max_shadow_maker_kernek_render_data_count: 1,
         }
     }
+}
+
+impl Configurations {
+    pub fn get_cascaded_shadows_count(&self) -> u8 {
+        return self.cascaded_shadows_count;
+    }
+
+    pub fn get_enable_anistropic_texture(&self) -> bool {
+        return self.enable_anistropic_texture;
+    }
+
+    pub fn get_max_meshes_count(&self) -> u64 {
+        return self.max_meshes_count;
+    }
+
+    pub fn get_max_models_count(&self) -> u64 {
+        return self.max_models_count;
+    }
+
+    pub fn get_max_scenes_count(&self) -> u64 {
+        return self.max_scenes_count;
+    }
+
+    pub fn get_max_textures_count(&self) -> u64 {
+        return self.max_textures_count;
+    }
+
+    pub fn get_max_shadow_maps_count(&self) -> u32 {
+        return self.max_shadow_maps_count;
+    }
+
+    pub fn get_shadow_map_aspect(&self) -> u32 {
+        return self.shadow_map_aspect;
+    }
+
+    pub fn get_max_shadow_maker_kernek_render_data_count(&self) -> u64 {
+        return self.max_shadow_maker_kernek_render_data_count;
+    }
+
 }

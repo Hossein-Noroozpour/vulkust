@@ -4,7 +4,6 @@ use super::config::Configurations;
 use super::deferred::Deferred;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::light::ShadowMakerKernelData;
 use super::model::Model;
 use super::object::Object;
 use super::resolver::Resolver;
@@ -120,217 +119,30 @@ impl Renderer {
     }
 
     pub fn render(&mut self) {
-        let g_engine = vxresult!(self.g_engine.read());
-        let frame_number = g_engine.get_frame_number();
+        let geng = vxresult!(self.g_engine.read());
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         let scenes = vxresult!(scenes.read());
-        let mut cmdsss = vxresult!(self.cmd_buffers.lock());
-        let cmdss = &mut cmdsss[frame_number];
         let g_buffer_filler = vxresult!(self.g_buffer_filler.read());
-        let mut task_index = 0usize;
-        for (scene_id, scene) in &*scenes {
-            let scene = scene.upgrade();
-            if scene.is_none() {
-                cmdss.remove_scene(scene_id);
-                continue;
+        let shadower = vxresult!(self.shadower.read());
+        for (_, scene) in &*scenes {
+            if let Some(scene) = scene.upgrade() {
+                vxresult!(scene.read()).render_gbuffer_shadow_maps(&*geng, &self.cmd_pool, &*g_buffer_filler, &*shadower, self.index);
             }
-            let scene = vxunwrap!(scene);
-            let scene = vxresult!(scene.read());
-            if !scene.is_rendarable() {
-                cmdss.remove_scene(scene_id);
-                continue;
-            }
-            let mut need_update_shadow_makers_data = true;
-            if !cmdss.has_scene(scene_id) {
-                need_update_shadow_makers_data = false;
-                cmdss.add_scene(
-                    *scene_id,
-                    KernelSceneData::new(&*scene, &*g_engine, self.cmd_pool.clone()),
-                );
-            }
-            let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
-            if need_update_shadow_makers_data {
-                scene.update_shadow_makers_data(&mut scene_data.shadow_makers_data);
-            }
-            let models = scene.get_all_models();
-            g_buffer_filler.begin_secondary(&mut scene_data.cmds.gbuff);
-            scene.render(&mut scene_data.cmds.gbuff, frame_number);
-            for (_, model) in &*models {
-                let camera = vxunwrap!(scene.get_active_camera()).upgrade();
-                let camera = vxunwrap!(camera);
-                let camera = vxresult!(camera.read());
-                task_index += 1;
-                if task_index % self.kernels_count != self.index {
-                    continue;
-                }
-                let model = model.upgrade();
-                if model.is_none() {
-                    continue;
-                }
-                let m = vxunwrap!(model);
-                let mut model = vxresult!(m.write());
-                if !model.is_rendarable() {
-                    continue;
-                }
-                Model::update(&mut *model, &*scene, &*camera);
-                Object::update(&mut *model);
-                Object::render(&mut *model, &mut scene_data.cmds.gbuff, frame_number);
-                if model.has_shadow() {
-                    for (_, shm) in &mut scene_data.shadow_makers_data {
-                        shm.check_shadowability(&mut *model);
-                    }
-                }
-            }
-            scene_data.cmds.gbuff.end();
         }
     }
 
     pub fn shadow(&mut self) {
-        let geng = vxresult!(self.g_engine.read());
-        let frame_number = geng.get_frame_number();
+        let frame_number = vxresult!(self.g_engine.read()).get_frame_number();
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         let scenes = vxresult!(scenes.read());
-        let mut cmdsss = vxresult!(self.cmd_buffers.lock());
-        let cmdss = &mut cmdsss[frame_number];
-        let mut task_index = 0usize;
-        for (scene_id, scene) in &*scenes {
-            let scene = scene.upgrade();
-            if scene.is_none() {
-                cmdss.remove_scene(scene_id);
-                continue;
-            }
-            let scene = vxunwrap!(scene);
-            let scene = vxresult!(scene.read());
-            if !scene.is_rendarable() {
-                cmdss.remove_scene(scene_id);
-                continue;
-            }
-            if !cmdss.has_scene(scene_id) {
-                cmdss.add_scene(
-                    *scene_id,
-                    KernelSceneData::new(&*scene, &*geng, self.cmd_pool.clone()),
-                );
-            }
-            let scene_data = vxunwrap!(cmdss.get_mut_scene(scene_id));
-            let models = scene.get_all_models();
-            let shadow_makers = scene.get_shadow_makers();
-            let shadower = vxresult!(self.shadower.read());
-            for (id, l) in &*shadow_makers {
-                {
-                    if let Some(lights) = scene_data.cmds.lights.get_mut(id) { // todo 
-                        shadower.begin_secondary_shadow_mappers(lights);
-                        continue;
-                    }
-                }
-                let l = vxresult!(l.read());
-                let mut lights = l.create_shadow_mapper_commands(&geng, &self.cmd_pool);
-                shadower.begin_secondary_shadow_mappers(&mut lights);
-                scene_data.cmds.lights.insert(*id, lights);
-            }
-            for (_, model) in &*models {
-                task_index += 1;
-                if task_index % self.kernels_count != self.index {
-                    continue;
-                }
-                let model = model.upgrade();
-                if model.is_none() {
-                    continue;
-                }
-                let model = vxunwrap!(model);
-                let mut model = vxresult!(model.write());
-                if !model.is_rendarable() {
-                    continue;
-                }
-                if !model.has_shadow() {
-                    continue;
-                }
-                model.update_light_visibilities();
-                let light_visibilities = model.get_light_visibilities();
-                for (_, l) in light_visibilities {
-                    l.render();
-                    model.render_shadow();
-                } 
-                ////////////////////////////////////////////////////
-            }
-            for (id, l) in &*shadow_makers {
-                if let Some(lights) = scene_data.cmds.lights.get_mut(id) {
-                    shadower.begin_secondary_shadow_mappers(lights);
-                    continue;
-                }
+        for (_, scene) in &*scenes {
+            if let Some(scene) = scene.upgrade() {
+                let scene = vxresult!(scene.read());
+                scene.render_shadow_maps(self.index, frame_number);
             }
         }
-    }
-}
-
-#[cfg_attr(debug_mode, derive(Debug))]
-struct PrimaryPassesCommands {
-    shadow: CmdBuffer,
-    shadow_semaphore: Arc<Semaphore>,
-    gbuff: CmdBuffer,
-    gbuff_semaphore: Arc<Semaphore>,
-    resolver: CmdBuffer,
-    resolver_secondary: CmdBuffer,
-    resolver_semaphore: Arc<Semaphore>,
-    deferred: CmdBuffer,
-    deferred_secondary: CmdBuffer,
-    deferred_semaphore: Arc<Semaphore>,
-}
-
-impl PrimaryPassesCommands {
-    fn new(engine: &GraphicApiEngine, cmd_pool: Arc<CmdPool>) -> Self {
-        let shadow = engine.create_primary_command_buffer(cmd_pool.clone());
-        let shadow_semaphore = Arc::new(engine.create_semaphore());
-        let gbuff = engine.create_primary_command_buffer(cmd_pool.clone());
-        let gbuff_semaphore = Arc::new(engine.create_semaphore());
-        let resolver = engine.create_primary_command_buffer(cmd_pool.clone());
-        let resolver_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
-        let resolver_semaphore = Arc::new(engine.create_semaphore());
-        let deferred = engine.create_primary_command_buffer(cmd_pool.clone());
-        let deferred_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
-        let deferred_semaphore = Arc::new(engine.create_semaphore());
-        Self {
-            shadow,
-            shadow_semaphore,
-            gbuff,
-            gbuff_semaphore,
-            resolver,
-            resolver_secondary,
-            resolver_semaphore,
-            deferred,
-            deferred_secondary,
-            deferred_semaphore,
-        }
-    }
-}
-
-#[cfg_attr(debug_mode, derive(Debug))]
-struct FrameData {
-    scenes_commands: BTreeMap<Id, PrimaryPassesCommands>,
-}
-
-impl FrameData {
-    fn new() -> Self {
-        Self {
-            scenes_commands: BTreeMap::new(),
-        }
-    }
-
-    fn remove_scene(&mut self, id: &Id) {
-        self.scenes_commands.remove(id);
-    }
-
-    fn has_scene(&self, id: &Id) -> bool {
-        return self.scenes_commands.contains_key(id);
-    }
-
-    fn add_scene(&mut self, id: Id, primary_passes_commands: PrimaryPassesCommands) {
-        self.scenes_commands.insert(id, primary_passes_commands);
-    }
-
-    fn get_mut_scene(&mut self, id: &Id) -> Option<&mut PrimaryPassesCommands> {
-        return self.scenes_commands.get_mut(id);
     }
 }
 
@@ -344,8 +156,6 @@ pub(super) struct Engine {
     deferred: Arc<Mutex<Deferred>>,
     resolver: Arc<Mutex<Resolver>>,
     shadower: Arc<RwLock<Shadower>>,
-    cmdsss: Mutex<Vec<FrameData>>,
-    cascaded_count: usize,
 }
 
 impl Engine {
@@ -365,36 +175,24 @@ impl Engine {
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
         let shadower = Arc::new(RwLock::new(Shadower::new(&eng, config)));
         let kernels_count = num_cpus::get();
-        let mut kernels = Vec::new();
-        let cascaded_count = config.cascaded_shadows_count as usize;
+        let mut kernels = Vec::with_capacity(kernels_count);
         for ki in 0..kernels_count {
             kernels.push(Kernel::new(
                 ki,
-                kernels_count,
                 engine.clone(),
                 scene_manager.clone(),
                 g_buffer_filler.clone(),
                 shadower.clone(),
             ));
         }
-        kernels.shrink_to_fit();
         let cmd_pool = eng.create_command_pool();
-        let frames_count = eng.get_frames_count();
-        let mut cmdsss = Vec::new();
-        for _ in 0..frames_count {
-            cmdsss.push(FrameData::new());
-        }
-        cmdsss.shrink_to_fit();
-        let cmdsss = Mutex::new(cmdsss);
         Engine {
             kernels,
             engine,
             scene_manager,
             cmd_pool,
-            cmdsss,
             g_buffer_filler,
             deferred,
-            cascaded_count,
             resolver,
             shadower,
         }
@@ -402,7 +200,9 @@ impl Engine {
 
     pub(crate) fn render(&self) {
         vxresult!(self.engine.write()).start_rendering();
-        self.update_scenes();
+        let engine = vxresult!(self.engine.read());
+        let frame_number = engine.get_frame_number();
+        self.update_scenes(frame_number);
         for k in &self.kernels {
             k.start_rendering();
         }
@@ -411,172 +211,164 @@ impl Engine {
         let scenes = vxresult!(scenes.read());
         let deferred = vxresult!(self.deferred.lock());
         let resolver = vxresult!(self.resolver.lock());
-        let engine = vxresult!(self.engine.read());
         let mut last_semaphore = engine.get_starting_semaphore().clone();
         let framebuffer = engine.get_current_framebuffer();
-        let frame_number = engine.get_frame_number();
-        let cmdss = &mut vxresult!(self.cmdsss.lock())[frame_number];
-        for (scene_id, scene) in &*scenes {
-            let scene = scene.upgrade();
-            if scene.is_none() {
-                cmdss.remove_scene(scene_id);
-                continue;
-            }
-            let scene = vxunwrap!(scene);
-            let scene = vxresult!(scene.read());
-            if !scene.is_rendarable() {
-                cmdss.remove_scene(scene_id);
-                continue;
-            }
-            if !cmdss.has_scene(scene_id) {
-                cmdss.add_scene(
-                    *scene_id,
-                    PrimaryPassesCommands::new(&*engine, self.cmd_pool.clone()),
-                );
-            }
-            let cmds = vxunwrap!(cmdss.get_mut_scene(scene_id));
-            {
-                let cmd = &mut cmds.gbuff;
-                cmd.begin();
-                vxresult!(self.g_buffer_filler.read()).begin_primary(cmd);
-            }
-            resolver.begin_primary(&mut cmds.resolver);
-            resolver.begin_secondary(&mut cmds.resolver_secondary, frame_number);
-            {
-                let cmd = &mut cmds.resolver;
-                cmd.exe_cmd(&cmds.resolver_secondary);
-                cmd.end_render_pass();
-                cmd.end();
-            }
-            {
-                let cmd = &mut cmds.deferred;
-                cmd.begin();
-                framebuffer.begin(cmd);
-            }
-            {
-                let cmd = &mut cmds.deferred_secondary;
-                cmd.begin_secondary(&*framebuffer);
-                deferred.render(cmd, frame_number);
-            }
-        }
+        // for (scene_id, scene) in &*scenes {
+        //     let scene = scene.upgrade();
+        //     if scene.is_none() {
+        //         cmdss.remove_scene(scene_id);
+        //         continue;
+        //     }
+        //     let scene = vxunwrap!(scene);
+        //     let scene = vxresult!(scene.read());
+        //     if !scene.is_rendarable() {
+        //         cmdss.remove_scene(scene_id);
+        //         continue;
+        //     }
+        //     if !cmdss.has_scene(scene_id) {
+        //         cmdss.add_scene(
+        //             *scene_id,
+        //             PrimaryPassesCommands::new(&*engine, self.cmd_pool.clone()),
+        //         );
+        //     }
+        //     let cmds = vxunwrap!(cmdss.get_mut_scene(scene_id));
+        //     {
+        //         let cmd = &mut cmds.gbuff;
+        //         cmd.begin();
+        //         vxresult!(self.g_buffer_filler.read()).begin_primary(cmd);
+        //     }
+        //     resolver.begin_primary(&mut cmds.resolver);
+        //     resolver.begin_secondary(&mut cmds.resolver_secondary, frame_number);
+        //     {
+        //         let cmd = &mut cmds.resolver;
+        //         cmd.exe_cmd(&cmds.resolver_secondary);
+        //         cmd.end_render_pass();
+        //         cmd.end();
+        //     }
+        //     {
+        //         let cmd = &mut cmds.deferred;
+        //         cmd.begin();
+        //         framebuffer.begin(cmd);
+        //     }
+        //     {
+        //         let cmd = &mut cmds.deferred_secondary;
+        //         cmd.begin_secondary(&*framebuffer);
+        //         deferred.render(cmd, frame_number);
+        //     }
+        // }
         for k in &self.kernels {
             k.wait_rendering();
         }
-        for (scene_id, scene) in &*scenes {
-            let scene = scene.upgrade();
-            if scene.is_none() {
-                cmdss.remove_scene(scene_id);
-                continue;
-            }
-            let scene = vxunwrap!(scene);
-            let scene = vxresult!(scene.read());
-            if !scene.is_rendarable() {
-                cmdss.remove_scene(scene_id);
-                continue;
-            }
-            for k in &self.kernels {
-                let frame_datas = vxresult!(k.frame_datas.lock());
-                let frame_data = &frame_datas[frame_number];
-                let scene_frame_data = frame_data.get_scene(scene_id);
-                if scene_frame_data.is_none() {
-                    cmdss.remove_scene(scene_id);
-                    continue;
-                }
-                let scene_frame_data = vxunwrap!(scene_frame_data);
-                scene.update_shadow_makers_with_data(&scene_frame_data.shadow_makers_data);
-            }
-            scene.update_shadow_makers();
-        }
+        // for (scene_id, scene) in &*scenes {
+        //     let scene = scene.upgrade();
+        //     if scene.is_none() {
+        //         cmdss.remove_scene(scene_id);
+        //         continue;
+        //     }
+        //     let scene = vxunwrap!(scene);
+        //     let scene = vxresult!(scene.read());
+        //     if !scene.is_rendarable() {
+        //         cmdss.remove_scene(scene_id);
+        //         continue;
+        //     }
+        //     for k in &self.kernels {
+        //         let frame_datas = vxresult!(k.frame_datas.lock());
+        //         let frame_data = &frame_datas[frame_number];
+        //         let scene_frame_data = frame_data.get_scene(scene_id);
+        //         if scene_frame_data.is_none() {
+        //             cmdss.remove_scene(scene_id);
+        //             continue;
+        //         }
+        //         let scene_frame_data = vxunwrap!(scene_frame_data);
+        //         scene.update_shadow_makers_with_data(&scene_frame_data.shadow_makers_data);
+        //     }
+        //     scene.update_shadow_makers();
+        // }
         for k in &self.kernels {
             k.start_shadowing();
         }
         for k in &self.kernels {
             k.wait_shadowing();
         }
-        for (scene_id, scene) in &*scenes {
-            let scene = scene.upgrade();
-            if scene.is_none() {
-                cmdss.remove_scene(scene_id);
-                continue;
-            }
-            let scene = vxunwrap!(scene);
-            let scene = vxresult!(scene.read());
-            if !scene.is_rendarable() {
-                cmdss.remove_scene(scene_id);
-                continue;
-            }
-            let mut kcmdsgbuffdatas = Vec::new();
-            for k in &self.kernels {
-                let frame_datas = vxresult!(k.frame_datas.lock());
-                let frame_data = &frame_datas[frame_number];
-                let scene_frame_data = frame_data.get_scene(scene_id);
-                if scene_frame_data.is_none() {
-                    cmdss.remove_scene(scene_id);
-                    continue;
-                }
-                let scene_frame_data = vxunwrap!(scene_frame_data);
-                kcmdsgbuffdatas.push(scene_frame_data.cmds.gbuff.get_data());
-            }
-            let cmds = cmdss.get_mut_scene(scene_id);
-            if cmds.is_none() {
-                continue;
-            }
-            let cmds = vxunwrap!(cmds);
-            {
-                let cmd = &mut cmds.gbuff;
-                cmd.exe_cmds_with_data(&kcmdsgbuffdatas);
-                cmd.end_render_pass();
-                cmd.end();
-            }
-            {
-                let cmd = &mut cmds.deferred_secondary;
-                scene.render_deferred(cmd, frame_number);
-                cmd.render_deferred();
-                cmd.end();
-            }
-            {
-                let cmd = &mut cmds.deferred;
-                cmd.exe_cmds_with_data(&[cmds.deferred_secondary.get_data()]);
-                cmd.end_render_pass();
-                cmd.end();
-            }
-            engine.submit(&last_semaphore, &cmds.gbuff, &cmds.gbuff_semaphore);
-            engine.submit(
-                &cmds.gbuff_semaphore,
-                &cmds.resolver,
-                &cmds.resolver_semaphore,
-            );
-            engine.submit(
-                &cmds.resolver_semaphore,
-                &cmds.deferred,
-                &cmds.deferred_semaphore,
-            );
-            last_semaphore = cmds.deferred_semaphore.clone();
-        }
+        // for (scene_id, scene) in &*scenes {
+        //     let scene = scene.upgrade();
+        //     if scene.is_none() {
+        //         cmdss.remove_scene(scene_id);
+        //         continue;
+        //     }
+        //     let scene = vxunwrap!(scene);
+        //     let scene = vxresult!(scene.read());
+        //     if !scene.is_rendarable() {
+        //         cmdss.remove_scene(scene_id);
+        //         continue;
+        //     }
+        //     let mut kcmdsgbuffdatas = Vec::new();
+        //     for k in &self.kernels {
+        //         let frame_datas = vxresult!(k.frame_datas.lock());
+        //         let frame_data = &frame_datas[frame_number];
+        //         let scene_frame_data = frame_data.get_scene(scene_id);
+        //         if scene_frame_data.is_none() {
+        //             cmdss.remove_scene(scene_id);
+        //             continue;
+        //         }
+        //         let scene_frame_data = vxunwrap!(scene_frame_data);
+        //         kcmdsgbuffdatas.push(scene_frame_data.cmds.gbuff.get_data());
+        //     }
+        //     let cmds = cmdss.get_mut_scene(scene_id);
+        //     if cmds.is_none() {
+        //         continue;
+        //     }
+        //     let cmds = vxunwrap!(cmds);
+        //     {
+        //         let cmd = &mut cmds.gbuff;
+        //         cmd.exe_cmds_with_data(&kcmdsgbuffdatas);
+        //         cmd.end_render_pass();
+        //         cmd.end();
+        //     }
+        //     {
+        //         let cmd = &mut cmds.deferred_secondary;
+        //         scene.render_deferred(cmd, frame_number);
+        //         cmd.render_deferred();
+        //         cmd.end();
+        //     }
+        //     {
+        //         let cmd = &mut cmds.deferred;
+        //         cmd.exe_cmds_with_data(&[cmds.deferred_secondary.get_data()]);
+        //         cmd.end_render_pass();
+        //         cmd.end();
+        //     }
+        //     engine.submit(&last_semaphore, &cmds.gbuff, &cmds.gbuff_semaphore);
+        //     engine.submit(
+        //         &cmds.gbuff_semaphore,
+        //         &cmds.resolver,
+        //         &cmds.resolver_semaphore,
+        //     );
+        //     engine.submit(
+        //         &cmds.resolver_semaphore,
+        //         &cmds.deferred,
+        //         &cmds.deferred_semaphore,
+        //     );
+        //     last_semaphore = cmds.deferred_semaphore.clone();
+        // }
         engine.end(&last_semaphore);
     }
 
-    fn update_scenes(&self) {
+    fn update_scenes(&self, frame_number: usize) {
         let scnmgr = vxresult!(self.scene_manager.read());
-        let scenes = scnmgr.get_scenes();
-        let mut scenes = vxresult!(scenes.write());
         let mut ids = Vec::new();
-        {
-            for (id, scene) in &*scenes {
-                let scene = scene.upgrade();
-                if scene.is_none() {
-                    ids.push(*id);
-                    continue;
-                }
-                let scene = vxunwrap!(&scene);
+        for (id, scene) in &*vxresult!(scnmgr.get_scenes().read()) {
+            if let Some(scene) = scene.upgrade() {
                 let mut scene = vxresult!(scene.write());
                 if !scene.is_rendarable() {
                     continue;
                 }
-                scene.update();
+                scene.update(frame_number);
                 scene.clean();
+            } else {
+                ids.push(*id);
             }
         }
+        let mut scenes = vxresult!(scnmgr.get_scenes().write());
         for id in ids {
             scenes.remove(&id);
         }

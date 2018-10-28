@@ -11,7 +11,6 @@ use super::scene::Scene;
 use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
-// use super::material::Material;
 
 use gltf;
 use math;
@@ -27,9 +26,10 @@ pub trait Mesh: Object {
     fn is_shadow_caster(&self) -> bool;
     fn is_transparent(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
-    fn update(&mut self, scene: &Scene, model: &Model);
     fn get_material(&self) -> &Material;
-    fn render_shadow(&self, &mut CmdBuffer, frame_number: usize);
+    fn update(&mut self, &Scene, &Model, usize);
+    fn render_gbuffer(&self, &mut CmdBuffer, usize);
+    fn render_shadow(&self, &mut CmdBuffer, usize);
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -315,16 +315,6 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.material.bind(cmd, frame_number);
-        cmd.render_gbuff(&self.vertex_buffer, &self.index_buffer, self.indices_count);
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        self.obj_base.update(frame_number);
-        self.material.update_uniform_buffer(frame_number);
-    }
-
     fn disable_rendering(&mut self) {
         self.obj_base.disable_rendering()
     }
@@ -353,8 +343,14 @@ impl Mesh for Base {
         return self.occlusion_culling_radius;
     }
 
-    fn update(&mut self, scene: &Scene, model: &Model) {
+    fn update(&mut self, scene: &Scene, model: &Model, frame_number: usize) {
         self.material.update(scene, model);
+        self.material.update_uniform_buffer(frame_number);
+    }
+
+    fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.material.bind_gbuffer(cmd, frame_number);
+        cmd.render_gbuff(&self.vertex_buffer, &self.index_buffer, self.indices_count);
     }
 
     fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {
@@ -365,21 +361,4 @@ impl Mesh for Base {
     fn get_material(&self) -> &Material {
         return &self.material;
     }
-
-    //     fn render(&mut self, scene_uniform: &SceneUniform) {
-    //         let mvp = scene_uniform.view_projection;
-    //         for geo in &mut self.geometries {
-    //             geo.uniform_buffer
-    //                 .update(unsafe { transmute(mvp.as_ptr()) });
-    //             let eng = vxresult!(self.engine.read());
-    //             let eng = vxresult!(eng.gapi_engine.read());
-    //             eng.render_main_pipeline(
-    //                 &geo.descriptor_set,
-    //                 &geo.uniform_buffer,
-    //                 &geo.vertex_buffer,
-    //                 &geo.index_buffer,
-    //                 geo.indices_count,
-    //             );
-    //         }
-    //     }
 }

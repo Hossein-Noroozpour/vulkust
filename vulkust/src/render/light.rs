@@ -29,20 +29,29 @@ pub(crate) enum TypeId {
     Sun = 1,
 }
 
-pub trait ShadowMakerKernelData: CoreDebug + Send {
+pub trait Light: Object {
+    fn to_directional(&self) -> Option<&Directional>;
+    fn to_mut_directional(&mut self) -> Option<&mut Directional>;
+    fn to_point(&self) -> Option<&Point>;
+    fn to_mut_point(&mut self) -> Option<&mut Point>;
+    fn to_shadow_maker(&self) -> Option<&ShadowMaker>;
+    fn to_mut_shadow_maker(&mut self) -> Option<&mut ShadowMaker>;
+    fn update(&mut self, usize);
+}
+
+pub trait ShadowMaker: Light {
     fn shadow(&self, &mut Model, &Arc<RwLock<Model>>, usize, usize); // old name was check_shadowability
     fn begin_secondary_commands(&self, &GraphicApiEngine, &Arc<CmdPool>, &Shadower, usize, usize);
     fn render_shadow_mapper(&self, usize, usize);
 }
 
-pub trait Light: Object {
-    fn to_directional(&self) -> Option<&Directional>;
-    fn to_mut_directional(&mut self) -> Option<&mut Directional>;
-    fn has_shadow(&self) -> bool;
-}
-
 pub trait Directional: Light {
     fn update_cascaded_shadow_map_cameras(&mut self, &Vec<[math::Vector3<Real>; 4]>);
+    fn update_uniform(&self, &mut DirectionalUniform);
+}
+
+pub trait Point: Light {
+    fn update_uniform(&self, &mut PointUniform);
 }
 
 pub trait DefaultLighting {
@@ -184,11 +193,7 @@ impl SunShadowMakerKernelData {
             self.cascade_cameras[i].vp = cascade_cameras[i].vp;
         }
     }
-}
 
-unsafe impl Send for SunShadowMakerKernelData {}
-
-impl ShadowMakerKernelData for SunShadowMakerKernelData {
     fn shadow(&mut self, m: &mut Model, model: &Arc<RwLock<Model>>, frame_number: usize) {
         let rd = m.get_occlusion_culling_radius();
         let v = (self.zero_located_view * m.get_location().extend(1.0)).truncate();
@@ -239,17 +244,18 @@ impl ShadowMakerKernelData for SunShadowMakerKernelData {
         }
     }
 
-    fn create_commands(&mut self, geng: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>) {
+    fn begin_secondary_commands(&mut self, geng: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>, shadower: &Shadower, frame_number: usize) {
         let cascades_count = self.cascade_cameras.len();
-        for fd in &mut self.frames_data {
-            for _ in 0..cascades_count {
-                fd.cascades_cmds
-                    .push(geng.create_secondary_command_buffer(cmd_pool.clone()));
-            }
+        let fd = &mut self.frames_data[frame_number];
+        let cmds_len = fd.cascades_cmds.len();
+        for _ in cmds_len..cascades_count {
+            fd.cascades_cmds.push(geng.create_secondary_command_buffer(cmd_pool.clone()));
         }
+        shadower.begin_secondary_shadow_mappers(&mut fd.cascades_cmds);
+        self.last_render_data_index = 0;
     }
 
-    fn render(&mut self, frame_number: usize) {
+    fn render_shadow_mapper(&mut self, frame_number: usize) {
         for i in 0..self.last_render_data_index {
             let rd = &mut self.render_data[i];
             let ci = rd.cascade_index;
@@ -268,8 +274,13 @@ impl ShadowMakerKernelData for SunShadowMakerKernelData {
             );
             model.render_shadow(cmd, frame_number);
         }
+        for cmd in &mut self.frames_data[frame_number].cascades_cmds {
+            cmd.end();
+        }
     }
 }
+
+unsafe impl Send for SunShadowMakerKernelData {}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Sun {
@@ -278,7 +289,7 @@ pub struct Sun {
     cascade_cameras: Vec<SunCascadeCamera>,
     kernels_data: Vec<Arc<Mutex<SunShadowMakerKernelData>>>,
     direction: math::Vector3<Real>,
-    color: (Real, Real, Real),
+    color: math::Vector3<Real>,
     strength: Real,
     shadow_mapper_primary_command: CmdBuffer,
     shadow_mapper_semaphore: Semaphore,
@@ -288,29 +299,33 @@ pub struct Sun {
 }
 
 impl Sun {
-    fn update_with_kernel_data(&mut self, smd: &SunShadowMakerKernelData) {
-        let cc = self.cascade_cameras.len();
-        for i in 0..cc {
-            let ccd = &mut self.cascade_cameras[i];
-            let smdccd = &smd.cascade_cameras[i];
-            if ccd.max_seen_x < smdccd.max_seen_x {
-                ccd.max_seen_x = smdccd.max_seen_x;
-            }
-            if ccd.max_seen_y < smdccd.max_seen_y {
-                ccd.max_seen_y = smdccd.max_seen_y;
-            }
-            if ccd.max_seen_z < smdccd.max_seen_z {
-                ccd.max_seen_z = smdccd.max_seen_z;
-                ccd.max_z = smdccd.max_seen_z;
-            }
-            if ccd.min_seen_x > smdccd.min_seen_x {
-                ccd.min_seen_x = smdccd.min_seen_x;
-            }
-            if ccd.min_seen_y > smdccd.min_seen_y {
-                ccd.min_seen_y = smdccd.min_seen_y;
-            }
-            if ccd.min_seen_z > smdccd.min_seen_z {
-                ccd.min_seen_z = smdccd.min_seen_z;
+    fn update_with_kernels_data(&mut self) {
+        let kernels_count = self.kernels_data.len();
+        for ki in 0..kernels_count {
+            let smd = vxresult!(self.kernels_data[ki].lock());
+            let cc = self.cascade_cameras.len();
+            for i in 0..cc {
+                let ccd = &mut self.cascade_cameras[i];
+                let smdccd = &smd.cascade_cameras[i];
+                if ccd.max_seen_x < smdccd.max_seen_x {
+                    ccd.max_seen_x = smdccd.max_seen_x;
+                }
+                if ccd.max_seen_y < smdccd.max_seen_y {
+                    ccd.max_seen_y = smdccd.max_seen_y;
+                }
+                if ccd.max_seen_z < smdccd.max_seen_z {
+                    ccd.max_seen_z = smdccd.max_seen_z;
+                    ccd.max_z = smdccd.max_seen_z;
+                }
+                if ccd.min_seen_x > smdccd.min_seen_x {
+                    ccd.min_seen_x = smdccd.min_seen_x;
+                }
+                if ccd.min_seen_y > smdccd.min_seen_y {
+                    ccd.min_seen_y = smdccd.min_seen_y;
+                }
+                if ccd.min_seen_z > smdccd.min_seen_z {
+                    ccd.min_seen_z = smdccd.min_seen_z;
+                }
             }
         }
     }
@@ -332,10 +347,6 @@ impl Object for Sun {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, _: &mut CmdBuffer, _: usize) {
-        vxlogf!("Sun light does not implement rendering.");
-    }
-
     fn disable_rendering(&mut self) {
         self.obj_base.disable_rendering()
     }
@@ -344,12 +355,38 @@ impl Object for Sun {
         self.obj_base.enable_rendering()
     }
 
+    fn is_rendarable(&self) -> bool {
+        return self.obj_base.is_rendarable();
+    }
+}
+
+impl Light for Sun {
+    fn to_directional(&self) -> Option<&Directional> {
+        return Some(self);
+    }
+
+    fn to_mut_directional(&mut self) -> Option<&mut Directional> {
+        return Some(self);
+    }
+
+    fn to_point(&self) -> Option<&Point> {
+        return None;
+    }
+
+    fn to_mut_point(&mut self) -> Option<&mut Point> {
+        return None;
+    }
+
+    fn to_shadow_maker(&self) -> Option<&ShadowMaker> {
+        return Some(self);
+    }
+
+    fn to_mut_shadow_maker(&mut self) -> Option<&mut ShadowMaker> {
+        return Some(self);
+    }
+
     fn update(&mut self, frame_number: usize) {
-        self.obj_base.update(frame_number);
-        for smd in &self.kernels_data {
-            let smd = vxresult!(smd.lock());
-            self.update_with_kernel_data(&*smd);
-        }
+        self.update_with_kernels_data();
         for ccd in &mut self.cascade_cameras {
             if ccd.max_seen_x < ccd.max_x {
                 ccd.max_x = ccd.max_seen_x;
@@ -388,27 +425,23 @@ impl Object for Sun {
             ccd.vp = p * self.zero_located_view * t;
         }
         for smd in &self.kernels_data {
-            let smd = vxresult!(smd.lock());
+            let mut smd = vxresult!(smd.lock());
             smd.update_camera_view_projection_matrices(&self.cascade_cameras);
         }
     }
-
-    fn is_rendarable(&self) -> bool {
-        return self.obj_base.is_rendarable();
-    }
 }
 
-impl Light for Sun {
-    fn to_directional(&self) -> Option<&Directional> {
-        return Some(self);
+impl ShadowMaker for Sun {
+    fn shadow(&self, m: &mut Model, mc: &Arc<RwLock<Model>>, kernel_index: usize, frame_number: usize) {
+        vxresult!(self.kernels_data[kernel_index].lock()).shadow(m, mc, frame_number);
     }
 
-    fn to_mut_directional(&mut self) -> Option<&mut Directional> {
-        return Some(self);
+    fn begin_secondary_commands(&self, geng: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>, sh: &Shadower, kernel_index: usize, frame_number: usize) {
+        vxresult!(self.kernels_data[kernel_index].lock()).begin_secondary_commands(geng, cmd_pool, sh, frame_number);
     }
 
-    fn has_shadow(&self) -> bool {
-        return true;
+    fn render_shadow_mapper(&self, kernel_index: usize, frame_number: usize) {
+        vxresult!(self.kernels_data[kernel_index].lock()).render_shadow_mapper(frame_number);
     }
 }
 
@@ -475,13 +508,18 @@ impl Directional for Sun {
             ccd.min_seen_z = ccd.max_z;
         }
     }
+
+    fn update_uniform(&self, u: &mut DirectionalUniform) {
+        u.color = self.color.extend(1.0);
+        u.direction = self.direction.extend(1.0);
+    }
 }
 
 impl DefaultLighting for Sun {
     fn default(eng: &Engine) -> Self {
-        let csc = eng.get_config().cascaded_shadows_count as usize;
+        let csc = eng.get_config().get_cascaded_shadows_count() as usize;
         let max_render_data_count =
-            eng.get_config().max_shadow_maker_kernek_render_data_count as usize;
+            eng.get_config().get_max_shadow_maker_kernek_render_data_count() as usize;
         let mut cascade_cameras = Vec::with_capacity(csc);
         let geng = vxresult!(eng.get_gapi_engine().read());
         let frames_count = geng.get_frames_count();
@@ -493,8 +531,8 @@ impl DefaultLighting for Sun {
         );
         let num_cpus = num_cpus::get();
         let mut kernels_data = Vec::with_capacity(num_cpus);
-        let buffer_manager = vxresult!(geng.get_buffer_manager().write());
-        let descriptor_manager = vxresult!(geng.get_descriptor_manager().write());
+        let mut buffer_manager = vxresult!(geng.get_buffer_manager().write());
+        let mut descriptor_manager = vxresult!(geng.get_descriptor_manager().write());
         for _ in 0..num_cpus {
             let kernel_data = Arc::new(Mutex::new(SunShadowMakerKernelData::new(
                 zero_located_view,
@@ -512,7 +550,7 @@ impl DefaultLighting for Sun {
             cascade_cameras,
             kernels_data,
             direction: math::Vector3::new(0.0, 0.0, -1.0),
-            color: (1.0, 1.0, 1.0),
+            color: math::Vector3::new(1.0, 1.0, 1.0),
             strength: 1.0,
             shadow_mapper_primary_command: geng
                 .create_primary_command_buffer_from_main_graphic_pool(),
@@ -539,8 +577,8 @@ impl Loadable for Sun {
         let mut camera = Orthographic::new_with_id(engine, id);
         camera.set_location(&location);
         camera.set_orientation(&r);
-        let color = (reader.read(), reader.read(), reader.read());
-        let strength = reader.read();
+        myself.color = math::Vector3::new(reader.read(), reader.read(), reader.read());
+        myself.strength = reader.read();
         vxtodo!(); // ccr is not correct
         vxtodo!(); // ccds is not correct
         vxtodo!(); // direction is not correct
@@ -621,7 +659,6 @@ impl PointUniform {
 pub struct DirectionalUniform {
     color: math::Vector4<Real>,
     direction: math::Vector4<Real>,
-    view_projection_biased: math::Matrix4<Real>,
 }
 
 impl DirectionalUniform {
@@ -629,9 +666,6 @@ impl DirectionalUniform {
         DirectionalUniform {
             color: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
             direction: math::Vector4::new(0.0, 0.0, -1.0, 0.0),
-            view_projection_biased: math::Matrix4::new(
-                1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-            ),
         }
     }
 }

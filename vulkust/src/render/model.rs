@@ -19,14 +19,15 @@ use gltf;
 use math;
 
 pub trait Model: Object + Transferable {
-    fn update(&mut self, scene: &Scene, camera: &Camera);
-    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>);
+    fn update(&mut self, &Scene, &Camera, usize);
+    fn add_mesh(&mut self, Arc<RwLock<Mesh>>);
     fn clear_meshes(&mut self);
     fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>>;
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)>;
     fn has_shadow(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
     fn get_uniform(&self) -> &Uniform;
+    fn render_gbuffer(&self, &mut CmdBuffer, usize);
     fn render_shadow(&self, &mut CmdBuffer, usize);
 }
 
@@ -180,32 +181,12 @@ impl Object for Base {
         vxunimplemented!();
     }
 
-    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        if !self.is_visible {
-            return;
-        }
-        self.obj_base.render(cmd, frame_number);
-        let buffer = self.uniform_buffer.get_buffer(frame_number);
-        cmd.bind_gbuff_model_descriptor(&*self.descriptor_set, &vxresult!(buffer.read()));
-        for (_, mesh) in &self.meshes {
-            vxresult!(mesh.read()).render(cmd, frame_number);
-        }
-    }
-
     fn disable_rendering(&mut self) {
         self.obj_base.disable_rendering();
     }
 
     fn enable_rendering(&mut self) {
         self.obj_base.enable_rendering();
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        self.obj_base.update(frame_number);
-        self.uniform_buffer.update(&self.uniform, frame_number);
-        for (_, m) in &self.meshes {
-            vxresult!(m.write()).update(frame_number);
-        }
     }
 
     fn is_rendarable(&self) -> bool {
@@ -347,7 +328,7 @@ impl Transferable for Base {
 }
 
 impl Model for Base {
-    fn update(&mut self, scene: &Scene, camera: &Camera) {
+    fn update(&mut self, scene: &Scene, camera: &Camera, frame_number: usize) {
         self.is_visible = camera.is_in_frustum(self.occlusion_culling_radius, &self.center);
         if !self.is_visible {
             return;
@@ -356,9 +337,9 @@ impl Model for Base {
             let dis = camera.get_location() - self.center;
             self.distance_from_camera = math::dot(dis, dis);
         }
-        for (_, mesh) in &self.meshes {
-            let mut mesh = vxresult!(mesh.write());
-            Mesh::update(&mut *mesh, scene, self);
+        self.uniform_buffer.update(&self.uniform, frame_number);
+        for (_, m) in &self.meshes {
+            vxresult!(m.write()).update(scene, self, frame_number);
         }
     }
 
@@ -408,6 +389,17 @@ impl Model for Base {
         return self.occlusion_culling_radius;
     }
 
+    fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        if !self.is_visible {
+            return;
+        }
+        let buffer = self.uniform_buffer.get_buffer(frame_number);
+        cmd.bind_gbuff_model_descriptor(&*self.descriptor_set, &*vxresult!(buffer.read()));
+        for (_, mesh) in &self.meshes {
+            vxresult!(mesh.read()).render_gbuffer(cmd, frame_number);
+        }
+    }
+
     fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         for (_, mesh) in &self.meshes {
             let mesh = vxresult!(mesh.read());
@@ -419,13 +411,11 @@ impl Model for Base {
 impl DefaultModel for Base {
     fn default(eng: &Engine) -> Self {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer =
-            Arc::new(RwLock::new(
+        let uniform_buffer = 
                 vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize),
-            ));
+                    .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
-        let descriptor_set = descriptor_manager.create_buffer_only_set(uniform_buffer.clone());
+        let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let descriptor_set = Arc::new(descriptor_set);
         Base {
             obj_base: ObjectBase::new(),
@@ -433,7 +423,6 @@ impl DefaultModel for Base {
             has_shadow_caster: false,
             has_transparent: false,
             occlusion_culling_radius: 0.0,
-            is_in_light: BTreeMap::new(),
             is_visible: false,
             distance_from_camera: 100000.0,
             collider: Arc::new(RwLock::new(GhostCollider::new())),

@@ -39,7 +39,7 @@ pub(super) struct Resolver {
     render_pass: Arc<RenderPass>,
     framebuffer: Arc<Framebuffer>,
     uniform: Uniform,
-    uniform_buffer: Arc<RwLock<DynamicBuffer>>,
+    uniform_buffer: DynamicBuffer,
     textures: Vec<Arc<RwLock<Texture>>>,
     descriptor_set: Arc<DescriptorSet>,
     pipeline: Arc<Pipeline>,
@@ -86,12 +86,11 @@ impl Resolver {
         let (w, h) = vxresult!(buffers[0].get_image().read()).get_dimensions();
         let s = eng.get_samples_count();
         let uniform = Uniform::new(s as i32, w as i32, h as i32);
-        let uniform_buffer = Arc::new(RwLock::new(
+        let uniform_buffer = 
             vxresult!(eng.get_buffer_manager().write())
-                .create_dynamic_buffer(size_of::<Uniform>() as isize),
-        ));
+                .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let descriptor_set = vxresult!(eng.get_descriptor_manager().write())
-            .create_resolver_set(uniform_buffer.clone(), textures.clone());
+            .create_resolver_set(&uniform_buffer, textures.clone());
         let descriptor_set = Arc::new(descriptor_set);
         let mut pipmgr = vxresult!(eng.get_pipeline_manager().write());
         let pipeline = pipmgr.create(render_pass.clone(), PipelineType::Resolver);
@@ -112,11 +111,13 @@ impl Resolver {
         self.framebuffer.begin(cmd);
     }
 
+    pub(super) fn update(&mut self, frame_number: usize) {
+        self.uniform_buffer.update(&self.uniform, frame_number);
+    }
+
     pub(super) fn begin_secondary(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         cmd.begin_secondary(&self.framebuffer);
-        let mut uniform_buffer = vxresult!(self.uniform_buffer.write());
-        uniform_buffer.update(&self.uniform, frame_number);
-        let buffer = uniform_buffer.get_buffer(frame_number);
+        let buffer = self.uniform_buffer.get_buffer(frame_number);
         let buffer = vxresult!(buffer.read());
         cmd.bind_pipeline(&self.pipeline);
         cmd.bind_resolver_descriptor(&*self.descriptor_set, &*buffer);

@@ -39,20 +39,12 @@ impl Object for Base {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.model_base.render(cmd, frame_number);
-    }
-
     fn disable_rendering(&mut self) {
         self.model_base.disable_rendering();
     }
 
     fn enable_rendering(&mut self) {
         self.model_base.enable_rendering()
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        Object::update(&mut self.model_base, frame_number);
     }
 
     fn is_rendarable(&self) -> bool {
@@ -91,8 +83,8 @@ impl Transferable for Base {
 }
 
 impl Model for Base {
-    fn update(&mut self, scene: &Scene, camera: &Camera) {
-        Model::update(&mut self.model_base, scene, camera);
+    fn update(&mut self, scene: &Scene, camera: &Camera, frame_number: usize) {
+        self.model_base.update(scene, camera, frame_number);
     }
 
     fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
@@ -121,6 +113,10 @@ impl Model for Base {
 
     fn get_uniform(&self) -> &Uniform {
         return &self.model_base.get_uniform();
+    }
+    
+    fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.model_base.render_gbuffer(cmd, frame_number);
     }
     
     fn render_shadow(&self, _: &mut CmdBuffer, _: usize) {
@@ -313,10 +309,6 @@ impl Object for Label {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.base.render(cmd, frame_number);
-    }
-
     fn disable_rendering(&mut self) {
         self.base.disable_rendering();
     }
@@ -327,10 +319,6 @@ impl Object for Label {
 
     fn is_rendarable(&self) -> bool {
         return self.base.is_rendarable();
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        Object::update(&mut self.base, frame_number);
     }
 }
 
@@ -365,8 +353,8 @@ impl Transferable for Label {
 }
 
 impl Model for Label {
-    fn update(&mut self, scene: &Scene, camera: &Camera) {
-        Model::update(&mut self.base, scene, camera);
+    fn update(&mut self, scene: &Scene, camera: &Camera, frame_number: usize) {
+        self.base.update(scene, camera, frame_number);
     }
 
     fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>> {
@@ -395,6 +383,10 @@ impl Model for Label {
 
     fn get_uniform(&self) -> &Uniform {
         return self.base.get_uniform();
+    }
+    
+    fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        self.base.render_gbuffer(cmd, frame_number);
     }
     
     fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {

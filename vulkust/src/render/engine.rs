@@ -26,7 +26,7 @@ pub struct Engine {
 impl Engine {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let config = &vxresult!(core_app.read()).get_config();
-        let config = config.render.clone();
+        let config = config.get_render().clone();
         let gapi_engine = GraphicApiEngine::new(os_app, &config);
         let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
         gx3d_import(&scene_manager);
@@ -96,10 +96,6 @@ impl Engine {
     }
 
     pub fn on_event(&self, _e: Event) {}
-
-    pub(crate) fn get_multithreaded_renderer(&self) -> &MultithreadedEngine {
-        return &self.multithreaded_engine;
-    }
 }
 
 unsafe impl Send for Engine {}

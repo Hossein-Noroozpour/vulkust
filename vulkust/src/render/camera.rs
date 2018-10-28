@@ -40,7 +40,7 @@ impl Uniform {
 
 pub trait Camera: Object + Transferable {
     fn get_view_projection(&self) -> &math::Matrix4<Real>;
-    fn get_cascaded_shadow_frustum_partitions(&self, usize) -> Vec<[math::Vector3<Real>; 4]>;
+    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]>;
     fn is_in_frustum(&self, Real, &math::Vector3<Real>) -> bool;
     fn update_uniform(&self, &mut Uniform);
 }
@@ -222,6 +222,7 @@ pub struct Base {
     pub projection: math::Matrix4<Real>,
     pub view_projection: math::Matrix4<Real>,
     frustum_planes: [Plane; 6],
+    cascades_count: usize,
 }
 
 impl Base {
@@ -242,7 +243,7 @@ impl Base {
         );
         let os_app = vxunwrap!(eng.os_app.upgrade());
         let os_app = vxresult!(os_app.read());
-        Base {
+        Self {
             obj_base,
             near: 1.0,
             far: 100.0,
@@ -263,6 +264,7 @@ impl Base {
                 Plane::default(),
                 Plane::default(),
             ],
+            cascades_count: eng.get_config().get_cascaded_shadows_count() as usize,
         }
     }
 
@@ -296,10 +298,6 @@ impl Object for Base {
         vxunimplemented!(); // It must update corresponding manager
     }
 
-    fn render(&self, _: &mut CmdBuffer, _: usize) {
-        vxlogf!("Base camera does not implement rendering.");
-    }
-
     fn disable_rendering(&mut self) {
         self.obj_base.disable_rendering()
     }
@@ -311,8 +309,6 @@ impl Object for Base {
     fn is_rendarable(&self) -> bool {
         return self.obj_base.is_rendarable();
     }
-
-    fn update(&mut self, _: usize) {}
 }
 
 impl Transferable for Base {
@@ -423,7 +419,7 @@ impl Camera for Base {
         &self.view_projection
     }
 
-    fn get_cascaded_shadow_frustum_partitions(&self, _: usize) -> Vec<[math::Vector3<Real>; 4]> {
+    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]> {
         vxlogf!("Base camera does not implement cascading.");
     }
 
@@ -466,7 +462,7 @@ impl Perspective {
         return myself;
     }
 
-    pub fn new_with_base(base: Base) -> Self {
+    fn new_with_base(base: Base) -> Self {
         let mut s = Self {
             base,
             fovy: 0.0,
@@ -539,10 +535,6 @@ impl Object for Perspective {
         vxunimplemented!(); //it must update corresponding manager
     }
 
-    fn render(&self, _: &mut CmdBuffer, _: usize) {
-        vxlogf!("Perspective camera does not implement rendering.");
-    }
-
     fn disable_rendering(&mut self) {
         self.base.disable_rendering()
     }
@@ -553,10 +545,6 @@ impl Object for Perspective {
 
     fn is_rendarable(&self) -> bool {
         return self.base.is_rendarable();
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        self.base.update(frame_number);
     }
 }
 
@@ -620,8 +608,8 @@ impl Camera for Perspective {
 
     fn get_cascaded_shadow_frustum_partitions(
         &self,
-        sections_count: usize,
     ) -> Vec<[math::Vector3<Real>; 4]> {
+        let sections_count = self.base.cascades_count;
         #[cfg(debug_mode)]
         {
             if sections_count < 1 {
@@ -773,10 +761,6 @@ impl Object for Orthographic {
         self.base.set_name(name);
     }
 
-    fn render(&self, _: &mut CmdBuffer, _: usize) {
-        vxlogf!("Orthographic camera does not implement rendering.");
-    }
-
     fn disable_rendering(&mut self) {
         self.base.disable_rendering()
     }
@@ -787,10 +771,6 @@ impl Object for Orthographic {
 
     fn is_rendarable(&self) -> bool {
         return self.base.is_rendarable();
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        self.base.update(frame_number);
     }
 }
 
@@ -850,8 +830,8 @@ impl Camera for Orthographic {
 
     fn get_cascaded_shadow_frustum_partitions(
         &self,
-        sections_count: usize,
     ) -> Vec<[math::Vector3<Real>; 4]> {
+        let sections_count = self.base.cascades_count;
         #[cfg(debug_mode)]
         {
             if sections_count < 1 {

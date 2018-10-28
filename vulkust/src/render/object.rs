@@ -75,15 +75,6 @@ impl Object for Base {
         self.name = Some(name.to_string());
     }
 
-    fn render(&self, _cmd: &mut CmdBuffer, _: usize) {
-        #[cfg(debug_mode)]
-        {
-            if !self.renderable {
-                vxunexpected!();
-            }
-        }
-    }
-
     fn disable_rendering(&mut self) {
         self.renderable = false;
     }
@@ -91,11 +82,10 @@ impl Object for Base {
     fn enable_rendering(&mut self) {
         self.renderable = true;
     }
+    
     fn is_rendarable(&self) -> bool {
         return self.renderable;
     }
-
-    fn update(&mut self, _: usize) {}
 }
 
 impl Loadable for Base {

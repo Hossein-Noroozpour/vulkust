@@ -213,7 +213,7 @@ impl Material {
         }
     }
 
-    pub(crate) fn default(eng: &Engine) -> Self {
+    pub fn default(eng: &Engine) -> Self {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
@@ -278,7 +278,7 @@ impl Material {
         self.uniform_buffer.update(&self.uniform, frame_number);
     }
 
-    pub fn bind(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+    pub fn bind_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let buffer = vxresult!(self.uniform_buffer.get_buffer(frame_number).read());
         cmd.bind_gbuff_material_descriptor(&*self.descriptor_set, &*buffer);
     }

@@ -7,7 +7,7 @@ use super::render_pass::RenderPass;
 use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(super) struct GBufferFiller {
+pub struct GBufferFiller {
     buffers: Vec<Arc<ImageView>>,
     render_pass: Arc<RenderPass>,
     framebuffer: Arc<Framebuffer>,
