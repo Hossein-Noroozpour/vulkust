@@ -606,9 +606,7 @@ impl Camera for Perspective {
         self.base.get_view_projection()
     }
 
-    fn get_cascaded_shadow_frustum_partitions(
-        &self,
-    ) -> Vec<[math::Vector3<Real>; 4]> {
+    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]> {
         let sections_count = self.base.cascades_count;
         #[cfg(debug_mode)]
         {
@@ -828,9 +826,7 @@ impl Camera for Orthographic {
         &self.base.view_projection
     }
 
-    fn get_cascaded_shadow_frustum_partitions(
-        &self,
-    ) -> Vec<[math::Vector3<Real>; 4]> {
+    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]> {
         let sections_count = self.base.cascades_count;
         #[cfg(debug_mode)]
         {

@@ -5,18 +5,20 @@ use super::super::system::file::File;
 use super::buffer::DynamicBuffer;
 use super::camera::{Camera, DefaultCamera, Manager as CameraManager, Uniform as CameraUniform};
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
+use super::deferred::Deferred;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::font::Manager as FontManager;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::sync::Semaphore;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::light::{DirectionalUniform, Light, Manager as LightManager, PointUniform};
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
+use super::resolver::Resolver;
 use super::shadower::Shadower;
+use super::sync::Semaphore;
 use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
 use std::io::BufReader;
@@ -47,11 +49,19 @@ pub trait Scene: Object {
     );
     fn update_shadow_makers(&self);
     fn render_shadow_maps(&self, usize, usize);
-    fn render_deferred(&self, &mut CmdBuffer, usize);
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
     fn clean(&mut self);
-    fn submit(&mut self, &GraphicApiEngine, &Semaphore, usize) -> &Arc<Semaphore>;
+    fn submit(
+        &mut self,
+        &GraphicApiEngine,
+        &Arc<Semaphore>,
+        &Arc<CmdPool>,
+        &GBufferFiller,
+        &Resolver,
+        &Shadower,
+        &Deferred,
+    ) -> Arc<Semaphore>;
 }
 
 pub trait Loadable: Scene + Sized {
@@ -347,9 +357,8 @@ impl Base {
             } // todo read lights
         }
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer = 
-                vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let descriptor_set = Arc::new(descriptor_set);
@@ -357,7 +366,7 @@ impl Base {
         let kernels_count = num_cpus::get();
         let mut kernels_data = Vec::with_capacity(kernels_count);
         for _ in 0..kernels_count {
-            kernels_data.push(Arc::new(Mutex::new(BaseKernelData { 
+            kernels_data.push(Arc::new(Mutex::new(BaseKernelData {
                 frames_data: Vec::with_capacity(frames_count),
             })));
         }
@@ -428,9 +437,8 @@ impl Base {
         }
         let uniform = Uniform::new();
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer = 
-                vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let descriptor_set = Arc::new(descriptor_set);
@@ -438,7 +446,7 @@ impl Base {
         let kernels_count = num_cpus::get();
         let mut kernels_data = Vec::with_capacity(kernels_count);
         for _ in 0..kernels_count {
-            kernels_data.push(Arc::new(Mutex::new(BaseKernelData { 
+            kernels_data.push(Arc::new(Mutex::new(BaseKernelData {
                 frames_data: Vec::with_capacity(frames_count),
             })));
         }
@@ -542,7 +550,9 @@ impl Scene for Base {
             {
                 if let Some(shm) = shm.to_mut_directional() {
                     shm.update_cascaded_shadow_map_cameras(&csmws);
-                    shm.update_uniform(&mut self.uniform.directional_lights[last_directional_light_index]);
+                    shm.update_uniform(
+                        &mut self.uniform.directional_lights[last_directional_light_index],
+                    );
                     last_directional_light_index += 1;
                 }
                 continue;
@@ -561,7 +571,9 @@ impl Scene for Base {
                 continue;
             }
             if let Some(l) = l.to_directional() {
-                l.update_uniform(&mut self.uniform.directional_lights[last_directional_light_index]);
+                l.update_uniform(
+                    &mut self.uniform.directional_lights[last_directional_light_index],
+                );
                 last_directional_light_index += 1;
             } else if let Some(l) = l.to_point() {
                 l.update_uniform(&mut self.uniform.point_lights[last_point_light_index]);
@@ -596,7 +608,13 @@ impl Scene for Base {
         }
         let frame_number = geng.get_frame_number();
         for (_, shm) in &self.shadow_maker_lights {
-            vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).begin_secondary_commands(geng, cmd_pool, shadower, kernel_index, frame_number);
+            vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).begin_secondary_commands(
+                geng,
+                cmd_pool,
+                shadower,
+                kernel_index,
+                frame_number,
+            );
         }
         let kernels_count = self.kernels_data.len();
         let mut kernel_data = vxresult!(self.kernels_data[kernel_index].lock());
@@ -637,7 +655,12 @@ impl Scene for Base {
             model.render_gbuffer(cmd, frame_number);
             if model.has_shadow() {
                 for (_, shm) in &self.shadow_maker_lights {
-                    vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).shadow(&mut *model, &m, kernel_index, frame_number);
+                    vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).shadow(
+                        &mut *model,
+                        &m,
+                        kernel_index,
+                        frame_number,
+                    );
                 }
             }
         }
@@ -646,14 +669,9 @@ impl Scene for Base {
 
     fn render_shadow_maps(&self, kernel_index: usize, frame_number: usize) {
         for (_, shm) in &self.shadow_maker_lights {
-            vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).render_shadow_mapper(kernel_index, frame_number);
+            vxunwrap!(vxresult!(shm.read()).to_shadow_maker())
+                .render_shadow_mapper(kernel_index, frame_number);
         }
-    }
-
-    fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        let buffer = self.uniform_buffer.get_buffer(frame_number);
-        let buffer = vxresult!(buffer.read());
-        cmd.bind_deferred_scene_descriptor(&*self.descriptor_set, &*buffer);
     }
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
@@ -676,25 +694,96 @@ impl Scene for Base {
         }
     }
 
-    fn submit(&mut self, geng: &GraphicApiEngine, sem: &Semaphore, frame_number: usize) -> &Arc<Semaphore> {
-        vxunimplemented!();
-        return &self.frames_data[frame_number].deferred_semaphore;
+    fn submit(
+        &mut self,
+        geng: &GraphicApiEngine,
+        sem: &Arc<Semaphore>,
+        cmd_pool: &Arc<CmdPool>,
+        g_buffer_filler: &GBufferFiller,
+        resolver: &Resolver,
+        shadower: &Shadower,
+        deferred: &Deferred,
+    ) -> Arc<Semaphore> {
+        if !self.is_rendarable() {
+            return sem.clone();
+        }
+        let frame_number = geng.get_frame_number();
+        let frames_count = geng.get_frames_count();
+        let frames_data_len = self.frames_data.len();
+        for i in frames_data_len..frames_count {
+            self.frames_data.push(BaseFramedata::new(geng, cmd_pool));
+        }
+        let frame_data = &mut self.frames_data[frame_number];
+        // g-buffer
+        {
+            let mut kernels_gbuffer_commands = Vec::with_capacity(self.kernels_data.len());
+            for k in &self.kernels_data {
+                kernels_gbuffer_commands.push(
+                    vxresult!(k.lock()).frames_data[frame_number]
+                        .gbuff
+                        .get_data(),
+                );
+            }
+            let cmd = &mut frame_data.gbuffer;
+            cmd.begin();
+            g_buffer_filler.begin_primary(cmd);
+            cmd.exe_cmds_with_data(&kernels_gbuffer_commands);
+            cmd.end_render_pass();
+            cmd.end();
+        }
+        geng.submit(&sem, &frame_data.gbuffer, &frame_data.gbuffer_semaphore);
+        // resolver
+        resolver.begin_primary(&mut frame_data.resolver);
+        resolver.begin_secondary(&mut frame_data.resolver_secondary, frame_number);
+        frame_data.resolver.exe_cmd(&frame_data.resolver_secondary);
+        frame_data.resolver.end_render_pass();
+        frame_data.resolver.end();
+        geng.submit(
+            &frame_data.gbuffer_semaphore,
+            &frame_data.resolver,
+            &frame_data.resolver_semaphore,
+        );
+        // deferred
+        frame_data
+            .deferred_secondary
+            .begin_secondary(geng.get_current_framebuffer());
+        deferred.render(&mut frame_data.deferred_secondary, frame_number);
+        frame_data
+            .deferred_secondary
+            .bind_deferred_scene_descriptor(
+                &*self.descriptor_set,
+                &*vxresult!(self.uniform_buffer.get_buffer(frame_number).read()),
+            );
+        frame_data.deferred_secondary.render_deferred();
+        frame_data.deferred_secondary.end();
+        frame_data.deferred.begin();
+        geng.get_current_framebuffer()
+            .begin(&mut frame_data.deferred);
+        frame_data.deferred.exe_cmd(&frame_data.deferred_secondary);
+        frame_data.deferred.end_render_pass();
+        frame_data.deferred.end();
+        geng.submit(
+            &frame_data.resolver_semaphore,
+            &frame_data.deferred,
+            &frame_data.deferred_semaphore,
+        );
+        return frame_data.deferred_semaphore.clone();
     }
 }
 
 impl DefaultScene for Base {
     fn default(engine: &Engine) -> Self {
         let gapi_engine = vxresult!(engine.gapi_engine.read());
-        let uniform_buffer =
-                vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
-        let descriptor_set = Arc::new(descriptor_set);let frames_count = gapi_engine.get_frames_count();
+        let descriptor_set = Arc::new(descriptor_set);
+        let frames_count = gapi_engine.get_frames_count();
         let kernels_count = num_cpus::get();
         let mut kernels_data = Vec::with_capacity(kernels_count);
         for _ in 0..kernels_count {
-            kernels_data.push(Arc::new(Mutex::new(BaseKernelData { 
+            kernels_data.push(Arc::new(Mutex::new(BaseKernelData {
                 frames_data: Vec::with_capacity(frames_count),
             })));
         }
@@ -763,7 +852,7 @@ impl Scene for Game {
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
         return self.base.get_active_camera();
     }
-    
+
     fn update(&mut self, frame_number: usize) {
         self.base.update(frame_number);
     }
@@ -793,10 +882,6 @@ impl Scene for Game {
         self.base.render_shadow_maps(kernel_index, frame_number);
     }
 
-    fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.base.render_deferred(cmd, frame_number);
-    }
-
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
         return self.base.get_models();
     }
@@ -809,8 +894,25 @@ impl Scene for Game {
         self.base.clean();
     }
 
-    fn submit(&mut self, geng: &GraphicApiEngine, sem: &Semaphore, frame_number: usize) -> &Arc<Semaphore> {
-        return self.base.submit(geng, sem, frame_number);
+    fn submit(
+        &mut self,
+        geng: &GraphicApiEngine,
+        sem: &Arc<Semaphore>,
+        cmd_pool: &Arc<CmdPool>,
+        g_buffer_filler: &GBufferFiller,
+        resolver: &Resolver,
+        shadower: &Shadower,
+        deferred: &Deferred,
+    ) -> Arc<Semaphore> {
+        return self.base.submit(
+            geng,
+            sem,
+            cmd_pool,
+            g_buffer_filler,
+            resolver,
+            shadower,
+            deferred,
+        );
     }
 }
 
@@ -881,7 +983,7 @@ impl Scene for Ui {
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
         return self.base.get_active_camera();
     }
-    
+
     fn update(&mut self, frame_number: usize) {
         self.base.update(frame_number);
     }
@@ -911,10 +1013,6 @@ impl Scene for Ui {
         self.base.render_shadow_maps(kernel_index, frame_number);
     }
 
-    fn render_deferred(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.base.render_deferred(cmd, frame_number);
-    }
-
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
         return self.base.get_models();
     }
@@ -927,8 +1025,25 @@ impl Scene for Ui {
         self.base.clean();
     }
 
-    fn submit(&mut self, geng: &GraphicApiEngine, sem: &Semaphore, frame_number: usize) -> &Arc<Semaphore> {
-        return self.base.submit(geng, sem, frame_number);
+    fn submit(
+        &mut self,
+        geng: &GraphicApiEngine,
+        sem: &Arc<Semaphore>,
+        cmd_pool: &Arc<CmdPool>,
+        g_buffer_filler: &GBufferFiller,
+        resolver: &Resolver,
+        shadower: &Shadower,
+        deferred: &Deferred,
+    ) -> Arc<Semaphore> {
+        return self.base.submit(
+            geng,
+            sem,
+            cmd_pool,
+            g_buffer_filler,
+            resolver,
+            shadower,
+            deferred,
+        );
     }
 }
 

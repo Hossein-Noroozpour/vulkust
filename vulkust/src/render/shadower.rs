@@ -1,9 +1,9 @@
+use super::command::Buffer as CmdBuffer;
 use super::config::Configurations;
 use super::framebuffer::Framebuffer;
 use super::gapi::GraphicApiEngine;
-use super::command::Buffer as CmdBuffer;
-use super::pipeline::{Pipeline, PipelineType};
 use super::image::{AttachmentType, Format as ImageFormat, View as ImageView};
+use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
 use std::sync::Arc;
 

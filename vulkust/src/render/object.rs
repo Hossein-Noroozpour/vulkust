@@ -82,7 +82,7 @@ impl Object for Base {
     fn enable_rendering(&mut self) {
         self.renderable = true;
     }
-    
+
     fn is_rendarable(&self) -> bool {
         return self.renderable;
     }

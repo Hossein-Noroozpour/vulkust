@@ -34,7 +34,7 @@ impl Uniform {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(super) struct Resolver {
+pub struct Resolver {
     buffers: Vec<Arc<ImageView>>,
     render_pass: Arc<RenderPass>,
     framebuffer: Arc<Framebuffer>,
@@ -86,9 +86,8 @@ impl Resolver {
         let (w, h) = vxresult!(buffers[0].get_image().read()).get_dimensions();
         let s = eng.get_samples_count();
         let uniform = Uniform::new(s as i32, w as i32, h as i32);
-        let uniform_buffer = 
-            vxresult!(eng.get_buffer_manager().write())
-                .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = vxresult!(eng.get_buffer_manager().write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let descriptor_set = vxresult!(eng.get_descriptor_manager().write())
             .create_resolver_set(&uniform_buffer, textures.clone());
         let descriptor_set = Arc::new(descriptor_set);

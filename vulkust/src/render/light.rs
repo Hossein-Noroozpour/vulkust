@@ -244,12 +244,19 @@ impl SunShadowMakerKernelData {
         }
     }
 
-    fn begin_secondary_commands(&mut self, geng: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>, shadower: &Shadower, frame_number: usize) {
+    fn begin_secondary_commands(
+        &mut self,
+        geng: &GraphicApiEngine,
+        cmd_pool: &Arc<CmdPool>,
+        shadower: &Shadower,
+        frame_number: usize,
+    ) {
         let cascades_count = self.cascade_cameras.len();
         let fd = &mut self.frames_data[frame_number];
         let cmds_len = fd.cascades_cmds.len();
         for _ in cmds_len..cascades_count {
-            fd.cascades_cmds.push(geng.create_secondary_command_buffer(cmd_pool.clone()));
+            fd.cascades_cmds
+                .push(geng.create_secondary_command_buffer(cmd_pool.clone()));
         }
         shadower.begin_secondary_shadow_mappers(&mut fd.cascades_cmds);
         self.last_render_data_index = 0;
@@ -432,12 +439,30 @@ impl Light for Sun {
 }
 
 impl ShadowMaker for Sun {
-    fn shadow(&self, m: &mut Model, mc: &Arc<RwLock<Model>>, kernel_index: usize, frame_number: usize) {
+    fn shadow(
+        &self,
+        m: &mut Model,
+        mc: &Arc<RwLock<Model>>,
+        kernel_index: usize,
+        frame_number: usize,
+    ) {
         vxresult!(self.kernels_data[kernel_index].lock()).shadow(m, mc, frame_number);
     }
 
-    fn begin_secondary_commands(&self, geng: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>, sh: &Shadower, kernel_index: usize, frame_number: usize) {
-        vxresult!(self.kernels_data[kernel_index].lock()).begin_secondary_commands(geng, cmd_pool, sh, frame_number);
+    fn begin_secondary_commands(
+        &self,
+        geng: &GraphicApiEngine,
+        cmd_pool: &Arc<CmdPool>,
+        sh: &Shadower,
+        kernel_index: usize,
+        frame_number: usize,
+    ) {
+        vxresult!(self.kernels_data[kernel_index].lock()).begin_secondary_commands(
+            geng,
+            cmd_pool,
+            sh,
+            frame_number,
+        );
     }
 
     fn render_shadow_mapper(&self, kernel_index: usize, frame_number: usize) {
@@ -519,7 +544,8 @@ impl DefaultLighting for Sun {
     fn default(eng: &Engine) -> Self {
         let csc = eng.get_config().get_cascaded_shadows_count() as usize;
         let max_render_data_count =
-            eng.get_config().get_max_shadow_maker_kernek_render_data_count() as usize;
+            eng.get_config()
+                .get_max_shadow_maker_kernek_render_data_count() as usize;
         let mut cascade_cameras = Vec::with_capacity(csc);
         let geng = vxresult!(eng.get_gapi_engine().read());
         let frames_count = geng.get_frames_count();

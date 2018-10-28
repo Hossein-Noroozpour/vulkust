@@ -25,7 +25,7 @@ impl Uniform {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(super) struct Deferred {
+pub struct Deferred {
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
     descriptor_set: Arc<DescriptorSet>,
@@ -33,7 +33,7 @@ pub(super) struct Deferred {
 }
 
 impl Deferred {
-    pub fn new(
+    pub(crate) fn new(
         gapi_engine: &GraphicApiEngine,
         scene_manager: &SceneManager,
         resolver: &Resolver,
@@ -41,9 +41,8 @@ impl Deferred {
         let resolver_framebuffer = resolver.get_framebuffer();
         let (w, h) = resolver_framebuffer.get_dimensions();
         let uniform = Uniform::new(w as f32, h as f32);
-        let uniform_buffer =
-                vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let sampler = gapi_engine.get_linear_repeat_sampler();
         let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let mut textures = Vec::new();
@@ -66,11 +65,14 @@ impl Deferred {
         }
     }
 
-    pub fn render(&mut self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.uniform_buffer.update(&self.uniform, frame_number);
+    pub(crate) fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let buffer = self.uniform_buffer.get_buffer(frame_number);
         let buffer = vxresult!(buffer.read());
         cmd.bind_pipeline(&self.pipeline);
         cmd.bind_deferred_deferred_descriptor(&*self.descriptor_set, &*buffer);
+    }
+
+    pub(crate) fn update(&mut self, frame_number: usize) {
+        self.uniform_buffer.update(&self.uniform, frame_number);
     }
 }

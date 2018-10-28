@@ -64,5 +64,4 @@ impl Configurations {
     pub fn get_max_shadow_maker_kernek_render_data_count(&self) -> u64 {
         return self.max_shadow_maker_kernek_render_data_count;
     }
-
 }

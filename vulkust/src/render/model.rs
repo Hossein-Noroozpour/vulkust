@@ -270,9 +270,8 @@ impl Loadable for Base {
             meshes.insert(mesh_id, mesh);
         }
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer =
-                vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let descriptor_set = Arc::new(descriptor_set);
@@ -411,9 +410,8 @@ impl Model for Base {
 impl DefaultModel for Base {
     fn default(eng: &Engine) -> Self {
         let gapi_engine = vxresult!(eng.gapi_engine.read());
-        let uniform_buffer = 
-                vxresult!(gapi_engine.get_buffer_manager().write())
-                    .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+            .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let descriptor_set = Arc::new(descriptor_set);
