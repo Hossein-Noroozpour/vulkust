@@ -179,6 +179,10 @@ mod debug {
         if found_layers.contains_key(&layer_name) {
             layers_names.push(layer_name);
         }
+        let layer_name = "VK_LAYER_RENDERDOC_Capture".to_string();
+        if found_layers.contains_key(&layer_name) {
+            layers_names.push(layer_name);
+        }
         let layer_name = "VK_LAYER_GOOGLE_unique_objects".to_string();
         if found_layers.contains_key(&layer_name) {
             layers_names.push(layer_name);
