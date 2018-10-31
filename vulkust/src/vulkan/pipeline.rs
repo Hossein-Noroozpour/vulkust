@@ -175,6 +175,7 @@ impl Pipeline {
         samples: vk::VkSampleCountFlagBits,
         pipeline_type: PipelineType,
     ) -> Self {
+        vxlogi!("{:?}", pipeline_type);
         let device = vxresult!(descriptor_manager.read())
             .pool
             .logical_device
@@ -334,7 +335,7 @@ impl Pipeline {
         vertex_input_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         match pipeline_type {
-            PipelineType::GBuffer => {
+            PipelineType::GBuffer | PipelineType::ShadowMapper => {
                 vertex_input_state.vertexBindingDescriptionCount = 1;
                 vertex_input_state.pVertexBindingDescriptions = &vertex_input_binding;
                 vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.len() as u32;
