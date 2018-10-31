@@ -258,6 +258,7 @@ impl Engine {
     fn submit(&self, engine: &GraphicApiEngine) {
         let mut last_semaphore = engine.get_starting_semaphore().clone();
         let frame_number = engine.get_frame_number();
+        vxresult!(self.resolver.write()).update(frame_number);
         vxresult!(self.deferred.write()).update(frame_number);
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = vxresult!(scnmgr.get_scenes().read());
