@@ -7,7 +7,7 @@ use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
 use std::sync::Arc;
 
-const SHADOW_MAP_FMT: ImageFormat = ImageFormat::Float;
+const SHADOW_MAP_FMT: ImageFormat = ImageFormat::DepthFloat;
 const SHADOW_ACCUMULATOR_FMT: ImageFormat = ImageFormat::Float;
 
 #[cfg_attr(debug_mode, derive(Debug))]

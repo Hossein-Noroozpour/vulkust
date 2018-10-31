@@ -71,7 +71,6 @@ impl Image {
         unsafe {
             vk::vkGetImageMemoryRequirements(logical_device.vk_data, vk_data, &mut mem_reqs);
         }
-        vxlogi!("{:?}", &mem_reqs);
         let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemeoryLocation::GPU);
         {
             let memory_r = vxresult!(memory.read());
