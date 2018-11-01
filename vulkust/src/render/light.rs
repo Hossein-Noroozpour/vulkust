@@ -1,4 +1,5 @@
 use super::super::core::debug::Debug as CoreDebug;
+use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::buffer::{DynamicBuffer, Manager as BufferManager};
@@ -7,7 +8,6 @@ use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::descriptor::{Manager as DescriptorManager, Set as DescriptorSet};
 use super::engine::Engine;
 use super::gapi::GraphicApiEngine;
-use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::mesh::Mesh;
 use super::model::Model;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
@@ -615,18 +615,24 @@ impl Loadable for Sun {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
-    pub lights: BTreeMap<Id, Weak<RwLock<Light>>>,
-    pub name_to_id: BTreeMap<String, Id>,
-    pub gx3d_table: Option<Gx3dTable>,
+    engine: Option<Weak<RwLock<Engine>>>,
+    lights: BTreeMap<Id, Weak<RwLock<Light>>>,
+    name_to_id: BTreeMap<String, Id>,
+    gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
     pub fn new() -> Self {
         Manager {
+            engine: None,
             lights: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
             gx3d_table: None,
         }
+    }
+
+    pub(crate) fn set_gx3d_table(&mut self, gx3d_table: Gx3dTable) {
+        self.gx3d_table = Some(gx3d_table);
     }
 
     pub fn create<L>(&mut self, eng: &Engine, name: &str) -> Arc<RwLock<L>>
@@ -650,7 +656,7 @@ impl Manager {
         }
         let table = vxunwrap!(&mut self.gx3d_table);
         table.goto(id);
-        let reader: &mut Gx3DReader = &mut table.reader;
+        let reader: &mut Gx3DReader = table.get_mut_reader();
         let type_id = reader.read_type_id();
         let result: Arc<RwLock<Light>> = if type_id == TypeId::Sun as u8 {
             Arc::new(RwLock::new(Sun::new_with_gx3d(eng, reader, id)))
@@ -659,6 +665,10 @@ impl Manager {
         };
         self.lights.insert(id, Arc::downgrade(&result));
         return result;
+    }
+
+    pub(crate) fn set_engine(&mut self, e: Weak<RwLock<Engine>>) {
+        self.engine = Some(e);
     }
 }
 

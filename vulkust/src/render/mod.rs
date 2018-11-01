@@ -10,7 +10,6 @@ pub mod font;
 pub mod framebuffer;
 pub mod g_buffer_filler;
 pub mod gapi;
-pub mod gx3d;
 pub mod image;
 pub mod light;
 pub mod material;

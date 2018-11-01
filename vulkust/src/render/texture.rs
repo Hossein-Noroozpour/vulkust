@@ -1,7 +1,7 @@
+use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::{Base as ObjectBase, Object as CoreObject};
 use super::super::core::types::{Id, Size, TypeId};
 use super::engine::Engine;
-use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::image::View as ImageView;
 use super::sampler::Sampler;
 use std::collections::BTreeMap;
@@ -30,20 +30,26 @@ pub trait Loadable: Sized {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
+    engine: Option<Weak<RwLock<Engine>>>,
     textures: BTreeMap<Id, Weak<RwLock<Texture>>>,
     name_to_id: BTreeMap<String, Id>,
     color_to_id: BTreeMap<[u8; 4], Id>,
-    pub gx3d_table: Option<Gx3dTable>,
+    gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
     pub fn new() -> Self {
         Manager {
+            engine: None,
             textures: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
             color_to_id: BTreeMap::new(),
             gx3d_table: None,
         }
+    }
+
+    pub(crate) fn set_gx3d_table(&mut self, gx3d_table: Gx3dTable) {
+        self.gx3d_table = Some(gx3d_table);
     }
 
     pub fn load_gltf<T>(
@@ -81,7 +87,7 @@ impl Manager {
         }
         let table = vxunwrap!(&mut self.gx3d_table);
         table.goto(id);
-        let reader: &mut Gx3DReader = &mut table.reader;
+        let reader: &mut Gx3DReader = &mut table.get_mut_reader();
         let t = reader.read_type_id();
         let texture: Arc<RwLock<Texture>> = if t == TextureType::T2D as TypeId {
             Arc::new(RwLock::new(Texture2D::new_with_gx3d(engine, reader, id)))
@@ -142,6 +148,10 @@ impl Manager {
         // todo maybe this is something unnecessary
         return tex;
     }
+
+    pub(crate) fn set_engine(&mut self, e: Weak<RwLock<Engine>>) {
+        self.engine = Some(e);
+    }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -165,7 +175,7 @@ impl Texture2D {
         data: &[u8],
         name: Option<String>,
     ) -> Self {
-        let engine = vxresult!(engine.gapi_engine.read());
+        let engine = vxresult!(engine.get_gapi_engine().read());
         let image_view = engine.create_texture_2d_with_pixels(width, height, data);
         let sampler = engine.get_linear_repeat_sampler().clone();
         Texture2D {

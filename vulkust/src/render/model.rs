@@ -1,3 +1,4 @@
+use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::super::physics::collider::{read as read_collider, Collider, Ghost as GhostCollider};
@@ -6,7 +7,6 @@ use super::camera::Camera;
 use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
-use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::mesh::Mesh;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::scene::Scene;
@@ -45,14 +45,16 @@ pub enum TypeId {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
-    pub models: BTreeMap<Id, Weak<RwLock<Model>>>,
-    pub name_to_id: BTreeMap<String, Id>,
-    pub gx3d_table: Option<Gx3dTable>,
+    engine: Option<Weak<RwLock<Engine>>>,
+    models: BTreeMap<Id, Weak<RwLock<Model>>>,
+    name_to_id: BTreeMap<String, Id>,
+    gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
     pub fn new() -> Self {
         Manager {
+            engine: None,
             models: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
             gx3d_table: None,
@@ -67,7 +69,7 @@ impl Manager {
         }
         let gx3d_table = vxunwrap!(self.gx3d_table.as_mut());
         gx3d_table.goto(id);
-        let reader = &mut gx3d_table.reader;
+        let reader = &mut gx3d_table.get_mut_reader();
         let t = reader.read_type_id();
         let model: Arc<RwLock<Model>> = if t == TypeId::Static as u8 {
             Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
@@ -82,16 +84,26 @@ impl Manager {
         return model;
     }
 
-    pub fn create<M>(&mut self, eng: &Engine) -> Arc<RwLock<M>>
+    pub fn create<M>(&mut self) -> Arc<RwLock<M>>
     where
         M: 'static + DefaultModel,
     {
-        let m = M::default(eng);
+        let eng = vxunwrap!(vxunwrap!(&self.engine).upgrade());
+        let eng = vxresult!(eng.read());
+        let m = M::default(&*eng);
         let id = m.get_id();
         let m1 = Arc::new(RwLock::new(m));
         let m2: Arc<RwLock<Model>> = m1.clone();
         self.models.insert(id, Arc::downgrade(&m2));
         return m1;
+    }
+
+    pub(crate) fn set_gx3d_table(&mut self, gx3d_table: Gx3dTable) {
+        self.gx3d_table = Some(gx3d_table);
+    }
+
+    pub(crate) fn set_engine(&mut self, e: Weak<RwLock<Engine>>) {
+        self.engine = Some(e);
     }
 }
 
@@ -197,8 +209,7 @@ impl Object for Base {
 impl Loadable for Base {
     fn new_with_gltf(node: &gltf::Node, engine: &Engine, data: &[u8]) -> Self {
         let obj_base = ObjectBase::new();
-        let scene_manager = vxresult!(engine.scene_manager.read());
-        let mut mesh_manager = vxresult!(scene_manager.mesh_manager.write());
+        let mut mesh_manager = vxresult!(engine.get_asset_manager().get_mesh_manager().write());
         let model = vxunwrap!(node.mesh());
         let primitives = model.primitives();
         let mut meshes = BTreeMap::new();
@@ -222,7 +233,7 @@ impl Loadable for Base {
         if node.children().count() > 0 {
             vxunimplemented!(); // todo support children
         }
-        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
@@ -255,8 +266,7 @@ impl Loadable for Base {
         let occlusion_culling_radius = reader.read();
         let collider = read_collider(reader);
         let meshes_ids = reader.read_array();
-        let scene_manager = vxresult!(eng.scene_manager.read());
-        let mut mesh_manager = vxresult!(scene_manager.mesh_manager.write());
+        let mut mesh_manager = vxresult!(eng.get_asset_manager().get_mesh_manager().write());
         let mut meshes = BTreeMap::new();
         let mut has_shadow_caster = false;
         let mut has_transparent = false;
@@ -269,7 +279,7 @@ impl Loadable for Base {
             }
             meshes.insert(mesh_id, mesh);
         }
-        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
@@ -409,7 +419,7 @@ impl Model for Base {
 
 impl DefaultModel for Base {
     fn default(eng: &Engine) -> Self {
-        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());

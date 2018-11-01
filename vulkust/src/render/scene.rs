@@ -1,4 +1,5 @@
 use super::super::core::constants::{MAX_DIRECTIONAL_LIGHTS_COUNT, MAX_POINT_LIGHTS_COUNT};
+use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, TypeId as CoreTypeId};
 use super::super::system::file::File;
@@ -11,7 +12,6 @@ use super::engine::Engine;
 use super::font::Manager as FontManager;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::light::{DirectionalUniform, Light, Manager as LightManager, PointUniform};
 use super::mesh::Manager as MeshManager;
 use super::model::{Base as ModelBase, Manager as ModelManager, Model};
@@ -75,47 +75,33 @@ pub trait DefaultScene: Scene + Sized {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
-    pub engine: Option<Weak<RwLock<Engine>>>,
-    pub scenes: Arc<RwLock<BTreeMap<Id, Weak<RwLock<Scene>>>>>,
-    pub name_to_id: Arc<RwLock<BTreeMap<String, Id>>>,
-    pub texture_manager: Arc<RwLock<TextureManager>>,
-    pub light_manager: Arc<RwLock<LightManager>>,
-    pub camera_manager: Arc<RwLock<CameraManager>>,
-    pub mesh_manager: Arc<RwLock<MeshManager>>,
-    pub font_manager: Arc<RwLock<FontManager>>,
-    pub model_manager: Arc<RwLock<ModelManager>>,
-    pub gx3d_table: Option<Arc<RwLock<Gx3dTable>>>,
+    engine: Option<Weak<RwLock<Engine>>>,
+    scenes: BTreeMap<Id, Weak<RwLock<Scene>>>,
+    name_to_id: BTreeMap<String, Id>,
+    gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
-    pub fn new() -> Self {
-        let texture_manager = Arc::new(RwLock::new(TextureManager::new()));
-        let light_manager = Arc::new(RwLock::new(LightManager::new()));
-        let camera_manager = Arc::new(RwLock::new(CameraManager::new()));
-        let mesh_manager = Arc::new(RwLock::new(MeshManager::new()));
-        let font_manager = Arc::new(RwLock::new(FontManager::new()));
-        let model_manager = Arc::new(RwLock::new(ModelManager::new()));
-        let scenes = Arc::new(RwLock::new(BTreeMap::new()));
-        let name_to_id = Arc::new(RwLock::new(BTreeMap::new()));
+    pub(crate) fn new() -> Self {
+        let scenes = BTreeMap::new();
+        let name_to_id = BTreeMap::new();
         Manager {
             engine: None,
             scenes,
             name_to_id,
-            texture_manager,
-            light_manager,
-            camera_manager,
-            mesh_manager,
-            font_manager,
-            model_manager,
             gx3d_table: None,
         }
     }
 
-    pub fn set_engine(&mut self, engine: Weak<RwLock<Engine>>) {
+    pub(crate) fn set_gx3d_table(&mut self, gx3d_table: Gx3dTable) {
+        self.gx3d_table = Some(gx3d_table);
+    }
+
+    pub(crate) fn set_engine(&mut self, engine: Weak<RwLock<Engine>>) {
         self.engine = Some(engine);
     }
 
-    pub fn load_gltf<S>(&self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
+    pub fn load_gltf<S>(&mut self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
     where
         S: 'static + Loadable,
     {
@@ -136,28 +122,22 @@ impl Manager {
         return scene;
     }
 
-    pub fn load_gx3d(&self, id: Id) -> Arc<RwLock<Scene>> {
-        if let Some(scene) = vxresult!(self.scenes.read()).get(&id) {
-            if let Some(scene) = scene.upgrade() {
-                return scene;
-            }
-        }
+    pub fn load_gx3d(&mut self, id: Id) -> Arc<RwLock<Scene>> {
         let scene: Arc<RwLock<Scene>> = {
-            let mut table = vxunwrap!(&self.gx3d_table);
-            let mut table = vxresult!(table.write());
+            let mut table = vxunwrap!(&mut self.gx3d_table);
             table.goto(id);
-            let mut reader: &mut Gx3DReader = &mut table.reader;
+            let reader = table.get_mut_reader();
             let type_id = reader.read_type_id();
             if type_id == TypeId::GAME as CoreTypeId {
                 let engine = vxunwrap!(&self.engine);
                 let engine = vxunwrap!(engine.upgrade());
                 let engine = vxresult!(engine.read());
-                Arc::new(RwLock::new(Game::new_with_gx3d(&engine, &mut reader, id)))
+                Arc::new(RwLock::new(Game::new_with_gx3d(&engine, reader, id)))
             } else if type_id == TypeId::UI as CoreTypeId {
                 let engine = vxunwrap!(&self.engine);
                 let engine = vxunwrap!(engine.upgrade());
                 let engine = vxresult!(engine.read());
-                Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, &mut reader, id)))
+                Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, reader, id)))
             } else {
                 vxunexpected!();
             }
@@ -166,7 +146,7 @@ impl Manager {
         return scene;
     }
 
-    pub fn create<S>(&self) -> Arc<RwLock<S>>
+    pub fn create<S>(&mut self) -> Arc<RwLock<S>>
     where
         S: 'static + DefaultScene,
     {
@@ -179,16 +159,6 @@ impl Manager {
         let s: Arc<RwLock<Scene>> = scene.clone();
         self.add_scene(&s);
         scene
-    }
-
-    pub fn create_camera<C>(&self) -> Arc<RwLock<C>>
-    where
-        C: 'static + DefaultCamera,
-    {
-        let engine = vxunwrap!(&self.engine);
-        let engine = vxunwrap!(engine.upgrade());
-        let engine = vxresult!(engine.read());
-        vxresult!(self.camera_manager.write()).create(&*engine)
     }
 
     pub fn fetch_gltf_scene<'a>(file: &'a gltf::Gltf, scene_name: &str) -> gltf::Scene<'a> {
@@ -209,27 +179,27 @@ impl Manager {
         return vxresult!(gltf::Gltf::from_reader_without_validation(file));
     }
 
-    pub fn add_scene(&self, scene: &Arc<RwLock<Scene>>) {
+    pub fn add_scene(&mut self, scene: &Arc<RwLock<Scene>>) {
         let id = {
             let scene = vxresult!(scene.read());
             let id = scene.get_id();
             if let Some(name) = scene.get_name() {
-                vxresult!(self.name_to_id.write()).insert(name, id);
+                self.name_to_id.insert(name, id);
             }
             id
         };
-        vxresult!(self.scenes.write()).insert(id, Arc::downgrade(scene));
+        self.scenes.insert(id, Arc::downgrade(scene));
     }
 
-    pub fn remove_with_id(&self, id: Id) {
-        vxresult!(self.scenes.write()).remove(&id);
+    pub fn remove_with_id(&mut self, id: &Id) {
+        self.scenes.remove(id);
     }
 
-    pub fn remove(&self, scene: Arc<RwLock<Scene>>) {
-        self.remove_with_id(vxresult!(scene.read()).get_id());
+    pub fn remove(&mut self, scene: Arc<RwLock<Scene>>) {
+        self.remove_with_id(&vxresult!(scene.read()).get_id());
     }
 
-    pub(super) fn get_scenes(&self) -> &Arc<RwLock<BTreeMap<Id, Weak<RwLock<Scene>>>>> {
+    pub(super) fn get_scenes(&self) -> &BTreeMap<Id, Weak<RwLock<Scene>>> {
         return &self.scenes;
     }
 }
@@ -326,10 +296,7 @@ pub struct Base {
 
 impl Base {
     pub fn new_with_gltf(engine: &Engine, scene: &gltf::Scene, data: &[u8]) -> Self {
-        let camera_manager = {
-            let manager = vxresult!(engine.scene_manager.read());
-            manager.camera_manager.clone()
-        };
+        let camera_manager = engine.get_asset_manager().get_camera_manager();
         let obj_base = ObjectBase::new();
         let uniform = Uniform::new();
         let mut cameras = BTreeMap::new();
@@ -356,7 +323,7 @@ impl Base {
                 models.insert(id, model);
             } // todo read lights
         }
-        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
@@ -398,14 +365,10 @@ impl Base {
         if reader.read_bool() {
             vxunimplemented!(); // todo
         }
-        let manager = vxresult!(eng.scene_manager.read());
-        let (camera_manager, light_manager, model_manager) = {
-            (
-                &manager.camera_manager,
-                &manager.light_manager,
-                &manager.model_manager,
-            )
-        };
+        let asset_manager = eng.get_asset_manager();
+        let camera_manager = asset_manager.get_camera_manager();
+        let light_manager = asset_manager.get_light_manager();
+        let model_manager = asset_manager.get_model_manager();
         let mut cameras = BTreeMap::new();
         for id in &cameras_ids {
             cameras.insert(*id, vxresult!(camera_manager.write()).load_gx3d(eng, *id));
@@ -436,7 +399,7 @@ impl Base {
             lights.insert(id, vxresult!(light_manager.write()).load_gx3d(eng, id));
         }
         let uniform = Uniform::new();
-        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
@@ -773,7 +736,7 @@ impl Scene for Base {
 
 impl DefaultScene for Base {
     fn default(engine: &Engine) -> Self {
-        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());

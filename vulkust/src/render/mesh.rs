@@ -1,9 +1,9 @@
+use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::buffer::StaticBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
-use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::material::Material;
 use super::model::Model;
 use super::object::{Base as ObjectBase, Object};
@@ -34,18 +34,24 @@ pub trait Mesh: Object {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
-    pub meshes: BTreeMap<Id, Weak<RwLock<Mesh>>>,
-    pub name_to_id: BTreeMap<String, Id>,
-    pub gx3d_table: Option<Gx3dTable>,
+    engine: Option<Weak<RwLock<Engine>>>,
+    meshes: BTreeMap<Id, Weak<RwLock<Mesh>>>,
+    name_to_id: BTreeMap<String, Id>,
+    gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
     pub fn new() -> Self {
         Manager {
+            engine: None,
             meshes: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
             gx3d_table: None,
         }
+    }
+
+    pub(crate) fn set_gx3d_table(&mut self, gx3d_table: Gx3dTable) {
+        self.gx3d_table = Some(gx3d_table);
     }
 
     pub fn load_gltf(
@@ -73,7 +79,7 @@ impl Manager {
         }
         let gx3d_table = vxunwrap!(self.gx3d_table.as_mut());
         gx3d_table.goto(id);
-        let reader = &mut gx3d_table.reader;
+        let reader = gx3d_table.get_mut_reader();
         let t = reader.read_type_id();
         let mesh: Arc<RwLock<Mesh>> = if t == TypeId::Base as u8 {
             Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
@@ -108,6 +114,10 @@ impl Manager {
         let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
         self.meshes.insert(mesh_id, Arc::downgrade(&mesh));
         return mesh;
+    }
+
+    pub fn set_engine(&mut self, e: Weak<RwLock<Engine>>) {
+        self.engine = Some(e);
     }
 }
 
@@ -222,7 +232,7 @@ impl Base {
         let end = view.length() + offset;
         let index_buffer = &data[offset..end];
         let indices_count = indices_count as u32;
-        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
         let vertex_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_static_buffer_with_vec(&vertex_buffer);
         let index_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
@@ -245,7 +255,7 @@ impl Base {
         occlusion_culling_radius: Real,
         engine: &Engine,
     ) -> Self {
-        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
         let mut buffer_manager = vxresult!(gapi_engine.get_buffer_manager().write());
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(indices);
@@ -281,7 +291,7 @@ impl Base {
         vxtodo!();
         let material = Material::new_with_gx3d(engine, reader);
         let obj_base = ObjectBase::new_with_id(my_id);
-        let gapi_engine = vxresult!(engine.gapi_engine.read());
+        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
         let mut buffer_manager = vxresult!(gapi_engine.get_buffer_manager().write());
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(&vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(&indices);

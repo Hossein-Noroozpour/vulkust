@@ -1,8 +1,8 @@
+use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
-use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use gltf;
 use math;
@@ -58,9 +58,10 @@ pub enum TypeId {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
-    pub cameras: BTreeMap<Id, Weak<RwLock<Camera>>>,
-    pub name_to_id: BTreeMap<String, Id>,
-    pub gx3d_table: Option<Gx3dTable>,
+    engine: Option<Weak<RwLock<Engine>>>,
+    cameras: BTreeMap<Id, Weak<RwLock<Camera>>>,
+    name_to_id: BTreeMap<String, Id>,
+    gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
@@ -68,10 +69,19 @@ impl Manager {
         let cameras = BTreeMap::new();
         let name_to_id = BTreeMap::new();
         Manager {
+            engine: None,
             cameras,
             name_to_id,
             gx3d_table: None,
         }
+    }
+
+    pub(crate) fn set_engine(&mut self, e: Weak<RwLock<Engine>>) {
+        self.engine = Some(e);
+    }
+
+    pub(crate) fn set_gx3d_table(&mut self, gx3d_table: Gx3dTable) {
+        self.gx3d_table = Some(gx3d_table);
     }
 
     pub fn load_gltf(&mut self, n: &gltf::Node, eng: &Engine) -> Arc<RwLock<Camera>> {
@@ -108,7 +118,7 @@ impl Manager {
         }
         let table = vxunwrap!(&mut self.gx3d_table);
         table.goto(id);
-        let reader: &mut Gx3DReader = &mut table.reader;
+        let reader: &mut Gx3DReader = table.get_mut_reader();
         let type_id = reader.read_type_id();
         let camera: Arc<RwLock<Camera>> = if type_id == TypeId::Perspective as u8 {
             Arc::new(RwLock::new(Perspective::new_with_gx3d(engine, reader, id)))
@@ -121,11 +131,13 @@ impl Manager {
         camera
     }
 
-    pub fn create<C>(&mut self, eng: &Engine) -> Arc<RwLock<C>>
+    pub fn create<C>(&mut self) -> Arc<RwLock<C>>
     where
         C: 'static + DefaultCamera,
     {
-        let camera = C::default(eng);
+        let eng = vxunwrap!(vxunwrap!(&self.engine).upgrade());
+        let eng = vxresult!(eng.read());
+        let camera = C::default(&*eng);
         let id = camera.get_id();
         if let Some(name) = camera.get_name() {
             self.name_to_id.insert(name, id);
@@ -241,7 +253,7 @@ impl Base {
         let img_transform = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         );
-        let os_app = vxunwrap!(eng.os_app.upgrade());
+        let os_app = vxunwrap!(eng.get_os_app().upgrade());
         let os_app = vxresult!(os_app.read());
         Self {
             obj_base,

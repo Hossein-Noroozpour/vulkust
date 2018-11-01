@@ -1,3 +1,4 @@
+use super::super::core::asset::Manager as AssetManager;
 use super::super::core::types::Id;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::config::Configurations;
@@ -117,7 +118,6 @@ impl Renderer {
         let geng = vxresult!(self.g_engine.read());
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
-        let scenes = vxresult!(scenes.read());
         let g_buffer_filler = vxresult!(self.g_buffer_filler.read());
         let shadower = vxresult!(self.shadower.read());
         for (_, scene) in &*scenes {
@@ -137,7 +137,6 @@ impl Renderer {
         let frame_number = vxresult!(self.g_engine.read()).get_frame_number();
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
-        let scenes = vxresult!(scenes.read());
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
                 let scene = vxresult!(scene.read());
@@ -162,16 +161,25 @@ pub(super) struct Engine {
 impl Engine {
     pub(crate) fn new(
         engine: Arc<RwLock<GraphicApiEngine>>,
-        scene_manager: Arc<RwLock<SceneManager>>,
+        asset_manager: &AssetManager,
         config: &Configurations,
     ) -> Self {
         let eng = engine.clone();
         let eng = vxresult!(eng.read());
+        let scene_manager = asset_manager.get_scene_manager().clone();
         let scnmgr = scene_manager.clone();
         let scnmgr = vxresult!(scnmgr.read());
         let g_buffer_filler = GBufferFiller::new(&eng);
-        let resolver = Resolver::new(&eng, &g_buffer_filler, &*scnmgr);
-        let deferred = Arc::new(RwLock::new(Deferred::new(&eng, &*scnmgr, &resolver)));
+        let resolver = Resolver::new(
+            &eng,
+            &g_buffer_filler,
+            &mut *vxresult!(asset_manager.get_texture_manager().write()),
+        );
+        let deferred = Arc::new(RwLock::new(Deferred::new(
+            &eng,
+            &mut *vxresult!(asset_manager.get_texture_manager().write()),
+            &resolver,
+        )));
         let resolver = Arc::new(RwLock::new(resolver));
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
         let shadower = Arc::new(RwLock::new(Shadower::new(&eng, config)));
@@ -221,9 +229,8 @@ impl Engine {
     }
 
     fn update_scenes(&self, frame_number: usize) {
-        let scnmgr = vxresult!(self.scene_manager.read());
         let mut ids = Vec::new();
-        for (id, scene) in &*vxresult!(scnmgr.get_scenes().read()) {
+        for (id, scene) in vxresult!(self.scene_manager.read()).get_scenes() {
             if let Some(scene) = scene.upgrade() {
                 let mut scene = vxresult!(scene.write());
                 if !scene.is_rendarable() {
@@ -235,15 +242,15 @@ impl Engine {
                 ids.push(*id);
             }
         }
-        let mut scenes = vxresult!(scnmgr.get_scenes().write());
+        let mut scnmgr = vxresult!(self.scene_manager.write());
         for id in ids {
-            scenes.remove(&id);
+            scnmgr.remove_with_id(&id);
         }
     }
 
     fn update_shadow_makers(&self) {
         let scnmgr = vxresult!(self.scene_manager.read());
-        let scenes = vxresult!(scnmgr.get_scenes().read());
+        let scenes = scnmgr.get_scenes();
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
                 let mut scene = vxresult!(scene.write());
@@ -261,7 +268,7 @@ impl Engine {
         vxresult!(self.resolver.write()).update(frame_number);
         vxresult!(self.deferred.write()).update(frame_number);
         let scnmgr = vxresult!(self.scene_manager.read());
-        let scenes = vxresult!(scnmgr.get_scenes().read());
+        let scenes = scnmgr.get_scenes();
         let g_buffer_filler = vxresult!(self.g_buffer_filler.read());
         let resolver = vxresult!(self.resolver.read());
         let shadower = vxresult!(self.shadower.read());

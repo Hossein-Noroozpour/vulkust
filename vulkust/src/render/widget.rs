@@ -153,11 +153,7 @@ impl Label {
     }
 
     pub fn set_font_with_file_name(&mut self, name: &str, engine: &Engine) {
-        {
-            let scene_manager = vxresult!(engine.scene_manager.read());
-            let mut font_manager = vxresult!(scene_manager.font_manager.write());
-            self.font = font_manager.load_ttf(name);
-        }
+        self.font = vxresult!(engine.get_asset_manager().get_font_manager().write()).load_ttf(name);
         self.create_text_mesh(engine);
     }
 
@@ -277,16 +273,15 @@ impl Label {
             ];
             let indices = [0u32, 2, 1, 1, 2, 3];
             let mut material = Material::default(engine);
-            let scene_manager = vxresult!(engine.scene_manager.read());
-            let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
-            material.base_color =
-                texture_manager.create_2d_with_pixels(imgw as u32, imgh as u32, engine, &img);
+            let asset_manager = engine.get_asset_manager();
+            material.base_color = vxresult!(asset_manager.get_texture_manager().write())
+                .create_2d_with_pixels(imgw as u32, imgh as u32, engine, &img);
             material.finalize_textures_change(engine);
             let radius = math::Vector2::new(w, h);
             let radius = math::dot(radius, radius).sqrt();
             let mesh = MeshBase::new_with_material(material, &vertices, &indices, radius, engine);
             let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
-            vxresult!(scene_manager.mesh_manager.write()).add(&mesh);
+            vxresult!(asset_manager.get_mesh_manager().write()).add(&mesh);
             mesh
         };
         self.add_mesh(mesh);
@@ -396,9 +391,9 @@ impl Model for Label {
 
 impl DefaultModel for Label {
     fn default(eng: &Engine) -> Self {
-        let scene_manager = vxresult!(eng.scene_manager.read());
-        let font_manager = vxresult!(scene_manager.font_manager.read());
-        let font = font_manager.default.clone();
+        let font = vxresult!(eng.get_asset_manager().get_font_manager().read())
+            .get_default()
+            .clone();
         Label {
             base: Base::default(eng),
             text: String::new(),

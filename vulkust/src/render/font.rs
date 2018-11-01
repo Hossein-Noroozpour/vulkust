@@ -1,7 +1,7 @@
+use super::super::core::gx3d::Table as Gx3dTable;
 use super::super::core::object::{Base as ObjectBase, Object as CoreObject};
 use super::super::core::types::Id;
 use super::super::system::file::File;
-use super::gx3d::Table as Gx3dTable;
 use rusttype::Font as TypeFont;
 use std::collections::BTreeMap;
 use std::default::Default;
@@ -16,10 +16,10 @@ pub trait Font: CoreObject {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
-    pub fonts: BTreeMap<Id, Weak<RwLock<Font>>>,
-    pub name_to_id: BTreeMap<String, Id>,
-    pub default: Arc<RwLock<Base>>,
-    pub gx3d_table: Option<Gx3dTable>,
+    fonts: BTreeMap<Id, Weak<RwLock<Font>>>,
+    name_to_id: BTreeMap<String, Id>,
+    default: Arc<RwLock<Font>>,
+    gx3d_table: Option<Gx3dTable>,
 }
 
 impl Manager {
@@ -30,6 +30,14 @@ impl Manager {
             default: Arc::new(RwLock::new(Base::default())),
             gx3d_table: None,
         }
+    }
+
+    pub(crate) fn set_gx3d_table(&mut self, gx3d_table: Gx3dTable) {
+        self.gx3d_table = Some(gx3d_table);
+    }
+
+    pub(crate) fn get_default(&self) -> &Arc<RwLock<Font>> {
+        return &self.default;
     }
 
     pub fn load_ttf(&mut self, name: &str) -> Arc<RwLock<Font>> {

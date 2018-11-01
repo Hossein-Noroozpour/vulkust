@@ -8,8 +8,7 @@ use super::gapi::GraphicApiEngine;
 use super::image::{AttachmentType, Format, View as ImageView};
 use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
-use super::scene::Manager as SceneManager;
-use super::texture::Texture;
+use super::texture::{Manager as TextureManager, Texture};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
@@ -56,12 +55,11 @@ impl Resolver {
     pub(super) fn new(
         eng: &GraphicApiEngine,
         g_buffer_filler: &GBufferFiller,
-        scene_manager: &SceneManager,
+        texture_manager: &mut TextureManager,
     ) -> Self {
         let dev = eng.get_device();
         let memmgr = eng.get_memory_manager();
         let sampler = eng.get_linear_repeat_sampler();
-        let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let g_buffers = g_buffer_filler.get_buffers();
 
         let mut buffers = Vec::new();

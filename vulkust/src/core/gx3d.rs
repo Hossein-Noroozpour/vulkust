@@ -1,13 +1,10 @@
-use super::super::core::object::NEXT_ID;
-use super::super::core::types::{Id, Offset, Size, TypeId};
 use super::super::system::file::File;
-use super::scene::Manager as SceneManager;
+use super::config::Configurations;
+use super::types::{Id, Offset, Size, TypeId};
 use std::collections::BTreeMap;
 use std::io::{BufReader, Read, Seek, SeekFrom};
 use std::mem::{size_of, transmute};
 use std::ptr::copy;
-use std::sync::atomic::Ordering;
-use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Gx3DReader {
@@ -22,8 +19,8 @@ impl Readable for u32 {}
 impl Readable for u64 {}
 
 impl Gx3DReader {
-    pub fn new() -> Option<Self> {
-        let file = File::open("data/data.gx3d");
+    pub(super) fn new(name: &str) -> Option<Self> {
+        let file = File::open(name);
         if file.is_err() {
             return None;
         }
@@ -166,20 +163,20 @@ impl Gx3DReader {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Table {
-    pub reader: Gx3DReader,
-    pub id_offset: BTreeMap<Id, Offset>,
+pub(crate) struct Table {
+    reader: Gx3DReader,
+    id_offset: BTreeMap<Id, Offset>,
 }
 
 impl Table {
-    pub fn new(reader: &mut Gx3DReader) -> Self {
+    pub(super) fn new(reader: &mut Gx3DReader, config: &Configurations) -> Self {
         let count = reader.read::<u64>();
         let mut id_offset = BTreeMap::new();
         for _ in 0..count {
             id_offset.insert(reader.read::<Id>(), reader.read::<Offset>());
         }
         Table {
-            reader: vxunwrap!(Gx3DReader::new()),
+            reader: vxunwrap!(Gx3DReader::new(config.get_gx3d_file_name())),
             id_offset,
         }
     }
@@ -188,35 +185,8 @@ impl Table {
         let off = vxunwrap!(self.id_offset.get(&id));
         self.reader.seek(*off);
     }
-}
 
-pub fn import(scenemgr: &Arc<RwLock<SceneManager>>) {
-    let main_file = Gx3DReader::new();
-    if main_file.is_none() {
-        return;
+    pub fn get_mut_reader(&mut self) -> &mut Gx3DReader {
+        return &mut self.reader;
     }
-    let mut main_file = vxunwrap!(main_file);
-    let last_id: Id = main_file.read();
-    #[cfg(debug_gx3d)]
-    vxlogi!("last id is: {}", last_id);
-    NEXT_ID.store(last_id, Ordering::Relaxed);
-    let mut scnmgr = vxresult!(scenemgr.write());
-    macro_rules! set_table {
-        ($mgr:ident) => {{
-            let mut mgr = vxresult!(scnmgr.$mgr.write());
-            let table = Table::new(&mut main_file);
-            mgr.gx3d_table = Some(table);
-        }};
-    }
-    set_table!(camera_manager);
-    let _audio_table = Table::new(&mut main_file);
-    set_table!(light_manager);
-    set_table!(texture_manager);
-    set_table!(font_manager);
-    set_table!(mesh_manager);
-    set_table!(model_manager);
-    let _skybox_table = Table::new(&mut main_file);
-    let _constraint_table = Table::new(&mut main_file);
-    let table = Table::new(&mut main_file);
-    scnmgr.gx3d_table = Some(Arc::new(RwLock::new(table)));
 }

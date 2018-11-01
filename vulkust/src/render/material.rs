@@ -1,9 +1,9 @@
+use super::super::core::gx3d::Gx3DReader;
 use super::super::core::types::{Id, TypeId};
 use super::buffer::DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
-use super::gx3d::Gx3DReader;
 use super::model::Model;
 use super::scene::Scene;
 use super::texture::{Manager as TextureManager, Texture};
@@ -87,11 +87,10 @@ impl Material {
     }
 
     pub(crate) fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader) -> Self {
-        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let scene_manager = vxresult!(eng.scene_manager.read());
-        let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
+        let mut texture_manager = vxresult!(eng.get_asset_manager().get_texture_manager().write());
         let mut uniform = Uniform::new();
         let mut translucency = TranslucencyMode::Opaque;
         let read_color = |reader: &mut Gx3DReader| {
@@ -194,7 +193,7 @@ impl Material {
             emissive.clone(),
             emissive_factor.clone(),
         ];
-        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_gbuff_set(&uniform_buffer, textures);
         let descriptor_set = Arc::new(descriptor_set);
@@ -214,11 +213,10 @@ impl Material {
     }
 
     pub fn default(eng: &Engine) -> Self {
-        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let scene_manager = vxresult!(eng.scene_manager.read());
-        let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
+        let mut texture_manager = vxresult!(eng.get_asset_manager().get_texture_manager().write());
         let uniform = Uniform::new();
         let translucency = TranslucencyMode::default();
         let base_color = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
@@ -265,7 +263,7 @@ impl Material {
             self.emissive.clone(),
             self.emissive_factor.clone(),
         ];
-        let gapi_engine = vxresult!(eng.gapi_engine.read());
+        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_gbuff_set(&self.uniform_buffer, textures);
         self.descriptor_set = Arc::new(descriptor_set);

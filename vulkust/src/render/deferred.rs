@@ -4,7 +4,7 @@ use super::descriptor::Set as DescriptorSet;
 use super::gapi::GraphicApiEngine;
 use super::pipeline::{Pipeline, PipelineType};
 use super::resolver::Resolver;
-use super::scene::Manager as SceneManager;
+use super::texture::Manager as TextureManager;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
@@ -35,7 +35,7 @@ pub struct Deferred {
 impl Deferred {
     pub(crate) fn new(
         gapi_engine: &GraphicApiEngine,
-        scene_manager: &SceneManager,
+        texture_manager: &mut TextureManager,
         resolver: &Resolver,
     ) -> Self {
         let resolver_framebuffer = resolver.get_framebuffer();
@@ -44,7 +44,6 @@ impl Deferred {
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let sampler = gapi_engine.get_linear_repeat_sampler();
-        let mut texture_manager = vxresult!(scene_manager.texture_manager.write());
         let mut textures = Vec::new();
         let resolver_buffers = resolver.get_buffers();
         for v in resolver_buffers {

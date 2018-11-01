@@ -65,14 +65,18 @@ impl CoreAppTrait for MyGame {
     fn initialize(&mut self) {
         let renderer = vxunwrap!(&self.renderer);
         let renderer = vxresult!(renderer.read());
-        let scene: Arc<RwLock<GameScene>> = renderer.create_scene();
-        let camera: Arc<RwLock<Perspective>> = renderer.create_camera();
+        let asset_manager = renderer.get_asset_manager();
+        let scene: Arc<RwLock<GameScene>> =
+            vxresult!(asset_manager.get_scene_manager().write()).create();
+        let camera: Arc<RwLock<Perspective>> =
+            vxresult!(asset_manager.get_camera_manager().write()).create();
         {
             let mut camera = vxresult!(camera.write());
             camera.set_location(&math::Vector3::new(0.0, 0.0, 4.0));
         }
         self.camera = Some(camera.clone());
-        let model: Arc<RwLock<Model>> = renderer.create_model::<ModelBase>();
+        let model: Arc<RwLock<Model>> =
+            vxresult!(asset_manager.get_model_manager().write()).create::<ModelBase>();
         {
             let vertices = [
                 -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
@@ -108,8 +112,7 @@ impl CoreAppTrait for MyGame {
                 16, 18, 17, 17, 18, 19, 20, 21, 22, 21, 23, 22,
             ];
             let material = Material::default(&*renderer);
-            let scnmgr = vxresult!(renderer.scene_manager.read());
-            let mesh = vxresult!(scnmgr.mesh_manager.write())
+            let mesh = vxresult!(asset_manager.get_mesh_manager().write())
                 .create_with_material(material, &vertices, &indices, 1.8, &*renderer);
             vxresult!(model.write()).add_mesh(mesh);
         }
@@ -119,13 +122,16 @@ impl CoreAppTrait for MyGame {
             scn.add_model(model);
         }
         self.scene = Some(scene);
-        let ui_scene: Arc<RwLock<UiScene>> = renderer.create_scene();
-        let camera: Arc<RwLock<Orthographic>> = renderer.create_camera();
+        let ui_scene: Arc<RwLock<UiScene>> =
+            vxresult!(asset_manager.get_scene_manager().write()).create();
+        let camera: Arc<RwLock<Orthographic>> =
+            vxresult!(asset_manager.get_camera_manager().write()).create();
         {
             let mut camera = vxresult!(camera.write());
             camera.move_local_z(-1.999);
         }
-        let label: Arc<RwLock<Label>> = renderer.create_model();
+        let label: Arc<RwLock<Label>> =
+            vxresult!(asset_manager.get_model_manager().write()).create();
         {
             let mut label = vxresult!(label.write());
             label.set_size(0.05, &renderer);
@@ -221,7 +227,7 @@ impl CoreAppTrait for MyGame {
             let mut camera = vxresult!(vxunwrap!(&self.camera).write());
             let delta = {
                 let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-                let n = vxresult!(renderer.timing.read())
+                let n = vxresult!(renderer.get_timing().read())
                     .length_of_previous_frame
                     .as_nanos();
                 (n as f64 / 1_000_000_000.0) as f32

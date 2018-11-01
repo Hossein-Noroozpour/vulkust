@@ -1,11 +1,12 @@
-// pub mod asset;
 pub mod allocate;
 pub mod application;
+pub mod asset;
 pub mod config;
 pub mod constants;
 pub mod debug;
 pub mod event;
 pub mod gesture;
+pub mod gx3d;
 pub mod object;
 pub mod string;
 pub mod timing;

@@ -1,5 +1,5 @@
 use super::super::core::debug::Debug;
-use super::super::render::gx3d::Gx3DReader;
+use super::super::core::gx3d::Gx3DReader;
 use std::sync::{Arc, RwLock};
 
 use math;
