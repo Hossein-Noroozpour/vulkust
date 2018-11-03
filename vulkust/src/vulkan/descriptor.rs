@@ -1,7 +1,7 @@
 use super::super::core::allocate::Object as AlcObject;
 use super::super::render::config::Configurations;
 use super::super::render::texture::Texture;
-use super::buffer::{DynamicBuffer, Manager as BufferManager};
+use super::buffer::DynamicBuffer;
 use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::ptr::null;
@@ -151,16 +151,14 @@ impl Set {
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        buffer_manager: &Arc<RwLock<BufferManager>>,
     ) -> Self {
-        Self::new(pool, layout, uniform, buffer_manager, Vec::new())
+        Self::new(pool, layout, uniform, Vec::new())
     }
 
     pub fn new_gbuff(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
         #[cfg(debug_mode)]
@@ -173,14 +171,13 @@ impl Set {
         for t in textures {
             texturess.push(vec![t]);
         }
-        Self::new(pool, layout, uniform, buffer_manager, texturess)
+        Self::new(pool, layout, uniform, texturess)
     }
 
     pub fn new_deferred(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
         #[cfg(debug_mode)]
@@ -193,14 +190,13 @@ impl Set {
         for t in textures {
             texturess.push(vec![t]);
         }
-        Self::new(pool, layout, uniform, buffer_manager, texturess)
+        Self::new(pool, layout, uniform, texturess)
     }
 
     pub fn new_resolver(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        buffer_manager: &Arc<RwLock<BufferManager>>,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
         #[cfg(debug_mode)]
@@ -213,16 +209,16 @@ impl Set {
         for t in textures {
             texturess.push(vec![t]);
         }
-        Self::new(pool, layout, uniform, buffer_manager, texturess)
+        Self::new(pool, layout, uniform, texturess)
     }
 
     fn create_buffer_info(
         uniform: &DynamicBuffer,
-        buffer_manager: &Arc<RwLock<BufferManager>>,
     ) -> vk::VkDescriptorBufferInfo {
+        let buffer = vxresult!(uniform.get_buffer(0).read());
         let mut buff_info = vk::VkDescriptorBufferInfo::default();
-        buff_info.buffer = vxresult!(buffer_manager.read()).cpu_buffer.vk_data;
-        buff_info.range = vxresult!(uniform.buffers[0].0.read()).get_size() as vk::VkDeviceSize;
+        buff_info.buffer = buffer.get_data();
+        buff_info.range = buffer.get_size() as vk::VkDeviceSize;
         // for offset: it is dynamic uniform buffer, it will be fill later
         return buff_info;
     }
@@ -246,11 +242,10 @@ impl Set {
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        buffer_manager: &Arc<RwLock<BufferManager>>,
         texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
     ) -> Self {
         let vk_data = Self::allocate_set(&pool, &layout);
-        let buff_info = Self::create_buffer_info(uniform, buffer_manager);
+        let buff_info = Self::create_buffer_info(uniform);
         let mut infos = vec![vk::VkWriteDescriptorSet::default(); 1 + texturess.len()];
         infos[0].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         infos[0].dstSet = vk_data;
@@ -308,7 +303,6 @@ impl Drop for Set {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Manager {
-    buffer_manager: Arc<RwLock<BufferManager>>,
     pub buffer_only_set_layout: Arc<SetLayout>,
     pub gbuff_set_layout: Arc<SetLayout>,
     pub resolver_set_layout: Arc<SetLayout>,
@@ -321,7 +315,6 @@ pub(crate) struct Manager {
 
 impl Manager {
     pub fn new(
-        buffer_manager: &Arc<RwLock<BufferManager>>,
         logical_device: &Arc<LogicalDevice>,
         conf: &Configurations,
     ) -> Self {
@@ -333,9 +326,7 @@ impl Manager {
         let shadow_accumulator_directional_set_layout = Arc::new(
             SetLayout::new_shadow_accumulator_directional(logical_device.clone()),
         );
-        let buffer_manager = buffer_manager.clone();
         Manager {
-            buffer_manager,
             gbuff_set_layout,
             buffer_only_set_layout,
             resolver_set_layout,
@@ -354,7 +345,6 @@ impl Manager {
             self.pool.clone(),
             self.gbuff_set_layout.clone(),
             uniform,
-            &self.buffer_manager,
             textures,
         )
     }
@@ -364,7 +354,6 @@ impl Manager {
             self.pool.clone(),
             self.buffer_only_set_layout.clone(),
             uniform,
-            &self.buffer_manager,
         )
     }
 
@@ -377,7 +366,6 @@ impl Manager {
             self.pool.clone(),
             self.deferred_set_layout.clone(),
             uniform,
-            &self.buffer_manager,
             textures,
         )
     }
@@ -391,7 +379,6 @@ impl Manager {
             self.pool.clone(),
             self.resolver_set_layout.clone(),
             uniform,
-            &self.buffer_manager,
             textures,
         )
     }

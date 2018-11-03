@@ -1,20 +1,15 @@
 use super::super::core::asset::Manager as AssetManager;
-use super::super::core::types::Id;
-use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
+use super::command::Pool as CmdPool;
 use super::config::Configurations;
 use super::deferred::Deferred;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::model::Model;
-use super::object::Object;
 use super::resolver::Resolver;
-use super::scene::{Manager as SceneManager, Scene};
+use super::scene::{Manager as SceneManager};
 use super::shadower::Shadower;
-use super::sync::Semaphore;
 use num_cpus;
-use std::collections::BTreeMap;
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, Mutex, RwLock, Weak};
+use std::sync::{Arc, RwLock};
 use std::thread::{spawn, JoinHandle};
 
 #[cfg_attr(debug_mode, derive(Debug))]

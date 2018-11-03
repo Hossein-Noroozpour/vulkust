@@ -103,6 +103,15 @@ impl Shadower {
             cmds[i].bind_pipeline(&self.shadow_map_pipeline);
         }
     }
+
+    pub(super) fn begin_shadow_map_primary(&self, cmd: &mut CmdBuffer, map_index: usize) {
+        self.shadow_map_framebuffers[map_index].begin(cmd);
+    }
+
+    // pub(super) fn begin_accumulator_primary(&self, cmd: &mut CmdBuffer) {
+    //     self.shadow_map_framebuffers[map_index].begin(cmd);
+    // }
+
     // do thread shadow gathering
     // do main thread shadow accumulating
 }

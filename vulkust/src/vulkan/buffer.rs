@@ -42,6 +42,10 @@ impl Buffer {
     pub(crate) fn get_info_for_binding(&self) -> (vk::VkDeviceSize, vk::VkBuffer) {
         return (self.get_offset() as vk::VkDeviceSize, self.vk_data);
     }
+
+    pub(super) fn get_data(&self) -> vk::VkBuffer {
+        return self.vk_data;
+    }
 }
 
 impl Object for Buffer {

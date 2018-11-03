@@ -428,7 +428,7 @@ impl DefaultModel for Base {
         Base {
             obj_base: ObjectBase::new(),
             is_dynamic: true,
-            has_shadow_caster: false,
+            has_shadow_caster: true,
             has_transparent: false,
             occlusion_culling_radius: 0.0,
             is_visible: false,

@@ -108,7 +108,6 @@ impl Engine {
             swapchain.image_views.len() as isize,
         )));
         let descriptor_manager = Arc::new(RwLock::new(DescriptorManager::new(
-            &buffer_manager,
             &logical_device,
             conf,
         )));
@@ -176,14 +175,14 @@ impl Engine {
     }
 
     pub(crate) fn submit(&self, wait: &Semaphore, cmd: &CmdBuffer, signal: &Semaphore) {
-        self.submit_with_fence(wait, Some(cmd), signal, None);
+        self.submit_with_fence(&[wait.get_data()], &[cmd.get_data()], &[signal.get_data()], None);
     }
 
     pub(crate) fn submit_with_fence(
         &self,
-        wait: &Semaphore,
-        cmd: Option<&CmdBuffer>,
-        signal: &Semaphore,
+        waits: &[vk::VkSemaphore],
+        cmds: &[vk::VkCommandBuffer],
+        signals: &[vk::VkSemaphore],
         fence: Option<&Fence>,
     ) {
         let wait_stage_mask =
@@ -191,16 +190,14 @@ impl Engine {
         let mut submit_info = vk::VkSubmitInfo::default();
         submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submit_info.pWaitDstStageMask = &wait_stage_mask;
-        submit_info.pWaitSemaphores = &wait.vk_data;
-        submit_info.waitSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = &signal.vk_data;
-        submit_info.signalSemaphoreCount = 1;
-        if cmd.is_some() {
-            let cmd = vxunwrap!(cmd);
-            cmd.fill_submit_info(&mut submit_info);
-        }
-        let fence = if fence.is_some() {
-            vxunwrap!(fence).vk_data
+        submit_info.pWaitSemaphores = waits.as_ptr();
+        submit_info.waitSemaphoreCount = waits.len() as u32;
+        submit_info.pSignalSemaphores = signals.as_ptr();
+        submit_info.signalSemaphoreCount = signals.len() as u32;
+        submit_info.pCommandBuffers = cmds.as_ptr();
+        submit_info.commandBufferCount = cmds.len() as u32;
+        let fence = if let Some(fence) = fence {
+            fence.vk_data
         } else {
             null_mut()
         };
@@ -212,11 +209,32 @@ impl Engine {
         ));
     }
 
+    pub(crate) fn submit_multiple(
+        &self,
+        waits: &[&Semaphore],
+        cmds: &[&CmdBuffer],
+        signals: &[&Semaphore],
+    ) {
+        let mut waits_data = Vec::with_capacity(waits.len());
+        let mut signals_data = Vec::with_capacity(signals.len());
+        let mut cmds_data = Vec::with_capacity(cmds.len());
+        for w in waits {
+            waits_data.push(w.get_data());
+        }
+        for s in signals {
+            signals_data.push(s.get_data());
+        }
+        for c in cmds {
+            cmds_data.push(c.get_data());
+        }
+        self.submit_with_fence(&waits_data, &cmds_data, &signals_data, None);
+    }
+
     pub(crate) fn end(&self, wait: &Semaphore) {
         self.submit_with_fence(
-            wait,
-            None,
-            &self.render_semaphore,
+            &[wait.get_data()],
+            &[],
+            &[self.render_semaphore.get_data()],
             Some(&self.wait_fences[self.current_frame_number as usize]),
         );
 

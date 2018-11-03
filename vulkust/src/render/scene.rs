@@ -4,22 +4,19 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, TypeId as CoreTypeId};
 use super::super::system::file::File;
 use super::buffer::DynamicBuffer;
-use super::camera::{Camera, DefaultCamera, Manager as CameraManager, Uniform as CameraUniform};
+use super::camera::{Camera, Uniform as CameraUniform};
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::deferred::Deferred;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
-use super::font::Manager as FontManager;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::light::{DirectionalUniform, Light, Manager as LightManager, PointUniform};
-use super::mesh::Manager as MeshManager;
-use super::model::{Base as ModelBase, Manager as ModelManager, Model};
+use super::light::{DirectionalUniform, Light, PointUniform};
+use super::model::{Base as ModelBase, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
 use super::resolver::Resolver;
 use super::shadower::Shadower;
 use super::sync::Semaphore;
-use super::texture::Manager as TextureManager;
 use std::collections::BTreeMap;
 use std::io::BufReader;
 use std::mem::size_of;
@@ -37,7 +34,10 @@ pub enum TypeId {
 pub trait Scene: Object {
     fn add_camera(&mut self, Arc<RwLock<Camera>>);
     fn add_model(&mut self, Arc<RwLock<Model>>);
+    fn add_light(&mut self, Arc<RwLock<Light>>);
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
+    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
+    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
     fn update(&mut self, frame_number: usize);
     fn render_gbuffer_shadow_maps(
         &self,
@@ -49,8 +49,6 @@ pub trait Scene: Object {
     );
     fn update_shadow_makers(&self);
     fn render_shadow_maps(&self, usize, usize);
-    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
-    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
     fn clean(&mut self);
     fn submit(
         &mut self,
@@ -490,6 +488,20 @@ impl Scene for Base {
         self.models.insert(id, model);
     }
 
+    fn add_light(&mut self, light: Arc<RwLock<Light>>) {
+        let (id, is_shadow_maker) = {
+            let light = vxresult!(light.read());
+            let is_shadow_maker = light.to_shadow_maker().is_some();
+            let id = light.get_id();
+            (id, is_shadow_maker)
+        };
+        if is_shadow_maker {
+            self.shadow_maker_lights.insert(id, light);
+        } else {
+            self.lights.insert(id, light);
+        }
+    }
+
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
         return &self.active_camera;
     }
@@ -517,8 +529,8 @@ impl Scene for Base {
                         &mut self.uniform.directional_lights[last_directional_light_index],
                     );
                     last_directional_light_index += 1;
+                    continue;
                 }
-                continue;
             }
             {
                 if let Some(shm) = shm.to_point() {
@@ -622,7 +634,6 @@ impl Scene for Base {
                         &mut *model,
                         &m,
                         kernel_index,
-                        frame_number,
                     );
                 }
             }
@@ -706,6 +717,12 @@ impl Scene for Base {
             &frame_data.resolver,
             &frame_data.resolver_semaphore,
         );
+        let mut last_sem = frame_data.resolver_semaphore.clone();
+        for (_, sml) in &self.shadow_maker_lights {
+            let mut sml = vxresult!(sml.write());
+            let sml = vxunwrap!(sml.to_mut_shadow_maker());
+            last_sem = sml.submit_shadow_mapper(&last_sem, geng, shadower, frame_number);
+        }
         // deferred
         frame_data
             .deferred_secondary
@@ -726,7 +743,7 @@ impl Scene for Base {
         frame_data.deferred.end_render_pass();
         frame_data.deferred.end();
         geng.submit(
-            &frame_data.resolver_semaphore,
+            &last_sem,
             &frame_data.deferred,
             &frame_data.deferred_semaphore,
         );
@@ -810,6 +827,10 @@ impl Scene for Game {
 
     fn add_model(&mut self, model: Arc<RwLock<Model>>) {
         self.base.add_model(model);
+    }
+
+    fn add_light(&mut self, light: Arc<RwLock<Light>>) {
+        self.base.add_light(light);
     }
 
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
@@ -941,6 +962,10 @@ impl Scene for Ui {
 
     fn add_model(&mut self, model: Arc<RwLock<Model>>) {
         self.base.add_model(model);
+    }
+
+    fn add_light(&mut self, light: Arc<RwLock<Light>>) {
+        self.base.add_light(light);
     }
 
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {

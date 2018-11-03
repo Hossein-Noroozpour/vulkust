@@ -6,7 +6,7 @@ use vulkust::core::gesture;
 use vulkust::math;
 use vulkust::render::camera::{Camera, Orthographic, Perspective};
 use vulkust::render::engine::Engine as Renderer;
-use vulkust::render::material::Material;
+use vulkust::render::light::{Sun, Light};
 use vulkust::render::model::{Base as ModelBase, Model};
 use vulkust::render::object::Transferable;
 use vulkust::render::scene::{Game as GameScene, Scene, Ui as UiScene};
@@ -79,10 +79,12 @@ impl CoreAppTrait for MyGame {
             vxresult!(asset_manager.get_model_manager().write()).create::<ModelBase>();
         let mesh = vxresult!(asset_manager.get_mesh_manager().write()).create_cube(1.0);
         vxresult!(model.write()).add_mesh(mesh);
+        let sun = vxresult!(asset_manager.get_light_manager().write()).create::<Sun>();
         {
             let mut scn = vxresult!(scene.write());
             scn.add_camera(camera);
             scn.add_model(model);
+            scn.add_light(sun);
         }
         self.scene = Some(scene);
         let ui_scene: Arc<RwLock<UiScene>> =

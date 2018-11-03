@@ -26,6 +26,10 @@ impl Semaphore {
             vk_data: vk_data,
         }
     }
+
+    pub(super) fn get_data(&self) -> vk::VkSemaphore {
+        return self.vk_data;
+    } 
 }
 impl Drop for Semaphore {
     fn drop(&mut self) {

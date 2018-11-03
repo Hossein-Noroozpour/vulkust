@@ -23,7 +23,7 @@ impl Default for Configurations {
             max_models_count: 10,
             max_scenes_count: 3,
             max_shadow_maps_count: 6,
-            max_shadow_maker_kernek_render_data_count: 1,
+            max_shadow_maker_kernek_render_data_count: 6,
         }
     }
 }
