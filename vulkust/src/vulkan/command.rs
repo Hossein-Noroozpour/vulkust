@@ -98,11 +98,6 @@ impl Buffer {
         self.exe_cmds_with_data(&data);
     }
 
-    pub(crate) fn fill_submit_info(&self, subinfo: &mut vk::VkSubmitInfo) {
-        subinfo.pCommandBuffers = &self.vk_data;
-        subinfo.commandBufferCount = 1;
-    }
-
     pub(crate) fn begin(&mut self) {
         #[cfg(debug_mode)]
         {

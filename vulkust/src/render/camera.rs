@@ -461,7 +461,7 @@ pub struct Perspective {
     pub fovy: Real,
     pub tanx: Real,
     pub tany: Real,
-    lambda: Real, // (cos(fovy) + cos(fovx)) / 2 -no proof for it just my gut, let see what I get
+    lambda: Real, // (sin(fovy/2) + sin(fovx/2)) / 2 -no proof for it just my gut, let see what I get
 }
 
 const DEFAULT_FOVX: Real = 1.396263402; // 80 degree
@@ -498,7 +498,7 @@ impl Perspective {
             self.base.near,
             self.base.far,
         );
-        self.lambda = (self.fovx + self.fovy) * 0.5;
+        self.lambda = ((self.fovx * 0.5).sin() + (self.fovy * 0.5).sin()) * 0.5;
         self.base.update_view_projection();
         self.update_frustum_planes();
     }

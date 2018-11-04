@@ -162,8 +162,6 @@ impl Engine {
         let eng = engine.clone();
         let eng = vxresult!(eng.read());
         let scene_manager = asset_manager.get_scene_manager().clone();
-        let scnmgr = scene_manager.clone();
-        let scnmgr = vxresult!(scnmgr.read());
         let g_buffer_filler = GBufferFiller::new(&eng);
         let resolver = Resolver::new(
             &eng,

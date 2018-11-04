@@ -147,9 +147,10 @@ impl SunShadowMakerKernelData {
         let mut frames_data = Vec::with_capacity(frames_count);
         let mut render_data = Vec::with_capacity(max_render_data_count);
         for _ in 0..max_render_data_count {
+            let uniform_buffer = buffer_manager
+                .create_dynamic_buffer(size_of::<math::Matrix4<Real>>() as isize);
             render_data.push(SunShadowMapperRenderData {
-                uniform_buffer: buffer_manager
-                    .create_dynamic_buffer(size_of::<math::Matrix4<Real>>() as isize),
+                uniform_buffer,
                 model: None,
                 cascade_index: 0,
             });
@@ -273,6 +274,7 @@ impl SunShadowMakerKernelData {
             let model = vxresult!(model.read());
             let mvp = &self.cascade_cameras[ci].vp * model.get_uniform().get_model();
             rd.uniform_buffer.update(&mvp, frame_number);
+            // vxloge!("{:?}", mvp);
             let cmd = &mut self.frames_data[frame_number].cascades_cmds[ci];
             cmd.bind_shadow_mapper_light_descriptor(
                 &self.descriptor_set,
@@ -419,21 +421,39 @@ impl Light for Sun {
             }
         }
         for ccd in &mut self.cascade_cameras {
-            let mmx = (ccd.max_x - ccd.min_x) * 0.02;
-            let mmy = (ccd.max_y - ccd.min_y) * 0.02;
-            let mz = ccd.max_z - ccd.min_z;
-            let mmz = mz * 0.02;
+            let horz = (ccd.max_x - ccd.min_x) * 0.52;
+            let vert = (ccd.max_y - ccd.min_y) * 0.52;
+            let depth = ccd.max_z - ccd.min_z;
+            let near = depth * 0.01;
+            let far = depth * 1.03;
             let p = math::ortho(
-                ccd.min_x - mmx,
-                ccd.max_x + mmx,
-                ccd.min_y - mmy,
-                ccd.min_y + mmy,
-                mmz,
-                mz + mmz,
+                -horz,
+                horz,
+                -vert,
+                vert,
+                near,
+                far,
             );
             let t =
-                math::Matrix4::from_translation(math::Vector3::new(0.0, 0.0, -(ccd.max_z + mmz)));
-            ccd.vp = p * self.zero_located_view * t;
+                math::Matrix4::from_translation(-math::Vector3::new(
+                    (ccd.max_x + ccd.min_x) * 0.5,
+                    (ccd.max_y + ccd.min_y) * 0.5,
+                    ccd.max_z + near * 2.0));
+            ccd.vp = math::Matrix4::new(
+                    1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
+            ) * p * self.zero_located_view * t;
+            ccd.max_x = F32MIN;
+            ccd.max_seen_x = F32MIN;
+            ccd.min_x = F32MAX;
+            ccd.min_seen_x = F32MAX;
+            ccd.max_y = F32MIN;
+            ccd.max_seen_y = F32MIN;
+            ccd.min_y = F32MAX;
+            ccd.min_seen_y = F32MAX;
+            ccd.max_z = F32MIN;
+            ccd.max_seen_z = F32MIN;
+            ccd.min_z = F32MAX;
+            ccd.min_seen_z = F32MAX;
         }
     }
 }

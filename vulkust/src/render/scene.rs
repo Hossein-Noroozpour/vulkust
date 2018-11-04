@@ -684,7 +684,7 @@ impl Scene for Base {
         let frame_number = geng.get_frame_number();
         let frames_count = geng.get_frames_count();
         let frames_data_len = self.frames_data.len();
-        for i in frames_data_len..frames_count {
+        for _ in frames_data_len..frames_count {
             self.frames_data.push(BaseFramedata::new(geng, cmd_pool));
         }
         let frame_data = &mut self.frames_data[frame_number];
