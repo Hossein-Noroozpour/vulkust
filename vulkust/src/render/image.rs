@@ -21,6 +21,8 @@ pub enum Format {
     RgbaByte,
     DepthFloat,
     Float,
+    FlagBits32,
+    FlagBits64,
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]

@@ -8,11 +8,13 @@
 layout (location = 0) in vec2 uv;
 
 layout (location = 0) out float black;
+layout (location = 1) out uvec2 flagbits;
 
 layout (set = 0, binding = 0) uniform LightUBO {
 	mat4 view_projections[MAX_DIRECTIONAL_CASCADES_COUNT];
     vec4 direction_strength;
     int cascades_count;
+    uint light_index;
 } light_ubo;
 
 layout (set = 0, binding = 1) uniform sampler2D position;
@@ -40,6 +42,11 @@ void main() {
         bias = clamp(0.005 * bias, 0.0, 0.02);
         if(dist + bias < ipos.z) {
             black = light_ubo.direction_strength.w;
+            if (light_ubo.light_index > 32) {
+                flagbits = uvec2(0, 1 << (light_ubo.light_index - 32));
+            } else {
+                flagbits = uvec2(1 << light_ubo.light_index, 0);
+            }
             return;
         }
     }

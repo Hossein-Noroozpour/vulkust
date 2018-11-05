@@ -11,6 +11,7 @@ layout (set = 0, binding = 0) uniform LightUBO {
 	mat4 view_projections[MAX_DIRECTIONAL_CASCADES_COUNT];
     vec4 direction_strength;
     int cascades_count;
+    uint light_index;
 } light_ubo;
 
 out gl_PerVertex {

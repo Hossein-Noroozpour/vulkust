@@ -8,7 +8,8 @@ use super::render_pass::RenderPass;
 use std::sync::Arc;
 
 const SHADOW_MAP_FMT: ImageFormat = ImageFormat::DepthFloat;
-const SHADOW_ACCUMULATOR_FMT: ImageFormat = ImageFormat::Float;
+const SHADOW_ACCUMULATOR_STRENGTH_FMT: ImageFormat = ImageFormat::Float;
+const SHADOW_ACCUMULATOR_FLAGBITS_FMT: ImageFormat = ImageFormat::FlagBits64;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Shadower {
@@ -18,7 +19,8 @@ pub struct Shadower {
     shadow_map_framebuffers: Vec<Arc<Framebuffer>>,
     shadow_map_pipeline: Arc<Pipeline>,
     //---------------------------------------
-    black_accumulator_buffer: Arc<ImageView>,
+    black_accumulator_strength_buffer: Arc<ImageView>,
+    black_accumulator_flagbits_buffer: Arc<ImageView>,
     black_accumulator_render_pass: Arc<RenderPass>,
     black_accumulator_framebuffer: Arc<Framebuffer>,
     clear_black_accumulator_render_pass: Arc<RenderPass>,
@@ -27,7 +29,7 @@ pub struct Shadower {
 
 impl Shadower {
     pub(super) fn new(geng: &GraphicApiEngine, conf: &Configurations) -> Self {
-        let mut shadow_map_buffers = Vec::new();
+        let mut shadow_map_buffers = Vec::with_capacity(conf.max_shadow_maps_count as usize);
         let dev = geng.get_device();
         let memmgr = geng.get_memory_manager();
         for _ in 0..conf.max_shadow_maps_count {
@@ -41,21 +43,28 @@ impl Shadower {
                 conf.shadow_map_aspect,
             )));
         }
-        shadow_map_buffers.shrink_to_fit();
-        let black_accumulator_buffer = Arc::new(ImageView::new_surface_attachment(
+        let black_accumulator_strength_buffer = Arc::new(ImageView::new_surface_attachment(
             dev.clone(),
             memmgr,
-            SHADOW_ACCUMULATOR_FMT,
+            SHADOW_ACCUMULATOR_STRENGTH_FMT,
             1,
             AttachmentType::ColorDisplay,
         ));
+        let black_accumulator_flagbits_buffer = Arc::new(ImageView::new_surface_attachment(
+            dev.clone(),
+            memmgr,
+            SHADOW_ACCUMULATOR_FLAGBITS_FMT,
+            1,
+            AttachmentType::ColorDisplay,
+        ));
+        let black_accumulator_buffers = vec![black_accumulator_strength_buffer.clone(), black_accumulator_flagbits_buffer.clone()];
         let clear_black_accumulator_render_pass = Arc::new(RenderPass::new(
-            vec![black_accumulator_buffer.clone()],
+            black_accumulator_buffers.clone(),
             true,
             false,
         ));
         let black_accumulator_render_pass = Arc::new(RenderPass::new(
-            vec![black_accumulator_buffer.clone()],
+            black_accumulator_buffers.clone(),
             false,
             true,
         ));
@@ -65,11 +74,11 @@ impl Shadower {
             true,
         ));
         let clear_black_accumulator_framebuffer = Arc::new(Framebuffer::new(
-            vec![black_accumulator_buffer.clone()],
+            black_accumulator_buffers.clone(),
             black_accumulator_render_pass.clone(),
         ));
         let black_accumulator_framebuffer = Arc::new(Framebuffer::new(
-            vec![black_accumulator_buffer.clone()],
+            black_accumulator_buffers.clone(),
             clear_black_accumulator_render_pass.clone(),
         ));
         let mut shadow_map_framebuffers = Vec::new();
@@ -88,7 +97,8 @@ impl Shadower {
             shadow_map_framebuffers,
             shadow_map_pipeline,
             //---------------------------------------
-            black_accumulator_buffer,
+            black_accumulator_strength_buffer,
+            black_accumulator_flagbits_buffer,
             black_accumulator_render_pass,
             black_accumulator_framebuffer,
             clear_black_accumulator_render_pass,

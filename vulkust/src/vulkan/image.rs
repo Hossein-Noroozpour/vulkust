@@ -14,6 +14,7 @@ pub(super) fn convert_format(f: Format) -> vk::VkFormat {
         Format::RgbaFloat => return vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT,
         Format::DepthFloat => return vk::VkFormat::VK_FORMAT_D32_SFLOAT,
         Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
+        Format::FlagBits64 => return vk::VkFormat::VK_FORMAT_R32G32_UINT,
         _ => vxunexpected!(),
     }
 }
