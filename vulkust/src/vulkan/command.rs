@@ -4,7 +4,7 @@ use super::descriptor::Set as DescriptorSet;
 use super::device::logical::Logical as LogicalDevice;
 use super::framebuffer::Framebuffer;
 use super::pipeline::Pipeline;
-use super::sync::Fence;
+// use super::sync::Fence;
 use super::vulkan as vk;
 use std::default::Default;
 use std::ptr::null;
@@ -185,27 +185,27 @@ impl Buffer {
         }
     }
 
-    pub(crate) fn reset(&mut self) {
-        unsafe {
-            vk::vkResetCommandBuffer(self.vk_data, 0);
-        }
-    }
+    // pub(crate) fn reset(&mut self) {
+    //     unsafe {
+    //         vk::vkResetCommandBuffer(self.vk_data, 0);
+    //     }
+    // }
 
-    pub(crate) fn flush(&mut self) {
-        let fence = Fence::new(self.pool.logical_device.clone());
-        vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
-        let mut submit_info = vk::VkSubmitInfo::default();
-        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &self.vk_data;
-        vulkan_check!(vk::vkQueueSubmit(
-            self.pool.logical_device.vk_graphic_queue,
-            1,
-            &submit_info,
-            fence.vk_data,
-        ));
-        fence.wait();
-    }
+    // pub(crate) fn flush(&mut self) {
+    //     let fence = Fence::new(self.pool.logical_device.clone());
+    //     vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
+    //     let mut submit_info = vk::VkSubmitInfo::default();
+    //     submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    //     submit_info.commandBufferCount = 1;
+    //     submit_info.pCommandBuffers = &self.vk_data;
+    //     vulkan_check!(vk::vkQueueSubmit(
+    //         self.pool.logical_device.vk_graphic_queue,
+    //         1,
+    //         &submit_info,
+    //         fence.vk_data,
+    //     ));
+    //     fence.wait();
+    // }
 
     pub(crate) fn end_render_pass(&mut self) {
         unsafe {

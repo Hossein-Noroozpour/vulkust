@@ -10,7 +10,7 @@ use super::framebuffer::Framebuffer;
 use super::image::{convert_format, View as ImageView};
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
-use super::pipeline::{Manager as PipelineManager, Pipeline};
+use super::pipeline::Manager as PipelineManager;
 use super::render_pass::RenderPass;
 use super::sampler::Sampler;
 use super::surface::Surface;
@@ -251,9 +251,9 @@ impl Engine {
         ));
     }
 
-    pub(crate) fn terminate(&mut self) {
-        self.logical_device.wait_idle();
-    }
+    // pub(crate) fn terminate(&mut self) {
+    //     self.logical_device.wait_idle();
+    // }
 
     pub(crate) fn create_texture_2d_with_pixels(
         &self,

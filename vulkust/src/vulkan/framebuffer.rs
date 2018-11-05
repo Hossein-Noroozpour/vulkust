@@ -112,9 +112,9 @@ impl Framebuffer {
         cmd_buffer.begin_render_pass_with_info(render_pass_begin_info);
     }
 
-    pub(crate) fn get_buffers(&self) -> &Vec<Arc<ImageView>> {
-        return &self.buffers;
-    }
+    // pub(crate) fn get_buffers(&self) -> &Vec<Arc<ImageView>> {
+    //     return &self.buffers;
+    // }
 
     pub(crate) fn get_data(&self) -> vk::VkFramebuffer {
         return self.vk_data;

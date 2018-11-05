@@ -78,13 +78,13 @@ impl Material {
         vxunimplemented!();
     }
 
-    pub(crate) fn get_uniform_buffer(&self) -> &DynamicBuffer {
-        return &self.uniform_buffer;
-    }
+    // pub(crate) fn get_uniform_buffer(&self) -> &DynamicBuffer {
+    //     return &self.uniform_buffer;
+    // }
 
-    pub(crate) fn get_descriptor_set(&self) -> &Arc<DescriptorSet> {
-        return &self.descriptor_set;
-    }
+    // pub(crate) fn get_descriptor_set(&self) -> &Arc<DescriptorSet> {
+    //     return &self.descriptor_set;
+    // }
 
     pub(crate) fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader) -> Self {
         let gapi_engine = vxresult!(eng.get_gapi_engine().read());

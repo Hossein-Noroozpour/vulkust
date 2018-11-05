@@ -6,15 +6,12 @@ use super::super::render::mesh::Manager as MeshManager;
 use super::super::render::model::Manager as ModelManager;
 use super::super::render::scene::Manager as SceneManager;
 use super::super::render::texture::Manager as TextureManager;
-use super::super::system::file::File;
 use super::config::Configurations;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::object::NEXT_ID;
-use super::types::{Id, Offset, Size, TypeId};
-use std::io::BufReader;
-use std::mem::size_of;
+use super::types::Id;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex, RwLock, Weak};
+use std::sync::{Arc, RwLock, Weak};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {

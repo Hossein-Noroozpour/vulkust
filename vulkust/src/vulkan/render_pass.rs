@@ -148,9 +148,9 @@ impl RenderPass {
         return &self.colors;
     }
 
-    pub(crate) fn get_depth_attachment(&self) -> Option<&Arc<ImageView>> {
-        return self.depth.as_ref();
-    }
+    // pub(crate) fn get_depth_attachment(&self) -> Option<&Arc<ImageView>> {
+    //     return self.depth.as_ref();
+    // }
 
     pub(crate) fn get_data(&self) -> vk::VkRenderPass {
         return self.vk_data;

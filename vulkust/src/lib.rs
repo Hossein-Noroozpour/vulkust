@@ -2,7 +2,6 @@
 #![feature(integer_atomics)]
 #![feature(stmt_expr_attributes)]
 #![feature(duration_as_u128)]
-#![feature(min_const_fn)]
 #![feature(concat_idents)]
 
 pub extern crate cgmath as math;

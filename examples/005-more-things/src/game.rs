@@ -6,7 +6,7 @@ use vulkust::core::gesture;
 use vulkust::math;
 use vulkust::render::camera::{Camera, Orthographic, Perspective};
 use vulkust::render::engine::Engine as Renderer;
-use vulkust::render::light::{Sun, Light};
+use vulkust::render::light::Sun;
 use vulkust::render::model::{Base as ModelBase, Model};
 use vulkust::render::object::Transferable;
 use vulkust::render::scene::{Game as GameScene, Scene, Ui as UiScene};

@@ -31,6 +31,7 @@ pub struct Shadower {
     shadow_accumulator_strength_buffer: Arc<ImageView>,
     shadow_accumulator_flagbits_buffer: Arc<ImageView>,
     shadow_accumulator_directional_pipeline: Arc<Pipeline>,
+    shadow_accumulator_directional_descriptor_set: DescriptorSet,
     shadow_accumulator_render_pass: Arc<RenderPass>,
     shadow_accumulator_framebuffer: Arc<Framebuffer>,
     clear_shadow_accumulator_render_pass: Arc<RenderPass>,
@@ -111,7 +112,8 @@ impl Shadower {
             let mut desmgr = vxresult!(geng.get_descriptor_manager().write());
             let restex = resolver.get_output_textures();
             (desmgr.create_buffer_only_set(&shadow_mapper_uniform_buffer), 
-            desmgr.create_shadow_accumulator_directional_set(&shadow_mapper_uniform_buffer,
+            desmgr.create_shadow_accumulator_directional_set(
+                &shadow_accumulator_directional_uniform_buffer,
                 vec![vec![restex[0].clone()], vec![restex[1].clone()], shadow_map_textures]))
         };
         shadow_map_framebuffers.shrink_to_fit();
@@ -129,6 +131,7 @@ impl Shadower {
             shadow_accumulator_strength_buffer,
             shadow_accumulator_flagbits_buffer,
             shadow_accumulator_directional_pipeline,
+            shadow_accumulator_directional_descriptor_set,
             shadow_accumulator_render_pass,
             shadow_accumulator_framebuffer,
             clear_shadow_accumulator_render_pass,
