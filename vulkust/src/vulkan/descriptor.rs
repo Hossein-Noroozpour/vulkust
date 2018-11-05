@@ -1,13 +1,11 @@
 use super::super::core::allocate::Object as AlcObject;
-use super::super::render::config::Configurations;
+use super::super::render::config::{Configurations, MAX_DIRECTIONAL_CASCADES_COUNT};
 use super::super::render::texture::Texture;
 use super::buffer::DynamicBuffer;
 use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
-
-const MAX_DIRECTIONAL_CASCADES_COUNT: u32 = 6;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Pool {
@@ -17,12 +15,12 @@ pub struct Pool {
 
 impl Pool {
     pub fn new(logical_device: Arc<LogicalDevice>, conf: &Configurations) -> Self {
-        let buffers_count = conf.max_meshes_count + conf.max_models_count + conf.max_scenes_count;
+        let buffers_count = conf.get_max_meshes_count() + conf.get_max_models_count() + conf.get_max_scenes_count();
         let mut type_counts = [vk::VkDescriptorPoolSize::default(); 2];
         type_counts[0].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         type_counts[0].descriptorCount = buffers_count as u32;
         type_counts[1].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        type_counts[1].descriptorCount = conf.max_textures_count as u32;
+        type_counts[1].descriptorCount = conf.get_max_textures_count() as u32;
         let mut descriptor_pool_info = vk::VkDescriptorPoolCreateInfo::default();
         descriptor_pool_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -212,6 +210,24 @@ impl Set {
         Self::new(pool, layout, uniform, texturess)
     }
 
+    pub fn new_shadow_accumulator_directional(
+        pool: Arc<Pool>,
+        layout: Arc<SetLayout>,
+        uniform: &DynamicBuffer,
+        texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
+    ) -> Self {
+        #[cfg(debug_mode)]
+        {
+            if texturess.len() != 3 {
+                vxlogf!("For shadow accumulator directional descriptor you need 3 textures.");
+            }
+            if texturess[0].len() != 1 || texturess[1].len() != 1 || texturess[2].len() < 1 || texturess[2].len() > MAX_DIRECTIONAL_CASCADES_COUNT as usize {
+                vxlogf!("Wrong number of textures for shadow accumulator directional descriptor.");
+            }
+        }
+        Self::new(pool, layout, uniform, texturess)
+    }
+
     fn create_buffer_info(
         uniform: &DynamicBuffer,
     ) -> vk::VkDescriptorBufferInfo {
@@ -314,7 +330,7 @@ pub(crate) struct Manager {
 // todo it can in future cache the sets based on their buffer id and size and texture ids and samplers
 
 impl Manager {
-    pub fn new(
+    pub(crate) fn new(
         logical_device: &Arc<LogicalDevice>,
         conf: &Configurations,
     ) -> Self {
@@ -336,7 +352,7 @@ impl Manager {
         }
     }
 
-    pub fn create_gbuff_set(
+    pub(crate) fn create_gbuff_set(
         &mut self,
         uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
@@ -349,7 +365,7 @@ impl Manager {
         )
     }
 
-    pub fn create_buffer_only_set(&mut self, uniform: &DynamicBuffer) -> Set {
+    pub(crate) fn create_buffer_only_set(&mut self, uniform: &DynamicBuffer) -> Set {
         Set::new_buffer_only(
             self.pool.clone(),
             self.buffer_only_set_layout.clone(),
@@ -357,7 +373,7 @@ impl Manager {
         )
     }
 
-    pub fn create_deferred_set(
+    pub(crate) fn create_deferred_set(
         &mut self,
         uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
@@ -370,7 +386,7 @@ impl Manager {
         )
     }
 
-    pub fn create_resolver_set(
+    pub(crate) fn create_resolver_set(
         &mut self,
         uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
@@ -380,6 +396,19 @@ impl Manager {
             self.resolver_set_layout.clone(),
             uniform,
             textures,
+        )
+    }
+
+    pub(crate) fn create_shadow_accumulator_directional_set(
+        &mut self,
+        uniform: &DynamicBuffer,
+        texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
+    ) -> Set {
+        Set::new_shadow_accumulator_directional(
+            self.pool.clone(),
+            self.shadow_accumulator_directional_set_layout.clone(),
+            uniform,
+            texturess,
         )
     }
 }

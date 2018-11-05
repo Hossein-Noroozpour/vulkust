@@ -1,15 +1,17 @@
+pub const MAX_DIRECTIONAL_CASCADES_COUNT: u32 = 6;
+
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Configurations {
-    pub(crate) enable_anistropic_texture: bool,
-    pub(crate) max_meshes_count: u64,
-    pub(crate) max_models_count: u64,
-    pub(crate) max_scenes_count: u64,
-    pub(crate) max_textures_count: u64,
-    pub(crate) max_shadow_maps_count: u32,
+    enable_anistropic_texture: bool,
+    max_meshes_count: u64,
+    max_models_count: u64,
+    max_scenes_count: u64,
+    max_textures_count: u64,
+    max_shadow_maps_count: u32,
     cascaded_shadows_count: u8,
-    pub(crate) shadow_map_aspect: u32,
-    pub(crate) max_shadow_maker_kernek_render_data_count: u64,
+    shadow_map_aspect: u32,
+    max_shadow_maker_kernek_render_data_count: u64,
 }
 
 impl Default for Configurations {
@@ -18,7 +20,7 @@ impl Default for Configurations {
             cascaded_shadows_count: 4,
             enable_anistropic_texture: true,
             shadow_map_aspect: 1024,
-            max_textures_count: 30,
+            max_textures_count: 40,
             max_meshes_count: 20,
             max_models_count: 10,
             max_scenes_count: 3,

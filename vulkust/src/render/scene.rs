@@ -38,7 +38,7 @@ pub trait Scene: Object {
     fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
     fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
-    fn update(&mut self, frame_number: usize);
+    fn update(&mut self, usize);
     fn render_gbuffer_shadow_maps(
         &self,
         &GraphicApiEngine,
@@ -48,7 +48,7 @@ pub trait Scene: Object {
         usize,
     );
     fn update_shadow_makers(&self);
-    fn render_shadow_maps(&self, usize, usize);
+    fn render_shadow_maps(&self, &Shadower, usize, usize);
     fn clean(&mut self);
     fn submit(
         &mut self,
@@ -641,10 +641,10 @@ impl Scene for Base {
         cmd.end();
     }
 
-    fn render_shadow_maps(&self, kernel_index: usize, frame_number: usize) {
+    fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
         for (_, shm) in &self.shadow_maker_lights {
             vxunwrap!(vxresult!(shm.read()).to_shadow_maker())
-                .render_shadow_mapper(kernel_index, frame_number);
+                .render_shadow_mapper(shadower, kernel_index, frame_number);
         }
     }
 
@@ -862,8 +862,8 @@ impl Scene for Game {
         self.base.update_shadow_makers();
     }
 
-    fn render_shadow_maps(&self, kernel_index: usize, frame_number: usize) {
-        self.base.render_shadow_maps(kernel_index, frame_number);
+    fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
+        self.base.render_shadow_maps(shadower, kernel_index, frame_number);
     }
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
@@ -997,8 +997,8 @@ impl Scene for Ui {
         self.base.update_shadow_makers();
     }
 
-    fn render_shadow_maps(&self, kernel_index: usize, frame_number: usize) {
-        self.base.render_shadow_maps(kernel_index, frame_number);
+    fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
+        self.base.render_shadow_maps(shadower, kernel_index, frame_number);
     }
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {

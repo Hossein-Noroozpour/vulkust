@@ -267,19 +267,6 @@ pub struct View {
 }
 
 impl View {
-    pub(crate) fn new_depth_stencil(
-        logical_device: Arc<LogicalDevice>,
-        memory_mgr: &Arc<RwLock<MemeoryManager>>,
-    ) -> Self {
-        Self::new_surface_attachment(
-            logical_device,
-            memory_mgr,
-            Format::DepthFloat,
-            1,
-            AttachmentType::DepthStencilDisplay,
-        )
-    }
-
     pub(crate) fn new_with_vk_image(
         logical_device: Arc<LogicalDevice>,
         vk_image: vk::VkImage,
@@ -355,7 +342,6 @@ impl View {
     ) -> Self {
         let surface_caps = logical_device.physical_device.surface_caps;
         return Self::new_attachment(
-            logical_device,
             memory_mgr,
             format,
             samples,
@@ -366,7 +352,6 @@ impl View {
     }
 
     pub(crate) fn new_attachment(
-        logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
         format: Format,
         samples: u8,
@@ -396,11 +381,11 @@ impl View {
             AttachmentType::ColorDisplay => {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
             }
-            AttachmentType::DepthGBuffer => {
+            AttachmentType::DepthGBuffer | AttachmentType::DepthShadowBuffer => {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
                     | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
             }
-            AttachmentType::DepthStencilDisplay | AttachmentType::DepthShadowBuffer => {
+            AttachmentType::DepthStencilDisplay => {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
             }
         };

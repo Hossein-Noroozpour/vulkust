@@ -40,6 +40,7 @@ pub struct Resolver {
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
     textures: Vec<Arc<RwLock<Texture>>>,
+    output_textures: Vec<Arc<RwLock<Texture>>>,
     descriptor_set: Arc<DescriptorSet>,
     pipeline: Arc<Pipeline>,
 }
@@ -62,22 +63,23 @@ impl Resolver {
         let sampler = eng.get_linear_repeat_sampler();
         let g_buffers = g_buffer_filler.get_buffers();
 
-        let mut buffers = Vec::new();
-        let mut textures = Vec::new();
+        let mut buffers = Vec::with_capacity(g_buffers.len());
+        let mut textures = Vec::with_capacity(g_buffers.len());
+        let mut output_textures = Vec::with_capacity(g_buffers.len());
         for v in g_buffers {
             let img = vxresult!(v.get_image().read());
             let format = convert_format(img.get_format());
-            buffers.push(Arc::new(ImageView::new_surface_attachment(
+            let buffer = Arc::new(ImageView::new_surface_attachment(
                 dev.clone(),
                 memmgr,
                 format,
                 1,
                 AttachmentType::ResolverBuffer,
-            )));
+            ));
+            output_textures.push(texture_manager.create_2d_with_view_sampler(buffer.clone(), sampler.clone()));
+            buffers.push(buffer);
             textures.push(texture_manager.create_2d_with_view_sampler(v.clone(), sampler.clone()));
         }
-        textures.shrink_to_fit();
-        buffers.shrink_to_fit();
 
         let render_pass = Arc::new(RenderPass::new(buffers.clone(), true, true));
         let framebuffer = Arc::new(Framebuffer::new(buffers.clone(), render_pass.clone()));
@@ -99,6 +101,7 @@ impl Resolver {
             uniform_buffer,
             descriptor_set,
             textures,
+            output_textures,
             pipeline,
         }
     }
@@ -126,7 +129,11 @@ impl Resolver {
         return &self.framebuffer;
     }
 
-    pub(super) fn get_buffers(&self) -> &Vec<Arc<ImageView>> {
+    pub(super) fn _get_buffers(&self) -> &Vec<Arc<ImageView>> {
         return &self.buffers;
+    }
+
+    pub(super) fn get_output_textures(&self) -> &Vec<Arc<RwLock<Texture>>> {
+        return &self.output_textures;
     }
 }

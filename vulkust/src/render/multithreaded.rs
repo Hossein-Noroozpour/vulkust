@@ -130,12 +130,13 @@ impl Renderer {
 
     pub fn shadow(&mut self) {
         let frame_number = vxresult!(self.g_engine.read()).get_frame_number();
+        let shadower = vxresult!(self.shadower.read());
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
                 let scene = vxresult!(scene.read());
-                scene.render_shadow_maps(self.index, frame_number);
+                scene.render_shadow_maps(&*shadower, self.index, frame_number);
             }
         }
     }
@@ -162,20 +163,21 @@ impl Engine {
         let eng = engine.clone();
         let eng = vxresult!(eng.read());
         let scene_manager = asset_manager.get_scene_manager().clone();
+        let mut texmgr = vxresult!(asset_manager.get_texture_manager().write());
         let g_buffer_filler = GBufferFiller::new(&eng);
         let resolver = Resolver::new(
             &eng,
             &g_buffer_filler,
-            &mut *vxresult!(asset_manager.get_texture_manager().write()),
+            &mut *texmgr,
         );
+        let shadower = Shadower::new(&eng, &resolver, config, &mut *texmgr);
         let deferred = Arc::new(RwLock::new(Deferred::new(
             &eng,
-            &mut *vxresult!(asset_manager.get_texture_manager().write()),
             &resolver,
         )));
         let resolver = Arc::new(RwLock::new(resolver));
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
-        let shadower = Arc::new(RwLock::new(Shadower::new(&eng, config)));
+        let shadower = Arc::new(RwLock::new(shadower));
         let kernels_count = num_cpus::get();
         let mut kernels = Vec::with_capacity(kernels_count);
         for ki in 0..kernels_count {

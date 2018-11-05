@@ -4,13 +4,13 @@ use super::super::core::types::{Id, Real};
 use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::camera::Orthographic;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
-use super::descriptor::{Manager as DescriptorManager, Set as DescriptorSet};
 use super::engine::Engine;
 use super::gapi::GraphicApiEngine;
 use super::model::Model;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::shadower::Shadower;
 use super::sync::Semaphore;
+use super::config::MAX_DIRECTIONAL_CASCADES_COUNT;
 use std::collections::BTreeMap;
 use std::f32::MAX as F32MAX;
 use std::f32::MIN as F32MIN;
@@ -40,7 +40,7 @@ pub trait Light: Object {
 pub trait ShadowMaker: Light {
     fn shadow(&self, &mut Model, &Arc<RwLock<Model>>, usize);
     fn begin_secondary_commands(&self, &GraphicApiEngine, &Arc<CmdPool>, &Shadower, usize, usize);
-    fn render_shadow_mapper(&self, usize, usize);
+    fn render_shadow_mapper(&self, &Shadower, usize, usize);
     fn submit_shadow_mapper(&mut self, &Semaphore, &GraphicApiEngine, &Shadower, usize) -> Arc<Semaphore>;
 }
 
@@ -130,7 +130,6 @@ struct SunShadowMakerKernelData {
     cascade_cameras: Vec<SunCascadeCamera>,
     frames_data: Vec<SunShadowMakerKernelFrameData>,
     render_data: Vec<SunShadowMapperRenderData>, // per model and cascade
-    descriptor_set: DescriptorSet,
     last_render_data_index: usize,
 }
 
@@ -141,7 +140,6 @@ impl SunShadowMakerKernelData {
         frames_count: usize,
         max_render_data_count: usize, // model-cascade
         buffer_manager: &mut BufferManager,
-        descriptor_manager: &mut DescriptorManager,
     ) -> Self {
         let cascade_cameras = vec![SunCascadeCamera::new(); cascades_count];
         let mut frames_data = Vec::with_capacity(frames_count);
@@ -155,8 +153,6 @@ impl SunShadowMakerKernelData {
                 cascade_index: 0,
             });
         }
-        let descriptor_set =
-            descriptor_manager.create_buffer_only_set(&render_data[0].uniform_buffer);
         for _ in 0..frames_count {
             frames_data.push(SunShadowMakerKernelFrameData {
                 cascades_cmds: Vec::with_capacity(cascades_count),
@@ -167,7 +163,6 @@ impl SunShadowMakerKernelData {
             cascade_cameras,
             frames_data,
             render_data,
-            descriptor_set,
             last_render_data_index: 0,
         }
     }
@@ -262,7 +257,7 @@ impl SunShadowMakerKernelData {
         self.last_render_data_index = 0;
     }
 
-    fn render_shadow_mapper(&mut self, frame_number: usize) {
+    fn render_shadow_mapper(&mut self, shadower: &Shadower, frame_number: usize) {
         for i in 0..self.last_render_data_index {
             let rd = &mut self.render_data[i];
             let ci = rd.cascade_index;
@@ -277,7 +272,7 @@ impl SunShadowMakerKernelData {
             // vxloge!("{:?}", mvp);
             let cmd = &mut self.frames_data[frame_number].cascades_cmds[ci];
             cmd.bind_shadow_mapper_light_descriptor(
-                &self.descriptor_set,
+                shadower.get_shadow_map_descriptor_set(),
                 &*vxresult!(rd.uniform_buffer.get_buffer(frame_number).read()),
             );
             model.render_shadow(cmd, frame_number);
@@ -486,10 +481,10 @@ impl ShadowMaker for Sun {
         );
     }
 
-    fn render_shadow_mapper(&self, kernel_index: usize, frame_number: usize) {
+    fn render_shadow_mapper(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
         let mut kernel_data = vxresult!(self.kernels_data[kernel_index].lock());
         kernel_data.update_camera_view_projection_matrices(&self.cascade_cameras);
-        kernel_data.render_shadow_mapper(frame_number);
+        kernel_data.render_shadow_mapper(shadower, frame_number);
     }
 
     fn submit_shadow_mapper(&mut self, sem: &Semaphore, geng: &GraphicApiEngine, shadower: &Shadower, frame_number: usize) -> Arc<Semaphore> {
@@ -630,7 +625,6 @@ impl DefaultLighting for Sun {
         );
         let mut kernels_data = Vec::with_capacity(num_cpus);
         let mut buffer_manager = vxresult!(geng.get_buffer_manager().write());
-        let mut descriptor_manager = vxresult!(geng.get_descriptor_manager().write());
         for _ in 0..num_cpus {
             let kernel_data = Arc::new(Mutex::new(SunShadowMakerKernelData::new(
                 zero_located_view,
@@ -638,7 +632,6 @@ impl DefaultLighting for Sun {
                 frames_count,
                 max_render_data_count,
                 &mut *buffer_manager,
-                &mut *descriptor_manager,
             )));
             kernels_data.push(kernel_data);
         }
@@ -765,9 +758,19 @@ pub struct DirectionalUniform {
 
 impl DirectionalUniform {
     pub fn new() -> Self {
-        DirectionalUniform {
+        Self {
             color: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
             direction: math::Vector4::new(0.0, 0.0, -1.0, 0.0),
         }
     }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+#[cfg_attr(debug_mode, derive(Debug))]
+pub struct ShadowAccumulatorDirectionalUniform {
+    view_projections: [math::Matrix4<Real>; MAX_DIRECTIONAL_CASCADES_COUNT as usize],
+    direction_strength: math::Vector4<Real>,
+    cascades_count: u32,
+    light_index: u32,
 }
