@@ -42,6 +42,9 @@ const SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT: usize = 2;
 const SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET: usize = 0;
 const SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET: usize = 1;
 
+const SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_SETS_COUNT: usize = 1;
+const SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_OFFSET: usize = 0;
+
 const MAX_DESCRIPTOR_SETS_COUNT: usize = 3;
 const MAX_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 3;
 
@@ -366,6 +369,22 @@ impl Buffer {
         self.draw(3);
     }
 
+    pub(crate) fn render_shadow_accumulator_directional(&mut self) {
+        unsafe {
+            vk::vkCmdBindDescriptorSets(
+                self.vk_data,
+                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                self.bound_pipeline_layout,
+                0,
+                SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_SETS_COUNT as u32,
+                self.bound_descriptor_sets.as_ptr(),
+                SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_SETS_COUNT as u32,
+                self.bound_dynamic_buffer_offsets.as_ptr(),
+            );
+        }
+        self.draw(3);
+    }
+
     pub(crate) fn bind_deferred_scene_descriptor(
         &mut self,
         descriptor_set: &DescriptorSet,
@@ -413,6 +432,17 @@ impl Buffer {
         self.bound_descriptor_sets[SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET] =
             descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET] =
+            buffer.get_offset() as u32;
+    }
+
+    pub(crate) fn bind_shadow_accumulator_directional_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_OFFSET] =
+            descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_OFFSET] =
             buffer.get_offset() as u32;
     }
 

@@ -304,6 +304,8 @@ pub struct Sun {
     color: math::Vector3<Real>,
     strength: Real,
     frames_data: Vec<SunFrameData>,
+    shadow_accumulator_uniform: ShadowAccumulatorDirectionalUniform,
+    shadow_accumulator_uniform_buffer: DynamicBuffer,
 }
 
 impl Sun {
@@ -499,6 +501,7 @@ impl ShadowMaker for Sun {
         }
         let frame_data = &mut self.frames_data[frame_number];
         for i in 0..cascades_count {
+            self.shadow_accumulator_uniform.view_projections[i] = self.cascade_cameras[i].vp;
             let cmd = &mut frame_data.shadow_mappers_primary_commands[i];
             cmd.begin();
             shadower.begin_shadow_map_primary(cmd, i);
@@ -511,14 +514,31 @@ impl ShadowMaker for Sun {
             cmds.push(c);
         }
         geng.submit_multiple(&[sem], &cmds, &[&frame_data.shadow_mappers_semaphore]);
-        // {
-        //     let cmd = &mut frame_data.shadow_accumulator_primary_command;
-        //     cmd.begin();
-        //     cmd.end_render_pass();
-        //     cmd.end();
-        // }
-        // geng.submit_multiple(&[&frame_data.shadow_mappers_semaphore], &[&frame_data.shadow_accumulator_primary_command], &[&frame_data.shadow_accumulator_semaphore]);
-        return frame_data.shadow_mappers_semaphore.clone();
+        self.shadow_accumulator_uniform.cascades_count = cascades_count as u32;
+        self.shadow_accumulator_uniform.light_index = 23;
+        self.shadow_accumulator_uniform.direction_strength = math::Vector4::new(0.0, 0.0, -1.0, 1.0);
+        self.shadow_accumulator_uniform_buffer.update(&self.shadow_accumulator_uniform, frame_number);
+        {
+            let cmd = &mut frame_data.shadow_accumulator_secondary_command;
+            cmd.begin_secondary(shadower.get_accumulator_framebuffer());
+            cmd.bind_pipeline(shadower.get_shadow_accumulator_directional_pipeline());
+            cmd.bind_shadow_accumulator_directional_descriptor(
+                shadower.get_shadow_accumulator_directional_descriptor_set(),
+                &*vxresult!(self.shadow_accumulator_uniform_buffer.get_buffer(frame_number).read())
+            );
+            cmd.render_shadow_accumulator_directional();
+            cmd.end();
+        }
+        {
+            let cmd = &mut frame_data.shadow_accumulator_primary_command;
+            cmd.begin();
+            shadower.get_accumulator_framebuffer().begin(cmd);
+            cmd.exe_cmd(&frame_data.shadow_accumulator_secondary_command);
+            cmd.end_render_pass();
+            cmd.end();
+        }
+        geng.submit(&frame_data.shadow_mappers_semaphore, &frame_data.shadow_accumulator_primary_command, &frame_data.shadow_accumulator_semaphore);
+        return frame_data.shadow_accumulator_semaphore.clone();
     }
 }
 
@@ -635,6 +655,8 @@ impl DefaultLighting for Sun {
             )));
             kernels_data.push(kernel_data);
         }
+        let shadow_accumulator_uniform = ShadowAccumulatorDirectionalUniform::new();
+        let shadow_accumulator_uniform_buffer = buffer_manager.create_dynamic_buffer(size_of::<ShadowAccumulatorDirectionalUniform>() as isize);
         Sun {
             obj_base: ObjectBase::new(),
             zero_located_view,
@@ -644,6 +666,8 @@ impl DefaultLighting for Sun {
             color: math::Vector3::new(1.0, 1.0, 1.0),
             strength: 1.0,
             frames_data,
+            shadow_accumulator_uniform,
+            shadow_accumulator_uniform_buffer,
         }
     }
 }
@@ -773,4 +797,15 @@ pub struct ShadowAccumulatorDirectionalUniform {
     direction_strength: math::Vector4<Real>,
     cascades_count: u32,
     light_index: u32,
+}
+
+impl ShadowAccumulatorDirectionalUniform {
+    fn new() -> Self {
+        Self {
+            view_projections: [math::Matrix4::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ); MAX_DIRECTIONAL_CASCADES_COUNT as usize],
+    direction_strength: math::Vector4::new(0.0, 0.0, 0.0, 0.0, ),
+    cascades_count: 0,
+    light_index: 0,
+        }
+    }
 }

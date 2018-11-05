@@ -155,6 +155,18 @@ impl Shadower {
         return &self.shadow_map_descriptor_set;
     }
 
+    pub(crate) fn get_shadow_accumulator_directional_descriptor_set(&self) -> &DescriptorSet {
+        return &self.shadow_accumulator_directional_descriptor_set;
+    }
+
+    pub(crate) fn get_accumulator_framebuffer(&self) -> &Arc<Framebuffer> {
+        return &self.shadow_accumulator_framebuffer;
+    }
+
+    pub(crate) fn get_shadow_accumulator_directional_pipeline(&self) -> &Arc<Pipeline> {
+        return &self.shadow_accumulator_directional_pipeline;
+    }
+
     // pub(super) fn begin_accumulator_primary(&self, cmd: &mut CmdBuffer) {
     //     self.shadow_map_framebuffers[map_index].begin(cmd);
     // }
