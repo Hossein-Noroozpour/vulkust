@@ -39,8 +39,10 @@ impl CoreAppTrait for MyGame {
         let renderer = vxunwrap!(&self.renderer);
         let renderer = vxresult!(renderer.read());
         let asset_manager = renderer.get_asset_manager();
-        let ui_scene: Arc<RwLock<UiScene>> = vxresult!(asset_manager.get_scene_manager().write()).create();
-        let camera: Arc<RwLock<Orthographic>> = vxresult!(asset_manager.get_camera_manager().write()).create();
+        let ui_scene: Arc<RwLock<UiScene>> =
+            vxresult!(asset_manager.get_scene_manager().write()).create();
+        let camera: Arc<RwLock<Orthographic>> =
+            vxresult!(asset_manager.get_camera_manager().write()).create();
         {
             let mut camera = vxresult!(camera.write());
             camera.move_local_z(-2.0);

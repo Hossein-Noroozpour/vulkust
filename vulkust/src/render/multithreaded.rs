@@ -5,7 +5,7 @@ use super::deferred::Deferred;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
 use super::resolver::Resolver;
-use super::scene::{Manager as SceneManager};
+use super::scene::Manager as SceneManager;
 use super::shadower::Shadower;
 use num_cpus;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -165,16 +165,9 @@ impl Engine {
         let scene_manager = asset_manager.get_scene_manager().clone();
         let mut texmgr = vxresult!(asset_manager.get_texture_manager().write());
         let g_buffer_filler = GBufferFiller::new(&eng);
-        let resolver = Resolver::new(
-            &eng,
-            &g_buffer_filler,
-            &mut *texmgr,
-        );
+        let resolver = Resolver::new(&eng, &g_buffer_filler, &mut *texmgr);
         let shadower = Shadower::new(&eng, &resolver, config, &mut *texmgr);
-        let deferred = Arc::new(RwLock::new(Deferred::new(
-            &eng,
-            &resolver,
-        )));
+        let deferred = Arc::new(RwLock::new(Deferred::new(&eng, &resolver)));
         let resolver = Arc::new(RwLock::new(resolver));
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
         let shadower = Arc::new(RwLock::new(shadower));
@@ -266,7 +259,7 @@ impl Engine {
         let scenes = scnmgr.get_scenes();
         let g_buffer_filler = vxresult!(self.g_buffer_filler.read());
         let resolver = vxresult!(self.resolver.read());
-        let shadower = vxresult!(self.shadower.read());
+        let mut shadower = vxresult!(self.shadower.write());
         let deferred = vxresult!(self.deferred.read());
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
@@ -281,7 +274,7 @@ impl Engine {
                         &self.cmd_pool,
                         &*g_buffer_filler,
                         &*resolver,
-                        &*shadower,
+                        &mut *shadower,
                         &*deferred,
                     )
                     .clone();

@@ -57,7 +57,7 @@ pub trait Scene: Object {
         &Arc<CmdPool>,
         &GBufferFiller,
         &Resolver,
-        &Shadower,
+        &mut Shadower,
         &Deferred,
     ) -> Arc<Semaphore>;
 }
@@ -643,8 +643,11 @@ impl Scene for Base {
 
     fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
         for (_, shm) in &self.shadow_maker_lights {
-            vxunwrap!(vxresult!(shm.read()).to_shadow_maker())
-                .render_shadow_mapper(shadower, kernel_index, frame_number);
+            vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).render_shadow_mapper(
+                shadower,
+                kernel_index,
+                frame_number,
+            );
         }
     }
 
@@ -675,7 +678,7 @@ impl Scene for Base {
         cmd_pool: &Arc<CmdPool>,
         g_buffer_filler: &GBufferFiller,
         resolver: &Resolver,
-        shadower: &Shadower,
+        shadower: &mut Shadower,
         deferred: &Deferred,
     ) -> Arc<Semaphore> {
         if !self.is_rendarable() {
@@ -717,7 +720,9 @@ impl Scene for Base {
             &frame_data.resolver,
             &frame_data.resolver_semaphore,
         );
-        let mut last_sem = frame_data.resolver_semaphore.clone();
+        let mut last_sem = shadower
+            .clear_shadow_accumulator(&frame_data.resolver_semaphore, geng)
+            .clone();
         for (_, sml) in &self.shadow_maker_lights {
             let mut sml = vxresult!(sml.write());
             let sml = vxunwrap!(sml.to_mut_shadow_maker());
@@ -863,7 +868,8 @@ impl Scene for Game {
     }
 
     fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
-        self.base.render_shadow_maps(shadower, kernel_index, frame_number);
+        self.base
+            .render_shadow_maps(shadower, kernel_index, frame_number);
     }
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
@@ -885,7 +891,7 @@ impl Scene for Game {
         cmd_pool: &Arc<CmdPool>,
         g_buffer_filler: &GBufferFiller,
         resolver: &Resolver,
-        shadower: &Shadower,
+        shadower: &mut Shadower,
         deferred: &Deferred,
     ) -> Arc<Semaphore> {
         return self.base.submit(
@@ -998,7 +1004,8 @@ impl Scene for Ui {
     }
 
     fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
-        self.base.render_shadow_maps(shadower, kernel_index, frame_number);
+        self.base
+            .render_shadow_maps(shadower, kernel_index, frame_number);
     }
 
     fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
@@ -1020,7 +1027,7 @@ impl Scene for Ui {
         cmd_pool: &Arc<CmdPool>,
         g_buffer_filler: &GBufferFiller,
         resolver: &Resolver,
-        shadower: &Shadower,
+        shadower: &mut Shadower,
         deferred: &Deferred,
     ) -> Arc<Semaphore> {
         return self.base.submit(

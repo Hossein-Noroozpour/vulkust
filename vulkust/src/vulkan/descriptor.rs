@@ -15,7 +15,8 @@ pub struct Pool {
 
 impl Pool {
     pub fn new(logical_device: Arc<LogicalDevice>, conf: &Configurations) -> Self {
-        let buffers_count = conf.get_max_meshes_count() + conf.get_max_models_count() + conf.get_max_scenes_count();
+        let buffers_count =
+            conf.get_max_meshes_count() + conf.get_max_models_count() + conf.get_max_scenes_count();
         let mut type_counts = [vk::VkDescriptorPoolSize::default(); 2];
         type_counts[0].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         type_counts[0].descriptorCount = buffers_count as u32;
@@ -221,16 +222,18 @@ impl Set {
             if texturess.len() != 3 {
                 vxlogf!("For shadow accumulator directional descriptor you need 3 textures.");
             }
-            if texturess[0].len() != 1 || texturess[1].len() != 1 || texturess[2].len() < 1 || texturess[2].len() > MAX_DIRECTIONAL_CASCADES_COUNT as usize {
+            if texturess[0].len() != 1
+                || texturess[1].len() != 1
+                || texturess[2].len() < 1
+                || texturess[2].len() > MAX_DIRECTIONAL_CASCADES_COUNT as usize
+            {
                 vxlogf!("Wrong number of textures for shadow accumulator directional descriptor.");
             }
         }
         Self::new(pool, layout, uniform, texturess)
     }
 
-    fn create_buffer_info(
-        uniform: &DynamicBuffer,
-    ) -> vk::VkDescriptorBufferInfo {
+    fn create_buffer_info(uniform: &DynamicBuffer) -> vk::VkDescriptorBufferInfo {
         let buffer = vxresult!(uniform.get_buffer(0).read());
         let mut buff_info = vk::VkDescriptorBufferInfo::default();
         buff_info.buffer = buffer.get_data();
@@ -330,10 +333,7 @@ pub(crate) struct Manager {
 // todo it can in future cache the sets based on their buffer id and size and texture ids and samplers
 
 impl Manager {
-    pub(crate) fn new(
-        logical_device: &Arc<LogicalDevice>,
-        conf: &Configurations,
-    ) -> Self {
+    pub(crate) fn new(logical_device: &Arc<LogicalDevice>, conf: &Configurations) -> Self {
         let pool = Arc::new(Pool::new(logical_device.clone(), conf));
         let gbuff_set_layout = Arc::new(SetLayout::new_gbuff(logical_device.clone()));
         let buffer_only_set_layout = Arc::new(SetLayout::new_buffer_only(logical_device.clone()));

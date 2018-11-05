@@ -1,17 +1,18 @@
 use super::super::core::types::Real;
 use super::command::Buffer as CmdBuffer;
 use super::config::Configurations;
+use super::descriptor::Set as DescriptorSet;
 use super::framebuffer::Framebuffer;
 use super::gapi::GraphicApiEngine;
-use super::descriptor::Set as DescriptorSet;
-use super::light::ShadowAccumulatorDirectionalUniform;
 use super::image::{AttachmentType, Format as ImageFormat, View as ImageView};
+use super::light::ShadowAccumulatorDirectionalUniform;
 use super::pipeline::{Pipeline, PipelineType};
-use super::texture::Manager as TextureManager;
 use super::render_pass::RenderPass;
 use super::resolver::Resolver;
-use std::sync::Arc;
+use super::sync::Semaphore;
+use super::texture::Manager as TextureManager;
 use std::mem::size_of;
+use std::sync::Arc;
 
 use math;
 
@@ -36,11 +37,17 @@ pub struct Shadower {
     shadow_accumulator_framebuffer: Arc<Framebuffer>,
     clear_shadow_accumulator_render_pass: Arc<RenderPass>,
     clear_shadow_accumulator_framebuffer: Arc<Framebuffer>,
+    clear_shadow_accumulator_cmd: CmdBuffer,
+    clear_shadow_accumulator_semaphore: Arc<Semaphore>,
 }
 
 impl Shadower {
-    pub(super) fn new(geng: &GraphicApiEngine, resolver: &Resolver, conf: &Configurations,
-        texture_manager: &mut TextureManager) -> Self {
+    pub(super) fn new(
+        geng: &GraphicApiEngine,
+        resolver: &Resolver,
+        conf: &Configurations,
+        texture_manager: &mut TextureManager,
+    ) -> Self {
         let dev = geng.get_device();
         let memmgr = geng.get_memory_manager();
         let mut shadow_map_buffers = Vec::with_capacity(conf.get_max_shadow_maps_count() as usize);
@@ -55,7 +62,8 @@ impl Shadower {
                 conf.get_shadow_map_aspect(),
                 conf.get_shadow_map_aspect(),
             ));
-            shadow_map_textures.push(texture_manager.create_2d_with_view_sampler(buf.clone(), sampler.clone()));
+            shadow_map_textures
+                .push(texture_manager.create_2d_with_view_sampler(buf.clone(), sampler.clone()));
             shadow_map_buffers.push(buf);
         }
         let shadow_accumulator_strength_buffer = Arc::new(ImageView::new_surface_attachment(
@@ -72,7 +80,10 @@ impl Shadower {
             1,
             AttachmentType::ColorDisplay,
         ));
-        let shadow_accumulator_buffers = vec![shadow_accumulator_strength_buffer.clone(), shadow_accumulator_flagbits_buffer.clone()];
+        let shadow_accumulator_buffers = vec![
+            shadow_accumulator_strength_buffer.clone(),
+            shadow_accumulator_flagbits_buffer.clone(),
+        ];
         let clear_shadow_accumulator_render_pass = Arc::new(RenderPass::new(
             shadow_accumulator_buffers.clone(),
             true,
@@ -90,13 +101,13 @@ impl Shadower {
         ));
         let clear_shadow_accumulator_framebuffer = Arc::new(Framebuffer::new(
             shadow_accumulator_buffers.clone(),
-            shadow_accumulator_render_pass.clone(),
+            clear_shadow_accumulator_render_pass.clone(),
         ));
         let shadow_accumulator_framebuffer = Arc::new(Framebuffer::new(
             shadow_accumulator_buffers.clone(),
-            clear_shadow_accumulator_render_pass.clone(),
+            shadow_accumulator_render_pass.clone(),
         ));
-        let mut shadow_map_framebuffers = Vec::new();
+        let mut shadow_map_framebuffers = Vec::with_capacity(shadow_accumulator_buffers.len());
         for v in &shadow_map_buffers {
             shadow_map_framebuffers.push(Arc::new(Framebuffer::new(
                 vec![v.clone()],
@@ -105,22 +116,45 @@ impl Shadower {
         }
         let (shadow_mapper_uniform_buffer, shadow_accumulator_directional_uniform_buffer) = {
             let mut bufmgr = vxresult!(geng.get_buffer_manager().write());
-            (bufmgr.create_dynamic_buffer(size_of::<ShadowMapperUniform>() as isize),
-            bufmgr.create_dynamic_buffer(size_of::<ShadowAccumulatorDirectionalUniform>() as isize))
+            (
+                bufmgr.create_dynamic_buffer(size_of::<ShadowMapperUniform>() as isize),
+                bufmgr.create_dynamic_buffer(
+                    size_of::<ShadowAccumulatorDirectionalUniform>() as isize
+                ),
+            )
         };
         let (shadow_map_descriptor_set, shadow_accumulator_directional_descriptor_set) = {
             let mut desmgr = vxresult!(geng.get_descriptor_manager().write());
             let restex = resolver.get_output_textures();
-            (desmgr.create_buffer_only_set(&shadow_mapper_uniform_buffer), 
-            desmgr.create_shadow_accumulator_directional_set(
-                &shadow_accumulator_directional_uniform_buffer,
-                vec![vec![restex[0].clone()], vec![restex[1].clone()], shadow_map_textures]))
+            (
+                desmgr.create_buffer_only_set(&shadow_mapper_uniform_buffer),
+                desmgr.create_shadow_accumulator_directional_set(
+                    &shadow_accumulator_directional_uniform_buffer,
+                    vec![
+                        vec![restex[0].clone()],
+                        vec![restex[1].clone()],
+                        shadow_map_textures,
+                    ],
+                ),
+            )
         };
-        shadow_map_framebuffers.shrink_to_fit();
-        let mut pipmgr = vxresult!(geng.get_pipeline_manager().write());
-        let shadow_map_pipeline = 
-            pipmgr.create(shadow_map_render_pass.clone(), PipelineType::ShadowMapper);
-        let shadow_accumulator_directional_pipeline = pipmgr.create(shadow_accumulator_render_pass.clone(), PipelineType::ShadowAccumulatorDirectional);
+        let (shadow_map_pipeline, shadow_accumulator_directional_pipeline) = {
+            let mut pipmgr = vxresult!(geng.get_pipeline_manager().write());
+            (
+                pipmgr.create(shadow_map_render_pass.clone(), PipelineType::ShadowMapper),
+                pipmgr.create(
+                    shadow_accumulator_render_pass.clone(),
+                    PipelineType::ShadowAccumulatorDirectional,
+                ),
+            )
+        };
+        let mut clear_shadow_accumulator_cmd =
+            geng.create_primary_command_buffer_from_main_graphic_pool();
+        clear_shadow_accumulator_cmd.begin();
+        clear_shadow_accumulator_framebuffer.begin(&mut clear_shadow_accumulator_cmd);
+        clear_shadow_accumulator_cmd.end_render_pass();
+        clear_shadow_accumulator_cmd.end();
+        let clear_shadow_accumulator_semaphore = Arc::new(geng.create_semaphore());
         Self {
             shadow_map_buffers,
             shadow_map_render_pass,
@@ -136,6 +170,8 @@ impl Shadower {
             shadow_accumulator_framebuffer,
             clear_shadow_accumulator_render_pass,
             clear_shadow_accumulator_framebuffer,
+            clear_shadow_accumulator_cmd,
+            clear_shadow_accumulator_semaphore,
         }
     }
 
@@ -167,6 +203,19 @@ impl Shadower {
         return &self.shadow_accumulator_directional_pipeline;
     }
 
+    pub(crate) fn clear_shadow_accumulator(
+        &mut self,
+        pre: &Semaphore,
+        geng: &GraphicApiEngine,
+    ) -> &Arc<Semaphore> {
+        geng.submit(
+            pre,
+            &self.clear_shadow_accumulator_cmd,
+            &self.clear_shadow_accumulator_semaphore,
+        );
+        return &self.clear_shadow_accumulator_semaphore;
+    }
+
     // pub(super) fn begin_accumulator_primary(&self, cmd: &mut CmdBuffer) {
     //     self.shadow_map_framebuffers[map_index].begin(cmd);
     // }
@@ -180,5 +229,5 @@ unsafe impl Sync for Shadower {}
 
 #[repr(C)]
 struct ShadowMapperUniform {
-    mvp: math::Matrix4<Real>
+    mvp: math::Matrix4<Real>,
 }

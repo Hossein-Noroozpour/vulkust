@@ -4,13 +4,13 @@ use super::super::core::types::{Id, Real};
 use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::camera::Orthographic;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
+use super::config::MAX_DIRECTIONAL_CASCADES_COUNT;
 use super::engine::Engine;
 use super::gapi::GraphicApiEngine;
 use super::model::Model;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::shadower::Shadower;
 use super::sync::Semaphore;
-use super::config::MAX_DIRECTIONAL_CASCADES_COUNT;
 use std::collections::BTreeMap;
 use std::f32::MAX as F32MAX;
 use std::f32::MIN as F32MIN;
@@ -41,7 +41,13 @@ pub trait ShadowMaker: Light {
     fn shadow(&self, &mut Model, &Arc<RwLock<Model>>, usize);
     fn begin_secondary_commands(&self, &GraphicApiEngine, &Arc<CmdPool>, &Shadower, usize, usize);
     fn render_shadow_mapper(&self, &Shadower, usize, usize);
-    fn submit_shadow_mapper(&mut self, &Semaphore, &GraphicApiEngine, &Shadower, usize) -> Arc<Semaphore>;
+    fn submit_shadow_mapper(
+        &mut self,
+        &Semaphore,
+        &GraphicApiEngine,
+        &Shadower,
+        usize,
+    ) -> Arc<Semaphore>;
 }
 
 pub trait Directional: Light {
@@ -145,8 +151,8 @@ impl SunShadowMakerKernelData {
         let mut frames_data = Vec::with_capacity(frames_count);
         let mut render_data = Vec::with_capacity(max_render_data_count);
         for _ in 0..max_render_data_count {
-            let uniform_buffer = buffer_manager
-                .create_dynamic_buffer(size_of::<math::Matrix4<Real>>() as isize);
+            let uniform_buffer =
+                buffer_manager.create_dynamic_buffer(size_of::<math::Matrix4<Real>>() as isize);
             render_data.push(SunShadowMapperRenderData {
                 uniform_buffer,
                 model: None,
@@ -423,22 +429,17 @@ impl Light for Sun {
             let depth = ccd.max_z - ccd.min_z;
             let near = depth * 0.01;
             let far = depth * 1.03;
-            let p = math::ortho(
-                -horz,
-                horz,
-                -vert,
-                vert,
-                near,
-                far,
-            );
-            let t =
-                math::Matrix4::from_translation(-math::Vector3::new(
-                    (ccd.max_x + ccd.min_x) * 0.5,
-                    (ccd.max_y + ccd.min_y) * 0.5,
-                    ccd.max_z + near * 2.0));
+            let p = math::ortho(-horz, horz, -vert, vert, near, far);
+            let t = math::Matrix4::from_translation(-math::Vector3::new(
+                (ccd.max_x + ccd.min_x) * 0.5,
+                (ccd.max_y + ccd.min_y) * 0.5,
+                ccd.max_z + near * 2.0,
+            ));
             ccd.vp = math::Matrix4::new(
-                    1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-            ) * p * self.zero_located_view * t;
+                1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
+            ) * p
+                * self.zero_located_view
+                * t;
             ccd.max_x = F32MIN;
             ccd.max_seen_x = F32MIN;
             ccd.min_x = F32MAX;
@@ -456,12 +457,7 @@ impl Light for Sun {
 }
 
 impl ShadowMaker for Sun {
-    fn shadow(
-        &self,
-        m: &mut Model,
-        mc: &Arc<RwLock<Model>>,
-        kernel_index: usize,
-    ) {
+    fn shadow(&self, m: &mut Model, mc: &Arc<RwLock<Model>>, kernel_index: usize) {
         vxresult!(self.kernels_data[kernel_index].lock()).shadow(m, mc);
     }
 
@@ -475,12 +471,7 @@ impl ShadowMaker for Sun {
     ) {
         let mut kernel_data = vxresult!(self.kernels_data[kernel_index].lock());
         kernel_data.update_camera_limits(&self.cascade_cameras, self.zero_located_view);
-        kernel_data.begin_secondary_commands(
-            geng,
-            cmd_pool,
-            sh,
-            frame_number,
-        );
+        kernel_data.begin_secondary_commands(geng, cmd_pool, sh, frame_number);
     }
 
     fn render_shadow_mapper(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
@@ -489,13 +480,21 @@ impl ShadowMaker for Sun {
         kernel_data.render_shadow_mapper(shadower, frame_number);
     }
 
-    fn submit_shadow_mapper(&mut self, sem: &Semaphore, geng: &GraphicApiEngine, shadower: &Shadower, frame_number: usize) -> Arc<Semaphore> {
+    fn submit_shadow_mapper(
+        &mut self,
+        sem: &Semaphore,
+        geng: &GraphicApiEngine,
+        shadower: &Shadower,
+        frame_number: usize,
+    ) -> Arc<Semaphore> {
         let cascades_count = self.cascade_cameras.len();
         let mut cmdss = Vec::with_capacity(cascades_count);
         for i in 0..cascades_count {
             let mut cmds = Vec::with_capacity(self.kernels_data.len());
             for kd in &self.kernels_data {
-                cmds.push(vxresult!(kd.lock()).frames_data[frame_number].cascades_cmds[i].get_data());
+                cmds.push(
+                    vxresult!(kd.lock()).frames_data[frame_number].cascades_cmds[i].get_data(),
+                );
             }
             cmdss.push(cmds);
         }
@@ -513,18 +512,26 @@ impl ShadowMaker for Sun {
         for c in &frame_data.shadow_mappers_primary_commands {
             cmds.push(c);
         }
+        vxlogi!("+++++++++++++++++++++++++++++++++++++++++");
         geng.submit_multiple(&[sem], &cmds, &[&frame_data.shadow_mappers_semaphore]);
+        vxlogi!("+++++++++++++++++++++++++++++++++++++++++");
         self.shadow_accumulator_uniform.cascades_count = cascades_count as u32;
         self.shadow_accumulator_uniform.light_index = 23;
-        self.shadow_accumulator_uniform.direction_strength = math::Vector4::new(0.0, 0.0, -1.0, 1.0);
-        self.shadow_accumulator_uniform_buffer.update(&self.shadow_accumulator_uniform, frame_number);
+        self.shadow_accumulator_uniform.direction_strength =
+            math::Vector4::new(0.0, 0.0, -1.0, 1.0);
+        self.shadow_accumulator_uniform_buffer
+            .update(&self.shadow_accumulator_uniform, frame_number);
         {
             let cmd = &mut frame_data.shadow_accumulator_secondary_command;
             cmd.begin_secondary(shadower.get_accumulator_framebuffer());
             cmd.bind_pipeline(shadower.get_shadow_accumulator_directional_pipeline());
             cmd.bind_shadow_accumulator_directional_descriptor(
                 shadower.get_shadow_accumulator_directional_descriptor_set(),
-                &*vxresult!(self.shadow_accumulator_uniform_buffer.get_buffer(frame_number).read())
+                &*vxresult!(
+                    self.shadow_accumulator_uniform_buffer
+                        .get_buffer(frame_number)
+                        .read()
+                ),
             );
             cmd.render_shadow_accumulator_directional();
             cmd.end();
@@ -537,7 +544,13 @@ impl ShadowMaker for Sun {
             cmd.end_render_pass();
             cmd.end();
         }
-        geng.submit(&frame_data.shadow_mappers_semaphore, &frame_data.shadow_accumulator_primary_command, &frame_data.shadow_accumulator_semaphore);
+        vxlogi!("--------------------------");
+        geng.submit(
+            &frame_data.shadow_mappers_semaphore,
+            &frame_data.shadow_accumulator_primary_command,
+            &frame_data.shadow_accumulator_semaphore,
+        );
+        vxlogi!("--------------------------");
         return frame_data.shadow_accumulator_semaphore.clone();
     }
 }
@@ -626,8 +639,8 @@ impl DefaultLighting for Sun {
         for _ in 0..csc {
             let mut shadow_mappers_primary_commands = Vec::with_capacity(num_cpus);
             for _ in 0..num_cpus {
-                shadow_mappers_primary_commands.push(geng
-                    .create_primary_command_buffer_from_main_graphic_pool());
+                shadow_mappers_primary_commands
+                    .push(geng.create_primary_command_buffer_from_main_graphic_pool());
             }
             frames_data.push(SunFrameData {
                 shadow_mappers_primary_commands,
@@ -656,7 +669,8 @@ impl DefaultLighting for Sun {
             kernels_data.push(kernel_data);
         }
         let shadow_accumulator_uniform = ShadowAccumulatorDirectionalUniform::new();
-        let shadow_accumulator_uniform_buffer = buffer_manager.create_dynamic_buffer(size_of::<ShadowAccumulatorDirectionalUniform>() as isize);
+        let shadow_accumulator_uniform_buffer = buffer_manager
+            .create_dynamic_buffer(size_of::<ShadowAccumulatorDirectionalUniform>() as isize);
         Sun {
             obj_base: ObjectBase::new(),
             zero_located_view,
@@ -690,7 +704,7 @@ impl Loadable for Sun {
         vxtodo!(); // ccr is not correct
         vxtodo!(); // ccds is not correct
         vxtodo!(); // direction is not correct
-        // let geng = vxresult!(engine.get_gapi_engine().read());
+                   // let geng = vxresult!(engine.get_gapi_engine().read());
         return myself;
     }
 }
@@ -802,10 +816,12 @@ pub struct ShadowAccumulatorDirectionalUniform {
 impl ShadowAccumulatorDirectionalUniform {
     fn new() -> Self {
         Self {
-            view_projections: [math::Matrix4::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ); MAX_DIRECTIONAL_CASCADES_COUNT as usize],
-    direction_strength: math::Vector4::new(0.0, 0.0, 0.0, 0.0, ),
-    cascades_count: 0,
-    light_index: 0,
+            view_projections: [math::Matrix4::new(
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            ); MAX_DIRECTIONAL_CASCADES_COUNT as usize],
+            direction_strength: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
+            cascades_count: 0,
+            light_index: 0,
         }
     }
 }

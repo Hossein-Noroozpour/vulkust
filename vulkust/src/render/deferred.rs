@@ -32,10 +32,7 @@ pub struct Deferred {
 }
 
 impl Deferred {
-    pub(crate) fn new(
-        gapi_engine: &GraphicApiEngine,
-        resolver: &Resolver,
-    ) -> Self {
+    pub(crate) fn new(gapi_engine: &GraphicApiEngine, resolver: &Resolver) -> Self {
         let resolver_framebuffer = resolver.get_framebuffer();
         let (w, h) = resolver_framebuffer.get_dimensions();
         let uniform = Uniform::new(w as f32, h as f32);

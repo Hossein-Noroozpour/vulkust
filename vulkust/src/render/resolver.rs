@@ -76,7 +76,8 @@ impl Resolver {
                 1,
                 AttachmentType::ResolverBuffer,
             ));
-            output_textures.push(texture_manager.create_2d_with_view_sampler(buffer.clone(), sampler.clone()));
+            output_textures
+                .push(texture_manager.create_2d_with_view_sampler(buffer.clone(), sampler.clone()));
             buffers.push(buffer);
             textures.push(texture_manager.create_2d_with_view_sampler(v.clone(), sampler.clone()));
         }

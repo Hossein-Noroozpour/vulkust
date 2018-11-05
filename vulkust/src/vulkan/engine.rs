@@ -107,10 +107,8 @@ impl Engine {
             16 * 1024 * 1024,
             swapchain.image_views.len() as isize,
         )));
-        let descriptor_manager = Arc::new(RwLock::new(DescriptorManager::new(
-            &logical_device,
-            conf,
-        )));
+        let descriptor_manager =
+            Arc::new(RwLock::new(DescriptorManager::new(&logical_device, conf)));
         let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(
             logical_device.clone(),
             descriptor_manager.clone(),
@@ -175,7 +173,12 @@ impl Engine {
     }
 
     pub(crate) fn submit(&self, wait: &Semaphore, cmd: &CmdBuffer, signal: &Semaphore) {
-        self.submit_with_fence(&[wait.get_data()], &[cmd.get_data()], &[signal.get_data()], None);
+        self.submit_with_fence(
+            &[wait.get_data()],
+            &[cmd.get_data()],
+            &[signal.get_data()],
+            None,
+        );
     }
 
     pub(crate) fn submit_with_fence(
