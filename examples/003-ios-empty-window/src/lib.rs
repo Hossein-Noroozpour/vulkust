@@ -4,8 +4,6 @@ extern crate vulkust;
 use vulkust::core::application::Application as CoreAppTrait;
 use vulkust::core::event::Event;
 
-use std::sync::{Arc, RwLock};
-
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct MyGame {}
 

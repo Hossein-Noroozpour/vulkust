@@ -69,7 +69,7 @@ impl CoreAppTrait for MyGame {
 
     fn initialize(&mut self) {
         let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-        let scene_manager = vxresult!(renderer.scene_manager.read());
+        let mut scene_manager = vxresult!(renderer.get_asset_manager().get_scene_manager().write());
         let scene = scene_manager.load_gx3d(data_gx3d::Scene::SceneGameSplash as Id);
         self.camera = vxunwrap!(vxresult!(scene.read()).get_active_camera()).upgrade();
         self.scene = Some(scene);
@@ -154,7 +154,7 @@ impl CoreAppTrait for MyGame {
             let mut camera = vxresult!(vxunwrap!(&self.camera).write());
             let delta = {
                 let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-                let n = vxresult!(renderer.timing.read())
+                let n = vxresult!(renderer.get_timing().read())
                     .length_of_previous_frame
                     .as_nanos();
                 (n as f64 / 1_000_000_000.0) as f32
