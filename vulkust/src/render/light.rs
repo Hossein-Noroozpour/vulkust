@@ -492,9 +492,11 @@ impl ShadowMaker for Sun {
         for i in 0..cascades_count {
             let mut cmds = Vec::with_capacity(self.kernels_data.len());
             for kd in &self.kernels_data {
-                cmds.push(
-                    vxresult!(kd.lock()).frames_data[frame_number].cascades_cmds[i].get_data(),
-                );
+                let kd = vxresult!(kd.lock());
+                let cmd = &kd.frames_data[frame_number].cascades_cmds[i];
+                if cmd.get_has_render_record() {
+                    cmds.push(cmd.get_data());
+                }
             }
             cmdss.push(cmds);
         }
@@ -508,13 +510,13 @@ impl ShadowMaker for Sun {
             cmd.end_render_pass();
             cmd.end();
         }
-        let mut cmds = Vec::with_capacity(cascades_count);
+        let mut cmds = Vec::with_capacity(frame_data.shadow_mappers_primary_commands.len());
         for c in &frame_data.shadow_mappers_primary_commands {
             cmds.push(c);
         }
-        vxlogi!("+++++++++++++++++++++++++++++++++++++++++");
+        vxlogi!("++++++++++++++++++++++++++++++++++++++++++++++++");
         geng.submit_multiple(&[sem], &cmds, &[&frame_data.shadow_mappers_semaphore]);
-        vxlogi!("+++++++++++++++++++++++++++++++++++++++++");
+        vxlogi!("************************************************");
         self.shadow_accumulator_uniform.cascades_count = cascades_count as u32;
         self.shadow_accumulator_uniform.light_index = 23;
         self.shadow_accumulator_uniform.direction_strength =
@@ -638,7 +640,7 @@ impl DefaultLighting for Sun {
         let frames_count = geng.get_frames_count();
         for _ in 0..csc {
             let mut shadow_mappers_primary_commands = Vec::with_capacity(num_cpus);
-            for _ in 0..num_cpus {
+            for _ in 0..csc {
                 shadow_mappers_primary_commands
                     .push(geng.create_primary_command_buffer_from_main_graphic_pool());
             }

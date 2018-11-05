@@ -14,6 +14,7 @@ use std::sync::{Arc, RwLock};
 pub struct Buffer {
     pool: Arc<Pool>,
     vk_data: vk::VkCommandBuffer,
+    has_render_record: bool,
     bound_pipeline_layout: vk::VkPipelineLayout,
     bound_descriptor_sets: [vk::VkDescriptorSet; 3],
     bound_dynamic_buffer_offsets: [u32; 3],
@@ -78,6 +79,7 @@ impl Buffer {
         Buffer {
             pool: pool.clone(),
             vk_data: vk_data,
+            has_render_record: false,
             bound_pipeline_layout: 0 as vk::VkPipelineLayout,
             bound_descriptor_sets: [0 as vk::VkDescriptorSet; MAX_DESCRIPTOR_SETS_COUNT],
             bound_dynamic_buffer_offsets: [0; MAX_DYNAMIC_BUFFER_OFFSETS_COUNT],
@@ -90,13 +92,22 @@ impl Buffer {
         return self.vk_data;
     }
 
+    pub(crate) fn get_has_render_record(&self) -> bool {
+        return self.has_render_record;
+    }
+
     pub(crate) fn exe_cmds_with_data(&mut self, data: &[vk::VkCommandBuffer]) {
+        if data.len() < 1 {
+            return;
+        }
+        self.has_render_record = true;
         unsafe {
             vk::vkCmdExecuteCommands(self.vk_data, data.len() as u32, data.as_ptr());
         }
     }
 
     pub(crate) fn exe_cmd(&mut self, other: &Self) {
+        self.has_render_record = true;
         let data = [other.vk_data];
         self.exe_cmds_with_data(&data);
     }
@@ -108,6 +119,7 @@ impl Buffer {
                 vxunexpected!();
             }
         }
+        self.has_render_record = false;
         let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
         cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         vulkan_check!(vk::vkBeginCommandBuffer(self.vk_data, &cmd_buf_info));
@@ -120,6 +132,7 @@ impl Buffer {
                 vxunexpected!();
             }
         }
+        self.has_render_record = false;
 
         let mut inheritance_info = vk::VkCommandBufferInheritanceInfo::default();
         inheritance_info.sType =
@@ -320,6 +333,7 @@ impl Buffer {
         index_buffer: &StaticBuffer,
         indices_count: u32,
     ) {
+        self.has_render_record = true;
         unsafe {
             vk::vkCmdBindDescriptorSets(
                 self.vk_data,
@@ -338,6 +352,7 @@ impl Buffer {
     }
 
     pub(crate) fn render_resolver(&mut self) {
+        self.has_render_record = true;
         unsafe {
             vk::vkCmdBindDescriptorSets(
                 self.vk_data,
@@ -354,6 +369,7 @@ impl Buffer {
     }
 
     pub(crate) fn render_deferred(&mut self) {
+        self.has_render_record = true;
         unsafe {
             vk::vkCmdBindDescriptorSets(
                 self.vk_data,
@@ -370,6 +386,7 @@ impl Buffer {
     }
 
     pub(crate) fn render_shadow_accumulator_directional(&mut self) {
+        self.has_render_record = true;
         unsafe {
             vk::vkCmdBindDescriptorSets(
                 self.vk_data,
@@ -452,6 +469,7 @@ impl Buffer {
         index_buffer: &StaticBuffer,
         indices_count: u32,
     ) {
+        self.has_render_record = true;
         unsafe {
             vk::vkCmdBindDescriptorSets(
                 self.vk_data,
