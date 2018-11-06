@@ -530,11 +530,10 @@ impl ShadowMaker for Sun {
             cmd.bind_pipeline(shadower.get_shadow_accumulator_directional_pipeline());
             cmd.bind_shadow_accumulator_directional_descriptor(
                 shadower.get_shadow_accumulator_directional_descriptor_set(),
-                &*vxresult!(
-                    self.shadow_accumulator_uniform_buffer
-                        .get_buffer(frame_number)
-                        .read()
-                ),
+                &*vxresult!(self
+                    .shadow_accumulator_uniform_buffer
+                    .get_buffer(frame_number)
+                    .read()),
             );
             cmd.render_shadow_accumulator_directional();
             cmd.end();

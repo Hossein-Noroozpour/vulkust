@@ -177,7 +177,6 @@ impl Pipeline {
         pipeline_type: PipelineType,
         config: &Configurations,
     ) -> Self {
-        vxlogi!("{:?}", pipeline_type);
         let device = vxresult!(descriptor_manager.read())
             .pool
             .logical_device

@@ -4927,10 +4927,7 @@ impl Default for VkWin32SurfaceCreateInfoKHR {
 }
 
 #[cfg_attr(target_os = "linux", link(name = "vulkan", kind = "dylib"))]
-#[cfg_attr(
-    target_os = "windows",
-    link(name = "vulkan-1", kind = "dylib")
-)]
+#[cfg_attr(target_os = "windows", link(name = "vulkan-1", kind = "dylib"))]
 #[cfg_attr(target_os = "android", link(name = "vulkan", kind = "dylib"))]
 #[cfg_attr(target_os = "macos", link(name = "vulkan", kind = "dylib"))]
 extern "C" {

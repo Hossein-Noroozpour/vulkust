@@ -29,10 +29,7 @@ pub enum AAssetMode {
     BUFFER = 3,
 }
 
-#[cfg_attr(
-    target_os = "android",
-    link(name = "android", kind = "dylib")
-)]
+#[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
 extern "C" {
     pub fn AAssetManager_openDir(
         mgr: *mut AAssetManager,

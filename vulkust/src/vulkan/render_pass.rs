@@ -54,8 +54,9 @@ impl RenderPass {
                 vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
             attachment_description.initialLayout = convert_layout(&start_layouts[view_index]);
             attachment_description.finalLayout = convert_layout(&end_layouts[view_index]);
-            if img.get_vk_usage() & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
-                as vk::VkImageUsageFlags
+            if img.get_vk_usage()
+                & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                    as vk::VkImageUsageFlags
                 != 0
             {
                 let mut color_attachment_ref = vk::VkAttachmentReference::default();
@@ -150,29 +151,31 @@ impl RenderPass {
                 Layout::Display
             });
             let img = vxresult!(v.get_image().read());
-            end_layouts.push(if img.get_vk_usage()
-                & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
-                    as vk::VkImageUsageFlags
-                != 0
-            {
-                if has_reader {
-                    Layout::ShaderReadOnly
+            end_layouts.push(
+                if img.get_vk_usage()
+                    & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                        as vk::VkImageUsageFlags
+                    != 0
+                {
+                    if has_reader {
+                        Layout::ShaderReadOnly
+                    } else {
+                        Layout::Display
+                    }
+                } else if img.get_vk_usage()
+                    & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+                        as vk::VkImageUsageFlags
+                    != 0
+                {
+                    if has_reader {
+                        Layout::ShaderReadOnly
+                    } else {
+                        Layout::DepthStencil
+                    }
                 } else {
-                    Layout::Display
-                }
-            } else if img.get_vk_usage()
-                & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-                    as vk::VkImageUsageFlags
-                != 0
-            {
-                if has_reader {
-                    Layout::ShaderReadOnly
-                } else {
-                    Layout::DepthStencil
-                }
-            } else {
-                vxunexpected!();
-            });
+                    vxunexpected!();
+                },
+            );
         }
         return Self::new_with_layouts(views, clear, &start_layouts, &end_layouts);
     }

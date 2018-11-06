@@ -6,10 +6,7 @@ use std::mem;
 
 type Imp = unsafe extern "C" fn();
 
-#[cfg(all(
-    any(target_os = "macos", target_os = "ios"),
-    target_arch = "x86_64"
-))]
+#[cfg(all(any(target_os = "macos", target_os = "ios"), target_arch = "x86_64"))]
 fn msg_send_fn<R>(obj: Id, _: Sel) -> (Imp, Id) {
     extern "C" {
         fn objc_msgSend();
@@ -23,10 +20,7 @@ fn msg_send_fn<R>(obj: Id, _: Sel) -> (Imp, Id) {
     (msg_fn, obj)
 }
 
-#[cfg(all(
-    any(target_os = "macos", target_os = "ios"),
-    target_arch = "aarch64"
-))]
+#[cfg(all(any(target_os = "macos", target_os = "ios"), target_arch = "aarch64"))]
 fn msg_send_fn<R>(obj: Id, _: Sel) -> (Imp, Id) {
     extern "C" {
         fn objc_msgSend();
@@ -34,10 +28,7 @@ fn msg_send_fn<R>(obj: Id, _: Sel) -> (Imp, Id) {
     (objc_msgSend, obj)
 }
 
-#[cfg(all(
-    any(target_os = "macos", target_os = "ios"),
-    target_arch = "arm"
-))]
+#[cfg(all(any(target_os = "macos", target_os = "ios"), target_arch = "arm"))]
 fn msg_send_fn<R: Any>(obj: Id, _: Sel) -> (Imp, Id) {
     extern "C" {
         fn objc_msgSend();

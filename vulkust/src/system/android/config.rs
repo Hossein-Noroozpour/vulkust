@@ -120,10 +120,7 @@ pub enum Id {
     UiMode = 0x1000,
 }
 
-#[cfg_attr(
-    target_os = "android",
-    link(name = "android", kind = "dylib")
-)]
+#[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
 extern "C" {
     pub fn AConfiguration_new() -> *mut AConfiguration;
     pub fn AConfiguration_delete(config: *mut AConfiguration);

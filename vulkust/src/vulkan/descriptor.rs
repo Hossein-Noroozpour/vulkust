@@ -1,5 +1,7 @@
 use super::super::core::allocate::Object as AlcObject;
-use super::super::render::config::{Configurations, MAX_DIRECTIONAL_CASCADES_COUNT};
+use super::super::render::config::Configurations;
+#[cfg(debug_mode)]
+use super::super::render::config::MAX_DIRECTIONAL_CASCADES_COUNT;
 use super::super::render::texture::Texture;
 use super::buffer::DynamicBuffer;
 use super::device::logical::Logical as LogicalDevice;

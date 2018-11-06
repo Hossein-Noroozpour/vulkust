@@ -334,17 +334,18 @@ impl Physical {
         flags: vk::VkImageCreateFlags,
     ) -> vk::VkSampleCountFlags {
         let mut prps = vk::VkImageFormatProperties::default();
-        if vk::VkResult::VK_SUCCESS as u32 != unsafe {
-            vk::vkGetPhysicalDeviceImageFormatProperties(
-                self.vk_data,
-                format,
-                image_type,
-                tiling,
-                usage,
-                flags,
-                &mut prps,
-            )
-        } as u32
+        if vk::VkResult::VK_SUCCESS as u32
+            != unsafe {
+                vk::vkGetPhysicalDeviceImageFormatProperties(
+                    self.vk_data,
+                    format,
+                    image_type,
+                    tiling,
+                    usage,
+                    flags,
+                    &mut prps,
+                )
+            } as u32
         {
             return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as vk::VkSampleCountFlags;
         }

@@ -31,10 +31,7 @@ pub enum ALooperEvent {
 pub type ALooperCallbackFunc =
     unsafe extern "C" fn(fd: c_int, events: c_int, data: *mut c_void) -> c_int;
 
-#[cfg_attr(
-    target_os = "android",
-    link(name = "android", kind = "dylib")
-)]
+#[cfg_attr(target_os = "android", link(name = "android", kind = "dylib"))]
 extern "C" {
     pub fn ALooper_forThread() -> *mut ALooper;
     pub fn ALooper_prepare(opts: c_int) -> *mut ALooper;
