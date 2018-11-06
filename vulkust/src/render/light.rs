@@ -502,7 +502,12 @@ impl ShadowMaker for Sun {
         }
         let frame_data = &mut self.frames_data[frame_number];
         for i in 0..cascades_count {
-            self.shadow_accumulator_uniform.view_projections[i] = self.cascade_cameras[i].vp;
+            self.shadow_accumulator_uniform.view_projection_biases[i] = math::Matrix4::new(
+                0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0
+            ) * self.cascade_cameras[i].vp;
             let cmd = &mut frame_data.shadow_mappers_primary_commands[i];
             cmd.begin();
             shadower.begin_shadow_map_primary(cmd, i);
@@ -805,7 +810,7 @@ impl DirectionalUniform {
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct ShadowAccumulatorDirectionalUniform {
-    view_projections: [math::Matrix4<Real>; MAX_DIRECTIONAL_CASCADES_COUNT as usize],
+    view_projection_biases: [math::Matrix4<Real>; MAX_DIRECTIONAL_CASCADES_COUNT as usize],
     direction_strength: math::Vector4<Real>,
     cascades_count: u32,
     light_index: u32,
@@ -814,7 +819,7 @@ pub struct ShadowAccumulatorDirectionalUniform {
 impl ShadowAccumulatorDirectionalUniform {
     fn new() -> Self {
         Self {
-            view_projections: [math::Matrix4::new(
+            view_projection_biases: [math::Matrix4::new(
                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             ); MAX_DIRECTIONAL_CASCADES_COUNT as usize],
             direction_strength: math::Vector4::new(0.0, 0.0, 0.0, 0.0),

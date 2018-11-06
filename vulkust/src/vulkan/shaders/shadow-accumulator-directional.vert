@@ -8,7 +8,7 @@ layout (constant_id = 0) const int MAX_DIRECTIONAL_CASCADES_COUNT = 6;
 layout (location = 0) out vec2 out_uv;
 
 layout (set = 0, binding = 0) uniform LightUBO {
-	mat4 view_projections[MAX_DIRECTIONAL_CASCADES_COUNT];
+	mat4 view_projection_biases[MAX_DIRECTIONAL_CASCADES_COUNT];
     vec4 direction_strength;
     uint cascades_count;
     uint light_index;
