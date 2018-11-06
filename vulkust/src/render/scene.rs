@@ -249,6 +249,8 @@ struct BaseFramedata {
     deferred: CmdBuffer,
     deferred_secondary: CmdBuffer,
     deferred_semaphore: Arc<Semaphore>,
+    preparation_cmd: CmdBuffer,
+    preparation_semaphore: Arc<Semaphore>,
 }
 
 impl BaseFramedata {
@@ -261,6 +263,8 @@ impl BaseFramedata {
         let deferred = engine.create_primary_command_buffer(cmd_pool.clone());
         let deferred_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
         let deferred_semaphore = Arc::new(engine.create_semaphore());
+        let preparation_cmd = engine.create_primary_command_buffer(cmd_pool.clone());
+        let preparation_semaphore = Arc::new(engine.create_semaphore());
         Self {
             gbuffer,
             gbuffer_semaphore,
@@ -270,6 +274,8 @@ impl BaseFramedata {
             deferred,
             deferred_secondary,
             deferred_semaphore,
+            preparation_cmd,
+            preparation_semaphore,
         }
     }
 }
@@ -720,9 +726,13 @@ impl Scene for Base {
             &frame_data.resolver,
             &frame_data.resolver_semaphore,
         );
-        let mut last_sem = shadower
-            .clear_shadow_accumulator(&frame_data.resolver_semaphore, geng)
-            .clone();
+        shadower.clear_shadow_accumulator(&mut frame_data.preparation_cmd);
+        geng.submit(
+            &frame_data.resolver_semaphore,
+            &frame_data.preparation_cmd,
+            &frame_data.preparation_semaphore,
+        );
+        let mut last_sem = frame_data.preparation_semaphore.clone();
         for (_, sml) in &self.shadow_maker_lights {
             let mut sml = vxresult!(sml.write());
             let sml = vxunwrap!(sml.to_mut_shadow_maker());

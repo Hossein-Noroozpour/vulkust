@@ -9,7 +9,6 @@ use super::light::ShadowAccumulatorDirectionalUniform;
 use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
 use super::resolver::Resolver;
-use super::sync::Semaphore;
 use super::texture::Manager as TextureManager;
 use std::mem::size_of;
 use std::sync::Arc;
@@ -37,8 +36,6 @@ pub struct Shadower {
     shadow_accumulator_framebuffer: Arc<Framebuffer>,
     clear_shadow_accumulator_render_pass: Arc<RenderPass>,
     clear_shadow_accumulator_framebuffer: Arc<Framebuffer>,
-    clear_shadow_accumulator_cmd: CmdBuffer,
-    clear_shadow_accumulator_semaphore: Arc<Semaphore>,
 }
 
 impl Shadower {
@@ -149,13 +146,6 @@ impl Shadower {
                 ),
             )
         };
-        let mut clear_shadow_accumulator_cmd =
-            geng.create_primary_command_buffer_from_main_graphic_pool();
-        clear_shadow_accumulator_cmd.begin();
-        clear_shadow_accumulator_framebuffer.begin(&mut clear_shadow_accumulator_cmd);
-        clear_shadow_accumulator_cmd.end_render_pass();
-        clear_shadow_accumulator_cmd.end();
-        let clear_shadow_accumulator_semaphore = Arc::new(geng.create_semaphore());
         Self {
             shadow_map_buffers,
             shadow_map_render_pass,
@@ -171,8 +161,6 @@ impl Shadower {
             shadow_accumulator_framebuffer,
             clear_shadow_accumulator_render_pass,
             clear_shadow_accumulator_framebuffer,
-            clear_shadow_accumulator_cmd,
-            clear_shadow_accumulator_semaphore,
         }
     }
 
@@ -205,16 +193,13 @@ impl Shadower {
     }
 
     pub(crate) fn clear_shadow_accumulator(
-        &mut self,
-        pre: &Semaphore,
-        geng: &GraphicApiEngine,
-    ) -> &Arc<Semaphore> {
-        geng.submit(
-            pre,
-            &self.clear_shadow_accumulator_cmd,
-            &self.clear_shadow_accumulator_semaphore,
-        );
-        return &self.clear_shadow_accumulator_semaphore;
+        &self,
+        cmd: &mut CmdBuffer,
+    ) {
+        cmd.begin();
+        self.clear_shadow_accumulator_framebuffer.begin(cmd);
+        cmd.end_render_pass();
+        cmd.end();
     }
 
     // pub(super) fn begin_accumulator_primary(&self, cmd: &mut CmdBuffer) {

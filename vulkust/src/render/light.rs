@@ -514,9 +514,7 @@ impl ShadowMaker for Sun {
         for c in &frame_data.shadow_mappers_primary_commands {
             cmds.push(c);
         }
-        vxlogi!("++++++++++++++++++++++++++++++++++++++++++++++++");
         geng.submit_multiple(&[sem], &cmds, &[&frame_data.shadow_mappers_semaphore]);
-        vxlogi!("************************************************");
         self.shadow_accumulator_uniform.cascades_count = cascades_count as u32;
         self.shadow_accumulator_uniform.light_index = 23;
         self.shadow_accumulator_uniform.direction_strength =
@@ -546,13 +544,11 @@ impl ShadowMaker for Sun {
             cmd.end_render_pass();
             cmd.end();
         }
-        vxlogi!("--------------------------");
         geng.submit(
             &frame_data.shadow_mappers_semaphore,
             &frame_data.shadow_accumulator_primary_command,
             &frame_data.shadow_accumulator_semaphore,
         );
-        vxlogi!("--------------------------");
         return frame_data.shadow_accumulator_semaphore.clone();
     }
 }
