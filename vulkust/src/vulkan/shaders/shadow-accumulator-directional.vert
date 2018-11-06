@@ -3,7 +3,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-#define MAX_DIRECTIONAL_CASCADES_COUNT 6
+layout (constant_id = 0) const int MAX_DIRECTIONAL_CASCADES_COUNT = 6;
 
 layout (location = 0) out vec2 out_uv;
 

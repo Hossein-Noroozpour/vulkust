@@ -141,10 +141,11 @@ impl Shadower {
         let (shadow_map_pipeline, shadow_accumulator_directional_pipeline) = {
             let mut pipmgr = vxresult!(geng.get_pipeline_manager().write());
             (
-                pipmgr.create(shadow_map_render_pass.clone(), PipelineType::ShadowMapper),
+                pipmgr.create(shadow_map_render_pass.clone(), PipelineType::ShadowMapper, conf),
                 pipmgr.create(
                     shadow_accumulator_render_pass.clone(),
                     PipelineType::ShadowAccumulatorDirectional,
+                    conf,
                 ),
             )
         };

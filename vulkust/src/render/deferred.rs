@@ -2,6 +2,7 @@ use super::buffer::DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::gapi::GraphicApiEngine;
+use super::config::Configurations;
 use super::pipeline::{Pipeline, PipelineType};
 use super::resolver::Resolver;
 use std::mem::size_of;
@@ -32,7 +33,7 @@ pub struct Deferred {
 }
 
 impl Deferred {
-    pub(crate) fn new(gapi_engine: &GraphicApiEngine, resolver: &Resolver) -> Self {
+    pub(crate) fn new(gapi_engine: &GraphicApiEngine, resolver: &Resolver, config: &Configurations) -> Self {
         let resolver_framebuffer = resolver.get_framebuffer();
         let (w, h) = resolver_framebuffer.get_dimensions();
         let uniform = Uniform::new(w as f32, h as f32);
@@ -43,7 +44,7 @@ impl Deferred {
         let descriptor_set = Arc::new(descriptor_set);
         let mut pipmgr = vxresult!(gapi_engine.get_pipeline_manager().write());
         let render_pass = gapi_engine.get_render_pass();
-        let pipeline = pipmgr.create(render_pass.clone(), PipelineType::Deferred);
+        let pipeline = pipmgr.create(render_pass.clone(), PipelineType::Deferred, config);
         Deferred {
             uniform,
             uniform_buffer,

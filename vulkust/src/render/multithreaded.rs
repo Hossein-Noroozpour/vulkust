@@ -164,10 +164,10 @@ impl Engine {
         let eng = vxresult!(eng.read());
         let scene_manager = asset_manager.get_scene_manager().clone();
         let mut texmgr = vxresult!(asset_manager.get_texture_manager().write());
-        let g_buffer_filler = GBufferFiller::new(&eng);
-        let resolver = Resolver::new(&eng, &g_buffer_filler, &mut *texmgr);
+        let g_buffer_filler = GBufferFiller::new(&eng, config);
+        let resolver = Resolver::new(&eng, &g_buffer_filler, &mut *texmgr, config);
         let shadower = Shadower::new(&eng, &resolver, config, &mut *texmgr);
-        let deferred = Arc::new(RwLock::new(Deferred::new(&eng, &resolver)));
+        let deferred = Arc::new(RwLock::new(Deferred::new(&eng, &resolver, config)));
         let resolver = Arc::new(RwLock::new(resolver));
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
         let shadower = Arc::new(RwLock::new(shadower));

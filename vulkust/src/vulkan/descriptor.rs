@@ -77,8 +77,8 @@ impl SetLayout {
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
-    pub fn new_shadow_accumulator_directional(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_binding_info(&[1, 1, MAX_DIRECTIONAL_CASCADES_COUNT]);
+    pub fn new_shadow_accumulator_directional(logical_device: Arc<LogicalDevice>, conf: &Configurations) -> Self {
+        let layout_bindings = Self::create_binding_info(&[1, 1, conf.get_cascaded_shadows_count() as u32]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
@@ -340,7 +340,7 @@ impl Manager {
         let resolver_set_layout = Arc::new(SetLayout::new_resolver(logical_device.clone()));
         let deferred_set_layout = Arc::new(SetLayout::new_deferred(logical_device.clone()));
         let shadow_accumulator_directional_set_layout = Arc::new(
-            SetLayout::new_shadow_accumulator_directional(logical_device.clone()),
+            SetLayout::new_shadow_accumulator_directional(logical_device.clone(), conf),
         );
         Manager {
             gbuff_set_layout,

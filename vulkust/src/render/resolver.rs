@@ -1,6 +1,7 @@
 use super::super::core::types::Real;
 use super::buffer::DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
+use super::config::Configurations;
 use super::descriptor::Set as DescriptorSet;
 use super::framebuffer::Framebuffer;
 use super::g_buffer_filler::GBufferFiller;
@@ -57,6 +58,7 @@ impl Resolver {
         eng: &GraphicApiEngine,
         g_buffer_filler: &GBufferFiller,
         texture_manager: &mut TextureManager,
+        config: &Configurations,
     ) -> Self {
         let dev = eng.get_device();
         let memmgr = eng.get_memory_manager();
@@ -93,7 +95,7 @@ impl Resolver {
             .create_resolver_set(&uniform_buffer, textures.clone());
         let descriptor_set = Arc::new(descriptor_set);
         let mut pipmgr = vxresult!(eng.get_pipeline_manager().write());
-        let pipeline = pipmgr.create(render_pass.clone(), PipelineType::Resolver);
+        let pipeline = pipmgr.create(render_pass.clone(), PipelineType::Resolver, config);
         Self {
             buffers,
             render_pass,

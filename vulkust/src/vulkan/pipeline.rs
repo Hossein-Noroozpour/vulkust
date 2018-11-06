@@ -1,4 +1,5 @@
 use super::super::render::pipeline::PipelineType;
+use super::super::render::config::Configurations;
 use super::descriptor::{Manager as DescriptorManager, SetLayout as DescriptorSetLayout};
 use super::device::logical::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
@@ -6,9 +7,9 @@ use super::shader::Module;
 use super::vulkan as vk;
 use std::collections::BTreeMap;
 use std::ffi::CString;
-use std::mem::transmute;
 use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
+use std::mem::{size_of, transmute};
 
 macro_rules! include_shader {
     ($name:expr) => {
@@ -174,6 +175,7 @@ impl Pipeline {
         cache: Arc<Cache>,
         samples: vk::VkSampleCountFlagBits,
         pipeline_type: PipelineType,
+        config: &Configurations, 
     ) -> Self {
         vxlogi!("{:?}", pipeline_type);
         let device = vxresult!(descriptor_manager.read())
@@ -344,6 +346,29 @@ impl Pipeline {
             _ => {}
         }
 
+        let cascades_count = config.get_cascaded_shadows_count() as u32;
+ 
+        let mut specialization_map_entries = match pipeline_type {
+            PipelineType::ShadowAccumulatorDirectional => vec![vk::VkSpecializationMapEntry::default(); 1],
+            _ => Vec::new(),
+        };
+
+        let mut specialization_info = vk::VkSpecializationInfo::default();
+
+        match pipeline_type {
+            PipelineType::ShadowAccumulatorDirectional => {
+                specialization_map_entries[0].constantID = 0;
+                specialization_map_entries[0].size = size_of::<u32>();
+                specialization_map_entries[0].offset = 0;
+
+                specialization_info.dataSize = size_of::<u32>();
+		        specialization_info.mapEntryCount = specialization_map_entries.len() as u32;
+		        specialization_info.pMapEntries = specialization_map_entries.as_ptr();
+		        specialization_info.pData = unsafe { transmute(&cascades_count) };
+            },
+            _ => {},
+        };
+
         let stage_name = CString::new("main").unwrap();
         let stages_count = shaders.len();
         let mut shader_stages = vec![vk::VkPipelineShaderStageCreateInfo::default(); stages_count];
@@ -364,6 +389,12 @@ impl Pipeline {
                     vxlogf!("Stage {} is not implemented yet!", n);
                 }
             };
+            match pipeline_type {
+                PipelineType::ShadowAccumulatorDirectional => {
+                    shader_stages[i].pSpecializationInfo = &specialization_info;
+                },
+                _ => {},
+            }
         }
 
         let mut pipeline_create_info = vk::VkGraphicsPipelineCreateInfo::default();
@@ -445,6 +476,7 @@ impl Manager {
         &mut self,
         render_pass: Arc<RenderPass>,
         pipeline_type: PipelineType,
+        config: &Configurations,
     ) -> Arc<Pipeline> {
         let samples = render_pass.get_vk_samples();
         let rpptr = unsafe { transmute(render_pass.get_data()) };
@@ -461,6 +493,7 @@ impl Manager {
             self.cache.clone(),
             samples,
             pipeline_type,
+            config, 
         ));
         self.pipelines.insert(id, Arc::downgrade(&p));
         return p;
