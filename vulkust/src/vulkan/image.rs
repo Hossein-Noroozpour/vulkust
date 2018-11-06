@@ -41,13 +41,16 @@ pub(super) fn convert_samples(s: u8) -> vk::VkSampleCountFlagBits {
     }
 }
 
-
 pub(super) fn convert_layout(f: &Layout) -> vk::VkImageLayout {
     match f {
         &Layout::Uninitialized => return vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
-        &Layout::DepthStencil => return vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        &Layout::DepthStencil => {
+            return vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+        }
         &Layout::Display => return vk::VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-        &Layout::ShaderReadOnly => return vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        &Layout::ShaderReadOnly => {
+            return vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        }
         // _ => vxunexpected!(),
     }
 }

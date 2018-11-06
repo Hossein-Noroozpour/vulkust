@@ -77,8 +77,12 @@ impl SetLayout {
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
-    pub fn new_shadow_accumulator_directional(logical_device: Arc<LogicalDevice>, conf: &Configurations) -> Self {
-        let layout_bindings = Self::create_binding_info(&[1, 1, conf.get_cascaded_shadows_count() as u32]);
+    pub fn new_shadow_accumulator_directional(
+        logical_device: Arc<LogicalDevice>,
+        conf: &Configurations,
+    ) -> Self {
+        let layout_bindings =
+            Self::create_binding_info(&[1, 1, conf.get_cascaded_shadows_count() as u32]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 

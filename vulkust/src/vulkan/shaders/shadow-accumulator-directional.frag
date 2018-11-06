@@ -37,9 +37,15 @@ void main() {
             continue;
         }
         float dist = texture(shadowmaps[i], ipos.xy).x;
-        float bias = -dot(nrm, light_ubo.direction_strength.xyz);
-        bias = sqrt(1.0 - (bias * bias)) / bias;
-        bias = clamp(0.005 * bias, 0.0, 0.02);
+        float bias = abs(dot(nrm, light_ubo.direction_strength.xyz));
+        if (bias < 0.1) {
+            bias = 0.02;
+        } else if (bias > 0.99) {
+            bias = 0.001;
+        } else {
+            bias = sqrt(1.0 - (bias * bias)) / bias;
+            bias = clamp(0.005 * bias, 0.001, 0.02);
+        }
         if(dist + bias < ipos.z) {
             shadow = light_ubo.direction_strength.w;
             if (light_ubo.light_index > 32) {

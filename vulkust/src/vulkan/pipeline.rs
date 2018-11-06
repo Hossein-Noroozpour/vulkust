@@ -1,5 +1,5 @@
-use super::super::render::pipeline::PipelineType;
 use super::super::render::config::Configurations;
+use super::super::render::pipeline::PipelineType;
 use super::descriptor::{Manager as DescriptorManager, SetLayout as DescriptorSetLayout};
 use super::device::logical::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
@@ -7,9 +7,9 @@ use super::shader::Module;
 use super::vulkan as vk;
 use std::collections::BTreeMap;
 use std::ffi::CString;
+use std::mem::{size_of, transmute};
 use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
-use std::mem::{size_of, transmute};
 
 macro_rules! include_shader {
     ($name:expr) => {
@@ -175,7 +175,7 @@ impl Pipeline {
         cache: Arc<Cache>,
         samples: vk::VkSampleCountFlagBits,
         pipeline_type: PipelineType,
-        config: &Configurations, 
+        config: &Configurations,
     ) -> Self {
         vxlogi!("{:?}", pipeline_type);
         let device = vxresult!(descriptor_manager.read())
@@ -347,9 +347,11 @@ impl Pipeline {
         }
 
         let cascades_count = config.get_cascaded_shadows_count() as u32;
- 
+
         let mut specialization_map_entries = match pipeline_type {
-            PipelineType::ShadowAccumulatorDirectional => vec![vk::VkSpecializationMapEntry::default(); 1],
+            PipelineType::ShadowAccumulatorDirectional => {
+                vec![vk::VkSpecializationMapEntry::default(); 1]
+            }
             _ => Vec::new(),
         };
 
@@ -362,11 +364,11 @@ impl Pipeline {
                 specialization_map_entries[0].offset = 0;
 
                 specialization_info.dataSize = size_of::<u32>();
-		        specialization_info.mapEntryCount = specialization_map_entries.len() as u32;
-		        specialization_info.pMapEntries = specialization_map_entries.as_ptr();
-		        specialization_info.pData = unsafe { transmute(&cascades_count) };
-            },
-            _ => {},
+                specialization_info.mapEntryCount = specialization_map_entries.len() as u32;
+                specialization_info.pMapEntries = specialization_map_entries.as_ptr();
+                specialization_info.pData = unsafe { transmute(&cascades_count) };
+            }
+            _ => {}
         };
 
         let stage_name = CString::new("main").unwrap();
@@ -392,8 +394,8 @@ impl Pipeline {
             match pipeline_type {
                 PipelineType::ShadowAccumulatorDirectional => {
                     shader_stages[i].pSpecializationInfo = &specialization_info;
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
 
@@ -493,7 +495,7 @@ impl Manager {
             self.cache.clone(),
             samples,
             pipeline_type,
-            config, 
+            config,
         ));
         self.pipelines.insert(id, Arc::downgrade(&p));
         return p;

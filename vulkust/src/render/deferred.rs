@@ -1,11 +1,11 @@
 use super::buffer::DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
+use super::config::Configurations;
 use super::descriptor::Set as DescriptorSet;
 use super::gapi::GraphicApiEngine;
-use super::config::Configurations;
 use super::pipeline::{Pipeline, PipelineType};
-use super::shadower::Shadower;
 use super::resolver::Resolver;
+use super::shadower::Shadower;
 use std::mem::size_of;
 use std::sync::Arc;
 
@@ -34,7 +34,12 @@ pub struct Deferred {
 }
 
 impl Deferred {
-    pub(crate) fn new(gapi_engine: &GraphicApiEngine, resolver: &Resolver, shadower: &Shadower, config: &Configurations) -> Self {
+    pub(crate) fn new(
+        gapi_engine: &GraphicApiEngine,
+        resolver: &Resolver,
+        shadower: &Shadower,
+        config: &Configurations,
+    ) -> Self {
         let resolver_framebuffer = resolver.get_framebuffer();
         let (w, h) = resolver_framebuffer.get_dimensions();
         let uniform = Uniform::new(w as f32, h as f32);

@@ -1,7 +1,7 @@
-use super::image::View as ImageView;
-use super::swapchain::Swapchain;
 use super::super::render::image::Layout;
 use super::image::convert_layout;
+use super::image::View as ImageView;
+use super::swapchain::Swapchain;
 use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::Arc;
@@ -22,7 +22,12 @@ impl RenderPass {
         return result;
     }
 
-    pub(crate) fn new_with_layouts(views: Vec<Arc<ImageView>>, clear: bool, start_layouts: &[Layout], end_layouts: &[Layout]) -> Self {
+    pub(crate) fn new_with_layouts(
+        views: Vec<Arc<ImageView>>,
+        clear: bool,
+        start_layouts: &[Layout],
+        end_layouts: &[Layout],
+    ) -> Self {
         let mut attachment_descriptions = Vec::new(); // vec![vk::VkAttachmentDescription::default(); views_len];
         let mut color_attachments_refs = Vec::new(); // vec![vk::VkAttachmentReference::default(); views_len - 1];
         let mut depth_attachment_ref = vk::VkAttachmentReference::default();
@@ -145,8 +150,9 @@ impl RenderPass {
                 Layout::Display
             });
             let img = vxresult!(v.get_image().read());
-            end_layouts.push(if img.get_vk_usage() & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
-                as vk::VkImageUsageFlags
+            end_layouts.push(if img.get_vk_usage()
+                & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                    as vk::VkImageUsageFlags
                 != 0
             {
                 if has_reader {

@@ -1,7 +1,7 @@
 use super::command::Buffer as CmdBuffer;
+use super::config::Configurations;
 use super::framebuffer::Framebuffer;
 use super::gapi::GraphicApiEngine;
-use super::config::Configurations;
 use super::image::{AttachmentType, Format, View as ImageView};
 use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
@@ -16,8 +16,7 @@ pub struct GBufferFiller {
 }
 
 impl GBufferFiller {
-    pub(super) fn new(eng: &GraphicApiEngine,
-        config: &Configurations,) -> Self {
+    pub(super) fn new(eng: &GraphicApiEngine, config: &Configurations) -> Self {
         let dev = eng.get_device();
         let memmgr = eng.get_memory_manager();
         let samples_count = eng.get_samples_count();
@@ -53,8 +52,11 @@ impl GBufferFiller {
         ];
         let render_pass = Arc::new(RenderPass::new(buffers.clone(), true, true));
         let framebuffer = Arc::new(Framebuffer::new(buffers.clone(), render_pass.clone()));
-        let pipeline = vxresult!(eng.get_pipeline_manager().write())
-            .create(render_pass.clone(), PipelineType::GBuffer, config);
+        let pipeline = vxresult!(eng.get_pipeline_manager().write()).create(
+            render_pass.clone(),
+            PipelineType::GBuffer,
+            config,
+        );
         Self {
             buffers,
             render_pass,

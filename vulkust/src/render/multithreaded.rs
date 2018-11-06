@@ -167,7 +167,9 @@ impl Engine {
         let g_buffer_filler = GBufferFiller::new(&eng, config);
         let resolver = Resolver::new(&eng, &g_buffer_filler, &mut *texmgr, config);
         let shadower = Shadower::new(&eng, &resolver, config, &mut *texmgr);
-        let deferred = Arc::new(RwLock::new(Deferred::new(&eng, &resolver, &shadower, config)));
+        let deferred = Arc::new(RwLock::new(Deferred::new(
+            &eng, &resolver, &shadower, config,
+        )));
         let resolver = Arc::new(RwLock::new(resolver));
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
         let shadower = Arc::new(RwLock::new(shadower));

@@ -4,12 +4,14 @@ use super::config::Configurations;
 use super::descriptor::Set as DescriptorSet;
 use super::framebuffer::Framebuffer;
 use super::gapi::GraphicApiEngine;
-use super::image::{AttachmentType, Format as ImageFormat, View as ImageView, Layout as ImageLayout};
+use super::image::{
+    AttachmentType, Format as ImageFormat, Layout as ImageLayout, View as ImageView,
+};
 use super::light::ShadowAccumulatorDirectionalUniform;
 use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
 use super::resolver::Resolver;
-use super::texture::{Texture, Manager as TextureManager};
+use super::texture::{Manager as TextureManager, Texture};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
@@ -79,8 +81,14 @@ impl Shadower {
             1,
             AttachmentType::ResolverBuffer,
         ));
-        let shadow_accumulator_strength_texture = texture_manager.create_2d_with_view_sampler(shadow_accumulator_strength_buffer.clone(), sampler.clone());
-        let shadow_accumulator_flagbits_texture = texture_manager.create_2d_with_view_sampler(shadow_accumulator_flagbits_buffer.clone(), sampler.clone());
+        let shadow_accumulator_strength_texture = texture_manager.create_2d_with_view_sampler(
+            shadow_accumulator_strength_buffer.clone(),
+            sampler.clone(),
+        );
+        let shadow_accumulator_flagbits_texture = texture_manager.create_2d_with_view_sampler(
+            shadow_accumulator_flagbits_buffer.clone(),
+            sampler.clone(),
+        );
         let shadow_accumulator_buffers = vec![
             shadow_accumulator_strength_buffer.clone(),
             shadow_accumulator_flagbits_buffer.clone(),
@@ -144,7 +152,11 @@ impl Shadower {
         let (shadow_map_pipeline, shadow_accumulator_directional_pipeline) = {
             let mut pipmgr = vxresult!(geng.get_pipeline_manager().write());
             (
-                pipmgr.create(shadow_map_render_pass.clone(), PipelineType::ShadowMapper, conf),
+                pipmgr.create(
+                    shadow_map_render_pass.clone(),
+                    PipelineType::ShadowMapper,
+                    conf,
+                ),
                 pipmgr.create(
                     shadow_accumulator_render_pass.clone(),
                     PipelineType::ShadowAccumulatorDirectional,
@@ -200,16 +212,12 @@ impl Shadower {
         return &self.shadow_accumulator_directional_pipeline;
     }
 
-    pub(crate) fn clear_shadow_accumulator(
-        &self,
-        cmd: &mut CmdBuffer,
-    ) {
+    pub(crate) fn clear_shadow_accumulator(&self, cmd: &mut CmdBuffer) {
         cmd.begin();
         self.clear_shadow_accumulator_framebuffer.begin(cmd);
         cmd.end_render_pass();
         cmd.end();
     }
-
 
     pub(super) fn get_shadow_accumulator_strength_texture(&self) -> &Arc<RwLock<Texture>> {
         return &self.shadow_accumulator_strength_texture;
@@ -218,7 +226,6 @@ impl Shadower {
     pub(super) fn get_shadow_accumulator_flagbits_texture(&self) -> &Arc<RwLock<Texture>> {
         return &self.shadow_accumulator_flagbits_texture;
     }
-
 
     // pub(super) fn begin_accumulator_primary(&self, cmd: &mut CmdBuffer) {
     //     self.shadow_map_framebuffers[map_index].begin(cmd);
