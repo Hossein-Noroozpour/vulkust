@@ -133,7 +133,7 @@ impl Shadower {
                     vec![
                         vec![restex[0].clone()],
                         vec![restex[1].clone()],
-                        shadow_map_textures,
+                        shadow_map_textures[0..conf.get_cascaded_shadows_count() as usize].to_vec(),
                     ],
                 ),
             )
