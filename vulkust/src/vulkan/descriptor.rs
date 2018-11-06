@@ -68,7 +68,7 @@ impl SetLayout {
     }
 
     pub fn new_deferred(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_binding_info(&[1; 4]);
+        let layout_bindings = Self::create_binding_info(&[1; 6]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
@@ -181,8 +181,8 @@ impl Set {
     ) -> Self {
         #[cfg(debug_mode)]
         {
-            if textures.len() != 4 {
-                vxlogf!("For deferred descriptor you need 4 textures.");
+            if textures.len() != 6 {
+                vxlogf!("For deferred descriptor you need 6 textures.");
             }
         }
         let mut texturess = Vec::new();

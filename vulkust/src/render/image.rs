@@ -26,6 +26,14 @@ pub enum Format {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
+pub enum Layout {
+    Uninitialized,
+    DepthStencil,
+    Display,
+    ShaderReadOnly,
+}
+
+#[cfg_attr(debug_mode, derive(Debug))]
 pub enum Usage {
     Color,
     DepthStencil,

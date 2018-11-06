@@ -1,4 +1,4 @@
-use super::super::render::image::{AttachmentType, Format};
+use super::super::render::image::{AttachmentType, Format, Layout};
 use super::buffer::Manager as BufferManager;
 use super::command::Buffer as CmdBuffer;
 use super::device::logical::Logical as LogicalDevice;
@@ -38,6 +38,17 @@ pub(super) fn convert_samples(s: u8) -> vk::VkSampleCountFlagBits {
         32 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT,
         64 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT,
         _ => vxunexpected!(),
+    }
+}
+
+
+pub(super) fn convert_layout(f: &Layout) -> vk::VkImageLayout {
+    match f {
+        &Layout::Uninitialized => return vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+        &Layout::DepthStencil => return vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        &Layout::Display => return vk::VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        &Layout::ShaderReadOnly => return vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        // _ => vxunexpected!(),
     }
 }
 

@@ -1,5 +1,7 @@
 use super::image::View as ImageView;
 use super::swapchain::Swapchain;
+use super::super::render::image::Layout;
+use super::image::convert_layout;
 use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::Arc;
@@ -20,13 +22,14 @@ impl RenderPass {
         return result;
     }
 
-    pub(crate) fn new(views: Vec<Arc<ImageView>>, clear: bool, has_reader: bool) -> Self {
+    pub(crate) fn new_with_layouts(views: Vec<Arc<ImageView>>, clear: bool, start_layouts: &[Layout], end_layouts: &[Layout]) -> Self {
         let mut attachment_descriptions = Vec::new(); // vec![vk::VkAttachmentDescription::default(); views_len];
         let mut color_attachments_refs = Vec::new(); // vec![vk::VkAttachmentReference::default(); views_len - 1];
         let mut depth_attachment_ref = vk::VkAttachmentReference::default();
         let mut vkdev = 0 as vk::VkDevice;
         let mut depth = None;
         let mut colors = Vec::new();
+        let mut view_index = 0;
         for v in &views {
             let img = vxresult!(v.get_image().read());
             vkdev = img.get_device().vk_data;
@@ -44,20 +47,12 @@ impl RenderPass {
                 vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             attachment_description.stencilStoreOp =
                 vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            attachment_description.initialLayout = if clear {
-                vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-            } else {
-                vk::VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-            };
+            attachment_description.initialLayout = convert_layout(&start_layouts[view_index]);
+            attachment_description.finalLayout = convert_layout(&end_layouts[view_index]);
             if img.get_vk_usage() & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
                 as vk::VkImageUsageFlags
                 != 0
             {
-                attachment_description.finalLayout = if has_reader {
-                    vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-                } else {
-                    vk::VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-                };
                 let mut color_attachment_ref = vk::VkAttachmentReference::default();
                 color_attachment_ref.attachment = attachment_descriptions.len() as u32;
                 color_attachment_ref.layout =
@@ -69,11 +64,6 @@ impl RenderPass {
                     as vk::VkImageUsageFlags
                 != 0
             {
-                attachment_description.finalLayout = if has_reader {
-                    vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-                } else {
-                    vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-                };
                 depth_attachment_ref.layout =
                     vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 depth_attachment_ref.attachment = attachment_descriptions.len() as u32;
@@ -82,6 +72,7 @@ impl RenderPass {
                 vxunexpected!();
             }
             attachment_descriptions.push(attachment_description);
+            view_index += 1;
         }
         colors.shrink_to_fit();
 
@@ -142,6 +133,42 @@ impl RenderPass {
             depth,
             vk_data,
         }
+    }
+
+    pub(crate) fn new(views: Vec<Arc<ImageView>>, clear: bool, has_reader: bool) -> Self {
+        let mut start_layouts = Vec::with_capacity(views.len());
+        let mut end_layouts = Vec::with_capacity(views.len());
+        for v in &views {
+            start_layouts.push(if clear {
+                Layout::Uninitialized
+            } else {
+                Layout::Display
+            });
+            let img = vxresult!(v.get_image().read());
+            end_layouts.push(if img.get_vk_usage() & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                as vk::VkImageUsageFlags
+                != 0
+            {
+                if has_reader {
+                    Layout::ShaderReadOnly
+                } else {
+                    Layout::Display
+                }
+            } else if img.get_vk_usage()
+                & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+                    as vk::VkImageUsageFlags
+                != 0
+            {
+                if has_reader {
+                    Layout::ShaderReadOnly
+                } else {
+                    Layout::DepthStencil
+                }
+            } else {
+                vxunexpected!();
+            });
+        }
+        return Self::new_with_layouts(views, clear, &start_layouts, &end_layouts);
     }
 
     pub(crate) fn get_color_attachments(&self) -> &[Arc<ImageView>] {

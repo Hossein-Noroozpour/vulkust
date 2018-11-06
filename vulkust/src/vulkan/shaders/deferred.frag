@@ -45,9 +45,11 @@ layout (set = 1, binding = 2) uniform sampler2D normal;
 layout (set = 1, binding = 3) uniform sampler2D albedo;
 layout (set = 1, binding = 4) uniform sampler2D screen_space_depth;
 layout (set = 1, binding = 5) uniform sampler2D darkness;
+layout (set = 1, binding = 6) uniform sampler2D light_flagbits;
 
 void main() {
 	vec4 ms_albedo = texture(albedo, uv);
 	out_color = ms_albedo;
+	out_color.xyz *= 1 - texture(darkness, uv).x;
 	// todo lots of work must be done in here
 }

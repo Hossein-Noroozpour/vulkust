@@ -4,6 +4,7 @@ use super::descriptor::Set as DescriptorSet;
 use super::gapi::GraphicApiEngine;
 use super::config::Configurations;
 use super::pipeline::{Pipeline, PipelineType};
+use super::shadower::Shadower;
 use super::resolver::Resolver;
 use std::mem::size_of;
 use std::sync::Arc;
@@ -33,14 +34,20 @@ pub struct Deferred {
 }
 
 impl Deferred {
-    pub(crate) fn new(gapi_engine: &GraphicApiEngine, resolver: &Resolver, config: &Configurations) -> Self {
+    pub(crate) fn new(gapi_engine: &GraphicApiEngine, resolver: &Resolver, shadower: &Shadower, config: &Configurations) -> Self {
         let resolver_framebuffer = resolver.get_framebuffer();
         let (w, h) = resolver_framebuffer.get_dimensions();
         let uniform = Uniform::new(w as f32, h as f32);
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let mut textures = Vec::with_capacity(resolver.get_output_textures().len() + 2);
+        for t in resolver.get_output_textures() {
+            textures.push(t.clone());
+        }
+        textures.push(shadower.get_shadow_accumulator_strength_texture().clone());
+        textures.push(shadower.get_shadow_accumulator_flagbits_texture().clone());
         let descriptor_set = vxresult!(gapi_engine.get_descriptor_manager().write())
-            .create_deferred_set(&uniform_buffer, resolver.get_output_textures().clone());
+            .create_deferred_set(&uniform_buffer, textures);
         let descriptor_set = Arc::new(descriptor_set);
         let mut pipmgr = vxresult!(gapi_engine.get_pipeline_manager().write());
         let render_pass = gapi_engine.get_render_pass();
