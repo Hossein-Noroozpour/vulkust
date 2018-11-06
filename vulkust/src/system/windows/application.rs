@@ -247,12 +247,12 @@ impl Application {
                     winapi::um::winuser::TranslateMessage(&msg);
                     winapi::um::winuser::DispatchMessageW(&msg);
                 }
-                vxresult!(vxunwrap!(&self.core_app).write()).update();
-                vxresult!(vxunwrap!(&self.renderer).read()).update();
                 if msg.message == winapi::um::winuser::WM_QUIT {
                     return true;
                 }
             }
+            vxresult!(vxunwrap!(&self.core_app).write()).update();
+            vxresult!(vxunwrap!(&self.renderer).read()).update();
         }
     }
 
@@ -265,8 +265,8 @@ impl Application {
         if unsafe { winapi::um::winuser::ScreenToClient(self.window, &mut p) } == 0 {
             vxloge!("ScreenToClient failed");
         }
-        data.mouse_x = p.x as Real / data.width;
-        data.mouse_y = p.y as Real / data.width;
+        data.mouse_x = p.x as Real / data.height;
+        data.mouse_y = p.y as Real / data.height;
         return (data.mouse_x, data.mouse_y);
     }
 
