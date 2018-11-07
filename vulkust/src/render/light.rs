@@ -4,7 +4,7 @@ use super::super::core::types::{Id, Real};
 use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::camera::Orthographic;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
-use super::config::MAX_DIRECTIONAL_CASCADES_COUNT;
+use super::config::MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT;
 use super::engine::Engine;
 use super::gapi::GraphicApiEngine;
 use super::model::Model;
@@ -807,7 +807,7 @@ impl DirectionalUniform {
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct ShadowAccumulatorDirectionalUniform {
-    view_projection_biases: [math::Matrix4<Real>; MAX_DIRECTIONAL_CASCADES_COUNT as usize],
+    view_projection_biases: [math::Matrix4<Real>; MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT as usize],
     direction_strength: math::Vector4<Real>,
     cascades_count: u32,
     light_index: u32,
@@ -818,7 +818,7 @@ impl ShadowAccumulatorDirectionalUniform {
         Self {
             view_projection_biases: [math::Matrix4::new(
                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            ); MAX_DIRECTIONAL_CASCADES_COUNT as usize],
+            ); MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT as usize],
             direction_strength: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
             cascades_count: 0,
             light_index: 0,

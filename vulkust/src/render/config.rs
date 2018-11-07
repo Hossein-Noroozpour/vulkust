@@ -1,4 +1,5 @@
 pub const MAX_DIRECTIONAL_CASCADES_COUNT: u32 = 6;
+pub const MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT: u32 = 6;
 
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]

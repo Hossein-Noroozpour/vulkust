@@ -72,7 +72,7 @@ void main() {
     out_pos.xyz = pos;
 //   out_pos.w = out_alb.a;
     out_pos.w = 1.0;
-    out_nrm.xyz = mat3(tng, btg, nrm) * ((texture(normal, uv).xyz - 0.5) * 2.0);
+    out_nrm.xyz = normalize(mat3(tng, btg, nrm) * ((texture(normal, uv).xyz - 0.5) * 2.0));
 //   out_nrm.w = out_alb.a;
     out_nrm.w = 1.0;
   // todo lots of work must be done in here

@@ -628,8 +628,11 @@ impl Camera for Perspective {
 
         let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
 
-        let x = self.base.x * (self.tanx * self.base.near);
-        let y = self.base.y * (self.tany * self.base.near);
+        let xtanx = self.base.x * self.tanx;
+        let ytany = self.base.y * self.tany;
+
+        let x = xtanx * self.base.near;
+        let y = ytany * self.base.near;
         let z = self.base.location + self.base.z * self.base.near;
 
         result[0][0] = z - x - y;
@@ -637,8 +640,8 @@ impl Camera for Perspective {
         result[0][2] = z + x + y;
         result[0][3] = z - x + y;
 
-        let x = self.base.x * (self.tanx * self.base.far);
-        let y = self.base.y * (self.tany * self.base.far);
+        let x = xtanx * self.base.far;
+        let y = ytany * self.base.far;
         let z = self.base.location + self.base.z * self.base.far;
 
         result[sections_count][0] = z - x - y;
@@ -665,8 +668,8 @@ impl Camera for Perspective {
         let mut logsec = lambda * self.base.near * logsecmul;
 
         let l = logsec + unisec;
-        let x = self.base.x * (self.tanx * l);
-        let y = self.base.y * (self.tany * l);
+        let x = xtanx * l;
+        let y = ytany * l;
         let z = self.base.location + self.base.z * l;
 
         result[1][0] = z - x - y;
@@ -679,8 +682,8 @@ impl Camera for Perspective {
             unisec += unisecinc;
 
             let l = logsec + unisec;
-            let x = self.base.x * (self.tanx * l);
-            let y = self.base.y * (self.tany * l);
+            let x = xtanx * l;
+            let y = ytany * l;
             let z = self.base.location + self.base.z * l;
 
             result[i][0] = z - x - y;
