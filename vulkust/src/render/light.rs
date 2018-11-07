@@ -1,5 +1,6 @@
 use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
+use super::super::core::constants::EPSILON;
 use super::super::core::types::{Id, Real};
 use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::camera::Orthographic;
@@ -233,8 +234,7 @@ impl SunShadowMakerKernelData {
             if c.max_seen_y < upv.y {
                 c.max_seen_y = upv.y;
             }
-            if c.max_z < upv.z {
-                c.max_z = upv.z;
+            if c.max_seen_z < upv.z {
                 c.max_seen_z = upv.z;
             }
             let render_data = &mut self.render_data[self.last_render_data_index];
@@ -331,7 +331,6 @@ impl Sun {
                 }
                 if ccd.max_seen_z < smdccd.max_seen_z {
                     ccd.max_seen_z = smdccd.max_seen_z;
-                    ccd.max_z = smdccd.max_seen_z;
                 }
                 if ccd.min_seen_x > smdccd.min_seen_x {
                     ccd.min_seen_x = smdccd.min_seen_x;
@@ -404,29 +403,29 @@ impl Light for Sun {
     fn update(&mut self) {
         self.update_with_kernels_data();
         for ccd in &mut self.cascade_cameras {
-            if ccd.max_seen_x < ccd.max_x {
+            if ccd.max_seen_x < ccd.max_x && ccd.min_x + EPSILON < ccd.max_seen_x {
                 ccd.max_x = ccd.max_seen_x;
             }
-            if ccd.max_seen_y < ccd.max_y {
+            if ccd.max_seen_y < ccd.max_y && ccd.min_y + EPSILON < ccd.max_seen_y  {
                 ccd.max_y = ccd.max_seen_y;
             }
-            if ccd.max_seen_z < ccd.max_z {
+            if ccd.max_seen_z < ccd.max_z  && ccd.min_z + EPSILON < ccd.max_seen_z {
                 ccd.max_z = ccd.max_seen_z;
             }
-            if ccd.min_seen_x > ccd.min_x {
+            if ccd.min_seen_x > ccd.min_x && ccd.max_x > ccd.min_seen_x + EPSILON  {
                 ccd.min_x = ccd.min_seen_x;
             }
-            if ccd.min_seen_y > ccd.min_y {
+            if ccd.min_seen_y > ccd.min_y && ccd.max_y > ccd.min_seen_y + EPSILON {
                 ccd.min_y = ccd.min_seen_y;
             }
-            if ccd.min_seen_z > ccd.min_z {
+            if ccd.min_seen_z > ccd.min_z && ccd.max_z > ccd.min_seen_z + EPSILON {
                 ccd.min_z = ccd.min_seen_z;
             }
         }
         for ccd in &mut self.cascade_cameras {
-            let horz = (ccd.max_x - ccd.min_x) * 0.52;
-            let vert = (ccd.max_y - ccd.min_y) * 0.52;
-            let depth = ccd.max_z - ccd.min_z;
+            let horz = ((ccd.max_x - ccd.min_x) * 0.52).abs();
+            let vert = ((ccd.max_y - ccd.min_y) * 0.52).abs();
+            let depth = (ccd.max_z - ccd.min_z).abs();
             let near = depth * 0.01;
             let far = depth * 1.03;
             let p = math::ortho(-horz, horz, -vert, vert, near, far);
@@ -440,18 +439,6 @@ impl Light for Sun {
             ) * p
                 * self.zero_located_view
                 * t;
-            ccd.max_x = F32MIN;
-            ccd.max_seen_x = F32MIN;
-            ccd.min_x = F32MAX;
-            ccd.min_seen_x = F32MAX;
-            ccd.max_y = F32MIN;
-            ccd.max_seen_y = F32MIN;
-            ccd.min_y = F32MAX;
-            ccd.min_seen_y = F32MAX;
-            ccd.max_z = F32MIN;
-            ccd.max_seen_z = F32MIN;
-            ccd.min_z = F32MAX;
-            ccd.min_seen_z = F32MAX;
         }
     }
 }
@@ -578,6 +565,9 @@ impl Directional for Sun {
                 if p.z < min.z {
                     min.z = p.z;
                 }
+                if max.z < p.z {
+                    max.z = p.z;
+                }
             }
             walls_bnds.push((max, min));
         }
@@ -609,6 +599,11 @@ impl Directional for Sun {
                 ccd.min_z = walls_bnds[i].1.z;
             } else {
                 ccd.min_z = walls_bnds[ii].1.z;
+            }
+            if walls_bnds[i].0.z < walls_bnds[ii].0.z {
+                ccd.max_z = walls_bnds[ii].0.z;
+            } else {
+                ccd.max_z = walls_bnds[i].0.z;
             }
             ccd.max_seen_x = ccd.min_x;
             ccd.max_seen_y = ccd.min_y;
