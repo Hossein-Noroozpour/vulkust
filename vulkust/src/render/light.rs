@@ -1,6 +1,6 @@
+use super::super::core::constants::EPSILON;
 use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
-use super::super::core::constants::EPSILON;
 use super::super::core::types::{Id, Real};
 use super::buffer::{DynamicBuffer, Manager as BufferManager};
 use super::camera::Orthographic;
@@ -406,13 +406,13 @@ impl Light for Sun {
             if ccd.max_seen_x < ccd.max_x && ccd.min_x + EPSILON < ccd.max_seen_x {
                 ccd.max_x = ccd.max_seen_x;
             }
-            if ccd.max_seen_y < ccd.max_y && ccd.min_y + EPSILON < ccd.max_seen_y  {
+            if ccd.max_seen_y < ccd.max_y && ccd.min_y + EPSILON < ccd.max_seen_y {
                 ccd.max_y = ccd.max_seen_y;
             }
-            if ccd.max_seen_z < ccd.max_z  && ccd.min_z + EPSILON < ccd.max_seen_z {
+            if ccd.max_seen_z < ccd.max_z && ccd.min_z + EPSILON < ccd.max_seen_z {
                 ccd.max_z = ccd.max_seen_z;
             }
-            if ccd.min_seen_x > ccd.min_x && ccd.max_x > ccd.min_seen_x + EPSILON  {
+            if ccd.min_seen_x > ccd.min_x && ccd.max_x > ccd.min_seen_x + EPSILON {
                 ccd.min_x = ccd.min_seen_x;
             }
             if ccd.min_seen_y > ccd.min_y && ccd.max_y > ccd.min_seen_y + EPSILON {
@@ -628,10 +628,10 @@ impl DefaultLighting for Sun {
             eng.get_config()
                 .get_max_shadow_maker_kernek_render_data_count() as usize;
         let mut cascade_cameras = Vec::with_capacity(csc);
-        let mut frames_data = Vec::with_capacity(csc);
         let geng = vxresult!(eng.get_gapi_engine().read());
         let frames_count = geng.get_frames_count();
-        for _ in 0..csc {
+        let mut frames_data = Vec::with_capacity(frames_count);
+        for _ in 0..frames_count {
             let mut shadow_mappers_primary_commands = Vec::with_capacity(num_cpus);
             for _ in 0..csc {
                 shadow_mappers_primary_commands
@@ -646,6 +646,8 @@ impl DefaultLighting for Sun {
                     .create_primary_command_buffer_from_main_graphic_pool(),
                 shadow_accumulator_semaphore: Arc::new(geng.create_semaphore()),
             });
+        }
+        for _ in 0..csc {
             cascade_cameras.push(SunCascadeCamera::new());
         }
         let zero_located_view = math::Matrix4::new(
