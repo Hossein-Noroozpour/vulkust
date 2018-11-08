@@ -70,5 +70,6 @@ void main() {
 		out_btg = cross(out_nrm, out_tng);
 	}
 	out_uv = uv;
-	gl_Position = scene_ubo.camera.view_projection * vec4(pos, 1.0);
+	gl_Position = scene_ubo.camera.view_projection * vec4(out_pos, 1.0);
+
 }

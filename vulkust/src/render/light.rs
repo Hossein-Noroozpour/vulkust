@@ -286,6 +286,7 @@ impl SunShadowMakerKernelData {
         for cmd in &mut self.frames_data[frame_number].cascades_cmds {
             cmd.end();
         }
+        self.last_render_data_index = 0;
     }
 }
 
