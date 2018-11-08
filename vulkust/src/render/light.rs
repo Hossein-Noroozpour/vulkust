@@ -198,7 +198,7 @@ impl SunShadowMakerKernelData {
 
     fn shadow(&mut self, m: &mut Model, model: &Arc<RwLock<Model>>) {
         let rd = m.get_occlusion_culling_radius();
-        let v = (self.zero_located_view * m.get_location().extend(1.0)).truncate();
+        let v = (self.zero_located_view * m.get_location().extend(0.0)).truncate();
         let rdv = math::Vector3::new(rd, rd, rd);
         let upv = v + rdv;
         let dnv = v - rdv;
@@ -404,37 +404,46 @@ impl Light for Sun {
     fn update(&mut self) {
         self.update_with_kernels_data();
         for ccd in &mut self.cascade_cameras {
-            if ccd.max_seen_x < ccd.max_x && ccd.min_x + EPSILON < ccd.max_seen_x {
+            let change_max_x = ccd.max_seen_x < ccd.max_x && ccd.min_x + EPSILON < ccd.max_seen_x;
+            let change_max_y = ccd.max_seen_y < ccd.max_y && ccd.min_y + EPSILON < ccd.max_seen_y;
+            let change_max_z = ccd.max_seen_z < ccd.max_z && ccd.min_z + EPSILON < ccd.max_seen_z;
+            let change_min_x = ccd.min_seen_x > ccd.min_x && ccd.max_x > ccd.min_seen_x + EPSILON;
+            let change_min_y = ccd.min_seen_y > ccd.min_y && ccd.max_y > ccd.min_seen_y + EPSILON;
+            let change_min_z = ccd.min_seen_z > ccd.min_z && ccd.max_z > ccd.min_seen_z + EPSILON;
+            if change_max_x {
                 ccd.max_x = ccd.max_seen_x;
             }
-            if ccd.max_seen_y < ccd.max_y && ccd.min_y + EPSILON < ccd.max_seen_y {
+            if change_max_y {
                 ccd.max_y = ccd.max_seen_y;
             }
-            if ccd.max_seen_z < ccd.max_z && ccd.min_z + EPSILON < ccd.max_seen_z {
+            if change_max_z {
+                ccd.max_z = ccd.max_seen_z;
+            } else if ccd.max_seen_z > ccd.max_z {
                 ccd.max_z = ccd.max_seen_z;
             }
-            if ccd.min_seen_x > ccd.min_x && ccd.max_x > ccd.min_seen_x + EPSILON {
+            if change_min_x {
                 ccd.min_x = ccd.min_seen_x;
             }
-            if ccd.min_seen_y > ccd.min_y && ccd.max_y > ccd.min_seen_y + EPSILON {
+            if change_min_y {
                 ccd.min_y = ccd.min_seen_y;
             }
-            if ccd.min_seen_z > ccd.min_z && ccd.max_z > ccd.min_seen_z + EPSILON {
+            if change_min_z {
                 ccd.min_z = ccd.min_seen_z;
             }
         }
         for ccd in &mut self.cascade_cameras {
-            let horz = ((ccd.max_x - ccd.min_x) * 0.52).abs();
-            let vert = ((ccd.max_y - ccd.min_y) * 0.52).abs();
+            let width = ((ccd.max_x - ccd.min_x) * 0.51).abs();
+            let height = ((ccd.max_y - ccd.min_y) * 0.51).abs();
             let depth = (ccd.max_z - ccd.min_z).abs();
             let near = depth * 0.01;
             let far = depth * 1.03;
-            let p = math::ortho(-horz, horz, -vert, vert, near, far);
-            let t = math::Matrix4::from_translation(-math::Vector3::new(
+            let p = math::ortho(-width, width, -height, height, near, far);
+            let t = -math::Vector3::new(
                 (ccd.max_x + ccd.min_x) * 0.5,
                 (ccd.max_y + ccd.min_y) * 0.5,
                 ccd.max_z + near * 2.0,
-            ));
+            );
+            let t = math::Matrix4::from_translation(t);
             ccd.vp = math::Matrix4::new(
                 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
             ) * p
@@ -651,8 +660,10 @@ impl DefaultLighting for Sun {
         for _ in 0..csc {
             cascade_cameras.push(SunCascadeCamera::new());
         }
-        let zero_located_view = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+        let zero_located_view = math::Matrix4::look_at(
+            math::Point3::new(0.0, 0.0, 0.0),
+            math::Point3::new(0.0, 0.0, -1.0),
+            math::Vector3::new(0.0, 1.0, 0.0),
         );
         let mut kernels_data = Vec::with_capacity(num_cpus);
         let mut buffer_manager = vxresult!(geng.get_buffer_manager().write());

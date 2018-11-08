@@ -325,9 +325,9 @@ impl Object for Base {
 impl Transferable for Base {
     fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
         let rotation = math::Matrix4::from(*q);
-        self.x = (rotation * self.x.extend(1.0)).truncate();
-        self.y = (rotation * self.y.extend(1.0)).truncate();
-        self.z = (rotation * self.z.extend(1.0)).truncate();
+        self.x = (rotation * self.x.extend(0.0)).truncate();
+        self.y = (rotation * self.y.extend(0.0)).truncate();
+        self.z = (rotation * self.z.extend(0.0)).truncate();
         for fp in &mut self.frustum_planes {
             fp.rotate_around(&self.location, &rotation);
         }

@@ -22,32 +22,37 @@ layout (set = 0, binding = 1) uniform sampler2D position;
 layout (set = 0, binding = 2) uniform sampler2D normal;
 layout (set = 0, binding = 3) uniform sampler2D shadowmaps[MAX_DIRECTIONAL_CASCADES_COUNT];
 
-const vec2 maxxy = vec2(1.0, 1.0);
-const vec2 minxy = vec2(0.0, 0.0);
-
 void main() {
     vec4 pos = texture(position, uv);
     vec3 nrm = texture(normal, uv).xyz;
-    for(int i = 0; i < /*light_ubo.cascades_count*/1; ++i) {
-        vec3 ipos;
+    for(int i = 0; i < light_ubo.cascades_count; ++i) {
+        vec2 uv;
+        float depth;
         {
             vec4 ppos = light_ubo.view_projection_biases[i] * pos;
-            ipos = ppos.xyz / ppos.w;
+            ppos.xyz = ppos.xyz / ppos.w;
+            uv = ppos.xy;
+            depth = ppos.z;
         }
-        if(any(lessThan(maxxy, ipos.xy)) || any(lessThan(ipos.xy, minxy))) {
+        if(uv.x >= 1.0)
             continue;
-        }
-        float dist = texture(shadowmaps[i], ipos.xy).x;
-        float bias = abs(dot(nrm, light_ubo.direction_strength.xyz));
-        if (bias < 0.1) {
+        if(uv.y >= 1.0)
+            continue;
+        if(uv.x <= 0.0)
+            continue;
+        if(uv.y <= 0.0)
+            continue;
+        float dist = texture(shadowmaps[i], uv).x;
+        float bias = abs(dot(nrm, light_ubo.direction_strength.xyz)); 
+        if (bias < 0.242535624) {
             bias = 0.02;
-        } else if (bias > 0.99) {
+        } else if (bias > 0.980580677) {
             bias = 0.001;
         } else {
             bias = sqrt(1.0 - (bias * bias)) / bias;
             bias = clamp(0.005 * bias, 0.001, 0.02);
         }
-        if(dist + bias < ipos.z) {
+        if(dist + bias < depth) {
             shadow = light_ubo.direction_strength.w;
             if (light_ubo.light_index > 32) {
                 flagbits = uvec2(0, 1 << (light_ubo.light_index - 32));
