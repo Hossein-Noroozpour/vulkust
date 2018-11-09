@@ -21,11 +21,15 @@ pub trait Loadable: Sized {
 pub trait Transferable {
     fn set_orientation(&mut self, &math::Quaternion<Real>);
     fn set_location(&mut self, &math::Vector3<Real>);
-    fn get_location(&self) -> &math::Vector3<Real>;
+    fn get_location(&self) -> math::Vector3<Real>;
     fn move_local_z(&mut self, Real);
     fn move_local_x(&mut self, Real);
     fn rotate_local_x(&mut self, Real);
     fn rotate_global_z(&mut self, Real);
+    fn translate(&mut self, _: &math::Vector3<Real>) {
+        // todo temporary
+        vxunimplemented!();
+    }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]

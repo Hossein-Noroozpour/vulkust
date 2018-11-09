@@ -61,7 +61,7 @@ impl Transferable for Base {
         self.model_base.set_location(l);
     }
 
-    fn get_location(&self) -> &math::Vector3<Real> {
+    fn get_location(&self) -> math::Vector3<Real> {
         return self.model_base.get_location();
     }
 
@@ -326,7 +326,7 @@ impl Transferable for Label {
         self.base.set_location(l);
     }
 
-    fn get_location(&self) -> &math::Vector3<Real> {
+    fn get_location(&self) -> math::Vector3<Real> {
         return self.base.get_location();
     }
 

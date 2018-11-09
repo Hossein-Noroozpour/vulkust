@@ -37,11 +37,12 @@ It is under lots of changes.
 - A safe interface over Vulkan
 - Vulkan Memory management (early version)
 - Occlusion culling (Frustum culling)
+- Shadowing
+- Cascaded Shadow
+- Shadow Accumulation
 
 #### 2-1-2- Underdeveloment features:
 
-- Shadowing
-- Cascaded Shadow
 - Soft Shadowing
 - Supporting GLTF
 

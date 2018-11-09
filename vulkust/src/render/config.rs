@@ -21,7 +21,7 @@ impl Default for Configurations {
             cascaded_shadows_count: 4,
             enable_anistropic_texture: true,
             shadow_map_aspect: 1024,
-            max_textures_count: 40,
+            max_textures_count: 47,
             max_meshes_count: 20,
             max_models_count: 10,
             max_scenes_count: 3,

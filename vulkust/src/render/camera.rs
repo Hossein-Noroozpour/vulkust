@@ -349,8 +349,8 @@ impl Transferable for Base {
         self.update_location();
     }
 
-    fn get_location(&self) -> &math::Vector3<Real> {
-        return &self.location;
+    fn get_location(&self) -> math::Vector3<Real> {
+        return self.location;
     }
 
     fn move_local_z(&mut self, v: Real) {
@@ -591,7 +591,7 @@ impl Transferable for Perspective {
         self.base.set_location(l);
     }
 
-    fn get_location(&self) -> &math::Vector3<Real> {
+    fn get_location(&self) -> math::Vector3<Real> {
         return self.base.get_location();
     }
 
@@ -814,7 +814,7 @@ impl Transferable for Orthographic {
         self.base.set_location(l);
     }
 
-    fn get_location(&self) -> &math::Vector3<Real> {
+    fn get_location(&self) -> math::Vector3<Real> {
         return self.base.get_location();
     }
 

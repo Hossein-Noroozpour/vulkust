@@ -79,11 +79,22 @@ impl CoreAppTrait for MyGame {
             vxresult!(asset_manager.get_model_manager().write()).create::<ModelBase>();
         let mesh = vxresult!(asset_manager.get_mesh_manager().write()).create_cube(1.0);
         vxresult!(model.write()).add_mesh(mesh);
+
+        let below_model: Arc<RwLock<Model>> =
+            vxresult!(asset_manager.get_model_manager().write()).create::<ModelBase>();
+        let mesh = vxresult!(asset_manager.get_mesh_manager().write()).create_cube(2.0);
+        {
+            let mut m = vxresult!(below_model.write());
+            m.add_mesh(mesh);
+            m.translate(&math::Vector3::new(0.0, 0.0, -5.0));
+        }
+
         let sun = vxresult!(asset_manager.get_light_manager().write()).create::<Sun>();
         {
             let mut scn = vxresult!(scene.write());
             scn.add_camera(camera);
             scn.add_model(model);
+            scn.add_model(below_model);
             scn.add_light(sun);
         }
         self.scene = Some(scene);

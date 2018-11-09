@@ -172,7 +172,6 @@ pub struct Base {
     descriptor_set: Arc<DescriptorSet>,
     meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
     children: BTreeMap<Id, Arc<RwLock<Model>>>,
-    center: math::Vector3<Real>,
 }
 
 impl Base {}
@@ -240,7 +239,6 @@ impl Loadable for Base {
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let descriptor_set = Arc::new(descriptor_set);
         let uniform = Uniform::new_with_gltf(node);
-        let center = math::Vector3::new(uniform.model.w.x, uniform.model.w.y, uniform.model.w.z);
         vxtodo!(); // not tested
         Base {
             obj_base,
@@ -256,7 +254,6 @@ impl Loadable for Base {
             descriptor_set,
             meshes,
             children: BTreeMap::new(),
-            center,
         }
     }
 
@@ -285,7 +282,6 @@ impl Loadable for Base {
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let descriptor_set = Arc::new(descriptor_set);
-        let center = math::Vector3::new(uniform.model.w.x, uniform.model.w.y, uniform.model.w.z);
         vxtodo!(); // not tested
         Base {
             obj_base,
@@ -301,7 +297,6 @@ impl Loadable for Base {
             descriptor_set,
             meshes,
             children: BTreeMap::new(),
-            center,
         }
     }
 }
@@ -315,8 +310,8 @@ impl Transferable for Base {
         vxunimplemented!();
     }
 
-    fn get_location(&self) -> &math::Vector3<Real> {
-        return &self.center;
+    fn get_location(&self) -> math::Vector3<Real> {
+        return self.uniform.model.w.truncate();
     }
 
     fn move_local_z(&mut self, _: Real) {
@@ -334,16 +329,25 @@ impl Transferable for Base {
     fn rotate_global_z(&mut self, _: Real) {
         vxunimplemented!();
     }
+
+    fn translate(&mut self, t: &math::Vector3<Real>) {
+        self.uniform.model.w += t.extend(0.0);
+        // todo take care of collider
+        for (_, c) in &self.children {
+            vxresult!(c.write()).translate(t);
+        }
+    }
 }
 
 impl Model for Base {
     fn update(&mut self, scene: &Scene, camera: &Camera, frame_number: usize) {
-        self.is_visible = camera.is_in_frustum(self.occlusion_culling_radius, &self.center);
+        let location = self.uniform.model.w.truncate();
+        self.is_visible = camera.is_in_frustum(self.occlusion_culling_radius, &location);
         if !self.is_visible {
             return;
         }
         if self.has_transparent {
-            let dis = camera.get_location() - self.center;
+            let dis = camera.get_location() - location;
             self.distance_from_camera = math::dot(dis, dis);
         }
         self.uniform_buffer.update(&self.uniform, frame_number);
@@ -439,7 +443,6 @@ impl DefaultModel for Base {
             descriptor_set,
             meshes: BTreeMap::new(),
             children: BTreeMap::new(),
-            center: math::Vector3::new(0.0, 0.0, 0.0),
         }
     }
 }
