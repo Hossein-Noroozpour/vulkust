@@ -202,8 +202,9 @@ impl SunShadowMakerKernelData {
         let rdv = math::Vector3::new(rd, rd, rd);
         let upv = v + rdv;
         let dnv = v - rdv;
-        let mut cascade_index = 0;
-        for c in &mut self.cascade_cameras {
+        let ccc = self.cascade_cameras.len();
+        for ci in 0..ccc {
+            let c = &mut self.cascade_cameras[ci];
             if upv.x < c.min_x {
                 continue;
             }
@@ -239,9 +240,8 @@ impl SunShadowMakerKernelData {
             }
             let render_data = &mut self.render_data[self.last_render_data_index];
             render_data.model = Some(Arc::downgrade(model));
-            render_data.cascade_index = cascade_index;
+            render_data.cascade_index = ci;
             self.last_render_data_index += 1;
-            cascade_index += 1;
         }
     }
 
