@@ -68,7 +68,7 @@ pub struct RootMemory {
     pub container: alc::Container,
 }
 
-const DEFAULT_MEMORY_SIZE: vk::VkDeviceSize = 750 * 1024 * 1024;
+const DEFAULT_MEMORY_SIZE: vk::VkDeviceSize = 512 * 1024 * 1024;
 
 impl RootMemory {
     pub fn new(

@@ -237,7 +237,6 @@ impl Loadable for Base {
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
-        let descriptor_set = Arc::new(descriptor_set);
         let uniform = Uniform::new_with_gltf(node);
         vxtodo!(); // not tested
         Base {
@@ -281,7 +280,6 @@ impl Loadable for Base {
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
-        let descriptor_set = Arc::new(descriptor_set);
         vxtodo!(); // not tested
         Base {
             obj_base,
@@ -428,7 +426,6 @@ impl DefaultModel for Base {
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
-        let descriptor_set = Arc::new(descriptor_set);
         Base {
             obj_base: ObjectBase::new(),
             is_dynamic: true,

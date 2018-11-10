@@ -196,7 +196,6 @@ impl Material {
         let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_gbuff_set(&uniform_buffer, textures);
-        let descriptor_set = Arc::new(descriptor_set);
         Material {
             base_color,
             base_color_factor,
@@ -237,7 +236,6 @@ impl Material {
         ];
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_gbuff_set(&uniform_buffer, textures);
-        let descriptor_set = Arc::new(descriptor_set);
         Material {
             base_color,
             base_color_factor,
@@ -265,8 +263,7 @@ impl Material {
         ];
         let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
-        let descriptor_set = descriptor_manager.create_gbuff_set(&self.uniform_buffer, textures);
-        self.descriptor_set = Arc::new(descriptor_set);
+        self.descriptor_set = descriptor_manager.create_gbuff_set(&self.uniform_buffer, textures);
     }
 
     pub fn update(&mut self, _scene: &Scene, _model: &Model) {}

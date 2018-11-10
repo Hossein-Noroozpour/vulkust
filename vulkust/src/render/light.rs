@@ -636,7 +636,7 @@ impl DefaultLighting for Sun {
         let num_cpus = num_cpus::get();
         let max_render_data_count =
             eng.get_config()
-                .get_max_shadow_maker_kernek_render_data_count() as usize;
+                .get_max_shadow_maker_kernel_render_data_count() as usize;
         let mut cascade_cameras = Vec::with_capacity(csc);
         let geng = vxresult!(eng.get_gapi_engine().read());
         let frames_count = geng.get_frames_count();

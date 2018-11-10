@@ -53,7 +53,6 @@ impl Deferred {
         textures.push(shadower.get_shadow_accumulator_flagbits_texture().clone());
         let descriptor_set = vxresult!(gapi_engine.get_descriptor_manager().write())
             .create_deferred_set(&uniform_buffer, textures);
-        let descriptor_set = Arc::new(descriptor_set);
         let mut pipmgr = vxresult!(gapi_engine.get_pipeline_manager().write());
         let render_pass = gapi_engine.get_render_pass();
         let pipeline = pipmgr.create(render_pass.clone(), PipelineType::Deferred, config);

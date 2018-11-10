@@ -1,4 +1,5 @@
 use super::super::core::allocate::Object as AlcObject;
+use super::super::core::types::Id;
 use super::super::render::config::Configurations;
 #[cfg(debug_mode)]
 use super::super::render::config::MAX_DIRECTIONAL_CASCADES_COUNT;
@@ -6,8 +7,11 @@ use super::super::render::texture::Texture;
 use super::buffer::DynamicBuffer;
 use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
+use std::collections::BTreeMap;
 use std::ptr::null;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Weak};
+
+const GBUFF_TEX_COUNT: usize = 7;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Pool {
@@ -166,12 +170,6 @@ impl Set {
         uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Self {
-        #[cfg(debug_mode)]
-        {
-            if textures.len() != 7 {
-                vxlogf!("For gbuffer filler descriptor you need 7 textures.");
-            }
-        }
         let mut texturess = Vec::new();
         for t in textures {
             texturess.push(vec![t]);
@@ -328,12 +326,17 @@ impl Drop for Set {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Manager {
-    pub buffer_only_set_layout: Arc<SetLayout>,
-    pub gbuff_set_layout: Arc<SetLayout>,
-    pub resolver_set_layout: Arc<SetLayout>,
-    pub deferred_set_layout: Arc<SetLayout>,
-    pub shadow_accumulator_directional_set_layout: Arc<SetLayout>,
-    pub pool: Arc<Pool>,
+    buffer_only_set_layout: Arc<SetLayout>,
+    gbuff_set_layout: Arc<SetLayout>,
+    resolver_set_layout: Arc<SetLayout>,
+    deferred_set_layout: Arc<SetLayout>,
+    shadow_accumulator_directional_set_layout: Arc<SetLayout>,
+    buffer_only_sets: BTreeMap<usize, Weak<Set>>,
+    gbuff_sets: BTreeMap<([Id; GBUFF_TEX_COUNT], usize), Weak<Set>>,
+    resolver_set: Option<Arc<Set>>,
+    deferred_set: Option<Arc<Set>>,
+    shadow_accumulator_directional_set: Option<Arc<Set>>,
+    pool: Arc<Pool>,
 }
 
 // todo it can in future cache the sets based on their buffer id and size and texture ids and samplers
@@ -354,6 +357,11 @@ impl Manager {
             resolver_set_layout,
             deferred_set_layout,
             shadow_accumulator_directional_set_layout,
+            buffer_only_sets: BTreeMap::new(),
+            gbuff_sets: BTreeMap::new(),
+            resolver_set: None,
+            deferred_set: None,
+            shadow_accumulator_directional_set: None,
             pool,
         }
     }
@@ -362,59 +370,124 @@ impl Manager {
         &mut self,
         uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
-    ) -> Set {
-        Set::new_gbuff(
+    ) -> Arc<Set> {
+        #[cfg(debug_mode)]
+        {
+            if textures.len() != GBUFF_TEX_COUNT {
+                vxlogf!("For gbuffer filler descriptor you need 7 textures.");
+            }
+        }
+        let mut id = ([0 as Id; GBUFF_TEX_COUNT], 0usize);
+        for i in 0..GBUFF_TEX_COUNT {
+            id.0[i] = vxresult!(textures[i].read()).get_id();
+        }
+        id.1 = vxresult!(uniform.get_buffer(0).read()).get_size() as usize;
+        if let Some(s) = self.gbuff_sets.get(&id) {
+            if let Some(s) = s.upgrade() {
+                return s;
+            }
+        }
+        let s = Arc::new(Set::new_gbuff(
             self.pool.clone(),
             self.gbuff_set_layout.clone(),
             uniform,
             textures,
-        )
+        ));
+        self.gbuff_sets.insert(id, Arc::downgrade(&s));
+        return s;
     }
 
-    pub(crate) fn create_buffer_only_set(&mut self, uniform: &DynamicBuffer) -> Set {
-        Set::new_buffer_only(
+    pub(crate) fn create_buffer_only_set(&mut self, uniform: &DynamicBuffer) -> Arc<Set> {
+        let id = vxresult!(uniform.get_buffer(0).read()).get_size() as usize;
+        if let Some(s) = self.buffer_only_sets.get(&id) {
+            if let Some(s) = s.upgrade() {
+                return s;
+            }
+        }
+        let s = Arc::new(Set::new_buffer_only(
             self.pool.clone(),
             self.buffer_only_set_layout.clone(),
             uniform,
-        )
+        ));
+        self.buffer_only_sets.insert(id, Arc::downgrade(&s));
+        return s;
     }
 
     pub(crate) fn create_deferred_set(
         &mut self,
         uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
-    ) -> Set {
-        Set::new_deferred(
+    ) -> Arc<Set> {
+        if let Some(s) = &self.deferred_set {
+            return s.clone();
+        }
+        let s = Arc::new(Set::new_deferred(
             self.pool.clone(),
             self.deferred_set_layout.clone(),
             uniform,
             textures,
-        )
+        ));
+        self.deferred_set = Some(s.clone());
+        return s;
     }
 
     pub(crate) fn create_resolver_set(
         &mut self,
         uniform: &DynamicBuffer,
         textures: Vec<Arc<RwLock<Texture>>>,
-    ) -> Set {
-        Set::new_resolver(
+    ) -> Arc<Set> {
+        if let Some(s) = &self.resolver_set {
+            return s.clone();
+        }
+        let s = Arc::new(Set::new_resolver(
             self.pool.clone(),
             self.resolver_set_layout.clone(),
             uniform,
             textures,
-        )
+        ));
+        self.resolver_set = Some(s.clone());
+        return s;
     }
 
     pub(crate) fn create_shadow_accumulator_directional_set(
         &mut self,
         uniform: &DynamicBuffer,
         texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
-    ) -> Set {
-        Set::new_shadow_accumulator_directional(
+    ) -> Arc<Set> {
+        if let Some(s) = &self.shadow_accumulator_directional_set {
+            return s.clone();
+        }
+        let s = Arc::new(Set::new_shadow_accumulator_directional(
             self.pool.clone(),
             self.shadow_accumulator_directional_set_layout.clone(),
             uniform,
             texturess,
-        )
+        ));
+        self.shadow_accumulator_directional_set = Some(s.clone());
+        return s;
+    }
+
+    pub(super) fn get_buffer_only_set_layout(&self) -> &Arc<SetLayout> {
+        return &self.buffer_only_set_layout;
+    }
+
+    pub(super) fn get_gbuff_set_layout(&self) -> &Arc<SetLayout> {
+        return &self.gbuff_set_layout;
+    }
+
+    pub(super) fn get_resolver_set_layout(&self) -> &Arc<SetLayout> {
+        return &self.resolver_set_layout;
+    }
+
+    pub(super) fn get_deferred_set_layout(&self) -> &Arc<SetLayout> {
+        return &self.deferred_set_layout;
+    }
+
+    pub(super) fn get_shadow_accumulator_directional_set_layout(&self) -> &Arc<SetLayout> {
+        return &self.shadow_accumulator_directional_set_layout;
+    }
+
+    pub(super) fn get_pool(&self) -> &Arc<Pool> {
+        return &self.pool;
     }
 }

@@ -12,7 +12,7 @@ pub struct Configurations {
     max_shadow_maps_count: u32,
     cascaded_shadows_count: u8,
     shadow_map_aspect: u32,
-    max_shadow_maker_kernek_render_data_count: u64,
+    max_shadow_maker_kernel_render_data_count: u64,
 }
 
 impl Default for Configurations {
@@ -26,7 +26,7 @@ impl Default for Configurations {
             max_models_count: 10,
             max_scenes_count: 3,
             max_shadow_maps_count: 6,
-            max_shadow_maker_kernek_render_data_count: 6,
+            max_shadow_maker_kernel_render_data_count: 600,
         }
     }
 }
@@ -64,7 +64,7 @@ impl Configurations {
         return self.shadow_map_aspect;
     }
 
-    pub fn get_max_shadow_maker_kernek_render_data_count(&self) -> u64 {
-        return self.max_shadow_maker_kernek_render_data_count;
+    pub fn get_max_shadow_maker_kernel_render_data_count(&self) -> u64 {
+        return self.max_shadow_maker_kernel_render_data_count;
     }
 }

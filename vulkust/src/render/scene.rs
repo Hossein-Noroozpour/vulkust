@@ -332,7 +332,6 @@ impl Base {
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
-        let descriptor_set = Arc::new(descriptor_set);
         let frames_count = gapi_engine.get_frames_count();
         let kernels_count = num_cpus::get();
         let mut kernels_data = Vec::with_capacity(kernels_count);
@@ -408,7 +407,6 @@ impl Base {
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
-        let descriptor_set = Arc::new(descriptor_set);
         let frames_count = gapi_engine.get_frames_count();
         let kernels_count = num_cpus::get();
         let mut kernels_data = Vec::with_capacity(kernels_count);
@@ -773,7 +771,6 @@ impl DefaultScene for Base {
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
-        let descriptor_set = Arc::new(descriptor_set);
         let frames_count = gapi_engine.get_frames_count();
         let kernels_count = num_cpus::get();
         let mut kernels_data = Vec::with_capacity(kernels_count);

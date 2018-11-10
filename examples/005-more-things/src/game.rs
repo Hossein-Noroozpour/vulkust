@@ -1,8 +1,10 @@
 use vulkust::core::application::Application as CoreAppTrait;
+use vulkust::core::asset::Manager as AssetManager;
 use vulkust::core::event::{
     Button, ButtonAction, Event, Keyboard, Mouse, Move, Touch, TouchGesture, Type as EventType,
 };
 use vulkust::core::gesture;
+use vulkust::core::types::Real;
 use vulkust::math;
 use vulkust::render::camera::{Camera, Orthographic, Perspective};
 use vulkust::render::engine::Engine as Renderer;
@@ -75,26 +77,12 @@ impl CoreAppTrait for MyGame {
             camera.set_location(&math::Vector3::new(0.0, 0.0, 4.0));
         }
         self.camera = Some(camera.clone());
-        let model: Arc<RwLock<Model>> =
-            vxresult!(asset_manager.get_model_manager().write()).create::<ModelBase>();
-        let mesh = vxresult!(asset_manager.get_mesh_manager().write()).create_cube(1.0);
-        vxresult!(model.write()).add_mesh(mesh);
-
-        let below_model: Arc<RwLock<Model>> =
-            vxresult!(asset_manager.get_model_manager().write()).create::<ModelBase>();
-        let mesh = vxresult!(asset_manager.get_mesh_manager().write()).create_cube(2.0);
-        {
-            let mut m = vxresult!(below_model.write());
-            m.add_mesh(mesh);
-            m.translate(&math::Vector3::new(0.0, 0.0, -5.0));
-        }
 
         let sun = vxresult!(asset_manager.get_light_manager().write()).create::<Sun>();
         {
             let mut scn = vxresult!(scene.write());
             scn.add_camera(camera);
-            scn.add_model(model);
-            scn.add_model(below_model);
+            place_cubes(&mut *scn, asset_manager);
             scn.add_light(sun);
         }
         self.scene = Some(scene);
@@ -224,4 +212,31 @@ impl CoreAppTrait for MyGame {
     }
 
     fn terminate(&mut self) {}
+}
+
+fn place_cubes(scn: &mut Scene, astmgr: &AssetManager) {
+    const GROUND_CUBE_ASPECT: Real = 2.0;
+    const GROUND_CUBE_SPACING: Real = GROUND_CUBE_ASPECT * 0.1;
+    const GROUND_CUBE_ROW_COUNT: usize = 10;
+    const ROW_INC: Real = GROUND_CUBE_SPACING + GROUND_CUBE_ASPECT * 2.0;
+    const ROW_START: Real = ((GROUND_CUBE_ROW_COUNT - 1) as Real * GROUND_CUBE_SPACING
+        + (GROUND_CUBE_ASPECT * 2.0) * GROUND_CUBE_ROW_COUNT as Real)
+        * -0.5;
+    let mut y = ROW_START;
+    let ground_mesh = vxresult!(astmgr.get_mesh_manager().write()).create_cube(2.0);
+    for _ in 0..GROUND_CUBE_ROW_COUNT {
+        let mut x = ROW_START;
+        for _ in 0..GROUND_CUBE_ROW_COUNT {
+            let m: Arc<RwLock<Model>> =
+                vxresult!(astmgr.get_model_manager().write()).create::<ModelBase>();
+            {
+                let mut m = vxresult!(m.write());
+                m.add_mesh(ground_mesh.clone());
+                m.translate(&math::Vector3::new(x, y, -5.0));
+            }
+            scn.add_model(m);
+            x += ROW_INC;
+        }
+        y += ROW_INC;
+    }
 }

@@ -26,8 +26,9 @@ pub(crate) struct Layout {
 impl Layout {
     pub fn new_gbuff(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
-        let gbuff_descriptor_set_layout = descriptor_manager.gbuff_set_layout.clone();
-        let buffer_only_descriptor_set_layout = descriptor_manager.buffer_only_set_layout.clone();
+        let gbuff_descriptor_set_layout = descriptor_manager.get_gbuff_set_layout().clone();
+        let buffer_only_descriptor_set_layout =
+            descriptor_manager.get_buffer_only_set_layout().clone();
         let layout = [
             buffer_only_descriptor_set_layout.vk_data,
             buffer_only_descriptor_set_layout.vk_data,
@@ -42,8 +43,9 @@ impl Layout {
 
     pub fn new_shadow_mapper(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
-        let gbuff_descriptor_set_layout = descriptor_manager.gbuff_set_layout.clone();
-        let buffer_only_descriptor_set_layout = descriptor_manager.buffer_only_set_layout.clone();
+        let gbuff_descriptor_set_layout = descriptor_manager.get_gbuff_set_layout().clone();
+        let buffer_only_descriptor_set_layout =
+            descriptor_manager.get_buffer_only_set_layout().clone();
         let layout = [
             buffer_only_descriptor_set_layout.vk_data,
             gbuff_descriptor_set_layout.vk_data,
@@ -60,7 +62,7 @@ impl Layout {
     ) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
         let shadow_accumulator_directional_descriptor_set_layout = descriptor_manager
-            .shadow_accumulator_directional_set_layout
+            .get_shadow_accumulator_directional_set_layout()
             .clone();
         let layout = [shadow_accumulator_directional_descriptor_set_layout.vk_data];
         let descriptor_set_layouts = vec![shadow_accumulator_directional_descriptor_set_layout];
@@ -69,7 +71,7 @@ impl Layout {
 
     pub fn new_resolver(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
-        let resolver_descriptor_set_layout = descriptor_manager.resolver_set_layout.clone();
+        let resolver_descriptor_set_layout = descriptor_manager.get_resolver_set_layout().clone();
         let layout = [resolver_descriptor_set_layout.vk_data];
         let descriptor_set_layouts = vec![resolver_descriptor_set_layout];
         Self::new(&layout, descriptor_set_layouts)
@@ -77,8 +79,9 @@ impl Layout {
 
     pub fn new_deferred(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
-        let deferred_descriptor_set_layout = descriptor_manager.deferred_set_layout.clone();
-        let buffer_only_descriptor_set_layout = descriptor_manager.buffer_only_set_layout.clone();
+        let deferred_descriptor_set_layout = descriptor_manager.get_deferred_set_layout().clone();
+        let buffer_only_descriptor_set_layout =
+            descriptor_manager.get_buffer_only_set_layout().clone();
         let layout = [
             buffer_only_descriptor_set_layout.vk_data,
             deferred_descriptor_set_layout.vk_data,
@@ -178,7 +181,7 @@ impl Pipeline {
         config: &Configurations,
     ) -> Self {
         let device = vxresult!(descriptor_manager.read())
-            .pool
+            .get_pool()
             .logical_device
             .clone();
 
