@@ -42,6 +42,10 @@ void main() {
             continue;
         if(uv.y <= 0.0)
             continue;
+        if(depth < 0.0)
+            continue;
+        if(depth > 1.0)
+            continue;
         float dist = texture(shadowmaps[i], uv).x;
         float bias = abs(dot(nrm, light_ubo.direction_strength.xyz)); 
         if (bias < 0.242535624) {
