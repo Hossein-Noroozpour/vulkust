@@ -1,3 +1,4 @@
+use super::super::core::allocate::Object as AlcObject;
 use super::super::render::image::{AttachmentType, Format, Layout};
 use super::buffer::Manager as BufferManager;
 use super::command::Buffer as CmdBuffer;
@@ -74,7 +75,7 @@ impl Image {
         info: &vk::VkImageCreateInfo,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
     ) -> Self {
-        let logical_device = vxresult!(memory_mgr.read()).logical_device.clone();
+        let logical_device = vxresult!(memory_mgr.read()).get_device().clone();
         let mut vk_data = 0 as vk::VkImage;
         vulkan_check!(vk::vkCreateImage(
             logical_device.vk_data,
@@ -89,12 +90,12 @@ impl Image {
         let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemeoryLocation::GPU);
         {
             let memory_r = vxresult!(memory.read());
-            let root_memory = vxresult!(memory_r.root_memory.read());
+            let root_memory = vxresult!(memory_r.get_root().read());
             vulkan_check!(vk::vkBindImageMemory(
                 logical_device.vk_data,
                 vk_data,
-                root_memory.vk_data,
-                memory_r.info.offset as vk::VkDeviceSize,
+                root_memory.get_data(),
+                memory_r.get_offset() as vk::VkDeviceSize,
             ));
         }
         Image {
@@ -159,7 +160,7 @@ impl Image {
             | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32;
         let memmgr = {
             let buffmgr = vxresult!(buffmgr.read());
-            let memmgr = vxresult!(buffmgr.gpu_buffer.memory.read()).manager.clone();
+            let memmgr = vxresult!(buffmgr.get_gpu_root_buffer().get_memory().read()).get_manager().clone();
             memmgr
         };
         let myself = Arc::new(RwLock::new(Self::new_with_info(&image_info, &memmgr)));

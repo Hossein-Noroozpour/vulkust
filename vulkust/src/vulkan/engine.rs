@@ -78,9 +78,7 @@ impl Engine {
         }
         wait_fences.shrink_to_fit();
         data_primary_cmds.shrink_to_fit();
-        let memory_manager = Arc::new(RwLock::new(MemoryManager::new(&logical_device)));
-        let memory_manager_w = Arc::downgrade(&memory_manager);
-        vxresult!(memory_manager.write()).set_itself(memory_manager_w);
+        let memory_manager = MemoryManager::new(&logical_device);
         let samples_count = Self::find_max_sample_count(&physical_device);
         let render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), false));
         let clear_render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), true));

@@ -20,10 +20,10 @@ use std::sync::{Arc, RwLock};
 pub struct Application {
     pub renderer: Option<Arc<RwLock<RenderEngine>>>,
     pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
-    pub connection: *mut xcb::xcb_connection_t,
-    pub screen: *mut xcb::xcb_screen_t,
-    pub window: xcb::xcb_window_t,
-    pub atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t,
+    pub(crate) connection: *mut xcb::Connection,
+    screen: *mut xcb::Screen,
+    pub(crate) window: xcb::Window,
+    atom_wm_delete_window: *mut xcb::InternAtomReply,
     pub window_width: Real,
     pub window_height: Real,
     pub window_aspect_ratio: Real,
@@ -33,7 +33,7 @@ pub struct Application {
 impl Application {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
         let mut scr = 0 as c_int;
-        let connection: *mut xcb::xcb_connection_t =
+        let connection: *mut xcb::Connection =
             unsafe { xcb::xcb_connect(null_mut(), &mut scr) };
         if connection == null_mut() {
             vxlogf!("Could not find a compatible Vulkan ICD!");
@@ -45,26 +45,26 @@ impl Application {
                 xcb::xcb_screen_next(&mut iter);
             }
         }
-        let screen: *mut xcb::xcb_screen_t = iter.data;
-        let window: xcb::xcb_window_t = unsafe { transmute(xcb::xcb_generate_id(connection)) };
+        let screen = iter.data;
+        let window: xcb::Window = unsafe { transmute(xcb::xcb_generate_id(connection)) };
         let mut value_list = vec![0u32; 32];
         value_list[0] = unsafe { (*screen).black_pixel };
-        value_list[1] = xcb::xcb_event_mask_t::XCB_EVENT_MASK_KEY_RELEASE as u32
-            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_KEY_PRESS as u32
-            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_EXPOSURE as u32
-            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_STRUCTURE_NOTIFY as u32
-            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_POINTER_MOTION as u32
-            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_PRESS as u32
-            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_BUTTON_RELEASE as u32
-            | xcb::xcb_event_mask_t::XCB_EVENT_MASK_RESIZE_REDIRECT as u32;
+        value_list[1] = (xcb::EventMask::KEY_RELEASE
+            | xcb::EventMask::KEY_PRESS
+            | xcb::EventMask::EXPOSURE
+            | xcb::EventMask::STRUCTURE_NOTIFY
+            | xcb::EventMask::POINTER_MOTION
+            | xcb::EventMask::BUTTON_PRESS
+            | xcb::EventMask::BUTTON_RELEASE
+            | xcb::EventMask::RESIZE_REDIRECT).bits();
         let value_mask =
-            xcb::xcb_cw_t::XCB_CW_BACK_PIXEL as u32 | xcb::xcb_cw_t::XCB_CW_EVENT_MASK as u32;
+            (xcb::CW::BACK_PIXEL | xcb::CW::EVENT_MASK).bits();
         let window_width = DEFAULT_WINDOW_WIDTH as u16;
         let window_height = DEFAULT_WINDOW_HEIGHT as u16;
         unsafe {
             xcb::xcb_create_window(
                 connection,
-                xcb::XCB_COPY_FROM_PARENT as u8,
+                xcb::COPY_FROM_PARENT as u8,
                 window,
                 (*screen).root,
                 0,
@@ -72,7 +72,7 @@ impl Application {
                 window_width,
                 window_height,
                 0,
-                xcb::xcb_window_class_t::XCB_WINDOW_CLASS_INPUT_OUTPUT as u16,
+                xcb::WindowClass::InputOutput as u16,
                 (*screen).root_visual,
                 value_mask,
                 value_list.as_ptr(),
@@ -90,12 +90,12 @@ impl Application {
         }
         let cs = CString::new("WM_DELETE_WINDOW".to_string().into_bytes()).unwrap();
         let cookie2 = unsafe { xcb::xcb_intern_atom(connection, 0, 16, cs.as_ptr()) };
-        let atom_wm_delete_window: *mut xcb::xcb_intern_atom_reply_t =
+        let atom_wm_delete_window: *mut xcb::InternAtomReply =
             unsafe { xcb::xcb_intern_atom_reply(connection, cookie2, null_mut()) };
         unsafe {
             xcb::xcb_change_property(
                 connection,
-                xproto::xcb_prop_mode_t::XCB_PROP_MODE_REPLACE as u8,
+                xproto::PropMode::Replace as u8,
                 window,
                 (*reply).atom,
                 4,
@@ -108,10 +108,10 @@ impl Application {
         unsafe {
             xcb::xcb_change_property(
                 connection,
-                xproto::xcb_prop_mode_t::XCB_PROP_MODE_REPLACE as u8,
+                xproto::PropMode::Replace as u8,
                 window,
-                xcb::xcb_atom_enum_t::XCB_ATOM_WM_NAME as u32,
-                xcb::xcb_atom_enum_t::XCB_ATOM_STRING as u32,
+                xcb::AtomEnum::WmName as u32,
+                xcb::AtomEnum::String as u32,
                 8,
                 cs.as_bytes_with_nul().len() as u32,
                 transmute(cs.as_ptr()),
@@ -190,13 +190,13 @@ impl Application {
         return events;
     }
 
-    fn translate(&self, e: *mut xcb::xcb_generic_event_t) -> Option<EventType> {
+    fn translate(&self, e: *mut xcb::GenericEvent) -> Option<EventType> {
         unsafe {
-            if (xproto::XCB_DESTROY_NOTIFY as u8 == ((*e).response_type & 0x7f))
-                || ((xproto::XCB_CLIENT_MESSAGE as u8 == ((*e).response_type & 0x7f))
+            if (xproto::DESTROY_NOTIFY as u8 == ((*e).response_type & 0x7f))
+                || ((xproto::CLIENT_MESSAGE as u8 == ((*e).response_type & 0x7f))
                     && ((*transmute::<
-                        *mut xcb::xcb_generic_event_t,
-                        *mut xcb::xcb_client_message_event_t,
+                        *mut xcb::GenericEvent,
+                        *mut xcb::ClientMessageEvent,
                     >(e))
                     .data
                     .data[0]
@@ -206,13 +206,13 @@ impl Application {
             }
         }
         match unsafe { (*e).response_type as c_uint & 0x7F } {
-            xproto::XCB_CLIENT_MESSAGE => {
-                let client_msg: &mut xcb::xcb_client_message_event_t = unsafe { transmute(e) };
+            xproto::CLIENT_MESSAGE => {
+                let client_msg: &mut xcb::ClientMessageEvent = unsafe { transmute(e) };
                 if client_msg.data.data[0] == unsafe { (*self.atom_wm_delete_window).atom } {
                     return Some(EventType::Quit);
                 }
             }
-            xproto::XCB_MOTION_NOTIFY => {
+            xproto::MOTION_NOTIFY => {
                 let pos = self.get_mouse_position();
                 let pre = *vxresult!(self.current_mouse_position.read());
                 *vxresult!(self.current_mouse_position.write()) = pos;
@@ -222,13 +222,13 @@ impl Application {
                     delta: (pos.0 - pre.0, pos.1 - pre.1),
                 }));
             }
-            xproto::XCB_BUTTON_PRESS => {
-                let press: &mut xcb::xcb_button_press_event_t = unsafe { transmute(e) };
-                let m: xcb::xcb_button_index_t = unsafe { transmute(press.detail as u32) };
+            xproto::BUTTON_PRESS => {
+                let press: &mut xcb::ButtonPressEvent = unsafe { transmute(e) };
+                let m: xcb::ButtonIndex = unsafe { transmute(press.detail as u32) };
                 let m = match m {
-                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_1 => Mouse::Left,
-                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_2 => Mouse::Middle,
-                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_3 => Mouse::Right,
+                    xcb::ButtonIndex::_Index1 => Mouse::Left,
+                    xcb::ButtonIndex::_Index2 => Mouse::Middle,
+                    xcb::ButtonIndex::_Index3 => Mouse::Right,
                     _ => {
                         vxlogi!("Unknown mouse button pressed.");
                         Mouse::Left
@@ -239,13 +239,13 @@ impl Application {
                     action: event::ButtonAction::Press,
                 });
             }
-            xproto::XCB_BUTTON_RELEASE => {
-                let release: &mut xcb::xcb_button_release_event_t = unsafe { transmute(e) };
-                let m: xcb::xcb_button_index_t = unsafe { transmute(release.detail as u32) };
+            xproto::BUTTON_RELEASE => {
+                let release: &mut xcb::ButtonReleaseEvent = unsafe { transmute(e) };
+                let m: xcb::ButtonIndex = unsafe { transmute(release.detail as u32) };
                 let m = match m {
-                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_1 => Mouse::Left,
-                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_2 => Mouse::Middle,
-                    xcb::xcb_button_index_t::XCB_BUTTON_INDEX_3 => Mouse::Right,
+                    xcb::ButtonIndex::_Index1 => Mouse::Left,
+                    xcb::ButtonIndex::_Index2 => Mouse::Middle,
+                    xcb::ButtonIndex::_Index3 => Mouse::Right,
                     _ => {
                         vxloge!("Unknown mouse button pressed.");
                         Mouse::Left
@@ -256,8 +256,8 @@ impl Application {
                     action: event::ButtonAction::Release,
                 });
             }
-            a @ xproto::XCB_KEY_PRESS | a @ xproto::XCB_KEY_RELEASE => {
-                let key_event: &xcb::xcb_key_release_event_t = unsafe { transmute(e) };
+            a @ xproto::KEY_PRESS | a @ xproto::KEY_RELEASE => {
+                let key_event: &xcb::KeyReleaseEvent = unsafe { transmute(e) };
                 let b = Button::Keyboard(match key_event.detail {
                     xproto::KEY_W => Keyboard::W,
                     xproto::KEY_S => Keyboard::S,
@@ -270,7 +270,7 @@ impl Application {
                         Keyboard::W
                     }
                 });
-                return Some(if a == xproto::XCB_KEY_RELEASE {
+                return Some(if a == xproto::KEY_RELEASE {
                     EventType::Button {
                         button: b,
                         action: event::ButtonAction::Release,
@@ -282,11 +282,11 @@ impl Application {
                     }
                 });
             }
-            xproto::XCB_DESTROY_NOTIFY => {
+            xproto::DESTROY_NOTIFY => {
                 return Some(EventType::Quit);
             }
-            xproto::XCB_CONFIGURE_NOTIFY => {
-                let cfg_event: &xcb::xcb_configure_notify_event_t = unsafe { transmute(e) };
+            xproto::CONFIGURE_NOTIFY => {
+                let cfg_event: &xcb::ConfigureNotifyEvent = unsafe { transmute(e) };
                 // if cfg_event.width as Real != self.window_aspects.0 ||
                 //     cfg_event.height as Real != self.window_aspects.1
                 // {
@@ -315,13 +315,13 @@ impl Application {
 }
 
 fn get_mouse_position(
-    connection: *mut xcb::xcb_connection_t,
-    window: xcb::xcb_window_t,
-    screen: *mut xcb::xcb_screen_t,
+    connection: *mut xcb::Connection,
+    window: xcb::Window,
+    screen: *mut xcb::Screen,
 ) -> (Real, Real) {
     unsafe {
         let coockie = xcb::xcb_query_pointer(connection, window);
-        let reply: &mut xcb::xcb_query_pointer_reply_t = transmute(xcb::xcb_query_pointer_reply(
+        let reply: &mut xcb::QueryPointerReply = transmute(xcb::xcb_query_pointer_reply(
             connection,
             coockie,
             null_mut(),

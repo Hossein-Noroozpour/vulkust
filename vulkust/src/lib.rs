@@ -15,7 +15,7 @@ pub extern crate rusttype;
 #[macro_use]
 pub extern crate objc;
 
-#[cfg(any(apple_os, target_os = "android"))]
+#[cfg(unix_based_os)]
 #[macro_use]
 pub extern crate bitflags;
 

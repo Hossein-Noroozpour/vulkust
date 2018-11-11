@@ -23,7 +23,7 @@ num_cpus = "*"
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser"] }
 
-[target.'cfg(any(target_os = "android", target_os = "macos", target_os = "ios"))'.dependencies]
+[target.'cfg(any(target_os = "android", target_os = "macos", target_os = "ios", target_os = "linux"))'.dependencies]
 bitflags = "*"
 
 [target.'cfg(all(any(target_os = "macos", target_os = "ios"), debug_assertions))'.dependencies]

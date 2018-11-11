@@ -50,15 +50,23 @@ impl Buffer {
 
 impl Object for Buffer {
     fn get_size(&self) -> isize {
-        self.info.base.size
+        return self.info.get_size();
     }
 
     fn get_offset(&self) -> isize {
-        self.info.base.offset
+        return self.info.get_offset();
     }
 
     fn get_offset_alignment(&self) -> isize {
-        self.info.base.offset_alignment
+        return self.info.get_offset_alignment();
+    }
+
+    fn get_offset_alignment_mask(&self) -> isize {
+        return self.info.get_offset_alignment_mask();
+    }
+
+    fn get_offset_alignment_not_mask(&self) -> isize {
+        return self.info.get_offset_alignment_not_mask();
     }
 
     fn place(&mut self, offset: isize) {
@@ -95,14 +103,14 @@ pub enum Location {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct RootBuffer {
-    pub logical_device: Arc<LogicalDevice>,
-    pub memory: Arc<RwLock<Memory>>,
-    pub vk_data: vk::VkBuffer,
-    pub container: alc::Container,
+    logical_device: Arc<LogicalDevice>,
+    memory: Arc<RwLock<Memory>>,
+    vk_data: vk::VkBuffer,
+    container: alc::Container,
 }
 
 impl RootBuffer {
-    pub fn new(size: isize, location: Location, memmgr: &Arc<RwLock<MemoryManager>>) -> Self {
+    pub(crate) fn new(size: isize, location: Location, memmgr: &Arc<RwLock<MemoryManager>>) -> Self {
         let (memloc, usage) = match location {
             Location::CPU => (
                 MemoryLocation::CPU,
@@ -120,7 +128,7 @@ impl RootBuffer {
             ),
         };
         let mut buffer_info = vk::VkBufferCreateInfo::default();
-        let logical_device = vxresult!(memmgr.read()).logical_device.clone();
+        let logical_device = vxresult!(memmgr.read()).get_device().clone();
         buffer_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         buffer_info.size = size as vk::VkDeviceSize;
         buffer_info.usage = usage;
@@ -138,12 +146,12 @@ impl RootBuffer {
         let memory = vxresult!(memmgr.write()).allocate(&mem_reqs, memloc);
         {
             let mem = vxresult!(memory.read());
-            let memroot = vxresult!(mem.root_memory.read());
+            let memroot = vxresult!(mem.get_root().read());
             vulkan_check!(vk::vkBindBufferMemory(
                 logical_device.vk_data,
                 vk_data,
-                memroot.vk_data,
-                mem.info.offset as vk::VkDeviceSize,
+                memroot.get_data(),
+                mem.get_offset() as vk::VkDeviceSize,
             ));
         }
         let container = alc::Container::new(size, 2);
@@ -155,12 +163,16 @@ impl RootBuffer {
         }
     }
 
-    pub fn allocate(&mut self, size: isize) -> Arc<RwLock<Buffer>> {
-        let memoff = vxresult!(self.memory.read()).info.offset;
+    pub(crate) fn allocate(&mut self, size: isize) -> Arc<RwLock<Buffer>> {
+        let memoff = vxresult!(self.memory.read()).get_offset();
         let buffer = Arc::new(RwLock::new(Buffer::new(size, memoff, self.vk_data)));
         let obj: Arc<RwLock<Object>> = buffer.clone();
         self.container.allocate(&obj);
         return buffer;
+    }
+
+    pub(crate) fn get_memory(&self) -> &Arc<RwLock<Memory>> {
+        return &self.memory;
     }
 }
 
@@ -234,23 +246,25 @@ impl DynamicBuffer {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Manager {
-    pub alignment: isize,
-    pub cpu_buffer: RootBuffer,
-    pub gpu_buffer: RootBuffer,
-    pub cpu_memory_mapped_ptr: isize,
-    pub static_buffer: Arc<RwLock<Buffer>>,
-    pub static_uploader_buffer: Arc<RwLock<Buffer>>,
-    pub dynamic_buffers: Vec<Arc<RwLock<Buffer>>>,
-    pub copy_ranges: Vec<vk::VkBufferCopy>,
-    pub copy_buffers: Vec<Arc<RwLock<Buffer>>>,
-    pub copy_to_image_ranges: Vec<(vk::VkBufferImageCopy, Arc<RwLock<Image>>)>,
-    pub frame_copy_buffers: Vec<Vec<Arc<RwLock<Buffer>>>>,
-    pub frame_copy_to_image_ranges: Vec<Vec<(vk::VkBufferImageCopy, Arc<RwLock<Image>>)>>,
-    pub cmd_pool: Arc<CmdPool>,
+    alignment: isize,
+    alignment_mask: isize,
+    alignment_not_mask: isize,
+    cpu_buffer: RootBuffer,
+    gpu_buffer: RootBuffer,
+    cpu_memory_mapped_ptr: isize,
+    static_buffer: Arc<RwLock<Buffer>>,
+    static_uploader_buffer: Arc<RwLock<Buffer>>,
+    dynamic_buffers: Vec<Arc<RwLock<Buffer>>>,
+    copy_ranges: Vec<vk::VkBufferCopy>,
+    copy_buffers: Vec<Arc<RwLock<Buffer>>>,
+    copy_to_image_ranges: Vec<(vk::VkBufferImageCopy, Arc<RwLock<Image>>)>,
+    frame_copy_buffers: Vec<Vec<Arc<RwLock<Buffer>>>>,
+    frame_copy_to_image_ranges: Vec<Vec<(vk::VkBufferImageCopy, Arc<RwLock<Image>>)>>,
+    cmd_pool: Arc<CmdPool>,
 }
 
 impl Manager {
-    pub fn new(
+    pub(crate) fn new(
         memmgr: &Arc<RwLock<MemoryManager>>,
         cmd_pool: &Arc<CmdPool>,
         static_size: isize,
@@ -259,12 +273,14 @@ impl Manager {
         frames_count: isize,
     ) -> Self {
         let alignment = vxresult!(memmgr.read())
-            .logical_device
+            .get_device()
             .physical_device
             .get_max_min_alignment() as isize;
-        let static_size = alc::align(static_size, alignment);
-        let static_uploader_size = alc::align(static_uploader_size, alignment);
-        let dynamics_size = alc::align(dynamics_size, alignment);
+        let alignment_mask = alignment -1;
+        let alignment_not_mask = !alignment_mask;
+        let static_size = alc::align(static_size, alignment, alignment_mask, alignment_not_mask);
+        let static_uploader_size = alc::align(static_uploader_size, alignment, alignment_mask, alignment_not_mask);
+        let dynamics_size = alc::align(dynamics_size, alignment, alignment_mask, alignment_not_mask);
         let frames_dynamics_size = dynamics_size * frames_count;
         let mut cpu_buffer = RootBuffer::new(
             frames_dynamics_size + static_uploader_size,
@@ -274,11 +290,11 @@ impl Manager {
         let mut gpu_buffer = RootBuffer::new(static_size, Location::GPU, memmgr);
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
-        let vk_memory = vxresult!(cpu_buffer.memory.read()).vk_data;
-        let vk_device = vxresult!(memmgr.read()).logical_device.vk_data;
+        let vk_memory = vxresult!(cpu_buffer.memory.read()).get_data();
+        let vk_device = vxresult!(memmgr.read()).get_device().vk_data;
         let memory_size = {
             let cpu_memory = vxresult!(cpu_buffer.memory.read());
-            let size = vxresult!(cpu_memory.root_memory.read()).container.base.size;
+            let size = vxresult!(cpu_memory.get_root().read()).get_size();
             size
         };
         let cpu_memory_mapped_ptr = unsafe {
@@ -310,8 +326,12 @@ impl Manager {
         frame_copy_buffers.shrink_to_fit();
         frame_copy_to_image_ranges.shrink_to_fit();
         let cmd_pool = cmd_pool.clone();
+        let alignment_mask = alignment - 1;
+        let alignment_not_mask = !alignment_mask;
         Manager {
             alignment,
+            alignment_mask,
+            alignment_not_mask,
             cpu_buffer,
             gpu_buffer,
             cpu_memory_mapped_ptr,
@@ -327,40 +347,40 @@ impl Manager {
         }
     }
 
-    pub fn create_static_buffer_with_ptr(
+    pub(crate) fn create_static_buffer_with_ptr(
         &mut self,
         data: *const c_void,
         data_len: usize,
     ) -> StaticBuffer {
-        let size = alc::align(data_len as isize, self.alignment);
+        let size = alc::align(data_len as isize, self.alignment, self.alignment_mask, self.alignment_not_mask);
         let buffer = vxresult!(self.static_buffer.write()).allocate(size);
         let upbuff = self.create_staging_buffer_with_ptr(data, data_len as usize);
         let upbuffer = vxresult!(upbuff.read());
         let mut range = vk::VkBufferCopy::default();
-        range.srcOffset = upbuffer.info.base.offset as vk::VkDeviceSize;
-        range.dstOffset = vxresult!(buffer.read()).info.base.offset as vk::VkDeviceSize;
+        range.srcOffset = upbuffer.get_offset() as vk::VkDeviceSize;
+        range.dstOffset = vxresult!(buffer.read()).get_offset() as vk::VkDeviceSize;
         range.size = data_len as vk::VkDeviceSize;
         self.copy_ranges.push(range);
         StaticBuffer::new(buffer)
     }
 
-    pub fn create_static_buffer_with_vec<T>(&mut self, data: &[T]) -> StaticBuffer {
+    pub(crate) fn create_static_buffer_with_vec<T>(&mut self, data: &[T]) -> StaticBuffer {
         let data_ptr = unsafe { transmute(data.as_ptr()) };
         let data_len = data.len() * size_of::<T>();
         self.create_static_buffer_with_ptr(data_ptr, data_len)
     }
 
-    pub fn create_staging_buffer_with_ptr(
+    pub(crate) fn create_staging_buffer_with_ptr(
         &mut self,
         data: *const c_void,
         data_len: usize,
     ) -> Arc<RwLock<Buffer>> {
-        let size = alc::align(data_len as isize, self.alignment);
+        let size = alc::align(data_len as isize, self.alignment, self.alignment_mask, self.alignment_not_mask);
         let upbuffer = vxresult!(self.static_uploader_buffer.write()).allocate(size);
         let off = {
             let upbuff = vxresult!(upbuffer.read());
             let mut off = upbuff.memory_offset;
-            off += upbuff.info.base.offset;
+            off += upbuff.get_offset();
             off += self.cpu_memory_mapped_ptr;
             off
         };
@@ -372,13 +392,13 @@ impl Manager {
         upbuffer
     }
 
-    pub fn create_staging_buffer_with_vec<T>(&mut self, data: &[T]) -> Arc<RwLock<Buffer>> {
+    pub(crate) fn create_staging_buffer_with_vec<T>(&mut self, data: &[T]) -> Arc<RwLock<Buffer>> {
         let data_ptr = unsafe { transmute(data.as_ptr()) };
         let data_len = data.len() * size_of::<T>();
         self.create_staging_buffer_with_ptr(data_ptr, data_len)
     }
 
-    pub fn create_staging_image(
+    pub(crate) fn create_staging_image(
         &mut self,
         image: &Arc<RwLock<Image>>,
         pixels: &[u8],
@@ -395,18 +415,18 @@ impl Manager {
         copy_info.imageExtent.width = img_info.extent.width;
         copy_info.imageExtent.height = img_info.extent.height;
         copy_info.imageExtent.depth = img_info.extent.depth;
-        copy_info.bufferOffset = upbuffer.info.base.offset as vk::VkDeviceSize;
+        copy_info.bufferOffset = upbuffer.get_offset() as vk::VkDeviceSize;
         self.copy_to_image_ranges.push((copy_info, image.clone()));
     }
 
-    pub fn create_dynamic_buffer(&mut self, actual_size: isize) -> DynamicBuffer {
-        let size = alc::align(actual_size, self.alignment);
+    pub(crate) fn create_dynamic_buffer(&mut self, actual_size: isize) -> DynamicBuffer {
+        let size = alc::align(actual_size, self.alignment, self.alignment_mask, self.alignment_not_mask);
         let mut buffers = Vec::new();
         for dynamic_buffer in &self.dynamic_buffers {
             let buffer = vxresult!(dynamic_buffer.write()).allocate(size);
             let ptr = {
                 let buffer = vxresult!(buffer.read());
-                buffer.memory_offset + buffer.info.base.offset + self.cpu_memory_mapped_ptr
+                buffer.memory_offset + buffer.get_offset() + self.cpu_memory_mapped_ptr
             };
             buffers.push((buffer, ptr));
         }
@@ -414,7 +434,7 @@ impl Manager {
         DynamicBuffer::new(buffers, actual_size)
     }
 
-    pub fn update(&mut self, cmd: &mut CmdBuffer, frame_number: usize) {
+    pub(crate) fn update(&mut self, cmd: &mut CmdBuffer, frame_number: usize) {
         self.frame_copy_buffers[frame_number].clear();
         self.frame_copy_to_image_ranges[frame_number].clear();
         if self.copy_buffers.len() == 0 {
@@ -447,6 +467,10 @@ impl Manager {
         }
         self.frame_copy_buffers[frame_number].append(&mut self.copy_buffers);
         self.frame_copy_to_image_ranges[frame_number].append(&mut self.copy_to_image_ranges);
+    }
+
+    pub(super) fn get_gpu_root_buffer(&self) -> &RootBuffer {
+        return &self.gpu_buffer;
     }
 }
 
