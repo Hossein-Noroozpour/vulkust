@@ -95,7 +95,7 @@ impl Image {
                 logical_device.vk_data,
                 vk_data,
                 root_memory.get_data(),
-                memory_r.get_offset() as vk::VkDeviceSize,
+                memory_r.get_allocated_memory().get_offset() as vk::VkDeviceSize,
             ));
         }
         Image {

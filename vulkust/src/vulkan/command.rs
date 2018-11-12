@@ -243,20 +243,22 @@ impl Buffer {
 
     pub(crate) fn bind_vertex_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
-        let info = buffer.get_info_for_binding();
+        let vkbuff = buffer.get_data();
+        let offset = buffer.get_allocated_memory().get_offset() as vk::VkDeviceSize;
         unsafe {
-            vk::vkCmdBindVertexBuffers(self.vk_data, 0, 1, &info.1, &info.0);
+            vk::vkCmdBindVertexBuffers(self.vk_data, 0, 1, &vkbuff, &offset);
         }
     }
 
     pub(crate) fn bind_index_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
-        let info = buffer.get_info_for_binding();
+        let vkbuff = buffer.get_data();
+        let offset = buffer.get_allocated_memory().get_offset() as vk::VkDeviceSize;
         unsafe {
             vk::vkCmdBindIndexBuffer(
                 self.vk_data,
-                info.1,
-                info.0,
+                vkbuff,
+                offset,
                 vk::VkIndexType::VK_INDEX_TYPE_UINT32,
             );
         }
@@ -304,7 +306,7 @@ impl Buffer {
     ) {
         self.bound_descriptor_sets[GBUFF_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[GBUFF_SCENE_DESCRIPTOR_OFFSET] =
-            buffer.get_offset() as u32;
+            buffer.get_allocated_memory().get_offset() as u32;
     }
 
     pub(crate) fn bind_gbuff_model_descriptor(
@@ -314,7 +316,7 @@ impl Buffer {
     ) {
         self.bound_descriptor_sets[GBUFF_MODEL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[GBUFF_MODEL_DESCRIPTOR_OFFSET] =
-            buffer.get_offset() as u32;
+            buffer.get_allocated_memory().get_offset() as u32;
     }
 
     pub(crate) fn bind_gbuff_material_descriptor(
@@ -324,7 +326,7 @@ impl Buffer {
     ) {
         self.bound_descriptor_sets[GBUFF_MATERIAL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[GBUFF_MATERIAL_DESCRIPTOR_OFFSET] =
-            buffer.get_offset() as u32;
+            buffer.get_allocated_memory().get_offset() as u32;
     }
 
     pub(crate) fn render_gbuff(
@@ -409,7 +411,7 @@ impl Buffer {
     ) {
         self.bound_descriptor_sets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] =
-            buffer.get_offset() as u32;
+            buffer.get_allocated_memory().get_offset() as u32;
     }
 
     pub(crate) fn bind_resolver_descriptor(
@@ -418,7 +420,8 @@ impl Buffer {
         buffer: &BufBuffer,
     ) {
         self.bound_descriptor_sets[RESOLVER_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
-        self.bound_dynamic_buffer_offsets[RESOLVER_DESCRIPTOR_OFFSET] = buffer.get_offset() as u32;
+        self.bound_dynamic_buffer_offsets[RESOLVER_DESCRIPTOR_OFFSET] = 
+            buffer.get_allocated_memory().get_offset() as u32;
     }
 
     pub(crate) fn bind_deferred_deferred_descriptor(
@@ -428,7 +431,7 @@ impl Buffer {
     ) {
         self.bound_descriptor_sets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] =
-            buffer.get_offset() as u32;
+            buffer.get_allocated_memory().get_offset() as u32;
     }
 
     pub(crate) fn bind_shadow_mapper_light_descriptor(
@@ -438,7 +441,7 @@ impl Buffer {
     ) {
         self.bound_descriptor_sets[SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET] =
-            buffer.get_offset() as u32;
+            buffer.get_allocated_memory().get_offset() as u32;
     }
 
     pub(crate) fn bind_shadow_mapper_material_descriptor(
@@ -449,7 +452,7 @@ impl Buffer {
         self.bound_descriptor_sets[SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET] =
             descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET] =
-            buffer.get_offset() as u32;
+            buffer.get_allocated_memory().get_offset() as u32;
     }
 
     pub(crate) fn bind_shadow_accumulator_directional_descriptor(
@@ -460,7 +463,7 @@ impl Buffer {
         self.bound_descriptor_sets[SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_OFFSET] =
             descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_OFFSET] =
-            buffer.get_offset() as u32;
+            buffer.get_allocated_memory().get_offset() as u32;
     }
 
     pub(crate) fn render_shadow_mapper(

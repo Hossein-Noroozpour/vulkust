@@ -102,7 +102,7 @@ impl Engine {
             &graphic_cmd_pool,
             32 * 1024 * 1024,
             32 * 1024 * 1024,
-            256 * 1024 * 1024,
+            32 * 1024 * 1024,
             swapchain.image_views.len() as isize,
         )));
         let descriptor_manager =

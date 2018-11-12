@@ -92,7 +92,12 @@ impl Logical {
             vk_present_queue,
         }
     }
-    pub fn wait_idle(&self) {
+
+    pub(crate) fn get_uniform_buffer_alignment(&self) -> isize {
+        self.physical_device.properties.limits.minUniformBufferOffsetAlignment as isize
+    }
+
+    pub(crate) fn wait_idle(&self) {
         unsafe {
             vk::vkDeviceWaitIdle(self.vk_data);
         }

@@ -53,16 +53,11 @@ pub fn round_to_power_of_two(mut v: isize) -> isize {
 }
 
 pub trait Object: Debug {
-    fn get_size(&self) -> isize;
-    fn get_offset(&self) -> isize;
-    fn get_offset_alignment(&self) -> isize;
-    fn get_offset_alignment_mask(&self) -> isize;
-    fn get_offset_alignment_not_mask(&self) -> isize;
-    fn place(&mut self, offset: isize);
+    fn get_allocated_memory(&self) -> &Memory;
+    fn place(&mut self, isize);
 }
 
 pub trait Allocator: Debug {
-    fn increase_size(&mut self, size: isize);
     fn allocate(&mut self, obj: &Arc<RwLock<Object>>);
     fn clean(&mut self);
 }
@@ -72,6 +67,7 @@ pub struct Memory {
     offset: isize,
     end: isize,
     size: isize,
+    aligned_size: isize,
     offset_alignment: isize,
     offset_alignment_mask: isize,
     offset_alignment_not_mask: isize,
@@ -81,43 +77,65 @@ impl Memory {
     pub(crate) fn new(size: isize, offset_alignment: isize) -> Self {
         let offset_alignment_mask = offset_alignment - 1;
         let offset_alignment_not_mask = !offset_alignment_mask;
-        #[cfg(debug_mode)]
-        {
-            check_power_of_two(offset_alignment);
-            if size != align(size, offset_alignment, offset_alignment_mask, offset_alignment_not_mask) {
-                vxunexpected!();
-            }
-        }
+        let aligned_size = align(size, offset_alignment, offset_alignment_mask, offset_alignment_not_mask);
         Memory {
             offset: 0,
-            end: size,
+            end: aligned_size,
             size,
+            aligned_size,
             offset_alignment,
             offset_alignment_mask,
             offset_alignment_not_mask,
         }
     }
+
+    pub(crate) fn get_size(&self) -> isize {
+        return self.size;
+    }
+
+    // pub(crate) fn get_aligned_size(&self) -> isize {
+    //     return self.aligned_size;
+    // }
+
+    // pub(crate) fn increase_size(&mut self, size: isize) {
+    //     self.size += size;
+    //     self.aligned_size = self.align(self.size);
+    //     self.end = self.offset + self.aligned_size;
+    // }
+
+    pub(crate) fn align(&self, size: isize) -> isize {
+        return align(
+            size, 
+            self.offset_alignment, 
+            self.offset_alignment_mask, 
+            self.offset_alignment_not_mask,
+        );
+    }
+
+    pub(crate) fn get_offset(&self) -> isize {
+        return self.offset;
+    }
+
+    pub(crate) fn get_end(&self) -> isize {
+        return self.end;
+    }
+
+    pub(crate) fn get_offset_alignment(&self) -> isize {
+        return self.offset_alignment;
+    }
+
+    // pub(crate) fn get_offset_alignment_mask(&self) -> isize {
+    //     return self.offset_alignment_mask;
+    // }
+
+    // pub(crate) fn get_offset_alignment_not_mask(&self) -> isize {
+    //     return self.offset_alignment_not_mask;
+    // }
 }
 
 impl Object for Memory {
-    fn get_size(&self) -> isize {
-        self.size
-    }
-
-    fn get_offset(&self) -> isize {
-        self.offset
-    }
-
-    fn get_offset_alignment(&self) -> isize {
-        self.offset_alignment
-    }
-
-    fn get_offset_alignment_mask(&self) -> isize {
-        self.offset_alignment_mask
-    }
-
-    fn get_offset_alignment_not_mask(&self) -> isize {
-        self.offset_alignment_not_mask
+    fn get_allocated_memory(&self) -> &Memory {
+        return self;
     }
 
     fn place(&mut self, offset: isize) {
@@ -128,7 +146,7 @@ impl Object for Memory {
             }
         }
         self.offset = offset;
-        self.end = self.size + offset;
+        self.end = self.aligned_size + self.offset;
     }
 }
 
@@ -150,24 +168,8 @@ impl Container {
 }
 
 impl Object for Container {
-    fn get_size(&self) -> isize {
-        return self.base.get_size();
-    }
-
-    fn get_offset(&self) -> isize {
-        return self.base.get_offset();
-    }
-
-    fn get_offset_alignment(&self) -> isize {
-        return self.base.get_offset_alignment();
-    }
-
-    fn get_offset_alignment_mask(&self) -> isize {
-        return self.base.get_offset_alignment_mask();
-    }
-
-    fn get_offset_alignment_not_mask(&self) -> isize {
-        return self.base.get_offset_alignment_not_mask();
+    fn get_allocated_memory(&self) -> &Memory {
+        return &self.base;
     }
 
     fn place(&mut self, offset: isize) {
@@ -177,20 +179,13 @@ impl Object for Container {
 }
 
 impl Allocator for Container {
-    fn increase_size(&mut self, size: isize) {
-        self.base.end += size;
-        self.base.size += size;
-    }
-
     fn allocate(&mut self, obj: &Arc<RwLock<Object>>) {
-        let mut mobj = vxresult!(obj.write());
-        let obj_size = mobj.get_size();
-        let offset_alignment = mobj.get_offset_alignment();
-        let offset_alignment_mask = mobj.get_offset_alignment_mask();
-        let offset_alignment_not_mask = mobj.get_offset_alignment_not_mask();
-        let offset = align(self.free_offset, offset_alignment, offset_alignment_mask, offset_alignment_not_mask);
-        let next_free_offset = obj_size + offset;
-        if next_free_offset > self.base.end {
+        let aligned_offset = vxresult!(obj.read()).get_allocated_memory().align(self.free_offset);
+        vxresult!(obj.write()).place(aligned_offset);
+        let mobj = vxresult!(obj.read());
+        let aobj = mobj.get_allocated_memory();
+        self.free_offset = aobj.get_end();
+        if self.free_offset > self.base.end {
             vxlogf!(
                 "Out of space, you probably forget to increase \
                 the size or cleaning the allocator, \
@@ -201,37 +196,30 @@ impl Allocator for Container {
                 size: {}, \
                 offset: {}, \
                 obj_size: {}",
-                offset_alignment,
-                next_free_offset,
-                offset,
+                aobj.get_offset_alignment(),
+                self.free_offset,
+                aligned_offset,
                 self.free_offset,
                 self.base.size,
                 self.base.offset,
-                obj_size
+                aobj.get_size(),
             );
         }
-        mobj.place(offset);
         self.objects.push(Arc::downgrade(obj));
-        self.free_offset = next_free_offset;
     }
 
     fn clean(&mut self) {
-        let mut objects = Vec::new();
+        let mut objects = Vec::with_capacity(self.objects.len());
         self.free_offset = self.base.offset;
         for obj in &self.objects {
             if let Some(obj) = obj.upgrade() {
-                let mut objm = vxresult!(obj.write());
-                let size = objm.get_size();
-                let offset = objm.get_offset();
-                let offset_alignment = objm.get_offset_alignment();
-                let offset_alignment_mask = objm.get_offset_alignment_mask();
-                let offset_alignment_not_mask = objm.get_offset_alignment_not_mask();
-                let aligned_offset = align(self.free_offset, offset_alignment, offset_alignment_mask, offset_alignment_not_mask);
-                if aligned_offset != offset {
-                    objm.place(aligned_offset);
+                let mut mobj = vxresult!(obj.write());
+                let aligned_offset = mobj.get_allocated_memory().align(self.free_offset);
+                if aligned_offset != self.free_offset {
+                    mobj.place(aligned_offset);
                 }
                 objects.push(Arc::downgrade(&obj));
-                self.free_offset = aligned_offset + size;
+                self.free_offset = mobj.get_allocated_memory().end;
             }
         }
         self.objects = objects;
@@ -312,5 +300,10 @@ mod test {
         assert_eq!(8, round_to_power_of_two(5));
         assert_eq!(8, round_to_power_of_two(6));
         assert_eq!(8, round_to_power_of_two(7));
+    }
+
+    #[test]
+    fn container_test1() {
+
     }
 }

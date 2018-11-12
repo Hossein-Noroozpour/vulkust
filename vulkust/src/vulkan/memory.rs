@@ -10,7 +10,6 @@ use std::sync::{Arc, RwLock, Weak};
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Memory {
     info: alc::Memory,
-    size: vk::VkDeviceSize,
     vk_data: vk::VkDeviceMemory,
     manager: Arc<RwLock<Manager>>,
     root_memory: Arc<RwLock<RootMemory>>,
@@ -18,17 +17,14 @@ pub struct Memory {
 
 impl Memory {
     pub(crate) fn new(
-        size: isize,
         mem_req: &vk::VkMemoryRequirements,
         vk_data: vk::VkDeviceMemory,
         manager: Arc<RwLock<Manager>>,
         root_memory: Arc<RwLock<RootMemory>>,
     ) -> Self {
-        let info = alc::Memory::new(size, mem_req.alignment as isize);
-        let size = mem_req.size;
+        let info = alc::Memory::new(mem_req.size as isize, mem_req.alignment as isize);
         Memory {
             info,
-            size,
             vk_data,
             manager,
             root_memory,
@@ -49,24 +45,8 @@ impl Memory {
 }
 
 impl Object for Memory {
-    fn get_size(&self) -> isize {
-        return self.info.get_size();
-    }
-
-    fn get_offset(&self) -> isize {
-        return self.info.get_offset();
-    }
-
-    fn get_offset_alignment(&self) -> isize {
-        return self.info.get_offset_alignment();
-    }
-
-    fn get_offset_alignment_mask(&self) -> isize {
-        return self.info.get_offset_alignment_mask();
-    }
-
-    fn get_offset_alignment_not_mask(&self) -> isize {
-        return self.info.get_offset_alignment_not_mask();
+    fn get_allocated_memory(&self) -> &alc::Memory {
+        return self.info.get_allocated_memory();
     }
 
     fn place(&mut self, offset: isize) {
@@ -80,9 +60,6 @@ unsafe impl Sync for Memory {}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct RootMemory {
-    alignment: isize,
-    alignment_mask: isize,
-    alignment_not_mask: isize,
     logical_device: Arc<LogicalDevice>,
     manager: Weak<RwLock<Manager>>,
     itself: Option<Weak<RwLock<RootMemory>>>,
@@ -90,7 +67,7 @@ pub(crate) struct RootMemory {
     container: alc::Container,
 }
 
-const DEFAULT_MEMORY_SIZE: vk::VkDeviceSize = 512 * 1024 * 1024;
+const DEFAULT_MEMORY_SIZE: vk::VkDeviceSize = 600 * 1024 * 1024;
 
 impl RootMemory {
     pub(crate) fn new(
@@ -98,7 +75,6 @@ impl RootMemory {
         manager: Weak<RwLock<Manager>>,
         logical_device: &Arc<LogicalDevice>,
     ) -> Arc<RwLock<Self>> {
-        let alignment = logical_device.physical_device.get_max_min_alignment() as isize;
         let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
         mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         mem_alloc.allocationSize = DEFAULT_MEMORY_SIZE;
@@ -110,17 +86,12 @@ impl RootMemory {
             null(),
             &mut vk_data,
         ));
-        let alignment_mask = alignment -1;
-        let alignment_not_mask = !alignment_mask;
         let itself = Arc::new(RwLock::new(RootMemory {
-            alignment,
-            alignment_mask,
-            alignment_not_mask,
             logical_device: logical_device.clone(),
             vk_data,
             manager,
             itself: None,
-            container: alc::Container::new(DEFAULT_MEMORY_SIZE as isize, 2),
+            container: alc::Container::new(DEFAULT_MEMORY_SIZE as isize, 1),
         }));
         let w = Arc::downgrade(&itself);
         vxresult!(itself.write()).itself = Some(w);
@@ -128,15 +99,9 @@ impl RootMemory {
     }
 
     pub(crate) fn allocate(&mut self, mem_req: &vk::VkMemoryRequirements) -> Arc<RwLock<Memory>> {
-        let aligned_size = alc::align(mem_req.size as isize, self.alignment, self.alignment_mask, self.alignment_not_mask);
-        let mem_alignment = mem_req.alignment as isize;
-        let mem_alignment_mask = mem_alignment -1;
-        let mem_alignment_not_mask = !mem_alignment_mask;
-        let aligned_size = alc::align(aligned_size, mem_alignment, mem_alignment_mask, mem_alignment_not_mask);
         let manager = vxunwrap!(self.manager.upgrade());
         let itself = vxunwrap!(vxunwrap!(&self.itself).upgrade());
         let memory = Arc::new(RwLock::new(Memory::new(
-            aligned_size,
             mem_req,
             self.vk_data,
             manager,
@@ -152,7 +117,7 @@ impl RootMemory {
     }
 
     pub(crate) fn get_size(&self) -> isize {
-        return self.container.get_size();
+        return self.container.get_allocated_memory().get_size();
     }
 }
 
