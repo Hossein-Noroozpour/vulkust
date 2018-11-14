@@ -172,6 +172,7 @@ pub struct Base {
     descriptor_set: Arc<DescriptorSet>,
     meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
     children: BTreeMap<Id, Arc<RwLock<Model>>>,
+    scales: math::Vector3<Real>,
 }
 
 impl Base {}
@@ -253,6 +254,7 @@ impl Loadable for Base {
             descriptor_set,
             meshes,
             children: BTreeMap::new(),
+            scales: math::Vector3::new(1.0, 1.0, 1.0),
         }
     }
 
@@ -295,6 +297,7 @@ impl Loadable for Base {
             descriptor_set,
             meshes,
             children: BTreeMap::new(),
+            scales: math::Vector3::new(1.0, 1.0, 1.0),
         }
     }
 }
@@ -334,6 +337,13 @@ impl Transferable for Base {
         for (_, c) in &self.children {
             vxresult!(c.write()).translate(t);
         }
+    }
+
+    fn scale(&mut self, s: Real) {
+        self.scales *= s;
+        self.occlusion_culling_radius *= s;
+        let s = math::Matrix4::from_scale(s);
+        self.uniform.model = self.uniform.model * s;
     }
 }
 
@@ -440,6 +450,7 @@ impl DefaultModel for Base {
             descriptor_set,
             meshes: BTreeMap::new(),
             children: BTreeMap::new(),
+            scales: math::Vector3::new(1.0, 1.0, 1.0),
         }
     }
 }

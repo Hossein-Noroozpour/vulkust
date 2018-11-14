@@ -1,5 +1,4 @@
 use vulkust::core::application::Application as CoreAppTrait;
-use vulkust::core::asset::Manager as AssetManager;
 use vulkust::core::event::{
     Button, ButtonAction, Event, Keyboard, Mouse, Move, Touch, TouchGesture, Type as EventType,
 };
@@ -16,6 +15,8 @@ use vulkust::render::widget::Label;
 use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
+
+use rand::{thread_rng, Rng};
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct MyGame {
@@ -82,7 +83,7 @@ impl CoreAppTrait for MyGame {
         {
             let mut scn = vxresult!(scene.write());
             scn.add_camera(camera);
-            place_cubes(&mut *scn, asset_manager);
+            place_cubes(&mut *scn, &*renderer);
             scn.add_light(sun);
         }
         self.scene = Some(scene);
@@ -214,7 +215,8 @@ impl CoreAppTrait for MyGame {
     fn terminate(&mut self) {}
 }
 
-fn place_cubes(scn: &mut Scene, astmgr: &AssetManager) {
+fn place_cubes(scn: &mut Scene, eng: &Renderer) {
+    let astmgr = eng.get_asset_manager();
     const GROUND_CUBE_ASPECT: Real = 2.0;
     const GROUND_CUBE_SPACING: Real = GROUND_CUBE_ASPECT * 0.1;
     const GROUND_CUBE_ROW_COUNT: usize = 10;
@@ -223,20 +225,69 @@ fn place_cubes(scn: &mut Scene, astmgr: &AssetManager) {
         + (GROUND_CUBE_ASPECT * 2.0) * GROUND_CUBE_ROW_COUNT as Real)
         * -0.5;
     let mut y = ROW_START;
-    let ground_mesh = vxresult!(astmgr.get_mesh_manager().write()).create_cube(2.0);
+    let ground_meshes = {
+        let mut mshmgr = vxresult!(astmgr.get_mesh_manager().write());
+        [mshmgr.create_cube(2.0),
+        mshmgr.create_cube(2.0),
+        mshmgr.create_cube(2.0),
+        mshmgr.create_cube(2.0),
+        mshmgr.create_cube(2.0),
+        mshmgr.create_cube(2.0),
+        mshmgr.create_cube(2.0),]
+    };
+    let cs = [
+        [50, 50, 50, 255],
+        [210, 210, 210, 255],
+        [153, 255, 150, 255],
+        [232, 220, 137, 255],
+        [255, 200, 163, 255],
+        [232, 121, 195, 255],
+        [149, 141, 255, 255],
+    ];
+    let cc = cs.len();
+    for i in 0..cc {
+        let mut m = vxresult!(ground_meshes[i].write());
+        let m = m.get_mut_material();
+        let c = &cs[i];
+        m.set_base_color(eng, c[0], c[1], c[2], c[3]);
+        m.finalize_textures_change(eng);
+    }
+    let mut ground_mesh_index = 0;
+    let mut mdlmgr = vxresult!(astmgr.get_model_manager().write());
     for _ in 0..GROUND_CUBE_ROW_COUNT {
         let mut x = ROW_START;
         for _ in 0..GROUND_CUBE_ROW_COUNT {
-            let m: Arc<RwLock<Model>> =
-                vxresult!(astmgr.get_model_manager().write()).create::<ModelBase>();
+            let m: Arc<RwLock<Model>> = mdlmgr.create::<ModelBase>();
             {
                 let mut m = vxresult!(m.write());
-                m.add_mesh(ground_mesh.clone());
+                m.add_mesh(ground_meshes[ground_mesh_index].clone());
                 m.translate(&math::Vector3::new(x, y, -5.0));
             }
             scn.add_model(m);
             x += ROW_INC;
+            ground_mesh_index += 1;
+            ground_mesh_index &= 1;
         }
         y += ROW_INC;
+        ground_mesh_index += 1;
+        ground_mesh_index &= 1;
+    }
+    const RANGE: Real = ROW_START * 0.7;
+    let mut rng = thread_rng();
+    for _ in 0..50 {
+        let y = rng.gen_range(RANGE, -RANGE);
+        let x = rng.gen_range(RANGE, -RANGE);
+        let z = rng.gen_range(0.0, 1.0);
+        let s = rng.gen_range(0.25, 0.5);
+        let m: Arc<RwLock<Model>> = mdlmgr.create::<ModelBase>();
+        {
+            let mut m = vxresult!(m.write());
+            m.add_mesh(ground_meshes[ground_mesh_index].clone());
+            m.translate(&math::Vector3::new(x, y, z));
+            m.scale(s);
+        }
+        scn.add_model(m);
+        ground_mesh_index += 1;
+        ground_mesh_index %= cc;
     }
 }

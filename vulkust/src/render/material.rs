@@ -281,4 +281,9 @@ impl Material {
         let buffer = vxresult!(self.uniform_buffer.get_buffer(frame_number).read());
         cmd.bind_shadow_mapper_material_descriptor(&*self.descriptor_set, &*buffer);
     }
+
+    pub fn set_base_color(&mut self, eng: &Engine, r: u8, g: u8, b: u8, a: u8) {
+        let mut texmgr = vxresult!(eng.get_asset_manager().get_texture_manager().write());
+        self.base_color = texmgr.create_2d_with_color(&*eng, [r, g, b, a]);
+    }
 }

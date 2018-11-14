@@ -27,6 +27,7 @@ pub trait Mesh: Object {
     fn is_transparent(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
     fn get_material(&self) -> &Material;
+    fn get_mut_material(&mut self) -> &mut Material;
     fn update(&mut self, &Scene, &Model, usize);
     fn render_gbuffer(&self, &mut CmdBuffer, usize);
     fn render_shadow(&self, &mut CmdBuffer, usize);
@@ -438,5 +439,9 @@ impl Mesh for Base {
 
     fn get_material(&self) -> &Material {
         return &self.material;
+    }
+
+    fn get_mut_material(&mut self) -> &mut Material {
+        return &mut self.material;
     }
 }

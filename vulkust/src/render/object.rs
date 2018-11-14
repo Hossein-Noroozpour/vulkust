@@ -30,6 +30,10 @@ pub trait Transferable {
         // todo temporary
         vxunimplemented!();
     }
+    fn scale(&mut self, _: Real) {
+        // todo temporary
+        vxunimplemented!();
+    }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
