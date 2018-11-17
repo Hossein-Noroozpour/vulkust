@@ -11,7 +11,6 @@ use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 pub(super) fn convert_format(f: Format) -> vk::VkFormat {
-    vxlogi!("{:?}", &f);
     match f {
         Format::RgbaFloat => return vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT,
         Format::DepthFloat => return vk::VkFormat::VK_FORMAT_D32_SFLOAT,
@@ -162,7 +161,9 @@ impl Image {
             | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32;
         let memmgr = {
             let buffmgr = vxresult!(buffmgr.read());
-            let memmgr = vxresult!(buffmgr.get_gpu_root_buffer().get_memory().read()).get_manager().clone();
+            let memmgr = vxresult!(buffmgr.get_gpu_root_buffer().get_memory().read())
+                .get_manager()
+                .clone();
             memmgr
         };
         let myself = Arc::new(RwLock::new(Self::new_with_info(&image_info, &memmgr)));

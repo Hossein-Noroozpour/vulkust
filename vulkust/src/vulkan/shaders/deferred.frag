@@ -43,13 +43,13 @@ layout (set = 1, binding = 1) uniform sampler2D position;
 layout (set = 1, binding = 2) uniform sampler2D normal;
 layout (set = 1, binding = 3) uniform sampler2D albedo;
 layout (set = 1, binding = 4) uniform sampler2D screen_space_depth;
-layout (set = 1, binding = 5) uniform sampler2D shadow_directional_flagbits;
+layout (set = 1, binding = 5) uniform usampler2D shadow_directional_flagbits;
 
 vec4 alb;
 
 void calc_lights() {
 	vec2 start_uv = uv - (vec2(deferred_ubo.pixel_x_step, deferred_ubo.pixel_y_step) * 2.0);
-	for(int light_index = 0; light_index < scene_ubo.directional_point_lights_count.x; ++light_index) {
+	for(uint light_index = 0; light_index < scene_ubo.directional_point_lights_count.x; ++light_index) {
 		float slope = -dot(texture(normal, uv).xyz, scene_ubo.directional_lights[light_index].direction_strength.xyz);
 		if(slope < 0.005) {
 			continue;
@@ -57,10 +57,10 @@ void calc_lights() {
 		slope = smoothstep(slope, 0.005, 0.2);
 		float brightness = 1.0;
 		vec2 shduv = start_uv;
-		int light_flag = 1 << light_index;
-		for(int si = 0; si < 4; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.pixel_x_step) {
-			for (int sj = 0; sj < 4; ++sj, shduv.y += deferred_ubo.pixel_y_step) {
-				if ((int(texture(shadow_directional_flagbits, shduv).x) & light_flag) == light_flag) {
+		uint light_flag = 1 << light_index;
+		for(uint si = 0; si < 4; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.pixel_x_step) {
+			for (uint sj = 0; sj < 4; ++sj, shduv.y += deferred_ubo.pixel_y_step) {
+				if ((texture(shadow_directional_flagbits, shduv).x & light_flag) == light_flag) {
 					brightness -= 0.0625;
 				}
 			}

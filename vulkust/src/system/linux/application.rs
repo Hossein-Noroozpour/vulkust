@@ -33,8 +33,7 @@ pub struct Application {
 impl Application {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
         let mut scr = 0 as c_int;
-        let connection: *mut xcb::Connection =
-            unsafe { xcb::xcb_connect(null_mut(), &mut scr) };
+        let connection: *mut xcb::Connection = unsafe { xcb::xcb_connect(null_mut(), &mut scr) };
         if connection == null_mut() {
             vxlogf!("Could not find a compatible Vulkan ICD!");
         }
@@ -56,9 +55,9 @@ impl Application {
             | xcb::EventMask::POINTER_MOTION
             | xcb::EventMask::BUTTON_PRESS
             | xcb::EventMask::BUTTON_RELEASE
-            | xcb::EventMask::RESIZE_REDIRECT).bits();
-        let value_mask =
-            (xcb::CW::BACK_PIXEL | xcb::CW::EVENT_MASK).bits();
+            | xcb::EventMask::RESIZE_REDIRECT)
+            .bits();
+        let value_mask = (xcb::CW::BACK_PIXEL | xcb::CW::EVENT_MASK).bits();
         let window_width = DEFAULT_WINDOW_WIDTH as u16;
         let window_height = DEFAULT_WINDOW_HEIGHT as u16;
         unsafe {
@@ -194,12 +193,9 @@ impl Application {
         unsafe {
             if (xproto::DESTROY_NOTIFY as u8 == ((*e).response_type & 0x7f))
                 || ((xproto::CLIENT_MESSAGE as u8 == ((*e).response_type & 0x7f))
-                    && ((*transmute::<
-                        *mut xcb::GenericEvent,
-                        *mut xcb::ClientMessageEvent,
-                    >(e))
-                    .data
-                    .data[0]
+                    && ((*transmute::<*mut xcb::GenericEvent, *mut xcb::ClientMessageEvent>(e))
+                        .data
+                        .data[0]
                         == (*self.atom_wm_delete_window).atom))
             {
                 return Some(EventType::Quit);

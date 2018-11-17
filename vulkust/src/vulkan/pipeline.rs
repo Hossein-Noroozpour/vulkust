@@ -257,8 +257,7 @@ impl Pipeline {
                         vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
                     blend_attachment_state[i].colorBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
                 }
-                _ => {
-                }
+                _ => {}
             }
             blend_attachment_state[i].colorWriteMask =
                 vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as vk::VkColorComponentFlags

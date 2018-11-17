@@ -187,7 +187,10 @@ impl Set {
         #[cfg(debug_mode)]
         {
             if textures.len() != DEFERRED_TEX_COUNT {
-                vxlogf!("For deferred descriptor you need {} textures.", DEFERRED_TEX_COUNT);
+                vxlogf!(
+                    "For deferred descriptor you need {} textures.",
+                    DEFERRED_TEX_COUNT
+                );
             }
         }
         let mut texturess = Vec::new();
@@ -375,14 +378,19 @@ impl Manager {
         #[cfg(debug_mode)]
         {
             if textures.len() != GBUFF_TEX_COUNT {
-                vxlogf!("For gbuffer filler descriptor you need {} textures.", GBUFF_TEX_COUNT);
+                vxlogf!(
+                    "For gbuffer filler descriptor you need {} textures.",
+                    GBUFF_TEX_COUNT
+                );
             }
         }
         let mut id = ([0 as Id; GBUFF_TEX_COUNT], 0usize);
         for i in 0..GBUFF_TEX_COUNT {
             id.0[i] = vxresult!(textures[i].read()).get_id();
         }
-        id.1 = vxresult!(uniform.get_buffer(0).read()).get_allocated_memory().get_size() as usize;
+        id.1 = vxresult!(uniform.get_buffer(0).read())
+            .get_allocated_memory()
+            .get_size() as usize;
         if let Some(s) = self.gbuff_sets.get(&id) {
             if let Some(s) = s.upgrade() {
                 return s;
@@ -399,7 +407,9 @@ impl Manager {
     }
 
     pub(crate) fn create_buffer_only_set(&mut self, uniform: &DynamicBuffer) -> Arc<Set> {
-        let id = vxresult!(uniform.get_buffer(0).read()).get_allocated_memory().get_size() as usize;
+        let id = vxresult!(uniform.get_buffer(0).read())
+            .get_allocated_memory()
+            .get_size() as usize;
         if let Some(s) = self.buffer_only_sets.get(&id) {
             if let Some(s) = s.upgrade() {
                 return s;

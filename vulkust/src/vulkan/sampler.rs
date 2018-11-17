@@ -1,5 +1,5 @@
-use super::device::logical::Logical as LogicalDevice;
 use super::super::render::sampler::Filter;
+use super::device::logical::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::Arc;
@@ -36,7 +36,7 @@ impl Sampler {
                 info.mipLodBias = 0f32;
                 info.minLod = 0f32;
                 info.maxLod = 0f32;
-            },
+            }
             _ => {
                 info.anisotropyEnable = vk::VK_TRUE;
                 info.maxAnisotropy = logical_device

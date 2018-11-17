@@ -99,7 +99,10 @@ impl Engine {
         framebuffers.shrink_to_fit();
         clear_framebuffers.shrink_to_fit();
         let linear_repeat_sampler = Arc::new(Sampler::new(logical_device.clone()));
-        let nearest_repeat_sampler = Arc::new(Sampler::new_with_filter(logical_device.clone(), SamplerFilter::Nearest));
+        let nearest_repeat_sampler = Arc::new(Sampler::new_with_filter(
+            logical_device.clone(),
+            SamplerFilter::Nearest,
+        ));
         let buffer_manager = Arc::new(RwLock::new(BufferManager::new(
             &memory_manager,
             &graphic_cmd_pool,

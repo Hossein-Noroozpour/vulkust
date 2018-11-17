@@ -6,7 +6,7 @@ use super::descriptor::Set as DescriptorSet;
 use super::framebuffer::Framebuffer;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::image::{AttachmentType, View as ImageView, Format};
+use super::image::{AttachmentType, Format, View as ImageView};
 use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
 use super::texture::{Manager as TextureManager, Texture};
@@ -71,7 +71,6 @@ impl Resolver {
         for v in g_buffers {
             let img = vxresult!(v.get_image().read());
             let format = convert_format_to_resolver_format(img.get_format());
-            vxlogi!("{:?}", &format);
             let buffer = Arc::new(ImageView::new_surface_attachment(
                 dev.clone(),
                 memmgr,

@@ -158,7 +158,11 @@ impl Manager {
         return itself;
     }
 
-    pub(crate) fn get_memory_type_index(&self, mem_req: &vk::VkMemoryRequirements, l: Location) -> u32 {
+    pub(crate) fn get_memory_type_index(
+        &self,
+        mem_req: &vk::VkMemoryRequirements,
+        l: Location,
+    ) -> u32 {
         let l = match l {
             Location::GPU => {
                 vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32

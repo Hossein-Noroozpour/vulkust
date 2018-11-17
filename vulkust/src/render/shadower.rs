@@ -76,9 +76,7 @@ impl Shadower {
             shadow_accumulator_flagbits_buffer.clone(),
             accumulator_sampler.clone(),
         );
-        let shadow_accumulator_buffers = vec![
-            shadow_accumulator_flagbits_buffer.clone(),
-        ];
+        let shadow_accumulator_buffers = vec![shadow_accumulator_flagbits_buffer.clone()];
         let clear_shadow_accumulator_render_pass = Arc::new(RenderPass::new_with_layouts(
             shadow_accumulator_buffers.clone(),
             true,

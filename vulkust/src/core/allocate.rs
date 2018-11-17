@@ -1,12 +1,12 @@
 use super::debug::Debug;
-use std::sync::{Arc, RwLock, Weak};
 use std::mem::size_of;
+use std::sync::{Arc, RwLock, Weak};
 
 pub fn align(size: isize, alignment: isize, mask: isize, not_mask: isize) -> isize {
     #[cfg(debug_mode)]
     {
         check_power_of_two(alignment);
-        if alignment -1 != mask {
+        if alignment - 1 != mask {
             vxunexpected!();
         }
         if mask != !not_mask {
@@ -23,7 +23,7 @@ pub fn align(size: isize, alignment: isize, mask: isize, not_mask: isize) -> isi
 #[cfg(debug_mode)]
 pub fn check_power_of_two(mut v: isize) {
     if v <= 0 {
-        vxunexpected!();        
+        vxunexpected!();
     }
     loop {
         if v & 1 == 1 {
@@ -77,7 +77,12 @@ impl Memory {
     pub(crate) fn new(size: isize, offset_alignment: isize) -> Self {
         let offset_alignment_mask = offset_alignment - 1;
         let offset_alignment_not_mask = !offset_alignment_mask;
-        let aligned_size = align(size, offset_alignment, offset_alignment_mask, offset_alignment_not_mask);
+        let aligned_size = align(
+            size,
+            offset_alignment,
+            offset_alignment_mask,
+            offset_alignment_not_mask,
+        );
         Memory {
             offset: 0,
             end: aligned_size,
@@ -105,9 +110,9 @@ impl Memory {
 
     pub(crate) fn align(&self, size: isize) -> isize {
         return align(
-            size, 
-            self.offset_alignment, 
-            self.offset_alignment_mask, 
+            size,
+            self.offset_alignment,
+            self.offset_alignment_mask,
             self.offset_alignment_not_mask,
         );
     }
@@ -141,7 +146,13 @@ impl Object for Memory {
     fn place(&mut self, offset: isize) {
         #[cfg(debug_mode)]
         {
-            if offset != align(offset, self.offset_alignment, self.offset_alignment_mask, self.offset_alignment_not_mask) {
+            if offset
+                != align(
+                    offset,
+                    self.offset_alignment,
+                    self.offset_alignment_mask,
+                    self.offset_alignment_not_mask,
+                ) {
                 vxunexpected!();
             }
         }
@@ -180,7 +191,9 @@ impl Object for Container {
 
 impl Allocator for Container {
     fn allocate(&mut self, obj: &Arc<RwLock<Object>>) {
-        let aligned_offset = vxresult!(obj.read()).get_allocated_memory().align(self.free_offset);
+        let aligned_offset = vxresult!(obj.read())
+            .get_allocated_memory()
+            .align(self.free_offset);
         vxresult!(obj.write()).place(aligned_offset);
         let mobj = vxresult!(obj.read());
         let aobj = mobj.get_allocated_memory();
@@ -188,14 +201,14 @@ impl Allocator for Container {
         if self.free_offset > self.base.end {
             vxlogf!(
                 "Out of space, you probably forget to increase \
-                the size or cleaning the allocator, \
-                offset_alignment: {}, \
-                next_free_offset: {}, \
-                aligned_free_offset: {}, \
-                free_offset: {}, \
-                size: {}, \
-                offset: {}, \
-                obj_size: {}",
+                 the size or cleaning the allocator, \
+                 offset_alignment: {}, \
+                 next_free_offset: {}, \
+                 aligned_free_offset: {}, \
+                 free_offset: {}, \
+                 size: {}, \
+                 offset: {}, \
+                 obj_size: {}",
                 aobj.get_offset_alignment(),
                 self.free_offset,
                 aligned_offset,
@@ -229,13 +242,13 @@ impl Allocator for Container {
 #[cfg(test)]
 mod test {
     use super::*;
-    
+
     #[test]
     #[should_panic]
     fn check_power_of_two_test1() {
         check_power_of_two(3 * 1024);
     }
-    
+
     #[test]
     #[should_panic]
     fn check_power_of_two_test2() {
@@ -258,31 +271,31 @@ mod test {
         assert_eq!(512, align(512, 512, 511, !511));
         assert_eq!(4851, align(4851, 1, 0, !0));
     }
-    
+
     #[test]
     #[should_panic]
     fn align_test2() {
         align(4851, 256, 259, !259);
     }
-    
+
     #[test]
     #[should_panic]
     fn align_test3() {
         align(4851, 256, 255, 25005);
     }
-    
+
     #[test]
     #[should_panic]
     fn align_test4() {
         align(4851, 255, 254, !254);
     }
-    
+
     #[test]
     #[should_panic]
     fn align_test5() {
         align(4851, 251, 255, 25005);
     }
-    
+
     #[test]
     #[should_panic]
     fn align_test6() {
@@ -303,7 +316,5 @@ mod test {
     }
 
     #[test]
-    fn container_test1() {
-
-    }
+    fn container_test1() {}
 }

@@ -420,7 +420,7 @@ impl Buffer {
         buffer: &BufBuffer,
     ) {
         self.bound_descriptor_sets[RESOLVER_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
-        self.bound_dynamic_buffer_offsets[RESOLVER_DESCRIPTOR_OFFSET] = 
+        self.bound_dynamic_buffer_offsets[RESOLVER_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
 

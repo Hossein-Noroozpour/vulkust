@@ -467,10 +467,7 @@ pub(super) const COPY_FROM_PARENT: u64 = 0;
 
 #[link(name = "xcb", kind = "dylib")]
 extern "C" {
-    pub(super) fn xcb_connect(
-        displayname: *const c_char,
-        screenp: *mut c_int,
-    ) -> *mut Connection;
+    pub(super) fn xcb_connect(displayname: *const c_char, screenp: *mut c_int) -> *mut Connection;
     pub(super) fn xcb_get_setup(c: *mut Connection) -> *const Setup;
     pub(super) fn xcb_setup_roots_iterator(R: *const Setup) -> ScreenIterator;
     pub(super) fn xcb_screen_next(i: *mut ScreenIterator);
@@ -514,10 +511,7 @@ extern "C" {
     pub(super) fn xcb_map_window(c: *mut Connection, window: Window) -> VoidCookie;
     pub(super) fn xcb_flush(c: *mut Connection) -> c_int;
     pub(super) fn xcb_poll_for_event(c: *mut Connection) -> *mut GenericEvent;
-    pub(super) fn xcb_query_pointer(
-        c: *mut Connection,
-        window: Window,
-    ) -> QueryPointerCookie;
+    pub(super) fn xcb_query_pointer(c: *mut Connection, window: Window) -> QueryPointerCookie;
     pub(super) fn xcb_query_pointer_reply(
         c: *mut Connection,
         cookie: QueryPointerCookie,

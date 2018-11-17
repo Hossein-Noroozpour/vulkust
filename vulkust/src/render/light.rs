@@ -552,7 +552,11 @@ impl ShadowMaker for Sun {
 }
 
 impl Directional for Sun {
-    fn update_cascaded_shadow_map_cameras(&mut self, walls: &Vec<[math::Vector3<Real>; 4]>, index: usize) {
+    fn update_cascaded_shadow_map_cameras(
+        &mut self,
+        walls: &Vec<[math::Vector3<Real>; 4]>,
+        index: usize,
+    ) {
         self.shadow_accumulator_uniform.light_index = index as u32;
         let mut walls_bnds = Vec::new();
         for w in walls {

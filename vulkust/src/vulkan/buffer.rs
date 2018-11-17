@@ -87,7 +87,11 @@ pub(crate) struct RootBuffer {
 }
 
 impl RootBuffer {
-    pub(crate) fn new(size: isize, location: Location, memmgr: &Arc<RwLock<MemoryManager>>) -> Self {
+    pub(crate) fn new(
+        size: isize,
+        location: Location,
+        memmgr: &Arc<RwLock<MemoryManager>>,
+    ) -> Self {
         let (memloc, usage) = match location {
             Location::CPU => (
                 MemoryLocation::CPU,
@@ -141,12 +145,18 @@ impl RootBuffer {
     }
 
     pub(crate) fn allocate(&mut self, size: isize) -> Arc<RwLock<Buffer>> {
-        let memoff = vxresult!(self.memory.read()).get_allocated_memory().get_offset();
-        let buffer = Arc::new(RwLock::new(Buffer::new(size, memoff, self.vk_data, 
+        let memoff = vxresult!(self.memory.read())
+            .get_allocated_memory()
+            .get_offset();
+        let buffer = Arc::new(RwLock::new(Buffer::new(
+            size,
+            memoff,
+            self.vk_data,
             match self.location {
                 Location::CPU => self.logical_device.get_uniform_buffer_alignment(),
                 _ => 1,
-            })));
+            },
+        )));
         let obj: Arc<RwLock<Object>> = buffer.clone();
         self.container.allocate(&obj);
         return buffer;
@@ -258,7 +268,7 @@ impl Manager {
         let mut gpu_buffer = RootBuffer::new(static_size, Location::GPU, memmgr);
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
-        
+
         let vk_device = vxresult!(memmgr.read()).get_device().vk_data;
         let (memory_size, vk_memory) = {
             let cpu_memory = vxresult!(cpu_buffer.memory.read());
@@ -320,8 +330,8 @@ impl Manager {
         let upbuffer = vxresult!(upbuff.read());
         let mut range = vk::VkBufferCopy::default();
         range.srcOffset = upbuffer.get_allocated_memory().get_offset() as vk::VkDeviceSize;
-        range.dstOffset = vxresult!(buffer.read()).get_allocated_memory().get_offset() 
-            as vk::VkDeviceSize;
+        range.dstOffset =
+            vxresult!(buffer.read()).get_allocated_memory().get_offset() as vk::VkDeviceSize;
         range.size = data_len as vk::VkDeviceSize;
         self.copy_ranges.push(range);
         StaticBuffer::new(buffer)
@@ -387,7 +397,9 @@ impl Manager {
             let buffer = vxresult!(dynamic_buffer.write()).allocate(actual_size);
             let ptr = {
                 let buffer = vxresult!(buffer.read());
-                buffer.memory_offset + buffer.get_allocated_memory().get_offset() + self.cpu_memory_mapped_ptr
+                buffer.memory_offset
+                    + buffer.get_allocated_memory().get_offset()
+                    + self.cpu_memory_mapped_ptr
             };
             buffers.push((buffer, ptr));
         }
