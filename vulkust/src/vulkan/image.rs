@@ -11,10 +11,12 @@ use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 pub(super) fn convert_format(f: Format) -> vk::VkFormat {
+    vxlogi!("{:?}", &f);
     match f {
         Format::RgbaFloat => return vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT,
         Format::DepthFloat => return vk::VkFormat::VK_FORMAT_D32_SFLOAT,
-        Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
+        // Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
+        Format::FlagBits8 => return vk::VkFormat::VK_FORMAT_R8_UINT,
         Format::FlagBits64 => return vk::VkFormat::VK_FORMAT_R32G32_UINT,
         _ => vxunexpected!(),
     }
@@ -24,7 +26,7 @@ pub(super) fn convert_to_format(f: vk::VkFormat) -> Format {
     match f {
         vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT => return Format::RgbaFloat,
         vk::VkFormat::VK_FORMAT_D32_SFLOAT => return Format::DepthFloat,
-        vk::VkFormat::VK_FORMAT_R32_SFLOAT => return Format::Float,
+        // vk::VkFormat::VK_FORMAT_R32_SFLOAT => return Format::Float,
         _ => vxunexpected!(),
     }
 }

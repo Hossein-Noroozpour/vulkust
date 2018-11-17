@@ -21,6 +21,7 @@ pub enum Format {
     RgbaByte,
     DepthFloat,
     Float,
+    FlagBits8,
     FlagBits32,
     FlagBits64,
 }

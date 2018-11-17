@@ -23,6 +23,7 @@ use std::mem::size_of;
 use std::sync::{Arc, Mutex, RwLock, Weak};
 
 use gltf;
+use math;
 
 #[repr(u8)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -209,11 +210,10 @@ unsafe impl Sync for Manager {}
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
-    pub camera: CameraUniform,
-    pub directional_lights: [DirectionalUniform; MAX_DIRECTIONAL_LIGHTS_COUNT],
-    pub directional_lights_count: u32,
-    pub point_lights: [PointUniform; MAX_POINT_LIGHTS_COUNT],
-    pub point_lights_count: u32,
+    camera: CameraUniform,
+    directional_lights: [DirectionalUniform; MAX_DIRECTIONAL_LIGHTS_COUNT],
+    point_lights: [PointUniform; MAX_POINT_LIGHTS_COUNT],
+    directional_point_lights_count: math::Vector4<u32>,
 }
 
 impl Uniform {
@@ -222,9 +222,8 @@ impl Uniform {
         Self {
             camera,
             directional_lights: [DirectionalUniform::new(); MAX_DIRECTIONAL_LIGHTS_COUNT],
-            directional_lights_count: 0,
             point_lights: [PointUniform::new(); MAX_POINT_LIGHTS_COUNT],
-            point_lights_count: 0,
+            directional_point_lights_count: math::Vector4::new(0, 0, 3, 4),
         }
     }
 }
@@ -528,7 +527,7 @@ impl Scene for Base {
             }
             {
                 if let Some(shm) = shm.to_mut_directional() {
-                    shm.update_cascaded_shadow_map_cameras(&csmws);
+                    shm.update_cascaded_shadow_map_cameras(&csmws, last_directional_light_index);
                     shm.update_uniform(
                         &mut self.uniform.directional_lights[last_directional_light_index],
                     );
@@ -559,8 +558,8 @@ impl Scene for Base {
                 last_point_light_index += 1;
             }
         }
-        self.uniform.directional_lights_count = last_directional_light_index as u32;
-        self.uniform.point_lights_count = last_point_light_index as u32;
+        self.uniform.directional_point_lights_count.x = last_directional_light_index as u32;
+        self.uniform.directional_point_lights_count.y = last_point_light_index as u32;
         self.uniform_buffer.update(&self.uniform, frame_number);
     }
 

@@ -6,7 +6,7 @@ use super::descriptor::Set as DescriptorSet;
 use super::framebuffer::Framebuffer;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::image::{AttachmentType, Format, View as ImageView};
+use super::image::{AttachmentType, View as ImageView};
 use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
 use super::texture::{Manager as TextureManager, Texture};
@@ -46,13 +46,6 @@ pub struct Resolver {
     pipeline: Arc<Pipeline>,
 }
 
-fn convert_format(f: Format) -> Format {
-    match f {
-        Format::DepthFloat => return Format::Float,
-        c @ _ => return c,
-    }
-}
-
 impl Resolver {
     pub(super) fn new(
         eng: &GraphicApiEngine,
@@ -70,7 +63,7 @@ impl Resolver {
         let mut output_textures = Vec::with_capacity(g_buffers.len());
         for v in g_buffers {
             let img = vxresult!(v.get_image().read());
-            let format = convert_format(img.get_format());
+            let format = img.get_format();
             let buffer = Arc::new(ImageView::new_surface_attachment(
                 dev.clone(),
                 memmgr,

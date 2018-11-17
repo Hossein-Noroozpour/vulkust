@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
 
+const DEFERRED_TEX_COUNT: usize = 5;
 const GBUFF_TEX_COUNT: usize = 7;
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -64,7 +65,7 @@ pub struct SetLayout {
 
 impl SetLayout {
     pub fn new_gbuff(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_binding_info(&[1; 7]);
+        let layout_bindings = Self::create_binding_info(&[1; GBUFF_TEX_COUNT]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
@@ -74,7 +75,7 @@ impl SetLayout {
     }
 
     pub fn new_deferred(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_binding_info(&[1; 6]);
+        let layout_bindings = Self::create_binding_info(&[1; DEFERRED_TEX_COUNT]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
@@ -185,8 +186,8 @@ impl Set {
     ) -> Self {
         #[cfg(debug_mode)]
         {
-            if textures.len() != 6 {
-                vxlogf!("For deferred descriptor you need 6 textures.");
+            if textures.len() != DEFERRED_TEX_COUNT {
+                vxlogf!("For deferred descriptor you need {} textures.", DEFERRED_TEX_COUNT);
             }
         }
         let mut texturess = Vec::new();
@@ -374,7 +375,7 @@ impl Manager {
         #[cfg(debug_mode)]
         {
             if textures.len() != GBUFF_TEX_COUNT {
-                vxlogf!("For gbuffer filler descriptor you need 7 textures.");
+                vxlogf!("For gbuffer filler descriptor you need {} textures.", GBUFF_TEX_COUNT);
             }
         }
         let mut id = ([0 as Id; GBUFF_TEX_COUNT], 0usize);

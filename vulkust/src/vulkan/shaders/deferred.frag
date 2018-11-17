@@ -24,15 +24,14 @@ struct PointLight {
 
 struct DirectionalLight {
 	vec4 color;
-	vec4 direction;
+	vec4 direction_strength;
 };
 
 layout (set = 0, binding = 0) uniform SceneUBO {
 	Camera camera;
 	DirectionalLight directional_lights[MAX_DIRECTIONAL_LIGHTS_COUNT];
-	uint directional_lights_count;
 	PointLight point_lights[MAX_POINT_LIGHTS_COUNT];
-	uint point_lights_count;
+	uvec4 directional_point_lights_count;
 } scene_ubo;
 
 layout (set = 1, binding = 0) uniform DeferredUBO {
@@ -44,30 +43,37 @@ layout (set = 1, binding = 1) uniform sampler2D position;
 layout (set = 1, binding = 2) uniform sampler2D normal;
 layout (set = 1, binding = 3) uniform sampler2D albedo;
 layout (set = 1, binding = 4) uniform sampler2D screen_space_depth;
-layout (set = 1, binding = 5) uniform sampler2D darkness;
-layout (set = 1, binding = 6) uniform sampler2D light_flagbits;
+layout (set = 1, binding = 5) uniform sampler2D shadow_directional_flagbits;
 
-float calc_shadow() {
-	vec2 shduv;
-	vec2 s = uv - (vec2(deferred_ubo.pixel_x_step, deferred_ubo.pixel_y_step) * 2.0);
-	shduv = s;
-	float d = 0.0;
-	for(int i = 0; i < 4; ++i, shduv.y = s.y, shduv.x += deferred_ubo.pixel_x_step) {
-		for (int j = 0; j < 4; ++j, shduv.y += deferred_ubo.pixel_y_step) {
-			if (texture(darkness, shduv).x > 0.0) {
-				d += 0.5;
-			} else {
-				d += 1.0;
+vec4 alb;
+
+void calc_lights() {
+	vec2 start_uv = uv - (vec2(deferred_ubo.pixel_x_step, deferred_ubo.pixel_y_step) * 2.0);
+	for(int light_index = 0; light_index < scene_ubo.directional_point_lights_count.x; ++light_index) {
+		float slope = -dot(texture(normal, uv).xyz, scene_ubo.directional_lights[light_index].direction_strength.xyz);
+		if(slope < 0.005) {
+			continue;
+		}
+		slope = smoothstep(slope, 0.005, 0.2);
+		float brightness = 1.0;
+		vec2 shduv = start_uv;
+		int light_flag = 1 << light_index;
+		for(int si = 0; si < 4; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.pixel_x_step) {
+			for (int sj = 0; sj < 4; ++sj, shduv.y += deferred_ubo.pixel_y_step) {
+				if ((int(texture(shadow_directional_flagbits, shduv).x) & light_flag) == light_flag) {
+					brightness -= 0.0625;
+				}
 			}
 		}
+		brightness *= slope;
+		out_color.xyz += alb.xyz * scene_ubo.directional_lights[light_index].direction_strength.w * brightness; 
 	}
-	d *= 1.0 / 16.0;
-	return d;
 }
 
 void main() {
-	vec4 ms_albedo = texture(albedo, uv);
-	out_color = ms_albedo;
-	out_color.xyz *= calc_shadow(); 
+	alb = texture(albedo, uv);
+	out_color.xyz = alb.xyz * 0.5; // todo it must come along scene
+	calc_lights();
+	out_color.w = alb.w;
 	// todo lots of work must be done in here
 }

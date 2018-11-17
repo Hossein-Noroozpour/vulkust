@@ -18,8 +18,7 @@ use std::sync::{Arc, RwLock};
 use math;
 
 const SHADOW_MAP_FMT: ImageFormat = ImageFormat::DepthFloat;
-const SHADOW_ACCUMULATOR_STRENGTH_FMT: ImageFormat = ImageFormat::Float;
-const SHADOW_ACCUMULATOR_FLAGBITS_FMT: ImageFormat = ImageFormat::FlagBits64;
+const SHADOW_ACCUMULATOR_FLAGBITS_FMT: ImageFormat = ImageFormat::FlagBits8;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Shadower {
@@ -30,9 +29,7 @@ pub struct Shadower {
     shadow_map_pipeline: Arc<Pipeline>,
     shadow_map_descriptor_set: Arc<DescriptorSet>,
     //---------------------------------------
-    shadow_accumulator_strength_buffer: Arc<ImageView>,
     shadow_accumulator_flagbits_buffer: Arc<ImageView>,
-    shadow_accumulator_strength_texture: Arc<RwLock<Texture>>,
     shadow_accumulator_flagbits_texture: Arc<RwLock<Texture>>,
     shadow_accumulator_directional_pipeline: Arc<Pipeline>,
     shadow_accumulator_directional_descriptor_set: Arc<DescriptorSet>,
@@ -54,6 +51,7 @@ impl Shadower {
         let mut shadow_map_buffers = Vec::with_capacity(conf.get_max_shadow_maps_count() as usize);
         let mut shadow_map_textures = Vec::with_capacity(conf.get_max_shadow_maps_count() as usize);
         let sampler = geng.get_linear_repeat_sampler();
+        let accumulator_sampler = geng.get_nearest_repeat_sampler();
         for _ in 0..conf.get_max_shadow_maps_count() {
             let buf = Arc::new(ImageView::new_attachment(
                 memmgr,
@@ -67,13 +65,6 @@ impl Shadower {
                 .push(texture_manager.create_2d_with_view_sampler(buf.clone(), sampler.clone()));
             shadow_map_buffers.push(buf);
         }
-        let shadow_accumulator_strength_buffer = Arc::new(ImageView::new_surface_attachment(
-            dev.clone(),
-            memmgr,
-            SHADOW_ACCUMULATOR_STRENGTH_FMT,
-            1,
-            AttachmentType::ResolverBuffer,
-        ));
         let shadow_accumulator_flagbits_buffer = Arc::new(ImageView::new_surface_attachment(
             dev.clone(),
             memmgr,
@@ -81,29 +72,24 @@ impl Shadower {
             1,
             AttachmentType::ResolverBuffer,
         ));
-        let shadow_accumulator_strength_texture = texture_manager.create_2d_with_view_sampler(
-            shadow_accumulator_strength_buffer.clone(),
-            sampler.clone(),
-        );
         let shadow_accumulator_flagbits_texture = texture_manager.create_2d_with_view_sampler(
             shadow_accumulator_flagbits_buffer.clone(),
-            sampler.clone(),
+            accumulator_sampler.clone(),
         );
         let shadow_accumulator_buffers = vec![
-            shadow_accumulator_strength_buffer.clone(),
             shadow_accumulator_flagbits_buffer.clone(),
         ];
         let clear_shadow_accumulator_render_pass = Arc::new(RenderPass::new_with_layouts(
             shadow_accumulator_buffers.clone(),
             true,
-            &[ImageLayout::Uninitialized, ImageLayout::Uninitialized],
-            &[ImageLayout::ShaderReadOnly, ImageLayout::ShaderReadOnly],
+            &[ImageLayout::Uninitialized],
+            &[ImageLayout::ShaderReadOnly],
         ));
         let shadow_accumulator_render_pass = Arc::new(RenderPass::new_with_layouts(
             shadow_accumulator_buffers.clone(),
             false,
-            &[ImageLayout::ShaderReadOnly, ImageLayout::ShaderReadOnly],
-            &[ImageLayout::ShaderReadOnly, ImageLayout::ShaderReadOnly],
+            &[ImageLayout::ShaderReadOnly],
+            &[ImageLayout::ShaderReadOnly],
         ));
         let shadow_map_render_pass = Arc::new(RenderPass::new(
             vec![shadow_map_buffers[0].clone()],
@@ -118,7 +104,7 @@ impl Shadower {
             shadow_accumulator_buffers.clone(),
             shadow_accumulator_render_pass.clone(),
         ));
-        let mut shadow_map_framebuffers = Vec::with_capacity(shadow_accumulator_buffers.len());
+        let mut shadow_map_framebuffers = Vec::with_capacity(shadow_map_buffers.len());
         for v in &shadow_map_buffers {
             shadow_map_framebuffers.push(Arc::new(Framebuffer::new(
                 vec![v.clone()],
@@ -171,9 +157,7 @@ impl Shadower {
             shadow_map_pipeline,
             shadow_map_descriptor_set,
             //---------------------------------------
-            shadow_accumulator_strength_buffer,
             shadow_accumulator_flagbits_buffer,
-            shadow_accumulator_strength_texture,
             shadow_accumulator_flagbits_texture,
             shadow_accumulator_directional_pipeline,
             shadow_accumulator_directional_descriptor_set,
@@ -219,20 +203,9 @@ impl Shadower {
         cmd.end();
     }
 
-    pub(super) fn get_shadow_accumulator_strength_texture(&self) -> &Arc<RwLock<Texture>> {
-        return &self.shadow_accumulator_strength_texture;
-    }
-
     pub(super) fn get_shadow_accumulator_flagbits_texture(&self) -> &Arc<RwLock<Texture>> {
         return &self.shadow_accumulator_flagbits_texture;
     }
-
-    // pub(super) fn begin_accumulator_primary(&self, cmd: &mut CmdBuffer) {
-    //     self.shadow_map_framebuffers[map_index].begin(cmd);
-    // }
-
-    // do thread shadow gathering
-    // do main thread shadow accumulating
 }
 
 unsafe impl Send for Shadower {}

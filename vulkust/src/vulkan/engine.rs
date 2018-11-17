@@ -1,5 +1,6 @@
 use super::super::render::config::Configurations;
 use super::super::render::image::Format as ImageFormat;
+use super::super::render::sampler::Filter as SamplerFilter;
 use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool, Type as CmdPoolType};
@@ -43,6 +44,7 @@ pub struct Engine {
     pipeline_manager: Arc<RwLock<PipelineManager>>,
     wait_fences: Vec<Arc<Fence>>,
     linear_repeat_sampler: Arc<Sampler>,
+    nearest_repeat_sampler: Arc<Sampler>,
     samples_count: vk::VkSampleCountFlagBits,
     //---------------------------------------
     clear_render_pass: Arc<RenderPass>,
@@ -97,6 +99,7 @@ impl Engine {
         framebuffers.shrink_to_fit();
         clear_framebuffers.shrink_to_fit();
         let linear_repeat_sampler = Arc::new(Sampler::new(logical_device.clone()));
+        let nearest_repeat_sampler = Arc::new(Sampler::new_with_filter(logical_device.clone(), SamplerFilter::Nearest));
         let buffer_manager = Arc::new(RwLock::new(BufferManager::new(
             &memory_manager,
             &graphic_cmd_pool,
@@ -136,6 +139,7 @@ impl Engine {
             buffer_manager,
             wait_fences,
             linear_repeat_sampler,
+            nearest_repeat_sampler,
         }
     }
 
@@ -340,6 +344,10 @@ impl Engine {
 
     pub(crate) fn get_linear_repeat_sampler(&self) -> &Arc<Sampler> {
         return &self.linear_repeat_sampler;
+    }
+
+    pub(crate) fn get_nearest_repeat_sampler(&self) -> &Arc<Sampler> {
+        return &self.nearest_repeat_sampler;
     }
 
     pub(crate) fn get_render_pass(&self) -> &Arc<RenderPass> {

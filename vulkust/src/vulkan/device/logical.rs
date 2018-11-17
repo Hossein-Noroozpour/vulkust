@@ -94,7 +94,7 @@ impl Logical {
     }
 
     pub(crate) fn get_uniform_buffer_alignment(&self) -> isize {
-        self.physical_device.properties.limits.minUniformBufferOffsetAlignment as isize
+            self.physical_device.properties.limits.minUniformBufferOffsetAlignment as isize
     }
 
     pub(crate) fn wait_idle(&self) {

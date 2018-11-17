@@ -8,8 +8,7 @@ const int MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT = 6;
 
 layout (location = 0) in vec2 uv;
 
-layout (location = 0) out float shadow;
-layout (location = 1) out uvec2 flagbits;
+layout (location = 0) out uint flagbits;
 
 layout (set = 0, binding = 0) uniform LightUBO {
 	mat4 view_projection_biases[MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT];
@@ -23,15 +22,11 @@ layout (set = 0, binding = 2) uniform sampler2D normal;
 layout (set = 0, binding = 3) uniform sampler2D shadowmaps[MAX_DIRECTIONAL_CASCADES_COUNT];
 
 void shade() {
-    shadow = light_ubo.direction_strength.w;
-    if (light_ubo.light_index > 32) {
-        flagbits = uvec2(0, 1 << (light_ubo.light_index - 32));
-    } else {
-        flagbits = uvec2(1 << light_ubo.light_index, 0);
-    }
+    flagbits = 1 << light_ubo.light_index;
 }
 
 void main() {
+    flagbits = 0;
     float bias = dot(texture(normal, uv).xyz, light_ubo.direction_strength.xyz);
     if(bias > -0.005) {
         shade();
@@ -73,5 +68,4 @@ void main() {
             return;
         }
     }
-    discard;
 }

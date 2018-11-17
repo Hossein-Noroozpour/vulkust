@@ -45,11 +45,10 @@ impl Deferred {
         let uniform = Uniform::new(w as f32, h as f32);
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let mut textures = Vec::with_capacity(resolver.get_output_textures().len() + 2);
+        let mut textures = Vec::with_capacity(resolver.get_output_textures().len() + 1);
         for t in resolver.get_output_textures() {
             textures.push(t.clone());
         }
-        textures.push(shadower.get_shadow_accumulator_strength_texture().clone());
         textures.push(shadower.get_shadow_accumulator_flagbits_texture().clone());
         let descriptor_set = vxresult!(gapi_engine.get_descriptor_manager().write())
             .create_deferred_set(&uniform_buffer, textures);

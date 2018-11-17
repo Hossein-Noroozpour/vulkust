@@ -52,7 +52,7 @@ pub trait ShadowMaker: Light {
 }
 
 pub trait Directional: Light {
-    fn update_cascaded_shadow_map_cameras(&mut self, &Vec<[math::Vector3<Real>; 4]>);
+    fn update_cascaded_shadow_map_cameras(&mut self, &Vec<[math::Vector3<Real>; 4]>, usize);
     fn update_uniform(&self, &mut DirectionalUniform);
 }
 
@@ -516,9 +516,8 @@ impl ShadowMaker for Sun {
         }
         geng.submit_multiple(&[sem], &cmds, &[&frame_data.shadow_mappers_semaphore]);
         self.shadow_accumulator_uniform.cascades_count = cascades_count as u32;
-        self.shadow_accumulator_uniform.light_index = 23;
         self.shadow_accumulator_uniform.direction_strength =
-            math::Vector4::new(0.0, 0.0, -1.0, 1.0);
+            math::Vector4::new(0.0, 0.0, -1.0, 0.5);
         self.shadow_accumulator_uniform_buffer
             .update(&self.shadow_accumulator_uniform, frame_number);
         {
@@ -553,7 +552,8 @@ impl ShadowMaker for Sun {
 }
 
 impl Directional for Sun {
-    fn update_cascaded_shadow_map_cameras(&mut self, walls: &Vec<[math::Vector3<Real>; 4]>) {
+    fn update_cascaded_shadow_map_cameras(&mut self, walls: &Vec<[math::Vector3<Real>; 4]>, index: usize) {
+        self.shadow_accumulator_uniform.light_index = index as u32;
         let mut walls_bnds = Vec::new();
         for w in walls {
             let mut max = math::Vector3::new(F32MIN, F32MIN, F32MIN);
@@ -626,7 +626,7 @@ impl Directional for Sun {
 
     fn update_uniform(&self, u: &mut DirectionalUniform) {
         u.color = self.color.extend(1.0);
-        u.direction = self.direction.extend(1.0);
+        u.direction = self.direction.extend(self.strength);
     }
 }
 
@@ -687,7 +687,7 @@ impl DefaultLighting for Sun {
             kernels_data,
             direction: math::Vector3::new(0.0, 0.0, -1.0),
             color: math::Vector3::new(1.0, 1.0, 1.0),
-            strength: 1.0,
+            strength: 0.5,
             frames_data,
             shadow_accumulator_uniform,
             shadow_accumulator_uniform_buffer,
