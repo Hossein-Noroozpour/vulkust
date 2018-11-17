@@ -6,12 +6,19 @@ use super::descriptor::Set as DescriptorSet;
 use super::framebuffer::Framebuffer;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::image::{AttachmentType, View as ImageView};
+use super::image::{AttachmentType, View as ImageView, Format};
 use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
 use super::texture::{Manager as TextureManager, Texture};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
+
+fn convert_format_to_resolver_format(f: Format) -> Format {
+    match f {
+        Format::DepthFloat => Format::Float,
+        _ => f,
+    }
+}
 
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -63,7 +70,8 @@ impl Resolver {
         let mut output_textures = Vec::with_capacity(g_buffers.len());
         for v in g_buffers {
             let img = vxresult!(v.get_image().read());
-            let format = img.get_format();
+            let format = convert_format_to_resolver_format(img.get_format());
+            vxlogi!("{:?}", &format);
             let buffer = Arc::new(ImageView::new_surface_attachment(
                 dev.clone(),
                 memmgr,

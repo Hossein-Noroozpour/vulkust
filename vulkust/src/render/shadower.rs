@@ -70,7 +70,7 @@ impl Shadower {
             memmgr,
             SHADOW_ACCUMULATOR_FLAGBITS_FMT,
             1,
-            AttachmentType::ResolverBuffer,
+            AttachmentType::ShadowAccumulator,
         ));
         let shadow_accumulator_flagbits_texture = texture_manager.create_2d_with_view_sampler(
             shadow_accumulator_flagbits_buffer.clone(),

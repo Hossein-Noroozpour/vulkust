@@ -15,7 +15,7 @@ pub(super) fn convert_format(f: Format) -> vk::VkFormat {
     match f {
         Format::RgbaFloat => return vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT,
         Format::DepthFloat => return vk::VkFormat::VK_FORMAT_D32_SFLOAT,
-        // Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
+        Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
         Format::FlagBits8 => return vk::VkFormat::VK_FORMAT_R8_UINT,
         Format::FlagBits64 => return vk::VkFormat::VK_FORMAT_R32G32_UINT,
         _ => vxunexpected!(),
@@ -26,7 +26,7 @@ pub(super) fn convert_to_format(f: vk::VkFormat) -> Format {
     match f {
         vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT => return Format::RgbaFloat,
         vk::VkFormat::VK_FORMAT_D32_SFLOAT => return Format::DepthFloat,
-        // vk::VkFormat::VK_FORMAT_R32_SFLOAT => return Format::Float,
+        vk::VkFormat::VK_FORMAT_R32_SFLOAT => return Format::Float,
         _ => vxunexpected!(),
     }
 }
@@ -382,6 +382,9 @@ impl View {
             | AttachmentType::ResolverBuffer => {
                 vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
             }
+            AttachmentType::ShadowAccumulator => {
+                vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
+            }
             AttachmentType::DepthGBuffer | AttachmentType::DepthShadowBuffer => {
                 vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32
             }
@@ -392,6 +395,10 @@ impl View {
         };
         let usage = match attachment_type {
             AttachmentType::ColorGBuffer | AttachmentType::ResolverBuffer => {
+                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
+                    | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
+            }
+            AttachmentType::ShadowAccumulator => {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
                     | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
             }

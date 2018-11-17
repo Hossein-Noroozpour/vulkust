@@ -66,7 +66,7 @@ impl Application {
     pub fn run(&self) {
         unsafe {
             {
-                let os_app = vxresult!(vxunwrap!(&self.renderer).read()).os_app.upgrade();
+                let os_app = vxresult!(vxunwrap!(&self.renderer).read()).get_os_app().upgrade();
                 let os_app = Box::into_raw(Box::new(vxunwrap!(os_app).clone()));
                 let os_app: *mut c_void = transmute(os_app);
                 (*self.app_dlg).set_ivar(app_delegate::APP_VAR_NAME, os_app);

@@ -13,6 +13,7 @@ pub enum AttachmentType {
     ColorDisplay,
     DepthStencilDisplay,
     ResolverBuffer,
+    ShadowAccumulator,
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]

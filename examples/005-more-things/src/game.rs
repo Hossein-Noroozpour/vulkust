@@ -227,13 +227,15 @@ fn place_cubes(scn: &mut Scene, eng: &Renderer) {
     let mut y = ROW_START;
     let ground_meshes = {
         let mut mshmgr = vxresult!(astmgr.get_mesh_manager().write());
-        [mshmgr.create_cube(2.0),
-        mshmgr.create_cube(2.0),
-        mshmgr.create_cube(2.0),
-        mshmgr.create_cube(2.0),
-        mshmgr.create_cube(2.0),
-        mshmgr.create_cube(2.0),
-        mshmgr.create_cube(2.0),]
+        [
+            mshmgr.create_cube(2.0),
+            mshmgr.create_cube(2.0),
+            mshmgr.create_cube(2.0),
+            mshmgr.create_cube(2.0),
+            mshmgr.create_cube(2.0),
+            mshmgr.create_cube(2.0),
+            mshmgr.create_cube(2.0),
+        ]
     };
     let cs = [
         [50, 50, 50, 255],
