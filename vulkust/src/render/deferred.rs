@@ -19,8 +19,8 @@ struct Uniform {
 impl Uniform {
     pub fn new(window_width: f32, window_height: f32) -> Self {
         Uniform {
-            pixel_x_step: 2f32 / window_width,
-            pixel_y_step: 2f32 / window_height,
+            pixel_x_step: 1f32 / window_width,
+            pixel_y_step: 1f32 / window_height,
         }
     }
 }

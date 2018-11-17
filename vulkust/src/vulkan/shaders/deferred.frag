@@ -47,10 +47,27 @@ layout (set = 1, binding = 4) uniform sampler2D screen_space_depth;
 layout (set = 1, binding = 5) uniform sampler2D darkness;
 layout (set = 1, binding = 6) uniform sampler2D light_flagbits;
 
+float calc_shadow() {
+	vec2 shduv;
+	vec2 s = uv - (vec2(deferred_ubo.pixel_x_step, deferred_ubo.pixel_y_step) * 2.0);
+	shduv = s;
+	float d = 0.0;
+	for(int i = 0; i < 4; ++i, shduv.y = s.y, shduv.x += deferred_ubo.pixel_x_step) {
+		for (int j = 0; j < 4; ++j, shduv.y += deferred_ubo.pixel_y_step) {
+			if (texture(darkness, shduv).x > 0.0) {
+				d += 0.5;
+			} else {
+				d += 1.0;
+			}
+		}
+	}
+	d *= 1.0 / 16.0;
+	return d;
+}
+
 void main() {
 	vec4 ms_albedo = texture(albedo, uv);
 	out_color = ms_albedo;
-	if (texture(darkness, uv).x > 0.0)
-		out_color.xyz *= 0.5;
+	out_color.xyz *= calc_shadow(); 
 	// todo lots of work must be done in here
 }
