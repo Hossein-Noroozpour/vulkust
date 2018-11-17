@@ -40,15 +40,15 @@ It is under lots of changes.
 - Shadowing
 - Cascaded Shadow
 - Shadow Accumulation
+- Soft Shadowing
 
 #### 2-1-2- Underdeveloment features:
 
-- Soft Shadowing
+- SSAO
 - Supporting GLTF
 
 #### 2-1-3- In near future:
 
-- SSAO
 - PBR rendering
 - SSR reflection
 - More UI widgets
