@@ -87,30 +87,30 @@ impl CoreAppTrait for MyGame {
             scn.add_light(sun);
         }
         self.scene = Some(scene);
-        let ui_scene: Arc<RwLock<UiScene>> =
-            vxresult!(asset_manager.get_scene_manager().write()).create();
-        let camera: Arc<RwLock<Orthographic>> =
-            vxresult!(asset_manager.get_camera_manager().write()).create();
-        {
-            let mut camera = vxresult!(camera.write());
-            camera.move_local_z(-1.999);
-        }
-        let label: Arc<RwLock<Label>> =
-            vxresult!(asset_manager.get_model_manager().write()).create();
-        {
-            let mut label = vxresult!(label.write());
-            label.set_size(0.05, &renderer);
-            label.set_text_size(50.0, &renderer);
-            label.set_text_color(1.0, 0.0, 0.0, 1.0, &renderer);
-            label.set_background_color(1.0, 0.0, 0.0, 0.0, &renderer);
-            label.set_text("More things from Vulkust!", &renderer);
-        }
-        {
-            let mut uiscn = vxresult!(ui_scene.write());
-            uiscn.add_camera(camera);
-            uiscn.add_model(label);
-        }
-        self.ui_scene = Some(ui_scene);
+        // let ui_scene: Arc<RwLock<UiScene>> =
+        //     vxresult!(asset_manager.get_scene_manager().write()).create();
+        // let camera: Arc<RwLock<Orthographic>> =
+        //     vxresult!(asset_manager.get_camera_manager().write()).create();
+        // {
+        //     let mut camera = vxresult!(camera.write());
+        //     camera.move_local_z(-1.999);
+        // }
+        // let label: Arc<RwLock<Label>> =
+        //     vxresult!(asset_manager.get_model_manager().write()).create();
+        // {
+        //     let mut label = vxresult!(label.write());
+        //     label.set_size(0.05, &renderer);
+        //     label.set_text_size(50.0, &renderer);
+        //     label.set_text_color(1.0, 0.0, 0.0, 1.0, &renderer);
+        //     label.set_background_color(1.0, 0.0, 0.0, 0.0, &renderer);
+        //     label.set_text("More things from Vulkust!", &renderer);
+        // }
+        // {
+        //     let mut uiscn = vxresult!(ui_scene.write());
+        //     uiscn.add_camera(camera);
+        //     uiscn.add_model(label);
+        // }
+        // self.ui_scene = Some(ui_scene);
     }
 
     fn on_event(&self, e: Event) {
