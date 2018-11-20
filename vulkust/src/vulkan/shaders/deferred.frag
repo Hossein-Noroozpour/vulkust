@@ -6,8 +6,10 @@
 #define MAX_POINT_LIGHTS_COUNT 32
 #define MAX_DIRECTIONAL_LIGHTS_COUNT 8
 #define BLUR_KERNEL_LENGTH 5
-#define SSAO_SAMPLES 9
+#define SSAO_SAMPLES 32
+#define SSAO_SEARCH_STEPS 4
 #define NORMAL_EPSILON 0.005
+#define SMALL_EPSILON 0.00001
 
 layout (location = 0) in vec2 uv;
 
@@ -50,10 +52,12 @@ layout (set = 1, binding = 5) uniform usampler2D shadow_directional_flagbits;
 
 vec4 alb;
 vec3 pos;
+vec3 spos;
 vec3 nrm;
 vec3 tng;
 vec3 btg;
 mat3 tbn;
+vec3 eye_nrm;
 
 void calc_lights() {
 	vec2 start_uv = uv - (vec2(deferred_ubo.pixel_x_step, deferred_ubo.pixel_y_step) * float((BLUR_KERNEL_LENGTH - 1) >> 1));
@@ -108,17 +112,83 @@ float random() {
 	return smoothstep(0.0, 1.0, abs(noise(pos * 500.0)));
 }
 
-void find_hit(vec3 p, vec3 dir, uint steps, inout vec3 hit, inout vec2 hituv) {
+bool is_zero(float v) {
+	return v < SMALL_EPSILON && v > -SMALL_EPSILON;
+}
 
+bool find_hit(vec3 p, uint steps, inout vec2 hituv) {
+	{
+		vec4 tmp = scene_ubo.camera.view_projection * vec4(p, 1.0);
+		p = tmp.xyz / tmp.w;
+		p.y = -p.y;
+	}
+	vec3 dir = p - spos;
+	if(is_zero(dir.x) && is_zero(dir.y)) {
+		return false;
+	}
+	{
+		vec2 ad = abs(dir.xy);
+		float coef;
+		if(ad.x > ad.y) {
+			coef = deferred_ubo.pixel_x_step / ad.x;
+		} else {
+			coef = deferred_ubo.pixel_y_step / ad.y;
+		}
+		dir *= coef;
+	}
+	p.z = spos.z;
+	p.xy = uv;
+	p += dir;
+	if(p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z < 0.0 || p.z > 1.0) {
+		return false;
+	}
+	if(p.z > texture(screen_space_depth, p.xy).x) {
+		return false;
+	}
+	for(int step_index = 0; step_index < steps; ++step_index) {
+		p += dir;
+		if(p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z < 0.0 || p.z > 1.0) {
+			return false;
+		}
+		if(p.z > texture(screen_space_depth, p.xy).x) {
+			hituv = p.xy;
+			return true;
+		}
+	}
+	return false;
 }
 
 float calc_ssao() {
-
-	vec2 ssaouv = uv - (vec2(deferred_ubo.pixel_x_step, deferred_ubo.pixel_y_step) * float(SSAO_SAMPLES));
-	for(int i = 0; i < SSAO_SAMPLES; ++i, ssaouv.x += deferred_ubo.pixel_x_step) {
-		vec3 p = texture(position, ssaouv).xyz;
+	float ambient_occlusion = 1.0;
+	for(int ssao_sample_index = 0; ssao_sample_index < SSAO_SAMPLES; ++ssao_sample_index) {
+		vec3 hit;
+		vec2 hituv;
+		if(find_hit(pos + vec3(vec2(random(), random()) * 2.0 - 1.0, random()), SSAO_SEARCH_STEPS, hituv)) {
+			vec3 dir = hit - pos;
+			float ld = length(dir);
+			float hbao = abs(dir.z / ld) - abs(tng.z); 
+			ambient_occlusion += hbao * 3.0 / float(SSAO_SAMPLES);
+		}
 	}
-	return random();
+	return ambient_occlusion;
+}
+
+void calc_ssr() {
+	vec3 ray = reflect(eye_nrm, nrm);
+	vec2 hituv = vec2(0.0);
+	if(find_hit(pos + ray * 10.0, 1000, hituv)) {
+		// if ( 0.0 > dot(texture(normal, hituv).xyz, ray)) {
+			out_color.xyz *= 0.7;
+			out_color.xyz += 0.3 * texture(albedo, hituv).xyz;
+		// }
+	}
+	// {
+	// 	vec4 p = scene_ubo.camera.view_projection * vec4(pos, 1.0);
+	// 	if (p.z / p.w > 0.9) {
+	// 		out_color.xyz *= 0.0;
+	// 		out_color.x = 1.0;
+	// 	}
+	// }
 }
 
 void main() {
@@ -133,9 +203,17 @@ void main() {
 		btg = cross(nrm, tng);
 	}
 	tbn = mat3(tng, btg, nrm);
+	eye_nrm = normalize(scene_ubo.camera.position_radius.xyz - pos);
+	vec4 tmp = scene_ubo.camera.view_projection * vec4(pos, 1.0);
+	spos = tmp.xyz / tmp.w;
+	spos.y = -spos.y;
 
-	out_color.xyz = alb.xyz * calc_ssao() * length(scene_ubo.camera.view_projection * pos.xyzz); // todo it must come along scene
+	out_color.xyz = alb.xyz; // todo it must come along scene
 	// calc_lights();
+	calc_ssr();
+
+	// out_color.xyz *= 0.0;
+	// out_color.y = spos.y;
 	out_color.w = alb.w;
 	// todo lots of work must be done in here
 }
