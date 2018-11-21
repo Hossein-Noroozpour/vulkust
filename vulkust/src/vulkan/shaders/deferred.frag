@@ -53,6 +53,8 @@ layout (set = 1, binding = 5) uniform usampler2D shadow_directional_flagbits;
 vec4 alb;
 vec3 pos;
 vec3 spos;
+float sposw;
+vec4 tmpv;
 vec3 nrm;
 vec3 tng;
 vec3 btg;
@@ -116,17 +118,17 @@ bool is_zero(float v) {
 	return v < SMALL_EPSILON && v > -SMALL_EPSILON;
 }
 
-bool find_hit(vec3 p, uint steps, inout vec2 hituv) {
-	{
-		vec4 tmp = scene_ubo.camera.view_projection * vec4(p, 1.0);
-		p = tmp.xyz / tmp.w;
-		p.y = -p.y;
-	}
-	vec3 dir = p - spos;
+bool find_hit(vec4 p, uint steps, inout vec2 hituv) {
+	p = scene_ubo.camera.view_projection * vec4(p.xyz, 1.0);
+	// p.y = -p.y;
+	p.xy /= p.w;
+	p.w = 1.0 / p.w;
+	float sposzw = spos.z * sposw;
+	// vec4 dir = p - vec4(spos.x, -spos.y, sposzw, sposw);
+	vec4 dir = p - vec4(spos.xy, sposzw, 1.0 / sposw);
 	if(is_zero(dir.x) && is_zero(dir.y)) {
 		return false;
-	}
-	{
+	} else {
 		vec2 ad = abs(dir.xy);
 		float coef;
 		if(ad.x > ad.y) {
@@ -136,24 +138,25 @@ bool find_hit(vec3 p, uint steps, inout vec2 hituv) {
 		}
 		dir *= coef;
 	}
-	p.z = spos.z;
 	p.xy = uv;
-	p += dir;
-	if(p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z < 0.0 || p.z > 1.0) {
-		return false;
-	}
-	if(p.z > texture(screen_space_depth, p.xy).x) {
-		return false;
-	}
+	p.z = sposzw;
+	p.w = 1.0 / sposw;
+	float prez = spos.z;
 	for(int step_index = 0; step_index < steps; ++step_index) {
 		p += dir;
-		if(p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z < 0.0 || p.z > 1.0) {
+		if(p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0) {
 			return false;
 		}
-		if(p.z > texture(screen_space_depth, p.xy).x) {
+		float curz = p.z * p.w;
+		float samz = texture(screen_space_depth, p.xy).x;
+		if(((curz + 0.001 >= samz && samz >= prez && curz >= prez) || (curz - 0.001 <= samz && samz <= prez && curz <= prez)) && samz < 0.999 && samz > 0.001) {
 			hituv = p.xy;
 			return true;
-		}
+		} 
+		// else if(prez > samz) {
+		// 	return false;
+		// }
+		prez = curz;
 	}
 	return false;
 }
@@ -163,7 +166,7 @@ float calc_ssao() {
 	for(int ssao_sample_index = 0; ssao_sample_index < SSAO_SAMPLES; ++ssao_sample_index) {
 		vec3 hit;
 		vec2 hituv;
-		if(find_hit(pos + vec3(vec2(random(), random()) * 2.0 - 1.0, random()), SSAO_SEARCH_STEPS, hituv)) {
+		if(find_hit(vec4(pos + vec3(vec2(random(), random()) * 2.0 - 1.0, random()), 1.0), SSAO_SEARCH_STEPS, hituv)) {
 			vec3 dir = hit - pos;
 			float ld = length(dir);
 			float hbao = abs(dir.z / ld) - abs(tng.z); 
@@ -174,12 +177,12 @@ float calc_ssao() {
 }
 
 void calc_ssr() {
-	vec3 ray = reflect(eye_nrm, nrm);
+	vec3 ray = reflect(-eye_nrm, nrm);
 	vec2 hituv = vec2(0.0);
-	if(find_hit(pos + ray * 10.0, 1000, hituv)) {
+	if(find_hit(vec4(pos + ray * 100.0, 1.0), 1000, hituv)) {
 		// if ( 0.0 > dot(texture(normal, hituv).xyz, ray)) {
-			out_color.xyz *= 0.7;
-			out_color.xyz += 0.3 * texture(albedo, hituv).xyz;
+			out_color.xyz *= 0.5;
+			// out_color.xyz += 0.3 * texture(albedo, hituv).xyz;
 		// }
 	}
 	// {
@@ -204,16 +207,165 @@ void main() {
 	}
 	tbn = mat3(tng, btg, nrm);
 	eye_nrm = normalize(scene_ubo.camera.position_radius.xyz - pos);
-	vec4 tmp = scene_ubo.camera.view_projection * vec4(pos, 1.0);
-	spos = tmp.xyz / tmp.w;
-	spos.y = -spos.y;
+	tmpv = scene_ubo.camera.view_projection * vec4(pos, 1.0);
+	spos = tmpv.xyz / tmpv.w;
+	sposw = tmpv.w;
 
 	out_color.xyz = alb.xyz; // todo it must come along scene
 	// calc_lights();
 	calc_ssr();
 
-	// out_color.xyz *= 0.0;
-	// out_color.y = spos.y;
+	// out_color.xyz *= dot(-normalize(reflect(eye_nrm, nrm)), nrm);
+	// out_color.x = spos.z;
 	out_color.w = alb.w;
 	// todo lots of work must be done in here
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// #define point2 vec2
+// #define point3 vec3
+
+// float distanceSquared(vec2 a, vec2 b) { a -= b; return dot(a, a); }
+
+// // Returns true if the ray hit something
+// bool traceScreenSpaceRay1(
+//  // Camera-space ray origin, which must be within the view volume
+//  point3 csOrig, 
+
+//  // Unit length camera-space ray direction
+//  vec3 csDir,
+
+//  // A projection matrix that maps to pixel coordinates (not [-1, +1]
+//  // normalized device coordinates)
+//  mat4x4 proj, 
+
+//  // The camera-space Z buffer (all negative values)
+//  sampler2D csZBuffer,
+
+//  // Dimensions of csZBuffer
+//  vec2 csZBufferSize,
+
+//  // Camera space thickness to ascribe to each pixel in the depth buffer
+//  float zThickness, 
+
+//  // (Negative number)
+//  float nearPlaneZ, 
+
+//  // Step in horizontal or vertical pixels between samples. This is a float
+//  // because integer math is slow on GPUs, but should be set to an integer >= 1
+//  float stride,
+
+//  // Number between 0 and 1 for how far to bump the ray in stride units
+//  // to conceal banding artifacts
+//  float jitter,
+
+//  // Maximum number of iterations. Higher gives better images but may be slow
+//  const float maxSteps, 
+
+//  // Maximum camera-space distance to trace before returning a miss
+//  float maxDistance, 
+
+//  // Pixel coordinates of the first intersection with the scene
+//  out point2 hitPixel, 
+
+//  // Camera space location of the ray hit
+//  out point3 hitPoint) {
+
+//     // Clip to the near plane    
+//     float rayLength = ((csOrig.z + csDir.z * maxDistance) > nearPlaneZ) ?
+//         (nearPlaneZ - csOrig.z) / csDir.z : maxDistance;
+//     point3 csEndPoint = csOrig + csDir * rayLength;
+
+//     // Project into homogeneous clip space
+//     vec4 H0 = proj * vec4(csOrig, 1.0);
+//     vec4 H1 = proj * vec4(csEndPoint, 1.0);
+//     float k0 = 1.0 / H0.w, k1 = 1.0 / H1.w;
+
+//     // The interpolated homogeneous version of the camera-space points  
+//     point3 Q0 = csOrig * k0, Q1 = csEndPoint * k1;
+
+//     // Screen-space endpoints
+//     point2 P0 = H0.xy * k0, P1 = H1.xy * k1;
+
+//     // If the line is degenerate, make it cover at least one pixel
+//     // to avoid handling zero-pixel extent as a special case later
+//     P1 += vec2((distanceSquared(P0, P1) < 0.0001) ? 0.01 : 0.0);
+//     vec2 delta = P1 - P0;
+
+//     // Permute so that the primary iteration is in x to collapse
+//     // all quadrant-specific DDA cases later
+//     bool permute = false;
+//     if (abs(delta.x) < abs(delta.y)) { 
+//         // This is a more-vertical line
+//         permute = true; delta = delta.yx; P0 = P0.yx; P1 = P1.yx; 
+//     }
+
+//     float stepDir = sign(delta.x);
+//     float invdx = stepDir / delta.x;
+
+//     // Track the derivatives of Q and k
+//     vec3  dQ = (Q1 - Q0) * invdx;
+//     float dk = (k1 - k0) * invdx;
+//     vec2  dP = vec2(stepDir, delta.y * invdx);
+
+//     // Scale derivatives by the desired pixel stride and then
+//     // offset the starting values by the jitter fraction
+//     dP *= stride; dQ *= stride; dk *= stride;
+//     P0 += dP * jitter; Q0 += dQ * jitter; k0 += dk * jitter;
+
+//     // Slide P from P0 to P1, (now-homogeneous) Q from Q0 to Q1, k from k0 to k1
+//     point3 Q = Q0; 
+
+//     // Adjust end condition for iteration direction
+//     float  end = P1.x * stepDir;
+
+//     float k = k0, stepCount = 0.0, prevZMaxEstimate = csOrig.z;
+//     float rayZMin = prevZMaxEstimate, rayZMax = prevZMaxEstimate;
+//     float sceneZMax = rayZMax + 100;
+//     for (point2 P = P0; 
+//          ((P.x * stepDir) <= end) && (stepCount < maxSteps) &&
+//          ((rayZMax < sceneZMax - zThickness) || (rayZMin > sceneZMax)) &&
+//           (sceneZMax != 0); 
+//          P += dP, Q.z += dQ.z, k += dk, ++stepCount) {
+        
+//         rayZMin = prevZMaxEstimate;
+//         rayZMax = (dQ.z * 0.5 + Q.z) / (dk * 0.5 + k);
+//         prevZMaxEstimate = rayZMax;
+//         if (rayZMin > rayZMax) { 
+//            float t = rayZMin; rayZMin = rayZMax; rayZMax = t;
+//         }
+
+//         hitPixel = permute ? P.yx : P;
+//         // You may need hitPixel.y = csZBufferSize.y - hitPixel.y; here if your vertical axis
+//         // is different than ours in screen space
+//         sceneZMax = texelFetch(csZBuffer, int2(hitPixel), 0);
+//     }
+    
+//     // Advance Q based on the number of steps
+//     Q.xy += dQ.xy * stepCount;
+//     hitPoint = Q * (1.0 / k);
+//     return (rayZMax >= sceneZMax - zThickness) && (rayZMin < sceneZMax);
+// }
