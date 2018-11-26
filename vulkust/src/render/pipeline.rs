@@ -10,7 +10,6 @@ pub use super::super::vulkan::pipeline::*;
 #[cfg_attr(debug_mode, derive(Debug))]
 pub enum PipelineType {
     Deferred,
-    Resolver,
     GBuffer,
     ShadowMapper,
     ShadowAccumulatorDirectional,

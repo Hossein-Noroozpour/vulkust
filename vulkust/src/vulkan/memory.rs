@@ -1,6 +1,6 @@
 use super::super::core::allocate as alc;
 use super::super::core::allocate::{Allocator, Object};
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::vulkan as vk;
 
 use std::collections::BTreeMap;
@@ -81,7 +81,7 @@ impl RootMemory {
         mem_alloc.memoryTypeIndex = type_index;
         let mut vk_data = 0 as vk::VkDeviceMemory;
         vulkan_check!(vk::vkAllocateMemory(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &mem_alloc,
             null(),
             &mut vk_data,
@@ -124,7 +124,7 @@ impl RootMemory {
 impl Drop for RootMemory {
     fn drop(&mut self) {
         unsafe {
-            vk::vkFreeMemory(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkFreeMemory(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }
@@ -172,17 +172,8 @@ impl Manager {
                     | vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32
             }
         };
-        let ref memory_prop = self.logical_device.physical_device.memory_properties;
-        let mut type_bits = mem_req.memoryTypeBits;
-        for index in 0..memory_prop.memoryTypeCount {
-            if (type_bits & 1) == 1
-                && ((memory_prop.memoryTypes[index as usize].propertyFlags as u32) & l) != 0
-            {
-                return index;
-            }
-            type_bits >>= 1;
-        }
-        vxunexpected!();
+        return self.logical_device.get_physical().get_memory_type_index(mem_req.memoryTypeBits, l);
+        
     }
 
     pub(crate) fn allocate(

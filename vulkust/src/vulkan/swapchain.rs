@@ -1,4 +1,4 @@
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::image::View as ImageView;
 use super::sync::Semaphore;
 use super::vulkan as vk;
@@ -21,8 +21,8 @@ pub struct Swapchain {
 
 impl Swapchain {
     pub fn new(logical_device: &Arc<LogicalDevice>) -> Self {
-        let surface_caps = logical_device.physical_device.surface_caps;
-        let surface_formats = logical_device.physical_device.get_surface_formats();
+        let surface_caps = logical_device.get_physical().get_surface_capabilities();
+        let surface_formats = logical_device.get_physical().get_surface_formats();
         let mut best_surface_format = vk::VkSurfaceFormatKHR::default();
         for format in &surface_formats {
             if format.format as u32 == vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM as u32 {
@@ -52,7 +52,7 @@ impl Swapchain {
         let mut format_props = vk::VkFormatProperties::default();
         unsafe {
             vk::vkGetPhysicalDeviceFormatProperties(
-                logical_device.physical_device.vk_data,
+                logical_device.get_physical().get_data(),
                 best_surface_format.format,
                 &mut format_props,
             );
@@ -64,13 +64,13 @@ impl Swapchain {
             image_usage |= vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT as u32;
         }
         let queue_family_indices = [
-            logical_device.physical_device.graphics_queue_node_index,
-            logical_device.physical_device.present_queue_node_index,
+            logical_device.get_physical().get_graphics_queue_node_index(),
+            logical_device.get_physical().get_present_queue_node_index(),
         ];
         let mut swapchain_create_info = vk::VkSwapchainCreateInfoKHR::default();
         swapchain_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapchain_create_info.surface = logical_device.physical_device.surface.vk_data;
+        swapchain_create_info.surface = logical_device.get_physical().get_surface().get_data();
         swapchain_create_info.minImageCount = swapchain_images_count;
         swapchain_create_info.imageFormat = best_surface_format.format;
         swapchain_create_info.imageColorSpace = best_surface_format.colorSpace;
@@ -123,21 +123,21 @@ impl Swapchain {
         }
         let mut vk_data = 0 as vk::VkSwapchainKHR;
         vulkan_check!(vk::vkCreateSwapchainKHR(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &swapchain_create_info,
             null(),
             &mut vk_data,
         ));
         let mut count = 0u32;
         vulkan_check!(vk::vkGetSwapchainImagesKHR(
-            logical_device.vk_data,
+            logical_device.get_data(),
             vk_data,
             &mut count,
             null_mut(),
         ));
         let mut images = vec![0 as vk::VkImage; count as usize];
         vulkan_check!(vk::vkGetSwapchainImagesKHR(
-            logical_device.vk_data,
+            logical_device.get_data(),
             vk_data,
             &mut count,
             images.as_mut_ptr(),
@@ -153,7 +153,6 @@ impl Swapchain {
                     as vk::VkImageUsageFlags,
                 surface_caps.currentExtent.width,
                 surface_caps.currentExtent.height,
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
             )));
         }
         Swapchain {
@@ -168,7 +167,7 @@ impl Swapchain {
         let mut image_index = 0u32;
         let res = unsafe {
             vk::vkAcquireNextImageKHR(
-                self.logical_device.vk_data,
+                self.logical_device.get_data(),
                 self.vk_data,
                 u64::max_value(),
                 sem.vk_data,
@@ -192,7 +191,7 @@ impl Drop for Swapchain {
     fn drop(&mut self) {
         self.image_views.clear();
         unsafe {
-            vk::vkDestroySwapchainKHR(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroySwapchainKHR(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }

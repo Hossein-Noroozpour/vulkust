@@ -2,18 +2,15 @@
 
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
+#extension GL_GOOGLE_include_directive : require
 
-layout (constant_id = 0) const int MAX_DIRECTIONAL_CASCADES_COUNT = 6;
-const int MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT = 6;
+#include "common.glsl"
+
+layout (constant_id = 0) const int DIRECTIONAL_CASCADES_COUNT = 6;
 
 layout (location = 0) out vec2 out_uv;
 
-layout (set = 0, binding = 0) uniform LightUBO {
-	mat4 view_projection_biases[MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT];
-    vec4 direction_strength;
-    uint cascades_count;
-    uint light_index;
-} light_ubo;
+layout (set = 0, binding = 0) uniform LightUBO { Light s; } light_ubo;
 
 out gl_PerVertex {
     vec4 gl_Position;

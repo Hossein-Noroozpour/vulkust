@@ -1,5 +1,5 @@
 use super::super::system::file::File;
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::io::Read;
 use std::mem::transmute;
@@ -27,7 +27,7 @@ impl Module {
         module_create_info.pCode = unsafe { transmute(data.as_ptr()) };
         let mut vk_data = 0 as vk::VkShaderModule;
         vulkan_check!(vk::vkCreateShaderModule(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &module_create_info,
             null(),
             &mut vk_data,
@@ -42,7 +42,7 @@ impl Module {
 impl Drop for Module {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyShaderModule(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyShaderModule(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }

@@ -1,4 +1,4 @@
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::default::Default;
 use std::ptr::null;
@@ -16,7 +16,7 @@ impl Semaphore {
         let mut semaphore_create_info = vk::VkSemaphoreCreateInfo::default();
         semaphore_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         vulkan_check!(vk::vkCreateSemaphore(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &semaphore_create_info,
             null(),
             &mut vk_data,
@@ -34,7 +34,7 @@ impl Semaphore {
 impl Drop for Semaphore {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroySemaphore(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroySemaphore(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }
@@ -51,7 +51,7 @@ impl Fence {
         fence_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         let mut vk_data = 0 as vk::VkFence;
         vulkan_check!(vk::vkCreateFence(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &fence_create_info,
             null(),
             &mut vk_data,
@@ -67,7 +67,7 @@ impl Fence {
         fence_create_info.flags = vk::VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT as u32;
         let mut vk_data = 0 as vk::VkFence;
         vulkan_check!(vk::vkCreateFence(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &fence_create_info,
             null(),
             &mut vk_data,
@@ -79,7 +79,7 @@ impl Fence {
     }
     pub fn wait(&self) {
         vulkan_check!(vk::vkWaitForFences(
-            self.logical_device.vk_data,
+            self.logical_device.get_data(),
             1,
             &self.vk_data,
             1u32,
@@ -91,7 +91,7 @@ impl Fence {
 impl Drop for Fence {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyFence(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyFence(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }

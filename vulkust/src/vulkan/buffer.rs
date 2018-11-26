@@ -1,7 +1,7 @@
 use super::super::core::allocate as alc;
 use super::super::core::allocate::{Allocator, Object};
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::image::Image;
 use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
 use super::vulkan as vk;
@@ -115,20 +115,20 @@ impl RootBuffer {
         buffer_info.usage = usage;
         let mut vk_data = 0 as vk::VkBuffer;
         vulkan_check!(vk::vkCreateBuffer(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &buffer_info,
             null(),
             &mut vk_data,
         ));
         let mut mem_reqs = vk::VkMemoryRequirements::default();
         unsafe {
-            vk::vkGetBufferMemoryRequirements(logical_device.vk_data, vk_data, &mut mem_reqs);
+            vk::vkGetBufferMemoryRequirements(logical_device.get_data(), vk_data, &mut mem_reqs);
         }
         let memory = vxresult!(memmgr.write()).allocate(&mem_reqs, memloc);
         {
             let mem = vxresult!(memory.read());
             vulkan_check!(vk::vkBindBufferMemory(
-                logical_device.vk_data,
+                logical_device.get_data(),
                 vk_data,
                 mem.get_data(),
                 mem.get_allocated_memory().get_offset() as vk::VkDeviceSize,
@@ -170,7 +170,7 @@ impl RootBuffer {
 impl Drop for RootBuffer {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyBuffer(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyBuffer(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }
@@ -269,7 +269,7 @@ impl Manager {
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
 
-        let vk_device = vxresult!(memmgr.read()).get_device().vk_data;
+        let vk_device = vxresult!(memmgr.read()).get_device().get_data();
         let (memory_size, vk_memory) = {
             let cpu_memory = vxresult!(cpu_buffer.memory.read());
             let vk_memory = cpu_memory.get_data();

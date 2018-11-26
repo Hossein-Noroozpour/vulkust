@@ -37,7 +37,7 @@ impl Framebuffer {
             }
             width = a.0;
             height = a.1;
-            vkdev = img.get_device().vk_data;
+            vkdev = img.get_device().get_data();
         }
 
         let mut fb_create_info = vk::VkFramebufferCreateInfo::default();
@@ -137,7 +137,7 @@ impl Drop for Framebuffer {
     fn drop(&mut self) {
         let vkdev = vxresult!(self.buffers[0].get_image().read())
             .get_device()
-            .vk_data;
+            .get_data();
         unsafe {
             vk::vkDestroyFramebuffer(vkdev, self.vk_data, null());
         }

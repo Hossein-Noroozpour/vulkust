@@ -2,52 +2,20 @@
 
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
+#extension GL_GOOGLE_include_directive : require
 
-#define MAX_POINT_LIGHTS_COUNT 32
-#define MAX_DIRECTIONAL_LIGHTS_COUNT 8
+#include "common.glsl"
 
 layout (location = 0) in vec3 pos;
 layout (location = 1) in vec3 nrm;
 layout (location = 2) in vec4 tng;
 layout (location = 3) in vec2 uv;
 
-struct Camera {
-	vec4 position_radius;
-	mat4 projection;
-	mat4 view;
-	mat4 view_projection;
-};
+layout (set = 0, binding = 0) uniform SceneUBO { Scene s; } scene_ubo;
 
-struct PointLight {
-	vec4 color;
-	vec4 position_radius;
-};
+layout (set = 1, binding = 0) uniform ModelUBO { Model s; } model_ubo;
 
-struct DirectionalLight {
-	vec4 color;
-	vec4 direction;
-};
-
-layout (set = 0, binding = 0) uniform SceneUBO {
-	Camera camera;
-	DirectionalLight directional_lights[MAX_DIRECTIONAL_LIGHTS_COUNT];
-	uint directional_lights_count;
-	PointLight point_lights[MAX_POINT_LIGHTS_COUNT];
-	uint point_lights_count;
-} scene_ubo;
-
-layout (set = 1, binding = 0) uniform ModelUBO {
-	mat4 model;
-} model_ubo;
-
-layout (set = 2, binding = 0) uniform MaterialUBO {
-    float alpha;
-    float alpha_cutoff;
-	float metallic_factor;
-    float normal_scale;
-    float occlusion_strength;
-    float roughness_factor;
-} material_ubo;
+layout (set = 2, binding = 0) uniform MaterialUBO { Material s; } material_ubo;
 
 layout (location = 0) out vec3 out_pos;
 layout (location = 1) out vec3 out_nrm;
@@ -60,8 +28,8 @@ out gl_PerVertex {
 };
 
 void main() {
-	out_pos = (model_ubo.model * vec4(pos, 1.0)).xyz;
-	mat3 m3_model = mat3(model_ubo.model);
+	out_pos = (model_ubo.s.model * vec4(pos, 1.0)).xyz;
+	mat3 m3_model = mat3(model_ubo.s.model);
 	out_nrm = normalize(m3_model * nrm);
 	out_tng = normalize(m3_model * tng.xyz);
 	if ( tng.w < 0.0 ) {
@@ -70,6 +38,5 @@ void main() {
 		out_btg = cross(out_nrm, out_tng);
 	}
 	out_uv = uv;
-	gl_Position = scene_ubo.camera.view_projection * vec4(out_pos, 1.0);
-
+	gl_Position = scene_ubo.s.camera.view_projection * vec4(out_pos, 1.0);
 }

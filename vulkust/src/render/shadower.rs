@@ -7,10 +7,10 @@ use super::gapi::GraphicApiEngine;
 use super::image::{
     AttachmentType, Format as ImageFormat, Layout as ImageLayout, View as ImageView,
 };
+use super::g_buffer_filler::GBufferFiller;
 use super::light::ShadowAccumulatorDirectionalUniform;
 use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
-use super::resolver::Resolver;
 use super::texture::{Manager as TextureManager, Texture};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
@@ -42,8 +42,8 @@ pub struct Shadower {
 impl Shadower {
     pub(super) fn new(
         geng: &GraphicApiEngine,
-        resolver: &Resolver,
         conf: &Configurations,
+        g_buffer_filler: &GBufferFiller,
         texture_manager: &mut TextureManager,
     ) -> Self {
         let dev = geng.get_device();
@@ -56,7 +56,6 @@ impl Shadower {
             let buf = Arc::new(ImageView::new_attachment(
                 memmgr,
                 SHADOW_MAP_FMT,
-                1,
                 AttachmentType::DepthShadowBuffer,
                 conf.get_shadow_map_aspect(),
                 conf.get_shadow_map_aspect(),
@@ -69,7 +68,6 @@ impl Shadower {
             dev.clone(),
             memmgr,
             SHADOW_ACCUMULATOR_FLAGBITS_FMT,
-            1,
             AttachmentType::ShadowAccumulator,
         ));
         let shadow_accumulator_flagbits_texture = texture_manager.create_2d_with_view_sampler(
@@ -120,14 +118,14 @@ impl Shadower {
         };
         let (shadow_map_descriptor_set, shadow_accumulator_directional_descriptor_set) = {
             let mut desmgr = vxresult!(geng.get_descriptor_manager().write());
-            let restex = resolver.get_output_textures();
+            let gbufftex = g_buffer_filler.get_textures();
             (
                 desmgr.create_buffer_only_set(&shadow_mapper_uniform_buffer),
                 desmgr.create_shadow_accumulator_directional_set(
                     &shadow_accumulator_directional_uniform_buffer,
                     vec![
-                        vec![restex[0].clone()],
-                        vec![restex[1].clone()],
+                        vec![gbufftex[0].clone()],
+                        vec![gbufftex[1].clone()],
                         shadow_map_textures[0..conf.get_cascaded_shadows_count() as usize].to_vec(),
                     ],
                 ),

@@ -1,7 +1,7 @@
 use super::super::render::config::Configurations;
 use super::super::render::pipeline::PipelineType;
 use super::descriptor::{Manager as DescriptorManager, SetLayout as DescriptorSetLayout};
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
 use super::shader::Module;
 use super::vulkan as vk;
@@ -69,14 +69,6 @@ impl Layout {
         Self::new(&layout, descriptor_set_layouts)
     }
 
-    pub fn new_resolver(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
-        let descriptor_manager = vxresult!(descriptor_manager.read());
-        let resolver_descriptor_set_layout = descriptor_manager.get_resolver_set_layout().clone();
-        let layout = [resolver_descriptor_set_layout.vk_data];
-        let descriptor_set_layouts = vec![resolver_descriptor_set_layout];
-        Self::new(&layout, descriptor_set_layouts)
-    }
-
     pub fn new_deferred(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
         let deferred_descriptor_set_layout = descriptor_manager.get_deferred_set_layout().clone();
@@ -98,7 +90,7 @@ impl Layout {
         descriptor_set_layouts: Vec<Arc<DescriptorSetLayout>>,
     ) -> Self {
         let mut vk_data = 0 as vk::VkPipelineLayout;
-        let vkdev = descriptor_set_layouts[0].logical_device.vk_data;
+        let vkdev = descriptor_set_layouts[0].logical_device.get_data();
         let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -121,7 +113,7 @@ impl Drop for Layout {
     fn drop(&mut self) {
         unsafe {
             vk::vkDestroyPipelineLayout(
-                self.descriptor_set_layouts[0].logical_device.vk_data,
+                self.descriptor_set_layouts[0].logical_device.get_data(),
                 self.vk_data,
                 null(),
             );
@@ -142,7 +134,7 @@ impl Cache {
         pipeline_cache_create_info.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
         vulkan_check!(vk::vkCreatePipelineCache(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &pipeline_cache_create_info,
             null(),
             &mut vk_data,
@@ -157,7 +149,7 @@ impl Cache {
 impl Drop for Cache {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyPipelineCache(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyPipelineCache(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }
@@ -176,7 +168,6 @@ impl Pipeline {
         descriptor_manager: &Arc<RwLock<DescriptorManager>>,
         render_pass: Arc<RenderPass>,
         cache: Arc<Cache>,
-        samples: vk::VkSampleCountFlagBits,
         pipeline_type: PipelineType,
         config: &Configurations,
     ) -> Self {
@@ -187,7 +178,6 @@ impl Pipeline {
 
         let vert_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.vert"),
-            PipelineType::Resolver => include_shader!("resolver.vert"),
             PipelineType::Deferred => include_shader!("deferred.vert"),
             PipelineType::ShadowMapper => include_shader!("shadow-mapper.vert"),
             PipelineType::ShadowAccumulatorDirectional => {
@@ -196,7 +186,6 @@ impl Pipeline {
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
-            PipelineType::Resolver => include_shader!("resolver.frag"),
             PipelineType::Deferred => include_shader!("deferred.frag"),
             PipelineType::ShadowMapper => include_shader!("shadow-mapper.frag"),
             PipelineType::ShadowAccumulatorDirectional => {
@@ -209,7 +198,6 @@ impl Pipeline {
         let shaders = vec![vertex_shader, fragment_shader];
         let layout = match pipeline_type {
             PipelineType::GBuffer => Layout::new_gbuff(descriptor_manager),
-            PipelineType::Resolver => Layout::new_resolver(descriptor_manager),
             PipelineType::Deferred => Layout::new_deferred(descriptor_manager),
             PipelineType::ShadowMapper => Layout::new_shadow_mapper(descriptor_manager),
             PipelineType::ShadowAccumulatorDirectional => {
@@ -308,16 +296,8 @@ impl Pipeline {
         let mut multisample_state = vk::VkPipelineMultisampleStateCreateInfo::default();
         multisample_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        if samples as u32 > vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT as u32 {
-            multisample_state.rasterizationSamples = samples;
-            multisample_state.sampleShadingEnable = vk::VK_TRUE;
-            multisample_state.minSampleShading = 0.25;
-            multisample_state.alphaToCoverageEnable = vk::VK_TRUE;
-        // multisample_state.alphaToOneEnable = vk::VK_TRUE;
-        } else {
-            multisample_state.rasterizationSamples =
+        multisample_state.rasterizationSamples =
                 vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-        }
 
         let mut vertex_input_binding = vk::VkVertexInputBindingDescription::default();
         vertex_input_binding.stride = 48; // bytes of vertex
@@ -420,7 +400,7 @@ impl Pipeline {
 
         let mut vk_data = 0 as vk::VkPipeline;
         vulkan_check!(vk::vkCreateGraphicsPipelines(
-            device.vk_data,
+            device.get_data(),
             cache.vk_data,
             1,
             &pipeline_create_info,
@@ -451,7 +431,7 @@ impl Pipeline {
 impl Drop for Pipeline {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyPipeline(self.cache.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyPipeline(self.cache.logical_device.get_data(), self.vk_data, null());
         }
     }
 }
@@ -482,7 +462,6 @@ impl Manager {
         pipeline_type: PipelineType,
         config: &Configurations,
     ) -> Arc<Pipeline> {
-        let samples = render_pass.get_vk_samples();
         let rpptr = unsafe { transmute(render_pass.get_data()) };
         let pt = pipeline_type as u8;
         let id = (rpptr, pt);
@@ -495,7 +474,6 @@ impl Manager {
             &self.descriptor_manager,
             render_pass,
             self.cache.clone(),
-            samples,
             pipeline_type,
             config,
         ));

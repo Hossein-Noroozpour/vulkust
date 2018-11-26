@@ -2,9 +2,9 @@
 
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
+#extension GL_GOOGLE_include_directive : require
 
-#define MAX_POINT_LIGHTS_COUNT 32
-#define MAX_DIRECTIONAL_LIGHTS_COUNT 8
+#include "common.glsl"
 
 layout (location = 0) in vec3 pos;
 layout (location = 1) in vec3 nrm;
@@ -12,44 +12,11 @@ layout (location = 2) in vec3 tng;
 layout (location = 3) in vec3 btg;
 layout (location = 4) in vec2 uv;
 
-struct Camera {
-	vec4 position_radius;
-	mat4 projection;
-	mat4 view;
-	mat4 view_projection;
-};
+layout (set = 0, binding = 0) uniform SceneUBO { Scene s; } scene_ubo;
 
-struct PointLight {
-	vec4 color;
-	vec4 position_radius;
-};
+layout (set = 1, binding = 0) uniform ModelUBO { Model s; } model_ubo;
 
-struct DirectionalLight {
-	vec4 color;
-	vec4 direction;
-};
-
-layout (set = 0, binding = 0) uniform SceneUBO {
-	Camera camera;
-	DirectionalLight directional_lights[MAX_DIRECTIONAL_LIGHTS_COUNT];
-	uint directional_lights_count;
-	PointLight point_lights[MAX_POINT_LIGHTS_COUNT];
-	uint point_lights_count;
-} scene_ubo;
-
-layout (set = 1, binding = 0) uniform ModelUBO {
-    mat4 model;
-} model_ubo;
-
-layout (set = 2, binding = 0) uniform MaterialUBO {
-    float alpha;
-    float alpha_cutoff;
-    float metallic_factor;
-    float normal_scale;
-    float occlusion_strength;
-    float roughness_factor;
-} material_ubo;
-
+layout (set = 2, binding = 0) uniform MaterialUBO { Material s; } material_ubo;
 layout (set = 2, binding = 1) uniform sampler2D base_color;
 layout (set = 2, binding = 2) uniform sampler2D base_color_factor;
 layout (set = 2, binding = 3) uniform sampler2D metallic_roughness;
@@ -64,8 +31,8 @@ layout (location = 2) out vec4 out_alb;
 
 void main() {
     vec4 alb = texture(base_color, uv) * texture(base_color_factor, uv);
-    alb.w *= material_ubo.alpha;
-    if(alb.w < material_ubo.alpha_cutoff) {
+    alb.w *= material_ubo.s.alpha;
+    if(alb.w < material_ubo.s.alpha_cutoff) {
         discard;
     }
     out_alb = alb;

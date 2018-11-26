@@ -4,7 +4,6 @@ use super::config::Configurations;
 use super::deferred::Deferred;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::resolver::Resolver;
 use super::scene::Manager as SceneManager;
 use super::shadower::Shadower;
 use num_cpus;
@@ -150,7 +149,6 @@ pub(super) struct Engine {
     cmd_pool: Arc<CmdPool>,
     g_buffer_filler: Arc<RwLock<GBufferFiller>>,
     deferred: Arc<RwLock<Deferred>>,
-    resolver: Arc<RwLock<Resolver>>,
     shadower: Arc<RwLock<Shadower>>,
 }
 
@@ -164,13 +162,11 @@ impl Engine {
         let eng = vxresult!(eng.read());
         let scene_manager = asset_manager.get_scene_manager().clone();
         let mut texmgr = vxresult!(asset_manager.get_texture_manager().write());
-        let g_buffer_filler = GBufferFiller::new(&eng, config);
-        let resolver = Resolver::new(&eng, &g_buffer_filler, &mut *texmgr, config);
-        let shadower = Shadower::new(&eng, &resolver, config, &mut *texmgr);
+        let g_buffer_filler = GBufferFiller::new(&eng,  &mut *texmgr, config);
+        let shadower = Shadower::new(&eng, config, &g_buffer_filler, &mut *texmgr);
         let deferred = Arc::new(RwLock::new(Deferred::new(
-            &eng, &resolver, &shadower, config,
+            &eng, &g_buffer_filler, &shadower, config,
         )));
-        let resolver = Arc::new(RwLock::new(resolver));
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
         let shadower = Arc::new(RwLock::new(shadower));
         let kernels_count = num_cpus::get();
@@ -192,7 +188,6 @@ impl Engine {
             cmd_pool,
             g_buffer_filler,
             deferred,
-            resolver,
             shadower,
         }
     }
@@ -255,12 +250,10 @@ impl Engine {
     fn submit(&self, engine: &GraphicApiEngine) {
         let mut last_semaphore = engine.get_starting_semaphore().clone();
         let frame_number = engine.get_frame_number();
-        vxresult!(self.resolver.write()).update(frame_number);
         vxresult!(self.deferred.write()).update(frame_number);
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         let g_buffer_filler = vxresult!(self.g_buffer_filler.read());
-        let resolver = vxresult!(self.resolver.read());
         let mut shadower = vxresult!(self.shadower.write());
         let deferred = vxresult!(self.deferred.read());
         for (_, scene) in &*scenes {
@@ -275,7 +268,6 @@ impl Engine {
                         &last_semaphore,
                         &self.cmd_pool,
                         &*g_buffer_filler,
-                        &*resolver,
                         &mut *shadower,
                         &*deferred,
                     )

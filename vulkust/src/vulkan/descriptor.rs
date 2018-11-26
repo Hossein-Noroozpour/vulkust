@@ -5,7 +5,7 @@ use super::super::render::config::Configurations;
 use super::super::render::config::MAX_DIRECTIONAL_CASCADES_COUNT;
 use super::super::render::texture::Texture;
 use super::buffer::DynamicBuffer;
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::collections::BTreeMap;
 use std::ptr::null;
@@ -37,7 +37,7 @@ impl Pool {
         descriptor_pool_info.maxSets = buffers_count as u32 + 1; // todo I must find the exact number after everything got stable
         let mut vk_data = 0 as vk::VkDescriptorPool;
         vulkan_check!(vk::vkCreateDescriptorPool(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &descriptor_pool_info,
             null(),
             &mut vk_data,
@@ -52,7 +52,7 @@ impl Pool {
 impl Drop for Pool {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyDescriptorPool(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyDescriptorPool(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }
@@ -79,11 +79,6 @@ impl SetLayout {
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
-    pub fn new_resolver(logical_device: Arc<LogicalDevice>) -> Self {
-        let layout_bindings = Self::create_binding_info(&[1; 4]);
-        return Self::new_with_bindings_info(logical_device, &layout_bindings);
-    }
-
     pub fn new_shadow_accumulator_directional(
         logical_device: Arc<LogicalDevice>,
         conf: &Configurations,
@@ -104,7 +99,7 @@ impl SetLayout {
         descriptor_layout.pBindings = layout_bindings.as_ptr();
         let mut vk_data = 0 as vk::VkDescriptorSetLayout;
         vulkan_check!(vk::vkCreateDescriptorSetLayout(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &descriptor_layout,
             null(),
             &mut vk_data,
@@ -143,7 +138,7 @@ impl SetLayout {
 impl Drop for SetLayout {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyDescriptorSetLayout(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyDescriptorSetLayout(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }
@@ -200,25 +195,6 @@ impl Set {
         Self::new(pool, layout, uniform, texturess)
     }
 
-    pub fn new_resolver(
-        pool: Arc<Pool>,
-        layout: Arc<SetLayout>,
-        uniform: &DynamicBuffer,
-        textures: Vec<Arc<RwLock<Texture>>>,
-    ) -> Self {
-        #[cfg(debug_mode)]
-        {
-            if textures.len() != 4 {
-                vxlogf!("For resolver descriptor you need 4 textures.");
-            }
-        }
-        let mut texturess = Vec::new();
-        for t in textures {
-            texturess.push(vec![t]);
-        }
-        Self::new(pool, layout, uniform, texturess)
-    }
-
     pub fn new_shadow_accumulator_directional(
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
@@ -258,7 +234,7 @@ impl Set {
         alloc_info.pSetLayouts = &layout.vk_data;
         let mut vk_data = 0 as vk::VkDescriptorSet;
         vulkan_check!(vk::vkAllocateDescriptorSets(
-            pool.logical_device.vk_data,
+            pool.logical_device.get_data(),
             &alloc_info,
             &mut vk_data,
         ));
@@ -308,7 +284,7 @@ impl Set {
         }
         unsafe {
             vk::vkUpdateDescriptorSets(
-                pool.logical_device.vk_data,
+                pool.logical_device.get_data(),
                 infos.len() as u32,
                 infos.as_ptr(),
                 0,
@@ -332,12 +308,10 @@ impl Drop for Set {
 pub(crate) struct Manager {
     buffer_only_set_layout: Arc<SetLayout>,
     gbuff_set_layout: Arc<SetLayout>,
-    resolver_set_layout: Arc<SetLayout>,
     deferred_set_layout: Arc<SetLayout>,
     shadow_accumulator_directional_set_layout: Arc<SetLayout>,
     buffer_only_sets: BTreeMap<usize, Weak<Set>>,
     gbuff_sets: BTreeMap<([Id; GBUFF_TEX_COUNT], usize), Weak<Set>>,
-    resolver_set: Option<Arc<Set>>,
     deferred_set: Option<Arc<Set>>,
     shadow_accumulator_directional_set: Option<Arc<Set>>,
     pool: Arc<Pool>,
@@ -350,7 +324,6 @@ impl Manager {
         let pool = Arc::new(Pool::new(logical_device.clone(), conf));
         let gbuff_set_layout = Arc::new(SetLayout::new_gbuff(logical_device.clone()));
         let buffer_only_set_layout = Arc::new(SetLayout::new_buffer_only(logical_device.clone()));
-        let resolver_set_layout = Arc::new(SetLayout::new_resolver(logical_device.clone()));
         let deferred_set_layout = Arc::new(SetLayout::new_deferred(logical_device.clone()));
         let shadow_accumulator_directional_set_layout = Arc::new(
             SetLayout::new_shadow_accumulator_directional(logical_device.clone(), conf),
@@ -358,12 +331,10 @@ impl Manager {
         Manager {
             gbuff_set_layout,
             buffer_only_set_layout,
-            resolver_set_layout,
             deferred_set_layout,
             shadow_accumulator_directional_set_layout,
             buffer_only_sets: BTreeMap::new(),
             gbuff_sets: BTreeMap::new(),
-            resolver_set: None,
             deferred_set: None,
             shadow_accumulator_directional_set: None,
             pool,
@@ -442,24 +413,6 @@ impl Manager {
         return s;
     }
 
-    pub(crate) fn create_resolver_set(
-        &mut self,
-        uniform: &DynamicBuffer,
-        textures: Vec<Arc<RwLock<Texture>>>,
-    ) -> Arc<Set> {
-        if let Some(s) = &self.resolver_set {
-            return s.clone();
-        }
-        let s = Arc::new(Set::new_resolver(
-            self.pool.clone(),
-            self.resolver_set_layout.clone(),
-            uniform,
-            textures,
-        ));
-        self.resolver_set = Some(s.clone());
-        return s;
-    }
-
     pub(crate) fn create_shadow_accumulator_directional_set(
         &mut self,
         uniform: &DynamicBuffer,
@@ -484,10 +437,6 @@ impl Manager {
 
     pub(super) fn get_gbuff_set_layout(&self) -> &Arc<SetLayout> {
         return &self.gbuff_set_layout;
-    }
-
-    pub(super) fn get_resolver_set_layout(&self) -> &Arc<SetLayout> {
-        return &self.resolver_set_layout;
     }
 
     pub(super) fn get_deferred_set_layout(&self) -> &Arc<SetLayout> {

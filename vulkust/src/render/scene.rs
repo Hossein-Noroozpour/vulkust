@@ -14,7 +14,6 @@ use super::gapi::GraphicApiEngine;
 use super::light::{DirectionalUniform, Light, PointUniform};
 use super::model::{Base as ModelBase, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
-use super::resolver::Resolver;
 use super::shadower::Shadower;
 use super::sync::Semaphore;
 use std::collections::BTreeMap;
@@ -57,7 +56,6 @@ pub trait Scene: Object {
         &Arc<Semaphore>,
         &Arc<CmdPool>,
         &GBufferFiller,
-        &Resolver,
         &mut Shadower,
         &Deferred,
     ) -> Arc<Semaphore>;
@@ -242,9 +240,6 @@ struct BaseKernelData {
 struct BaseFramedata {
     gbuffer: CmdBuffer,
     gbuffer_semaphore: Arc<Semaphore>,
-    resolver: CmdBuffer,
-    resolver_secondary: CmdBuffer,
-    resolver_semaphore: Arc<Semaphore>,
     deferred: CmdBuffer,
     deferred_secondary: CmdBuffer,
     deferred_semaphore: Arc<Semaphore>,
@@ -256,9 +251,6 @@ impl BaseFramedata {
     fn new(engine: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>) -> Self {
         let gbuffer = engine.create_primary_command_buffer(cmd_pool.clone());
         let gbuffer_semaphore = Arc::new(engine.create_semaphore());
-        let resolver = engine.create_primary_command_buffer(cmd_pool.clone());
-        let resolver_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
-        let resolver_semaphore = Arc::new(engine.create_semaphore());
         let deferred = engine.create_primary_command_buffer(cmd_pool.clone());
         let deferred_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
         let deferred_semaphore = Arc::new(engine.create_semaphore());
@@ -267,9 +259,6 @@ impl BaseFramedata {
         Self {
             gbuffer,
             gbuffer_semaphore,
-            resolver,
-            resolver_secondary,
-            resolver_semaphore,
             deferred,
             deferred_secondary,
             deferred_semaphore,
@@ -680,7 +669,6 @@ impl Scene for Base {
         sem: &Arc<Semaphore>,
         cmd_pool: &Arc<CmdPool>,
         g_buffer_filler: &GBufferFiller,
-        resolver: &Resolver,
         shadower: &mut Shadower,
         deferred: &Deferred,
     ) -> Arc<Semaphore> {
@@ -712,20 +700,10 @@ impl Scene for Base {
             cmd.end();
         }
         geng.submit(&sem, &frame_data.gbuffer, &frame_data.gbuffer_semaphore);
-        // resolver
-        resolver.begin_primary(&mut frame_data.resolver);
-        resolver.begin_secondary(&mut frame_data.resolver_secondary, frame_number);
-        frame_data.resolver.exe_cmd(&frame_data.resolver_secondary);
-        frame_data.resolver.end_render_pass();
-        frame_data.resolver.end();
-        geng.submit(
-            &frame_data.gbuffer_semaphore,
-            &frame_data.resolver,
-            &frame_data.resolver_semaphore,
-        );
+        // shadow
         shadower.clear_shadow_accumulator(&mut frame_data.preparation_cmd);
         geng.submit(
-            &frame_data.resolver_semaphore,
+            &frame_data.gbuffer_semaphore,
             &frame_data.preparation_cmd,
             &frame_data.preparation_semaphore,
         );
@@ -896,7 +874,6 @@ impl Scene for Game {
         sem: &Arc<Semaphore>,
         cmd_pool: &Arc<CmdPool>,
         g_buffer_filler: &GBufferFiller,
-        resolver: &Resolver,
         shadower: &mut Shadower,
         deferred: &Deferred,
     ) -> Arc<Semaphore> {
@@ -905,7 +882,6 @@ impl Scene for Game {
             sem,
             cmd_pool,
             g_buffer_filler,
-            resolver,
             shadower,
             deferred,
         );
@@ -1032,7 +1008,6 @@ impl Scene for Ui {
         sem: &Arc<Semaphore>,
         cmd_pool: &Arc<CmdPool>,
         g_buffer_filler: &GBufferFiller,
-        resolver: &Resolver,
         shadower: &mut Shadower,
         deferred: &Deferred,
     ) -> Arc<Semaphore> {
@@ -1041,7 +1016,6 @@ impl Scene for Ui {
             sem,
             cmd_pool,
             g_buffer_filler,
-            resolver,
             shadower,
             deferred,
         );

@@ -19,7 +19,6 @@ pub mod multithreaded;
 pub mod object;
 pub mod pipeline;
 pub mod render_pass;
-pub mod resolver;
 pub mod sampler;
 pub mod scene;
 pub mod shadower;

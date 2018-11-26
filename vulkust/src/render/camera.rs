@@ -13,10 +13,11 @@ use std::sync::{Arc, RwLock, Weak};
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
-    pub position_radius: math::Vector4<Real>,
-    pub projection: math::Matrix4<Real>,
-    pub view: math::Matrix4<Real>,
-    pub view_projection: math::Matrix4<Real>,
+    position_far: math::Vector4<Real>,
+    near_reserved: math::Vector4<Real>,
+    projection: math::Matrix4<Real>,
+    view: math::Matrix4<Real>,
+    view_projection: math::Matrix4<Real>,
 }
 
 impl Uniform {
@@ -27,9 +28,11 @@ impl Uniform {
         let projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         );
-        let position_radius = math::Vector4::new(0.0, 0.0, 0.0, 0.0);
+        let position_far = math::Vector4::new(0.0, 0.0, 0.0, -100.0);
+        let near_reserved = math::Vector4::new(-1.0, 0.0, 0.0, -100.0);
         Uniform {
-            position_radius,
+            position_far,
+            near_reserved,
             projection,
             view,
             view_projection: projection,
@@ -446,8 +449,11 @@ impl Camera for Base {
     }
 
     fn update_uniform(&self, uniform: &mut Uniform) {
-        uniform.position_radius = self.location.extend(self.near); // todo more accurate bounding shere radius
-        uniform.projection = self.projection;
+        uniform.position_far = self.location.extend(-self.far);
+        uniform.near_reserved = math::Vector4::new(-self.near, 0.0, 0.0, 0.0);
+        uniform.projection = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
+        ) * self.projection;
         uniform.view = self.view;
         uniform.view_projection = self.view_projection;
     }

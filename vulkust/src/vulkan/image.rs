@@ -2,7 +2,7 @@ use super::super::core::allocate::Object as AlcObject;
 use super::super::render::image::{AttachmentType, Format, Layout};
 use super::buffer::Manager as BufferManager;
 use super::command::Buffer as CmdBuffer;
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::memory::{Location as MemeoryLocation, Manager as MemeoryManager, Memory};
 use super::vulkan as vk;
 
@@ -30,19 +30,6 @@ pub(super) fn convert_to_format(f: vk::VkFormat) -> Format {
     }
 }
 
-pub(super) fn convert_samples(s: u8) -> vk::VkSampleCountFlagBits {
-    match s {
-        1 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-        2 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT,
-        4 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT,
-        8 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT,
-        16 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT,
-        32 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT,
-        64 => return vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT,
-        _ => vxunexpected!(),
-    }
-}
-
 pub(super) fn convert_layout(f: &Layout) -> vk::VkImageLayout {
     match f {
         &Layout::Uninitialized => return vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
@@ -63,7 +50,6 @@ pub(crate) struct Image {
     layout: vk::VkImageLayout,
     format: vk::VkFormat,
     mips_count: u8,
-    samples: vk::VkSampleCountFlagBits,
     usage: vk::VkImageUsageFlags,
     memory: Option<Arc<RwLock<Memory>>>,
     width: u32,
@@ -79,21 +65,21 @@ impl Image {
         let logical_device = vxresult!(memory_mgr.read()).get_device().clone();
         let mut vk_data = 0 as vk::VkImage;
         vulkan_check!(vk::vkCreateImage(
-            logical_device.vk_data,
+            logical_device.get_data(),
             info,
             null(),
             &mut vk_data,
         ));
         let mut mem_reqs = vk::VkMemoryRequirements::default();
         unsafe {
-            vk::vkGetImageMemoryRequirements(logical_device.vk_data, vk_data, &mut mem_reqs);
+            vk::vkGetImageMemoryRequirements(logical_device.get_data(), vk_data, &mut mem_reqs);
         }
         let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemeoryLocation::GPU);
         {
             let memory_r = vxresult!(memory.read());
             let root_memory = vxresult!(memory_r.get_root().read());
             vulkan_check!(vk::vkBindImageMemory(
-                logical_device.vk_data,
+                logical_device.get_data(),
                 vk_data,
                 root_memory.get_data(),
                 memory_r.get_allocated_memory().get_offset() as vk::VkDeviceSize,
@@ -105,7 +91,6 @@ impl Image {
             layout: info.initialLayout,
             format: info.format,
             mips_count: info.mipLevels as u8,
-            samples: info.samples,
             usage: info.usage,
             width: info.extent.width,
             height: info.extent.height,
@@ -121,7 +106,6 @@ impl Image {
         usage: vk::VkImageUsageFlags,
         width: u32,
         height: u32,
-        samples: vk::VkSampleCountFlagBits,
     ) -> Self {
         Image {
             logical_device,
@@ -130,7 +114,6 @@ impl Image {
             mips_count: 1,
             vk_data,
             usage,
-            samples,
             width,
             height,
             memory: None,
@@ -258,17 +241,13 @@ impl Image {
     pub(super) fn get_vk_format(&self) -> vk::VkFormat {
         return self.format;
     }
-
-    pub(super) fn get_vk_samples(&self) -> vk::VkSampleCountFlagBits {
-        return self.samples;
-    }
 }
 
 impl Drop for Image {
     fn drop(&mut self) {
         if self.memory.is_some() {
             unsafe {
-                vk::vkDestroyImage(self.logical_device.vk_data, self.vk_data, null());
+                vk::vkDestroyImage(self.logical_device.get_data(), self.vk_data, null());
             }
         }
     }
@@ -293,7 +272,6 @@ impl View {
         usage: vk::VkImageUsageFlags,
         width: u32,
         height: u32,
-        samples: vk::VkSampleCountFlagBits,
     ) -> Self {
         Self::new_with_image(Arc::new(RwLock::new(Image::new_with_vk_data(
             logical_device,
@@ -303,7 +281,6 @@ impl View {
             usage,
             width,
             height,
-            samples,
         ))))
     }
 
@@ -342,7 +319,7 @@ impl View {
             view_create_info.subresourceRange.levelCount = img.mips_count as u32;
             view_create_info.subresourceRange.layerCount = 1;
             vulkan_check!(vk::vkCreateImageView(
-                dev.vk_data,
+                dev.get_data(),
                 &view_create_info,
                 null(),
                 &mut vk_data,
@@ -355,14 +332,12 @@ impl View {
         logical_device: Arc<LogicalDevice>,
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
         format: Format,
-        samples: u8,
         attachment_type: AttachmentType,
     ) -> Self {
-        let surface_caps = logical_device.physical_device.surface_caps;
+        let surface_caps = logical_device.get_physical().get_surface_capabilities();
         return Self::new_attachment(
             memory_mgr,
             format,
-            samples,
             attachment_type,
             surface_caps.currentExtent.width,
             surface_caps.currentExtent.height,
@@ -372,15 +347,13 @@ impl View {
     pub(crate) fn new_attachment(
         memory_mgr: &Arc<RwLock<MemeoryManager>>,
         format: Format,
-        samples: u8,
         attachment_type: AttachmentType,
         width: u32,
         height: u32,
     ) -> Self {
         let aspect_mask = match attachment_type {
             AttachmentType::ColorGBuffer
-            | AttachmentType::ColorDisplay
-            | AttachmentType::ResolverBuffer => {
+            | AttachmentType::ColorDisplay => {
                 vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
             }
             AttachmentType::ShadowAccumulator => {
@@ -395,7 +368,7 @@ impl View {
             }
         };
         let usage = match attachment_type {
-            AttachmentType::ColorGBuffer | AttachmentType::ResolverBuffer => {
+            AttachmentType::ColorGBuffer => {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
                     | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
             }
@@ -427,7 +400,7 @@ impl View {
         image_info.tiling = vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
         image_info.usage = usage;
         image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-        image_info.samples = convert_samples(samples);
+        image_info.samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         let image = Arc::new(RwLock::new(Image::new_with_info(&image_info, memory_mgr)));
         return Self::new_with_image_aspect(image, aspect_mask);
     }
@@ -445,7 +418,7 @@ impl Drop for View {
     fn drop(&mut self) {
         unsafe {
             let img = vxresult!(self.image.read());
-            vk::vkDestroyImageView(img.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyImageView(img.logical_device.get_data(), self.vk_data, null());
         }
     }
 }

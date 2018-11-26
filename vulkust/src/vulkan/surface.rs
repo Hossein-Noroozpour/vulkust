@@ -7,13 +7,13 @@ use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Surface {
-    pub instance: Arc<Instance>,
-    pub vk_data: vk::VkSurfaceKHR,
+    instance: Arc<Instance>,
+    vk_data: vk::VkSurfaceKHR,
 }
 
 impl Surface {
     #[cfg(target_os = "ios")]
-    pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
+    pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let os_app = vxresult!(os_app.read());
         let mut create_info = vk::VkIOSSurfaceCreateInfoMVK::default();
@@ -33,7 +33,7 @@ impl Surface {
     }
 
     #[cfg(target_os = "macos")]
-    pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
+    pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let os_app = vxresult!(os_app.read());
         let mut create_info = vk::VkMacOSSurfaceCreateInfoMVK::default();
@@ -53,7 +53,7 @@ impl Surface {
     }
 
     #[cfg(target_os = "android")]
-    pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
+    pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let os_app = vxresult!(os_app.read());
         let mut create_info = vk::VkAndroidSurfaceCreateInfoKHR::default();
@@ -73,7 +73,7 @@ impl Surface {
     }
 
     #[cfg(target_os = "linux")]
-    pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
+    pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_surface = 0 as vk::VkSurfaceKHR;
         let os_app = vxresult!(os_app.read());
         let mut create_info = vk::VkXcbSurfaceCreateInfoKHR::default();
@@ -81,7 +81,7 @@ impl Surface {
         create_info.window = os_app.window;
         create_info.connection = os_app.connection;
         vulkan_check!(vk::vkCreateXcbSurfaceKHR(
-            instance.vk_data,
+            instance.get_data(),
             &create_info,
             null(),
             &mut vk_surface,
@@ -93,7 +93,7 @@ impl Surface {
     }
 
     #[cfg(target_os = "windows")]
-    pub fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
+    pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
         let os_app = vxresult!(os_app.read());
         let mut create_info = vk::VkWin32SurfaceCreateInfoKHR::default();
@@ -112,12 +112,20 @@ impl Surface {
             vk_data,
         }
     }
+
+    pub(super) fn get_data(&self) -> vk::VkSurfaceKHR {
+        return self.vk_data;
+    }
+
+    pub(super) fn get_instance(&self) -> &Instance {
+        return &self.instance;
+    }
 }
 
 impl Drop for Surface {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroySurfaceKHR(self.instance.vk_data, self.vk_data, null());
+            vk::vkDestroySurfaceKHR(self.instance.get_data(), self.vk_data, null());
         }
     }
 }

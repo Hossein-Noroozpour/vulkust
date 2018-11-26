@@ -5,10 +5,10 @@ use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool, Type as CmdPoolType};
 use super::descriptor::Manager as DescriptorManager;
-use super::device::logical::Logical as LogicalDevice;
-use super::device::physical::Physical as PhysicalDevice;
+use super::device::Logical as LogicalDevice;
+use super::device::Physical as PhysicalDevice;
 use super::framebuffer::Framebuffer;
-use super::image::{convert_format, View as ImageView};
+use super::image::View as ImageView;
 use super::instance::Instance;
 use super::memory::Manager as MemoryManager;
 use super::pipeline::Manager as PipelineManager;
@@ -45,7 +45,6 @@ pub struct Engine {
     wait_fences: Vec<Arc<Fence>>,
     linear_repeat_sampler: Arc<Sampler>,
     nearest_repeat_sampler: Arc<Sampler>,
-    samples_count: vk::VkSampleCountFlagBits,
     //---------------------------------------
     clear_render_pass: Arc<RenderPass>,
     clear_framebuffers: Vec<Arc<Framebuffer>>,
@@ -60,7 +59,7 @@ impl Engine {
         let instance = Arc::new(Instance::new());
         let surface = Arc::new(Surface::new(&instance, os_app));
         let physical_device = Arc::new(PhysicalDevice::new(&surface));
-        let logical_device = Arc::new(LogicalDevice::new(&physical_device));
+        let logical_device = Arc::new(LogicalDevice::new(&physical_device, conf));
         let swapchain = Arc::new(Swapchain::new(&logical_device));
         let present_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let data_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
@@ -81,7 +80,6 @@ impl Engine {
         wait_fences.shrink_to_fit();
         data_primary_cmds.shrink_to_fit();
         let memory_manager = MemoryManager::new(&logical_device);
-        let samples_count = Self::find_max_sample_count(&physical_device);
         let render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), false));
         let clear_render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), true));
         let mut framebuffers = Vec::new();
@@ -131,7 +129,6 @@ impl Engine {
             graphic_cmd_pool,
             data_primary_cmds,
             memory_manager,
-            samples_count,
             render_pass,
             clear_render_pass,
             descriptor_manager,
@@ -154,14 +151,14 @@ impl Engine {
             }
         } as usize;
         vulkan_check!(vk::vkWaitForFences(
-            self.logical_device.vk_data,
+            self.logical_device.get_data(),
             1,
             &self.wait_fences[current_buffer].vk_data,
             1,
             u64::max_value(),
         ));
         vulkan_check!(vk::vkResetFences(
-            self.logical_device.vk_data,
+            self.logical_device.get_data(),
             1,
             &self.wait_fences[current_buffer].vk_data,
         ));
@@ -210,7 +207,7 @@ impl Engine {
             null_mut()
         };
         vulkan_check!(vk::vkQueueSubmit(
-            self.logical_device.vk_graphic_queue,
+            self.logical_device.get_vk_graphic_queue(),
             1,
             &submit_info,
             fence,
@@ -254,7 +251,7 @@ impl Engine {
         present_info.pWaitSemaphores = &self.render_semaphore.vk_data;
         present_info.waitSemaphoreCount = 1;
         vulkan_check!(vk::vkQueuePresentKHR(
-            self.logical_device.vk_graphic_queue,
+            self.logical_device.get_vk_graphic_queue(),
             &present_info,
         ));
     }
@@ -341,10 +338,6 @@ impl Engine {
         return &self.pipeline_manager;
     }
 
-    pub(crate) fn get_samples_count(&self) -> u8 {
-        return self.samples_count as u8;
-    }
-
     pub(crate) fn get_linear_repeat_sampler(&self) -> &Arc<Sampler> {
         return &self.linear_repeat_sampler;
     }
@@ -355,29 +348,6 @@ impl Engine {
 
     pub(crate) fn get_render_pass(&self) -> &Arc<RenderPass> {
         return &self.render_pass;
-    }
-
-    fn find_max_sample_count(phdev: &Arc<PhysicalDevice>) -> vk::VkSampleCountFlagBits {
-        let mut sample_count = phdev.get_max_sample_bit(
-            convert_format(GBUFF_COLOR_FMT),
-            vk::VkImageType::VK_IMAGE_TYPE_2D,
-            vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
-            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as vk::VkImageUsageFlags
-                | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as vk::VkImageUsageFlags,
-            0,
-        );
-        sample_count &= phdev.get_max_sample_bit(
-            convert_format(GBUFF_DEPTH_FMT),
-            vk::VkImageType::VK_IMAGE_TYPE_2D,
-            vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
-            vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-                as vk::VkImageUsageFlags
-                | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as vk::VkImageUsageFlags,
-            0,
-        );
-        let result = phdev.get_max_sample_bit_with_mask(sample_count);
-        vxlogi!("Sample count is: {:?}", result);
-        return result;
     }
 }
 

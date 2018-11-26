@@ -77,6 +77,9 @@ fn check_shaders() {
         let shader_path = entry.path();
         let shader_file = shader_path.to_str().unwrap();
         let spirv_file = shader_path.file_name().unwrap().to_str().unwrap();
+        if !spirv_file.ends_with(".vert") && !spirv_file.ends_with(".frag") {
+            continue;
+        }
         let spirv_file = spirv_file.to_string() + ".spv";
         let spirv_file = vulkan_spirv_path.join(&spirv_file);
         let spirv_file = spirv_file.to_str().unwrap();

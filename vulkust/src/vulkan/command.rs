@@ -1,7 +1,7 @@
 use super::super::core::allocate::Object as CoreAllocObj;
 use super::buffer::{Buffer as BufBuffer, StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::framebuffer::Framebuffer;
 use super::pipeline::Pipeline;
 // use super::sync::Fence;
@@ -34,10 +34,6 @@ const DEFERRED_DEFERRED_DESCRIPTOR_OFFSET: usize = 1;
 
 const DEFERRED_DESCRIPTOR_SETS_COUNT: usize = 2;
 const DEFERRED_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 2;
-
-const RESOLVER_DESCRIPTOR_SETS_COUNT: usize = 1;
-const RESOLVER_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 1;
-const RESOLVER_DESCRIPTOR_OFFSET: usize = 0;
 
 const SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT: usize = 2;
 const SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET: usize = 0;
@@ -72,7 +68,7 @@ impl Buffer {
         cmd_buf_allocate_info.commandBufferCount = 1;
         let mut vk_data = 0 as vk::VkCommandBuffer;
         vulkan_check!(vk::vkAllocateCommandBuffers(
-            pool.logical_device.vk_data,
+            pool.logical_device.get_data(),
             &cmd_buf_allocate_info,
             &mut vk_data,
         ));
@@ -353,23 +349,6 @@ impl Buffer {
         self.draw_index(indices_count);
     }
 
-    pub(crate) fn render_resolver(&mut self) {
-        self.has_render_record = true;
-        unsafe {
-            vk::vkCmdBindDescriptorSets(
-                self.vk_data,
-                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-                self.bound_pipeline_layout,
-                0,
-                RESOLVER_DESCRIPTOR_SETS_COUNT as u32,
-                self.bound_descriptor_sets.as_ptr(),
-                RESOLVER_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
-                self.bound_dynamic_buffer_offsets.as_ptr(),
-            );
-        }
-        self.draw(3);
-    }
-
     pub(crate) fn render_deferred(&mut self) {
         self.has_render_record = true;
         unsafe {
@@ -411,16 +390,6 @@ impl Buffer {
     ) {
         self.bound_descriptor_sets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] =
-            buffer.get_allocated_memory().get_offset() as u32;
-    }
-
-    pub(crate) fn bind_resolver_descriptor(
-        &mut self,
-        descriptor_set: &DescriptorSet,
-        buffer: &BufBuffer,
-    ) {
-        self.bound_descriptor_sets[RESOLVER_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
-        self.bound_dynamic_buffer_offsets[RESOLVER_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
 
@@ -495,7 +464,7 @@ impl Drop for Buffer {
     fn drop(&mut self) {
         unsafe {
             vk::vkFreeCommandBuffers(
-                self.pool.logical_device.vk_data,
+                self.pool.logical_device.get_data(),
                 self.pool.vk_data,
                 1,
                 &mut self.vk_data,
@@ -528,11 +497,11 @@ impl Pool {
         match pool_type {
             Type::Graphic => {
                 vk_cmd_pool_info.queueFamilyIndex =
-                    logical_device.physical_device.graphics_queue_node_index;
+                    logical_device.get_physical().get_graphics_queue_node_index();
             }
             Type::Compute => {
                 vk_cmd_pool_info.queueFamilyIndex =
-                    logical_device.physical_device.compute_queue_node_index;
+                    logical_device.get_physical().get_compute_queue_node_index();
             }
         }
         vk_cmd_pool_info.flags =
@@ -540,7 +509,7 @@ impl Pool {
                 | flags;
         let mut vk_data = 0 as vk::VkCommandPool;
         vulkan_check!(vk::vkCreateCommandPool(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &vk_cmd_pool_info,
             null(),
             &mut vk_data,
@@ -556,7 +525,7 @@ impl Pool {
 impl Drop for Pool {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyCommandPool(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroyCommandPool(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }

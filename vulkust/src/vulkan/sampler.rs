@@ -1,5 +1,5 @@
 use super::super::render::sampler::Filter;
-use super::device::logical::Logical as LogicalDevice;
+use super::device::Logical as LogicalDevice;
 use super::vulkan as vk;
 use std::ptr::null;
 use std::sync::Arc;
@@ -40,8 +40,8 @@ impl Sampler {
             _ => {
                 info.anisotropyEnable = vk::VK_TRUE;
                 info.maxAnisotropy = logical_device
-                    .physical_device
-                    .properties
+                    .get_physical()
+                    .get_properties()
                     .limits
                     .maxSamplerAnisotropy;
                 info.compareEnable = vk::VK_FALSE;
@@ -53,7 +53,7 @@ impl Sampler {
         }
         let mut vk_data = 0 as vk::VkSampler;
         vulkan_check!(vk::vkCreateSampler(
-            logical_device.vk_data,
+            logical_device.get_data(),
             &info,
             null(),
             &mut vk_data
@@ -80,7 +80,7 @@ impl Sampler {
 impl Drop for Sampler {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroySampler(self.logical_device.vk_data, self.vk_data, null());
+            vk::vkDestroySampler(self.logical_device.get_data(), self.vk_data, null());
         }
     }
 }

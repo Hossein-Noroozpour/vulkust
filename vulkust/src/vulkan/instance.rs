@@ -263,7 +263,7 @@ fn enumerate_extensions() -> Vec<String> {
     extensions
 }
 
-pub fn contain_extension(s: &str) -> bool {
+fn contain_extension(s: &str) -> bool {
     let properties = get_all_extensions();
     for p in properties {
         let name = slice_to_string(&p.extensionName);
@@ -276,12 +276,12 @@ pub fn contain_extension(s: &str) -> bool {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Instance {
-    pub vk_data: vk::VkInstance,
+    vk_data: vk::VkInstance,
     debugger: debug::Debugger,
 }
 
 impl Instance {
-    pub fn new() -> Self {
+    pub(super) fn new() -> Self {
         let application_name = CString::new("Vulkust App").unwrap();
         let engine_name = CString::new("Vulkust").unwrap();
         let mut application_info = vk::VkApplicationInfo::default();
@@ -313,6 +313,10 @@ impl Instance {
             vk_data: vk_instance,
             debugger: debug::Debugger::new(vk_instance),
         }
+    }
+
+    pub(super) fn get_data(&self) -> vk::VkInstance {
+        return self.vk_data;
     }
 }
 

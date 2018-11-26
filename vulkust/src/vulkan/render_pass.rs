@@ -37,11 +37,11 @@ impl RenderPass {
         let mut view_index = 0;
         for v in &views {
             let img = vxresult!(v.get_image().read());
-            vkdev = img.get_device().vk_data;
+            vkdev = img.get_device().get_data();
 
             let mut attachment_description = vk::VkAttachmentDescription::default();
             attachment_description.format = img.get_vk_format();
-            attachment_description.samples = img.get_vk_samples();
+            attachment_description.samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
             attachment_description.loadOp = if clear {
                 vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR
             } else {
@@ -191,28 +191,18 @@ impl RenderPass {
     pub(crate) fn get_data(&self) -> vk::VkRenderPass {
         return self.vk_data;
     }
-
-    pub(super) fn get_vk_samples(&self) -> vk::VkSampleCountFlagBits {
-        if self.colors.len() > 0 {
-            return vxresult!(self.colors[0].get_image().read()).get_vk_samples();
-        } else if let Some(d) = &self.depth {
-            return vxresult!(d.get_image().read()).get_vk_samples();
-        } else {
-            vxunexpected!();
-        }
-    }
 }
 
 impl Drop for RenderPass {
     fn drop(&mut self) {
         let vkdev = if let Some(swapchain) = &self.swapchain {
-            swapchain.logical_device.vk_data
+            swapchain.logical_device.get_data()
         } else if self.colors.len() > 0 {
             let i = vxresult!(self.colors[0].get_image().read());
-            i.get_device().vk_data
+            i.get_device().get_data()
         } else if let Some(depth) = &self.depth {
             let i = vxresult!(depth.get_image().read());
-            i.get_device().vk_data
+            i.get_device().get_data()
         } else {
             vxunexpected!();
         };
