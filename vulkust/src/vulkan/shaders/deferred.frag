@@ -91,7 +91,7 @@ bool find_hit(vec4 p, float dis, float steps, inout vec2 hituv) {
 	p = scene_ubo.s.camera.view * vec4(p.xyz, 1.0);
 	vec4 dir = p - vpos;
 	{
-		float l = length(dir);
+		float l = length(dir.xyz);
 		if(is_zero(l)) {
 			return false;
 		}
@@ -100,50 +100,54 @@ bool find_hit(vec4 p, float dis, float steps, inout vec2 hituv) {
 	if(is_zero(dir.z)) {
 		return false;
 	}
-	p.xyz *= dis;
+	p.xyz = dir.xyz * dis;
 	p.w = p.z + vpos.z;
 	if(p.w < scene_ubo.s.camera.position_far.w) {
-		dis = (scene_ubo.s.camera.position_far.w - vpos.z) / p.z;
+		dis = (scene_ubo.s.camera.position_far.w - vpos.z) / dir.z;
 	} else if (p.w > scene_ubo.s.camera.near_reserved.x) {
-		dis = (scene_ubo.s.camera.near_reserved.x - vpos.z) / p.z;
+		dis = (scene_ubo.s.camera.near_reserved.x - vpos.z) / dir.z;
+	}
+	if(dis < 0.001) { // for debugging
+		out_color.xyz *= 0.0;
+		out_color.y = 1.0;
+		return false;
 	}
 	if(is_zero(dis)) {
 		return false;
 	}
-	p = vpos + (dir * dis);
-	dir.z = p.z;
+	dir.xyz *= dis;
+	p.xyz = vpos.xyz + dir.xyz;
 	p.w = 1;
 	p = scene_ubo.s.camera.projection * p;
 	float t1 = 1.0 / p.w;
 	float t2 = 1.0 / spos.w;
 	dir.w = t1 - t2;
-	dir.xy = (p.xy * t1 * 0.5 + 0.5) - uv;
+	dir.xy = p.xy * t1 - spos.xy;
 	if(is_zero(dir.x) && is_zero(dir.y)) {
 		return false;
-	} else {
+	}
+	{
 		vec2 ad = abs(dir.xy);
 		float coef;
 		if(ad.x > ad.y) {
-			coef = deferred_ubo.s.pixel_x_step / ad.x;
+			coef = deferred_ubo.s.pixel_x_step * 2.0 / ad.x;
 		} else {
-			coef = deferred_ubo.s.pixel_y_step / ad.y;
+			coef = deferred_ubo.s.pixel_y_step * 2.0 / ad.y;
 		}
 		dir *= coef;
 	}
-	p.xy = uv;
+	p.xy = spos.xy;
 	p.z = vpos.z;
 	p.w = t2;
 
-	p += dir;
-
-	float prez = p.z * p.w;
+	float prez = (dir.z * 0.5 + p.z) / (dir.w * 0.5 + p.w);
 	for(float step_index = 0; step_index < steps; ++step_index) {
 		p += dir;
-		if(p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0) {
-			return false;
-		}
-		float curz = p.z * p.w;
-		float samz = texture(screen_space_depth, p.xy).x;
+		// if(p.x < -1.0 || p.x > 1.0 || p.y < -1.0 || p.y > 1.0) {
+		// 	return false;
+		// }
+		float curz = (dir.z * 0.5 + p.z) / (dir.w * 0.5 + p.w);
+		float samz = (scene_ubo.s.camera.view * vec4(texture(position, p.xy * 0.5 + 0.5).xyz, 1.0)).z;
 		if(curz < prez) {
 			t1 = prez;
 			t2 = curz;
@@ -152,8 +156,8 @@ bool find_hit(vec4 p, float dis, float steps, inout vec2 hituv) {
 			t1 = curz;
 		}
 		prez = curz;
-		if(t1 + 0.001 > samz && samz > t2) {
-			hituv = p.xy;
+		if(t1 + 1 > samz && samz > t2) {
+			hituv = p.xy * 0.5 + 0.5;
 			return true;
 		}
 	}
@@ -176,12 +180,12 @@ bool find_hit(vec4 p, float dis, float steps, inout vec2 hituv) {
 // }
 
 void calc_ssr() {
-	vec3 ray = reflect(-eye_nrm, nrm);
+	vec3 ray = reflect(-eye_nrm, nrm) * 100.0;
 	vec2 hituv = vec2(0.0);
-	if(find_hit(vec4(pos + ray * 100.0, 1.0), 100.0, 1000, hituv)) {
+	if(find_hit(vec4(pos + ray, 1.0), 100.0, 1000, hituv)) {
 		// if ( 0.0 > dot(texture(normal, hituv).xyz, ray)) {
 			out_color.xyz *= 0.5;
-			// out_color.xyz += 0.3 * texture(albedo, hituv).xyz;
+			out_color.xyz += 0.3 * texture(albedo, hituv).xyz;
 		// }
 	}
 	// {

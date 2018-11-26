@@ -21,7 +21,7 @@ impl Surface {
             vk::VkStructureType::VK_STRUCTURE_TYPE_IOS_SURFACE_CREATE_INFO_MVK;
         create_info.view = os_app.view;
         vulkan_check!(vk::vkCreateIOSSurfaceMVK(
-            instance.vk_data,
+            instance.get_data(),
             &create_info,
             null(),
             &mut vk_data,
@@ -41,7 +41,7 @@ impl Surface {
             vk::VkStructureType::VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
         create_info.view = os_app.view;
         vulkan_check!(vk::vkCreateMacOSSurfaceMVK(
-            instance.vk_data,
+            instance.get_data(),
             &create_info,
             null(),
             &mut vk_data,
@@ -61,7 +61,7 @@ impl Surface {
             vk::VkStructureType::VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
         create_info.window = unsafe { (*os_app.and_app).window };
         vulkan_check!(vk::vkCreateAndroidSurfaceKHR(
-            instance.vk_data,
+            instance.get_data(),
             &create_info,
             null(),
             &mut vk_data,
@@ -101,7 +101,7 @@ impl Surface {
         create_info.hinstance = os_app.instance;
         create_info.hwnd = os_app.window;
         vulkan_check!(vk::vkCreateWin32SurfaceKHR(
-            instance.vk_data,
+            instance.get_data(),
             &create_info,
             null(),
             &mut vk_data,

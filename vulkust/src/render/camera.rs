@@ -268,7 +268,7 @@ impl Base {
             location: math::Vector3::new(0.0, 0.0, 0.0),
             direction: identity,
             view: identity,
-            projection: identity,
+            projection: img_transform,
             view_projection: img_transform,
             frustum_planes: [
                 Plane::default(),
@@ -283,10 +283,7 @@ impl Base {
     }
 
     pub fn update_view_projection(&mut self) {
-        self.view_projection = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-        ) * self.projection
-            * self.view;
+        self.view_projection = self.projection * self.view;
     }
 
     pub fn update_location(&mut self) {
@@ -451,9 +448,7 @@ impl Camera for Base {
     fn update_uniform(&self, uniform: &mut Uniform) {
         uniform.position_far = self.location.extend(-self.far);
         uniform.near_reserved = math::Vector4::new(-self.near, 0.0, 0.0, 0.0);
-        uniform.projection = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-        ) * self.projection;
+        uniform.projection = self.projection;
         uniform.view = self.view;
         uniform.view_projection = self.view_projection;
     }
@@ -497,7 +492,9 @@ impl Perspective {
         self.tanx = (fovx * 0.5).tan();
         self.tany = self.tanx / self.base.aspect_ratio;
         self.fovy = self.tany.atan() * 2.0;
-        self.base.projection = math::perspective(
+        self.base.projection = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
+        ) * math::perspective(
             math::Rad(self.fovy),
             self.base.aspect_ratio,
             self.base.near,
@@ -745,7 +742,9 @@ impl Orthographic {
     pub fn new_with_base(mut base: Base, size: Real) -> Self {
         let size = size * 0.5;
         let w = base.aspect_ratio * size;
-        base.projection = math::ortho(-w, w, -size, size, base.near, base.far);
+        base.projection = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
+        ) * math::ortho(-w, w, -size, size, base.near, base.far);
         base.update_view_projection();
         let mut s = Orthographic { base, size };
         s.update_frustum_planes();
@@ -756,7 +755,9 @@ impl Orthographic {
         let mut base = Base::new_with_id(eng, id);
         let size = 0.5;
         let w = base.aspect_ratio * size;
-        base.projection = math::ortho(-w, w, -size, size, base.near, base.far);
+        base.projection = math::Matrix4::new(
+            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
+        ) * math::ortho(-w, w, -size, size, base.near, base.far);
         base.update_view_projection();
         let mut s = Orthographic { base, size };
         s.update_frustum_planes();
