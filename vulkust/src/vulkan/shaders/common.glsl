@@ -33,8 +33,7 @@ struct Scene {
 };
 
 struct Deferred {
-	float pixel_x_step;
-	float pixel_y_step;
+	vec4 pixel_step;
 };
 
 struct Model {

@@ -21,7 +21,7 @@ layout (set = 1, binding = 5) uniform usampler2D shadow_directional_flagbits;
 
 vec4 alb;
 vec3 pos;
-vec4 vpos;
+vec3 vpos;
 vec4 spos;
 vec4 tmpv;
 vec3 nrm;
@@ -31,7 +31,7 @@ mat3 tbn;
 vec3 eye_nrm;
 
 void calc_lights() {
-	vec2 start_uv = uv - (vec2(deferred_ubo.s.pixel_x_step, deferred_ubo.s.pixel_y_step) * float((BLUR_KERNEL_LENGTH - 1) >> 1));
+	vec2 start_uv = uv - (vec2(deferred_ubo.s.pixel_step.x, deferred_ubo.s.pixel_step.y) * float((BLUR_KERNEL_LENGTH - 1) >> 1));
 	for(uint light_index = 0; light_index < scene_ubo.s.directional_point_lights_count.x; ++light_index) {
 		float slope = -dot(nrm, scene_ubo.s.directional_lights[light_index].direction_strength.xyz);
 		if(slope < 0.005) {
@@ -41,8 +41,8 @@ void calc_lights() {
 		float brightness = 1.0;
 		vec2 shduv = start_uv;
 		uint light_flag = 1 << light_index;
-		for(uint si = 0; si < BLUR_KERNEL_LENGTH; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.s.pixel_x_step) {
-			for (uint sj = 0; sj < BLUR_KERNEL_LENGTH; ++sj, shduv.y += deferred_ubo.s.pixel_y_step) {
+		for(uint si = 0; si < BLUR_KERNEL_LENGTH; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.s.pixel_step.x) {
+			for (uint sj = 0; sj < BLUR_KERNEL_LENGTH; ++sj, shduv.y += deferred_ubo.s.pixel_step.y) {
 				if ((texture(shadow_directional_flagbits, shduv).x & light_flag) == light_flag) {
 					brightness -= 1.0 / float(BLUR_KERNEL_LENGTH * BLUR_KERNEL_LENGTH);
 				}
@@ -87,25 +87,26 @@ bool is_zero(float v) {
 	return v < SMALL_EPSILON && v > -SMALL_EPSILON;
 }
 
-bool find_hit(vec4 p, float dis, float steps, inout vec2 hituv) {
-	p = scene_ubo.s.camera.view * vec4(p.xyz, 1.0);
-	vec4 dir = p - vpos;
+bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
+	p = (scene_ubo.s.camera.view * vec4(p, 1.0)).xyz;
+	vec3 dir = p - vpos;
 	{
-		float l = length(dir.xyz);
+		float l = length(dir);
 		if(is_zero(l)) {
 			return false;
 		}
-		dir.xyz /= l;
+		dir /= l;
 	}
 	if(is_zero(dir.z)) {
 		return false;
 	}
-	p.xyz = dir.xyz * dis;
-	p.w = p.z + vpos.z;
-	if(p.w < scene_ubo.s.camera.position_far.w) {
+	vec3 end = dir * dis + vpos;
+	if(end.z < scene_ubo.s.camera.position_far.w) {
 		dis = (scene_ubo.s.camera.position_far.w - vpos.z) / dir.z;
-	} else if (p.w > scene_ubo.s.camera.near_reserved.x) {
+		end = dir * dis + vpos;
+	} else if (end.z > scene_ubo.s.camera.near_reserved.x) {
 		dis = (scene_ubo.s.camera.near_reserved.x - vpos.z) / dir.z;
+		end = dir * dis + vpos;
 	}
 	if(dis < 0.001) { // for debugging
 		out_color.xyz *= 0.0;
@@ -115,53 +116,87 @@ bool find_hit(vec4 p, float dis, float steps, inout vec2 hituv) {
 	if(is_zero(dis)) {
 		return false;
 	}
-	dir.xyz *= dis;
-	p.xyz = vpos.xyz + dir.xyz;
-	p.w = 1;
-	p = scene_ubo.s.camera.projection * p;
-	float t1 = 1.0 / p.w;
-	float t2 = 1.0 / spos.w;
-	dir.w = t1 - t2;
-	dir.xy = p.xy * t1 - spos.xy;
-	if(is_zero(dir.x) && is_zero(dir.y)) {
+
+	const vec4 h0 = scene_ubo.s.camera.projection * vec4(vpos, 1.0);
+	const vec4 h1 = scene_ubo.s.camera.projection * vec4(end, 1.0);
+
+	const float k0 = 1.0 / h0.w;
+	const float k1 = 1.0 / h1.w;
+
+	const vec3 q0 = vpos * k0;
+	const vec3 q1 = end * k1; 
+
+    const vec2 p0 = h0.xy * k0;
+    const vec2 p1 = h1.xy * k1;
+
+	vec4 dpqk = vec4((p1 - p0) * 0.5, q1.z - q0.z, k1 - k0);
+	if(is_zero(dpqk.x) && is_zero(dpqk.y)) {
 		return false;
 	}
 	{
-		vec2 ad = abs(dir.xy);
+		vec2 ad = abs(dpqk.xy);
 		float coef;
 		if(ad.x > ad.y) {
-			coef = deferred_ubo.s.pixel_x_step * 2.0 / ad.x;
+			coef = deferred_ubo.s.pixel_step.x / ad.x;
 		} else {
-			coef = deferred_ubo.s.pixel_y_step * 2.0 / ad.y;
+			coef = deferred_ubo.s.pixel_step.y / ad.y;
 		}
-		dir *= coef;
+		dpqk *= coef;
 	}
-	p.xy = spos.xy;
-	p.z = vpos.z;
-	p.w = t2;
+	vec4 pqk = vec4(uv, q0.z, k0);
 
-	float prez = (dir.z * 0.5 + p.z) / (dir.w * 0.5 + p.w);
-	for(float step_index = 0; step_index < steps; ++step_index) {
-		p += dir;
-		// if(p.x < -1.0 || p.x > 1.0 || p.y < -1.0 || p.y > 1.0) {
-		// 	return false;
-		// }
-		float curz = (dir.z * 0.5 + p.z) / (dir.w * 0.5 + p.w);
-		float samz = (scene_ubo.s.camera.view * vec4(texture(position, p.xy * 0.5 + 0.5).xyz, 1.0)).z;
-		if(curz < prez) {
-			t1 = prez;
-			t2 = curz;
-		} else {
-			t2 = prez;
-			t1 = curz;
+	{
+		vec2 enduv = pqk.xy + (dpqk.xy * steps);
+		if (enduv.x < 0.0) {
+			if ( is_zero(dpqk.x)) {
+				return false;
+			}
+			steps = (0.0 - pqk.x) / dpqk.x;
+		} else if (enduv.x > 1.0) {
+			if ( is_zero(dpqk.x)) {
+				return false;
+			}
+			steps = (1.0 - pqk.x) / dpqk.x;
 		}
-		prez = curz;
-		if(t1 + 1 > samz && samz > t2) {
-			hituv = p.xy * 0.5 + 0.5;
-			return true;
+		enduv = pqk.xy + (dpqk.xy * steps);
+		if (enduv.y < 0.0) {
+			if ( is_zero(dpqk.y)) {
+				return false;
+			}
+			steps = (0.0 - pqk.y) / dpqk.y;
+		} else if (enduv.y > 1.0) {
+			if ( is_zero(dpqk.y)) {
+				return false;
+			}
+			steps = (1.0 - pqk.y) / dpqk.y;
 		}
 	}
-	return false;
+
+	float prev_z_max_estimate = vpos.z;
+    float ray_z_max = prev_z_max_estimate, ray_z_min = prev_z_max_estimate;
+    float scene_z_max = ray_z_max + 1e4;
+	const float z_thickness = 1.0;
+
+	for(
+		float step_index = 0;
+		(step_index < steps) &&
+			((ray_z_max < (scene_z_max - z_thickness)) || (ray_z_min > scene_z_max));
+		++step_index
+	) {
+		pqk += dpqk;
+        ray_z_min = prev_z_max_estimate;
+        ray_z_max = (dpqk.z * 0.5 + pqk.z) / (dpqk.w * 0.5 + pqk.w);
+		prev_z_max_estimate = ray_z_max;
+        if (ray_z_min > ray_z_max) {
+			float tmp = ray_z_min;
+			ray_z_min = ray_z_max;
+			ray_z_max = tmp;
+		}
+		// todo it can be replaced with something much better
+		scene_z_max = (scene_ubo.s.camera.view * vec4(texture(position, pqk.xy).xyz, 1.0)).z;
+	}
+	hituv = pqk.xy;
+	return (ray_z_max >= scene_z_max - z_thickness) && (ray_z_min <= scene_z_max);
 }
 
 // float calc_ssao() {
@@ -182,7 +217,7 @@ bool find_hit(vec4 p, float dis, float steps, inout vec2 hituv) {
 void calc_ssr() {
 	vec3 ray = reflect(-eye_nrm, nrm) * 100.0;
 	vec2 hituv = vec2(0.0);
-	if(find_hit(vec4(pos + ray, 1.0), 100.0, 1000, hituv)) {
+	if(find_hit(pos + ray, 100.0, 500, hituv)) {
 		// if ( 0.0 > dot(texture(normal, hituv).xyz, ray)) {
 			out_color.xyz *= 0.5;
 			out_color.xyz += 0.3 * texture(albedo, hituv).xyz;
@@ -212,7 +247,7 @@ void main() {
 	eye_nrm = normalize(scene_ubo.s.camera.position_far.xyz - pos);
 	spos = scene_ubo.s.camera.view_projection * vec4(pos, 1.0);
 	spos.xyz /= spos.w;
-	vpos = scene_ubo.s.camera.view * vec4(pos, 1.0);
+	vpos = (scene_ubo.s.camera.view * vec4(pos, 1.0)).xyz;
 
 	out_color.xyz = alb.xyz; // todo it must come along scene
 	// calc_lights();

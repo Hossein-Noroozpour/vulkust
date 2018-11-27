@@ -1,3 +1,4 @@
+use super::super::core::types::Real;
 use super::buffer::DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::config::Configurations;
@@ -9,18 +10,21 @@ use super::g_buffer_filler::GBufferFiller;
 use std::mem::size_of;
 use std::sync::Arc;
 
+use math;
+
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Uniform {
-    pixel_x_step: f32,
-    pixel_y_step: f32,
+    pixel_step: math::Vector4<Real>,
 }
 
 impl Uniform {
-    pub fn new(window_width: f32, window_height: f32) -> Self {
+    pub fn new(window_width: Real, window_height: Real) -> Self {
         Uniform {
-            pixel_x_step: 1f32 / window_width,
-            pixel_y_step: 1f32 / window_height,
+            pixel_step: math::Vector4::new(
+                1f32 / window_width,
+                1f32 / window_height,
+                0.0, 0.0),
         }
     }
 }
