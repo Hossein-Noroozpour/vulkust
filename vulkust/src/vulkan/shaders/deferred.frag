@@ -126,49 +126,50 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 	const vec3 q0 = vpos * k0;
 	const vec3 q1 = end * k1; 
 
-    const vec2 p0 = h0.xy * k0;
-    const vec2 p1 = h1.xy * k1;
+    const vec2 p0 = uv; // (h0.xy * (k0 * 0.5)) + 0.5;
+    const vec2 p1 = (h1.xy * (k1 * 0.5)) + 0.5;
 
-	vec4 dpqk = vec4((p1 - p0) * 0.5, q1.z - q0.z, k1 - k0);
+	vec4 dpqk = vec4(p1 - p0, q1.z - q0.z, k1 - k0);
 	if(is_zero(dpqk.x) && is_zero(dpqk.y)) {
 		return false;
 	}
+	bool permute;
 	{
 		vec2 ad = abs(dpqk.xy);
 		float coef;
 		if(ad.x > ad.y) {
+			permute = false;
 			coef = deferred_ubo.s.pixel_step.x / ad.x;
 		} else {
+			permute = true;
+			dpqk.xy = dpqk.yx;
 			coef = deferred_ubo.s.pixel_step.y / ad.y;
+		}
+		if ( is_zero(dpqk.x)) {
+			return false;
 		}
 		dpqk *= coef;
 	}
-	vec4 pqk = vec4(uv, q0.z, k0);
-
+	vec4 pqk = vec4(permute? p0.yx: p0, q0.z, k0);
+	int debug1 = 0;
 	{
-		vec2 enduv = pqk.xy + (dpqk.xy * steps);
-		if (enduv.x < 0.0) {
-			if ( is_zero(dpqk.x)) {
-				return false;
+		float maxx = 1.0, minx = 0.0;
+		if(dpqk.x < 0.0) {
+			if(p1.x > minx) {
+				minx = p1.x;
 			}
-			steps = (0.0 - pqk.x) / dpqk.x;
-		} else if (enduv.x > 1.0) {
-			if ( is_zero(dpqk.x)) {
-				return false;
+		} else {
+			if(p1.x < maxx) {
+				maxx = p1.x;
 			}
-			steps = (1.0 - pqk.x) / dpqk.x;
 		}
-		enduv = pqk.xy + (dpqk.xy * steps);
-		if (enduv.y < 0.0) {
-			if ( is_zero(dpqk.y)) {
-				return false;
-			}
-			steps = (0.0 - pqk.y) / dpqk.y;
-		} else if (enduv.y > 1.0) {
-			if ( is_zero(dpqk.y)) {
-				return false;
-			}
-			steps = (1.0 - pqk.y) / dpqk.y;
+		float endx = pqk.x + (dpqk.x * steps);
+		if (endx < minx) {
+			debug1 = 1;
+			steps = (pqk.x - minx) / dpqk.x;
+		} else if (endx > maxx) {
+			debug1 = 2;
+			steps = (maxx - pqk.x) / dpqk.x;
 		}
 	}
 
@@ -176,6 +177,13 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
     float ray_z_max = prev_z_max_estimate, ray_z_min = prev_z_max_estimate;
     float scene_z_max = ray_z_max + 1e4;
 	const float z_thickness = 1.0;
+
+	if(steps < 0.0) {
+		out_color.xyz *= 0.0;
+		if(debug1 == 1) out_color.y = 1.0;
+		if(debug1 == 2) out_color.z = 1.0;
+		return false;
+	}
 
 	for(
 		float step_index = 0;
@@ -193,9 +201,9 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 			ray_z_max = tmp;
 		}
 		// todo it can be replaced with something much better
-		scene_z_max = (scene_ubo.s.camera.view * vec4(texture(position, pqk.xy).xyz, 1.0)).z;
+		scene_z_max = (scene_ubo.s.camera.view * vec4(texture(position, permute? pqk.yx: pqk.xy).xyz, 1.0)).z;
 	}
-	hituv = pqk.xy;
+	hituv = permute? pqk.yx: pqk.xy;
 	return (ray_z_max >= scene_z_max - z_thickness) && (ray_z_min <= scene_z_max);
 }
 
@@ -215,7 +223,7 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 // }
 
 void calc_ssr() {
-	vec3 ray = reflect(-eye_nrm, nrm) * 100.0;
+	vec3 ray = reflect(-eye_nrm, nrm) * 1.0;
 	vec2 hituv = vec2(0.0);
 	if(find_hit(pos + ray, 100.0, 500, hituv)) {
 		// if ( 0.0 > dot(texture(normal, hituv).xyz, ray)) {
