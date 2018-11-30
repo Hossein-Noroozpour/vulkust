@@ -92,6 +92,11 @@ bool is_equal(vec2 a, vec2 b) {
 	return is_zero(a.x) && is_zero(a.y);
 }
 
+bool is_equal(vec4 a, vec4 b) {
+	a -= b;
+	return is_zero(a.x) && is_zero(a.y) && is_zero(a.z) && is_zero(a.w);
+}
+
 bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 	p = (scene_ubo.s.camera.view * vec4(p, 1.0)).xyz;
 	vec3 dir = normalize(p - vpos);
@@ -115,10 +120,10 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 	const vec3 end = tmpv3;
 
 	const mat4 proj = mat4(
-		0.5, 0.0, 0.0, 0.0,
-		0.0, 0.5, 0.0, 0.0,
+		500, 0.0, 0.0, 0.0,
+		0.0, 350, 0.0, 0.0,
 		0.0, 0.0, 1.0, 0.0,
-		0.5, 0.5, 0.0, 1.0
+		500, 350, 0.0, 1.0
 		) * scene_ubo.s.camera.projection;
 
 	const vec4 h0 = proj * vec4(vpos, 1.0);
@@ -128,32 +133,33 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 	const float k1 = 1.0 / h1.w;
 
 	const vec3 q0 = vpos * k0;
-	const vec3 q1 = end * k1; 
+	const vec3 q1 = end * k1;
 
-    const vec2 p0 = h0.xy * k0; // uv; // (h0.xy * (k0 * 0.5)) + 0.5;
-    const vec2 p1 = h1.xy * k1; // ((h1.xy * 0.5) + 0.5) * k1;
+    const vec2 p0 = h0.xy * k0;
+    const vec2 p1 = h1.xy * k1;
 
-	vec4 dpqk = vec4(p1 - p0, q1.z - q0.z, k1 - k0);
-	if(is_zero(dpqk.x) && is_zero(dpqk.y)) {
+	vec4 tmpv4 = vec4(p1 - p0, q1.z - q0.z, k1 - k0);
+	if(is_zero(tmpv4.x) && is_zero(tmpv4.y)) {
 		return false;
 	}
+	float endx = 1000;
 	bool permute = false;
 	{
-		vec2 ad = abs(dpqk.xy);
+		vec2 ad = abs(tmpv4.xy);
 		float coef;
 		if(ad.x > ad.y) {
-			coef = deferred_ubo.s.pixel_step.x / ad.x;
+			coef = 1.0 / ad.x;
 		} else {
+			endx = 700;
 			permute = true;
-			dpqk.xy = dpqk.yx;
-			coef = deferred_ubo.s.pixel_step.y / ad.y;
+			tmpv4.xy = tmpv4.yx;
+			coef = 1.0 / ad.y;
 		}
-		if ( is_zero(dpqk.x)) {
-			return false;
-		}
-		dpqk *= coef;
+		tmpv4 *= coef;
 	}
+	const vec4 dpqk = tmpv4;
 	vec4 pqk = vec4(permute? p0.yx: p0, q0.z, k0);
+	pqk += dpqk * 0.2;
 	// int debug1 = 0;
 	// {
 	// 	float maxx = 1.0, minx = 0.0;
@@ -176,10 +182,10 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 	// 	}
 	// }
 
-	float prev_z_max_estimate = abs(vpos.z);
+	float prev_z_max_estimate = -abs(pqk.z / pqk.w);
     float ray_z_max = prev_z_max_estimate, ray_z_min = prev_z_max_estimate;
     float scene_z_max = ray_z_max + 10000;
-	const float z_thickness = 1.0;
+	const float z_thickness = 0.1;
 
 	// if(steps < 10.0) {
 	// 	out_color.xyz *= 0.0;
@@ -188,16 +194,16 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 	// 	return false;
 	// }
 
-	pqk += dpqk * 0.2;
 	float step_index = 0;
 	for(;
 		(step_index < steps) &&
-			(pqk.x < 1.0 && pqk.x > 0.0) && // debug
+			(pqk.x < endx && pqk.x > 0.0) && // debug
+			!is_zero(scene_z_max) &&
 			((ray_z_max < (scene_z_max - z_thickness)) || (ray_z_min > scene_z_max));
 		++step_index, pqk += dpqk
 	) {
         ray_z_min = prev_z_max_estimate;
-        ray_z_max = abs((dpqk.z * 0.5 + pqk.z) / (dpqk.w * 0.5 + pqk.w));
+        ray_z_max = -abs((dpqk.z * 0.5 + pqk.z) / (dpqk.w * 0.5 + pqk.w));
 		prev_z_max_estimate = ray_z_max;
         if (ray_z_min > ray_z_max) {
 			float tmp = ray_z_min;
@@ -205,10 +211,11 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 			ray_z_max = tmp;
 		}
 		// todo it can be replaced with something much better
-		scene_z_max = abs((scene_ubo.s.camera.view * vec4(texture(position, permute? pqk.yx: pqk.xy).xyz, 1.0)).z);
+		hituv = (permute? pqk.yx: pqk.xy) *  deferred_ubo.s.pixel_step.xy;
+		scene_z_max = -abs((scene_ubo.s.camera.view * vec4(texture(position, hituv).xyz, 1.0)).z);
+
 	}
-	hituv = permute? pqk.yx: pqk.xy;
-	if (step_index < 10 && (ray_z_max >= scene_z_max - z_thickness) && (ray_z_min <= scene_z_max)) {
+	if (step_index < 2 && (ray_z_max >= scene_z_max - z_thickness) && (ray_z_min <= scene_z_max)) {
 		out_color.xyz *= 0.0;
 		if(is_equal(uv, permute? pqk.yx: pqk.xy))
 			out_color.y = 1.0;
@@ -216,7 +223,10 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 			out_color.x = 1.0;
 		return false;
 	}
-	return (ray_z_max >= scene_z_max - z_thickness) && (ray_z_min <= scene_z_max);
+	if((step_index < steps) &&
+			(pqk.x < endx && pqk.x > 0.0) && // debug
+			!is_zero(scene_z_max)) return false;
+	return (ray_z_max >= scene_z_max - z_thickness) && (scene_z_max >= ray_z_min);
 }
 
 // float calc_ssao() {
@@ -237,10 +247,10 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 void calc_ssr() {
 	vec3 ray = reflect(-eye_nrm, nrm) * 10.0;
 	vec2 hituv = vec2(0.0);
-	if(find_hit(pos + ray, 100.0, 500, hituv)) {
+	if(find_hit(pos + ray, 1000.0, 1000, hituv)) {
 		// if ( 0.0 > dot(texture(normal, hituv).xyz, ray)) {
 			out_color.xyz *= 0.5;
-			out_color.xyz += 0.5 * texture(albedo, hituv).xyz;
+			out_color.xyz += 0.3 * texture(albedo, hituv).xyz;
 		// }
 	}
 	// {
