@@ -1,12 +1,12 @@
 use super::super::core::types::Real;
-use super::buffer::DynamicBuffer;
+use super::buffer::Dynamic as DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::config::Configurations;
 use super::descriptor::Set as DescriptorSet;
+use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
 use super::pipeline::{Pipeline, PipelineType};
 use super::shadower::Shadower;
-use super::g_buffer_filler::GBufferFiller;
 use std::mem::size_of;
 use std::sync::Arc;
 
@@ -21,10 +21,7 @@ struct Uniform {
 impl Uniform {
     pub fn new(window_width: Real, window_height: Real) -> Self {
         Uniform {
-            pixel_step: math::Vector4::new(
-                1f32 / window_width,
-                1f32 / window_height,
-                0.0, 0.0),
+            pixel_step: math::Vector4::new(1f32 / window_width, 1f32 / window_height, 0.0, 0.0),
         }
     }
 }

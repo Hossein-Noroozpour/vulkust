@@ -1,5 +1,4 @@
 use super::super::render::config::Configurations;
-use super::super::render::image::Format as ImageFormat;
 use super::super::render::sampler::Filter as SamplerFilter;
 use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
@@ -21,9 +20,6 @@ use super::sync::Semaphore;
 use super::vulkan as vk;
 use std::ptr::null_mut;
 use std::sync::{Arc, Mutex, RwLock};
-
-const GBUFF_COLOR_FMT: ImageFormat = ImageFormat::RgbaFloat;
-const GBUFF_DEPTH_FMT: ImageFormat = ImageFormat::DepthFloat;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {

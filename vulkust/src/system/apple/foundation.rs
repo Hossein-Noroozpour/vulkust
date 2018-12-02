@@ -34,7 +34,7 @@ impl NSDictionaryBuilder {
         NSDictionary {
             id: unsafe {
                 msg_send![
-                    get_class("NSDictionary"), 
+                    get_class("NSDictionary"),
                     dictionaryWithObjects:values_ptr
                     forKeys:keys_ptr
                     count:count

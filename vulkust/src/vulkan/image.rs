@@ -3,7 +3,7 @@ use super::super::render::image::{AttachmentType, Format, Layout};
 use super::buffer::Manager as BufferManager;
 use super::command::Buffer as CmdBuffer;
 use super::device::Logical as LogicalDevice;
-use super::memory::{Location as MemeoryLocation, Manager as MemeoryManager, Memory};
+use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
 use super::vulkan as vk;
 
 use std::default::Default;
@@ -21,14 +21,14 @@ pub(super) fn convert_format(f: Format) -> vk::VkFormat {
     }
 }
 
-pub(super) fn convert_to_format(f: vk::VkFormat) -> Format {
-    match f {
-        vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT => return Format::RgbaFloat,
-        vk::VkFormat::VK_FORMAT_D32_SFLOAT => return Format::DepthFloat,
-        vk::VkFormat::VK_FORMAT_R32_SFLOAT => return Format::Float,
-        _ => vxunexpected!(),
-    }
-}
+// pub(super) fn convert_to_format(f: vk::VkFormat) -> Format {
+//     match f {
+//         vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT => return Format::RgbaFloat,
+//         vk::VkFormat::VK_FORMAT_D32_SFLOAT => return Format::DepthFloat,
+//         vk::VkFormat::VK_FORMAT_R32_SFLOAT => return Format::Float,
+//         _ => vxunexpected!(),
+//     }
+// }
 
 pub(super) fn convert_layout(f: &Layout) -> vk::VkImageLayout {
     match f {
@@ -60,7 +60,7 @@ pub(crate) struct Image {
 impl Image {
     pub(crate) fn new_with_info(
         info: &vk::VkImageCreateInfo,
-        memory_mgr: &Arc<RwLock<MemeoryManager>>,
+        memory_mgr: &Arc<RwLock<MemoryManager>>,
     ) -> Self {
         let logical_device = vxresult!(memory_mgr.read()).get_device().clone();
         let mut vk_data = 0 as vk::VkImage;
@@ -74,7 +74,7 @@ impl Image {
         unsafe {
             vk::vkGetImageMemoryRequirements(logical_device.get_data(), vk_data, &mut mem_reqs);
         }
-        let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemeoryLocation::GPU);
+        let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemoryLocation::GPU);
         {
             let memory_r = vxresult!(memory.read());
             let root_memory = vxresult!(memory_r.get_root().read());
@@ -222,9 +222,9 @@ impl Image {
         return (self.width, self.height);
     }
 
-    pub(crate) fn get_format(&self) -> Format {
-        return convert_to_format(self.format);
-    }
+    // pub(crate) fn get_format(&self) -> Format {
+    //     return convert_to_format(self.format);
+    // }
 
     pub(crate) fn get_data(&self) -> vk::VkImage {
         return self.vk_data;
@@ -330,7 +330,7 @@ impl View {
 
     pub(crate) fn new_surface_attachment(
         logical_device: Arc<LogicalDevice>,
-        memory_mgr: &Arc<RwLock<MemeoryManager>>,
+        memory_mgr: &Arc<RwLock<MemoryManager>>,
         format: Format,
         attachment_type: AttachmentType,
     ) -> Self {
@@ -345,15 +345,14 @@ impl View {
     }
 
     pub(crate) fn new_attachment(
-        memory_mgr: &Arc<RwLock<MemeoryManager>>,
+        memory_mgr: &Arc<RwLock<MemoryManager>>,
         format: Format,
         attachment_type: AttachmentType,
         width: u32,
         height: u32,
     ) -> Self {
         let aspect_mask = match attachment_type {
-            AttachmentType::ColorGBuffer
-            | AttachmentType::ColorDisplay => {
+            AttachmentType::ColorGBuffer | AttachmentType::ColorDisplay => {
                 vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
             }
             AttachmentType::ShadowAccumulator => {

@@ -172,8 +172,10 @@ impl Manager {
                     | vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32
             }
         };
-        return self.logical_device.get_physical().get_memory_type_index(mem_req.memoryTypeBits, l);
-        
+        return self
+            .logical_device
+            .get_physical()
+            .get_memory_type_index(mem_req.memoryTypeBits, l);
     }
 
     pub(crate) fn allocate(

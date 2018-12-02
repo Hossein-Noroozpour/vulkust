@@ -32,6 +32,9 @@ fn main() {
     if !(in_macos || in_android || in_ios || in_linux || in_windows) {
         panic!("Unsupported platform!");
     }
+    #[cfg(feature = "directx12")]
+    println!("cargo:rustc-cfg=directx12_api");
+    #[cfg(not(feature = "directx12"))]
     println!("cargo:rustc-cfg=vulkan_api");
     if in_macos || in_ios {
         println!("cargo:rustc-cfg=apple_os");

@@ -2,7 +2,7 @@ use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::super::physics::collider::{read as read_collider, Collider, Ghost as GhostCollider};
-use super::buffer::DynamicBuffer;
+use super::buffer::Dynamic as DynamicBuffer;
 use super::camera::Camera;
 use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;

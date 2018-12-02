@@ -296,8 +296,7 @@ impl Pipeline {
         let mut multisample_state = vk::VkPipelineMultisampleStateCreateInfo::default();
         multisample_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisample_state.rasterizationSamples =
-                vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+        multisample_state.rasterizationSamples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 
         let mut vertex_input_binding = vk::VkVertexInputBindingDescription::default();
         vertex_input_binding.stride = 48; // bytes of vertex

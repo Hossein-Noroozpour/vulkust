@@ -181,13 +181,13 @@ unsafe impl Sync for RootBuffer {}
 
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct StaticBuffer {
+pub(crate) struct Static {
     buffer: Arc<RwLock<Buffer>>,
 }
 
-impl StaticBuffer {
+impl Static {
     pub(crate) fn new(buffer: Arc<RwLock<Buffer>>) -> Self {
-        StaticBuffer { buffer }
+        Self { buffer }
     }
 
     pub(crate) fn get_buffer(&self) -> &Arc<RwLock<Buffer>> {
@@ -197,14 +197,14 @@ impl StaticBuffer {
 
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct DynamicBuffer {
+pub(crate) struct Dynamic {
     buffers: Vec<(Arc<RwLock<Buffer>>, isize)>,
     actual_size: isize,
 }
 
-impl DynamicBuffer {
+impl Dynamic {
     pub(crate) fn new(buffers: Vec<(Arc<RwLock<Buffer>>, isize)>, actual_size: isize) -> Self {
-        DynamicBuffer {
+        Self {
             buffers,
             actual_size,
         }
@@ -324,7 +324,7 @@ impl Manager {
         &mut self,
         data: *const c_void,
         data_len: usize,
-    ) -> StaticBuffer {
+    ) -> Static {
         let buffer = vxresult!(self.static_buffer.write()).allocate(data_len as isize);
         let upbuff = self.create_staging_buffer_with_ptr(data, data_len as usize);
         let upbuffer = vxresult!(upbuff.read());
@@ -334,10 +334,10 @@ impl Manager {
             vxresult!(buffer.read()).get_allocated_memory().get_offset() as vk::VkDeviceSize;
         range.size = data_len as vk::VkDeviceSize;
         self.copy_ranges.push(range);
-        StaticBuffer::new(buffer)
+        Static::new(buffer)
     }
 
-    pub(crate) fn create_static_buffer_with_vec<T>(&mut self, data: &[T]) -> StaticBuffer {
+    pub(crate) fn create_static_buffer_with_vec<T>(&mut self, data: &[T]) -> Static {
         let data_ptr = unsafe { transmute(data.as_ptr()) };
         let data_len = data.len() * size_of::<T>();
         self.create_static_buffer_with_ptr(data_ptr, data_len)
@@ -391,7 +391,7 @@ impl Manager {
         self.copy_to_image_ranges.push((copy_info, image.clone()));
     }
 
-    pub(crate) fn create_dynamic_buffer(&mut self, actual_size: isize) -> DynamicBuffer {
+    pub(crate) fn create_dynamic_buffer(&mut self, actual_size: isize) -> Dynamic {
         let mut buffers = Vec::new();
         for dynamic_buffer in &self.dynamic_buffers {
             let buffer = vxresult!(dynamic_buffer.write()).allocate(actual_size);
@@ -404,7 +404,7 @@ impl Manager {
             buffers.push((buffer, ptr));
         }
         buffers.shrink_to_fit();
-        DynamicBuffer::new(buffers, actual_size)
+        Dynamic::new(buffers, actual_size)
     }
 
     pub(crate) fn update(&mut self, cmd: &mut CmdBuffer, frame_number: usize) {

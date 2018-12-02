@@ -2,10 +2,10 @@ use super::command::Buffer as CmdBuffer;
 use super::config::Configurations;
 use super::framebuffer::Framebuffer;
 use super::gapi::GraphicApiEngine;
-use super::texture::{Texture, Manager as TextureManager};
 use super::image::{AttachmentType, Format, View as ImageView};
 use super::pipeline::{Pipeline, PipelineType};
 use super::render_pass::RenderPass;
+use super::texture::{Manager as TextureManager, Texture};
 use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -17,7 +17,11 @@ pub struct GBufferFiller {
 }
 
 impl GBufferFiller {
-    pub(super) fn new(eng: &GraphicApiEngine, texmgr: &mut TextureManager, config: &Configurations) -> Self {
+    pub(super) fn new(
+        eng: &GraphicApiEngine,
+        texmgr: &mut TextureManager,
+        config: &Configurations,
+    ) -> Self {
         let dev = eng.get_device();
         let memmgr = eng.get_memory_manager();
         let buffers = vec![

@@ -15,7 +15,7 @@ use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
 
-pub mod data_gx3d;
+// pub mod data_gx3d;
 
 /// In this example you have to place your data.gx3d file in data directory of your project (in
 /// android assets/data/ and in ios Resources/data/). Then if data.gx3d was presented render engine

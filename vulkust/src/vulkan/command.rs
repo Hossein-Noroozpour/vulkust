@@ -1,5 +1,5 @@
 use super::super::core::allocate::Object as CoreAllocObj;
-use super::buffer::{Buffer as BufBuffer, StaticBuffer};
+use super::buffer::{Buffer as BufBuffer, Static as StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
 use super::device::Logical as LogicalDevice;
 use super::framebuffer::Framebuffer;
@@ -496,8 +496,9 @@ impl Pool {
         vk_cmd_pool_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         match pool_type {
             Type::Graphic => {
-                vk_cmd_pool_info.queueFamilyIndex =
-                    logical_device.get_physical().get_graphics_queue_node_index();
+                vk_cmd_pool_info.queueFamilyIndex = logical_device
+                    .get_physical()
+                    .get_graphics_queue_node_index();
             }
             Type::Compute => {
                 vk_cmd_pool_info.queueFamilyIndex =

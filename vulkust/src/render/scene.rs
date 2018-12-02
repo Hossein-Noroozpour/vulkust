@@ -3,7 +3,7 @@ use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, TypeId as CoreTypeId};
 use super::super::system::file::File;
-use super::buffer::DynamicBuffer;
+use super::buffer::Dynamic as DynamicBuffer;
 use super::camera::{Camera, Uniform as CameraUniform};
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::deferred::Deferred;
@@ -877,14 +877,9 @@ impl Scene for Game {
         shadower: &mut Shadower,
         deferred: &Deferred,
     ) -> Arc<Semaphore> {
-        return self.base.submit(
-            geng,
-            sem,
-            cmd_pool,
-            g_buffer_filler,
-            shadower,
-            deferred,
-        );
+        return self
+            .base
+            .submit(geng, sem, cmd_pool, g_buffer_filler, shadower, deferred);
     }
 }
 
@@ -1011,14 +1006,9 @@ impl Scene for Ui {
         shadower: &mut Shadower,
         deferred: &Deferred,
     ) -> Arc<Semaphore> {
-        return self.base.submit(
-            geng,
-            sem,
-            cmd_pool,
-            g_buffer_filler,
-            shadower,
-            deferred,
-        );
+        return self
+            .base
+            .submit(geng, sem, cmd_pool, g_buffer_filler, shadower, deferred);
     }
 }
 

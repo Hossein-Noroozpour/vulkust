@@ -1,4 +1,6 @@
+#[cfg(directx12_api)]
+pub(crate) use super::super::d3d12::descriptor::*;
 #[cfg(metal)]
-pub use super::super::metal::descriptor::*;
+pub(crate) use super::super::metal::descriptor::*;
 #[cfg(vulkan_api)]
-pub use super::super::vulkan::descriptor::*;
+pub(crate) use super::super::vulkan::descriptor::*;

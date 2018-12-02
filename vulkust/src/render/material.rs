@@ -1,6 +1,6 @@
 use super::super::core::gx3d::Gx3DReader;
 use super::super::core::types::{Id, TypeId};
-use super::buffer::DynamicBuffer;
+use super::buffer::Dynamic as DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;

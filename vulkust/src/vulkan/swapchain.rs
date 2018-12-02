@@ -64,7 +64,9 @@ impl Swapchain {
             image_usage |= vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT as u32;
         }
         let queue_family_indices = [
-            logical_device.get_physical().get_graphics_queue_node_index(),
+            logical_device
+                .get_physical()
+                .get_graphics_queue_node_index(),
             logical_device.get_physical().get_present_queue_node_index(),
         ];
         let mut swapchain_create_info = vk::VkSwapchainCreateInfoKHR::default();

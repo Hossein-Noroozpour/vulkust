@@ -1,11 +1,11 @@
 use super::super::core::string::{cstrings_to_ptrs, strings_to_cstrings};
 use super::super::render::config::Configurations;
-use super::vulkan as vk;
 use super::surface::Surface;
+use super::vulkan as vk;
 use std::collections::HashSet;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
-use std::cmp::max;
+// use std::cmp::max;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(super) struct Physical {
@@ -207,30 +207,30 @@ impl Physical {
         queue_props
     }
 
-    pub(super) fn get_queue_family_properties(&self) -> Vec<vk::VkQueueFamilyProperties> {
-        Self::get_device_queue_family_properties(self.vk_data)
-    }
+    // pub(super) fn get_queue_family_properties(&self) -> Vec<vk::VkQueueFamilyProperties> {
+    //     Self::get_device_queue_family_properties(self.vk_data)
+    // }
 
-    pub(super) fn get_supported_depth_format(&self) -> vk::VkFormat {
-        let depth_formats = vec![
-            vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT,
-            vk::VkFormat::VK_FORMAT_D24_UNORM_S8_UINT,
-            vk::VkFormat::VK_FORMAT_D16_UNORM_S8_UINT,
-        ];
-        for format in depth_formats {
-            let mut format_props = vk::VkFormatProperties::default();
-            unsafe {
-                vk::vkGetPhysicalDeviceFormatProperties(self.vk_data, format, &mut format_props);
-            }
-            if format_props.optimalTilingFeatures as u32
-                & vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
-                != 0
-            {
-                return format;
-            }
-        }
-        vxlogf!("No depth format found!");
-    }
+    // pub(super) fn get_supported_depth_format(&self) -> vk::VkFormat {
+    //     let depth_formats = vec![
+    //         vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT,
+    //         vk::VkFormat::VK_FORMAT_D24_UNORM_S8_UINT,
+    //         vk::VkFormat::VK_FORMAT_D16_UNORM_S8_UINT,
+    //     ];
+    //     for format in depth_formats {
+    //         let mut format_props = vk::VkFormatProperties::default();
+    //         unsafe {
+    //             vk::vkGetPhysicalDeviceFormatProperties(self.vk_data, format, &mut format_props);
+    //         }
+    //         if format_props.optimalTilingFeatures as u32
+    //             & vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
+    //             != 0
+    //         {
+    //             return format;
+    //         }
+    //     }
+    //     vxlogf!("No depth format found!");
+    // }
 
     pub(super) fn get_surface_formats(&self) -> Vec<vk::VkSurfaceFormatKHR> {
         let mut count = 0u32;
@@ -267,32 +267,34 @@ impl Physical {
         vxlogf!("Could not find the requsted memory type.");
     }
 
-    pub(super) fn get_max_min_alignment(&self) -> u64 {
-        let limits = &self.properties.limits;
-        max(
-            max(
-                max(
-                    limits.minMemoryMapAlignment as u64,
-                    limits.minStorageBufferOffsetAlignment,
-                ),
-                max(
-                    limits.minTexelBufferOffsetAlignment,
-                    limits.minUniformBufferOffsetAlignment,
-                ),
-            ),
-            max(
-                max(
-                    limits.optimalBufferCopyOffsetAlignment,
-                    limits.optimalBufferCopyRowPitchAlignment,
-                ),
-                limits.bufferImageGranularity,
-            ),
-        )
-    }
+    // pub(super) fn get_max_min_alignment(&self) -> u64 {
+    //     let limits = &self.properties.limits;
+    //     max(
+    //         max(
+    //             max(
+    //                 limits.minMemoryMapAlignment as u64,
+    //                 limits.minStorageBufferOffsetAlignment,
+    //             ),
+    //             max(
+    //                 limits.minTexelBufferOffsetAlignment,
+    //                 limits.minUniformBufferOffsetAlignment,
+    //             ),
+    //         ),
+    //         max(
+    //             max(
+    //                 limits.optimalBufferCopyOffsetAlignment,
+    //                 limits.optimalBufferCopyRowPitchAlignment,
+    //             ),
+    //             limits.bufferImageGranularity,
+    //         ),
+    //     )
+    // }
 
     pub(super) fn get_vk_features(&self) -> vk::VkPhysicalDeviceFeatures {
         let mut result = vk::VkPhysicalDeviceFeatures::default();
-        unsafe { vk::vkGetPhysicalDeviceFeatures(self.vk_data, &mut result); }
+        unsafe {
+            vk::vkGetPhysicalDeviceFeatures(self.vk_data, &mut result);
+        }
         return result;
     }
 
@@ -450,14 +452,13 @@ impl Logical {
         return self.vk_graphic_queue;
     }
 
-    pub(super) fn get_vk_compute_queue(&self) -> vk::VkQueue {
-        return self.vk_compute_queue;
-    }
+    // pub(super) fn get_vk_compute_queue(&self) -> vk::VkQueue {
+    //     return self.vk_compute_queue;
+    // }
 
-    pub(super) fn get_vk_present_queue(&self) -> vk::VkQueue {
-        return self.vk_present_queue;
-    }
-
+    // pub(super) fn get_vk_present_queue(&self) -> vk::VkQueue {
+    //     return self.vk_present_queue;
+    // }
 }
 
 impl Drop for Logical {

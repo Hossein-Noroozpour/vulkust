@@ -24,9 +24,13 @@ pub extern crate winapi;
 
 #[macro_use]
 pub mod macros;
+
 // pub mod audio;
 pub mod core;
+#[cfg(directx12_api)]
+pub mod d3d12;
 pub mod physics;
 pub mod render;
 pub mod system;
+#[cfg(vulkan_api)]
 pub mod vulkan;

@@ -10,7 +10,7 @@ keywords = ["game", "engine", "vulkan"]
 categories = ["game-engines"]
 
 [features]
-fullscreen = []
+directx12 = []
 
 [dependencies]
 image = "*"

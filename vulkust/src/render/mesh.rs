@@ -1,7 +1,7 @@
 use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
-use super::buffer::StaticBuffer;
+use super::buffer::Static as StaticBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
 use super::material::Material;

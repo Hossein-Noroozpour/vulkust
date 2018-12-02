@@ -39,11 +39,11 @@ impl File {
         let bundle: apple::Id = unsafe { msg_send![bundle, mainBundle] };
         let path: apple::Id = unsafe {
             msg_send![
-            bundle,
-            pathForResource:file_name
-            ofType:file_type
-            inDirectory:directory
-        ]
+                bundle,
+                pathForResource:file_name
+                ofType:file_type
+                inDirectory:directory
+            ]
         };
         let path = unsafe {
             let path: *const c_char = msg_send![path, fileSystemRepresentation];
