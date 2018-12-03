@@ -684,18 +684,12 @@ impl Scene for Base {
         let frame_data = &mut self.frames_data[frame_number];
         // g-buffer
         {
-            let mut kernels_gbuffer_commands = Vec::with_capacity(self.kernels_data.len());
-            for k in &self.kernels_data {
-                kernels_gbuffer_commands.push(
-                    vxresult!(k.lock()).frames_data[frame_number]
-                        .gbuff
-                        .get_data(),
-                );
-            }
             let cmd = &mut frame_data.gbuffer;
             cmd.begin();
             g_buffer_filler.begin_primary(cmd);
-            cmd.exe_cmds_with_data(&kernels_gbuffer_commands);
+            for k in &self.kernels_data {
+                cmd.exe_cmd(&vxresult!(k.lock()).frames_data[frame_number].gbuff);
+            }
             cmd.end_render_pass();
             cmd.end();
         }

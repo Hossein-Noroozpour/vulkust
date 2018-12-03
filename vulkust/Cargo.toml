@@ -11,6 +11,7 @@ categories = ["game-engines"]
 
 [features]
 directx12 = []
+blank_gapi = [] # This is only for implementation template for future Graphic-APIs
 
 [dependencies]
 image = "*"

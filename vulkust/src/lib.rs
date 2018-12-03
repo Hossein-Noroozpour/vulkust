@@ -26,6 +26,8 @@ pub extern crate winapi;
 pub mod macros;
 
 // pub mod audio;
+#[cfg(blank_gapi)]
+pub mod blank_gapi;
 pub mod core;
 #[cfg(directx12_api)]
 pub mod d3d12;

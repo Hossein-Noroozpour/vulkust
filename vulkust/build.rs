@@ -32,6 +32,8 @@ fn main() {
     if !(in_macos || in_android || in_ios || in_linux || in_windows) {
         panic!("Unsupported platform!");
     }
+    #[cfg(feature = "blank_gapi")]
+    println!("cargo:rustc-cfg=blank_gapi");
     #[cfg(feature = "directx12")]
     println!("cargo:rustc-cfg=directx12_api");
     #[cfg(not(feature = "directx12"))]

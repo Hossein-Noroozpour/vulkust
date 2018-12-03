@@ -1,5 +1,5 @@
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Semaphore {}
+pub(crate) struct Memory {}
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Fence {}
+pub(crate) struct Manager {}

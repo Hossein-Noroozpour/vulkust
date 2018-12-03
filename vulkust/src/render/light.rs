@@ -485,30 +485,24 @@ impl ShadowMaker for Sun {
         frame_number: usize,
     ) -> Arc<Semaphore> {
         let cascades_count = self.cascade_cameras.len();
-        let mut cmdss = Vec::with_capacity(cascades_count);
-        for i in 0..cascades_count {
-            let mut cmds = Vec::with_capacity(self.kernels_data.len());
-            for kd in &self.kernels_data {
-                let kd = vxresult!(kd.lock());
-                let cmd = &kd.frames_data[frame_number].cascades_cmds[i];
-                if cmd.get_has_render_record() {
-                    cmds.push(cmd.get_data());
-                }
-            }
-            cmdss.push(cmds);
-        }
         let frame_data = &mut self.frames_data[frame_number];
         for i in 0..cascades_count {
             self.shadow_accumulator_uniform.view_projection_biases[i] = math::Matrix4::new(
                 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
             ) * self.cascade_cameras[i]
                 .vp;
-            let cmd = &mut frame_data.shadow_mappers_primary_commands[i];
-            cmd.begin();
-            shadower.begin_shadow_map_primary(cmd, i);
-            cmd.exe_cmds_with_data(&cmdss[i]);
-            cmd.end_render_pass();
-            cmd.end();
+            let pricmd = &mut frame_data.shadow_mappers_primary_commands[i];
+            pricmd.begin();
+            shadower.begin_shadow_map_primary(pricmd, i);
+            for kd in &self.kernels_data {
+                let kd = vxresult!(kd.lock());
+                let cmd = &kd.frames_data[frame_number].cascades_cmds[i];
+                if cmd.get_has_render_record() {
+                    pricmd.exe_cmd(cmd);
+                }
+            }
+            pricmd.end_render_pass();
+            pricmd.end();
         }
         let mut cmds = Vec::with_capacity(frame_data.shadow_mappers_primary_commands.len());
         for c in &frame_data.shadow_mappers_primary_commands {
