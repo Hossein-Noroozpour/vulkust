@@ -21,8 +21,8 @@ struct AppData {
 pub struct Application {
     pub instance: winapi::shared::minwindef::HINSTANCE,
     pub window: winapi::shared::windef::HWND,
-    pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
-    pub renderer: Option<Arc<RwLock<RenderEngine>>>,
+    core_app: Option<Arc<RwLock<CoreAppTrait>>>,
+    renderer: Option<Arc<RwLock<RenderEngine>>>,
     data: Arc<RwLock<AppData>>,
 }
 
@@ -110,26 +110,31 @@ impl Application {
             vxlogf!("Could not register window class!");
         }
         let mut window_rect: winapi::shared::windef::RECT = unsafe { zeroed() };
-        #[cfg(debug_mode)]
-        {
-            window_rect.right = constants::DEFAULT_WINDOW_WIDTH as winapi::um::winnt::LONG;
-            window_rect.bottom = constants::DEFAULT_WINDOW_HEIGHT as winapi::um::winnt::LONG;
+        let config = {
+            let myself = vxresult!(itself.read());
+            let core_app = vxunwrap!(&myself.core_app);
+            let core_app = vxresult!(core_app.read());
+            core_app.get_config().clone()
+        };
+        if !config.get_fullscreen() {
+            window_rect.right = config.get_window_width() as winapi::um::winnt::LONG;
+            window_rect.bottom = config.get_window_height() as winapi::um::winnt::LONG;
         }
-        #[cfg(debug_mode)]
-        let dwex_style =
-            winapi::um::winuser::WS_EX_APPWINDOW | winapi::um::winuser::WS_EX_WINDOWEDGE;
-        #[cfg(debug_mode)]
-        let dw_style = winapi::um::winuser::WS_OVERLAPPEDWINDOW
-            | winapi::um::winuser::WS_CLIPSIBLINGS
-            | winapi::um::winuser::WS_CLIPCHILDREN;
-        #[cfg(not(debug_mode))]
-        let dwex_style = winapi::um::winuser::WS_EX_APPWINDOW;
-        #[cfg(not(debug_mode))]
-        let dw_style = winapi::um::winuser::WS_POPUP
-            | winapi::um::winuser::WS_CLIPSIBLINGS
-            | winapi::um::winuser::WS_CLIPCHILDREN;
-        #[cfg(not(debug_mode))]
-        {
+        let dwex_style = if config.get_fullscreen() {
+            winapi::um::winuser::WS_EX_APPWINDOW
+        } else {
+            winapi::um::winuser::WS_EX_APPWINDOW | winapi::um::winuser::WS_EX_WINDOWEDGE
+        };
+        let dw_style = if config.get_fullscreen() {
+            winapi::um::winuser::WS_POPUP
+                | winapi::um::winuser::WS_CLIPSIBLINGS
+                | winapi::um::winuser::WS_CLIPCHILDREN
+        } else {
+            winapi::um::winuser::WS_OVERLAPPEDWINDOW
+                | winapi::um::winuser::WS_CLIPSIBLINGS
+                | winapi::um::winuser::WS_CLIPCHILDREN
+        };
+        if !config.get_fullscreen() {
             let screen_width =
                 unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN) };
             let screen_height =
@@ -142,8 +147,8 @@ impl Application {
             dm_screen_settings.dmFields = winapi::um::wingdi::DM_BITSPERPEL
                 | winapi::um::wingdi::DM_PELSWIDTH
                 | winapi::um::wingdi::DM_PELSHEIGHT;
-            if screen_width != constants::DEFAULT_WINDOW_WIDTH as i32
-                && screen_height != constants::DEFAULT_WINDOW_HEIGHT as i32
+            if screen_width != config.get_window_width() as i32
+                && screen_height != config.get_window_height() as i32
             {
                 let result = unsafe {
                     winapi::um::winuser::ChangeDisplaySettingsW(
@@ -187,8 +192,7 @@ impl Application {
         if window == null_mut() {
             vxlogf!("Could not create window!");
         }
-        #[cfg(not(debug_mode))]
-        {
+        if !config.get_fullscreen() {
             let x = (unsafe {
                 winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN)
             } - window_rect.right)

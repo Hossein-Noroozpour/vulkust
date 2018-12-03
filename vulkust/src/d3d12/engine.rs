@@ -14,15 +14,18 @@ use super::sync::Semaphore;
 use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Engine {}
+pub struct Engine {
+    device: Arc<Device>,
+}
 
 impl Engine {
-    pub(crate) fn new(_os_app: &Arc<RwLock<OsApp>>, _conf: &Configurations) -> Self {
-        vxunimplemented!();
+    pub(crate) fn new(os_app: &Arc<RwLock<OsApp>>, conf: &Configurations) -> Self {
+        let device = Arc::new(Device::new());
+        Self { device }
     }
 
     pub(crate) fn get_device(&self) -> &Arc<Device> {
-        vxunimplemented!();
+        return &self.device;
     }
 
     pub(crate) fn get_linear_repeat_sampler(&self) -> &Arc<Sampler> {
