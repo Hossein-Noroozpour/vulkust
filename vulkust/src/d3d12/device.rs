@@ -1,10 +1,14 @@
-use std::mem::{transmute, transmute_copy, zeroed};
+use std::mem::{transmute, zeroed};
 use std::ptr::null_mut;
 use winapi;
 use winapi::Interface;
 
-#[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct Device {}
+pub(crate) struct Device {
+    adapter: &'static mut winapi::shared::dxgi::IDXGIAdapter1,
+    device: &'static mut winapi::um::d3d12::ID3D12Device,
+    factory: &'static mut winapi::shared::dxgi1_4::IDXGIFactory4,
+    queue: &'static mut winapi::um::d3d12::ID3D12CommandQueue,
+}
 
 impl Device {
     pub(super) fn new() -> Self {
@@ -37,7 +41,7 @@ impl Device {
         let mut adapter_index: winapi::shared::minwindef::UINT = 0;
         let mut adapter_found = false;
         while winapi::shared::winerror::DXGI_ERROR_NOT_FOUND
-            != unsafe { factory.EnumAdapters1(adapter_index, transmute_copy(&mut adapter)) }
+            != unsafe { factory.EnumAdapters1(adapter_index, transmute(&mut adapter)) }
         {
             let mut desc: winapi::shared::dxgi::DXGI_ADAPTER_DESC1 = unsafe { zeroed() };
             unsafe {
@@ -46,11 +50,12 @@ impl Device {
             if desc.Flags & winapi::shared::dxgi::DXGI_ADAPTER_FLAG_SOFTWARE
                 == winapi::shared::dxgi::DXGI_ADAPTER_FLAG_SOFTWARE
             {
+                adapter_index += 1;
                 continue;
             }
             if winapi::shared::winerror::SUCCEEDED(unsafe {
                 winapi::um::d3d12::D3D12CreateDevice(
-                    transmute_copy(adapter),
+                    transmute(&mut *adapter),
                     winapi::um::d3dcommon::D3D_FEATURE_LEVEL_11_0,
                     &winapi::um::d3d12::ID3D12Device::uuidof(),
                     null_mut(),
@@ -62,30 +67,57 @@ impl Device {
             adapter_index += 1;
         }
         if !adapter_found {
-            // todo
+            ThrowIfFailed!(factory.EnumWarpAdapter(
+                &winapi::shared::dxgi::IDXGIAdapter1::uuidof(),
+                transmute(&mut adapter)
+            ));
+            #[cfg(debug_mode)]
+            vxlogi!("Warning: Warp device created instead of Hardware device this is going to impact the performance seriously");
         }
         let mut device: &'static mut winapi::um::d3d12::ID3D12Device = unsafe { transmute(0usize) };
         ThrowIfFailed!(winapi::um::d3d12::D3D12CreateDevice(
-            transmute(adapter),
+            transmute(&mut *adapter),
             winapi::um::d3dcommon::D3D_FEATURE_LEVEL_11_0,
             &winapi::um::d3d12::ID3D12Device::uuidof(),
             transmute(&mut device)
         ));
+        let mut queue_desc: winapi::um::d3d12::D3D12_COMMAND_QUEUE_DESC = unsafe { zeroed() };
+        queue_desc.Flags = winapi::um::d3d12::D3D12_COMMAND_QUEUE_FLAG_NONE;
+        queue_desc.Type = winapi::um::d3d12::D3D12_COMMAND_LIST_TYPE_DIRECT;
+        let mut queue: &'static mut winapi::um::d3d12::ID3D12CommandQueue =
+            unsafe { transmute(0usize) };
+        ThrowIfFailed!(device.CreateCommandQueue(
+            &queue_desc,
+            &winapi::um::d3d12::ID3D12CommandQueue::uuidof(),
+            transmute(&mut queue)
+        ));
+        Self {
+            adapter,
+            device,
+            factory,
+            queue,
+        }
+    }
 
-        // if (m_useWarpDevice)
-        // {
-        //     ComPtr<IDXGIAdapter> warpAdapter;
-        //     ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
+    pub(super) fn get_data(&self) -> &winapi::um::d3d12::ID3D12Device {
+        return &*self.device;
+    }
 
-        //     ThrowIfFailed(D3D12CreateDevice(
-        //         warpAdapter.Get(),
-        //         D3D_FEATURE_LEVEL_11_0,
-        //         IID_PPV_ARGS(&m_device)
-        //         ));
-        // }
-        // else
-        // {
-        //
-        Self {}
+    pub(super) fn get_factory(&self) -> &winapi::shared::dxgi1_4::IDXGIFactory4 {
+        return &*self.factory;
+    }
+
+    pub(super) fn get_queue(&self) -> &winapi::um::d3d12::ID3D12CommandQueue {
+        return &*self.queue;
     }
 }
+
+#[cfg(debug_mode)]
+impl std::fmt::Debug for Device {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        return write!(f, "Directx12-Device");
+    }
+}
+
+unsafe impl Send for Device {}
+unsafe impl Sync for Device {}

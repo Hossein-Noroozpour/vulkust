@@ -25,10 +25,10 @@ num_cpus = "*"
 winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser"] }
 
 [target.'cfg(all(target_os = "windows", feature = "directx12", debug_assertions))'.dependencies]
-winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser", "d3d12", "dxgi", "dxgi1_3", "dxgi1_4", "d3d12sdklayers"] }
+winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser", "basetsd", "d3d12", "dxgiformat", "dxgi", "dxgi1_3", "dxgi1_4", "dxgitype", "d3d12sdklayers"] }
 
 [target.'cfg(all(target_os = "windows", feature = "directx12", not(debug_assertions)))'.dependencies]
-winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser", "d3d12", "dxgi", "dxgi1_3", "dxgi1_4"] }
+winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser", "basetsd", "d3d12", "dxgiformat", "dxgi", "dxgi1_3", "dxgi1_4", "dxgitype"] }
 
 [target.'cfg(any(target_os = "android", target_os = "macos", target_os = "ios", target_os = "linux"))'.dependencies]
 bitflags = "*"

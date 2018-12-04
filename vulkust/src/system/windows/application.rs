@@ -426,6 +426,10 @@ impl Application {
         }
         return unsafe { winapi::um::winuser::DefWindowProcW(hwnd, msg, w_param, l_param) };
     }
+
+    pub(crate) fn get_window(&self) -> winapi::shared::windef::HWND {
+        return self.window;
+    }
 }
 
 #[cfg(debug_mode)]

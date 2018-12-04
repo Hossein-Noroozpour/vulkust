@@ -10,18 +10,21 @@ use super::memory::Manager as MemoryManager;
 use super::pipeline::Manager as PipelineManager;
 use super::render_pass::RenderPass;
 use super::sampler::Sampler;
+use super::swapchain::Swapchain;
 use super::sync::Semaphore;
 use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Engine {
     device: Arc<Device>,
+    swapchain: Arc<Swapchain>,
 }
 
 impl Engine {
     pub(crate) fn new(os_app: &Arc<RwLock<OsApp>>, conf: &Configurations) -> Self {
         let device = Arc::new(Device::new());
-        Self { device }
+        let swapchain = Arc::new(Swapchain::new(device.clone(), os_app, conf));
+        Self { device, swapchain }
     }
 
     pub(crate) fn get_device(&self) -> &Arc<Device> {
@@ -86,7 +89,7 @@ impl Engine {
     }
 
     pub(crate) fn get_frame_number(&self) -> usize {
-        vxunimplemented!();
+        return self.swapchain.get_current_frame_index() as usize;
     }
 
     pub(crate) fn start_rendering(&mut self) {
