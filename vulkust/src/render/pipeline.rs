@@ -6,7 +6,7 @@ pub(crate) use super::super::metal::pileline::*;
 pub(crate) use super::super::vulkan::pipeline::*;
 
 #[repr(u8)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialOrd, PartialEq, Eq, Ord)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub enum PipelineType {
     Deferred,

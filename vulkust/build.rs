@@ -35,7 +35,12 @@ fn main() {
     #[cfg(feature = "blank_gapi")]
     println!("cargo:rustc-cfg=blank_gapi");
     #[cfg(feature = "directx12")]
-    println!("cargo:rustc-cfg=directx12_api");
+    {
+        if !in_windows {
+            panic!("Error directx12 API is only available in Windows platform");
+        }
+        println!("cargo:rustc-cfg=directx12_api");
+    }
     #[cfg(not(feature = "directx12"))]
     println!("cargo:rustc-cfg=vulkan_api");
     if in_macos || in_ios {
@@ -59,10 +64,16 @@ fn main() {
 fn check_shaders() {
     let out_dir = env::var("OUT_DIR").unwrap();
     let src_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let vulkan_spirv_path = Path::new(&out_dir).join("vulkan/shaders/");
-    fs::create_dir_all(vulkan_spirv_path.clone()).expect("can not create vulkan/shaders path");;
-    let vulkan_shaders_path = Path::new(&src_dir).join("src/vulkan/shaders/");
-    let ls = vulkan_shaders_path
+    #[cfg(feature = "directx12")]
+    let compiled_shader_path = Path::new(&out_dir).join("directx12/shaders/");
+    #[cfg(not(feature = "directx12"))]
+    let compiled_shader_path = Path::new(&out_dir).join("vulkan/shaders/");
+    fs::create_dir_all(compiled_shader_path.clone()).expect("can not create compiled shaders path");
+    #[cfg(feature = "directx12")]
+    let shaders_source_path = Path::new(&src_dir).join("src/d3d12/shaders/");
+    #[cfg(not(feature = "directx12"))]
+    let shaders_source_path = Path::new(&src_dir).join("src/vulkan/shaders/");
+    let ls = shaders_source_path
         .read_dir()
         .expect("read_dir call failed");
     for entry in ls {
@@ -81,27 +92,72 @@ fn check_shaders() {
         }
         let shader_path = entry.path();
         let shader_file = shader_path.to_str().unwrap();
-        let spirv_file = shader_path.file_name().unwrap().to_str().unwrap();
-        if !spirv_file.ends_with(".vert") && !spirv_file.ends_with(".frag") {
-            continue;
+        #[cfg(feature = "directx12")]
+        {
+            let hlsl_file = shader_path.file_name().unwrap().to_str().unwrap();
+            if hlsl_file.ends_with(".h.hlsl") || !hlsl_file.ends_with(".hlsl") {
+                continue;
+            }
+            let hlsl_file = compiled_shader_path
+                .join(hlsl_file)
+                .to_str()
+                .unwrap()
+                .to_string();
+            let vert_file = hlsl_file.clone() + ".vert.fxc";
+            let frag_file = hlsl_file + ".frag.fxc";
+            let outputs = vec![vert_file, frag_file];
+            let profiles = vec!["vs_5_1", "ps_5_1"];
+            let entries = vec!["vert_main", "frag_main"];
+            for i in 0..outputs.len() {
+                let mut output = Command::new("fxc");
+                #[cfg(debug_assertions)]
+                let output = output.arg("/Od");
+                #[cfg(debug_assertions)]
+                let output = output.arg("/Zi");
+                #[cfg(not(debug_assertions))]
+                let output = output.arg("/O3");
+                let output = output
+                    .arg("/T")
+                    .arg(&profiles[i])
+                    .arg("/Fo")
+                    .arg(&outputs[i])
+                    .arg(shader_file)
+                    .arg("/E")
+                    .arg(&entries[i])
+                    .output()
+                    .expect("failed to execute hlsl compiler");
+                if !output.status.success() {
+                    panic!(
+                        "Compiling hlsl shaders failed.\n {:?}\n in {:?}",
+                        output, shader_file
+                    );
+                }
+            }
         }
-        let spirv_file = spirv_file.to_string() + ".spv";
-        let spirv_file = vulkan_spirv_path.join(&spirv_file);
-        let spirv_file = spirv_file.to_str().unwrap();
-        #[cfg(debug_assertions)]
-        let compile_flag = "-g";
-        #[cfg(not(debug_assertions))]
-        let compile_flag = "-Os";
-        let output = Command::new("glslangValidator")
-            .arg("-V")
-            .arg(compile_flag)
-            .arg(shader_file)
-            .arg("-o")
-            .arg(spirv_file)
-            .output()
-            .expect("failed to execute glsl compiler");
-        if !output.status.success() {
-            panic!("Compiling vulkan shaders failed.\n {:?}", output);
+        #[cfg(not(feature = "directx12"))]
+        {
+            let spirv_file = shader_path.file_name().unwrap().to_str().unwrap();
+            if !spirv_file.ends_with(".vert") && !spirv_file.ends_with(".frag") {
+                continue;
+            }
+            let spirv_file = spirv_file.to_string() + ".spv";
+            let spirv_file = compiled_shader_path.join(&spirv_file);
+            let spirv_file = spirv_file.to_str().unwrap();
+            #[cfg(debug_assertions)]
+            let compile_flag = "-g";
+            #[cfg(not(debug_assertions))]
+            let compile_flag = "-Os";
+            let output = Command::new("glslangValidator")
+                .arg("-V")
+                .arg(compile_flag)
+                .arg(shader_file)
+                .arg("-o")
+                .arg(spirv_file)
+                .output()
+                .expect("failed to execute glsl compiler");
+            if !output.status.success() {
+                panic!("Compiling vulkan shaders failed.\n {:?}", output);
+            }
         }
     }
 }

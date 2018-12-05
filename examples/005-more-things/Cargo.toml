@@ -6,8 +6,8 @@ description = "A more things example for Vulkust game engine"
 license = "MIT"
 
 [dependencies]
-# vulkust = { path = "../../vulkust" }
-vulkust = { path = "../../vulkust", features = ["directx12"] }
+vulkust = { path = "../../vulkust" }
+# vulkust = { path = "../../vulkust", features = ["directx12"] } # in case you want a more unsatable engine!
 # vulkust = { path = "../../vulkust", features = ["blank_gapi"] } # only for test of blank API
 rand = "*"
 

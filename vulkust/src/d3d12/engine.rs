@@ -10,7 +10,7 @@ use super::memory::Manager as MemoryManager;
 use super::pipeline::Manager as PipelineManager;
 use super::render_pass::RenderPass;
 use super::sampler::Sampler;
-use super::swapchain::Swapchain;
+use super::swapchain::{Swapchain, BUFFER_COUNT as FRAMES_COUNT};
 use super::sync::Semaphore;
 use std::sync::{Arc, RwLock};
 
@@ -18,13 +18,19 @@ use std::sync::{Arc, RwLock};
 pub struct Engine {
     device: Arc<Device>,
     swapchain: Arc<Swapchain>,
+    main_graphic_pool: Arc<CmdPool>,
 }
 
 impl Engine {
     pub(crate) fn new(os_app: &Arc<RwLock<OsApp>>, conf: &Configurations) -> Self {
         let device = Arc::new(Device::new());
         let swapchain = Arc::new(Swapchain::new(device.clone(), os_app, conf));
-        Self { device, swapchain }
+        let main_graphic_pool = Arc::new(CmdPool::new(device.clone()));
+        Self {
+            device,
+            swapchain,
+            main_graphic_pool,
+        }
     }
 
     pub(crate) fn get_device(&self) -> &Arc<Device> {
@@ -61,7 +67,7 @@ impl Engine {
     }
 
     pub(crate) fn create_command_pool(&self) -> Arc<CmdPool> {
-        vxunimplemented!();
+        return Arc::new(CmdPool::new(self.device.clone()));
     }
 
     pub(crate) fn create_secondary_command_buffer(&self, _cmd_pool: Arc<CmdPool>) -> CmdBuffer {
@@ -85,7 +91,7 @@ impl Engine {
     }
 
     pub(crate) fn get_frames_count(&self) -> usize {
-        vxunimplemented!();
+        return FRAMES_COUNT;
     }
 
     pub(crate) fn get_frame_number(&self) -> usize {

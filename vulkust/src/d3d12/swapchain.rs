@@ -7,7 +7,7 @@ use std::sync::{Arc, RwLock};
 use winapi;
 use winapi::Interface;
 
-const BUFFER_COUNT: usize = 3;
+pub(super) const BUFFER_COUNT: usize = 3;
 
 pub(super) struct Swapchain {
     swapchain: &'static mut winapi::shared::dxgi1_4::IDXGISwapChain3,

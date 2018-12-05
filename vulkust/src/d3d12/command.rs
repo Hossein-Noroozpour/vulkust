@@ -1,11 +1,39 @@
 use super::buffer::{Buffer as BufBuffer, Static as StaticBuffer};
 use super::descriptor::Set as DescriptorSet;
+use super::device::Device;
 use super::framebuffer::Framebuffer;
 use super::pipeline::Pipeline;
+use std::mem::{transmute, zeroed};
 use std::sync::{Arc, RwLock};
+use winapi;
+use winapi::Interface;
 
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct Pool {}
+pub struct Pool {
+    device: Arc<Device>,
+    pool: &'static mut winapi::um::d3d12::ID3D12CommandAllocator,
+}
+
+impl Pool {
+    pub(super) fn new(device: Arc<Device>) -> Self {
+        let mut pool: &'static mut winapi::um::d3d12::ID3D12CommandAllocator = unsafe { zeroed() };
+        ThrowIfFailed!(device.get_data().CreateCommandAllocator(
+            winapi::um::d3d12::D3D12_COMMAND_LIST_TYPE_DIRECT,
+            &winapi::um::d3d12::ID3D12CommandAllocator::uuidof(),
+            transmute(&mut pool)
+        ));
+        Self { device, pool }
+    }
+}
+
+#[cfg(debug_mode)]
+impl std::fmt::Debug for Pool {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        return write!(f, "Directx12-Pool");
+    }
+}
+
+unsafe impl Send for Pool {}
+unsafe impl Sync for Pool {}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Buffer {}
