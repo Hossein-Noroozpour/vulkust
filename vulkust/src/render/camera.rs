@@ -333,11 +333,8 @@ impl Transferable for Base {
         }
         let mut q = *q;
         q.s = -q.s;
-        let rotation = math::Matrix4::from(q);
-        let translate = math::Matrix4::from_translation(-self.location);
-        self.direction = rotation;
-        self.view = rotation * translate;
-        self.update_view_projection();
+        self.direction = math::Matrix4::from(q);
+        self.update_location();
     }
 
     fn set_location(&mut self, l: &math::Vector3<Real>) {
