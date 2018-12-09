@@ -285,7 +285,7 @@ void main() {
 
 	out_color.xyz = alb.xyz; // todo it must come along scene
 	// calc_lights();
-	calc_ssr();
+	// calc_ssr();
 
 	// out_color.xyz *= dot(-normalize(reflect(eye_nrm, nrm)), nrm);
 	// out_color.x = spos.z;

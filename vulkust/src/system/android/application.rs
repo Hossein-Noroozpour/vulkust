@@ -47,7 +47,6 @@ impl Application {
     }
 
     pub fn initialize(&self) {
-        vxlogi!("I'm in");
         let mut events = 0 as c_int;
         let mut source = 0 as *mut AndroidPollSource;
         while unsafe { (*self.and_app).destroy_requested == 0 } {

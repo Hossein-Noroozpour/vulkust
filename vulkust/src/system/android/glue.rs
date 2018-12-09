@@ -221,7 +221,6 @@ unsafe extern "C" fn android_app_destroy(android_app: *mut AndroidApp) {
     vxlogi!("android_app_destroy!");
     free_saved_state(android_app);
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
-    //    vxloge!("locked");
     if (*android_app).input_queue != ptr::null_mut() {
         input::AInputQueue_detachLooper((*android_app).input_queue);
     }
@@ -229,7 +228,6 @@ unsafe extern "C" fn android_app_destroy(android_app: *mut AndroidApp) {
     (*android_app).destroyed = 1;
     libc::pthread_cond_broadcast(&mut ((*android_app).cond) as *mut libc::pthread_cond_t);
     libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-    //    vxloge!("unlocked");
 }
 
 unsafe extern "C" fn process_input(app: *mut AndroidApp, source: *mut AndroidPollSource) {
@@ -246,12 +244,9 @@ unsafe extern "C" fn process_input(app: *mut AndroidApp, source: *mut AndroidPol
         let mut handled = 0 as libc::c_int;
         if (*app).on_input_event != transmute(0usize) {
             handled = ((*app).on_input_event)(app, event);
-            vxloge!("Reached");
         }
         input::AInputQueue_finishEvent((*app).input_queue, event, handled);
-        vxloge!("Reached");
     }
-    vxloge!("Reached");
 }
 
 unsafe extern "C" fn process_cmd(app: *mut AndroidApp, source: *mut AndroidPollSource) {
@@ -298,9 +293,13 @@ extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
             vxresult!(os_app.read()).initialize();
             let core_app = vxunwrap!(&vxresult!(os_app.read()).core_app).clone();
             let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
+            vxloge!("Reached");
             let renderer_w = Arc::downgrade(&renderer);
+            vxloge!("Reached");
             vxresult!(renderer.write()).set_myself(renderer_w);
+            vxloge!("Reached");
             vxresult!(os_app.write()).set_renderer(renderer.clone());
+            vxloge!("Reached");
             {
                 let mut core_app = vxresult!(core_app.write());
                 core_app.set_os_app(os_app.clone());
@@ -397,13 +396,11 @@ unsafe extern "C" fn android_app_set_input(
 ) {
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
     (*android_app).pending_input_queue = input_queue;
-    //    vxloge!("locked!");
     android_app_write_cmd(android_app, AppCmd::InputChanged as i8);
     while (*android_app).input_queue != (*android_app).pending_input_queue {
         libc::pthread_cond_wait(&mut (*android_app).cond, &mut (*android_app).mutex);
     }
     libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-    //    vxloge!("unlocked!");
 }
 
 unsafe extern "C" fn android_app_set_window(
@@ -411,7 +408,6 @@ unsafe extern "C" fn android_app_set_window(
     window: *mut window::ANativeWindow,
 ) {
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
-    //    vxloge!("locked");
     if (*android_app).pending_window != ptr::null_mut() {
         android_app_write_cmd(android_app, AppCmd::TermWindow as i8);
     }
@@ -423,29 +419,24 @@ unsafe extern "C" fn android_app_set_window(
         libc::pthread_cond_wait(&mut (*android_app).cond, &mut (*android_app).mutex);
     }
     libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-    //    vxloge!("unlocked");
 }
 
 unsafe extern "C" fn android_app_set_activity_state(android_app: *mut AndroidApp, cmd: i8) {
-    //    vxloge!("locked");
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
     android_app_write_cmd(android_app, cmd);
     while (*android_app).activity_state != cmd as i32 {
         libc::pthread_cond_wait(&mut (*android_app).cond, &mut (*android_app).mutex);
     }
     libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-    //    vxloge!("unlocked");
 }
 
 unsafe extern "C" fn android_app_free(android_app: *mut AndroidApp) {
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
-    //    vxloge!("locked");
     android_app_write_cmd(android_app, AppCmd::Destroy as i8);
     while (*android_app).destroyed == 0 {
         libc::pthread_cond_wait(&mut (*android_app).cond, &mut (*android_app).mutex);
     }
     libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-    //    vxloge!("unlocked");
     libc::close((*android_app).msg_read_fd);
     libc::close((*android_app).msg_write_fd);
     libc::pthread_cond_destroy(&mut (*android_app).cond);
@@ -477,7 +468,6 @@ pub unsafe extern "C" fn on_save_instance_state(
     let mut saved_state: *mut libc::c_void = ptr::null_mut();
     vxlogi!("SaveInstanceState: {:?}", activity);
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
-    //    vxloge!("locked");
     (*android_app).state_saved = 0;
     android_app_write_cmd(android_app, AppCmd::SaveState as i8);
     while (*android_app).state_saved == 0 {
@@ -490,7 +480,6 @@ pub unsafe extern "C" fn on_save_instance_state(
         (*android_app).saved_state_size = 0;
     }
     libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-    //    vxloge!("unlocked");
     return saved_state;
 }
 
