@@ -4,6 +4,7 @@ use super::device::Device;
 use super::framebuffer::Framebuffer;
 use super::pipeline::Pipeline;
 use std::mem::{transmute, zeroed};
+use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
 use winapi;
 use winapi::Interface;
@@ -23,6 +24,14 @@ impl Pool {
         ));
         Self { device, pool }
     }
+
+    pub(super) fn get_device(&self) -> &Arc<Device> {
+        return &self.device;
+    }
+
+    pub(super) fn get_data(&self) -> &winapi::um::d3d12::ID3D12CommandAllocator {
+        return &*self.pool;
+    }
 }
 
 #[cfg(debug_mode)]
@@ -35,20 +44,38 @@ impl std::fmt::Debug for Pool {
 unsafe impl Send for Pool {}
 unsafe impl Sync for Pool {}
 
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct Buffer {}
+pub struct Buffer {
+    pool: Arc<Pool>,
+    command_list: &'static mut winapi::um::d3d12::ID3D12CommandList,
+}
 
 impl Buffer {
-    pub(crate) fn new_primary(_pool: Arc<Pool>) -> Self {
-        vxunimplemented!();
+    pub(crate) fn new_primary(pool: Arc<Pool>) -> Self {
+        let mut command_list: &'static mut winapi::um::d3d12::ID3D12CommandList =
+            unsafe { zeroed() };
+        ThrowIfFailed!(pool.get_device().get_data().CreateCommandList(
+            0,
+            winapi::um::d3d12::D3D12_COMMAND_LIST_TYPE_DIRECT,
+            transmute(pool.get_data()),
+            null_mut(),
+            &winapi::um::d3d12::ID3D12CommandList::uuidof(),
+            transmute(&mut command_list)
+        ));
+        Self { pool, command_list }
     }
 
-    pub(crate) fn new_secondary(_pool: Arc<Pool>) -> Self {
-        vxunimplemented!();
-    }
-
-    fn new(_pool: Arc<Pool>, _is_secondary: bool) -> Self {
-        vxunimplemented!();
+    pub(crate) fn new_secondary(pool: Arc<Pool>) -> Self {
+        let mut command_list: &'static mut winapi::um::d3d12::ID3D12CommandList =
+            unsafe { zeroed() };
+        ThrowIfFailed!(pool.get_device().get_data().CreateCommandList(
+            0,
+            winapi::um::d3d12::D3D12_COMMAND_LIST_TYPE_BUNDLE,
+            transmute(pool.get_data()),
+            null_mut(),
+            &winapi::um::d3d12::ID3D12CommandList::uuidof(),
+            transmute(&mut command_list)
+        ));
+        Self { pool, command_list }
     }
 
     pub(crate) fn get_has_render_record(&self) -> bool {
@@ -189,3 +216,13 @@ impl Buffer {
         vxunimplemented!();
     }
 }
+
+#[cfg(debug_mode)]
+impl std::fmt::Debug for Buffer {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        return write!(f, "Directx12-Buffer");
+    }
+}
+
+unsafe impl Send for Buffer {}
+unsafe impl Sync for Buffer {}

@@ -9,6 +9,7 @@ pub struct Configurations {
     max_models_count: u64,
     max_scenes_count: u64,
     max_textures_count: u64,
+    max_shadow_maker_lights_count: u64,
     max_shadow_maps_count: u32,
     cascaded_shadows_count: u8,
     shadow_map_aspect: u32,
@@ -24,6 +25,7 @@ impl Default for Configurations {
             enable_anistropic_texture: true,
             shadow_map_aspect: 1024,
             max_textures_count: 100,
+            max_shadow_maker_lights_count: 100,
             max_meshes_count: 200,
             max_models_count: 200,
             max_scenes_count: 3,
@@ -58,6 +60,10 @@ impl Configurations {
 
     pub fn get_max_textures_count(&self) -> u64 {
         return self.max_textures_count;
+    }
+
+    pub fn get_max_shadow_maker_lights_count(&self) -> u64 {
+        return self.max_shadow_maker_lights_count;
     }
 
     pub fn get_max_shadow_maps_count(&self) -> u32 {

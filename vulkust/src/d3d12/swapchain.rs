@@ -59,6 +59,7 @@ impl Swapchain {
                 .get_data()
                 .GetDescriptorHandleIncrementSize(winapi::um::d3d12::D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
         };
+        vxlogi!("rtv_descriptor_size: {}", rtv_descriptor_size);
         let mut rtv_handle = unsafe { rtv_heap.GetCPUDescriptorHandleForHeapStart() };
         let mut render_targets: [&'static mut winapi::um::d3d12::ID3D12Resource; BUFFER_COUNT] =
             unsafe { zeroed() };
