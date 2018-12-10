@@ -5,18 +5,20 @@ use super::config::Configurations;
 use super::descriptor::Set as DescriptorSet;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
+use super::image::{AttachmentType, Format, View as ImageView};
 use super::pipeline::{Pipeline, PipelineType};
 use super::texture::{Manager as TextureManager, Texture};
-use super::image::{AttachmentType, View as ImageView, Format};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
 use math;
 
+const MAX_SSAO_SAMPLES_COUNT: usize = 128;
+
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Uniform {
-    reserved: math::Vector4<Real>,
+    sample_vectors: [math::Vector4<Real>; MAX_SSAO_SAMPLES_COUNT],
 }
 
 impl Uniform {
@@ -46,14 +48,12 @@ impl SSAO {
         let gbuff_framebuffer = g_buffer_filler.get_framebuffer();
         let dev = eng.get_device();
         let memmgr = eng.get_memory_manager();
-        let buffers = vec![
-            Arc::new(ImageView::new_surface_attachment(
-                dev.clone(),
-                memmgr,
-                Format::Float,
-                AttachmentType::ColorGBuffer,
-            )),
-        ];
+        let buffers = vec![Arc::new(ImageView::new_surface_attachment(
+            dev.clone(),
+            memmgr,
+            Format::Float,
+            AttachmentType::ColorGBuffer,
+        ))];
         let (w, h) = gbuff_framebuffer.get_dimensions();
         let uniform = Uniform::new();
         let uniform_buffer = vxresult!(eng.get_buffer_manager().write())
@@ -66,7 +66,10 @@ impl SSAO {
             .create_deferred_set(&uniform_buffer, textures);
         let render_pass = eng.get_render_pass();
         let pipeline = vxresult!(eng.get_pipeline_manager().write()).create(
-            render_pass.clone(), PipelineType::SSAO, config);
+            render_pass.clone(),
+            PipelineType::SSAO,
+            config,
+        );
         let sampler = eng.get_linear_repeat_sampler();
         let mut textures = Vec::with_capacity(buffers.len());
         for b in &buffers {

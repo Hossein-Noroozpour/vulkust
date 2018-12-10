@@ -5,12 +5,14 @@ pub const MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT: u32 = 6;
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Configurations {
     enable_anistropic_texture: bool,
+    enable_ssao: bool,
     max_meshes_count: u64,
     max_models_count: u64,
     max_scenes_count: u64,
     max_textures_count: u64,
     max_shadow_maker_lights_count: u64,
     max_shadow_maps_count: u32,
+    max_ssao_samples: u32,
     cascaded_shadows_count: u8,
     shadow_map_aspect: u32,
     max_shadow_maker_kernel_render_data_count: u64,
@@ -23,6 +25,7 @@ impl Default for Configurations {
         Configurations {
             cascaded_shadows_count: 4,
             enable_anistropic_texture: true,
+            enable_ssao: true,
             shadow_map_aspect: 1024,
             max_textures_count: 100,
             max_shadow_maker_lights_count: 100,
@@ -30,6 +33,7 @@ impl Default for Configurations {
             max_models_count: 200,
             max_scenes_count: 3,
             max_shadow_maps_count: 6,
+            max_ssao_samples: 64,
             max_shadow_maker_kernel_render_data_count: 600,
             content_width: 1000,
             content_height: 700,
@@ -48,6 +52,10 @@ impl Configurations {
 
     pub fn get_max_meshes_count(&self) -> u64 {
         return self.max_meshes_count;
+    }
+
+    pub fn get_max_ssao_samples(&self) -> u32 {
+        return self.max_ssao_samples;
     }
 
     pub fn get_max_models_count(&self) -> u64 {

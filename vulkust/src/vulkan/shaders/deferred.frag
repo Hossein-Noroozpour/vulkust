@@ -32,7 +32,7 @@ vec3 eye_nrm;
 
 void calc_lights() {
 	vec2 start_uv = uv - (vec2(deferred_ubo.s.pixel_step.x, deferred_ubo.s.pixel_step.y) * float((BLUR_KERNEL_LENGTH - 1) >> 1));
-	for(uint light_index = 0; light_index < scene_ubo.s.directional_point_lights_count.x; ++light_index) {
+	for(uint light_index = 0; light_index < scene_ubo.s.lights_count.x; ++light_index) {
 		float slope = -dot(nrm, scene_ubo.s.directional_lights[light_index].direction_strength.xyz);
 		if(slope < 0.005) {
 			continue;
