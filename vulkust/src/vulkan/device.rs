@@ -1,5 +1,6 @@
 use super::super::core::string::{cstrings_to_ptrs, strings_to_cstrings};
 use super::super::render::config::Configurations;
+use super::super::render::image::Format;
 use super::surface::Surface;
 use super::vulkan as vk;
 use std::collections::HashSet;
@@ -18,6 +19,7 @@ pub(super) struct Physical {
     memory_properties: vk::VkPhysicalDeviceMemoryProperties,
     properties: vk::VkPhysicalDeviceProperties,
     surface_caps: vk::VkSurfaceCapabilitiesKHR,
+    supported_depth_format: vk::VkFormat,
 }
 
 impl Physical {
@@ -42,7 +44,7 @@ impl Physical {
             vk::vkGetPhysicalDeviceProperties(vk_data, &mut properties);
         }
         vxlogi!("{:?}", &surface_caps);
-        let physical = Physical {
+        let mut physical = Physical {
             surface: surface.clone(),
             graphics_queue_node_index,
             transfer_queue_node_index,
@@ -52,8 +54,10 @@ impl Physical {
             memory_properties,
             properties,
             surface_caps,
+            supported_depth_format: vk::VkFormat::VK_FORMAT_D32_SFLOAT,
         };
-        physical
+        physical.supported_depth_format = physical.get_supported_depth_format();
+        return physical;
     }
 
     pub(super) fn get_surface(&self) -> &Surface {
@@ -211,26 +215,28 @@ impl Physical {
     //     Self::get_device_queue_family_properties(self.vk_data)
     // }
 
-    // pub(super) fn get_supported_depth_format(&self) -> vk::VkFormat {
-    //     let depth_formats = vec![
-    //         vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT,
-    //         vk::VkFormat::VK_FORMAT_D24_UNORM_S8_UINT,
-    //         vk::VkFormat::VK_FORMAT_D16_UNORM_S8_UINT,
-    //     ];
-    //     for format in depth_formats {
-    //         let mut format_props = vk::VkFormatProperties::default();
-    //         unsafe {
-    //             vk::vkGetPhysicalDeviceFormatProperties(self.vk_data, format, &mut format_props);
-    //         }
-    //         if format_props.optimalTilingFeatures as u32
-    //             & vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
-    //             != 0
-    //         {
-    //             return format;
-    //         }
-    //     }
-    //     vxlogf!("No depth format found!");
-    // }
+    fn get_supported_depth_format(&self) -> vk::VkFormat {
+        let depth_formats = vec![
+            vk::VkFormat::VK_FORMAT_D32_SFLOAT,
+            vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT,
+            vk::VkFormat::VK_FORMAT_D24_UNORM_S8_UINT,
+            vk::VkFormat::VK_FORMAT_D16_UNORM_S8_UINT,
+            vk::VkFormat::VK_FORMAT_D16_UNORM,
+        ];
+        for format in depth_formats {
+            let mut format_props = vk::VkFormatProperties::default();
+            unsafe {
+                vk::vkGetPhysicalDeviceFormatProperties(self.vk_data, format, &mut format_props);
+            }
+            if format_props.optimalTilingFeatures as u32
+                & vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
+                != 0
+            {
+                return format;
+            }
+        }
+        vxlogf!("No depth format found!");
+    }
 
     pub(super) fn get_surface_formats(&self) -> Vec<vk::VkSurfaceFormatKHR> {
         let mut count = 0u32;
@@ -320,6 +326,17 @@ impl Physical {
 
     pub(super) fn get_properties(&self) -> &vk::VkPhysicalDeviceProperties {
         return &self.properties;
+    }
+
+    pub(super) fn convert_format(&self, f: Format) -> vk::VkFormat {
+        match f {
+            Format::RgbaFloat => return vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT,
+            Format::DepthFloat => return self.get_supported_depth_format(),
+            Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
+            Format::FlagBits8 => return vk::VkFormat::VK_FORMAT_R8_UINT,
+            Format::FlagBits64 => return vk::VkFormat::VK_FORMAT_R32G32_UINT,
+            _ => vxunexpected!(),
+        }
     }
 }
 
@@ -450,6 +467,10 @@ impl Logical {
 
     pub(super) fn get_vk_graphic_queue(&self) -> vk::VkQueue {
         return self.vk_graphic_queue;
+    }
+
+    pub(super) fn convert_format(&self, f: Format) -> vk::VkFormat {
+        return self.physical_device.convert_format(f);
     }
 
     // pub(super) fn get_vk_compute_queue(&self) -> vk::VkQueue {

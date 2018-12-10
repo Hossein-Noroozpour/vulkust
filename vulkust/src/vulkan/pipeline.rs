@@ -183,6 +183,7 @@ impl Pipeline {
             PipelineType::ShadowAccumulatorDirectional => {
                 include_shader!("shadow-accumulator-directional.vert")
             }
+            _ => vxunimplemented!(),
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
@@ -191,6 +192,7 @@ impl Pipeline {
             PipelineType::ShadowAccumulatorDirectional => {
                 include_shader!("shadow-accumulator-directional.frag")
             }
+            _ => vxunimplemented!(),
         };
 
         let vertex_shader = Module::new(vert_bytes, device.clone());
@@ -203,6 +205,7 @@ impl Pipeline {
             PipelineType::ShadowAccumulatorDirectional => {
                 Layout::new_shadow_accumulator_directional(descriptor_manager)
             }
+            _ => vxunimplemented!(),
         };
 
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();

@@ -13,4 +13,5 @@ pub enum PipelineType {
     GBuffer,
     ShadowMapper,
     ShadowAccumulatorDirectional,
+    SSAO,
 }

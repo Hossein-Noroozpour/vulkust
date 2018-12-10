@@ -83,6 +83,18 @@ impl GBufferFiller {
         return &self.textures;
     }
 
+    pub(super) fn get_normal_texture(&self) -> &Arc<RwLock<Texture>> {
+        return &self.textures[1];
+    }
+
+    pub(super) fn get_position_texture(&self) -> &Arc<RwLock<Texture>> {
+        return &self.textures[0];
+    }
+
+    pub(super) fn get_depth_texture(&self) -> &Arc<RwLock<Texture>> {
+        return &self.textures[3];
+    }
+
     pub(super) fn get_framebuffer(&self) -> &Framebuffer {
         return &self.framebuffer;
     }

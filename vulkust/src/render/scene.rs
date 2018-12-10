@@ -1,7 +1,7 @@
 use super::super::core::constants::{MAX_DIRECTIONAL_LIGHTS_COUNT, MAX_POINT_LIGHTS_COUNT};
 use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
-use super::super::core::types::{Id, TypeId as CoreTypeId};
+use super::super::core::types::{Id, Real, TypeId as CoreTypeId};
 use super::super::system::file::File;
 use super::buffer::Dynamic as DynamicBuffer;
 use super::camera::{Camera, Uniform as CameraUniform};
@@ -211,7 +211,8 @@ pub struct Uniform {
     camera: CameraUniform,
     directional_lights: [DirectionalUniform; MAX_DIRECTIONAL_LIGHTS_COUNT],
     point_lights: [PointUniform; MAX_POINT_LIGHTS_COUNT],
-    directional_point_lights_count: math::Vector4<u32>,
+    lights_count: math::Vector4<u32>, // directional, point, rezerved
+    ssao_config: math::Vector4<Real>, // samples-count, radius, z-tolerance, rezerved
 }
 
 impl Uniform {
@@ -221,7 +222,8 @@ impl Uniform {
             camera,
             directional_lights: [DirectionalUniform::new(); MAX_DIRECTIONAL_LIGHTS_COUNT],
             point_lights: [PointUniform::new(); MAX_POINT_LIGHTS_COUNT],
-            directional_point_lights_count: math::Vector4::new(0, 0, 3, 4),
+            lights_count: math::Vector4::new(0, 0, 0, 0),
+            ssao_config: math::Vector4::new(64.1, 0.5, 0.1, 0.0),
         }
     }
 }
@@ -547,8 +549,8 @@ impl Scene for Base {
                 last_point_light_index += 1;
             }
         }
-        self.uniform.directional_point_lights_count.x = last_directional_light_index as u32;
-        self.uniform.directional_point_lights_count.y = last_point_light_index as u32;
+        self.uniform.lights_count.x = last_directional_light_index as u32;
+        self.uniform.lights_count.y = last_point_light_index as u32;
         self.uniform_buffer.update(&self.uniform, frame_number);
     }
 

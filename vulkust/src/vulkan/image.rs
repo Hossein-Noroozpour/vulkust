@@ -10,17 +10,6 @@ use std::default::Default;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
-pub(super) fn convert_format(f: Format) -> vk::VkFormat {
-    match f {
-        Format::RgbaFloat => return vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT,
-        Format::DepthFloat => return vk::VkFormat::VK_FORMAT_D32_SFLOAT,
-        Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
-        Format::FlagBits8 => return vk::VkFormat::VK_FORMAT_R8_UINT,
-        Format::FlagBits64 => return vk::VkFormat::VK_FORMAT_R32G32_UINT,
-        _ => vxunexpected!(),
-    }
-}
-
 // pub(super) fn convert_to_format(f: vk::VkFormat) -> Format {
 //     match f {
 //         vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT => return Format::RgbaFloat,
@@ -386,11 +375,13 @@ impl View {
                 vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
             }
         };
-
+        let vkfmt = vxresult!(memory_mgr.read())
+            .get_device()
+            .convert_format(format);
         let mut image_info = vk::VkImageCreateInfo::default();
         image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
-        image_info.format = convert_format(format);
+        image_info.format = vkfmt;
         image_info.extent.width = width;
         image_info.extent.height = height;
         image_info.extent.depth = 1;
