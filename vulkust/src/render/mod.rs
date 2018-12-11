@@ -22,7 +22,7 @@ pub mod render_pass;
 pub mod sampler;
 pub mod scene;
 pub mod shadower;
-// pub mod ssao;
+pub mod ssao;
 pub mod sync;
 pub mod texture;
 pub mod widget;

@@ -110,8 +110,8 @@ bool find_hit(vec3 p, float dis, float steps, inout vec2 hituv) {
 			return false;
 		}
 		tmpv3 = dir * dis + vpos;
-	} else if (tmpv3.z > scene_ubo.s.camera.near_reserved.x) {
-		dis = abs((scene_ubo.s.camera.near_reserved.x - vpos.z) / dir.z);
+	} else if (tmpv3.z > scene_ubo.s.camera.near_aspect_ratio_reserved.x) {
+		dis = abs((scene_ubo.s.camera.near_aspect_ratio_reserved.x - vpos.z) / dir.z);
 		if(dis < SMALL_EPSILON) {
 			return false;
 		}

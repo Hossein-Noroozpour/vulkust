@@ -11,31 +11,50 @@ use std::convert::From;
 use std::sync::{Arc, RwLock, Weak};
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
-    position_far: math::Vector4<Real>,
-    near_reserved: math::Vector4<Real>,
-    projection: math::Matrix4<Real>,
+    x: math::Vector4<Real>,
+    y: math::Vector4<Real>,
+    z: math::Vector4<Real>,
+    position_far: math::Vector4<Real>, // far is negative
+    near_aspect_ratio_reserved: math::Vector4<Real>, // near is negative
+    inversed_rotation: math::Matrix4<Real>,
     view: math::Matrix4<Real>,
+    projection: math::Matrix4<Real>,
+    uniform_projection: math::Matrix4<Real>,
     view_projection: math::Matrix4<Real>,
+    uniform_view_projection: math::Matrix4<Real>,
 }
 
 impl Uniform {
     pub fn new() -> Self {
+        let x = math::Vector4::new(1.0, 0.0, 0.0, 0.0);
+        let y = math::Vector4::new(0.0, 1.0, 0.0, 0.0);
+        let z = math::Vector4::new(0.0, 0.0, 1.0, 0.0);
+        let position_far = math::Vector4::new(0.0, 0.0, 0.0, -100.0);
+        let near_aspect_ratio_reserved = math::Vector4::new(-1.0, 0.0, 0.0, -100.0);
         let view = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
         let projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         );
-        let position_far = math::Vector4::new(0.0, 0.0, 0.0, -100.0);
-        let near_reserved = math::Vector4::new(-1.0, 0.0, 0.0, -100.0);
+        let uniform_projection = math::Matrix4::new(
+            0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
+        ) * projection;
         Uniform {
+            x,
+            y,
+            z,
             position_far,
-            near_reserved,
-            projection,
+            near_aspect_ratio_reserved,
+            inversed_rotation: view,
             view,
+            projection,
+            uniform_projection,
             view_projection: projection,
+            uniform_view_projection: uniform_projection,
         }
     }
 }
@@ -223,18 +242,8 @@ impl Default for Plane {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
-    pub obj_base: ObjectBase,
-    pub near: Real,
-    pub far: Real,
-    pub aspect_ratio: Real,
-    pub x: math::Vector3<Real>,
-    pub y: math::Vector3<Real>,
-    pub z: math::Vector3<Real>,
-    pub location: math::Vector3<Real>,
-    pub direction: math::Matrix4<Real>,
-    pub view: math::Matrix4<Real>,
-    pub projection: math::Matrix4<Real>,
-    pub view_projection: math::Matrix4<Real>,
+    obj_base: ObjectBase,
+    uniform: Uniform,
     frustum_planes: [Plane; 6],
     cascades_count: usize,
 }
@@ -249,27 +258,13 @@ impl Base {
     }
 
     pub fn new_with_obj_base(eng: &Engine, obj_base: ObjectBase) -> Self {
-        let identity = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-        );
-        let img_transform = math::Matrix4::new(
-            1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-        );
         let os_app = vxunwrap!(eng.get_os_app().upgrade());
         let os_app = vxresult!(os_app.read());
+        let mut uniform = Uniform::new();
+        uniform.near_aspect_ratio_reserved.y = os_app.get_window_aspect_ratio();
         Self {
             obj_base,
-            near: 1.0,
-            far: 100.0,
-            aspect_ratio: os_app.get_window_aspect_ratio(),
-            x: math::Vector3::new(1.0, 0.0, 0.0),
-            y: math::Vector3::new(0.0, 1.0, 0.0),
-            z: math::Vector3::new(0.0, 0.0, -1.0),
-            location: math::Vector3::new(0.0, 0.0, 0.0),
-            direction: identity,
-            view: identity,
-            projection: img_transform,
-            view_projection: img_transform,
+            uniform,
             frustum_planes: [
                 Plane::default(),
                 Plane::default(),
@@ -283,12 +278,15 @@ impl Base {
     }
 
     pub fn update_view_projection(&mut self) {
-        self.view_projection = self.projection * self.view;
+        self.uniform.view_projection = self.uniform.projection * self.uniform.view;
+        self.uniform.uniform_view_projection = math::Matrix4::new(
+            0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
+        ) * self.uniform.view_projection;
     }
 
     pub fn update_location(&mut self) {
-        let translate = math::Matrix4::from_translation(-self.location);
-        self.view = self.direction * translate;
+        let translate = math::Matrix4::from_translation(-self.uniform.position_far.truncate());
+        self.uniform.view = self.uniform.inversed_rotation * translate;
         self.update_view_projection();
     }
 }
@@ -325,58 +323,70 @@ impl Object for Base {
 impl Transferable for Base {
     fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
         let rotation = math::Matrix4::from(*q);
-        self.x = (rotation * self.x.extend(0.0)).truncate();
-        self.y = (rotation * self.y.extend(0.0)).truncate();
-        self.z = (rotation * self.z.extend(0.0)).truncate();
+        self.uniform.x = (rotation * math::Vector4::new(1.0, 0.0, 0.0, 0.0))
+            .truncate()
+            .extend(self.uniform.x.w);
+        self.uniform.y = (rotation * math::Vector4::new(0.0, 1.0, 0.0, 0.0))
+            .truncate()
+            .extend(self.uniform.y.w);
+        self.uniform.z = (rotation * math::Vector4::new(0.0, 0.0, 1.0, 0.0))
+            .truncate()
+            .extend(self.uniform.z.w);
         for fp in &mut self.frustum_planes {
-            fp.rotate_around(&self.location, &rotation);
+            fp.rotate_around(&self.uniform.position_far.truncate(), &rotation);
         }
         let mut q = *q;
         q.s = -q.s;
-        self.direction = math::Matrix4::from(q);
+        self.uniform.inversed_rotation = math::Matrix4::from(q);
         self.update_location();
     }
 
     fn set_location(&mut self, l: &math::Vector3<Real>) {
-        let t = l - self.location;
+        let t = l - self.uniform.position_far.truncate();
         for fp in &mut self.frustum_planes {
             fp.translate(&t);
         }
-        self.location = *l;
+        self.uniform.position_far = l.extend(self.uniform.position_far.w);
         self.update_location();
     }
 
     fn get_location(&self) -> math::Vector3<Real> {
-        return self.location;
+        return self.uniform.position_far.truncate();
     }
 
     fn move_local_z(&mut self, v: Real) {
-        let t = self.z * v;
+        let t = self.uniform.z.truncate() * v;
         for fp in &mut self.frustum_planes {
             fp.translate(&t);
         }
-        self.location = self.location + t;
+        self.uniform.position_far =
+            (self.uniform.position_far.truncate() + t).extend(self.uniform.position_far.w);
         self.update_location();
     }
 
     fn move_local_x(&mut self, v: Real) {
-        let t = self.x * v;
+        let t = self.uniform.x.truncate() * v;
         for fp in &mut self.frustum_planes {
             fp.translate(&t);
         }
-        self.location = self.location + t;
+        self.uniform.position_far =
+            (self.uniform.position_far.truncate() + t).extend(self.uniform.position_far.w);
         self.update_location();
     }
 
     fn rotate_local_x(&mut self, v: Real) {
-        let rot = math::Matrix4::from_axis_angle(self.x, math::Rad(-v));
-        let irot = math::Matrix4::from_axis_angle(self.x, math::Rad(v));
-        self.y = (irot * self.y.extend(0.0)).truncate();
-        self.z = (irot * self.z.extend(0.0)).truncate();
+        let rot = math::Matrix4::from_axis_angle(self.uniform.x.truncate(), math::Rad(-v));
+        let irot = math::Matrix4::from_axis_angle(self.uniform.x.truncate(), math::Rad(v));
+        self.uniform.y = (irot * self.uniform.y.truncate().extend(0.0))
+            .truncate()
+            .extend(self.uniform.y.w);
+        self.uniform.z = (irot * self.uniform.z.truncate().extend(0.0))
+            .truncate()
+            .extend(self.uniform.z.w);
         for fp in &mut self.frustum_planes {
-            fp.rotate_around(&self.location, &irot);
+            fp.rotate_around(&self.uniform.position_far.truncate(), &irot);
         }
-        self.direction = self.direction * rot;
+        self.uniform.inversed_rotation = self.uniform.inversed_rotation * rot;
         self.update_location();
     }
 
@@ -384,13 +394,19 @@ impl Transferable for Base {
         let ax = math::Vector3::new(0.0, 0.0, 1.0);
         let rot = math::Matrix4::from_axis_angle(ax, math::Rad(-v));
         let irot = math::Matrix4::from_axis_angle(ax, math::Rad(v));
-        self.x = (irot * self.x.extend(0.0)).truncate();
-        self.y = (irot * self.y.extend(0.0)).truncate();
-        self.z = (irot * self.z.extend(0.0)).truncate();
+        self.uniform.x = (irot * self.uniform.x.truncate().extend(0.0))
+            .truncate()
+            .extend(self.uniform.x.w);
+        self.uniform.y = (irot * self.uniform.y.truncate().extend(0.0))
+            .truncate()
+            .extend(self.uniform.y.w);
+        self.uniform.z = (irot * self.uniform.z.truncate().extend(0.0))
+            .truncate()
+            .extend(self.uniform.z.w);
         for fp in &mut self.frustum_planes {
-            fp.rotate_around(&self.location, &irot);
+            fp.rotate_around(&self.uniform.position_far.truncate(), &irot);
         }
-        self.direction = self.direction * rot;
+        self.uniform.inversed_rotation = self.uniform.inversed_rotation * rot;
         self.update_location();
     }
 }
@@ -402,10 +418,9 @@ impl Loadable for Base {
             gltf::camera::Projection::Orthographic(p) => (p.znear(), p.zfar()),
         };
         let mut myself = Base::new(eng);
-        myself.near = near;
-        myself.near = far;
+        myself.uniform.near_aspect_ratio_reserved.x = near;
         let (l, r, _) = node.transform().decomposed();
-        myself.location = math::Vector3::new(l[0], l[1], l[2]);
+        myself.uniform.position_far = math::Vector4::new(l[0], l[1], l[2], -far);
         let rotation = math::Quaternion::new(r[3], r[0], r[1], r[2]);
         myself.set_orientation(&rotation);
         return myself;
@@ -413,10 +428,11 @@ impl Loadable for Base {
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let mut myself = Base::new_with_id(engine, my_id);
-        myself.location = math::Vector3::new(reader.read(), reader.read(), reader.read());
+        myself.uniform.position_far =
+            math::Vector4::new(reader.read(), reader.read(), reader.read(), 0.0);
         let r = math::Quaternion::new(reader.read(), reader.read(), reader.read(), reader.read());
-        myself.near = reader.read();
-        myself.far = reader.read();
+        myself.uniform.near_aspect_ratio_reserved.x = -reader.read::<Real>();
+        myself.uniform.position_far.w = -reader.read::<Real>();
         myself.set_orientation(&r);
         return myself;
     }
@@ -424,7 +440,7 @@ impl Loadable for Base {
 
 impl Camera for Base {
     fn get_view_projection(&self) -> &math::Matrix4<Real> {
-        &self.view_projection
+        &self.uniform.view_projection
     }
 
     fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]> {
@@ -443,11 +459,7 @@ impl Camera for Base {
     }
 
     fn update_uniform(&self, uniform: &mut Uniform) {
-        uniform.position_far = self.location.extend(-self.far);
-        uniform.near_reserved = math::Vector4::new(-self.near, 0.0, 0.0, 0.0);
-        uniform.projection = self.projection;
-        uniform.view = self.view;
-        uniform.view_projection = self.view_projection;
+        *uniform = self.uniform;
     }
 }
 
@@ -487,28 +499,35 @@ impl Perspective {
     pub fn set_fov_vertical(&mut self, fovx: Real) {
         self.fovx = fovx;
         self.tanx = (fovx * 0.5).tan();
-        self.tany = self.tanx / self.base.aspect_ratio;
+        self.tany = self.tanx / self.base.uniform.near_aspect_ratio_reserved.y;
         self.fovy = self.tany.atan() * 2.0;
-        self.base.projection = math::Matrix4::new(
+        self.base.uniform.projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         ) * math::perspective(
             math::Rad(self.fovy),
-            self.base.aspect_ratio,
-            self.base.near,
-            self.base.far,
+            self.base.uniform.near_aspect_ratio_reserved.y,
+            -self.base.uniform.near_aspect_ratio_reserved.x,
+            -self.base.uniform.position_far.w,
         );
+        self.base.uniform.uniform_projection = math::Matrix4::new(
+            0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
+        ) * self.base.uniform.projection;
         self.lambda = ((self.fovx * 0.5).sin() + (self.fovy * 0.5).sin()) * 0.5;
         self.base.update_view_projection();
         self.update_frustum_planes();
     }
 
     fn update_frustum_planes(&mut self) {
-        let zn = self.base.location + (self.base.z * self.base.near);
-        let zf = self.base.location + (self.base.z * self.base.far);
-        let xn = self.base.x * (self.base.near * self.tanx);
-        let yn = self.base.y * (self.base.near * self.tany);
-        let xf = self.base.x * (self.base.far * self.tanx);
-        let yf = self.base.y * (self.base.far * self.tany);
+        let zn = self.base.uniform.position_far.truncate()
+            + (self.base.uniform.z.truncate() * self.base.uniform.near_aspect_ratio_reserved.x);
+        let zf = self.base.uniform.position_far.truncate()
+            + (self.base.uniform.z.truncate() * self.base.uniform.position_far.w);
+        let xn = self.base.uniform.x.truncate()
+            * (-self.base.uniform.near_aspect_ratio_reserved.x * self.tanx);
+        let yn = self.base.uniform.y.truncate()
+            * (-self.base.uniform.near_aspect_ratio_reserved.x * self.tany);
+        let xf = self.base.uniform.x.truncate() * (-self.base.uniform.position_far.w * self.tanx);
+        let yf = self.base.uniform.y.truncate() * (-self.base.uniform.position_far.w * self.tany);
         let znpxn = zn + xn;
         let znmxn = zn - xn;
         let np1 = znpxn + yn;
@@ -628,26 +647,28 @@ impl Camera for Perspective {
 
         let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
 
-        let xtanx = self.base.x * self.tanx;
-        let ytany = self.base.y * self.tany;
+        let xtanx = self.base.uniform.x.truncate() * self.tanx;
+        let ytany = self.base.uniform.y.truncate() * self.tany;
 
-        let x = xtanx * self.base.near;
-        let y = ytany * self.base.near;
-        let z = self.base.location + self.base.z * self.base.near;
+        let x = xtanx * -self.base.uniform.near_aspect_ratio_reserved.x;
+        let y = ytany * -self.base.uniform.near_aspect_ratio_reserved.x;
+        let z = self.base.uniform.position_far.truncate()
+            + (self.base.uniform.z.truncate() * self.base.uniform.near_aspect_ratio_reserved.x);
 
-        result[0][0] = z - x - y;
+        result[0][0] = (z - x) - y;
         result[0][1] = z + x - y;
         result[0][2] = z + x + y;
-        result[0][3] = z - x + y;
+        result[0][3] = (z - x) + y;
 
-        let x = xtanx * self.base.far;
-        let y = ytany * self.base.far;
-        let z = self.base.location + self.base.z * self.base.far;
+        let x = xtanx * -self.base.uniform.position_far.w;
+        let y = ytany * -self.base.uniform.position_far.w;
+        let z = self.base.uniform.position_far.truncate()
+            + (self.base.uniform.z.truncate() * self.base.uniform.position_far.w);
 
-        result[sections_count][0] = z - x - y;
+        result[sections_count][0] = (z - x) - y;
         result[sections_count][1] = z + x - y;
         result[sections_count][2] = z + x + y;
-        result[sections_count][3] = z - x + y;
+        result[sections_count][3] = (z - x) + y;
 
         if sections_count < 2 {
             return result;
@@ -658,24 +679,27 @@ impl Camera for Perspective {
         let lambda = self.lambda;
         let onedivcn = 1.0 / sections_count as Real;
         // uniform increament
-        let unisecinc = oneminlambda * onedivcn * (self.base.far - self.base.near);
-        let fdivn = self.base.far / self.base.near;
+        let unisecinc = oneminlambda
+            * onedivcn
+            * (self.base.uniform.position_far.w - self.base.uniform.near_aspect_ratio_reserved.x);
+        let fdivn =
+            self.base.uniform.position_far.w / self.base.uniform.near_aspect_ratio_reserved.x;
         // logarithmic multiplication
         let logsecmul = fdivn.powf(onedivcn);
         // uniform sector
-        let mut unisec = oneminlambda * self.base.near + unisecinc;
+        let mut unisec = oneminlambda * self.base.uniform.near_aspect_ratio_reserved.x + unisecinc;
         // logarithmic sector
-        let mut logsec = lambda * self.base.near * logsecmul;
+        let mut logsec = lambda * self.base.uniform.near_aspect_ratio_reserved.x * logsecmul;
 
         let l = logsec + unisec;
         let x = xtanx * l;
         let y = ytany * l;
-        let z = self.base.location + self.base.z * l;
+        let z = self.base.uniform.position_far.truncate() + (self.base.uniform.z.truncate() * l);
 
-        result[1][0] = z - x - y;
+        result[1][0] = (z - x) - y;
         result[1][1] = z + x - y;
         result[1][2] = z + x + y;
-        result[1][3] = z - x + y;
+        result[1][3] = (z - x) + y;
 
         for i in 2..sections_count {
             logsec *= logsecmul;
@@ -684,12 +708,13 @@ impl Camera for Perspective {
             let l = logsec + unisec;
             let x = xtanx * l;
             let y = ytany * l;
-            let z = self.base.location + self.base.z * l;
+            let z =
+                self.base.uniform.position_far.truncate() + (self.base.uniform.z.truncate() * l);
 
-            result[i][0] = z - x - y;
+            result[i][0] = (z - x) - y;
             result[i][1] = z + x - y;
             result[i][2] = z + x + y;
-            result[i][3] = z - x + y;
+            result[i][3] = (z - x) + y;
         }
         return result;
     }
@@ -721,27 +746,46 @@ impl Orthographic {
     }
 
     fn update_frustum_planes(&mut self) {
-        let zn = self.base.location + (self.base.z * self.base.near);
-        let zf = self.base.location + (self.base.z * self.base.far);
-        let x = self.base.x * (self.base.aspect_ratio * self.size);
-        let y = self.base.y * self.size;
+        let zn = self.base.uniform.position_far.truncate()
+            + (self.base.uniform.z.truncate() * self.base.uniform.near_aspect_ratio_reserved.x);
+        let zf = self.base.uniform.position_far.truncate()
+            + (self.base.uniform.z.truncate() * self.base.uniform.position_far.w);
+        let x = self.base.uniform.x.truncate()
+            * (self.base.uniform.near_aspect_ratio_reserved.y * self.size);
+        let y = self.base.uniform.y.truncate() * self.size;
         let xpy = x + y;
         let np = zn + xpy;
         let fp = zf - xpy;
-        self.base.frustum_planes[0] = Plane::new_with_point_normal(np, -self.base.z);
-        self.base.frustum_planes[1] = Plane::new_with_point_normal(np, self.base.x);
-        self.base.frustum_planes[2] = Plane::new_with_point_normal(np, self.base.y);
-        self.base.frustum_planes[3] = Plane::new_with_point_normal(fp, -self.base.x);
-        self.base.frustum_planes[4] = Plane::new_with_point_normal(fp, -self.base.y);
-        self.base.frustum_planes[5] = Plane::new_with_point_normal(fp, self.base.z);
+        self.base.frustum_planes[0] =
+            Plane::new_with_point_normal(np, -self.base.uniform.z.truncate());
+        self.base.frustum_planes[1] =
+            Plane::new_with_point_normal(np, self.base.uniform.x.truncate());
+        self.base.frustum_planes[2] =
+            Plane::new_with_point_normal(np, self.base.uniform.y.truncate());
+        self.base.frustum_planes[3] =
+            Plane::new_with_point_normal(fp, -self.base.uniform.x.truncate());
+        self.base.frustum_planes[4] =
+            Plane::new_with_point_normal(fp, -self.base.uniform.y.truncate());
+        self.base.frustum_planes[5] =
+            Plane::new_with_point_normal(fp, self.base.uniform.z.truncate());
     }
 
     pub fn new_with_base(mut base: Base, size: Real) -> Self {
         let size = size * 0.5;
-        let w = base.aspect_ratio * size;
-        base.projection = math::Matrix4::new(
+        let w = base.uniform.near_aspect_ratio_reserved.y * size;
+        base.uniform.projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-        ) * math::ortho(-w, w, -size, size, base.near, base.far);
+        ) * math::ortho(
+            -w,
+            w,
+            -size,
+            size,
+            -base.uniform.near_aspect_ratio_reserved.x,
+            -base.uniform.position_far.w,
+        );
+        base.uniform.uniform_projection = math::Matrix4::new(
+            0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
+        ) * base.uniform.projection;
         base.update_view_projection();
         let mut s = Orthographic { base, size };
         s.update_frustum_planes();
@@ -751,10 +795,20 @@ impl Orthographic {
     pub fn new_with_id(eng: &Engine, id: Id) -> Self {
         let mut base = Base::new_with_id(eng, id);
         let size = 0.5;
-        let w = base.aspect_ratio * size;
-        base.projection = math::Matrix4::new(
+        let w = base.uniform.near_aspect_ratio_reserved.y * size;
+        base.uniform.projection = math::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-        ) * math::ortho(-w, w, -size, size, base.near, base.far);
+        ) * math::ortho(
+            -w,
+            w,
+            -size,
+            size,
+            -base.uniform.near_aspect_ratio_reserved.x,
+            -base.uniform.position_far.w,
+        );
+        base.uniform.uniform_projection = math::Matrix4::new(
+            0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
+        ) * base.uniform.projection;
         base.update_view_projection();
         let mut s = Orthographic { base, size };
         s.update_frustum_planes();
@@ -841,7 +895,7 @@ impl Transferable for Orthographic {
 
 impl Camera for Orthographic {
     fn get_view_projection(&self) -> &math::Matrix4<Real> {
-        &self.base.view_projection
+        &self.base.uniform.view_projection
     }
 
     fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]> {
@@ -854,28 +908,31 @@ impl Camera for Orthographic {
         }
         let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
 
-        let w = self.size * self.base.aspect_ratio;
+        let w = self.size * self.base.uniform.near_aspect_ratio_reserved.y;
 
-        let mut l = self.base.near;
-        let x = self.base.x * w;
-        let y = self.base.y * self.size;
-        let z = self.base.location + self.base.z * l;
+        let mut l = -self.base.uniform.near_aspect_ratio_reserved.x;
+        let x = self.base.uniform.x.truncate() * w;
+        let y = self.base.uniform.y.truncate() * self.size;
+        let z = self.base.uniform.position_far.truncate() + (self.base.uniform.z.truncate() * l);
 
         result[0][0] = z - x - y;
         result[0][1] = z + x - y;
         result[0][2] = z + x + y;
         result[0][3] = z - x + y;
 
-        let unisecinc = (self.base.far - self.base.near) / sections_count as Real;
+        let unisecinc = (-self.base.uniform.position_far.w
+            + self.base.uniform.near_aspect_ratio_reserved.x)
+            / sections_count as Real;
 
         let sections_count = sections_count + 1;
 
         for i in 1..sections_count {
             l += unisecinc;
 
-            let x = self.base.x * w;
-            let y = self.base.y * self.size;
-            let z = self.base.location + self.base.z * l;
+            let x = self.base.uniform.x.truncate() * w;
+            let y = self.base.uniform.y.truncate() * self.size;
+            let z =
+                self.base.uniform.position_far.truncate() + (self.base.uniform.z.truncate() * l);
 
             result[i][0] = z - x - y;
             result[i][1] = z + x - y;

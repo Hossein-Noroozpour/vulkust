@@ -9,10 +9,15 @@
 #define SMALL_EPSILON 0.00001
 
 struct Camera {
-	vec4 position_far;
-	vec4 near_reserved;
-	mat4 projection;
+    vec4 x;
+    vec4 y;
+    vec4 z;
+	vec4 position_far; // far is negative
+	vec4 near_aspect_ratio_reserved; // far is negative
+	mat4 inversed_rotation;
 	mat4 view;
+	mat4 projection;
+	mat4 uniform_projection; // x -> (0, 1), y -> (0, 1), z -> (0, 1)
 	mat4 view_projection;
 	mat4 uniform_view_projection; // x -> (0, 1), y -> (0, 1), z -> (0, 1)
 };

@@ -12,20 +12,49 @@ use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
 use math;
+use math::InnerSpace;
+use rand;
+use rand::distributions::{Distribution as RandDis, Uniform as RandUni};
 
 const MAX_SSAO_SAMPLES_COUNT: usize = 128;
 
 #[repr(C)]
-#[cfg_attr(debug_mode, derive(Debug))]
 struct Uniform {
     sample_vectors: [math::Vector4<Real>; MAX_SSAO_SAMPLES_COUNT],
 }
 
+#[cfg(debug_mode)]
+impl std::fmt::Debug for Uniform {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        return write!(f, "SSAO Uniform");
+    }
+}
+
 impl Uniform {
     pub fn new() -> Self {
-        Uniform {
-            reserved: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
+        let r1 = RandUni::from(-1f32..1f32);
+        let r2 = RandUni::from(0f32..1f32);
+        let mut rng = rand::thread_rng();
+        let mut sample_vectors = [math::Vector4::new(0.0, 0.0, 0.0, 0.0); MAX_SSAO_SAMPLES_COUNT];
+        let mut sum_weight = 0.0;
+        for i in 0..MAX_SSAO_SAMPLES_COUNT {
+            let v = math::Vector3::new(
+                r1.sample(&mut rng),
+                r1.sample(&mut rng),
+                r2.sample(&mut rng),
+            );
+            let sv = &mut sample_vectors[i];
+            sv.x = v.x;
+            sv.y = v.y;
+            sv.z = v.z;
+            sv.w = 2.4 - v.magnitude();
+            sum_weight += sv.w;
         }
+        let coef = -1.0 / sum_weight;
+        for i in 0..MAX_SSAO_SAMPLES_COUNT {
+            sample_vectors[i].w *= coef;
+        }
+        Uniform { sample_vectors }
     }
 }
 

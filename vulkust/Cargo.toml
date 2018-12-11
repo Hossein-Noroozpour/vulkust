@@ -20,6 +20,7 @@ libc = "*"
 rusttype = "*"
 gltf = { version = "*", features = ["extras", "default"] }
 num_cpus = "*"
+rand = "*"
 
 [target.'cfg(all(target_os = "windows", not(feature = "directx12")))'.dependencies]
 winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser"] }

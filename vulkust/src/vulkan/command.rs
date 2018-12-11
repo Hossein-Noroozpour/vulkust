@@ -35,6 +35,12 @@ const DEFERRED_DEFERRED_DESCRIPTOR_OFFSET: usize = 1;
 const DEFERRED_DESCRIPTOR_SETS_COUNT: usize = 2;
 const DEFERRED_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 2;
 
+const SSAO_SCENE_DESCRIPTOR_OFFSET: usize = 0;
+const SSAO_SSAO_DESCRIPTOR_OFFSET: usize = 1;
+
+const SSAO_DESCRIPTOR_SETS_COUNT: usize = 2;
+const SSAO_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 2;
+
 const SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT: usize = 2;
 const SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET: usize = 0;
 const SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET: usize = 1;
@@ -366,6 +372,23 @@ impl Buffer {
         self.draw(3);
     }
 
+    pub(crate) fn render_ssao(&mut self) {
+        self.has_render_record = true;
+        unsafe {
+            vk::vkCmdBindDescriptorSets(
+                self.vk_data,
+                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                self.bound_pipeline_layout,
+                0,
+                SSAO_DESCRIPTOR_SETS_COUNT as u32,
+                self.bound_descriptor_sets.as_ptr(),
+                SSAO_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
+                self.bound_dynamic_buffer_offsets.as_ptr(),
+            );
+        }
+        self.draw(3);
+    }
+
     pub(crate) fn render_shadow_accumulator_directional(&mut self) {
         self.has_render_record = true;
         unsafe {
@@ -400,6 +423,26 @@ impl Buffer {
     ) {
         self.bound_descriptor_sets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
         self.bound_dynamic_buffer_offsets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] =
+            buffer.get_allocated_memory().get_offset() as u32;
+    }
+
+    pub(crate) fn bind_ssao_scene_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[SSAO_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[SSAO_SCENE_DESCRIPTOR_OFFSET] =
+            buffer.get_allocated_memory().get_offset() as u32;
+    }
+
+    pub(crate) fn bind_ssao_ssao_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[SSAO_SSAO_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[SSAO_SSAO_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
 
