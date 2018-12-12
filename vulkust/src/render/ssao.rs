@@ -3,10 +3,12 @@ use super::buffer::Dynamic as DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::config::Configurations;
 use super::descriptor::Set as DescriptorSet;
+use super::framebuffer::Framebuffer;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
 use super::image::{AttachmentType, Format, View as ImageView};
 use super::pipeline::{Pipeline, PipelineType};
+use super::render_pass::RenderPass;
 use super::texture::{Manager as TextureManager, Texture};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
@@ -62,6 +64,8 @@ impl Uniform {
 pub struct SSAO {
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
+    render_pass: Arc<RenderPass>,
+    framebuffer: Arc<Framebuffer>,
     descriptor_set: Arc<DescriptorSet>,
     pipeline: Arc<Pipeline>,
     textures: Vec<Arc<RwLock<Texture>>>,
@@ -74,7 +78,6 @@ impl SSAO {
         g_buffer_filler: &GBufferFiller,
         config: &Configurations,
     ) -> Self {
-        let gbuff_framebuffer = g_buffer_filler.get_framebuffer();
         let dev = eng.get_device();
         let memmgr = eng.get_memory_manager();
         let buffers = vec![Arc::new(ImageView::new_surface_attachment(
@@ -83,7 +86,6 @@ impl SSAO {
             Format::Float,
             AttachmentType::ColorGBuffer,
         ))];
-        let (w, h) = gbuff_framebuffer.get_dimensions();
         let uniform = Uniform::new();
         let uniform_buffer = vxresult!(eng.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
@@ -92,7 +94,7 @@ impl SSAO {
         textures.push(g_buffer_filler.get_normal_texture().clone());
         textures.push(g_buffer_filler.get_depth_texture().clone());
         let descriptor_set = vxresult!(eng.get_descriptor_manager().write())
-            .create_deferred_set(&uniform_buffer, textures);
+            .create_ssao_set(&uniform_buffer, textures);
         let render_pass = eng.get_render_pass();
         let pipeline = vxresult!(eng.get_pipeline_manager().write()).create(
             render_pass.clone(),
@@ -104,23 +106,45 @@ impl SSAO {
         for b in &buffers {
             textures.push(texmgr.create_2d_with_view_sampler(b.clone(), sampler.clone()));
         }
+        let render_pass = Arc::new(RenderPass::new(buffers.clone(), true, true));
+        let framebuffer = Arc::new(Framebuffer::new(buffers.clone(), render_pass.clone()));
         Self {
             uniform,
             uniform_buffer,
             descriptor_set,
             pipeline,
+            render_pass,
+            framebuffer,
             textures,
         }
     }
 
-    pub(crate) fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+    pub(super) fn begin_secondary(&self, cmd: &mut CmdBuffer) {
+        cmd.begin_secondary(&self.framebuffer);
+        cmd.bind_pipeline(&self.pipeline);
+    }
+
+    pub(super) fn end_secondary(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let buffer = self.uniform_buffer.get_buffer(frame_number);
         let buffer = vxresult!(buffer.read());
-        cmd.bind_pipeline(&self.pipeline);
         cmd.bind_ssao_ssao_descriptor(&*self.descriptor_set, &*buffer);
+        cmd.render_ssao();
+        cmd.end();
+    }
+
+    pub(super) fn record_primary(&self, pricmd: &mut CmdBuffer, seccmd: &CmdBuffer) {
+        pricmd.begin();
+        self.framebuffer.begin(pricmd);
+        pricmd.exe_cmd(seccmd);
+        pricmd.end_render_pass();
+        pricmd.end();
     }
 
     pub(crate) fn update(&mut self, frame_number: usize) {
         self.uniform_buffer.update(&self.uniform, frame_number);
+    }
+
+    pub(crate) fn get_ambient_occlusion_texture(&self) -> &Arc<RwLock<Texture>> {
+        return &self.textures[0];
     }
 }

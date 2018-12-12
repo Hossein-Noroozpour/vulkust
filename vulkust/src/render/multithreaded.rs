@@ -6,6 +6,7 @@ use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
 use super::scene::Manager as SceneManager;
 use super::shadower::Shadower;
+use super::ssao::SSAO;
 use num_cpus;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, RwLock};
@@ -150,6 +151,7 @@ pub(super) struct Engine {
     g_buffer_filler: Arc<RwLock<GBufferFiller>>,
     deferred: Arc<RwLock<Deferred>>,
     shadower: Arc<RwLock<Shadower>>,
+    ssao: Option<Arc<RwLock<SSAO>>>,
 }
 
 impl Engine {
@@ -164,14 +166,26 @@ impl Engine {
         let mut texmgr = vxresult!(asset_manager.get_texture_manager().write());
         let g_buffer_filler = GBufferFiller::new(&eng, &mut *texmgr, config);
         let shadower = Shadower::new(&eng, config, &g_buffer_filler, &mut *texmgr);
+        let ssao = if config.get_enable_ssao() {
+            Some(SSAO::new(&eng, &mut *texmgr, &g_buffer_filler, config))
+        } else {
+            None
+        };
         let deferred = Arc::new(RwLock::new(Deferred::new(
             &eng,
             &g_buffer_filler,
             &shadower,
+            ssao.as_ref(),
             config,
+            &mut *texmgr,
         )));
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
         let shadower = Arc::new(RwLock::new(shadower));
+        let ssao = if let Some(ssao) = ssao {
+            Some(Arc::new(RwLock::new(ssao)))
+        } else {
+            None
+        };
         let kernels_count = num_cpus::get();
         let mut kernels = Vec::with_capacity(kernels_count);
         for ki in 0..kernels_count {
@@ -192,6 +206,7 @@ impl Engine {
             g_buffer_filler,
             deferred,
             shadower,
+            ssao,
         }
     }
 
@@ -254,6 +269,17 @@ impl Engine {
         let mut last_semaphore = engine.get_starting_semaphore().clone();
         let frame_number = engine.get_frame_number();
         vxresult!(self.deferred.write()).update(frame_number);
+        let ssao = if let Some(ssao) = &self.ssao {
+            vxresult!(ssao.write()).update(frame_number);
+            Some(vxresult!(ssao.read()))
+        } else {
+            None
+        };
+        let ssao: Option<&SSAO> = if let Some(ssao) = &ssao {
+            Some(&*ssao)
+        } else {
+            None
+        };
         let scnmgr = vxresult!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         let g_buffer_filler = vxresult!(self.g_buffer_filler.read());
@@ -273,6 +299,7 @@ impl Engine {
                         &*g_buffer_filler,
                         &mut *shadower,
                         &*deferred,
+                        ssao,
                     )
                     .clone();
             }

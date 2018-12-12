@@ -15,6 +15,7 @@ use super::light::{DirectionalUniform, Light, PointUniform};
 use super::model::{Base as ModelBase, Model};
 use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
 use super::shadower::Shadower;
+use super::ssao::SSAO;
 use super::sync::Semaphore;
 use std::collections::BTreeMap;
 use std::io::BufReader;
@@ -58,6 +59,7 @@ pub trait Scene: Object {
         &GBufferFiller,
         &mut Shadower,
         &Deferred,
+        Option<&SSAO>,
     ) -> Arc<Semaphore>;
 }
 
@@ -242,9 +244,13 @@ struct BaseKernelData {
 struct BaseFramedata {
     gbuffer: CmdBuffer,
     gbuffer_semaphore: Arc<Semaphore>,
+    gbuffer_semaphore_ssao: Arc<Semaphore>,
     deferred: CmdBuffer,
     deferred_secondary: CmdBuffer,
     deferred_semaphore: Arc<Semaphore>,
+    ssao: CmdBuffer,
+    ssao_secondary: CmdBuffer,
+    ssao_semaphore: Arc<Semaphore>,
     preparation_cmd: CmdBuffer,
     preparation_semaphore: Arc<Semaphore>,
 }
@@ -253,17 +259,25 @@ impl BaseFramedata {
     fn new(engine: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>) -> Self {
         let gbuffer = engine.create_primary_command_buffer(cmd_pool.clone());
         let gbuffer_semaphore = Arc::new(engine.create_semaphore());
+        let gbuffer_semaphore_ssao = Arc::new(engine.create_semaphore());
         let deferred = engine.create_primary_command_buffer(cmd_pool.clone());
         let deferred_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
         let deferred_semaphore = Arc::new(engine.create_semaphore());
+        let ssao = engine.create_primary_command_buffer(cmd_pool.clone());
+        let ssao_secondary = engine.create_secondary_command_buffer(cmd_pool.clone());
+        let ssao_semaphore = Arc::new(engine.create_semaphore());
         let preparation_cmd = engine.create_primary_command_buffer(cmd_pool.clone());
         let preparation_semaphore = Arc::new(engine.create_semaphore());
         Self {
             gbuffer,
             gbuffer_semaphore,
+            gbuffer_semaphore_ssao,
             deferred,
             deferred_secondary,
             deferred_semaphore,
+            ssao,
+            ssao_secondary,
+            ssao_semaphore,
             preparation_cmd,
             preparation_semaphore,
         }
@@ -673,6 +687,7 @@ impl Scene for Base {
         g_buffer_filler: &GBufferFiller,
         shadower: &mut Shadower,
         deferred: &Deferred,
+        ssao: Option<&SSAO>,
     ) -> Arc<Semaphore> {
         if !self.is_rendarable() {
             return sem.clone();
@@ -695,7 +710,18 @@ impl Scene for Base {
             cmd.end_render_pass();
             cmd.end();
         }
-        geng.submit(&sem, &frame_data.gbuffer, &frame_data.gbuffer_semaphore);
+        if ssao.is_some() {
+            geng.submit_multiple(
+                &[&sem],
+                &[&frame_data.gbuffer],
+                &[
+                    &frame_data.gbuffer_semaphore,
+                    &frame_data.gbuffer_semaphore_ssao,
+                ],
+            );
+        } else {
+            geng.submit(&sem, &frame_data.gbuffer, &frame_data.gbuffer_semaphore);
+        }
         // shadow
         shadower.clear_shadow_accumulator(&mut frame_data.preparation_cmd);
         geng.submit(
@@ -709,6 +735,21 @@ impl Scene for Base {
             let sml = vxunwrap!(sml.to_mut_shadow_maker());
             last_sem = sml.submit_shadow_mapper(&last_sem, geng, shadower, frame_number);
         }
+        let uniform_buffer = vxresult!(self.uniform_buffer.get_buffer(frame_number).read());
+        // SSAO
+        if let Some(ssao) = &ssao {
+            ssao.begin_secondary(&mut frame_data.ssao_secondary);
+            frame_data
+                .ssao_secondary
+                .bind_ssao_scene_descriptor(&*self.descriptor_set, &*uniform_buffer);
+            ssao.end_secondary(&mut frame_data.ssao_secondary, frame_number);
+            ssao.record_primary(&mut frame_data.ssao, &frame_data.ssao_secondary);
+            geng.submit(
+                &frame_data.gbuffer_semaphore_ssao,
+                &frame_data.ssao,
+                &frame_data.ssao_semaphore,
+            );
+        }
         // deferred
         frame_data
             .deferred_secondary
@@ -716,10 +757,7 @@ impl Scene for Base {
         deferred.render(&mut frame_data.deferred_secondary, frame_number);
         frame_data
             .deferred_secondary
-            .bind_deferred_scene_descriptor(
-                &*self.descriptor_set,
-                &*vxresult!(self.uniform_buffer.get_buffer(frame_number).read()),
-            );
+            .bind_deferred_scene_descriptor(&*self.descriptor_set, &*uniform_buffer);
         frame_data.deferred_secondary.render_deferred();
         frame_data.deferred_secondary.end();
         frame_data.deferred.begin();
@@ -728,11 +766,19 @@ impl Scene for Base {
         frame_data.deferred.exe_cmd(&frame_data.deferred_secondary);
         frame_data.deferred.end_render_pass();
         frame_data.deferred.end();
-        geng.submit(
-            &last_sem,
-            &frame_data.deferred,
-            &frame_data.deferred_semaphore,
-        );
+        if ssao.is_some() {
+            geng.submit_multiple(
+                &[&last_sem, &frame_data.ssao_semaphore],
+                &[&frame_data.deferred],
+                &[&frame_data.deferred_semaphore],
+            );
+        } else {
+            geng.submit(
+                &last_sem,
+                &frame_data.deferred,
+                &frame_data.deferred_semaphore,
+            );
+        }
         return frame_data.deferred_semaphore.clone();
     }
 }
@@ -872,10 +918,17 @@ impl Scene for Game {
         g_buffer_filler: &GBufferFiller,
         shadower: &mut Shadower,
         deferred: &Deferred,
+        ssao: Option<&SSAO>,
     ) -> Arc<Semaphore> {
-        return self
-            .base
-            .submit(geng, sem, cmd_pool, g_buffer_filler, shadower, deferred);
+        return self.base.submit(
+            geng,
+            sem,
+            cmd_pool,
+            g_buffer_filler,
+            shadower,
+            deferred,
+            ssao,
+        );
     }
 }
 
@@ -1001,10 +1054,17 @@ impl Scene for Ui {
         g_buffer_filler: &GBufferFiller,
         shadower: &mut Shadower,
         deferred: &Deferred,
+        ssao: Option<&SSAO>,
     ) -> Arc<Semaphore> {
-        return self
-            .base
-            .submit(geng, sem, cmd_pool, g_buffer_filler, shadower, deferred);
+        return self.base.submit(
+            geng,
+            sem,
+            cmd_pool,
+            g_buffer_filler,
+            shadower,
+            deferred,
+            ssao,
+        );
     }
 }
 

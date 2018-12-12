@@ -7,6 +7,8 @@ use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
 use super::pipeline::{Pipeline, PipelineType};
 use super::shadower::Shadower;
+use super::ssao::SSAO;
+use super::texture::Manager as TextureManager;
 use std::mem::size_of;
 use std::sync::Arc;
 
@@ -39,16 +41,23 @@ impl Deferred {
         gapi_engine: &GraphicApiEngine,
         g_buffer_filler: &GBufferFiller,
         shadower: &Shadower,
+        ssao: Option<&SSAO>,
         config: &Configurations,
+        texmgr: &mut TextureManager,
     ) -> Self {
         let gbuff_framebuffer = g_buffer_filler.get_framebuffer();
         let (w, h) = gbuff_framebuffer.get_dimensions();
         let uniform = Uniform::new(w as f32, h as f32);
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let mut textures = Vec::with_capacity(g_buffer_filler.get_textures().len() + 1);
+        let mut textures = Vec::with_capacity(g_buffer_filler.get_textures().len() + 2);
         for t in g_buffer_filler.get_textures() {
             textures.push(t.clone());
+        }
+        if let Some(ssao) = ssao {
+            textures.push(ssao.get_ambient_occlusion_texture().clone());
+        } else {
+            textures.push(texmgr.create_2d_with_pixels(2, 2, gapi_engine, &[255u8; 2 * 2 * 4]));
         }
         textures.push(shadower.get_shadow_accumulator_flagbits_texture().clone());
         let descriptor_set = vxresult!(gapi_engine.get_descriptor_manager().write())

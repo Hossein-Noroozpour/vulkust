@@ -85,6 +85,22 @@ impl Layout {
         Self::new(&layout, descriptor_set_layouts)
     }
 
+    pub fn new_ssao(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
+        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let ssao_descriptor_set_layout = descriptor_manager.get_ssao_set_layout().clone();
+        let buffer_only_descriptor_set_layout =
+            descriptor_manager.get_buffer_only_set_layout().clone();
+        let layout = [
+            buffer_only_descriptor_set_layout.vk_data,
+            ssao_descriptor_set_layout.vk_data,
+        ];
+        let descriptor_set_layouts = vec![
+            buffer_only_descriptor_set_layout,
+            ssao_descriptor_set_layout,
+        ];
+        Self::new(&layout, descriptor_set_layouts)
+    }
+
     fn new(
         layout: &[vk::VkDescriptorSetLayout],
         descriptor_set_layouts: Vec<Arc<DescriptorSetLayout>>,
@@ -183,7 +199,7 @@ impl Pipeline {
             PipelineType::ShadowAccumulatorDirectional => {
                 include_shader!("shadow-accumulator-directional.vert")
             }
-            _ => vxunimplemented!(),
+            PipelineType::SSAO => include_shader!("ssao.vert"),
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
@@ -192,7 +208,7 @@ impl Pipeline {
             PipelineType::ShadowAccumulatorDirectional => {
                 include_shader!("shadow-accumulator-directional.frag")
             }
-            _ => vxunimplemented!(),
+            PipelineType::SSAO => include_shader!("ssao.frag"),
         };
 
         let vertex_shader = Module::new(vert_bytes, device.clone());
@@ -205,7 +221,7 @@ impl Pipeline {
             PipelineType::ShadowAccumulatorDirectional => {
                 Layout::new_shadow_accumulator_directional(descriptor_manager)
             }
-            _ => vxunimplemented!(),
+            PipelineType::SSAO => Layout::new_ssao(descriptor_manager),
         };
 
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();

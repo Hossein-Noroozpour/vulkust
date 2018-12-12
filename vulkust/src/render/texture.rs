@@ -2,6 +2,7 @@ use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::{Base as ObjectBase, Object as CoreObject};
 use super::super::core::types::{Id, Size, TypeId};
 use super::engine::Engine;
+use super::gapi::GraphicApiEngine;
 use super::image::View as ImageView;
 use super::sampler::Sampler;
 use std::collections::BTreeMap;
@@ -102,7 +103,7 @@ impl Manager {
         &mut self,
         width: u32,
         height: u32,
-        engine: &Engine,
+        engine: &GraphicApiEngine,
         data: &[u8],
     ) -> Arc<RwLock<Texture2D>> {
         let tex = Texture2D::new_with_pixels(width, height, engine, data);
@@ -116,7 +117,7 @@ impl Manager {
 
     pub fn create_2d_with_color(
         &mut self,
-        engine: &Engine,
+        engine: &GraphicApiEngine,
         color: [u8; 4],
     ) -> Arc<RwLock<Texture>> {
         if let Some(id) = self.color_to_id.get(&color) {
@@ -163,7 +164,12 @@ pub struct Texture2D {
 }
 
 impl Texture2D {
-    pub fn new_with_pixels(width: u32, height: u32, engine: &Engine, data: &[u8]) -> Self {
+    pub fn new_with_pixels(
+        width: u32,
+        height: u32,
+        engine: &GraphicApiEngine,
+        data: &[u8],
+    ) -> Self {
         Self::new_with_base_pixels(ObjectBase::new(), width, height, engine, data)
     }
 
@@ -171,11 +177,10 @@ impl Texture2D {
         obj_base: ObjectBase,
         width: u32,
         height: u32,
-        engine: &Engine,
+        engine: &GraphicApiEngine,
         data: &[u8],
         name: Option<String>,
     ) -> Self {
-        let engine = vxresult!(engine.get_gapi_engine().read());
         let image_view = engine.create_texture_2d_with_pixels(width, height, data);
         let sampler = engine.get_linear_repeat_sampler().clone();
         Texture2D {
@@ -190,7 +195,7 @@ impl Texture2D {
         obj_base: ObjectBase,
         width: u32,
         height: u32,
-        engine: &Engine,
+        engine: &GraphicApiEngine,
         data: &[u8],
     ) -> Self {
         return Self::new_with_base_pixels_name(obj_base, width, height, engine, data, None);
@@ -242,7 +247,8 @@ impl Loadable for Texture2D {
         let img = vxresult!(image::load_from_memory(&data[offset..offset + length])).to_rgba();
         let (width, height) = img.dimensions();
         let img = img.into_raw();
-        Self::new_with_base_pixels_name(obj_base, width, height, engine, &img, Some(name))
+        let geng = vxresult!(engine.get_gapi_engine().read());
+        Self::new_with_base_pixels_name(obj_base, width, height, &geng, &img, Some(name))
     }
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
@@ -252,6 +258,7 @@ impl Loadable for Texture2D {
         let img = vxresult!(image::load_from_memory(&data)).to_rgba();
         let (width, height) = img.dimensions();
         let img = img.into_raw();
-        Self::new_with_base_pixels(obj_base, width, height, engine, &img)
+        let geng = vxresult!(engine.get_gapi_engine().read());
+        Self::new_with_base_pixels(obj_base, width, height, &geng, &img)
     }
 }

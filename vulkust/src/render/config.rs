@@ -50,6 +50,10 @@ impl Configurations {
         return self.enable_anistropic_texture;
     }
 
+    pub fn get_enable_ssao(&self) -> bool {
+        return self.enable_ssao;
+    }
+
     pub fn get_max_meshes_count(&self) -> u64 {
         return self.max_meshes_count;
     }

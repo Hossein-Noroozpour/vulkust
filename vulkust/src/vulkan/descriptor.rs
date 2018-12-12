@@ -11,7 +11,8 @@ use std::collections::BTreeMap;
 use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
 
-const DEFERRED_TEX_COUNT: usize = 5;
+const SSAO_TEX_COUNT: usize = 3;
+const DEFERRED_TEX_COUNT: usize = 6;
 const GBUFF_TEX_COUNT: usize = 7;
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -76,6 +77,11 @@ impl SetLayout {
 
     pub fn new_deferred(logical_device: Arc<LogicalDevice>) -> Self {
         let layout_bindings = Self::create_binding_info(&[1; DEFERRED_TEX_COUNT]);
+        return Self::new_with_bindings_info(logical_device, &layout_bindings);
+    }
+
+    pub fn new_ssao(logical_device: Arc<LogicalDevice>) -> Self {
+        let layout_bindings = Self::create_binding_info(&[1; SSAO_TEX_COUNT]);
         return Self::new_with_bindings_info(logical_device, &layout_bindings);
     }
 
@@ -186,6 +192,25 @@ impl Set {
                     "For deferred descriptor you need {} textures.",
                     DEFERRED_TEX_COUNT
                 );
+            }
+        }
+        let mut texturess = Vec::new();
+        for t in textures {
+            texturess.push(vec![t]);
+        }
+        Self::new(pool, layout, uniform, texturess)
+    }
+
+    pub fn new_ssao(
+        pool: Arc<Pool>,
+        layout: Arc<SetLayout>,
+        uniform: &DynamicBuffer,
+        textures: Vec<Arc<RwLock<Texture>>>,
+    ) -> Self {
+        #[cfg(debug_mode)]
+        {
+            if textures.len() != SSAO_TEX_COUNT {
+                vxlogf!("For SSAO descriptor you need {} textures.", SSAO_TEX_COUNT);
             }
         }
         let mut texturess = Vec::new();
@@ -309,10 +334,12 @@ pub(crate) struct Manager {
     buffer_only_set_layout: Arc<SetLayout>,
     gbuff_set_layout: Arc<SetLayout>,
     deferred_set_layout: Arc<SetLayout>,
+    ssao_set_layout: Arc<SetLayout>,
     shadow_accumulator_directional_set_layout: Arc<SetLayout>,
     buffer_only_sets: BTreeMap<usize, Weak<Set>>,
     gbuff_sets: BTreeMap<([Id; GBUFF_TEX_COUNT], usize), Weak<Set>>,
     deferred_set: Option<Arc<Set>>,
+    ssao_set: Option<Arc<Set>>,
     shadow_accumulator_directional_set: Option<Arc<Set>>,
     pool: Arc<Pool>,
 }
@@ -325,6 +352,7 @@ impl Manager {
         let gbuff_set_layout = Arc::new(SetLayout::new_gbuff(logical_device.clone()));
         let buffer_only_set_layout = Arc::new(SetLayout::new_buffer_only(logical_device.clone()));
         let deferred_set_layout = Arc::new(SetLayout::new_deferred(logical_device.clone()));
+        let ssao_set_layout = Arc::new(SetLayout::new_ssao(logical_device.clone()));
         let shadow_accumulator_directional_set_layout = Arc::new(
             SetLayout::new_shadow_accumulator_directional(logical_device.clone(), conf),
         );
@@ -332,10 +360,12 @@ impl Manager {
             gbuff_set_layout,
             buffer_only_set_layout,
             deferred_set_layout,
+            ssao_set_layout,
             shadow_accumulator_directional_set_layout,
             buffer_only_sets: BTreeMap::new(),
             gbuff_sets: BTreeMap::new(),
             deferred_set: None,
+            ssao_set: None,
             shadow_accumulator_directional_set: None,
             pool,
         }
@@ -413,6 +443,24 @@ impl Manager {
         return s;
     }
 
+    pub(crate) fn create_ssao_set(
+        &mut self,
+        uniform: &DynamicBuffer,
+        textures: Vec<Arc<RwLock<Texture>>>,
+    ) -> Arc<Set> {
+        if let Some(s) = &self.ssao_set {
+            return s.clone();
+        }
+        let s = Arc::new(Set::new_ssao(
+            self.pool.clone(),
+            self.ssao_set_layout.clone(),
+            uniform,
+            textures,
+        ));
+        self.ssao_set = Some(s.clone());
+        return s;
+    }
+
     pub(crate) fn create_shadow_accumulator_directional_set(
         &mut self,
         uniform: &DynamicBuffer,
@@ -441,6 +489,10 @@ impl Manager {
 
     pub(super) fn get_deferred_set_layout(&self) -> &Arc<SetLayout> {
         return &self.deferred_set_layout;
+    }
+
+    pub(super) fn get_ssao_set_layout(&self) -> &Arc<SetLayout> {
+        return &self.ssao_set_layout;
     }
 
     pub(super) fn get_shadow_accumulator_directional_set_layout(&self) -> &Arc<SetLayout> {

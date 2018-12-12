@@ -107,7 +107,7 @@ impl Material {
                 if t == Field::Texture as TypeId {
                     texture_manager.load_gx3d(engine, reader.read())
                 } else if t == Field::Vector as TypeId {
-                    texture_manager.create_2d_with_color(engine, read_color(reader))
+                    texture_manager.create_2d_with_color(&gapi_engine, read_color(reader))
                 } else {
                     vxunexpected!()
                 }
@@ -158,7 +158,7 @@ impl Material {
             if color[3] < 254 {
                 translucency = TranslucencyMode::Tansparent;
             }
-            texture_manager.create_2d_with_color(&*eng, color)
+            texture_manager.create_2d_with_color(&*gapi_engine, color)
         } else {
             vxunexpected!()
         };
@@ -218,13 +218,15 @@ impl Material {
         let mut texture_manager = vxresult!(eng.get_asset_manager().get_texture_manager().write());
         let uniform = Uniform::new();
         let translucency = TranslucencyMode::default();
-        let base_color = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
-        let base_color_factor = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
-        let emissive = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
-        let emissive_factor = texture_manager.create_2d_with_color(&*eng, [0, 0, 0, 0]);
-        let metallic_roughness = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
-        let normal = texture_manager.create_2d_with_color(&*eng, [127, 127, 255, 255]);
-        let occlusion = texture_manager.create_2d_with_color(&*eng, [255, 255, 255, 255]);
+        let base_color = texture_manager.create_2d_with_color(&*gapi_engine, [255, 255, 255, 255]);
+        let base_color_factor =
+            texture_manager.create_2d_with_color(&*gapi_engine, [255, 255, 255, 255]);
+        let emissive = texture_manager.create_2d_with_color(&*gapi_engine, [255, 255, 255, 255]);
+        let emissive_factor = texture_manager.create_2d_with_color(&*gapi_engine, [0, 0, 0, 0]);
+        let metallic_roughness =
+            texture_manager.create_2d_with_color(&*gapi_engine, [255, 255, 255, 255]);
+        let normal = texture_manager.create_2d_with_color(&*gapi_engine, [127, 127, 255, 255]);
+        let occlusion = texture_manager.create_2d_with_color(&*gapi_engine, [255, 255, 255, 255]);
         let textures = vec![
             base_color.clone(),
             base_color_factor.clone(),
@@ -284,6 +286,7 @@ impl Material {
 
     pub fn set_base_color(&mut self, eng: &Engine, r: u8, g: u8, b: u8, a: u8) {
         let mut texmgr = vxresult!(eng.get_asset_manager().get_texture_manager().write());
-        self.base_color = texmgr.create_2d_with_color(&*eng, [r, g, b, a]);
+        self.base_color =
+            texmgr.create_2d_with_color(&*vxresult!(eng.get_gapi_engine().read()), [r, g, b, a]);
     }
 }

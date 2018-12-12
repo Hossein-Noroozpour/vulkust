@@ -17,7 +17,8 @@ layout (set = 1, binding = 1) uniform sampler2D position;
 layout (set = 1, binding = 2) uniform sampler2D normal;
 layout (set = 1, binding = 3) uniform sampler2D albedo;
 layout (set = 1, binding = 4) uniform sampler2D screen_space_depth;
-layout (set = 1, binding = 5) uniform usampler2D shadow_directional_flagbits;
+layout (set = 1, binding = 5) uniform sampler2D ambient_occlusion;
+layout (set = 1, binding = 6) uniform usampler2D shadow_directional_flagbits;
 
 vec4 alb;
 vec3 pos;
