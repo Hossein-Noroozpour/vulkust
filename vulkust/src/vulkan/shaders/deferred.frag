@@ -285,7 +285,9 @@ void main() {
 	vpos = (scene_ubo.s.camera.view * vec4(pos, 1.0)).xyz;
 
 	out_color.xyz = alb.xyz; // todo it must come along scene
-	// calc_lights();
+	// out_color.xyz *= 0.001; // todo it must come along scene
+	calc_lights();
+	out_color.xyz *= texture(ambient_occlusion, uv).x;
 	// calc_ssr();
 
 	// out_color.xyz *= dot(-normalize(reflect(eye_nrm, nrm)), nrm);

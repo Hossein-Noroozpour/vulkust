@@ -225,7 +225,7 @@ impl Uniform {
             directional_lights: [DirectionalUniform::new(); MAX_DIRECTIONAL_LIGHTS_COUNT],
             point_lights: [PointUniform::new(); MAX_POINT_LIGHTS_COUNT],
             lights_count: math::Vector4::new(0, 0, 0, 0),
-            ssao_config: math::Vector4::new(64.1, 0.5, 0.1, 0.0),
+            ssao_config: math::Vector4::new(64.1, 0.2, 0.6, 0.0),
         }
     }
 }

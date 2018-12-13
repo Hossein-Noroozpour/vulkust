@@ -71,3 +71,22 @@ struct Light {
 struct ModelShadow {
 	mat4 model_view_projection;
 };
+
+float gausssian_blur_5x5(const sampler2D s, const vec2 uv, const vec2 pixel_step) {
+	const float ws[] = {
+		1.0 / 256.0,  4.0 / 256.0,  6.0 / 256.0,  4.0 / 256.0, 1.0 / 256.0,
+		4.0 / 256.0, 16.0 / 256.0, 24.0 / 256.0, 16.0 / 256.0, 4.0 / 256.0,
+		6.0 / 256.0, 24.0 / 256.0, 36.0 / 256.0, 24.0 / 256.0, 6.0 / 256.0,
+		4.0 / 256.0, 16.0 / 256.0, 24.0 / 256.0, 16.0 / 256.0, 4.0 / 256.0,
+		1.0 / 256.0,  4.0 / 256.0,  6.0 / 256.0,  4.0 / 256.0, 1.0 / 256.0
+	};
+	float result = 0.0;
+	vec2 suv = uv - (pixel_step * 2.0);
+	const float y = suv.y;
+	for(int c = 0, i = 0; c < 5; ++c, suv.x += pixel_step.x, suv.y = y) {
+		for(int r = 0; r < 5; ++r, ++i, suv.y += pixel_step.y) {
+			result += texture(s, suv).x * ws[i];
+		}
+	}
+	return result;
+}
