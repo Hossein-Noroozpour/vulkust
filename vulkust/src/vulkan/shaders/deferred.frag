@@ -18,7 +18,7 @@ layout (set = 1, binding = 2) uniform sampler2D normal;
 layout (set = 1, binding = 3) uniform sampler2D albedo;
 layout (set = 1, binding = 4) uniform sampler2D screen_space_depth;
 layout (set = 1, binding = 5) uniform sampler2D ambient_occlusion;
-layout (set = 1, binding = 6) uniform usampler2D shadow_directional_flagbits;
+layout (set = 1, binding = 6) uniform sampler2D shadow_directional_flagbits;
 
 vec4 alb;
 vec3 pos;
@@ -44,7 +44,8 @@ void calc_lights() {
 		uint light_flag = 1 << light_index;
 		for(uint si = 0; si < BLUR_KERNEL_LENGTH; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.s.pixel_step.x) {
 			for (uint sj = 0; sj < BLUR_KERNEL_LENGTH; ++sj, shduv.y += deferred_ubo.s.pixel_step.y) {
-				if ((texture(shadow_directional_flagbits, shduv).x & light_flag) == light_flag) {
+				if ((uint(round(texture(shadow_directional_flagbits, shduv).x * 
+						float(1 << MAX_DIRECTIONAL_LIGHTS_COUNT))) & light_flag) == light_flag) {
 					brightness -= 1.0 / float(BLUR_KERNEL_LENGTH * BLUR_KERNEL_LENGTH);
 				}
 			}

@@ -18,7 +18,10 @@ layout (set = 0, binding = 2) uniform sampler2D normal;
 layout (set = 0, binding = 3) uniform sampler2D shadowmaps[DIRECTIONAL_CASCADES_COUNT];
 
 void shade() {
-    flagbits = (float(1 << light_ubo.s.light_index) * (1.0 / 256.0)) + (1.0 / (256.0 * 4.0));
+    flagbits = (float(1 << light_ubo.s.light_index) * 
+        (1.0 / float(1 << MAX_DIRECTIONAL_LIGHTS_COUNT))) + 
+        (1.0 / (float(1 << MAX_DIRECTIONAL_LIGHTS_COUNT) * 4.0 * 
+        float(MAX_DIRECTIONAL_LIGHTS_COUNT)));
 }
 
 void main() {

@@ -39,7 +39,7 @@ impl Surface {
         let mut create_info = vk::VkMacOSSurfaceCreateInfoMVK::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
-        create_info.view = os_app.view;
+        create_info.view = os_app.get_view();
         vulkan_check!(vk::vkCreateMacOSSurfaceMVK(
             instance.get_data(),
             &create_info,

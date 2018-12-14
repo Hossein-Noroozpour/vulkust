@@ -12,13 +12,13 @@ use std::os::raw::c_void;
 use std::sync::{Arc, RwLock};
 
 pub struct Application {
-    pub app: apple::Id,
-    pub app_dlg: apple::Id,
-    pub controller: apple::Id,
-    pub auto_release_pool: Option<apple::NsAutoReleasePool>,
-    pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
-    pub renderer: Option<Arc<RwLock<RenderEngine>>>,
-    pub view: *mut c_void,
+    app: apple::Id,
+    app_dlg: apple::Id,
+    _controller: apple::Id,
+    auto_release_pool: Option<apple::NsAutoReleasePool>,
+    core_app: Option<Arc<RwLock<CoreAppTrait>>>,
+    renderer: Option<Arc<RwLock<RenderEngine>>>,
+    view: *mut c_void,
 }
 
 #[cfg(debug_mode)]
@@ -43,7 +43,7 @@ impl Application {
             let view: apple::Id = *(*app_dlg).get_ivar(app_delegate::VIEW_VAR_NAME);
             transmute(view)
         };
-        let controller = unsafe { *(*app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME) };
+        let _controller = unsafe { *(*app_dlg).get_ivar(app_delegate::CONTROLLER_VAR_NAME) };
         let renderer = None;
         let core_app = Some(core_app);
         Application {
@@ -53,7 +53,7 @@ impl Application {
             core_app,
             renderer,
             view,
-            controller,
+            _controller,
         }
     }
 
@@ -95,6 +95,18 @@ impl Application {
 
     pub fn set_title(&self, title: &str) {
         app_delegate::set_title(self.app_dlg, title);
+    }
+
+    pub(crate) fn get_core_app(&self) -> Option<&Arc<RwLock<CoreAppTrait>>> {
+        return self.core_app.as_ref();
+    }
+
+    pub(crate) fn _get_render_engine(&self) -> Option<&Arc<RwLock<RenderEngine>>> {
+        return self.renderer.as_ref();
+    }
+
+    pub(crate) fn get_view(&self) -> *mut c_void {
+        return self.view;
     }
 }
 

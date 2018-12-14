@@ -60,3 +60,12 @@ bitflags! {
         const NS_EVENT_TYPE_DIRECT_TOUCH = 37;
     }
 }
+
+pub fn get_screen_rect() -> super::NSRect {
+    let main_screen: super::Id = unsafe { msg_send![super::get_class("NSScreen"), mainScreen] };
+    return unsafe { msg_send![main_screen, frame] };
+}
+
+pub fn get_mouse_position() -> super::NSPoint {
+    return unsafe { msg_send![super::get_class("NSEvent"), mouseLocation] };
+}

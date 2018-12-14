@@ -26,8 +26,7 @@ fn create_frame() -> apple::NSRect {
 
 #[cfg(not(debug_mode))]
 fn create_frame() -> apple::NSRect {
-    let main_screen: apple::Id = unsafe { msg_send![apple::get_class("NSScreen"), mainScreen] };
-    let frame: apple::NSRect = unsafe { msg_send![main_screen, frame] };
+    let frame = apple::app_kit::get_screen_rect();
     apple::NSRect::new(0.0, 0.0, frame.size.width, frame.size.height)
 }
 
@@ -61,11 +60,13 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
         this.set_ivar(VIEW_VAR_NAME, view);
         this.set_ivar(CONTROLLER_VAR_NAME, gvc);
         let options = (apple::app_kit::NSTrackingAreaOptions::NS_TRACKING_MOUSE_MOVED
-            | apple::app_kit::NSTrackingAreaOptions::NS_TRACKING_ACTIVE_ALWAYS)
+            | apple::app_kit::NSTrackingAreaOptions::NS_TRACKING_ACTIVE_ALWAYS
+            | apple::app_kit::NSTrackingAreaOptions::NS_TRACKING_ASSUME_INSIDE
+            | apple::app_kit::NSTrackingAreaOptions::NS_TRACKING_ENABLED_DURING_MOUSE_DRAG)
             .bits();
         let tracker_area: apple::Id = msg_send![
             apple::alloc("NSTrackingArea"), 
-            initWithRect:frame
+            initWithRect:apple::app_kit::get_screen_rect()
             options:options
             owner:gvc
             userInfo:apple::NIL];
