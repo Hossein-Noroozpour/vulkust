@@ -10,7 +10,7 @@ layout (constant_id = 0) const int DIRECTIONAL_CASCADES_COUNT = 6;
 
 layout (location = 0) in vec2 uv;
 
-layout (location = 0) out uint flagbits;
+layout (location = 0) out float flagbits;
 
 layout (set = 0, binding = 0) uniform LightUBO { Light s; } light_ubo;
 layout (set = 0, binding = 1) uniform sampler2D position;
@@ -18,7 +18,7 @@ layout (set = 0, binding = 2) uniform sampler2D normal;
 layout (set = 0, binding = 3) uniform sampler2D shadowmaps[DIRECTIONAL_CASCADES_COUNT];
 
 void shade() {
-    flagbits = 1 << light_ubo.s.light_index;
+    flagbits = (float(1 << light_ubo.s.light_index) * (1.0 / 256.0)) + (1.0 / (256.0 * 4.0));
 }
 
 void main() {

@@ -95,19 +95,18 @@ impl SSAO {
         textures.push(g_buffer_filler.get_depth_texture().clone());
         let descriptor_set = vxresult!(eng.get_descriptor_manager().write())
             .create_ssao_set(&uniform_buffer, textures);
-        let render_pass = eng.get_render_pass();
-        let pipeline = vxresult!(eng.get_pipeline_manager().write()).create(
-            render_pass.clone(),
-            PipelineType::SSAO,
-            config,
-        );
         let sampler = eng.get_linear_repeat_sampler();
         let mut textures = Vec::with_capacity(buffers.len());
         for b in &buffers {
             textures.push(texmgr.create_2d_with_view_sampler(b.clone(), sampler.clone()));
         }
         let render_pass = Arc::new(RenderPass::new(buffers.clone(), true, true));
-        let framebuffer = Arc::new(Framebuffer::new(buffers.clone(), render_pass.clone()));
+        let framebuffer = Arc::new(Framebuffer::new(buffers, render_pass.clone()));
+        let pipeline = vxresult!(eng.get_pipeline_manager().write()).create(
+            render_pass.clone(),
+            PipelineType::SSAO,
+            config,
+        );
         Self {
             uniform,
             uniform_buffer,

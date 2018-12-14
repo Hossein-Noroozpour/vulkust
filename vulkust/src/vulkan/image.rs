@@ -10,15 +10,6 @@ use std::default::Default;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
-// pub(super) fn convert_to_format(f: vk::VkFormat) -> Format {
-//     match f {
-//         vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT => return Format::RgbaFloat,
-//         vk::VkFormat::VK_FORMAT_D32_SFLOAT => return Format::DepthFloat,
-//         vk::VkFormat::VK_FORMAT_R32_SFLOAT => return Format::Float,
-//         _ => vxunexpected!(),
-//     }
-// }
-
 pub(super) fn convert_layout(f: &Layout) -> vk::VkImageLayout {
     match f {
         &Layout::Uninitialized => return vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,

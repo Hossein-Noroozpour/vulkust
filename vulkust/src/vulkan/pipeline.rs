@@ -255,6 +255,14 @@ impl Pipeline {
                     blend_attachment_state[i].dstAlphaBlendFactor =
                         vk::VkBlendFactor::VK_BLEND_FACTOR_ZERO;
                     blend_attachment_state[i].alphaBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
+                    blend_attachment_state[i].colorWriteMask =
+                        vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as vk::VkColorComponentFlags
+                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT
+                                as vk::VkColorComponentFlags
+                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
+                                as vk::VkColorComponentFlags
+                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT
+                                as vk::VkColorComponentFlags;
                 }
                 PipelineType::ShadowAccumulatorDirectional => {
                     blend_attachment_state[i].blendEnable = vk::VK_TRUE;
@@ -263,17 +271,31 @@ impl Pipeline {
                     blend_attachment_state[i].dstColorBlendFactor =
                         vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
                     blend_attachment_state[i].colorBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
+                    blend_attachment_state[i].colorWriteMask =
+                        vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as vk::VkColorComponentFlags
+                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT
+                                as vk::VkColorComponentFlags
+                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
+                                as vk::VkColorComponentFlags
+                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT
+                                as vk::VkColorComponentFlags;
                 }
-                _ => {}
+                PipelineType::SSAO => {
+                    blend_attachment_state[i].colorWriteMask =
+                        vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT
+                            as vk::VkColorComponentFlags;
+                }
+                _ => {
+                    blend_attachment_state[i].colorWriteMask =
+                        vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as vk::VkColorComponentFlags
+                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT
+                                as vk::VkColorComponentFlags
+                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
+                                as vk::VkColorComponentFlags
+                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT
+                                as vk::VkColorComponentFlags;
+                }
             }
-            blend_attachment_state[i].colorWriteMask =
-                vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT as vk::VkColorComponentFlags
-                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT
-                        as vk::VkColorComponentFlags
-                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
-                        as vk::VkColorComponentFlags
-                    | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT
-                        as vk::VkColorComponentFlags;
         }
 
         let mut color_blend_state = vk::VkPipelineColorBlendStateCreateInfo::default();

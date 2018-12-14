@@ -333,7 +333,7 @@ impl Physical {
             Format::RgbaFloat => return vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT,
             Format::DepthFloat => return self.get_supported_depth_format(),
             Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
-            Format::FlagBits8 => return vk::VkFormat::VK_FORMAT_R8_UINT,
+            Format::FlagBits8 => return vk::VkFormat::VK_FORMAT_R8_UNORM,
             Format::FlagBits64 => return vk::VkFormat::VK_FORMAT_R32G32_UINT,
             _ => vxunexpected!(),
         }
