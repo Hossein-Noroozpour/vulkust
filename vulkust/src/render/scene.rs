@@ -377,33 +377,47 @@ impl Base {
         let light_manager = asset_manager.get_light_manager();
         let model_manager = asset_manager.get_model_manager();
         let mut cameras = BTreeMap::new();
-        for id in &cameras_ids {
-            cameras.insert(*id, vxresult!(camera_manager.write()).load_gx3d(eng, *id));
-        }
-        let active_camera = if cameras_ids.len() > 0 {
-            Some(Arc::downgrade(
-                &vxresult!(camera_manager.write()).load_gx3d(eng, cameras_ids[0]),
-            ))
-        } else {
-            None
+        let active_camera = {
+            let mut mgr = vxresult!(camera_manager.write());
+            for id in &cameras_ids {
+                cameras.insert(*id, mgr.load_gx3d(eng, *id));
+            }
+            if cameras_ids.len() > 0 {
+                Some(Arc::downgrade(&mgr.load_gx3d(eng, cameras_ids[0])))
+            } else {
+                None
+            }
         };
         let mut models = BTreeMap::new();
         let mut all_models = BTreeMap::new();
-        for id in models_ids {
-            let model = vxresult!(model_manager.write()).load_gx3d(eng, id);
-            {
-                let model = vxresult!(model.read());
-                let child_models = model.bring_all_child_models();
-                for (id, model) in child_models {
-                    all_models.insert(id, Arc::downgrade(&model));
+        {
+            let mut mgr = vxresult!(model_manager.write());
+            for id in models_ids {
+                let model = mgr.load_gx3d(eng, id);
+                {
+                    let model = vxresult!(model.read());
+                    let child_models = model.bring_all_child_models();
+                    for (id, model) in child_models {
+                        all_models.insert(id, Arc::downgrade(&model));
+                    }
                 }
+                all_models.insert(id, Arc::downgrade(&model));
+                models.insert(id, model);
             }
-            all_models.insert(id, Arc::downgrade(&model));
-            models.insert(id, model);
         }
         let mut lights = BTreeMap::new();
-        for id in lights_ids {
-            lights.insert(id, vxresult!(light_manager.write()).load_gx3d(eng, id));
+        let mut shadow_maker_lights = BTreeMap::new();
+        {
+            let mut mgr = vxresult!(light_manager.write());
+            for id in lights_ids {
+                let light = mgr.load_gx3d(eng, id);
+                let is_shadow_maker = vxresult!(light.read()).to_shadow_maker().is_some();
+                if is_shadow_maker {
+                    shadow_maker_lights.insert(id, light);
+                } else {
+                    lights.insert(id, light);
+                }
+            }
         }
         let uniform = Uniform::new();
         let gapi_engine = vxresult!(eng.get_gapi_engine().read());
@@ -419,7 +433,6 @@ impl Base {
                 frames_data: Vec::with_capacity(frames_count),
             })));
         }
-        vxtodo!(); // take care of shadow mapper lights
         Self {
             obj_base: ObjectBase::new_with_id(my_id),
             uniform,
@@ -429,7 +442,7 @@ impl Base {
             active_camera,
             models,
             all_models,
-            shadow_maker_lights: BTreeMap::new(),
+            shadow_maker_lights,
             lights,
             kernels_data,
             frames_data: Vec::new(),

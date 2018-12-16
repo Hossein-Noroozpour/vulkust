@@ -428,12 +428,13 @@ impl Loadable for Base {
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
         let mut myself = Base::new_with_id(engine, my_id);
-        myself.uniform.position_far =
-            math::Vector4::new(reader.read(), reader.read(), reader.read(), 0.0);
-        let r = math::Quaternion::new(reader.read(), reader.read(), reader.read(), reader.read());
+        myself.uniform.position_far.x = reader.read();
+        myself.uniform.position_far.y = reader.read();
+        myself.uniform.position_far.z = reader.read();
+        let r = [reader.read(), reader.read(), reader.read(), reader.read()];
         myself.uniform.near_aspect_ratio_reserved.x = -reader.read::<Real>();
         myself.uniform.position_far.w = -reader.read::<Real>();
-        myself.set_orientation(&r);
+        myself.set_orientation(&math::Quaternion::new(r[3], r[0], r[1], r[2]));
         return myself;
     }
 }

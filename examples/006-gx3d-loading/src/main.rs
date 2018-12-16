@@ -15,10 +15,10 @@ use vulkust::system::os::application::Application as OsApp;
 
 use std::sync::{Arc, RwLock};
 
-// pub mod data_gx3d;
+pub mod data_gx3d;
 
 /// In this example you have to place your data.gx3d file in data directory of your project (in
-/// android assets/data/ and in ios Resources/data/). Then if data.gx3d was presented render engine
+/// android assets/gx3d/ and in ios Resources/gx3d/). Then if data.gx3d was presented render engine
 /// is gonna import its references and then you can load your scene by id (in here we load the first
 /// scene). Keep in mind that, you can not have several gx3d file and its name must be data.gx3d
 
@@ -33,10 +33,10 @@ struct KeysState {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 struct MyGame {
-    pub os_app: Option<Arc<RwLock<OsApp>>>,
-    pub renderer: Option<Arc<RwLock<Renderer>>>,
-    pub scene: Option<Arc<RwLock<Scene>>>,
-    pub camera: Option<Arc<RwLock<Camera>>>,
+    os_app: Option<Arc<RwLock<OsApp>>>,
+    renderer: Option<Arc<RwLock<Renderer>>>,
+    scene: Option<Arc<RwLock<Scene>>>,
+    camera: Option<Arc<RwLock<Camera>>>,
     keys_state: Arc<RwLock<KeysState>>,
 }
 

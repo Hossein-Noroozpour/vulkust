@@ -69,12 +69,13 @@ impl Manager {
         }
         let gx3d_table = vxunwrap!(self.gx3d_table.as_mut());
         gx3d_table.goto(id);
-        let reader = &mut gx3d_table.get_mut_reader();
+        let reader = gx3d_table.get_mut_reader();
         let t = reader.read_type_id();
         let model: Arc<RwLock<Model>> = if t == TypeId::Static as u8 {
+            // maybe in future I will implement it defferently for static
             Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
         } else if t == TypeId::Dynamic as u8 {
-            vxunimplemented!()
+            Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
         } else if t == TypeId::Widget as u8 {
             vxunimplemented!()
         } else {
@@ -160,7 +161,6 @@ impl Uniform {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     obj_base: ObjectBase,
-    is_dynamic: bool,
     has_shadow_caster: bool,
     has_transparent: bool,
     occlusion_culling_radius: Real,
@@ -242,7 +242,6 @@ impl Loadable for Base {
         vxtodo!(); // not tested
         Base {
             obj_base,
-            is_dynamic: true,
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
@@ -282,10 +281,8 @@ impl Loadable for Base {
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
-        vxtodo!(); // not tested
         Base {
             obj_base,
-            is_dynamic: false, // todo there must be a dynamic struct
             has_shadow_caster,
             has_transparent,
             occlusion_culling_radius,
@@ -438,7 +435,6 @@ impl DefaultModel for Base {
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         Base {
             obj_base: ObjectBase::new(),
-            is_dynamic: true,
             has_shadow_caster: true,
             has_transparent: false,
             occlusion_culling_radius: 0.0,

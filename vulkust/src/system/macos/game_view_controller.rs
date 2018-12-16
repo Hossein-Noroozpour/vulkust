@@ -133,14 +133,19 @@ extern "C" fn mouse_moved(this: &mut Object, _cmd: Sel, _event: apple::Id) {
     let core_app = core_app.get_core_app();
     let core_app = vxresult!(vxunwrap!(core_app).read());
     core_app.on_event(event::Event::new(event::Type::Move(event::Move::Mouse {
-        previous: (app_data.previous_mouse_position_x, app_data.previous_mouse_position_y),
+        previous: (
+            app_data.previous_mouse_position_x,
+            app_data.previous_mouse_position_y,
+        ),
         current: mp,
-        delta: (mp.0 - app_data.previous_mouse_position_x, mp.1 - app_data.previous_mouse_position_y),
+        delta: (
+            mp.0 - app_data.previous_mouse_position_x,
+            mp.1 - app_data.previous_mouse_position_y,
+        ),
     })));
     app_data.previous_mouse_position_x = mp.0;
     app_data.previous_mouse_position_y = mp.1;
 }
-
 
 // - (void)mouseDragged:(NSEvent *)event
 extern "C" fn mouse_dragged(this: &mut Object, cmd: Sel, e: apple::Id) {
@@ -224,5 +229,8 @@ pub fn create_instance() -> apple::Id {
 pub fn get_uniform_mouse_position() -> (Real, Real) {
     let sr = apple::app_kit::get_screen_rect();
     let mp = apple::app_kit::get_mouse_position();
-    return ((mp.x / sr.size.height) as Real, (mp.y / sr.size.height) as Real);
+    return (
+        (mp.x / sr.size.height) as Real,
+        (mp.y / sr.size.height) as Real,
+    );
 }

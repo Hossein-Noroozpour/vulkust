@@ -316,6 +316,69 @@ pub struct Sun {
 }
 
 impl Sun {
+    fn new_with_obj_base(eng: &Engine, obj_base: ObjectBase) -> Self {
+        let csc = eng.get_config().get_cascaded_shadows_count() as usize;
+        let num_cpus = num_cpus::get();
+        let max_render_data_count =
+            eng.get_config()
+                .get_max_shadow_maker_kernel_render_data_count() as usize;
+        let mut cascade_cameras = Vec::with_capacity(csc);
+        let geng = vxresult!(eng.get_gapi_engine().read());
+        let frames_count = geng.get_frames_count();
+        let mut frames_data = Vec::with_capacity(frames_count);
+        for _ in 0..frames_count {
+            let mut shadow_mappers_primary_commands = Vec::with_capacity(num_cpus);
+            for _ in 0..csc {
+                shadow_mappers_primary_commands
+                    .push(geng.create_primary_command_buffer_from_main_graphic_pool());
+            }
+            frames_data.push(SunFrameData {
+                shadow_mappers_primary_commands,
+                shadow_mappers_semaphore: Arc::new(geng.create_semaphore()),
+                shadow_accumulator_secondary_command: geng
+                    .create_secondary_command_buffer_from_main_graphic_pool(),
+                shadow_accumulator_primary_command: geng
+                    .create_primary_command_buffer_from_main_graphic_pool(),
+                shadow_accumulator_semaphore: Arc::new(geng.create_semaphore()),
+            });
+        }
+        for _ in 0..csc {
+            cascade_cameras.push(SunCascadeCamera::new());
+        }
+        let zero_located_view = math::Matrix4::look_at(
+            math::Point3::new(0.0, 0.0, 0.0),
+            math::Point3::new(0.0, 0.0, -1.0),
+            math::Vector3::new(0.0, 1.0, 0.0),
+        );
+        let mut kernels_data = Vec::with_capacity(num_cpus);
+        let mut buffer_manager = vxresult!(geng.get_buffer_manager().write());
+        for _ in 0..num_cpus {
+            let kernel_data = Arc::new(Mutex::new(SunShadowMakerKernelData::new(
+                zero_located_view,
+                csc,
+                frames_count,
+                max_render_data_count,
+                &mut *buffer_manager,
+            )));
+            kernels_data.push(kernel_data);
+        }
+        let shadow_accumulator_uniform = ShadowAccumulatorDirectionalUniform::new();
+        let shadow_accumulator_uniform_buffer = buffer_manager
+            .create_dynamic_buffer(size_of::<ShadowAccumulatorDirectionalUniform>() as isize);
+        Self {
+            obj_base,
+            zero_located_view,
+            cascade_cameras,
+            kernels_data,
+            direction: math::Vector3::new(0.0, 0.0, -1.0),
+            color: math::Vector3::new(1.0, 1.0, 1.0),
+            strength: 0.5,
+            frames_data,
+            shadow_accumulator_uniform,
+            shadow_accumulator_uniform_buffer,
+        }
+    }
+
     fn update_with_kernels_data(&mut self) {
         let kernels_count = self.kernels_data.len();
         for ki in 0..kernels_count {
@@ -630,66 +693,50 @@ impl Directional for Sun {
 
 impl DefaultLighting for Sun {
     fn default(eng: &Engine) -> Self {
-        let csc = eng.get_config().get_cascaded_shadows_count() as usize;
-        let num_cpus = num_cpus::get();
-        let max_render_data_count =
-            eng.get_config()
-                .get_max_shadow_maker_kernel_render_data_count() as usize;
-        let mut cascade_cameras = Vec::with_capacity(csc);
-        let geng = vxresult!(eng.get_gapi_engine().read());
-        let frames_count = geng.get_frames_count();
-        let mut frames_data = Vec::with_capacity(frames_count);
-        for _ in 0..frames_count {
-            let mut shadow_mappers_primary_commands = Vec::with_capacity(num_cpus);
-            for _ in 0..csc {
-                shadow_mappers_primary_commands
-                    .push(geng.create_primary_command_buffer_from_main_graphic_pool());
-            }
-            frames_data.push(SunFrameData {
-                shadow_mappers_primary_commands,
-                shadow_mappers_semaphore: Arc::new(geng.create_semaphore()),
-                shadow_accumulator_secondary_command: geng
-                    .create_secondary_command_buffer_from_main_graphic_pool(),
-                shadow_accumulator_primary_command: geng
-                    .create_primary_command_buffer_from_main_graphic_pool(),
-                shadow_accumulator_semaphore: Arc::new(geng.create_semaphore()),
-            });
-        }
-        for _ in 0..csc {
-            cascade_cameras.push(SunCascadeCamera::new());
-        }
-        let zero_located_view = math::Matrix4::look_at(
-            math::Point3::new(0.0, 0.0, 0.0),
-            math::Point3::new(0.0, 0.0, -1.0),
-            math::Vector3::new(0.0, 1.0, 0.0),
-        );
-        let mut kernels_data = Vec::with_capacity(num_cpus);
-        let mut buffer_manager = vxresult!(geng.get_buffer_manager().write());
-        for _ in 0..num_cpus {
-            let kernel_data = Arc::new(Mutex::new(SunShadowMakerKernelData::new(
-                zero_located_view,
-                csc,
-                frames_count,
-                max_render_data_count,
-                &mut *buffer_manager,
-            )));
-            kernels_data.push(kernel_data);
-        }
-        let shadow_accumulator_uniform = ShadowAccumulatorDirectionalUniform::new();
-        let shadow_accumulator_uniform_buffer = buffer_manager
-            .create_dynamic_buffer(size_of::<ShadowAccumulatorDirectionalUniform>() as isize);
-        Sun {
-            obj_base: ObjectBase::new(),
-            zero_located_view,
-            cascade_cameras,
-            kernels_data,
-            direction: math::Vector3::new(0.0, 0.0, -1.0),
-            color: math::Vector3::new(1.0, 1.0, 1.0),
-            strength: 0.5,
-            frames_data,
-            shadow_accumulator_uniform,
-            shadow_accumulator_uniform_buffer,
-        }
+        return Self::new_with_obj_base(eng, ObjectBase::new());
+    }
+}
+
+impl Transferable for Sun {
+    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
+        let rotation = math::Matrix4::from(*q);
+        self.direction = (rotation * math::Vector4::new(0.0, 0.0, -1.0, 0.0)).truncate();
+        let mut q = *q;
+        q.s = -q.s;
+        self.zero_located_view = math::Matrix4::from(q);
+    }
+
+    fn set_location(&mut self, _: &math::Vector3<Real>) {
+        // camera does not have location
+        vxunexpected!();
+    }
+
+    fn get_location(&self) -> math::Vector3<Real> {
+        vxunexpected!();
+    }
+
+    fn move_local_z(&mut self, _: Real) {
+        vxunexpected!();
+    }
+
+    fn move_local_x(&mut self, _: Real) {
+        vxunexpected!();
+    }
+
+    fn rotate_local_x(&mut self, _: Real) {
+        vxunimplemented!();
+    }
+
+    fn rotate_global_z(&mut self, _: Real) {
+        vxunimplemented!();
+    }
+
+    fn translate(&mut self, _: &math::Vector3<Real>) {
+        vxunexpected!();
+    }
+
+    fn scale(&mut self, _: Real) {
+        vxunexpected!();
     }
 }
 
@@ -699,19 +746,15 @@ impl Loadable for Sun {
     }
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
-        let mut myself = Self::default(engine);
-        let location = math::Vector3::new(reader.read(), reader.read(), reader.read());
+        let mut myself = Self::new_with_obj_base(engine, ObjectBase::new_with_id(id));
+        // sun does not need location
+        let _: Real = reader.read();
+        let _: Real = reader.read();
+        let _: Real = reader.read();
         let r = [reader.read(), reader.read(), reader.read(), reader.read()];
-        let r = math::Quaternion::new(r[3], r[0], r[1], r[2]);
-        let mut camera = Orthographic::new_with_id(engine, id);
-        camera.set_location(&location);
-        camera.set_orientation(&r);
+        myself.set_orientation(&math::Quaternion::new(r[3], r[0], r[1], r[2]));
         myself.color = math::Vector3::new(reader.read(), reader.read(), reader.read());
         myself.strength = reader.read();
-        vxtodo!(); // ccr is not correct
-        vxtodo!(); // ccds is not correct
-        vxtodo!(); // direction is not correct
-                   // let geng = vxresult!(engine.get_gapi_engine().read());
         return myself;
     }
 }

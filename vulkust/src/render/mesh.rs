@@ -357,7 +357,6 @@ impl Base {
         }
         let indices = reader.read_array::<u32>();
         let occlusion_culling_radius = reader.read();
-        vxtodo!();
         let material = Material::new_with_gx3d(engine, reader);
         let obj_base = ObjectBase::new_with_id(my_id);
         let gapi_engine = vxresult!(engine.get_gapi_engine().read());
@@ -367,6 +366,8 @@ impl Base {
         let indices_count = indices.len() as u32;
         #[cfg(debug_gx3d)]
         vxlogi!("Number of indices is: {}", indices_count);
+        #[cfg(debug_gx3d)]
+        vxlogi!("Occlusion culling radius is: {}", occlusion_culling_radius);
         Base {
             obj_base,
             material,
