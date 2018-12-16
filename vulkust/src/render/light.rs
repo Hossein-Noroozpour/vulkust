@@ -3,7 +3,6 @@ use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::buffer::{Dynamic as DynamicBuffer, Manager as BufferManager};
-use super::camera::Orthographic;
 use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::config::MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT;
 use super::engine::Engine;

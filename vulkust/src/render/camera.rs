@@ -335,7 +335,7 @@ impl Transferable for Base {
         for fp in &mut self.frustum_planes {
             fp.rotate_around(&self.uniform.position_far.truncate(), &rotation);
         }
-        let mut q = *q;
+        let mut q = -*q;
         q.s = -q.s;
         self.uniform.inversed_rotation = math::Matrix4::from(q);
         self.update_location();
@@ -431,10 +431,17 @@ impl Loadable for Base {
         myself.uniform.position_far.x = reader.read();
         myself.uniform.position_far.y = reader.read();
         myself.uniform.position_far.z = reader.read();
-        let r = [reader.read(), reader.read(), reader.read(), reader.read()];
+        let r: [Real; 4] = [reader.read(), reader.read(), reader.read(), reader.read()];
         myself.uniform.near_aspect_ratio_reserved.x = -reader.read::<Real>();
         myself.uniform.position_far.w = -reader.read::<Real>();
-        myself.set_orientation(&math::Quaternion::new(r[3], r[0], r[1], r[2]));
+        myself.set_orientation(&math::Quaternion::new(r[0], r[1], r[2], r[3]));
+        #[cfg(debug_gx3d)]
+        vxlogi!("Camera position is: {:?}", &myself.uniform.position_far);
+        #[cfg(debug_gx3d)]
+        vxlogi!("Camera quaternion is: {:?}", &r);
+        #[cfg(debug_gx3d)]
+        vxlogi!("Camera view matrix is: {:?}", &myself.uniform.view);
+
         return myself;
     }
 }
@@ -598,6 +605,7 @@ impl Loadable for Perspective {
         let base = Base::new_with_gx3d(engine, reader, my_id);
         let mut myself = Self::new_with_base(base);
         myself.set_fov_vertical(reader.read());
+        vxlogi!("{:?}", &myself.base.uniform);
         return myself;
     }
 }

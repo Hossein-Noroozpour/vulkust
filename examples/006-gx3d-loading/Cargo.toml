@@ -9,7 +9,7 @@ license = "MIT"
 vulkust = { path = "../../vulkust" }
 
 [lib]
-path = "src/main.rs"
+path = "src/lib.rs"
 crate-type = ["staticlib"]
 
 [[bin]]
