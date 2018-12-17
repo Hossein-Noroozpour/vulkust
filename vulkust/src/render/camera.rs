@@ -605,6 +605,7 @@ impl Loadable for Perspective {
         let base = Base::new_with_gx3d(engine, reader, my_id);
         let mut myself = Self::new_with_base(base);
         myself.set_fov_vertical(reader.read());
+        #[cfg(debug_gx3d)]
         vxlogi!("{:?}", &myself.base.uniform);
         return myself;
     }
