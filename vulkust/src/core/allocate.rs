@@ -152,8 +152,7 @@ impl Object for Memory {
                     self.offset_alignment,
                     self.offset_alignment_mask,
                     self.offset_alignment_not_mask,
-                )
-            {
+                ) {
                 vxunexpected!();
             }
         }

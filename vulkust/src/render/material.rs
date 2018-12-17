@@ -1,5 +1,5 @@
 use super::super::core::gx3d::Gx3DReader;
-use super::super::core::types::{Id, TypeId};
+use super::super::core::types::{Id, Real, TypeId};
 use super::buffer::Dynamic as DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
@@ -95,10 +95,10 @@ impl Material {
         let mut translucency = TranslucencyMode::Opaque;
         let read_color = |reader: &mut Gx3DReader| {
             [
-                ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
-                ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
-                ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
-                ((reader.read::<f32>() * 256.0) as u64 & 255) as u8,
+                ((reader.read::<f32>() * 255.0) as u64 & 255) as u8,
+                ((reader.read::<f32>() * 255.0) as u64 & 255) as u8,
+                ((reader.read::<f32>() * 255.0) as u64 & 255) as u8,
+                ((reader.read::<f32>() * 255.0) as u64 & 255) as u8,
             ]
         };
         let read_tex =
@@ -128,104 +128,172 @@ impl Material {
             vxlogi!("Value: {:?}", v);
             v
         };
-        // Alpha
-        let t = reader.read_type_id();
-        if t == Field::Float as TypeId {
-            uniform.alpha = reader.read();
-        } else if t == Field::Texture as TypeId {
-            let _: Id = reader.read();
-            translucency = TranslucencyMode::Tansparent;
-        } else {
-            vxunexpected!();
-        }
-        #[cfg(debug_gx3d)]
-        vxlogi!("Alpha is: {:?}", uniform.alpha);
-        // AlphaCutoff
-        let t = reader.read_type_id();
-        if t == Field::Float as TypeId {
-            uniform.alpha_cutoff = reader.read();
-            if uniform.alpha_cutoff > 0.001 {
-                translucency = TranslucencyMode::Cutoff;
+        let mut alpha = None;
+        let mut alpha_cutoff = None;
+        let mut alpha_mode = None;
+        let mut base_color = None;
+        let mut base_color_factor = None;
+        let mut double_sided = None;
+        let mut emissive = None;
+        let mut emissive_factor = None;
+        let mut metallic_factor = None;
+        let mut metallic_roughness = None;
+        let mut normal = None;
+        let mut normal_scale = None;
+        let mut occlusion = None;
+        let mut occlusion_strength = None;
+        let mut roughness_factor = None;
+        for _ in 0..15 {
+            let it = reader.read_type_id();
+            match it {
+                1 => {
+                    // Alpha
+                    let t = reader.read_type_id();
+                    if t == Field::Float as TypeId {
+                        alpha = Some(reader.read());
+                    } else if t == Field::Texture as TypeId {
+                        let _: Id = reader.read();
+                        alpha = Some(1.0);
+                        translucency = TranslucencyMode::Tansparent;
+                    } else {
+                        vxunexpected!();
+                    }
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Alpha is: {:?}", uniform.alpha);
+                }
+                2 => {
+                    // AlphaCutoff
+                    let t = reader.read_type_id();
+                    if t == Field::Float as TypeId {
+                        alpha_cutoff = Some(reader.read());
+                        if vxunwrap!(alpha_cutoff) > 0.003 {
+                            translucency = TranslucencyMode::Cutoff;
+                        }
+                    } else {
+                        vxunexpected!();
+                    }
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Alpha cutoff is: {:?}", uniform.alpha_cutoff);
+                }
+                3 => {
+                    // AlphaMode
+                    let t = reader.read_type_id();
+                    if t == Field::Float as TypeId {
+                        alpha_mode = Some(reader.read());
+                        let alpha_mode = vxunwrap!(alpha_mode);
+                        if alpha_mode < 1.0 && 0.0 < alpha_mode {
+                            translucency = TranslucencyMode::Cutoff;
+                        }
+                    } else {
+                        vxunexpected!();
+                    }
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Translucency is: {:?}", translucency);
+                }
+                4 => {
+                    // BaseColor
+                    let t = reader.read_type_id();
+                    base_color = Some(if t == Field::Texture as TypeId {
+                        let id: Id = reader.read();
+                        #[cfg(debug_gx3d)]
+                        vxlogi!("Base color is: texture<{:?}>", id);
+                        texture_manager.load_gx3d(&*eng, id)
+                    } else if t == Field::Vector as TypeId {
+                        let color = read_color(reader);
+                        if color[3] < 254 {
+                            translucency = TranslucencyMode::Tansparent;
+                        }
+                        #[cfg(debug_gx3d)]
+                        vxlogi!("Base color is: {:?}", &color);
+                        texture_manager.create_2d_with_color(&*gapi_engine, color)
+                    } else {
+                        vxunexpected!()
+                    });
+                }
+                5 => {
+                    // BaseColorFactor
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Base color factor");
+                    base_color_factor = Some(read_tex(&*eng, reader, &mut *texture_manager));
+                }
+                6 => {
+                    // DoubleSided maybe // in future I gonna think about it
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Double sided");
+                    double_sided = Some(read_value(reader));
+                }
+                7 => {
+                    // Emissive
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Emissive");
+                    emissive = Some(read_tex(&*eng, reader, &mut *texture_manager));
+                }
+                8 => {
+                    // EmissiveFactor
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Emissive factor");
+                    emissive_factor = Some(read_tex(&*eng, reader, &mut *texture_manager));
+                }
+                9 => {
+                    // MetallicFactor
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Metallic Factor");
+                    metallic_factor = Some(read_value(reader));
+                }
+                10 => {
+                    // MetallicRoughness
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("MetallicRoughness");
+                    metallic_roughness = Some(read_tex(&*eng, reader, &mut *texture_manager));
+                }
+                11 => {
+                    // Normal
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Normal");
+                    normal = Some(read_tex(&*eng, reader, &mut *texture_manager));
+                }
+                12 => {
+                    // NormalScale
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("NormalScale");
+                    normal_scale = Some(read_value(reader));
+                }
+                13 => {
+                    // Occlusion
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("Occlusion");
+                    occlusion = Some(read_tex(&*eng, reader, &mut *texture_manager));
+                }
+                14 => {
+                    // OcclusionStrength
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("OcclusionStrength");
+                    occlusion_strength = Some(read_value(reader));
+                }
+                15 => {
+                    // RoughnessFactor
+                    #[cfg(debug_gx3d)]
+                    vxlogi!("RoughnessFactor");
+                    roughness_factor = Some(read_value(reader));
+                }
+                _ => vxunexpected!(),
             }
-        } else {
-            vxunexpected!();
         }
-        #[cfg(debug_gx3d)]
-        vxlogi!("Alpha cutoff is: {:?}", uniform.alpha_cutoff);
-        // AlphaMode
-        let t = reader.read_type_id();
-        if t == Field::Float as TypeId {
-            let alpha_mode: f32 = reader.read();
-            if alpha_mode < 1.0 && 0.0 < alpha_mode {
-                translucency = TranslucencyMode::Cutoff;
-            }
-        } else {
-            vxunexpected!();
-        }
-        #[cfg(debug_gx3d)]
-        vxlogi!("Translucency is: {:?}", translucency);
-        // BaseColor
-        let t = reader.read_type_id();
-        let base_color = if t == Field::Texture as TypeId {
-            let id: Id = reader.read();
-            #[cfg(debug_gx3d)]
-            vxlogi!("Base color is: texture<{:?}>", id);
-            texture_manager.load_gx3d(&*eng, id)
-        } else if t == Field::Vector as TypeId {
-            let color = read_color(reader);
-            if color[3] < 254 {
-                translucency = TranslucencyMode::Tansparent;
-            }
-            #[cfg(debug_gx3d)]
-            vxlogi!("Base color is: {:?}", &color);
-            texture_manager.create_2d_with_color(&*gapi_engine, color)
-        } else {
-            vxunexpected!()
-        };
-        // BaseColorFactor
-        #[cfg(debug_gx3d)]
-        vxlogi!("Base color factor");
-        let base_color_factor = read_tex(&*eng, reader, &mut *texture_manager);
-        // DoubleSided maybe // in future I gonna think about it
-        #[cfg(debug_gx3d)]
-        vxlogi!("Double sided");
-        let _double_sided = read_value(reader);
-        // Emissive
-        #[cfg(debug_gx3d)]
-        vxlogi!("Emissive");
-        let emissive = read_tex(&*eng, reader, &mut *texture_manager);
-        // EmissiveFactor
-        #[cfg(debug_gx3d)]
-        vxlogi!("Emissive factor");
-        let emissive_factor = read_tex(&*eng, reader, &mut *texture_manager);
-        // MetallicFactor
-        #[cfg(debug_gx3d)]
-        vxlogi!("Metallic Factor");
-        uniform.metallic_factor = read_value(reader);
-        // MetallicRoughness
-        #[cfg(debug_gx3d)]
-        vxlogi!("MetallicRoughness");
-        let metallic_roughness = read_tex(&*eng, reader, &mut *texture_manager);
-        // Normal
-        #[cfg(debug_gx3d)]
-        vxlogi!("Normal");
-        let normal = read_tex(&*eng, reader, &mut *texture_manager);
-        // NormalScale
-        #[cfg(debug_gx3d)]
-        vxlogi!("NormalScale");
-        uniform.normal_scale = read_value(reader);
-        // Occlusion
-        #[cfg(debug_gx3d)]
-        vxlogi!("Occlusion");
-        let occlusion = read_tex(&*eng, reader, &mut *texture_manager);
-        // OcclusionStrength
-        #[cfg(debug_gx3d)]
-        vxlogi!("OcclusionStrength");
-        uniform.occlusion_strength = read_value(reader);
-        // RoughnessFactor
-        #[cfg(debug_gx3d)]
-        vxlogi!("RoughnessFactor");
-        uniform.roughness_factor = read_value(reader);
+        uniform.alpha = vxunwrap!(alpha);
+        uniform.alpha_cutoff = vxunwrap!(alpha_cutoff);
+        uniform.metallic_factor = vxunwrap!(metallic_factor);
+        uniform.normal_scale = vxunwrap!(normal_scale);
+        uniform.occlusion_strength = vxunwrap!(occlusion_strength);
+        uniform.roughness_factor = vxunwrap!(roughness_factor);
+        let _: Real = vxunwrap!(alpha_mode);
+        let base_color = vxunwrap!(base_color);
+        let base_color_factor = vxunwrap!(base_color_factor);
+        let _: Real = vxunwrap!(double_sided);
+        let emissive = vxunwrap!(emissive);
+        let emissive_factor = vxunwrap!(emissive_factor);
+        let metallic_roughness = vxunwrap!(metallic_roughness);
+        let normal = vxunwrap!(normal);
+        let occlusion = vxunwrap!(occlusion);
         let textures = vec![
             base_color.clone(),
             base_color_factor.clone(),

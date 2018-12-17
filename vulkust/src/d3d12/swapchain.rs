@@ -61,8 +61,8 @@ impl Swapchain {
         };
         vxlogi!("rtv_descriptor_size: {}", rtv_descriptor_size);
         let mut rtv_handle = unsafe { rtv_heap.GetCPUDescriptorHandleForHeapStart() };
-        let mut render_targets: [&'static mut winapi::um::d3d12::ID3D12Resource; BUFFER_COUNT] =
-            unsafe { zeroed() };
+        let mut render_targets: [&'static mut winapi::um::d3d12::ID3D12Resource;
+                                    BUFFER_COUNT] = unsafe { zeroed() };
         for n in 0..BUFFER_COUNT {
             ThrowIfFailed!(swapchain.GetBuffer(
                 n as winapi::shared::minwindef::UINT,

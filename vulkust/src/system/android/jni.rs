@@ -119,21 +119,15 @@ pub struct JNINativeInterface {
     pub FromReflectedMethod:
         *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jobject) -> jmethodID,
     pub FromReflectedField: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jobject) -> jfieldID,
-    pub ToReflectedMethod: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jclass,
-        arg3: jmethodID,
-        arg4: jboolean,
-    ) -> jobject,
+    pub ToReflectedMethod:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jclass, arg3: jmethodID, arg4: jboolean)
+            -> jobject,
     pub GetSuperclass: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jclass) -> jclass,
     pub IsAssignableFrom:
         *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jclass, arg3: jclass) -> jboolean,
-    pub ToReflectedField: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jclass,
-        arg3: jfieldID,
-        arg4: jboolean,
-    ) -> jobject,
+    pub ToReflectedField:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jclass, arg3: jfieldID, arg4: jboolean)
+            -> jobject,
     pub Throw: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jthrowable) -> jint,
     pub ThrowNew:
         *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jclass, arg3: *const c_char) -> jint,
@@ -174,12 +168,9 @@ pub struct JNINativeInterface {
         arg3: *const c_char,
         arg4: *const c_char,
     ) -> jmethodID,
-    pub CallObjectMethod: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jobject,
-        arg3: jmethodID,
-        ...
-    ) -> jobject,
+    pub CallObjectMethod:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jobject, arg3: jmethodID, ...)
+            -> jobject,
     pub CallObjectMethodV: *mut unsafe extern "C" fn(
         arg1: *mut JNIEnv,
         arg2: jobject,
@@ -192,12 +183,9 @@ pub struct JNINativeInterface {
         arg3: jmethodID,
         arg4: *mut jvalue,
     ) -> jobject,
-    pub CallBooleanMethod: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jobject,
-        arg3: jmethodID,
-        ...
-    ) -> jboolean,
+    pub CallBooleanMethod:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jobject, arg3: jmethodID, ...)
+            -> jboolean,
     pub CallBooleanMethodV: *mut unsafe extern "C" fn(
         arg1: *mut JNIEnv,
         arg2: jobject,
@@ -294,12 +282,9 @@ pub struct JNINativeInterface {
         arg3: jmethodID,
         arg4: *mut jvalue,
     ) -> jfloat,
-    pub CallDoubleMethod: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jobject,
-        arg3: jmethodID,
-        ...
-    ) -> jdouble,
+    pub CallDoubleMethod:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jobject, arg3: jmethodID, ...)
+            -> jdouble,
     pub CallDoubleMethodV: *mut unsafe extern "C" fn(
         arg1: *mut JNIEnv,
         arg2: jobject,
@@ -598,12 +583,9 @@ pub struct JNINativeInterface {
         arg3: jmethodID,
         arg4: *mut jvalue,
     ) -> jobject,
-    pub CallStaticBooleanMethod: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jclass,
-        arg3: jmethodID,
-        ...
-    ) -> jboolean,
+    pub CallStaticBooleanMethod:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jclass, arg3: jmethodID, ...)
+            -> jboolean,
     pub CallStaticBooleanMethodV: *mut unsafe extern "C" fn(
         arg1: *mut JNIEnv,
         arg2: jclass,
@@ -773,29 +755,22 @@ pub struct JNINativeInterface {
     pub NewString:
         *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: *const jchar, arg3: jsize) -> jstring,
     pub GetStringLength: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jstring) -> jsize,
-    pub GetStringChars: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jstring,
-        arg3: *mut jboolean,
-    ) -> *const jchar,
+    pub GetStringChars:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jstring, arg3: *mut jboolean)
+            -> *const jchar,
     pub ReleaseStringChars:
         *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jstring, arg3: *const jchar),
     pub NewStringUTF: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: *const c_char) -> jstring,
     pub GetStringUTFLength: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jstring) -> jsize,
-    pub GetStringUTFChars: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jstring,
-        arg3: *mut jboolean,
-    ) -> *const c_char,
+    pub GetStringUTFChars:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jstring, arg3: *mut jboolean)
+            -> *const c_char,
     pub ReleaseStringUTFChars:
         *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jstring, arg3: *const c_char),
     pub GetArrayLength: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jarray) -> jsize,
-    pub NewObjectArray: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jsize,
-        arg3: jclass,
-        arg4: jobject,
-    ) -> jobjectArray,
+    pub NewObjectArray:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jsize, arg3: jclass, arg4: jobject)
+            -> jobjectArray,
     pub GetObjectArrayElement:
         *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jobjectArray, arg3: jsize) -> jobject,
     pub SetObjectArrayElement: *mut unsafe extern "C" fn(
@@ -812,46 +787,30 @@ pub struct JNINativeInterface {
     pub NewLongArray: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jsize) -> jlongArray,
     pub NewFloatArray: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jsize) -> jfloatArray,
     pub NewDoubleArray: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jsize) -> jdoubleArray,
-    pub GetBooleanArrayElements: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jbooleanArray,
-        arg3: *mut jboolean,
-    ) -> *mut jboolean,
-    pub GetByteArrayElements: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jbyteArray,
-        arg3: *mut jboolean,
-    ) -> *mut jbyte,
-    pub GetCharArrayElements: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jcharArray,
-        arg3: *mut jboolean,
-    ) -> *mut jchar,
-    pub GetShortArrayElements: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jshortArray,
-        arg3: *mut jboolean,
-    ) -> *mut jshort,
-    pub GetIntArrayElements: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jintArray,
-        arg3: *mut jboolean,
-    ) -> *mut jint,
-    pub GetLongArrayElements: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jlongArray,
-        arg3: *mut jboolean,
-    ) -> *mut jlong,
-    pub GetFloatArrayElements: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jfloatArray,
-        arg3: *mut jboolean,
-    ) -> *mut jfloat,
-    pub GetDoubleArrayElements: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jdoubleArray,
-        arg3: *mut jboolean,
-    ) -> *mut jdouble,
+    pub GetBooleanArrayElements:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jbooleanArray, arg3: *mut jboolean)
+            -> *mut jboolean,
+    pub GetByteArrayElements:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jbyteArray, arg3: *mut jboolean)
+            -> *mut jbyte,
+    pub GetCharArrayElements:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jcharArray, arg3: *mut jboolean)
+            -> *mut jchar,
+    pub GetShortArrayElements:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jshortArray, arg3: *mut jboolean)
+            -> *mut jshort,
+    pub GetIntArrayElements:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jintArray, arg3: *mut jboolean)
+            -> *mut jint,
+    pub GetLongArrayElements:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jlongArray, arg3: *mut jboolean)
+            -> *mut jlong,
+    pub GetFloatArrayElements:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jfloatArray, arg3: *mut jboolean)
+            -> *mut jfloat,
+    pub GetDoubleArrayElements:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jdoubleArray, arg3: *mut jboolean)
+            -> *mut jdouble,
     pub ReleaseBooleanArrayElements: *mut unsafe extern "C" fn(
         arg1: *mut JNIEnv,
         arg2: jbooleanArray,
@@ -1032,18 +991,14 @@ pub struct JNINativeInterface {
         arg4: jsize,
         arg5: *mut c_char,
     ),
-    pub GetPrimitiveArrayCritical: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jarray,
-        arg3: *mut jboolean,
-    ) -> *mut c_void,
+    pub GetPrimitiveArrayCritical:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jarray, arg3: *mut jboolean)
+            -> *mut c_void,
     pub ReleasePrimitiveArrayCritical:
         *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jarray, arg3: *mut c_void, arg4: jint),
-    pub GetStringCritical: *mut unsafe extern "C" fn(
-        arg1: *mut JNIEnv,
-        arg2: jstring,
-        arg3: *mut jboolean,
-    ) -> *const jchar,
+    pub GetStringCritical:
+        *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jstring, arg3: *mut jboolean)
+            -> *const jchar,
     pub ReleaseStringCritical:
         *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jstring, arg3: *const jchar),
     pub NewWeakGlobalRef: *mut unsafe extern "C" fn(arg1: *mut JNIEnv, arg2: jobject) -> jweak,
@@ -1084,19 +1039,15 @@ pub struct JNIInvokeInterface {
     pub reserved1: *mut c_void,
     pub reserved2: *mut c_void,
     pub DestroyJavaVM: *mut unsafe extern "C" fn(arg1: *mut JavaVM) -> jint,
-    pub AttachCurrentThread: *mut unsafe extern "C" fn(
-        arg1: *mut JavaVM,
-        arg2: *mut *mut JNIEnv,
-        arg3: *mut c_void,
-    ) -> jint,
+    pub AttachCurrentThread:
+        *mut unsafe extern "C" fn(arg1: *mut JavaVM, arg2: *mut *mut JNIEnv, arg3: *mut c_void)
+            -> jint,
     pub DetachCurrentThread: *mut unsafe extern "C" fn(arg1: *mut JavaVM) -> jint,
     pub GetEnv:
         *mut unsafe extern "C" fn(arg1: *mut JavaVM, arg2: *mut *mut c_void, arg3: jint) -> jint,
-    pub AttachCurrentThreadAsDaemon: *mut unsafe extern "C" fn(
-        arg1: *mut JavaVM,
-        arg2: *mut *mut JNIEnv,
-        arg3: *mut c_void,
-    ) -> jint,
+    pub AttachCurrentThreadAsDaemon:
+        *mut unsafe extern "C" fn(arg1: *mut JavaVM, arg2: *mut *mut JNIEnv, arg3: *mut c_void)
+            -> jint,
 }
 
 impl Default for JNIInvokeInterface {
