@@ -29,6 +29,14 @@ impl Manager {
         vxunimplemented!();
     }
 
+    pub(crate) fn create_ssao_set(
+        &mut self,
+        _uniform: &DynamicBuffer,
+        _textures: Vec<Arc<RwLock<Texture>>>,
+    ) -> Arc<Set> {
+        vxunimplemented!();
+    }
+
     pub(crate) fn create_shadow_accumulator_directional_set(
         &mut self,
         _uniform: &DynamicBuffer,

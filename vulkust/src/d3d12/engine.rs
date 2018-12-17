@@ -18,18 +18,21 @@ use std::sync::{Arc, RwLock};
 pub struct Engine {
     device: Arc<Device>,
     swapchain: Arc<Swapchain>,
-    main_graphic_pool: Arc<CmdPool>,
+    main_graphic_cmd_pool: Arc<CmdPool>,
+    memory_manager: Arc<RwLock<MemoryManager>>,
 }
 
 impl Engine {
     pub(crate) fn new(os_app: &Arc<RwLock<OsApp>>, conf: &Configurations) -> Self {
         let device = Arc::new(Device::new());
         let swapchain = Arc::new(Swapchain::new(device.clone(), os_app, conf));
-        let main_graphic_pool = Arc::new(CmdPool::new(device.clone()));
+        let main_graphic_cmd_pool = Arc::new(CmdPool::new(device.clone()));
+        let memory_manager = Arc::new(RwLock::new(MemoryManager::new()));
         Self {
             device,
             swapchain,
-            main_graphic_pool,
+            main_graphic_cmd_pool,
+            memory_manager,
         }
     }
 
@@ -58,7 +61,7 @@ impl Engine {
     }
 
     pub(crate) fn get_memory_manager(&self) -> &Arc<RwLock<MemoryManager>> {
-        vxunimplemented!();
+        return &self.memory_manager;
     }
 
     pub(crate) fn get_render_pass(&self) -> &Arc<RenderPass> {

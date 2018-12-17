@@ -1,3 +1,5 @@
+#[cfg(blank_gapi)]
+pub(crate) use super::super::blank_gapi::pipeline::*;
 #[cfg(directx12_api)]
 pub(crate) use super::super::d3d12::pipeline::*;
 #[cfg(metal_api)]

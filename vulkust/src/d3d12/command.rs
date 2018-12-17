@@ -163,6 +163,10 @@ impl Buffer {
         vxunimplemented!();
     }
 
+    pub(crate) fn render_ssao(&mut self) {
+        vxunimplemented!();
+    }
+
     pub(crate) fn render_shadow_accumulator_directional(&mut self) {
         vxunimplemented!();
     }
@@ -176,6 +180,22 @@ impl Buffer {
     }
 
     pub(crate) fn bind_deferred_deferred_descriptor(
+        &mut self,
+        _descriptor_set: &DescriptorSet,
+        _buffer: &BufBuffer,
+    ) {
+        vxunimplemented!();
+    }
+
+    pub(crate) fn bind_ssao_scene_descriptor(
+        &mut self,
+        _descriptor_set: &DescriptorSet,
+        _buffer: &BufBuffer,
+    ) {
+        vxunimplemented!();
+    }
+
+    pub(crate) fn bind_ssao_ssao_descriptor(
         &mut self,
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,

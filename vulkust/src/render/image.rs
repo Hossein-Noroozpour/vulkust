@@ -1,3 +1,5 @@
+#[cfg(blank_gapi)]
+pub(crate) use super::super::blank_gapi::image::*;
 #[cfg(directx12_api)]
 pub use super::super::d3d12::image::*;
 #[cfg(metal_api)]

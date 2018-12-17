@@ -41,7 +41,7 @@ fn main() {
         }
         println!("cargo:rustc-cfg=directx12_api");
     }
-    #[cfg(not(feature = "directx12"))]
+    #[cfg(all(not(feature = "directx12"), not(feature = "blank_gapi")))]
     println!("cargo:rustc-cfg=vulkan_api");
     if in_macos || in_ios {
         println!("cargo:rustc-cfg=apple_os");
