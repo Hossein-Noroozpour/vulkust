@@ -7,6 +7,7 @@
 #define SSAO_SEARCH_STEPS 4
 #define NORMAL_EPSILON 0.005
 #define SMALL_EPSILON 0.00001
+#define VX_PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062862
 
 struct Camera {
     vec4 x;
@@ -89,4 +90,39 @@ float gausssian_blur_5x5(const sampler2D s, const vec2 uv, const vec2 pixel_step
 		}
 	}
 	return result;
+}
+
+// Normal Distribution Function Trowbridge-Reitz GGX
+float NDFTRGGX(const vec3 normal, const vec3 halfway, const float roughness) {
+    const float roughness2 = roughness * roughness;
+    const float nh = max(dot(normal, halfway), 0.0);
+    const float nh2 = nh * nh;
+    const float nom = roughness2;
+    const float tmpdenom = (nh2 * (roughness2 - 1.0) + 1.0);
+    const float denom = VX_PI * tmpdenom * tmpdenom;
+    return nom / denom;
+}
+
+float GFSCHGGX(const float nd, const float roughness) {
+    const float r = roughness + 1.0;
+    const float k = (r * r) * (1.0 / 8.0);
+    const float nom = nd;
+    const float denom = (nd * (1.0 - k)) + k;
+    return nom / denom;
+}
+
+float GFSCHGGX(const vec3 normal, const vec3 view, const vec3 light, const float roughness) {
+    const float nv = max(dot(normal, view), 0.0);
+    const float nl = max(dot(normal, light), 0.0);
+    const float ggx2 = GFSCHGGX(nv, roughness);
+    const float ggx1 = GFSCHGGX(nl, roughness);
+    return ggx1 * ggx2;
+}
+
+vec3 FFSCHGGX(const float nv, const vec3 f0) {
+	const float inv = 1.0 - nv;
+	const float inv2 = inv * inv;
+	const float inv4 = inv2 * inv2;
+	const float inv5 = inv4 * inv;
+    return f0 + ((1.0 - f0) * inv5);
 }

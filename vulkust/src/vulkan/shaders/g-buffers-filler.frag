@@ -31,6 +31,7 @@ layout (location = 2) out vec4 out_alb;
 
 void main() {
     vec4 alb = texture(base_color, uv) * texture(base_color_factor, uv);
+    vec2 metal_rough = texture(metallic_roughness, uv).xy * vec2(material_ubo.s.metallic_factor, material_ubo.s.roughness_factor);
     alb.w *= material_ubo.s.alpha;
     if(alb.w < material_ubo.s.alpha_cutoff) {
         discard;
@@ -38,10 +39,10 @@ void main() {
     out_alb = alb;
     out_pos.xyz = pos;
 //   out_pos.w = out_alb.a;
-    out_pos.w = 1.0;
+    out_pos.w = metal_rough.y;
     out_nrm.xyz = normalize(mat3(tng, btg, nrm) * ((texture(normal, uv).xyz - 0.5) * 2.0));
 //   out_nrm.w = out_alb.a;
-    out_nrm.w = 1.0;
+    out_nrm.w = metal_rough.x;
   // todo lots of work must be done in here
   // I must add any needed output for deferred part
   // w channel can hold useful info for deferred

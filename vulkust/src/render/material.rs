@@ -24,12 +24,12 @@ pub enum Field {
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
-    alpha: f32,
-    alpha_cutoff: f32,
-    metallic_factor: f32,
-    normal_scale: f32,
-    occlusion_strength: f32,
-    roughness_factor: f32,
+    alpha: Real,
+    alpha_cutoff: Real,
+    metallic_factor: Real,
+    normal_scale: Real,
+    occlusion_strength: Real,
+    roughness_factor: Real,
 }
 
 impl Uniform {
@@ -93,13 +93,18 @@ impl Material {
         let mut texture_manager = vxresult!(eng.get_asset_manager().get_texture_manager().write());
         let mut uniform = Uniform::new();
         let mut translucency = TranslucencyMode::Opaque;
-        let read_color = |reader: &mut Gx3DReader| {
-            [
-                ((reader.read::<f32>() * 255.0) as u64 & 255) as u8,
-                ((reader.read::<f32>() * 255.0) as u64 & 255) as u8,
-                ((reader.read::<f32>() * 255.0) as u64 & 255) as u8,
-                ((reader.read::<f32>() * 255.0) as u64 & 255) as u8,
-            ]
+        let read_color = |r: &mut Gx3DReader| {
+            let read = |r: &mut Gx3DReader| {
+                let f = r.read::<Real>() * 255.0;
+                #[cfg(debug_gx3d)]
+                {
+                    if f > 255.5 || f < 0.0 {
+                        vxunexpected!();
+                    }
+                }
+                f as u8
+            };
+            [read(r), read(r), read(r), read(r)]
         };
         let read_tex =
             |engine: &Engine, reader: &mut Gx3DReader, texture_manager: &mut TextureManager| {
@@ -123,7 +128,7 @@ impl Material {
             if t != Field::Float as TypeId {
                 vxunexpected!();
             }
-            let v = reader.read::<f32>();
+            let v = reader.read::<Real>();
             #[cfg(debug_gx3d)]
             vxlogi!("Value: {:?}", v);
             v
