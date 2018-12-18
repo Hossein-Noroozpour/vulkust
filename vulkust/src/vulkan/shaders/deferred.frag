@@ -32,25 +32,26 @@ mat3 tbn;
 vec3 eye_nrm;
 
 void calc_lights() {
-	vec2 start_uv = uv - (vec2(deferred_ubo.s.pixel_step.x, deferred_ubo.s.pixel_step.y) * float((BLUR_KERNEL_LENGTH - 1) >> 1));
+	const vec2 start_uv = uv - (vec2(deferred_ubo.s.pixel_step.x, deferred_ubo.s.pixel_step.y) * float((BLUR_KERNEL_LENGTH - 1) >> 1));
 	for(uint light_index = 0; light_index < scene_ubo.s.lights_count.x; ++light_index) {
 		float slope = -dot(nrm, scene_ubo.s.directional_lights[light_index].direction_strength.xyz);
-		if(slope < 0.005) {
+		if(slope < 0.0) {
 			continue;
 		}
-		slope = smoothstep(slope, 0.005, 0.2);
 		float brightness = 1.0;
 		vec2 shduv = start_uv;
-		uint light_flag = 1 << light_index;
+		const uint light_flag = 1 << light_index;
 		for(uint si = 0; si < BLUR_KERNEL_LENGTH; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.s.pixel_step.x) {
 			for (uint sj = 0; sj < BLUR_KERNEL_LENGTH; ++sj, shduv.y += deferred_ubo.s.pixel_step.y) {
 				if ((uint(round(texture(shadow_directional_flagbits, shduv).x * 
 						float(1 << MAX_DIRECTIONAL_LIGHTS_COUNT))) & light_flag) == light_flag) {
-					brightness -= 1.0 / float(BLUR_KERNEL_LENGTH * BLUR_KERNEL_LENGTH);
+					brightness += (-1.0 / float(BLUR_KERNEL_LENGTH * BLUR_KERNEL_LENGTH));
 				}
 			}
 		}
-		brightness *= slope;
+		vec3 tmpv3 = eye_nrm - scene_ubo.s.directional_lights[light_index].direction_strength.xyz;
+		const vec3 half = normalize(tmpv3);
+		// pbr calculation 
 		out_color.xyz += alb.xyz * scene_ubo.s.directional_lights[light_index].direction_strength.w * brightness; 
 	}
 }
@@ -285,10 +286,10 @@ void main() {
 	spos.xyz /= spos.w;
 	vpos = (scene_ubo.s.camera.view * vec4(pos, 1.0)).xyz;
 
-	out_color.xyz = alb.xyz; // todo it must come along scene
+	// out_color.xyz = alb.xyz; // todo it must come along scene
 	// out_color.xyz *= 0.001; // todo it must come along scene
 	calc_lights();
-	out_color.xyz *= texture(ambient_occlusion, uv).x;
+	// out_color.xyz *= texture(ambient_occlusion, uv).x;
 	// calc_ssr();
 
 	// out_color.xyz *= dot(-normalize(reflect(eye_nrm, nrm)), nrm);
