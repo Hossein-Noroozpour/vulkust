@@ -685,7 +685,7 @@ impl Directional for Sun {
     }
 
     fn update_uniform(&self, u: &mut DirectionalUniform) {
-        u.color = self.color.extend(1.0);
+        u.color = (self.color * self.strength).extend(1.0);
         u.direction = self.direction.extend(self.strength);
     }
 }

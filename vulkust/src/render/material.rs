@@ -22,6 +22,7 @@ pub enum Field {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
     alpha: Real,
@@ -35,16 +36,17 @@ pub struct Uniform {
 impl Uniform {
     pub fn new() -> Self {
         Uniform {
-            metallic_factor: 1.0,
-            roughness_factor: 1.0,
-            normal_scale: 1.0,
-            occlusion_strength: 1.0,
             alpha: 1.0,
             alpha_cutoff: 0.001,
+            metallic_factor: 1.0,
+            normal_scale: 1.0,
+            occlusion_strength: 1.0,
+            roughness_factor: 1.0,
         }
     }
 }
 
+#[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub enum TranslucencyMode {
     Cutoff,
@@ -58,6 +60,7 @@ impl Default for TranslucencyMode {
     }
 }
 
+#[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Material {
     pub base_color: Arc<RwLock<Texture>>,
@@ -383,8 +386,6 @@ impl Material {
         self.descriptor_set = descriptor_manager.create_gbuff_set(&self.uniform_buffer, textures);
     }
 
-    pub fn update(&mut self, _scene: &Scene, _model: &Model) {}
-
     pub fn update_uniform_buffer(&mut self, frame_number: usize) {
         self.uniform_buffer.update(&self.uniform, frame_number);
     }
@@ -403,5 +404,13 @@ impl Material {
         let mut texmgr = vxresult!(eng.get_asset_manager().get_texture_manager().write());
         self.base_color =
             texmgr.create_2d_with_color(&*vxresult!(eng.get_gapi_engine().read()), [r, g, b, a]);
+    }
+
+    pub fn set_metallic_factor(&mut self, v: Real) {
+        self.uniform.metallic_factor = v;
+    }
+
+    pub fn set_roughness_factor(&mut self, v: Real) {
+        self.uniform.roughness_factor = v;
     }
 }

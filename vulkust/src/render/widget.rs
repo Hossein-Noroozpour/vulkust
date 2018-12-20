@@ -87,11 +87,11 @@ impl Model for Base {
         self.model_base.update(scene, camera, frame_number);
     }
 
-    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
-        self.model_base.add_mesh(mesh);
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>, mat: Material) {
+        self.model_base.add_mesh(mesh, mat);
     }
 
-    fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>> {
+    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)> {
         return self.model_base.get_meshes();
     }
 
@@ -188,7 +188,7 @@ impl Label {
         // todo margin
         // todo alignment
         // todo multiline support
-        let mesh = {
+        let (mesh, material) = {
             if self.text.len() < 1 {
                 if self.get_meshes().len() < 1 {
                     return;
@@ -284,12 +284,12 @@ impl Label {
             material.finalize_textures_change(engine);
             let radius = math::Vector2::new(w, h);
             let radius = math::dot(radius, radius).sqrt();
-            let mesh = MeshBase::new_with_material(material, &vertices, &indices, radius, engine);
+            let mesh = MeshBase::new(&vertices, &indices, radius, engine);
             let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
             vxresult!(asset_manager.get_mesh_manager().write()).add(&mesh);
-            mesh
+            (mesh, material)
         };
-        self.add_mesh(mesh);
+        self.add_mesh(mesh, material);
     }
 }
 
@@ -357,7 +357,7 @@ impl Model for Label {
         self.base.update(scene, camera, frame_number);
     }
 
-    fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>> {
+    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)> {
         return self.base.get_meshes();
     }
 
@@ -365,8 +365,8 @@ impl Model for Label {
         self.base.clear_meshes();
     }
 
-    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
-        self.base.add_mesh(mesh);
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>, mat: Material) {
+        self.base.add_mesh(mesh, mat);
     }
 
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)> {

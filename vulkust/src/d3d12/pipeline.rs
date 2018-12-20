@@ -125,8 +125,8 @@ impl Pipeline {
             },
         ];
 
-        let mut blend_state_render_targets: [winapi::um::d3d12::D3D12_RENDER_TARGET_BLEND_DESC;
-                                                8] = unsafe { zeroed() };
+        let mut blend_state_render_targets: [winapi::um::d3d12::D3D12_RENDER_TARGET_BLEND_DESC; 8] =
+            unsafe { zeroed() };
         for t in &mut blend_state_render_targets {
             t.BlendEnable = winapi::shared::minwindef::FALSE;
             t.LogicOpEnable = winapi::shared::minwindef::FALSE;

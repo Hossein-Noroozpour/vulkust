@@ -31,7 +31,9 @@ void main() {
         shade();
         return;
     }
-    vec4 pos = texture(position, uv);
+    vec4 pos;
+    pos.xyz = texture(position, uv).xyz;
+    pos.w = 1.0;
     bias = abs(bias);
     if (bias < 0.242535624) {
         bias = 0.02;

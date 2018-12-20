@@ -61,12 +61,14 @@ impl Gx3DReader {
 
     fn read_typed_bytes(&mut self, dest: *mut u8, count: usize) {
         let mut bytes = vec![0u8; count];
-        let _n = vxresult!(self.file.read(&mut bytes));
-        #[cfg(debug_mode)]
-        {
-            if _n != count {
+        let mut n = vxresult!(self.file.read(&mut bytes));
+        let mut readcount = n;
+        while readcount < count {
+            if n < 1 {
                 vxunexpected!();
             }
+            n = vxresult!(self.file.read(&mut bytes[readcount..count]));
+            readcount += n;
         }
         if self.different_endianness {
             let mut end = count - 1;
@@ -87,12 +89,14 @@ impl Gx3DReader {
     fn read_array_typed_bytes(&mut self, dest: *mut u8, esize: usize, count: usize) {
         let size = esize * count;
         let mut bytes = vec![0u8; size];
-        let _n = vxresult!(self.file.read(&mut bytes));
-        #[cfg(debug_mode)]
-        {
-            if _n != size {
+        let mut n = vxresult!(self.file.read(&mut bytes));
+        let mut readsize = n;
+        while readsize < size {
+            if n < 1 {
                 vxunexpected!();
             }
+            n = vxresult!(self.file.read(&mut bytes[readsize..size]));
+            readsize += n;
         }
         if self.different_endianness {
             let inc = esize - 1;

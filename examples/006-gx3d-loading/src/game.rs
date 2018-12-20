@@ -81,8 +81,8 @@ impl CoreAppTrait for MyGame {
                 } => {
                     if vxresult!(self.keys_state.read()).lm {
                         let mut camera = vxresult!(vxunwrap!(&self.camera).write());
-                        camera.rotate_local_x(delta.1 * 1.5);
-                        camera.rotate_global_z(delta.0 * 1.5);
+                        camera.rotate_local_x(delta.1 * 2.5);
+                        camera.rotate_global_z(delta.0 * 2.5);
                     }
                 }
                 _ => (),
@@ -156,13 +156,13 @@ impl CoreAppTrait for MyGame {
                 (n as f64 / 1_000_000_000.0) as f32
             };
             if keys_state.w {
-                camera.move_local_z(delta * 0.7);
+                camera.move_local_z(delta * -1.4);
             }
             if keys_state.s {
-                camera.move_local_z(delta * -0.7);
+                camera.move_local_z(delta * 1.4);
             }
             if keys_state.a {
-                camera.move_local_x(delta * -0.7);
+                camera.move_local_x(delta * -1.4);
             }
             if keys_state.d {
                 camera.move_local_x(delta * 0.7);

@@ -7,6 +7,7 @@ use super::camera::Camera;
 use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
+use super::material::Material;
 use super::mesh::Mesh;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::scene::Scene;
@@ -20,9 +21,9 @@ use math;
 
 pub trait Model: Object + Transferable {
     fn update(&mut self, &Scene, &Camera, usize);
-    fn add_mesh(&mut self, Arc<RwLock<Mesh>>);
+    fn add_mesh(&mut self, Arc<RwLock<Mesh>>, Material);
     fn clear_meshes(&mut self);
-    fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>>;
+    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)>;
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)>;
     fn has_shadow(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
@@ -170,7 +171,7 @@ pub struct Base {
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
     descriptor_set: Arc<DescriptorSet>,
-    meshes: BTreeMap<Id, Arc<RwLock<Mesh>>>,
+    meshes: BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)>,
     children: BTreeMap<Id, Arc<RwLock<Model>>>,
     scales: math::Vector3<Real>,
 }
@@ -228,7 +229,7 @@ impl Loadable for Base {
                 }
                 mesh.get_id()
             };
-            meshes.insert(id, mesh);
+            meshes.insert(id, (mesh, Material::default(engine)));
         }
         if node.children().count() > 0 {
             vxunimplemented!(); // todo support children
@@ -268,13 +269,14 @@ impl Loadable for Base {
         let mut has_shadow_caster = false;
         let mut has_transparent = false;
         for mesh_id in meshes_ids {
+            let mat = Material::new_with_gx3d(eng, reader);
             let mesh = mesh_manager.load_gx3d(eng, mesh_id);
             {
                 let mesh = vxresult!(mesh.read());
                 has_shadow_caster |= mesh.is_shadow_caster();
                 has_transparent |= mesh.is_transparent();
             }
-            meshes.insert(mesh_id, mesh);
+            meshes.insert(mesh_id, (mesh, mat));
         }
         let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
@@ -356,8 +358,9 @@ impl Model for Base {
             self.distance_from_camera = math::dot(dis, dis);
         }
         self.uniform_buffer.update(&self.uniform, frame_number);
-        for (_, m) in &self.meshes {
-            vxresult!(m.write()).update(scene, self, frame_number);
+        for (_, m) in &mut self.meshes {
+            vxresult!(m.0.write()).update(frame_number);
+            m.1.update_uniform_buffer(frame_number);
         }
     }
 
@@ -373,11 +376,11 @@ impl Model for Base {
         return &self.uniform;
     }
 
-    fn get_meshes(&self) -> &BTreeMap<Id, Arc<RwLock<Mesh>>> {
+    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)> {
         return &self.meshes;
     }
 
-    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>) {
+    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>, mat: Material) {
         let id = {
             let mesh = vxresult!(mesh.read());
             let radius = mesh.get_occlusion_culling_radius();
@@ -386,7 +389,7 @@ impl Model for Base {
             }
             mesh.get_id()
         };
-        self.meshes.insert(id, mesh);
+        self.meshes.insert(id, (mesh, mat));
     }
 
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)> {
@@ -414,14 +417,15 @@ impl Model for Base {
         let buffer = self.uniform_buffer.get_buffer(frame_number);
         cmd.bind_gbuff_model_descriptor(&*self.descriptor_set, &*vxresult!(buffer.read()));
         for (_, mesh) in &self.meshes {
-            vxresult!(mesh.read()).render_gbuffer(cmd, frame_number);
+            mesh.1.bind_gbuffer(cmd, frame_number);
+            vxresult!(mesh.0.read()).render_gbuffer(cmd, frame_number);
         }
     }
 
     fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         for (_, mesh) in &self.meshes {
-            let mesh = vxresult!(mesh.read());
-            mesh.render_shadow(cmd, frame_number);
+            mesh.1.bind_shadow(cmd, frame_number);
+            vxresult!(mesh.0.read()).render_shadow(cmd, frame_number);
         }
     }
 }

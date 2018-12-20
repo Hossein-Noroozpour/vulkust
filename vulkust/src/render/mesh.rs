@@ -4,7 +4,6 @@ use super::super::core::types::{Id, Real};
 use super::buffer::Static as StaticBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
-use super::material::Material;
 use super::model::Model;
 use super::object::{Base as ObjectBase, Object};
 use super::scene::Scene;
@@ -26,9 +25,7 @@ pub trait Mesh: Object {
     fn is_shadow_caster(&self) -> bool;
     fn is_transparent(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
-    fn get_material(&self) -> &Material;
-    fn get_mut_material(&mut self) -> &mut Material;
-    fn update(&mut self, &Scene, &Model, usize);
+    fn update(&mut self, usize);
     fn render_gbuffer(&self, &mut CmdBuffer, usize);
     fn render_shadow(&self, &mut CmdBuffer, usize);
 }
@@ -96,21 +93,14 @@ impl Manager {
         self.meshes.insert(id, Arc::downgrade(&mesh));
     }
 
-    pub fn create_with_material(
+    pub fn create(
         &mut self,
-        material: Material,
         vertices: &[Real],
         indices: &[u32],
         occlusion_culling_radius: Real,
         engine: &Engine,
     ) -> Arc<RwLock<Mesh>> {
-        let mesh = Base::new_with_material(
-            material,
-            vertices,
-            indices,
-            occlusion_culling_radius,
-            engine,
-        );
+        let mesh = Base::new(vertices, indices, occlusion_culling_radius, engine);
         let mesh_id = mesh.get_id();
         let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
         self.meshes.insert(mesh_id, Arc::downgrade(&mesh));
@@ -175,14 +165,7 @@ impl Manager {
             0, 1, 2, 1, 3, 2, 4, 6, 5, 5, 6, 7, 8, 9, 10, 9, 11, 10, 12, 14, 13, 13, 14, 15, 16,
             18, 17, 17, 18, 19, 20, 21, 22, 21, 23, 22,
         ];
-        let material = Material::default(&*eng);
-        self.create_with_material(
-            material,
-            &vertices,
-            &indices,
-            aspect.abs() * 1.732050809,
-            &*eng,
-        )
+        self.create(&vertices, &indices, aspect.abs() * 1.732050809, &*eng)
     }
 
     pub fn set_engine(&mut self, e: Weak<RwLock<Engine>>) {
@@ -193,7 +176,6 @@ impl Manager {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     obj_base: ObjectBase,
-    material: Material,
     vertex_buffer: StaticBuffer,
     index_buffer: StaticBuffer,
     indices_count: u32,
@@ -206,7 +188,6 @@ impl Base {
         engine: &Engine,
         data: &[u8],
     ) -> Self {
-        let material = Material::new_with_gltf(engine, &primitive.material());
         let count = vxunwrap!(primitive.get(&gltf::Semantic::Positions)).count();
         let mut vertex_buffer = vec![0u8; count * size_of::<Real>() * 12];
         let occlusion_culling_radius = {
@@ -309,7 +290,6 @@ impl Base {
         let obj_base = ObjectBase::new();
         Base {
             obj_base,
-            material,
             vertex_buffer,
             index_buffer,
             indices_count,
@@ -317,8 +297,7 @@ impl Base {
         }
     }
 
-    pub fn new_with_material(
-        material: Material,
+    pub fn new(
         vertices: &[Real],
         indices: &[u32],
         occlusion_culling_radius: Real,
@@ -331,7 +310,6 @@ impl Base {
         let obj_base = ObjectBase::new();
         Base {
             obj_base,
-            material,
             vertex_buffer,
             index_buffer,
             indices_count: indices.len() as u32,
@@ -357,7 +335,6 @@ impl Base {
         }
         let indices = reader.read_array::<u32>();
         let occlusion_culling_radius = reader.read();
-        let material = Material::new_with_gx3d(engine, reader);
         let obj_base = ObjectBase::new_with_id(my_id);
         let gapi_engine = vxresult!(engine.get_gapi_engine().read());
         let mut buffer_manager = vxresult!(gapi_engine.get_buffer_manager().write());
@@ -370,7 +347,6 @@ impl Base {
         vxlogi!("Occlusion culling radius is: {}", occlusion_culling_radius);
         Base {
             obj_base,
-            material,
             vertex_buffer,
             index_buffer,
             indices_count,
@@ -423,26 +399,13 @@ impl Mesh for Base {
         return self.occlusion_culling_radius;
     }
 
-    fn update(&mut self, scene: &Scene, model: &Model, frame_number: usize) {
-        self.material.update(scene, model);
-        self.material.update_uniform_buffer(frame_number);
-    }
+    fn update(&mut self, _frame_number: usize) {}
 
     fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.material.bind_gbuffer(cmd, frame_number);
         cmd.render_gbuff(&self.vertex_buffer, &self.index_buffer, self.indices_count);
     }
 
     fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {
-        self.material.bind_shadow(cmd, frame_number);
         cmd.render_shadow_mapper(&self.vertex_buffer, &self.index_buffer, self.indices_count);
-    }
-
-    fn get_material(&self) -> &Material {
-        return &self.material;
-    }
-
-    fn get_mut_material(&mut self) -> &mut Material {
-        return &mut self.material;
     }
 }

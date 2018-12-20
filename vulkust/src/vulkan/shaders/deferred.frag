@@ -36,33 +36,38 @@ vec3 base_reflectivity;
 
 void calc_lights() {
 	const vec2 start_uv = uv - (vec2(deferred_ubo.s.pixel_step.x, deferred_ubo.s.pixel_step.y) * float((BLUR_KERNEL_LENGTH - 1) >> 1));
-	for(uint light_index = 0; light_index < scene_ubo.s.lights_count.x; ++light_index) {
-		const float slope = -dot(nrm, scene_ubo.s.directional_lights[light_index].direction_strength.xyz);
-		if(slope < 0.005) {
-			continue;
-		}
-		float shadowing = 1.0;
-		vec2 shduv = start_uv;
-		const uint light_flag = 1 << light_index;
-		for(uint si = 0; si < BLUR_KERNEL_LENGTH; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.s.pixel_step.x) {
-			for (uint sj = 0; sj < BLUR_KERNEL_LENGTH; ++sj, shduv.y += deferred_ubo.s.pixel_step.y) {
-				if ((uint(round(texture(shadow_directional_flagbits, shduv).x * 
-						float(1 << MAX_DIRECTIONAL_LIGHTS_COUNT))) & light_flag) == light_flag) {
-					shadowing += (-1.0 / float(BLUR_KERNEL_LENGTH * BLUR_KERNEL_LENGTH));
+	float directional_lights_shadowness[MAX_DIRECTIONAL_LIGHTS_COUNT];
+	for(uint i = 0; i < MAX_DIRECTIONAL_LIGHTS_COUNT; ++i) {
+		directional_lights_shadowness[i] = 1.0;
+	}
+	vec2 shduv = start_uv;
+	for(uint si = 0; si < BLUR_KERNEL_LENGTH; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.s.pixel_step.x) {
+		for (uint sj = 0; sj < BLUR_KERNEL_LENGTH; ++sj, shduv.y += deferred_ubo.s.pixel_step.y) {
+			const vec4 flags_f = texture(shadow_directional_flagbits, shduv); // it can be used for future
+			const uint directional_flags = uint((flags_f.x * float(1 << MAX_DIRECTIONAL_LIGHTS_COUNT)) + 0.5);
+			for(uint light_index = 0, light_flag = 1; light_index < scene_ubo.s.lights_count.x; ++light_index, light_flag <<= 1) {
+				if ((directional_flags & light_flag) == light_flag) {
+					directional_lights_shadowness[light_index] += (-1.0 / float(BLUR_KERNEL_LENGTH * BLUR_KERNEL_LENGTH));
 				}
 			}
 		}
-		const vec3 halfway = normalize(eye - scene_ubo.s.directional_lights[light_index].direction_strength.xyz);
+	}
+	for(uint light_index = 0; light_index < scene_ubo.s.lights_count.x; ++light_index) {
+		const vec3 l = normalize(-scene_ubo.s.directional_lights[light_index].direction_strength.xyz);
+		const float slope = dot(nrm, l);
+		if(slope < 0.005) {
+			continue;
+		}
+		const vec3 halfway = normalize(eye + l);
 		const vec3 radiance = scene_ubo.s.directional_lights[light_index].color.xyz;
 		const float distribution = NDFTRGGX(nrm, halfway, roughness);
-		const float geometry = GFSCHGGX(nrm, eye, -scene_ubo.s.directional_lights[light_index].direction_strength.xyz, roughness);
+		const float geometry = GFSCHGGX(nrm, eye, l, roughness);
 		const vec3 fresnel = FFSCHGGX(clamp(dot(halfway, eye), 0.0, 1.0), base_reflectivity);
 		const vec3 kd = (vec3(1.0) - fresnel) * (1.0 - metallic);
 		const vec3 nom = distribution * geometry * fresnel;
-		const float denom = 4 * max(dot(nrm, eye), 0.0) * max(dot(nrm,  -scene_ubo.s.directional_lights[light_index].direction_strength.xyz), 0.0);
+		const float denom = 4 * max(dot(nrm, eye), 0.0) * max(dot(nrm, l), 0.0);
         const vec3 specular = nom / max(denom, 0.001);
-        // add to outgoing radiance Lo
-		out_color.xyz += (kd * (alb.xyz / VX_PI) + specular) * radiance * smoothstep(slope, 0.005, 1.0);
+		out_color.xyz += (kd * (alb.xyz / VX_PI) + specular) * radiance * smoothstep(0.005, 1.0, slope) * directional_lights_shadowness[light_index];
 	}
 }
 
@@ -303,11 +308,12 @@ void main() {
 	out_color.xyz = alb.xyz * 0.3; // todo it must come along scene
 	// out_color.xyz *= 0.001; // todo it must come along scene
 	calc_lights();
-	// out_color.xyz *= texture(ambient_occlusion, uv).x;
+	out_color.xyz *= texture(ambient_occlusion, uv).x;
 	// calc_ssr();
 
 	// out_color.xyz *= dot(-normalize(reflect(eye, nrm)), nrm);
 	// out_color.x = spos.z;
+	out_color.xyz = pow(out_color.xyz / (out_color.xyz + vec3(1.0)), vec3(1.0 / 2.2));
 	out_color.w = 1.0;
 	// todo lots of work must be done in here
 }

@@ -8,6 +8,7 @@ use vulkust::math;
 use vulkust::render::camera::{Camera, Orthographic, Perspective};
 use vulkust::render::engine::Engine as Renderer;
 use vulkust::render::light::Sun;
+use vulkust::render::material::Material;
 use vulkust::render::model::{Base as ModelBase, Model};
 use vulkust::render::object::Transferable;
 use vulkust::render::scene::{Game as GameScene, Scene, Ui as UiScene};
@@ -198,16 +199,16 @@ impl CoreAppTrait for MyGame {
                 (n as f64 / 1_000_000_000.0) as f32
             };
             if keys_state.w {
-                camera.move_local_z(delta * 0.7);
+                camera.move_local_z(delta * -1.7);
             }
             if keys_state.s {
-                camera.move_local_z(delta * -0.7);
+                camera.move_local_z(delta * 1.7);
             }
             if keys_state.a {
-                camera.move_local_x(delta * -0.7);
+                camera.move_local_x(delta * -1.7);
             }
             if keys_state.d {
-                camera.move_local_x(delta * 0.7);
+                camera.move_local_x(delta * 1.7);
             }
         }
     }
@@ -225,18 +226,7 @@ fn place_cubes(scn: &mut Scene, eng: &Renderer) {
         + (GROUND_CUBE_ASPECT * 2.0) * GROUND_CUBE_ROW_COUNT as Real)
         * -0.5;
     let mut y = ROW_START;
-    let ground_meshes = {
-        let mut mshmgr = vxresult!(astmgr.get_mesh_manager().write());
-        [
-            mshmgr.create_cube(2.0),
-            mshmgr.create_cube(2.0),
-            mshmgr.create_cube(2.0),
-            mshmgr.create_cube(2.0),
-            mshmgr.create_cube(2.0),
-            mshmgr.create_cube(2.0),
-            mshmgr.create_cube(2.0),
-        ]
-    };
+    let ground_mesh = vxresult!(astmgr.get_mesh_manager().write()).create_cube(2.0);
     let cs = [
         [50, 50, 50, 255],
         [210, 210, 210, 255],
@@ -246,13 +236,14 @@ fn place_cubes(scn: &mut Scene, eng: &Renderer) {
         [232, 121, 195, 255],
         [149, 141, 255, 255],
     ];
-    let cc = cs.len();
-    for i in 0..cc {
-        let mut m = vxresult!(ground_meshes[i].write());
-        let m = m.get_mut_material();
-        let c = &cs[i];
+    let mut ground_meshes = Vec::with_capacity(cs.len());
+    for c in &cs {
+        let mut m = Material::default(eng);
         m.set_base_color(eng, c[0], c[1], c[2], c[3]);
+        m.set_metallic_factor(0.1);
+        m.set_roughness_factor(0.2);
         m.finalize_textures_change(eng);
+        ground_meshes.push((ground_mesh.clone(), m));
     }
     let mut ground_mesh_index = 0;
     let mut mdlmgr = vxresult!(astmgr.get_model_manager().write());
@@ -262,7 +253,8 @@ fn place_cubes(scn: &mut Scene, eng: &Renderer) {
             let m: Arc<RwLock<Model>> = mdlmgr.create::<ModelBase>();
             {
                 let mut m = vxresult!(m.write());
-                m.add_mesh(ground_meshes[ground_mesh_index].clone());
+                let (mesh, mat) = &ground_meshes[ground_mesh_index];
+                m.add_mesh(mesh.clone(), mat.clone());
                 m.translate(&math::Vector3::new(x, y, -5.0));
             }
             scn.add_model(m);
@@ -284,12 +276,13 @@ fn place_cubes(scn: &mut Scene, eng: &Renderer) {
         let m: Arc<RwLock<Model>> = mdlmgr.create::<ModelBase>();
         {
             let mut m = vxresult!(m.write());
-            m.add_mesh(ground_meshes[ground_mesh_index].clone());
+            let (mesh, mat) = &ground_meshes[ground_mesh_index];
+            m.add_mesh(mesh.clone(), mat.clone());
             m.translate(&math::Vector3::new(x, y, z));
             m.scale(s);
         }
         scn.add_model(m);
         ground_mesh_index += 1;
-        ground_mesh_index %= cc;
+        ground_mesh_index %= cs.len();
     }
 }
