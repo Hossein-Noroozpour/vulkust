@@ -126,3 +126,17 @@ vec3 FFSCHGGX(const float nv, const vec3 f0) {
 	const float inv5 = inv4 * inv;
     return f0 + ((1.0 - f0) * inv5);
 }
+
+bool is_zero(const float v) {
+	return v < SMALL_EPSILON && v > -SMALL_EPSILON;
+}
+
+bool is_equal(const vec2 a, const vec2 b) {
+	const vec2 c = a - b;
+	return is_zero(c.x) && is_zero(c.y);
+}
+
+bool is_equal(const vec4 a, const vec4 b) {
+	const vec4 c = a - b;
+	return is_zero(c.x) && is_zero(c.y) && is_zero(c.z) && is_zero(c.w);
+}
