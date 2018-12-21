@@ -38,13 +38,7 @@ void main() {
     }
     out_alb = alb;
     out_pos.xyz = pos;
-//   out_pos.w = out_alb.a;
     out_pos.w = metal_rough.y;
     out_nrm.xyz = normalize(mat3(tng, btg, nrm) * ((texture(normal, uv).xyz - 0.5) * 2.0));
-//   out_nrm.w = out_alb.a;
     out_nrm.w = metal_rough.x;
-  // todo lots of work must be done in here
-  // I must add any needed output for deferred part
-  // w channel can hold useful info for deferred
-  // its highly depends on my pbr render model
 }

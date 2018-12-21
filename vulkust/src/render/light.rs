@@ -700,7 +700,7 @@ impl Transferable for Sun {
     fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
         let rotation = math::Matrix4::from(*q);
         self.direction = (rotation * math::Vector4::new(0.0, 0.0, -1.0, 0.0)).truncate();
-        let mut q = *q;
+        let mut q = -*q;
         q.s = -q.s;
         self.zero_located_view = math::Matrix4::from(q);
     }
@@ -751,7 +751,7 @@ impl Loadable for Sun {
         let _: Real = reader.read();
         let _: Real = reader.read();
         let r = [reader.read(), reader.read(), reader.read(), reader.read()];
-        myself.set_orientation(&math::Quaternion::new(r[3], r[0], r[1], r[2]));
+        myself.set_orientation(&math::Quaternion::new(r[0], r[1], r[2], r[3]));
         myself.color = math::Vector3::new(reader.read(), reader.read(), reader.read());
         myself.strength = reader.read();
         return myself;
