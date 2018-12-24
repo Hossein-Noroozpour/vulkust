@@ -156,6 +156,12 @@ impl Material {
             match it {
                 1 => {
                     // Alpha
+                    #[cfg(debug_gx3d)]
+                    {
+                        if alpha.is_some() {
+                            vxunexpected!();
+                        }
+                    }
                     let t = reader.read_type_id();
                     if t == Field::Float as TypeId {
                         alpha = Some(reader.read());
@@ -171,6 +177,12 @@ impl Material {
                 }
                 2 => {
                     // AlphaCutoff
+                    #[cfg(debug_gx3d)]
+                    {
+                        if alpha_cutoff.is_some() {
+                            vxunexpected!();
+                        }
+                    }
                     let t = reader.read_type_id();
                     if t == Field::Float as TypeId {
                         alpha_cutoff = Some(reader.read());
@@ -185,6 +197,12 @@ impl Material {
                 }
                 3 => {
                     // AlphaMode
+                    #[cfg(debug_gx3d)]
+                    {
+                        if alpha_mode.is_some() {
+                            vxunexpected!();
+                        }
+                    }
                     let t = reader.read_type_id();
                     if t == Field::Float as TypeId {
                         alpha_mode = Some(reader.read());
@@ -200,6 +218,12 @@ impl Material {
                 }
                 4 => {
                     // BaseColor
+                    #[cfg(debug_gx3d)]
+                    {
+                        if base_color.is_some() {
+                            vxunexpected!();
+                        }
+                    }
                     let t = reader.read_type_id();
                     base_color = Some(if t == Field::Texture as TypeId {
                         let id: Id = reader.read();
@@ -221,11 +245,23 @@ impl Material {
                 5 => {
                     // BaseColorFactor
                     #[cfg(debug_gx3d)]
+                    {
+                        if base_color_factor.is_some() {
+                            vxunexpected!();
+                        }
+                    }
+                    #[cfg(debug_gx3d)]
                     vxlogi!("Base color factor");
                     base_color_factor = Some(read_tex(&*eng, reader, &mut *texture_manager));
                 }
                 6 => {
                     // DoubleSided maybe // in future I gonna think about it
+                    #[cfg(debug_gx3d)]
+                    {
+                        if double_sided.is_some() {
+                            vxunexpected!();
+                        }
+                    }
                     #[cfg(debug_gx3d)]
                     vxlogi!("Double sided");
                     double_sided = Some(read_value(reader));
@@ -233,11 +269,23 @@ impl Material {
                 7 => {
                     // Emissive
                     #[cfg(debug_gx3d)]
+                    {
+                        if emissive.is_some() {
+                            vxunexpected!();
+                        }
+                    }
+                    #[cfg(debug_gx3d)]
                     vxlogi!("Emissive");
                     emissive = Some(read_tex(&*eng, reader, &mut *texture_manager));
                 }
                 8 => {
                     // EmissiveFactor
+                    #[cfg(debug_gx3d)]
+                    {
+                        if emissive_factor.is_some() {
+                            vxunexpected!();
+                        }
+                    }
                     #[cfg(debug_gx3d)]
                     vxlogi!("Emissive factor");
                     emissive_factor = Some(read_tex(&*eng, reader, &mut *texture_manager));
@@ -245,11 +293,23 @@ impl Material {
                 9 => {
                     // MetallicFactor
                     #[cfg(debug_gx3d)]
+                    {
+                        if metallic_factor.is_some() {
+                            vxunexpected!();
+                        }
+                    }
+                    #[cfg(debug_gx3d)]
                     vxlogi!("Metallic Factor");
                     metallic_factor = Some(read_value(reader));
                 }
                 10 => {
                     // MetallicRoughness
+                    #[cfg(debug_gx3d)]
+                    {
+                        if metallic_roughness.is_some() {
+                            vxunexpected!();
+                        }
+                    }
                     #[cfg(debug_gx3d)]
                     vxlogi!("MetallicRoughness");
                     metallic_roughness = Some(read_tex(&*eng, reader, &mut *texture_manager));
@@ -257,11 +317,23 @@ impl Material {
                 11 => {
                     // Normal
                     #[cfg(debug_gx3d)]
+                    {
+                        if normal.is_some() {
+                            vxunexpected!();
+                        }
+                    }
+                    #[cfg(debug_gx3d)]
                     vxlogi!("Normal");
                     normal = Some(read_tex(&*eng, reader, &mut *texture_manager));
                 }
                 12 => {
                     // NormalScale
+                    #[cfg(debug_gx3d)]
+                    {
+                        if normal_scale.is_some() {
+                            vxunexpected!();
+                        }
+                    }
                     #[cfg(debug_gx3d)]
                     vxlogi!("NormalScale");
                     normal_scale = Some(read_value(reader));
@@ -269,11 +341,23 @@ impl Material {
                 13 => {
                     // Occlusion
                     #[cfg(debug_gx3d)]
+                    {
+                        if occlusion.is_some() {
+                            vxunexpected!();
+                        }
+                    }
+                    #[cfg(debug_gx3d)]
                     vxlogi!("Occlusion");
                     occlusion = Some(read_tex(&*eng, reader, &mut *texture_manager));
                 }
                 14 => {
                     // OcclusionStrength
+                    #[cfg(debug_gx3d)]
+                    {
+                        if occlusion_strength.is_some() {
+                            vxunexpected!();
+                        }
+                    }
                     #[cfg(debug_gx3d)]
                     vxlogi!("OcclusionStrength");
                     occlusion_strength = Some(read_value(reader));
@@ -281,10 +365,16 @@ impl Material {
                 15 => {
                     // RoughnessFactor
                     #[cfg(debug_gx3d)]
+                    {
+                        if roughness_factor.is_some() {
+                            vxunexpected!();
+                        }
+                    }
+                    #[cfg(debug_gx3d)]
                     vxlogi!("RoughnessFactor");
                     roughness_factor = Some(read_value(reader));
                 }
-                _ => vxunexpected!(),
+                c @ _ => vxlogf!("Unexpected input key {}", c),
             }
         }
         uniform.alpha = vxunwrap!(alpha);
