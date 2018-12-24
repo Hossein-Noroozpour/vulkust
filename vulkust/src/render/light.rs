@@ -197,7 +197,7 @@ impl SunShadowMakerKernelData {
 
     fn shadow(&mut self, m: &mut Model, model: &Arc<RwLock<Model>>) {
         let rd = m.get_occlusion_culling_radius();
-        let v = (self.zero_located_view * m.get_location().extend(0.0)).truncate();
+        let v = (self.zero_located_view * m.get_location().extend(1.0)).truncate();
         let rdv = math::Vector3::new(rd, rd, rd);
         let upv = v + rdv;
         let dnv = v - rdv;
@@ -509,8 +509,8 @@ impl Light for Sun {
             ccd.vp = math::Matrix4::new(
                 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
             ) * p
-                * self.zero_located_view
-                * t;
+                * t
+                * self.zero_located_view;
         }
     }
 }
@@ -613,7 +613,7 @@ impl Directional for Sun {
         index: usize,
     ) {
         self.shadow_accumulator_uniform.light_index = index as u32;
-        let mut walls_bnds = Vec::new();
+        let mut walls_bnds = Vec::with_capacity(walls.len());
         for w in walls {
             let mut max = math::Vector3::new(F32MIN, F32MIN, F32MIN);
             let mut min = math::Vector3::new(F32MAX, F32MAX, F32MAX);
