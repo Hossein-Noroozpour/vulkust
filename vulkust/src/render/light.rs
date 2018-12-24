@@ -572,8 +572,7 @@ impl ShadowMaker for Sun {
         }
         geng.submit_multiple(&[sem], &cmds, &[&frame_data.shadow_mappers_semaphore]);
         self.shadow_accumulator_uniform.cascades_count = cascades_count as u32;
-        self.shadow_accumulator_uniform.direction_strength =
-            math::Vector4::new(0.0, 0.0, -1.0, 0.5);
+        self.shadow_accumulator_uniform.direction_strength = self.direction.extend(self.strength);
         self.shadow_accumulator_uniform_buffer
             .update(&self.shadow_accumulator_uniform, frame_number);
         {
@@ -699,7 +698,6 @@ impl DefaultLighting for Sun {
 impl Transferable for Sun {
     fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
         let rotation = math::Matrix3::from(*q);
-        vxlogi!("M{:?}", &rotation);
         self.direction = rotation * math::Vector3::new(0.0, 0.0, -1.0);
         let mut q = -*q;
         q.s = -q.s;
