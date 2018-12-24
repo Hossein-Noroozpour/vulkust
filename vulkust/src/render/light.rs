@@ -698,8 +698,9 @@ impl DefaultLighting for Sun {
 
 impl Transferable for Sun {
     fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
-        let rotation = math::Matrix4::from(*q);
-        self.direction = (rotation * math::Vector4::new(0.0, 0.0, -1.0, 0.0)).truncate();
+        let rotation = math::Matrix3::from(*q);
+        vxlogi!("M{:?}", &rotation);
+        self.direction = rotation * math::Vector3::new(0.0, 0.0, -1.0);
         let mut q = -*q;
         q.s = -q.s;
         self.zero_located_view = math::Matrix4::from(q);
@@ -746,14 +747,26 @@ impl Loadable for Sun {
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
         let mut myself = Self::new_with_obj_base(engine, ObjectBase::new_with_id(id));
-        // sun does not need location
-        let _: Real = reader.read();
-        let _: Real = reader.read();
-        let _: Real = reader.read();
-        let r = [reader.read(), reader.read(), reader.read(), reader.read()];
+        let r = [
+            reader.read::<Real>(),
+            reader.read::<Real>(),
+            reader.read::<Real>(),
+            reader.read::<Real>(),
+        ];
         myself.set_orientation(&math::Quaternion::new(r[0], r[1], r[2], r[3]));
-        myself.color = math::Vector3::new(reader.read(), reader.read(), reader.read());
-        myself.strength = reader.read();
+        myself.color = math::Vector3::new(
+            reader.read::<Real>(),
+            reader.read::<Real>(),
+            reader.read::<Real>(),
+        );
+        myself.strength = reader.read::<Real>();
+        #[cfg(debug_gx3d)]
+        {
+            vxlogi!("Matrix {:?}", &myself.zero_located_view);
+            vxlogi!("Quaternion {:?}", &r);
+            vxlogi!("Color {:?}", &myself.color);
+            vxlogi!("Strength {:?}", &myself.strength);
+        }
         return myself;
     }
 }
@@ -846,8 +859,8 @@ pub struct DirectionalUniform {
 impl DirectionalUniform {
     pub fn new() -> Self {
         Self {
-            color: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
-            direction: math::Vector4::new(0.0, 0.0, -1.0, 0.0),
+            color: math::Vector4::new(1.0, 1.0, 1.0, 1.0),
+            direction: math::Vector4::new(0.0, 0.0, -1.0, 1.0),
         }
     }
 }
@@ -866,9 +879,9 @@ impl ShadowAccumulatorDirectionalUniform {
     fn new() -> Self {
         Self {
             view_projection_biases: [math::Matrix4::new(
-                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
             ); MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT as usize],
-            direction_strength: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
+            direction_strength: math::Vector4::new(0.0, 0.0, -1.0, 1.0),
             cascades_count: 0,
             light_index: 0,
         }
