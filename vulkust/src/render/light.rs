@@ -389,7 +389,10 @@ impl Light for Sun {
     fn update(&mut self) {
         self.update_with_kernels_data();
         for ccd in &mut self.cascade_cameras {
-            ccd.seen = ccd.seen.get_intersection_with_aabb(&ccd.boundary);
+            let mut b = ccd.seen.get_intersection_with_aabb(&ccd.boundary);
+            let maxb = b.get_max();
+            b.insert(&cgmath::Vector3::new(maxb.x, maxb.y, ccd.seen.get_max().z));
+            ccd.seen = b;
         }
         for ccd in &mut self.cascade_cameras {
             let d = ccd.seen.get_min_max_diff();
@@ -401,7 +404,7 @@ impl Light for Sun {
             let near = depth * 0.01;
             let far = depth * 1.03;
             let p = cgmath::ortho(-width, width, -height, height, near, far);
-            let t = -cgmath::Vector3::new(c.x, c.y, bmx.z + near * 2.0);
+            let t = -cgmath::Vector3::new(c.x, c.y, bmx.z + (near * 2.0));
             let t = cgmath::Matrix4::from_translation(t);
             ccd.vp = cgmath::Matrix4::new(
                 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
@@ -511,13 +514,18 @@ impl Directional for Sun {
     ) {
         self.shadow_accumulator_uniform.light_index = index as u32;
         let ccdsc = self.cascade_cameras.len();
-        for i in 0..ccdsc {
+        let mut wbs = Vec::with_capacity(walls.len());
+        for w in walls {
             let mut b = Aabb3::new();
-            for p in &walls[i] {
+            for p in w {
                 let p = (self.zero_located_view * p.extend(1.0)).truncate();
                 b.insert(&p);
             }
-            self.cascade_cameras[i].boundary = b;
+            wbs.push(b);
+        }
+        for i in 0..ccdsc {
+            self.cascade_cameras[i].boundary = wbs[i];
+            self.cascade_cameras[i].boundary.insert_aabb(&wbs[i + 1]);
         }
     }
 
