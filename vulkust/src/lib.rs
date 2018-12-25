@@ -4,7 +4,7 @@
 #![feature(duration_as_u128)]
 #![feature(concat_idents)]
 
-pub extern crate cgmath as math;
+pub extern crate cgmath;
 pub extern crate gltf;
 pub extern crate image;
 pub extern crate libc;
@@ -29,6 +29,7 @@ pub mod macros;
 // pub mod audio;
 #[cfg(blank_gapi)]
 pub mod blank_gapi;
+pub mod collision;
 pub mod core;
 #[cfg(directx12_api)]
 pub mod d3d12;

@@ -3,9 +3,9 @@ use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::engine::Engine;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
+use cgmath;
+use cgmath::prelude::*;
 use gltf;
-use math;
-use math::prelude::*;
 use std::collections::BTreeMap;
 use std::convert::From;
 use std::sync::{Arc, RwLock, Weak};
@@ -14,33 +14,33 @@ use std::sync::{Arc, RwLock, Weak};
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
-    x: math::Vector4<Real>,
-    y: math::Vector4<Real>,
-    z: math::Vector4<Real>,
-    position_far: math::Vector4<Real>, // far is negative
-    near_aspect_ratio_reserved: math::Vector4<Real>, // near is negative
-    inversed_rotation: math::Matrix4<Real>,
-    view: math::Matrix4<Real>,
-    projection: math::Matrix4<Real>,
-    uniform_projection: math::Matrix4<Real>,
-    view_projection: math::Matrix4<Real>,
-    uniform_view_projection: math::Matrix4<Real>,
+    x: cgmath::Vector4<Real>,
+    y: cgmath::Vector4<Real>,
+    z: cgmath::Vector4<Real>,
+    position_far: cgmath::Vector4<Real>, // far is negative
+    near_aspect_ratio_reserved: cgmath::Vector4<Real>, // near is negative
+    inversed_rotation: cgmath::Matrix4<Real>,
+    view: cgmath::Matrix4<Real>,
+    projection: cgmath::Matrix4<Real>,
+    uniform_projection: cgmath::Matrix4<Real>,
+    view_projection: cgmath::Matrix4<Real>,
+    uniform_view_projection: cgmath::Matrix4<Real>,
 }
 
 impl Uniform {
     pub fn new() -> Self {
-        let x = math::Vector4::new(1.0, 0.0, 0.0, 0.0);
-        let y = math::Vector4::new(0.0, 1.0, 0.0, 0.0);
-        let z = math::Vector4::new(0.0, 0.0, 1.0, 0.0);
-        let position_far = math::Vector4::new(0.0, 0.0, 0.0, -100.0);
-        let near_aspect_ratio_reserved = math::Vector4::new(-1.0, 0.0, 0.0, -100.0);
-        let view = math::Matrix4::new(
+        let x = cgmath::Vector4::new(1.0, 0.0, 0.0, 0.0);
+        let y = cgmath::Vector4::new(0.0, 1.0, 0.0, 0.0);
+        let z = cgmath::Vector4::new(0.0, 0.0, 1.0, 0.0);
+        let position_far = cgmath::Vector4::new(0.0, 0.0, 0.0, -100.0);
+        let near_aspect_ratio_reserved = cgmath::Vector4::new(-1.0, 0.0, 0.0, -100.0);
+        let view = cgmath::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
-        let projection = math::Matrix4::new(
+        let projection = cgmath::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
         );
-        let uniform_projection = math::Matrix4::new(
+        let uniform_projection = cgmath::Matrix4::new(
             0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
         ) * projection;
         Uniform {
@@ -60,9 +60,9 @@ impl Uniform {
 }
 
 pub trait Camera: Object + Transferable {
-    fn get_view_projection(&self) -> &math::Matrix4<Real>;
-    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]>;
-    fn is_in_frustum(&self, Real, &math::Vector3<Real>) -> bool;
+    fn get_view_projection(&self) -> &cgmath::Matrix4<Real>;
+    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[cgmath::Vector3<Real>; 4]>;
+    fn is_in_frustum(&self, Real, &cgmath::Vector3<Real>) -> bool;
     fn update_uniform(&self, &mut Uniform);
 }
 
@@ -173,8 +173,8 @@ impl Manager {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Plane {
-    n: math::Vector3<Real>,
-    p: math::Vector3<Real>,
+    n: cgmath::Vector3<Real>,
+    p: cgmath::Vector3<Real>,
     d: Real,
 }
 
@@ -185,7 +185,7 @@ enum PlaneIntersectStatue {
 }
 
 impl Plane {
-    fn new(p: math::Vector3<Real>, f: math::Vector3<Real>, s: math::Vector3<Real>) -> Self {
+    fn new(p: cgmath::Vector3<Real>, f: cgmath::Vector3<Real>, s: cgmath::Vector3<Real>) -> Self {
         let pf = f - p;
         let ps = s - p;
         let n = pf.cross(ps).normalize();
@@ -193,13 +193,17 @@ impl Plane {
         Self { n, p, d }
     }
 
-    fn new_with_point_normal(p: math::Vector3<Real>, n: math::Vector3<Real>) -> Self {
+    fn new_with_point_normal(p: cgmath::Vector3<Real>, n: cgmath::Vector3<Real>) -> Self {
         let n = n.normalize();
         let d = -(n.dot(p));
         Self { n, p, d }
     }
 
-    fn intersect_sphere(&self, radius: Real, center: &math::Vector3<Real>) -> PlaneIntersectStatue {
+    fn intersect_sphere(
+        &self,
+        radius: Real,
+        center: &cgmath::Vector3<Real>,
+    ) -> PlaneIntersectStatue {
         let dis = self.n.dot(*center) + self.d;
         if radius <= dis {
             return PlaneIntersectStatue::Above;
@@ -210,12 +214,12 @@ impl Plane {
         return PlaneIntersectStatue::Intersecting;
     }
 
-    fn translate(&mut self, l: &math::Vector3<Real>) {
+    fn translate(&mut self, l: &cgmath::Vector3<Real>) {
         self.p += *l;
         self.d = -(self.n.dot(self.p));
     }
 
-    fn rotate_around(&mut self, l: &math::Vector3<Real>, m: &math::Matrix4<Real>) {
+    fn rotate_around(&mut self, l: &cgmath::Vector3<Real>, m: &cgmath::Matrix4<Real>) {
         let mut lp = self.p - l;
         lp = (m * lp.extend(1.0)).truncate();
         self.n = (m * self.n.extend(0.0)).truncate().normalize();
@@ -223,7 +227,7 @@ impl Plane {
         self.d = -(self.n.dot(self.p));
     }
 
-    fn _transform(&mut self, m: &math::Matrix4<Real>) {
+    fn _transform(&mut self, m: &cgmath::Matrix4<Real>) {
         self.p = (m * self.p.extend(1.0)).truncate();
         self.n = (m * self.n.extend(0.0)).truncate().normalize();
         self.d = -(self.n.dot(self.p));
@@ -233,8 +237,8 @@ impl Plane {
 impl Default for Plane {
     fn default() -> Self {
         Self {
-            n: math::Vector3::new(0.0, 0.0, 1.0),
-            p: math::Vector3::new(0.0, 0.0, 0.0),
+            n: cgmath::Vector3::new(0.0, 0.0, 1.0),
+            p: cgmath::Vector3::new(0.0, 0.0, 0.0),
             d: 0.0,
         }
     }
@@ -279,13 +283,13 @@ impl Base {
 
     pub fn update_view_projection(&mut self) {
         self.uniform.view_projection = self.uniform.projection * self.uniform.view;
-        self.uniform.uniform_view_projection = math::Matrix4::new(
+        self.uniform.uniform_view_projection = cgmath::Matrix4::new(
             0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
         ) * self.uniform.view_projection;
     }
 
     pub fn update_location(&mut self) {
-        let translate = math::Matrix4::from_translation(-self.uniform.position_far.truncate());
+        let translate = cgmath::Matrix4::from_translation(-self.uniform.position_far.truncate());
         self.uniform.view = self.uniform.inversed_rotation * translate;
         self.update_view_projection();
     }
@@ -321,15 +325,15 @@ impl Object for Base {
 }
 
 impl Transferable for Base {
-    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
-        let rotation = math::Matrix4::from(*q);
-        self.uniform.x = (rotation * math::Vector4::new(1.0, 0.0, 0.0, 0.0))
+    fn set_orientation(&mut self, q: &cgmath::Quaternion<Real>) {
+        let rotation = cgmath::Matrix4::from(*q);
+        self.uniform.x = (rotation * cgmath::Vector4::new(1.0, 0.0, 0.0, 0.0))
             .truncate()
             .extend(self.uniform.x.w);
-        self.uniform.y = (rotation * math::Vector4::new(0.0, 1.0, 0.0, 0.0))
+        self.uniform.y = (rotation * cgmath::Vector4::new(0.0, 1.0, 0.0, 0.0))
             .truncate()
             .extend(self.uniform.y.w);
-        self.uniform.z = (rotation * math::Vector4::new(0.0, 0.0, 1.0, 0.0))
+        self.uniform.z = (rotation * cgmath::Vector4::new(0.0, 0.0, 1.0, 0.0))
             .truncate()
             .extend(self.uniform.z.w);
         for fp in &mut self.frustum_planes {
@@ -337,11 +341,11 @@ impl Transferable for Base {
         }
         let mut q = -*q;
         q.s = -q.s;
-        self.uniform.inversed_rotation = math::Matrix4::from(q);
+        self.uniform.inversed_rotation = cgmath::Matrix4::from(q);
         self.update_location();
     }
 
-    fn set_location(&mut self, l: &math::Vector3<Real>) {
+    fn set_location(&mut self, l: &cgmath::Vector3<Real>) {
         let t = l - self.uniform.position_far.truncate();
         for fp in &mut self.frustum_planes {
             fp.translate(&t);
@@ -350,7 +354,7 @@ impl Transferable for Base {
         self.update_location();
     }
 
-    fn get_location(&self) -> math::Vector3<Real> {
+    fn get_location(&self) -> cgmath::Vector3<Real> {
         return self.uniform.position_far.truncate();
     }
 
@@ -375,8 +379,8 @@ impl Transferable for Base {
     }
 
     fn rotate_local_x(&mut self, v: Real) {
-        let rot = math::Matrix4::from_axis_angle(self.uniform.x.truncate(), math::Rad(-v));
-        let irot = math::Matrix4::from_axis_angle(self.uniform.x.truncate(), math::Rad(v));
+        let rot = cgmath::Matrix4::from_axis_angle(self.uniform.x.truncate(), cgmath::Rad(-v));
+        let irot = cgmath::Matrix4::from_axis_angle(self.uniform.x.truncate(), cgmath::Rad(v));
         self.uniform.y = (irot * self.uniform.y.truncate().extend(0.0))
             .truncate()
             .extend(self.uniform.y.w);
@@ -391,9 +395,9 @@ impl Transferable for Base {
     }
 
     fn rotate_global_z(&mut self, v: Real) {
-        let ax = math::Vector3::new(0.0, 0.0, 1.0);
-        let rot = math::Matrix4::from_axis_angle(ax, math::Rad(-v));
-        let irot = math::Matrix4::from_axis_angle(ax, math::Rad(v));
+        let ax = cgmath::Vector3::new(0.0, 0.0, 1.0);
+        let rot = cgmath::Matrix4::from_axis_angle(ax, cgmath::Rad(-v));
+        let irot = cgmath::Matrix4::from_axis_angle(ax, cgmath::Rad(v));
         self.uniform.x = (irot * self.uniform.x.truncate().extend(0.0))
             .truncate()
             .extend(self.uniform.x.w);
@@ -420,8 +424,8 @@ impl Loadable for Base {
         let mut myself = Base::new(eng);
         myself.uniform.near_aspect_ratio_reserved.x = near;
         let (l, r, _) = node.transform().decomposed();
-        myself.uniform.position_far = math::Vector4::new(l[0], l[1], l[2], -far);
-        let rotation = math::Quaternion::new(r[3], r[0], r[1], r[2]);
+        myself.uniform.position_far = cgmath::Vector4::new(l[0], l[1], l[2], -far);
+        let rotation = cgmath::Quaternion::new(r[3], r[0], r[1], r[2]);
         myself.set_orientation(&rotation);
         return myself;
     }
@@ -434,7 +438,7 @@ impl Loadable for Base {
         let r: [Real; 4] = [reader.read(), reader.read(), reader.read(), reader.read()];
         myself.uniform.near_aspect_ratio_reserved.x = -reader.read::<Real>();
         myself.uniform.position_far.w = -reader.read::<Real>();
-        myself.set_orientation(&math::Quaternion::new(r[0], r[1], r[2], r[3]));
+        myself.set_orientation(&cgmath::Quaternion::new(r[0], r[1], r[2], r[3]));
         #[cfg(debug_gx3d)]
         vxlogi!("Camera position is: {:?}", &myself.uniform.position_far);
         #[cfg(debug_gx3d)]
@@ -447,15 +451,15 @@ impl Loadable for Base {
 }
 
 impl Camera for Base {
-    fn get_view_projection(&self) -> &math::Matrix4<Real> {
+    fn get_view_projection(&self) -> &cgmath::Matrix4<Real> {
         &self.uniform.view_projection
     }
 
-    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]> {
+    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[cgmath::Vector3<Real>; 4]> {
         vxlogf!("Base camera does not implement cascading.");
     }
 
-    fn is_in_frustum(&self, radius: Real, location: &math::Vector3<Real>) -> bool {
+    fn is_in_frustum(&self, radius: Real, location: &cgmath::Vector3<Real>) -> bool {
         for f in &self.frustum_planes {
             let s = f.intersect_sphere(radius, location);
             match s {
@@ -509,15 +513,15 @@ impl Perspective {
         self.tanx = (fovx * 0.5).tan();
         self.tany = self.tanx / self.base.uniform.near_aspect_ratio_reserved.y;
         self.fovy = self.tany.atan() * 2.0;
-        self.base.uniform.projection = math::Matrix4::new(
+        self.base.uniform.projection = cgmath::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-        ) * math::perspective(
-            math::Rad(self.fovy),
+        ) * cgmath::perspective(
+            cgmath::Rad(self.fovy),
             self.base.uniform.near_aspect_ratio_reserved.y,
             -self.base.uniform.near_aspect_ratio_reserved.x,
             -self.base.uniform.position_far.w,
         );
-        self.base.uniform.uniform_projection = math::Matrix4::new(
+        self.base.uniform.uniform_projection = cgmath::Matrix4::new(
             0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
         ) * self.base.uniform.projection;
         self.lambda = ((self.fovx * 0.5).sin() + (self.fovy * 0.5).sin()) * 0.5;
@@ -612,15 +616,15 @@ impl Loadable for Perspective {
 }
 
 impl Transferable for Perspective {
-    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
+    fn set_orientation(&mut self, q: &cgmath::Quaternion<Real>) {
         self.base.set_orientation(q);
     }
 
-    fn set_location(&mut self, l: &math::Vector3<Real>) {
+    fn set_location(&mut self, l: &cgmath::Vector3<Real>) {
         self.base.set_location(l);
     }
 
-    fn get_location(&self) -> math::Vector3<Real> {
+    fn get_location(&self) -> cgmath::Vector3<Real> {
         return self.base.get_location();
     }
 
@@ -642,11 +646,11 @@ impl Transferable for Perspective {
 }
 
 impl Camera for Perspective {
-    fn get_view_projection(&self) -> &math::Matrix4<Real> {
+    fn get_view_projection(&self) -> &cgmath::Matrix4<Real> {
         self.base.get_view_projection()
     }
 
-    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]> {
+    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[cgmath::Vector3<Real>; 4]> {
         let sections_count = self.base.cascades_count;
         #[cfg(debug_mode)]
         {
@@ -655,7 +659,7 @@ impl Camera for Perspective {
             }
         }
 
-        let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
+        let mut result = vec![[cgmath::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
 
         let xtanx = self.base.uniform.x.truncate() * self.tanx;
         let ytany = self.base.uniform.y.truncate() * self.tany;
@@ -729,7 +733,7 @@ impl Camera for Perspective {
         return result;
     }
 
-    fn is_in_frustum(&self, radius: Real, location: &math::Vector3<Real>) -> bool {
+    fn is_in_frustum(&self, radius: Real, location: &cgmath::Vector3<Real>) -> bool {
         return self.base.is_in_frustum(radius, location);
     }
 
@@ -783,9 +787,9 @@ impl Orthographic {
     pub fn new_with_base(mut base: Base, size: Real) -> Self {
         let size = size * 0.5;
         let w = base.uniform.near_aspect_ratio_reserved.y * size;
-        base.uniform.projection = math::Matrix4::new(
+        base.uniform.projection = cgmath::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-        ) * math::ortho(
+        ) * cgmath::ortho(
             -w,
             w,
             -size,
@@ -793,7 +797,7 @@ impl Orthographic {
             -base.uniform.near_aspect_ratio_reserved.x,
             -base.uniform.position_far.w,
         );
-        base.uniform.uniform_projection = math::Matrix4::new(
+        base.uniform.uniform_projection = cgmath::Matrix4::new(
             0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
         ) * base.uniform.projection;
         base.update_view_projection();
@@ -806,9 +810,9 @@ impl Orthographic {
         let mut base = Base::new_with_id(eng, id);
         let size = 0.5;
         let w = base.uniform.near_aspect_ratio_reserved.y * size;
-        base.uniform.projection = math::Matrix4::new(
+        base.uniform.projection = cgmath::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-        ) * math::ortho(
+        ) * cgmath::ortho(
             -w,
             w,
             -size,
@@ -816,7 +820,7 @@ impl Orthographic {
             -base.uniform.near_aspect_ratio_reserved.x,
             -base.uniform.position_far.w,
         );
-        base.uniform.uniform_projection = math::Matrix4::new(
+        base.uniform.uniform_projection = cgmath::Matrix4::new(
             0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
         ) * base.uniform.projection;
         base.update_view_projection();
@@ -874,15 +878,15 @@ impl Loadable for Orthographic {
 }
 
 impl Transferable for Orthographic {
-    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
+    fn set_orientation(&mut self, q: &cgmath::Quaternion<Real>) {
         self.base.set_orientation(q);
     }
 
-    fn set_location(&mut self, l: &math::Vector3<Real>) {
+    fn set_location(&mut self, l: &cgmath::Vector3<Real>) {
         self.base.set_location(l);
     }
 
-    fn get_location(&self) -> math::Vector3<Real> {
+    fn get_location(&self) -> cgmath::Vector3<Real> {
         return self.base.get_location();
     }
 
@@ -904,11 +908,11 @@ impl Transferable for Orthographic {
 }
 
 impl Camera for Orthographic {
-    fn get_view_projection(&self) -> &math::Matrix4<Real> {
+    fn get_view_projection(&self) -> &cgmath::Matrix4<Real> {
         &self.base.uniform.view_projection
     }
 
-    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[math::Vector3<Real>; 4]> {
+    fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[cgmath::Vector3<Real>; 4]> {
         let sections_count = self.base.cascades_count;
         #[cfg(debug_mode)]
         {
@@ -916,7 +920,7 @@ impl Camera for Orthographic {
                 vxlogf!("sections_count must be greater than zero.");
             }
         }
-        let mut result = vec![[math::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
+        let mut result = vec![[cgmath::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];
 
         let w = self.size * self.base.uniform.near_aspect_ratio_reserved.y;
 
@@ -952,7 +956,7 @@ impl Camera for Orthographic {
         return result;
     }
 
-    fn is_in_frustum(&self, radius: Real, location: &math::Vector3<Real>) -> bool {
+    fn is_in_frustum(&self, radius: Real, location: &cgmath::Vector3<Real>) -> bool {
         return self.base.is_in_frustum(radius, location);
     }
 

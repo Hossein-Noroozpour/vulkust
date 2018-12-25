@@ -12,18 +12,18 @@ use super::texture::Manager as TextureManager;
 use std::mem::size_of;
 use std::sync::Arc;
 
-use math;
+use cgmath;
 
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Uniform {
-    pixel_step: math::Vector4<Real>,
+    pixel_step: cgmath::Vector4<Real>,
 }
 
 impl Uniform {
     pub fn new(window_width: Real, window_height: Real) -> Self {
         Uniform {
-            pixel_step: math::Vector4::new(1f32 / window_width, 1f32 / window_height, 0.0, 0.0),
+            pixel_step: cgmath::Vector4::new(1f32 / window_width, 1f32 / window_height, 0.0, 0.0),
         }
     }
 }

@@ -15,7 +15,7 @@ use super::texture::{Manager as TextureManager, Texture};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
-use math;
+use cgmath;
 
 const SHADOW_MAP_FMT: ImageFormat = ImageFormat::DepthFloat;
 const SHADOW_ACCUMULATOR_FLAGBITS_FMT: ImageFormat = ImageFormat::FlagBits8;
@@ -209,5 +209,5 @@ unsafe impl Sync for Shadower {}
 
 #[repr(C)]
 struct ShadowMapperUniform {
-    mvp: math::Matrix4<Real>,
+    mvp: cgmath::Matrix4<Real>,
 }

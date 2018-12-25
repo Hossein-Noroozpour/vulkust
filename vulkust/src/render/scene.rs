@@ -22,8 +22,8 @@ use std::io::BufReader;
 use std::mem::size_of;
 use std::sync::{Arc, Mutex, RwLock, Weak};
 
+use cgmath;
 use gltf;
-use math;
 
 #[repr(u8)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -213,8 +213,8 @@ pub struct Uniform {
     camera: CameraUniform,
     directional_lights: [DirectionalUniform; MAX_DIRECTIONAL_LIGHTS_COUNT],
     point_lights: [PointUniform; MAX_POINT_LIGHTS_COUNT],
-    lights_count: math::Vector4<u32>, // directional, point, rezerved
-    ssao_config: math::Vector4<Real>, // samples-count, radius, z-tolerance, rezerved
+    lights_count: cgmath::Vector4<u32>, // directional, point, rezerved
+    ssao_config: cgmath::Vector4<Real>, // samples-count, radius, z-tolerance, rezerved
 }
 
 impl Uniform {
@@ -224,8 +224,8 @@ impl Uniform {
             camera,
             directional_lights: [DirectionalUniform::new(); MAX_DIRECTIONAL_LIGHTS_COUNT],
             point_lights: [PointUniform::new(); MAX_POINT_LIGHTS_COUNT],
-            lights_count: math::Vector4::new(0, 0, 0, 0),
-            ssao_config: math::Vector4::new(64.1, 0.2, 0.6, 0.0),
+            lights_count: cgmath::Vector4::new(0, 0, 0, 0),
+            ssao_config: cgmath::Vector4::new(64.1, 0.2, 0.6, 0.0),
         }
     }
 }

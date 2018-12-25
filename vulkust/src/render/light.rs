@@ -1,4 +1,4 @@
-use super::super::core::constants::EPSILON;
+use super::super::collision::aabb::Aabb3;
 use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
@@ -12,13 +12,11 @@ use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::shadower::Shadower;
 use super::sync::Semaphore;
 use std::collections::BTreeMap;
-use std::f32::MAX as F32MAX;
-use std::f32::MIN as F32MIN;
 use std::mem::size_of;
 use std::sync::{Arc, Mutex, RwLock, Weak};
 
+use cgmath;
 use gltf;
-use math;
 use num_cpus;
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -51,7 +49,7 @@ pub trait ShadowMaker: Light {
 }
 
 pub trait Directional: Light {
-    fn update_cascaded_shadow_map_cameras(&mut self, &Vec<[math::Vector3<Real>; 4]>, usize);
+    fn update_cascaded_shadow_map_cameras(&mut self, &Vec<[cgmath::Vector3<Real>; 4]>, usize);
     fn update_uniform(&self, &mut DirectionalUniform);
 }
 
@@ -66,55 +64,25 @@ pub trait DefaultLighting {
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
 struct SunCascadeCamera {
-    vp: math::Matrix4<Real>,
-    max_x: Real,
-    max_seen_x: Real,
-    min_x: Real,
-    min_seen_x: Real,
-    max_y: Real,
-    max_seen_y: Real,
-    min_y: Real,
-    min_seen_y: Real,
-    max_z: Real,
-    max_seen_z: Real,
-    min_z: Real,
-    min_seen_z: Real,
+    vp: cgmath::Matrix4<Real>,
+    boundary: Aabb3,
+    seen: Aabb3,
 }
 
 impl SunCascadeCamera {
     fn new() -> Self {
         Self {
-            vp: math::Matrix4::new(
+            vp: cgmath::Matrix4::new(
                 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
             ),
-            max_x: F32MIN,
-            max_seen_x: F32MIN,
-            min_x: F32MAX,
-            min_seen_x: F32MAX,
-            max_y: F32MIN,
-            max_seen_y: F32MIN,
-            min_y: F32MAX,
-            min_seen_y: F32MAX,
-            max_z: F32MIN,
-            max_seen_z: F32MIN,
-            min_z: F32MAX,
-            min_seen_z: F32MAX,
+            boundary: Aabb3::new(),
+            seen: Aabb3::new(),
         }
     }
 
     fn update_limits(&mut self, other: &Self) {
-        self.max_x = other.max_x;
-        self.max_seen_x = other.min_x;
-        self.min_x = other.min_x;
-        self.min_seen_x = other.max_x;
-        self.max_y = other.max_y;
-        self.max_seen_y = other.min_y;
-        self.min_y = other.min_y;
-        self.min_seen_y = other.max_y;
-        self.max_z = other.max_z;
-        self.max_seen_z = other.min_z;
-        self.min_z = other.min_z;
-        self.min_seen_z = other.max_z;
+        self.boundary = other.boundary;
+        self.seen = Aabb3::new();
     }
 }
 
@@ -132,7 +100,7 @@ struct SunShadowMapperRenderData {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 struct SunShadowMakerKernelData {
-    zero_located_view: math::Matrix4<Real>,
+    zero_located_view: cgmath::Matrix4<Real>,
     cascade_cameras: Vec<SunCascadeCamera>,
     frames_data: Vec<SunShadowMakerKernelFrameData>,
     render_data: Vec<SunShadowMapperRenderData>, // per model and cascade
@@ -141,7 +109,7 @@ struct SunShadowMakerKernelData {
 
 impl SunShadowMakerKernelData {
     fn new(
-        zero_located_view: math::Matrix4<Real>,
+        zero_located_view: cgmath::Matrix4<Real>,
         cascades_count: usize,
         frames_count: usize,
         max_render_data_count: usize, // model-cascade
@@ -152,7 +120,7 @@ impl SunShadowMakerKernelData {
         let mut render_data = Vec::with_capacity(max_render_data_count);
         for _ in 0..max_render_data_count {
             let uniform_buffer =
-                buffer_manager.create_dynamic_buffer(size_of::<math::Matrix4<Real>>() as isize);
+                buffer_manager.create_dynamic_buffer(size_of::<cgmath::Matrix4<Real>>() as isize);
             render_data.push(SunShadowMapperRenderData {
                 uniform_buffer,
                 model: None,
@@ -177,7 +145,7 @@ impl SunShadowMakerKernelData {
     fn update_camera_limits(
         &mut self,
         cascade_cameras: &[SunCascadeCamera],
-        zero_located_view: math::Matrix4<Real>,
+        zero_located_view: cgmath::Matrix4<Real>,
     ) {
         self.zero_located_view = zero_located_view;
         let cc = cascade_cameras.len();
@@ -198,45 +166,14 @@ impl SunShadowMakerKernelData {
     fn shadow(&mut self, m: &mut Model, model: &Arc<RwLock<Model>>) {
         let rd = m.get_occlusion_culling_radius();
         let v = (self.zero_located_view * m.get_location().extend(1.0)).truncate();
-        let rdv = math::Vector3::new(rd, rd, rd);
-        let upv = v + rdv;
-        let dnv = v - rdv;
+        let b = Aabb3::new_with_center_radius(&v, rd);
         let ccc = self.cascade_cameras.len();
         for ci in 0..ccc {
             let c = &mut self.cascade_cameras[ci];
-            if upv.x < c.min_x {
+            if !c.boundary.intersects_center_radius(&v, rd) {
                 continue;
             }
-            if upv.y < c.min_y {
-                continue;
-            }
-            if upv.z < c.min_z {
-                continue;
-            }
-            if c.max_x < dnv.x {
-                continue;
-            }
-            if c.max_y < dnv.y {
-                continue;
-            }
-            if dnv.x < c.min_seen_x {
-                c.min_seen_x = dnv.x;
-            }
-            if dnv.y < c.min_seen_y {
-                c.min_seen_y = dnv.y;
-            }
-            if dnv.z < c.min_seen_z {
-                c.min_seen_z = dnv.z;
-            }
-            if c.max_seen_x < upv.x {
-                c.max_seen_x = upv.x;
-            }
-            if c.max_seen_y < upv.y {
-                c.max_seen_y = upv.y;
-            }
-            if c.max_seen_z < upv.z {
-                c.max_seen_z = upv.z;
-            }
+            c.seen.insert_aabb(&b);
             let render_data = &mut self.render_data[self.last_render_data_index];
             render_data.model = Some(Arc::downgrade(model));
             render_data.cascade_index = ci;
@@ -303,11 +240,11 @@ struct SunFrameData {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Sun {
     obj_base: ObjectBase,
-    zero_located_view: math::Matrix4<Real>,
+    zero_located_view: cgmath::Matrix4<Real>,
     cascade_cameras: Vec<SunCascadeCamera>,
     kernels_data: Vec<Arc<Mutex<SunShadowMakerKernelData>>>,
-    direction: math::Vector3<Real>,
-    color: math::Vector3<Real>,
+    direction: cgmath::Vector3<Real>,
+    color: cgmath::Vector3<Real>,
     strength: Real,
     frames_data: Vec<SunFrameData>,
     shadow_accumulator_uniform: ShadowAccumulatorDirectionalUniform,
@@ -344,10 +281,10 @@ impl Sun {
         for _ in 0..csc {
             cascade_cameras.push(SunCascadeCamera::new());
         }
-        let zero_located_view = math::Matrix4::look_at(
-            math::Point3::new(0.0, 0.0, 0.0),
-            math::Point3::new(0.0, 0.0, -1.0),
-            math::Vector3::new(0.0, 1.0, 0.0),
+        let zero_located_view = cgmath::Matrix4::look_at(
+            cgmath::Point3::new(0.0, 0.0, 0.0),
+            cgmath::Point3::new(0.0, 0.0, -1.0),
+            cgmath::Vector3::new(0.0, 1.0, 0.0),
         );
         let mut kernels_data = Vec::with_capacity(num_cpus);
         let mut buffer_manager = vxresult!(geng.get_buffer_manager().write());
@@ -369,8 +306,8 @@ impl Sun {
             zero_located_view,
             cascade_cameras,
             kernels_data,
-            direction: math::Vector3::new(0.0, 0.0, -1.0),
-            color: math::Vector3::new(1.0, 1.0, 1.0),
+            direction: cgmath::Vector3::new(0.0, 0.0, -1.0),
+            color: cgmath::Vector3::new(1.0, 1.0, 1.0),
             strength: 0.5,
             frames_data,
             shadow_accumulator_uniform,
@@ -379,6 +316,9 @@ impl Sun {
     }
 
     fn update_with_kernels_data(&mut self) {
+        for cc in &mut self.cascade_cameras {
+            cc.seen = Aabb3::new();
+        }
         let kernels_count = self.kernels_data.len();
         for ki in 0..kernels_count {
             let smd = vxresult!(self.kernels_data[ki].lock());
@@ -386,24 +326,7 @@ impl Sun {
             for i in 0..cc {
                 let ccd = &mut self.cascade_cameras[i];
                 let smdccd = &smd.cascade_cameras[i];
-                if ccd.max_seen_x < smdccd.max_seen_x {
-                    ccd.max_seen_x = smdccd.max_seen_x;
-                }
-                if ccd.max_seen_y < smdccd.max_seen_y {
-                    ccd.max_seen_y = smdccd.max_seen_y;
-                }
-                if ccd.max_seen_z < smdccd.max_seen_z {
-                    ccd.max_seen_z = smdccd.max_seen_z;
-                }
-                if ccd.min_seen_x > smdccd.min_seen_x {
-                    ccd.min_seen_x = smdccd.min_seen_x;
-                }
-                if ccd.min_seen_y > smdccd.min_seen_y {
-                    ccd.min_seen_y = smdccd.min_seen_y;
-                }
-                if ccd.min_seen_z > smdccd.min_seen_z {
-                    ccd.min_seen_z = smdccd.min_seen_z;
-                }
+                ccd.seen.insert_aabb(&smdccd.seen);
             }
         }
     }
@@ -466,47 +389,21 @@ impl Light for Sun {
     fn update(&mut self) {
         self.update_with_kernels_data();
         for ccd in &mut self.cascade_cameras {
-            let change_max_x = ccd.max_seen_x < ccd.max_x && ccd.min_x + EPSILON < ccd.max_seen_x;
-            let change_max_y = ccd.max_seen_y < ccd.max_y && ccd.min_y + EPSILON < ccd.max_seen_y;
-            let change_max_z = ccd.max_seen_z < ccd.max_z && ccd.min_z + EPSILON < ccd.max_seen_z;
-            let change_min_x = ccd.min_seen_x > ccd.min_x && ccd.max_x > ccd.min_seen_x + EPSILON;
-            let change_min_y = ccd.min_seen_y > ccd.min_y && ccd.max_y > ccd.min_seen_y + EPSILON;
-            let change_min_z = ccd.min_seen_z > ccd.min_z && ccd.max_z > ccd.min_seen_z + EPSILON;
-            if change_max_x {
-                ccd.max_x = ccd.max_seen_x;
-            }
-            if change_max_y {
-                ccd.max_y = ccd.max_seen_y;
-            }
-            if change_max_z {
-                ccd.max_z = ccd.max_seen_z;
-            } else if ccd.max_seen_z > ccd.max_z {
-                ccd.max_z = ccd.max_seen_z;
-            }
-            if change_min_x {
-                ccd.min_x = ccd.min_seen_x;
-            }
-            if change_min_y {
-                ccd.min_y = ccd.min_seen_y;
-            }
-            if change_min_z {
-                ccd.min_z = ccd.min_seen_z;
-            }
+            ccd.seen = ccd.seen.get_intersection_with_aabb(&ccd.boundary);
         }
         for ccd in &mut self.cascade_cameras {
-            let width = ((ccd.max_x - ccd.min_x) * 0.51).abs();
-            let height = ((ccd.max_y - ccd.min_y) * 0.51).abs();
-            let depth = (ccd.max_z - ccd.min_z).abs();
+            let d = ccd.seen.get_min_max_diff();
+            let c = ccd.seen.get_center();
+            let bmx = ccd.seen.get_max();
+            let width = d.x * 0.51;
+            let height = d.y * 0.51;
+            let depth = d.z;
             let near = depth * 0.01;
             let far = depth * 1.03;
-            let p = math::ortho(-width, width, -height, height, near, far);
-            let t = -math::Vector3::new(
-                (ccd.max_x + ccd.min_x) * 0.5,
-                (ccd.max_y + ccd.min_y) * 0.5,
-                ccd.max_z + near * 2.0,
-            );
-            let t = math::Matrix4::from_translation(t);
-            ccd.vp = math::Matrix4::new(
+            let p = cgmath::ortho(-width, width, -height, height, near, far);
+            let t = -cgmath::Vector3::new(c.x, c.y, bmx.z + near * 2.0);
+            let t = cgmath::Matrix4::from_translation(t);
+            ccd.vp = cgmath::Matrix4::new(
                 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
             ) * p
                 * t
@@ -549,7 +446,7 @@ impl ShadowMaker for Sun {
         let cascades_count = self.cascade_cameras.len();
         let frame_data = &mut self.frames_data[frame_number];
         for i in 0..cascades_count {
-            self.shadow_accumulator_uniform.view_projection_biases[i] = math::Matrix4::new(
+            self.shadow_accumulator_uniform.view_projection_biases[i] = cgmath::Matrix4::new(
                 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
             ) * self.cascade_cameras[i]
                 .vp;
@@ -609,77 +506,18 @@ impl ShadowMaker for Sun {
 impl Directional for Sun {
     fn update_cascaded_shadow_map_cameras(
         &mut self,
-        walls: &Vec<[math::Vector3<Real>; 4]>,
+        walls: &Vec<[cgmath::Vector3<Real>; 4]>,
         index: usize,
     ) {
         self.shadow_accumulator_uniform.light_index = index as u32;
-        let mut walls_bnds = Vec::with_capacity(walls.len());
-        for w in walls {
-            let mut max = math::Vector3::new(F32MIN, F32MIN, F32MIN);
-            let mut min = math::Vector3::new(F32MAX, F32MAX, F32MAX);
-            for p in w {
-                let p = self.zero_located_view * p.extend(1.0);
-                if p.x < min.x {
-                    min.x = p.x;
-                }
-                if max.x < p.x {
-                    max.x = p.x;
-                }
-                if p.y < min.y {
-                    min.y = p.y;
-                }
-                if max.y < p.y {
-                    max.y = p.y;
-                }
-                if p.z < min.z {
-                    min.z = p.z;
-                }
-                if max.z < p.z {
-                    max.z = p.z;
-                }
-            }
-            walls_bnds.push((max, min));
-        }
         let ccdsc = self.cascade_cameras.len();
         for i in 0..ccdsc {
-            let ccd = &mut self.cascade_cameras[i];
-            let ii = i + 1;
-            if walls_bnds[i].1.x < walls_bnds[ii].1.x {
-                ccd.min_x = walls_bnds[i].1.x;
-            } else {
-                ccd.min_x = walls_bnds[ii].1.x;
+            let mut b = Aabb3::new();
+            for p in &walls[i] {
+                let p = (self.zero_located_view * p.extend(1.0)).truncate();
+                b.insert(&p);
             }
-            if walls_bnds[i].0.x < walls_bnds[ii].0.x {
-                ccd.max_x = walls_bnds[ii].0.x;
-            } else {
-                ccd.max_x = walls_bnds[i].0.x;
-            }
-            if walls_bnds[i].1.y < walls_bnds[ii].1.y {
-                ccd.min_y = walls_bnds[i].1.y;
-            } else {
-                ccd.min_y = walls_bnds[ii].1.y;
-            }
-            if walls_bnds[i].0.y < walls_bnds[ii].0.y {
-                ccd.max_y = walls_bnds[ii].0.y;
-            } else {
-                ccd.max_y = walls_bnds[i].0.y;
-            }
-            if walls_bnds[i].1.z < walls_bnds[ii].1.z {
-                ccd.min_z = walls_bnds[i].1.z;
-            } else {
-                ccd.min_z = walls_bnds[ii].1.z;
-            }
-            if walls_bnds[i].0.z < walls_bnds[ii].0.z {
-                ccd.max_z = walls_bnds[ii].0.z;
-            } else {
-                ccd.max_z = walls_bnds[i].0.z;
-            }
-            ccd.max_seen_x = ccd.min_x;
-            ccd.max_seen_y = ccd.min_y;
-            ccd.max_seen_z = ccd.min_z;
-            ccd.min_seen_x = ccd.max_x;
-            ccd.min_seen_y = ccd.max_y;
-            ccd.min_seen_z = ccd.max_z;
+            self.cascade_cameras[i].boundary = b;
         }
     }
 
@@ -696,20 +534,20 @@ impl DefaultLighting for Sun {
 }
 
 impl Transferable for Sun {
-    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
-        let rotation = math::Matrix3::from(*q);
-        self.direction = rotation * math::Vector3::new(0.0, 0.0, -1.0);
+    fn set_orientation(&mut self, q: &cgmath::Quaternion<Real>) {
+        let rotation = cgmath::Matrix3::from(*q);
+        self.direction = rotation * cgmath::Vector3::new(0.0, 0.0, -1.0);
         let mut q = -*q;
         q.s = -q.s;
-        self.zero_located_view = math::Matrix4::from(q);
+        self.zero_located_view = cgmath::Matrix4::from(q);
     }
 
-    fn set_location(&mut self, _: &math::Vector3<Real>) {
+    fn set_location(&mut self, _: &cgmath::Vector3<Real>) {
         // camera does not have location
         vxunexpected!();
     }
 
-    fn get_location(&self) -> math::Vector3<Real> {
+    fn get_location(&self) -> cgmath::Vector3<Real> {
         vxunexpected!();
     }
 
@@ -729,7 +567,7 @@ impl Transferable for Sun {
         vxunimplemented!();
     }
 
-    fn translate(&mut self, _: &math::Vector3<Real>) {
+    fn translate(&mut self, _: &cgmath::Vector3<Real>) {
         vxunexpected!();
     }
 
@@ -751,8 +589,8 @@ impl Loadable for Sun {
             reader.read::<Real>(),
             reader.read::<Real>(),
         ];
-        myself.set_orientation(&math::Quaternion::new(r[0], r[1], r[2], r[3]));
-        myself.color = math::Vector3::new(
+        myself.set_orientation(&cgmath::Quaternion::new(r[0], r[1], r[2], r[3]));
+        myself.color = cgmath::Vector3::new(
             reader.read::<Real>(),
             reader.read::<Real>(),
             reader.read::<Real>(),
@@ -833,15 +671,15 @@ impl Manager {
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct PointUniform {
-    color: math::Vector4<Real>,
-    position_radius: math::Vector4<Real>,
+    color: cgmath::Vector4<Real>,
+    position_radius: cgmath::Vector4<Real>,
 }
 
 impl PointUniform {
     pub fn new() -> Self {
         PointUniform {
-            color: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
-            position_radius: math::Vector4::new(0.0, 0.0, 0.0, 0.0),
+            color: cgmath::Vector4::new(0.0, 0.0, 0.0, 0.0),
+            position_radius: cgmath::Vector4::new(0.0, 0.0, 0.0, 0.0),
         }
     }
 }
@@ -850,15 +688,15 @@ impl PointUniform {
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct DirectionalUniform {
-    color: math::Vector4<Real>,
-    direction: math::Vector4<Real>,
+    color: cgmath::Vector4<Real>,
+    direction: cgmath::Vector4<Real>,
 }
 
 impl DirectionalUniform {
     pub fn new() -> Self {
         Self {
-            color: math::Vector4::new(1.0, 1.0, 1.0, 1.0),
-            direction: math::Vector4::new(0.0, 0.0, -1.0, 1.0),
+            color: cgmath::Vector4::new(1.0, 1.0, 1.0, 1.0),
+            direction: cgmath::Vector4::new(0.0, 0.0, -1.0, 1.0),
         }
     }
 }
@@ -867,8 +705,8 @@ impl DirectionalUniform {
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct ShadowAccumulatorDirectionalUniform {
-    view_projection_biases: [math::Matrix4<Real>; MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT as usize],
-    direction_strength: math::Vector4<Real>,
+    view_projection_biases: [cgmath::Matrix4<Real>; MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT as usize],
+    direction_strength: cgmath::Vector4<Real>,
     cascades_count: u32,
     light_index: u32,
 }
@@ -876,10 +714,10 @@ pub struct ShadowAccumulatorDirectionalUniform {
 impl ShadowAccumulatorDirectionalUniform {
     fn new() -> Self {
         Self {
-            view_projection_biases: [math::Matrix4::new(
+            view_projection_biases: [cgmath::Matrix4::new(
                 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
             ); MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT as usize],
-            direction_strength: math::Vector4::new(0.0, 0.0, -1.0, 1.0),
+            direction_strength: cgmath::Vector4::new(0.0, 0.0, -1.0, 1.0),
             cascades_count: 0,
             light_index: 0,
         }

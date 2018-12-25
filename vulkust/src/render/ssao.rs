@@ -13,8 +13,8 @@ use super::texture::{Manager as TextureManager, Texture};
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
-use math;
-use math::InnerSpace;
+use cgmath;
+use cgmath::InnerSpace;
 use rand;
 use rand::distributions::{Distribution as RandDis, Uniform as RandUni};
 
@@ -22,7 +22,7 @@ const MAX_SSAO_SAMPLES_COUNT: usize = 128;
 
 #[repr(C)]
 struct Uniform {
-    sample_vectors: [math::Vector4<Real>; MAX_SSAO_SAMPLES_COUNT],
+    sample_vectors: [cgmath::Vector4<Real>; MAX_SSAO_SAMPLES_COUNT],
 }
 
 #[cfg(debug_mode)]
@@ -37,10 +37,10 @@ impl Uniform {
         let r1 = RandUni::from(-1f32..1f32);
         let r2 = RandUni::from(0f32..1f32);
         let mut rng = rand::thread_rng();
-        let mut sample_vectors = [math::Vector4::new(0.0, 0.0, 0.0, 0.0); MAX_SSAO_SAMPLES_COUNT];
+        let mut sample_vectors = [cgmath::Vector4::new(0.0, 0.0, 0.0, 0.0); MAX_SSAO_SAMPLES_COUNT];
         let mut sum_weight = 0.0;
         for i in 0..MAX_SSAO_SAMPLES_COUNT {
-            let v = math::Vector3::new(
+            let v = cgmath::Vector3::new(
                 r1.sample(&mut rng),
                 r1.sample(&mut rng),
                 r2.sample(&mut rng),

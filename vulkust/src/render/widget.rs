@@ -12,7 +12,7 @@ use super::scene::Scene;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 
-use math;
+use cgmath;
 use rusttype::{point, Scale};
 
 pub trait Widget: Model {}
@@ -53,15 +53,15 @@ impl Object for Base {
 }
 
 impl Transferable for Base {
-    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
+    fn set_orientation(&mut self, q: &cgmath::Quaternion<Real>) {
         self.model_base.set_orientation(q);
     }
 
-    fn set_location(&mut self, l: &math::Vector3<Real>) {
+    fn set_location(&mut self, l: &cgmath::Vector3<Real>) {
         self.model_base.set_location(l);
     }
 
-    fn get_location(&self) -> math::Vector3<Real> {
+    fn get_location(&self) -> cgmath::Vector3<Real> {
         return self.model_base.get_location();
     }
 
@@ -282,8 +282,8 @@ impl Label {
                     &img,
                 );
             material.finalize_textures_change(engine);
-            let radius = math::Vector2::new(w, h);
-            let radius = math::dot(radius, radius).sqrt();
+            let radius = cgmath::Vector2::new(w, h);
+            let radius = cgmath::dot(radius, radius).sqrt();
             let mesh = MeshBase::new(&vertices, &indices, radius, engine);
             let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
             vxresult!(asset_manager.get_mesh_manager().write()).add(&mesh);
@@ -323,15 +323,15 @@ impl Object for Label {
 }
 
 impl Transferable for Label {
-    fn set_orientation(&mut self, q: &math::Quaternion<Real>) {
+    fn set_orientation(&mut self, q: &cgmath::Quaternion<Real>) {
         self.base.set_orientation(q);
     }
 
-    fn set_location(&mut self, l: &math::Vector3<Real>) {
+    fn set_location(&mut self, l: &cgmath::Vector3<Real>) {
         self.base.set_location(l);
     }
 
-    fn get_location(&self) -> math::Vector3<Real> {
+    fn get_location(&self) -> cgmath::Vector3<Real> {
         return self.base.get_location();
     }
 

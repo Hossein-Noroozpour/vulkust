@@ -11,9 +11,9 @@ use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
 
+use cgmath;
+use cgmath::prelude::*;
 use gltf;
-use math;
-use math::prelude::*;
 
 #[repr(u8)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -191,12 +191,12 @@ impl Base {
         let count = vxunwrap!(primitive.get(&gltf::Semantic::Positions)).count();
         let mut vertex_buffer = vec![0u8; count * size_of::<Real>() * 12];
         let occlusion_culling_radius = {
-            let mut center = math::Vector3::new(0.0, 0.0, 0.0);
+            let mut center = cgmath::Vector3::new(0.0, 0.0, 0.0);
             let p1 = &primitive.bounding_box().max;
-            let p1 = math::Vector3::new(p1[0], p1[1], p1[2]);
+            let p1 = cgmath::Vector3::new(p1[0], p1[1], p1[2]);
             center += p1;
             let p2 = &primitive.bounding_box().max;
-            center += math::Vector3::new(p2[0], p2[1], p2[2]);
+            center += cgmath::Vector3::new(p2[0], p2[1], p2[2]);
             center *= 0.5;
             p1.distance(center)
         };

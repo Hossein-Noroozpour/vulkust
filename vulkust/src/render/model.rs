@@ -16,8 +16,8 @@ use std::f32::MAX as F32MAX;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
 
+use cgmath;
 use gltf;
-use math;
 
 pub trait Model: Object + Transferable {
     fn update(&mut self, &Scene, &Camera, usize);
@@ -112,13 +112,13 @@ impl Manager {
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
-    model: math::Matrix4<Real>,
+    model: cgmath::Matrix4<Real>,
 }
 
 impl Uniform {
     fn new_with_gltf(node: &gltf::Node) -> Self {
         let m = node.transform().matrix();
-        let model = math::Matrix4::new(
+        let model = cgmath::Matrix4::new(
             m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0],
             m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3],
         );
@@ -126,7 +126,7 @@ impl Uniform {
     }
 
     fn new_with_gx3d(reader: &mut Gx3DReader) -> Self {
-        let model = math::Matrix4::new(
+        let model = cgmath::Matrix4::new(
             reader.read(),
             reader.read(),
             reader.read(),
@@ -147,12 +147,12 @@ impl Uniform {
         Uniform { model }
     }
 
-    pub(crate) fn get_model(&self) -> &math::Matrix4<Real> {
+    pub(crate) fn get_model(&self) -> &cgmath::Matrix4<Real> {
         return &self.model;
     }
 
     fn default() -> Self {
-        let m = math::Matrix4::new(
+        let m = cgmath::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
         Uniform { model: m }
@@ -173,7 +173,7 @@ pub struct Base {
     descriptor_set: Arc<DescriptorSet>,
     meshes: BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)>,
     children: BTreeMap<Id, Arc<RwLock<Model>>>,
-    scales: math::Vector3<Real>,
+    scales: cgmath::Vector3<Real>,
 }
 
 impl Base {}
@@ -254,7 +254,7 @@ impl Loadable for Base {
             descriptor_set,
             meshes,
             children: BTreeMap::new(),
-            scales: math::Vector3::new(1.0, 1.0, 1.0),
+            scales: cgmath::Vector3::new(1.0, 1.0, 1.0),
         }
     }
 
@@ -296,21 +296,21 @@ impl Loadable for Base {
             descriptor_set,
             meshes,
             children: BTreeMap::new(),
-            scales: math::Vector3::new(1.0, 1.0, 1.0),
+            scales: cgmath::Vector3::new(1.0, 1.0, 1.0),
         }
     }
 }
 
 impl Transferable for Base {
-    fn set_orientation(&mut self, _: &math::Quaternion<Real>) {
+    fn set_orientation(&mut self, _: &cgmath::Quaternion<Real>) {
         vxunimplemented!();
     }
 
-    fn set_location(&mut self, _: &math::Vector3<Real>) {
+    fn set_location(&mut self, _: &cgmath::Vector3<Real>) {
         vxunimplemented!();
     }
 
-    fn get_location(&self) -> math::Vector3<Real> {
+    fn get_location(&self) -> cgmath::Vector3<Real> {
         return self.uniform.model.w.truncate();
     }
 
@@ -330,7 +330,7 @@ impl Transferable for Base {
         vxunimplemented!();
     }
 
-    fn translate(&mut self, t: &math::Vector3<Real>) {
+    fn translate(&mut self, t: &cgmath::Vector3<Real>) {
         self.uniform.model.w += t.extend(0.0);
         // todo take care of collider
         for (_, c) in &self.children {
@@ -341,7 +341,7 @@ impl Transferable for Base {
     fn scale(&mut self, s: Real) {
         self.scales *= s;
         self.occlusion_culling_radius *= s;
-        let s = math::Matrix4::from_scale(s);
+        let s = cgmath::Matrix4::from_scale(s);
         self.uniform.model = self.uniform.model * s;
     }
 }
@@ -355,7 +355,7 @@ impl Model for Base {
         }
         if self.has_transparent {
             let dis = camera.get_location() - location;
-            self.distance_from_camera = math::dot(dis, dis);
+            self.distance_from_camera = cgmath::dot(dis, dis);
         }
         self.uniform_buffer.update(&self.uniform, frame_number);
         for (_, m) in &mut self.meshes {
@@ -450,7 +450,7 @@ impl DefaultModel for Base {
             descriptor_set,
             meshes: BTreeMap::new(),
             children: BTreeMap::new(),
-            scales: math::Vector3::new(1.0, 1.0, 1.0),
+            scales: cgmath::Vector3::new(1.0, 1.0, 1.0),
         }
     }
 }
