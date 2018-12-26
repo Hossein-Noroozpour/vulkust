@@ -202,8 +202,8 @@ impl Object for Base {
         self.obj_base.enable_rendering();
     }
 
-    fn is_rendarable(&self) -> bool {
-        return self.obj_base.is_rendarable();
+    fn is_renderable(&self) -> bool {
+        return self.obj_base.is_renderable();
     }
 }
 

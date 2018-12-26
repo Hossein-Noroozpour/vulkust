@@ -47,8 +47,8 @@ impl Object for Base {
         self.model_base.enable_rendering()
     }
 
-    fn is_rendarable(&self) -> bool {
-        return self.model_base.is_rendarable();
+    fn is_renderable(&self) -> bool {
+        return self.model_base.is_renderable();
     }
 }
 
@@ -317,8 +317,8 @@ impl Object for Label {
         self.base.enable_rendering()
     }
 
-    fn is_rendarable(&self) -> bool {
-        return self.base.is_rendarable();
+    fn is_renderable(&self) -> bool {
+        return self.base.is_renderable();
     }
 }
 

@@ -474,11 +474,11 @@ impl Object for Base {
         self.obj_base.enable_rendering()
     }
 
-    fn is_rendarable(&self) -> bool {
-        if self.obj_base.is_rendarable() {
+    fn is_renderable(&self) -> bool {
+        if self.obj_base.is_renderable() {
             if let Some(camera) = &self.active_camera {
                 if let Some(camera) = camera.upgrade() {
-                    return vxresult!(camera.read()).is_rendarable();
+                    return vxresult!(camera.read()).is_renderable();
                 }
             }
         }
@@ -528,7 +528,7 @@ impl Scene for Base {
     }
 
     fn update(&mut self, frame_number: usize) {
-        if !self.is_rendarable() {
+        if !self.is_renderable() {
             return;
         }
         let camera = vxunwrap!(&self.active_camera);
@@ -540,7 +540,7 @@ impl Scene for Base {
         let csmws = camera.get_cascaded_shadow_frustum_partitions();
         for (_, shm) in &self.shadow_maker_lights {
             let mut shm = vxresult!(shm.write());
-            if !shm.is_rendarable() {
+            if !shm.is_renderable() {
                 continue;
             }
             {
@@ -563,7 +563,7 @@ impl Scene for Base {
         }
         for (_, l) in &self.lights {
             let mut l = vxresult!(l.read());
-            if !l.is_rendarable() {
+            if !l.is_renderable() {
                 continue;
             }
             if let Some(l) = l.to_directional() {
@@ -584,7 +584,7 @@ impl Scene for Base {
     fn update_shadow_makers(&self) {
         for (_, shm) in &self.shadow_maker_lights {
             let mut shm = vxresult!(shm.write());
-            if !shm.is_rendarable() {
+            if !shm.is_renderable() {
                 continue;
             }
             shm.update();
@@ -599,7 +599,7 @@ impl Scene for Base {
         shadower: &Shadower,
         kernel_index: usize,
     ) {
-        if !self.is_rendarable() {
+        if !self.is_renderable() {
             return;
         }
         let frame_number = geng.get_frame_number();
@@ -644,7 +644,7 @@ impl Scene for Base {
             }
             let m = vxunwrap!(model);
             let mut model = vxresult!(m.write());
-            if !model.is_rendarable() {
+            if !model.is_renderable() {
                 continue;
             }
             model.update(self, &*camera, frame_number);
@@ -702,7 +702,7 @@ impl Scene for Base {
         deferred: &Deferred,
         ssao: Option<&SSAO>,
     ) -> Arc<Semaphore> {
-        if !self.is_rendarable() {
+        if !self.is_renderable() {
             return sem.clone();
         }
         let frame_number = geng.get_frame_number();
@@ -859,8 +859,8 @@ impl Object for Game {
         self.base.enable_rendering()
     }
 
-    fn is_rendarable(&self) -> bool {
-        return self.base.is_rendarable();
+    fn is_renderable(&self) -> bool {
+        return self.base.is_renderable();
     }
 }
 
@@ -995,8 +995,8 @@ impl Object for Ui {
         self.base.enable_rendering()
     }
 
-    fn is_rendarable(&self) -> bool {
-        return self.base.is_rendarable();
+    fn is_renderable(&self) -> bool {
+        return self.base.is_renderable();
     }
 }
 

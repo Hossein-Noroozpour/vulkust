@@ -236,7 +236,7 @@ impl Engine {
         for (id, scene) in vxresult!(self.scene_manager.read()).get_scenes() {
             if let Some(scene) = scene.upgrade() {
                 let mut scene = vxresult!(scene.write());
-                if !scene.is_rendarable() {
+                if !scene.is_renderable() {
                     continue;
                 }
                 scene.update(frame_number);
@@ -257,7 +257,7 @@ impl Engine {
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
                 let mut scene = vxresult!(scene.write());
-                if !scene.is_rendarable() {
+                if !scene.is_renderable() {
                     continue;
                 }
                 scene.update_shadow_makers();
@@ -288,7 +288,7 @@ impl Engine {
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
                 let mut scene = vxresult!(scene.write());
-                if !scene.is_rendarable() {
+                if !scene.is_renderable() {
                     continue;
                 }
                 last_semaphore = scene

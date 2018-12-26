@@ -319,8 +319,8 @@ impl Object for Base {
         self.obj_base.enable_rendering()
     }
 
-    fn is_rendarable(&self) -> bool {
-        return self.obj_base.is_rendarable();
+    fn is_renderable(&self) -> bool {
+        return self.obj_base.is_renderable();
     }
 }
 
@@ -585,8 +585,8 @@ impl Object for Perspective {
         self.base.enable_rendering()
     }
 
-    fn is_rendarable(&self) -> bool {
-        return self.base.is_rendarable();
+    fn is_renderable(&self) -> bool {
+        return self.base.is_renderable();
     }
 }
 
@@ -853,8 +853,8 @@ impl Object for Orthographic {
         self.base.enable_rendering()
     }
 
-    fn is_rendarable(&self) -> bool {
-        return self.base.is_rendarable();
+    fn is_renderable(&self) -> bool {
+        return self.base.is_renderable();
     }
 }
 
