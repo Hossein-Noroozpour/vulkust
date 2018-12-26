@@ -1,215 +1,30 @@
-use super::super::core::constants::{MAX_DIRECTIONAL_LIGHTS_COUNT, MAX_POINT_LIGHTS_COUNT};
-use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::super::core::object::Object as CoreObject;
-use super::super::core::types::{Id, Real, TypeId as CoreTypeId};
-use super::super::system::file::File;
-use super::buffer::Dynamic as DynamicBuffer;
-use super::camera::{Camera, Uniform as CameraUniform};
-use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
-use super::deferred::Deferred;
-use super::descriptor::Set as DescriptorSet;
-use super::engine::Engine;
-use super::g_buffer_filler::GBufferFiller;
-use super::gapi::GraphicApiEngine;
-use super::light::{DirectionalUniform, Light, PointUniform};
-use super::model::{Base as ModelBase, Model};
-use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
-use super::shadower::Shadower;
-use super::ssao::SSAO;
-use super::sync::Semaphore;
+use super::super::super::core::constants::{MAX_DIRECTIONAL_LIGHTS_COUNT, MAX_POINT_LIGHTS_COUNT};
+use super::super::super::core::gx3d::Gx3DReader;
+use super::super::super::core::object::Object as CoreObject;
+use super::super::super::core::types::{Id, Real};
+use super::super::buffer::Dynamic as DynamicBuffer;
+use super::super::camera::{Camera, Uniform as CameraUniform};
+use super::super::command::{Buffer as CmdBuffer, Pool as CmdPool};
+use super::super::deferred::Deferred;
+use super::super::descriptor::Set as DescriptorSet;
+use super::super::engine::Engine;
+use super::super::g_buffer_filler::GBufferFiller;
+use super::super::gapi::GraphicApiEngine;
+use super::super::light::{DirectionalUniform, Light, PointUniform};
+use super::super::model::{Base as ModelBase, Model};
+use super::super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
+use super::super::shadower::Shadower;
+use super::super::ssao::SSAO;
+use super::super::sync::Semaphore;
+use super::{Scene, DefaultScene};
 use std::collections::BTreeMap;
 use std::io::BufReader;
 use std::mem::size_of;
 use std::sync::{Arc, Mutex, RwLock, Weak};
 
-use cgmath;
-use gltf;
-
-#[repr(u8)]
-#[cfg_attr(debug_mode, derive(Debug))]
-pub enum TypeId {
-    GAME = 1,
-    UI = 2,
-}
-
-pub trait Scene: Object {
-    fn add_camera(&mut self, Arc<RwLock<Camera>>);
-    fn add_model(&mut self, Arc<RwLock<Model>>);
-    fn add_light(&mut self, Arc<RwLock<Light>>);
-    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
-    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
-    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
-    fn update(&mut self, usize);
-    fn render_gbuffer_shadow_maps(
-        &self,
-        &GraphicApiEngine,
-        &Arc<CmdPool>,
-        &GBufferFiller,
-        &Shadower,
-        usize,
-    );
-    fn update_shadow_makers(&self);
-    fn render_shadow_maps(&self, &Shadower, usize, usize);
-    fn clean(&mut self);
-    fn submit(
-        &mut self,
-        &GraphicApiEngine,
-        &Arc<Semaphore>,
-        &Arc<CmdPool>,
-        &GBufferFiller,
-        &mut Shadower,
-        &Deferred,
-        Option<&SSAO>,
-    ) -> Arc<Semaphore>;
-}
-
-pub trait Loadable: Scene + Sized {
-    fn new_with_gltf(&Engine, &gltf::Scene, &[u8]) -> Self;
-    fn new_with_gx3d(&Engine, &mut Gx3DReader, Id) -> Self;
-}
-
-pub trait DefaultScene: Scene + Sized {
-    fn default(&Engine) -> Self;
-}
-
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct Manager {
-    engine: Option<Weak<RwLock<Engine>>>,
-    scenes: BTreeMap<Id, Weak<RwLock<Scene>>>,
-    name_to_id: BTreeMap<String, Id>,
-    gx3d_table: Option<Gx3dTable>,
-}
-
-impl Manager {
-    pub(crate) fn new() -> Self {
-        let scenes = BTreeMap::new();
-        let name_to_id = BTreeMap::new();
-        Manager {
-            engine: None,
-            scenes,
-            name_to_id,
-            gx3d_table: None,
-        }
-    }
-
-    pub(crate) fn set_gx3d_table(&mut self, gx3d_table: Gx3dTable) {
-        self.gx3d_table = Some(gx3d_table);
-    }
-
-    pub(crate) fn set_engine(&mut self, engine: Weak<RwLock<Engine>>) {
-        self.engine = Some(engine);
-    }
-
-    pub fn load_gltf<S>(&mut self, file_name: &str, scene_name: &str) -> Arc<RwLock<S>>
-    where
-        S: 'static + Loadable,
-    {
-        let file = Self::load_gltf_struct(file_name);
-        let scene = Self::fetch_gltf_scene(&file, scene_name);
-        let scene = {
-            let engine = vxunwrap!(&self.engine);
-            let engine = vxunwrap!(engine.upgrade());
-            let engine = vxresult!(engine.read());
-            Arc::new(RwLock::new(S::new_with_gltf(
-                &*engine,
-                &scene,
-                vxunwrap!(&file.blob),
-            )))
-        };
-        let s: Arc<RwLock<Scene>> = scene.clone();
-        self.add_scene(&s);
-        return scene;
-    }
-
-    pub fn load_gx3d(&mut self, id: Id) -> Arc<RwLock<Scene>> {
-        let scene: Arc<RwLock<Scene>> = {
-            let mut table = vxunwrap!(&mut self.gx3d_table);
-            table.goto(id);
-            let reader = table.get_mut_reader();
-            let type_id = reader.read_type_id();
-            if type_id == TypeId::GAME as CoreTypeId {
-                let engine = vxunwrap!(&self.engine);
-                let engine = vxunwrap!(engine.upgrade());
-                let engine = vxresult!(engine.read());
-                Arc::new(RwLock::new(Game::new_with_gx3d(&engine, reader, id)))
-            } else if type_id == TypeId::UI as CoreTypeId {
-                let engine = vxunwrap!(&self.engine);
-                let engine = vxunwrap!(engine.upgrade());
-                let engine = vxresult!(engine.read());
-                Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, reader, id)))
-            } else {
-                vxunexpected!();
-            }
-        };
-        self.add_scene(&scene);
-        return scene;
-    }
-
-    pub fn create<S>(&mut self) -> Arc<RwLock<S>>
-    where
-        S: 'static + DefaultScene,
-    {
-        let scene = {
-            let engine = vxunwrap!(&self.engine);
-            let engine = vxunwrap!(engine.upgrade());
-            let engine = vxresult!(engine.read());
-            Arc::new(RwLock::new(S::default(&engine)))
-        };
-        let s: Arc<RwLock<Scene>> = scene.clone();
-        self.add_scene(&s);
-        scene
-    }
-
-    pub fn fetch_gltf_scene<'a>(file: &'a gltf::Gltf, scene_name: &str) -> gltf::Scene<'a> {
-        let scenes = file.scenes();
-        for scene in scenes {
-            if vxunwrap!(scene.name()) == scene_name {
-                return scene;
-            }
-        }
-        vxunexpected!();
-    }
-
-    pub fn load_gltf_struct(file_name: &str) -> gltf::Gltf {
-        let file = BufReader::new(vxresult!(File::open(file_name)));
-        #[cfg(debug_mode)]
-        return vxresult!(gltf::Gltf::from_reader(file));
-        #[cfg(not(debug_mode))]
-        return vxresult!(gltf::Gltf::from_reader_without_validation(file));
-    }
-
-    pub fn add_scene(&mut self, scene: &Arc<RwLock<Scene>>) {
-        let id = {
-            let scene = vxresult!(scene.read());
-            let id = scene.get_id();
-            if let Some(name) = scene.get_name() {
-                self.name_to_id.insert(name, id);
-            }
-            id
-        };
-        self.scenes.insert(id, Arc::downgrade(scene));
-    }
-
-    pub fn remove_with_id(&mut self, id: &Id) {
-        self.scenes.remove(id);
-    }
-
-    pub fn remove(&mut self, scene: Arc<RwLock<Scene>>) {
-        self.remove_with_id(&vxresult!(scene.read()).get_id());
-    }
-
-    pub(super) fn get_scenes(&self) -> &BTreeMap<Id, Weak<RwLock<Scene>>> {
-        return &self.scenes;
-    }
-}
-
-unsafe impl Send for Manager {}
-
-unsafe impl Sync for Manager {}
-
 #[repr(C)]
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Uniform {
+struct Uniform {
     camera: CameraUniform,
     directional_lights: [DirectionalUniform; MAX_DIRECTIONAL_LIGHTS_COUNT],
     point_lights: [PointUniform; MAX_POINT_LIGHTS_COUNT],
@@ -285,7 +100,7 @@ impl BaseFramedata {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Base {
+pub(super) struct Base {
     obj_base: ObjectBase,
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
@@ -298,8 +113,8 @@ pub struct Base {
     descriptor_set: Arc<DescriptorSet>,
     kernels_data: Vec<Arc<Mutex<BaseKernelData>>>,
     frames_data: Vec<BaseFramedata>,
-    // pub skybox: Option<Arc<RwLock<Skybox>>>, // todo, maybe its not gonna be needed in GI PBR
-    // pub constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
+    // skybox: Option<Arc<RwLock<Skybox>>>, // todo
+    // constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
 }
 
 impl Base {
@@ -825,277 +640,5 @@ impl DefaultScene for Base {
             kernels_data,
             frames_data: Vec::new(),
         }
-    }
-}
-
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct Game {
-    pub base: Base,
-}
-
-impl Game {}
-
-impl CoreObject for Game {
-    fn get_id(&self) -> Id {
-        self.base.get_id()
-    }
-}
-
-impl Object for Game {
-    fn get_name(&self) -> Option<String> {
-        self.base.get_name()
-    }
-
-    fn set_name(&mut self, name: &str) {
-        self.base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
-    }
-
-    fn disable_rendering(&mut self) {
-        self.base.disable_rendering()
-    }
-
-    fn enable_rendering(&mut self) {
-        self.base.enable_rendering()
-    }
-
-    fn is_renderable(&self) -> bool {
-        return self.base.is_renderable();
-    }
-}
-
-impl Scene for Game {
-    fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
-        self.base.add_camera(camera);
-    }
-
-    fn add_model(&mut self, model: Arc<RwLock<Model>>) {
-        self.base.add_model(model);
-    }
-
-    fn add_light(&mut self, light: Arc<RwLock<Light>>) {
-        self.base.add_light(light);
-    }
-
-    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
-        return self.base.get_active_camera();
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        self.base.update(frame_number);
-    }
-
-    fn render_gbuffer_shadow_maps(
-        &self,
-        geng: &GraphicApiEngine,
-        cmd_pool: &Arc<CmdPool>,
-        g_buffer_filler: &GBufferFiller,
-        shadower: &Shadower,
-        kernel_index: usize,
-    ) {
-        self.base.render_gbuffer_shadow_maps(
-            geng,
-            cmd_pool,
-            g_buffer_filler,
-            shadower,
-            kernel_index,
-        );
-    }
-
-    fn update_shadow_makers(&self) {
-        self.base.update_shadow_makers();
-    }
-
-    fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
-        self.base
-            .render_shadow_maps(shadower, kernel_index, frame_number);
-    }
-
-    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
-        return self.base.get_models();
-    }
-
-    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
-        return self.base.get_all_models();
-    }
-
-    fn clean(&mut self) {
-        self.base.clean();
-    }
-
-    fn submit(
-        &mut self,
-        geng: &GraphicApiEngine,
-        sem: &Arc<Semaphore>,
-        cmd_pool: &Arc<CmdPool>,
-        g_buffer_filler: &GBufferFiller,
-        shadower: &mut Shadower,
-        deferred: &Deferred,
-        ssao: Option<&SSAO>,
-    ) -> Arc<Semaphore> {
-        return self.base.submit(
-            geng,
-            sem,
-            cmd_pool,
-            g_buffer_filler,
-            shadower,
-            deferred,
-            ssao,
-        );
-    }
-}
-
-impl Loadable for Game {
-    fn new_with_gltf(engine: &Engine, scene: &gltf::Scene, data: &[u8]) -> Self {
-        let base = Base::new_with_gltf(engine, scene, data);
-        Game { base }
-    }
-
-    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
-        let base = Base::new_with_gx3d(engine, reader, my_id);
-        Game { base }
-    }
-}
-
-impl DefaultScene for Game {
-    fn default(engine: &Engine) -> Self {
-        let base = Base::default(engine);
-        Game { base }
-    }
-}
-
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct Ui {
-    pub base: Base,
-}
-
-impl Ui {}
-
-impl CoreObject for Ui {
-    fn get_id(&self) -> Id {
-        self.base.get_id()
-    }
-}
-
-impl Object for Ui {
-    fn get_name(&self) -> Option<String> {
-        self.base.get_name()
-    }
-
-    fn set_name(&mut self, name: &str) {
-        self.base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
-    }
-
-    fn disable_rendering(&mut self) {
-        self.base.disable_rendering()
-    }
-
-    fn enable_rendering(&mut self) {
-        self.base.enable_rendering()
-    }
-
-    fn is_renderable(&self) -> bool {
-        return self.base.is_renderable();
-    }
-}
-
-impl Scene for Ui {
-    fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
-        self.base.add_camera(camera)
-    }
-
-    fn add_model(&mut self, model: Arc<RwLock<Model>>) {
-        self.base.add_model(model);
-    }
-
-    fn add_light(&mut self, light: Arc<RwLock<Light>>) {
-        self.base.add_light(light);
-    }
-
-    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
-        return self.base.get_active_camera();
-    }
-
-    fn update(&mut self, frame_number: usize) {
-        self.base.update(frame_number);
-    }
-
-    fn render_gbuffer_shadow_maps(
-        &self,
-        geng: &GraphicApiEngine,
-        cmd_pool: &Arc<CmdPool>,
-        g_buffer_filler: &GBufferFiller,
-        shadower: &Shadower,
-        kernel_index: usize,
-    ) {
-        self.base.render_gbuffer_shadow_maps(
-            geng,
-            cmd_pool,
-            g_buffer_filler,
-            shadower,
-            kernel_index,
-        );
-    }
-
-    fn update_shadow_makers(&self) {
-        self.base.update_shadow_makers();
-    }
-
-    fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
-        self.base
-            .render_shadow_maps(shadower, kernel_index, frame_number);
-    }
-
-    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
-        return self.base.get_models();
-    }
-
-    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
-        return self.base.get_all_models();
-    }
-
-    fn clean(&mut self) {
-        self.base.clean();
-    }
-
-    fn submit(
-        &mut self,
-        geng: &GraphicApiEngine,
-        sem: &Arc<Semaphore>,
-        cmd_pool: &Arc<CmdPool>,
-        g_buffer_filler: &GBufferFiller,
-        shadower: &mut Shadower,
-        deferred: &Deferred,
-        ssao: Option<&SSAO>,
-    ) -> Arc<Semaphore> {
-        return self.base.submit(
-            geng,
-            sem,
-            cmd_pool,
-            g_buffer_filler,
-            shadower,
-            deferred,
-            ssao,
-        );
-    }
-}
-
-impl Loadable for Ui {
-    fn new_with_gltf(engine: &Engine, scene: &gltf::Scene, data: &[u8]) -> Self {
-        let base = Base::new_with_gltf(engine, scene, data);
-        Ui { base }
-    }
-
-    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
-        let base = Base::new_with_gx3d(engine, reader, my_id);
-        Ui { base }
-    }
-}
-
-impl DefaultScene for Ui {
-    fn default(engine: &Engine) -> Self {
-        let base = Base::default(engine);
-        Ui { base }
     }
 }
