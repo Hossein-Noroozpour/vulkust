@@ -345,6 +345,10 @@ impl Engine {
     pub(crate) fn get_render_pass(&self) -> &Arc<RenderPass> {
         return &self.render_pass;
     }
+
+    pub(crate) fn get_framebuffers(&self) -> &Vec<Arc<Framebuffer>> {
+        return &self.framebuffers;
+    }
 }
 
 impl Drop for Engine {

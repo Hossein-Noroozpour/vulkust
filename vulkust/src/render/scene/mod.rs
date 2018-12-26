@@ -22,8 +22,8 @@ use std::io::BufReader;
 use std::mem::size_of;
 use std::sync::{Arc, Mutex, RwLock, Weak};
 
-pub mod base_deferred_shadow;
-pub mod base_forward_no_shadow;
+mod base_deferred_shadow;
+mod base_unlit;
 pub mod game;
 pub mod manager;
 pub mod ui;

@@ -200,6 +200,7 @@ impl Pipeline {
                 include_shader!("shadow-accumulator-directional.vert")
             }
             PipelineType::SSAO => include_shader!("ssao.vert"),
+            _ => vxunimplemented!(),
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
@@ -209,6 +210,7 @@ impl Pipeline {
                 include_shader!("shadow-accumulator-directional.frag")
             }
             PipelineType::SSAO => include_shader!("ssao.frag"),
+            _ => vxunimplemented!(),
         };
 
         let vertex_shader = Module::new(vert_bytes, device.clone());
@@ -222,6 +224,7 @@ impl Pipeline {
                 Layout::new_shadow_accumulator_directional(descriptor_manager)
             }
             PipelineType::SSAO => Layout::new_ssao(descriptor_manager),
+            _ => vxunimplemented!(),
         };
 
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
@@ -487,7 +490,7 @@ pub(crate) struct Manager {
 }
 
 impl Manager {
-    pub fn new(
+    pub(super) fn new(
         logical_device: Arc<LogicalDevice>,
         descriptor_manager: Arc<RwLock<DescriptorManager>>,
     ) -> Self {

@@ -16,4 +16,5 @@ pub enum PipelineType {
     ShadowMapper,
     ShadowAccumulatorDirectional,
     SSAO,
+    Unlit,
 }
