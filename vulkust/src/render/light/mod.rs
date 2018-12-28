@@ -13,7 +13,9 @@ pub mod manager;
 pub mod point;
 pub mod sun;
 
-pub use self::directional::{Directional, DirectionalUniform, ShadowAccumulatorDirectionalUniform};
+pub use self::directional::{
+    Base as DirectionalBase, Directional, DirectionalUniform, ShadowAccumulatorDirectionalUniform,
+};
 pub use self::manager::Manager;
 pub use self::point::{Point, PointUniform};
 pub use self::sun::Sun;

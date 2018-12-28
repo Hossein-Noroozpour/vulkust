@@ -2,7 +2,7 @@ use super::super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::super::core::types::Id;
 use super::super::engine::Engine;
 use super::super::object::Loadable;
-use super::{DefaultLighting, Light, Sun, TypeId};
+use super::{DefaultLighting, DirectionalBase, Light, Sun, TypeId};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 
@@ -53,7 +53,17 @@ impl Manager {
         let reader: &mut Gx3DReader = table.get_mut_reader();
         let type_id = reader.read_type_id();
         let result: Arc<RwLock<Light>> = if type_id == TypeId::Sun as u8 {
-            Arc::new(RwLock::new(Sun::new_with_gx3d(eng, reader, id)))
+            if reader.read_bool() {
+                Arc::new(RwLock::new(Sun::new_with_gx3d(eng, reader, id)))
+            } else {
+                Arc::new(RwLock::new(DirectionalBase::new_with_gx3d(eng, reader, id)))
+            }
+        } else if type_id == TypeId::Lamp as u8 {
+            if reader.read_bool() {
+                vxunimplemented!();
+            } else {
+                vxunimplemented!();
+            }
         } else {
             vxunexpected!();
         };
