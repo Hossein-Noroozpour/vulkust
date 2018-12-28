@@ -7,6 +7,7 @@ use super::super::core::types::{Id, Real};
 use super::engine::Engine;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use cgmath;
+use cgmath::prelude::InnerSpace;
 use gltf;
 use std::collections::BTreeMap;
 use std::convert::From;
@@ -66,6 +67,7 @@ pub trait Camera: Object + Transferable {
     fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[cgmath::Vector3<Real>; 4]>;
     fn is_in_frustum(&self, Real, &cgmath::Vector3<Real>) -> bool;
     fn update_uniform(&self, &mut Uniform);
+    fn get_distance(&self, &cgmath::Vector3<Real>) -> Real;
 }
 
 pub trait DefaultCamera: Camera {
@@ -366,6 +368,10 @@ impl Camera for Base {
     fn update_uniform(&self, uniform: &mut Uniform) {
         *uniform = self.uniform;
     }
+
+    fn get_distance(&self, _: &cgmath::Vector3<Real>) -> Real {
+        vxunexpected!();
+    }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -643,6 +649,10 @@ impl Camera for Perspective {
     fn update_uniform(&self, uniform: &mut Uniform) {
         self.base.update_uniform(uniform);
     }
+
+    fn get_distance(&self, p: &cgmath::Vector3<Real>) -> Real {
+        return (self.base.uniform.position_far.truncate() - p).magnitude();
+    }
 }
 
 impl DefaultCamera for Perspective {
@@ -872,6 +882,13 @@ impl Camera for Orthographic {
 
     fn update_uniform(&self, uniform: &mut Uniform) {
         self.base.update_uniform(uniform);
+    }
+
+    fn get_distance(&self, p: &cgmath::Vector3<Real>) -> Real {
+        return -cgmath::dot(
+            self.base.uniform.position_far.truncate() - p,
+            self.base.uniform.z.truncate(),
+        );
     }
 }
 
