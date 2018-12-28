@@ -365,8 +365,7 @@ impl Model for Base {
             return;
         }
         if self.has_transparent {
-            let dis = camera.get_location() - location; // todo
-            self.distance_from_camera = cgmath::dot(dis, dis);
+            self.distance_from_camera = camera.get_distance(&location);
         }
         self.uniform_buffer.update(&self.uniform, frame_number);
         for (_, m) in &mut self.meshes {

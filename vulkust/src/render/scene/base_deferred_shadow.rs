@@ -359,7 +359,12 @@ impl Scene for Base {
             }
             {
                 if let Some(shm) = shm.to_mut_directional() {
-                    shm.update_cascaded_shadow_map_cameras(&csmws, last_directional_light_index);
+                    if let Some(sun) = shm.to_mut_sun() {
+                        sun.update_cascaded_shadow_map_cameras(
+                            &csmws,
+                            last_directional_light_index,
+                        );
+                    }
                     shm.update_uniform(
                         &mut self.uniform.directional_lights[last_directional_light_index],
                     );

@@ -1,65 +1,22 @@
-use super::super::collision::aabb::Aabb3;
-use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::super::core::object::Object as CoreObject;
-use super::super::core::types::{Id, Real};
-use super::buffer::{Dynamic as DynamicBuffer, Manager as BufferManager};
-use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
-use super::config::MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT;
-use super::engine::Engine;
-use super::gapi::GraphicApiEngine;
-use super::model::Model;
-use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
-use super::shadower::Shadower;
-use super::sync::Semaphore;
-use std::collections::BTreeMap;
+use super::super::super::collision::aabb::Aabb3;
+use super::super::super::core::gx3d::Gx3DReader;
+use super::super::super::core::object::Object as CoreObject;
+use super::super::super::core::types::{Id, Real};
+use super::super::buffer::{Dynamic as DynamicBuffer, Manager as BufferManager};
+use super::super::command::{Buffer as CmdBuffer, Pool as CmdPool};
+use super::super::engine::Engine;
+use super::super::gapi::GraphicApiEngine;
+use super::super::model::Model;
+use super::super::object::{Base as ObjectBase, Loadable, Object, Transferable};
+use super::super::shadower::Shadower;
+use super::super::sync::Semaphore;
+use super::directional::Base;
+use super::{
+    DefaultLighting, Directional, DirectionalUniform, Light, Point,
+    ShadowAccumulatorDirectionalUniform, ShadowMaker,
+};
 use std::mem::size_of;
 use std::sync::{Arc, Mutex, RwLock, Weak};
-
-use cgmath;
-use gltf;
-use num_cpus;
-
-#[cfg_attr(debug_mode, derive(Debug))]
-#[repr(u8)]
-pub(crate) enum TypeId {
-    Sun = 1,
-}
-
-pub trait Light: Object {
-    fn to_directional(&self) -> Option<&Directional>;
-    fn to_mut_directional(&mut self) -> Option<&mut Directional>;
-    fn to_point(&self) -> Option<&Point>;
-    fn to_mut_point(&mut self) -> Option<&mut Point>;
-    fn to_shadow_maker(&self) -> Option<&ShadowMaker>;
-    fn to_mut_shadow_maker(&mut self) -> Option<&mut ShadowMaker>;
-    fn update(&mut self);
-}
-
-pub trait ShadowMaker: Light {
-    fn shadow(&self, &mut Model, &Arc<RwLock<Model>>, usize);
-    fn begin_secondary_commands(&self, &GraphicApiEngine, &Arc<CmdPool>, &Shadower, usize, usize);
-    fn render_shadow_mapper(&self, &Shadower, usize, usize);
-    fn submit_shadow_mapper(
-        &mut self,
-        &Semaphore,
-        &GraphicApiEngine,
-        &Shadower,
-        usize,
-    ) -> Arc<Semaphore>;
-}
-
-pub trait Directional: Light {
-    fn update_cascaded_shadow_map_cameras(&mut self, &Vec<[cgmath::Vector3<Real>; 4]>, usize);
-    fn update_uniform(&self, &mut DirectionalUniform);
-}
-
-pub trait Point: Light {
-    fn update_uniform(&self, &mut PointUniform);
-}
-
-pub trait DefaultLighting {
-    fn default(eng: &Engine) -> Self;
-}
 
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -330,6 +287,28 @@ impl Sun {
             }
         }
     }
+
+    pub(crate) fn update_cascaded_shadow_map_cameras(
+        &mut self,
+        walls: &Vec<[cgmath::Vector3<Real>; 4]>,
+        index: usize,
+    ) {
+        self.shadow_accumulator_uniform.light_index = index as u32;
+        let ccdsc = self.cascade_cameras.len();
+        let mut wbs = Vec::with_capacity(walls.len());
+        for w in walls {
+            let mut b = Aabb3::new();
+            for p in w {
+                let p = (self.zero_located_view * p.extend(1.0)).truncate();
+                b.insert(&p);
+            }
+            wbs.push(b);
+        }
+        for i in 0..ccdsc {
+            self.cascade_cameras[i].boundary = wbs[i];
+            self.cascade_cameras[i].boundary.insert_aabb(&wbs[i + 1]);
+        }
+    }
 }
 
 impl CoreObject for Sun {
@@ -507,26 +486,20 @@ impl ShadowMaker for Sun {
 }
 
 impl Directional for Sun {
-    fn update_cascaded_shadow_map_cameras(
-        &mut self,
-        walls: &Vec<[cgmath::Vector3<Real>; 4]>,
-        index: usize,
-    ) {
-        self.shadow_accumulator_uniform.light_index = index as u32;
-        let ccdsc = self.cascade_cameras.len();
-        let mut wbs = Vec::with_capacity(walls.len());
-        for w in walls {
-            let mut b = Aabb3::new();
-            for p in w {
-                let p = (self.zero_located_view * p.extend(1.0)).truncate();
-                b.insert(&p);
-            }
-            wbs.push(b);
-        }
-        for i in 0..ccdsc {
-            self.cascade_cameras[i].boundary = wbs[i];
-            self.cascade_cameras[i].boundary.insert_aabb(&wbs[i + 1]);
-        }
+    fn to_sun(&self) -> Option<&Sun> {
+        return Some(self);
+    }
+
+    fn to_mut_sun(&mut self) -> Option<&mut Sun> {
+        return Some(self);
+    }
+
+    fn to_base(&self) -> Option<&Base> {
+        return None;
+    }
+
+    fn to_mut_base(&mut self) -> Option<&mut Base> {
+        return None;
     }
 
     fn update_uniform(&self, u: &mut DirectionalUniform) {
@@ -612,122 +585,5 @@ impl Loadable for Sun {
             vxlogi!("Strength {:?}", &myself.strength);
         }
         return myself;
-    }
-}
-
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct Manager {
-    engine: Option<Weak<RwLock<Engine>>>,
-    lights: BTreeMap<Id, Weak<RwLock<Light>>>,
-    name_to_id: BTreeMap<String, Id>,
-    gx3d_table: Option<Gx3dTable>,
-}
-
-impl Manager {
-    pub fn new() -> Self {
-        Manager {
-            engine: None,
-            lights: BTreeMap::new(),
-            name_to_id: BTreeMap::new(),
-            gx3d_table: None,
-        }
-    }
-
-    pub(crate) fn set_gx3d_table(&mut self, gx3d_table: Gx3dTable) {
-        self.gx3d_table = Some(gx3d_table);
-    }
-
-    pub fn create<L>(&mut self) -> Arc<RwLock<L>>
-    where
-        L: 'static + Light + DefaultLighting,
-    {
-        let eng = vxunwrap!(vxunwrap!(&self.engine).upgrade());
-        let eng = vxresult!(eng.read());
-        let result = L::default(&*eng);
-        let id = result.get_id();
-        let result = Arc::new(RwLock::new(result));
-        let light: Arc<RwLock<Light>> = result.clone();
-        self.lights.insert(id, Arc::downgrade(&light));
-        return result;
-    }
-
-    pub fn load_gx3d(&mut self, eng: &Engine, id: Id) -> Arc<RwLock<Light>> {
-        if let Some(light) = self.lights.get(&id) {
-            if let Some(light) = light.upgrade() {
-                return light;
-            }
-        }
-        let table = vxunwrap!(&mut self.gx3d_table);
-        table.goto(id);
-        let reader: &mut Gx3DReader = table.get_mut_reader();
-        let type_id = reader.read_type_id();
-        let result: Arc<RwLock<Light>> = if type_id == TypeId::Sun as u8 {
-            Arc::new(RwLock::new(Sun::new_with_gx3d(eng, reader, id)))
-        } else {
-            vxunexpected!();
-        };
-        self.lights.insert(id, Arc::downgrade(&result));
-        return result;
-    }
-
-    pub(crate) fn set_engine(&mut self, e: Weak<RwLock<Engine>>) {
-        self.engine = Some(e);
-    }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct PointUniform {
-    color: cgmath::Vector4<Real>,
-    position_radius: cgmath::Vector4<Real>,
-}
-
-impl PointUniform {
-    pub fn new() -> Self {
-        PointUniform {
-            color: cgmath::Vector4::new(0.0, 0.0, 0.0, 0.0),
-            position_radius: cgmath::Vector4::new(0.0, 0.0, 0.0, 0.0),
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct DirectionalUniform {
-    color: cgmath::Vector4<Real>,
-    direction: cgmath::Vector4<Real>,
-}
-
-impl DirectionalUniform {
-    pub fn new() -> Self {
-        Self {
-            color: cgmath::Vector4::new(1.0, 1.0, 1.0, 1.0),
-            direction: cgmath::Vector4::new(0.0, 0.0, -1.0, 1.0),
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct ShadowAccumulatorDirectionalUniform {
-    view_projection_biases: [cgmath::Matrix4<Real>; MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT as usize],
-    direction_strength: cgmath::Vector4<Real>,
-    cascades_count: u32,
-    light_index: u32,
-}
-
-impl ShadowAccumulatorDirectionalUniform {
-    fn new() -> Self {
-        Self {
-            view_projection_biases: [cgmath::Matrix4::new(
-                1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0,
-            ); MAX_DIRECTIONAL_CASCADES_MATRIX_COUNT as usize],
-            direction_strength: cgmath::Vector4::new(0.0, 0.0, -1.0, 1.0),
-            cascades_count: 0,
-            light_index: 0,
-        }
     }
 }
