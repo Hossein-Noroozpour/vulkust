@@ -1,11 +1,12 @@
 use super::super::collision::aabb::Aabb3;
+use super::super::collision::frustum::Frustum;
+use super::super::collision::plane::Plane;
 use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::core::object::Object as CoreObject;
 use super::super::core::types::{Id, Real};
 use super::engine::Engine;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use cgmath;
-use cgmath::prelude::*;
 use gltf;
 use std::collections::BTreeMap;
 use std::convert::From;
@@ -173,83 +174,9 @@ impl Manager {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-struct Plane {
-    n: cgmath::Vector3<Real>,
-    p: cgmath::Vector3<Real>,
-    d: Real,
-}
-
-enum PlaneIntersectStatue {
-    Above,
-    Intersecting,
-    Under,
-}
-
-impl Plane {
-    fn new(p: cgmath::Vector3<Real>, f: cgmath::Vector3<Real>, s: cgmath::Vector3<Real>) -> Self {
-        let pf = f - p;
-        let ps = s - p;
-        let n = pf.cross(ps).normalize();
-        let d = -(n.dot(p));
-        Self { n, p, d }
-    }
-
-    fn new_with_point_normal(p: cgmath::Vector3<Real>, n: cgmath::Vector3<Real>) -> Self {
-        let n = n.normalize();
-        let d = -(n.dot(p));
-        Self { n, p, d }
-    }
-
-    fn intersect_sphere(
-        &self,
-        radius: Real,
-        center: &cgmath::Vector3<Real>,
-    ) -> PlaneIntersectStatue {
-        let dis = self.n.dot(*center) + self.d;
-        if radius <= dis {
-            return PlaneIntersectStatue::Above;
-        }
-        if radius <= -dis {
-            return PlaneIntersectStatue::Under;
-        }
-        return PlaneIntersectStatue::Intersecting;
-    }
-
-    fn translate(&mut self, l: &cgmath::Vector3<Real>) {
-        self.p += *l;
-        self.d = -(self.n.dot(self.p));
-    }
-
-    fn rotate_around(&mut self, l: &cgmath::Vector3<Real>, m: &cgmath::Matrix4<Real>) {
-        let mut lp = self.p - l;
-        lp = (m * lp.extend(1.0)).truncate();
-        self.n = (m * self.n.extend(0.0)).truncate().normalize();
-        self.p = lp + l;
-        self.d = -(self.n.dot(self.p));
-    }
-
-    fn _transform(&mut self, m: &cgmath::Matrix4<Real>) {
-        self.p = (m * self.p.extend(1.0)).truncate();
-        self.n = (m * self.n.extend(0.0)).truncate().normalize();
-        self.d = -(self.n.dot(self.p));
-    }
-}
-
-impl Default for Plane {
-    fn default() -> Self {
-        Self {
-            n: cgmath::Vector3::new(0.0, 0.0, 1.0),
-            p: cgmath::Vector3::new(0.0, 0.0, 0.0),
-            d: 0.0,
-        }
-    }
-}
-
-#[cfg_attr(debug_mode, derive(Debug))]
 pub struct Base {
     obj_base: ObjectBase,
     uniform: Uniform,
-    frustum_planes: [Plane; 6],
     cascades_count: usize,
 }
 
@@ -270,14 +197,6 @@ impl Base {
         Self {
             obj_base,
             uniform,
-            frustum_planes: [
-                Plane::default(),
-                Plane::default(),
-                Plane::default(),
-                Plane::default(),
-                Plane::default(),
-                Plane::default(),
-            ],
             cascades_count: eng.get_config().get_cascaded_shadows_count() as usize,
         }
     }
@@ -337,9 +256,6 @@ impl Transferable for Base {
         self.uniform.z = (rotation * cgmath::Vector4::new(0.0, 0.0, 1.0, 0.0))
             .truncate()
             .extend(self.uniform.z.w);
-        for fp in &mut self.frustum_planes {
-            fp.rotate_around(&self.uniform.position_far.truncate(), &rotation);
-        }
         let mut q = -*q;
         q.s = -q.s;
         self.uniform.inversed_rotation = cgmath::Matrix4::from(q);
@@ -347,10 +263,6 @@ impl Transferable for Base {
     }
 
     fn set_location(&mut self, l: &cgmath::Vector3<Real>) {
-        let t = l - self.uniform.position_far.truncate();
-        for fp in &mut self.frustum_planes {
-            fp.translate(&t);
-        }
         self.uniform.position_far = l.extend(self.uniform.position_far.w);
         self.update_location();
     }
@@ -361,9 +273,6 @@ impl Transferable for Base {
 
     fn move_local_z(&mut self, v: Real) {
         let t = self.uniform.z.truncate() * v;
-        for fp in &mut self.frustum_planes {
-            fp.translate(&t);
-        }
         self.uniform.position_far =
             (self.uniform.position_far.truncate() + t).extend(self.uniform.position_far.w);
         self.update_location();
@@ -371,9 +280,6 @@ impl Transferable for Base {
 
     fn move_local_x(&mut self, v: Real) {
         let t = self.uniform.x.truncate() * v;
-        for fp in &mut self.frustum_planes {
-            fp.translate(&t);
-        }
         self.uniform.position_far =
             (self.uniform.position_far.truncate() + t).extend(self.uniform.position_far.w);
         self.update_location();
@@ -388,9 +294,6 @@ impl Transferable for Base {
         self.uniform.z = (irot * self.uniform.z.truncate().extend(0.0))
             .truncate()
             .extend(self.uniform.z.w);
-        for fp in &mut self.frustum_planes {
-            fp.rotate_around(&self.uniform.position_far.truncate(), &irot);
-        }
         self.uniform.inversed_rotation = self.uniform.inversed_rotation * rot;
         self.update_location();
     }
@@ -408,9 +311,6 @@ impl Transferable for Base {
         self.uniform.z = (irot * self.uniform.z.truncate().extend(0.0))
             .truncate()
             .extend(self.uniform.z.w);
-        for fp in &mut self.frustum_planes {
-            fp.rotate_around(&self.uniform.position_far.truncate(), &irot);
-        }
         self.uniform.inversed_rotation = self.uniform.inversed_rotation * rot;
         self.update_location();
     }
@@ -446,7 +346,6 @@ impl Loadable for Base {
         vxlogi!("Camera quaternion is: {:?}", &r);
         #[cfg(debug_gx3d)]
         vxlogi!("Camera view matrix is: {:?}", &myself.uniform.view);
-
         return myself;
     }
 }
@@ -460,15 +359,8 @@ impl Camera for Base {
         vxlogf!("Base camera does not implement cascading.");
     }
 
-    fn is_in_frustum(&self, radius: Real, location: &cgmath::Vector3<Real>) -> bool {
-        for f in &self.frustum_planes {
-            let s = f.intersect_sphere(radius, location);
-            match s {
-                PlaneIntersectStatue::Above => return false,
-                _ => (),
-            }
-        }
-        return true;
+    fn is_in_frustum(&self, _: Real, _: &cgmath::Vector3<Real>) -> bool {
+        vxunexpected!();
     }
 
     fn update_uniform(&self, uniform: &mut Uniform) {
@@ -478,11 +370,12 @@ impl Camera for Base {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Perspective {
-    pub base: Base,
-    pub fovx: Real,
-    pub fovy: Real,
-    pub tanx: Real,
-    pub tany: Real,
+    base: Base,
+    fovx: Real,
+    fovy: Real,
+    tanx: Real,
+    tany: Real,
+    frustum: Frustum,
     lambda: Real, // (sin(fovy/2) + sin(fovx/2)) / 2 -no proof for it just my gut, let see what I get
 }
 
@@ -503,6 +396,7 @@ impl Perspective {
             fovx: 0.0,
             tanx: 0.0,
             tany: 0.0,
+            frustum: Frustum::default(),
             lambda: 0.0,
         };
         s.set_fov_vertical(DEFAULT_FOVX);
@@ -527,10 +421,10 @@ impl Perspective {
         ) * self.base.uniform.projection;
         self.lambda = ((self.fovx * 0.5).sin() + (self.fovy * 0.5).sin()) * 0.5;
         self.base.update_view_projection();
-        self.update_frustum_planes();
+        self.update_frustum();
     }
 
-    fn update_frustum_planes(&mut self) {
+    fn update_frustum(&mut self) {
         let zn = self.base.uniform.position_far.truncate()
             + (self.base.uniform.z.truncate() * self.base.uniform.near_aspect_ratio_reserved.x);
         let zf = self.base.uniform.position_far.truncate()
@@ -553,12 +447,14 @@ impl Perspective {
         let fp2 = zfpxf - yf;
         let fp3 = zfmxf + yf;
         let fp4 = zfmxf - yf;
-        self.base.frustum_planes[0] = Plane::new(np1, np3, np2);
-        self.base.frustum_planes[1] = Plane::new(np1, fp1, np3);
-        self.base.frustum_planes[2] = Plane::new(np1, np2, fp1);
-        self.base.frustum_planes[3] = Plane::new(fp4, fp3, fp2);
-        self.base.frustum_planes[4] = Plane::new(fp4, fp2, np4);
-        self.base.frustum_planes[5] = Plane::new(fp4, np4, fp3);
+        self.frustum = Frustum::new([
+            Plane::new(np1, np3, np2),
+            Plane::new(np1, fp1, np3),
+            Plane::new(np1, np2, fp1),
+            Plane::new(fp4, fp3, fp2),
+            Plane::new(fp4, fp2, np4),
+            Plane::new(fp4, np4, fp3),
+        ]);
     }
 }
 
@@ -619,10 +515,12 @@ impl Loadable for Perspective {
 impl Transferable for Perspective {
     fn set_orientation(&mut self, q: &cgmath::Quaternion<Real>) {
         self.base.set_orientation(q);
+        self.update_frustum();
     }
 
     fn set_location(&mut self, l: &cgmath::Vector3<Real>) {
         self.base.set_location(l);
+        self.update_frustum();
     }
 
     fn get_location(&self) -> cgmath::Vector3<Real> {
@@ -631,18 +529,22 @@ impl Transferable for Perspective {
 
     fn move_local_z(&mut self, v: Real) {
         self.base.move_local_z(v);
+        self.update_frustum();
     }
 
     fn move_local_x(&mut self, v: Real) {
         self.base.move_local_x(v);
+        self.update_frustum();
     }
 
     fn rotate_local_x(&mut self, v: Real) {
         self.base.rotate_local_x(v);
+        self.update_frustum();
     }
 
     fn rotate_global_z(&mut self, v: Real) {
         self.base.rotate_global_z(v);
+        self.update_frustum();
     }
 }
 
@@ -735,7 +637,7 @@ impl Camera for Perspective {
     }
 
     fn is_in_frustum(&self, radius: Real, location: &cgmath::Vector3<Real>) -> bool {
-        return self.base.is_in_frustum(radius, location);
+        return self.frustum.intersects_center_radius(location, radius);
     }
 
     fn update_uniform(&self, uniform: &mut Uniform) {
@@ -761,12 +663,12 @@ impl Orthographic {
         Self::new_with_base(Base::new(eng), size)
     }
 
-    fn update_frustum_planes(&mut self) {
+    fn update_frustum(&mut self) {
         self.aabb = Aabb3::new();
         let zn = self.base.uniform.position_far.truncate()
-            - (self.base.uniform.z.truncate() * self.base.uniform.near_aspect_ratio_reserved.x);
+            + (self.base.uniform.z.truncate() * self.base.uniform.near_aspect_ratio_reserved.x);
         let zf = self.base.uniform.position_far.truncate()
-            - (self.base.uniform.z.truncate() * self.base.uniform.position_far.w);
+            + (self.base.uniform.z.truncate() * self.base.uniform.position_far.w);
         let x = self.base.uniform.x.truncate()
             * (self.base.uniform.near_aspect_ratio_reserved.y * self.size);
         let y = self.base.uniform.y.truncate() * self.size;
@@ -799,7 +701,7 @@ impl Orthographic {
             size,
             aabb: Aabb3::new(),
         };
-        s.update_frustum_planes();
+        s.update_frustum();
         return s;
     }
 
@@ -826,7 +728,7 @@ impl Orthographic {
             size,
             aabb: Aabb3::new(),
         };
-        s.update_frustum_planes();
+        s.update_frustum();
         return s;
     }
 }
@@ -881,12 +783,12 @@ impl Loadable for Orthographic {
 impl Transferable for Orthographic {
     fn set_orientation(&mut self, q: &cgmath::Quaternion<Real>) {
         self.base.set_orientation(q);
-        self.update_frustum_planes();
+        self.update_frustum();
     }
 
     fn set_location(&mut self, l: &cgmath::Vector3<Real>) {
         self.base.set_location(l);
-        self.update_frustum_planes();
+        self.update_frustum();
     }
 
     fn get_location(&self) -> cgmath::Vector3<Real> {
@@ -895,22 +797,22 @@ impl Transferable for Orthographic {
 
     fn move_local_z(&mut self, v: Real) {
         self.base.move_local_z(v);
-        self.update_frustum_planes();
+        self.update_frustum();
     }
 
     fn move_local_x(&mut self, v: Real) {
         self.base.move_local_x(v);
-        self.update_frustum_planes();
+        self.update_frustum();
     }
 
     fn rotate_local_x(&mut self, v: Real) {
         self.base.rotate_local_x(v);
-        self.update_frustum_planes();
+        self.update_frustum();
     }
 
     fn rotate_global_z(&mut self, v: Real) {
         self.base.rotate_global_z(v);
-        self.update_frustum_planes();
+        self.update_frustum();
     }
 }
 
@@ -931,7 +833,7 @@ impl Camera for Orthographic {
 
         let w = self.size * self.base.uniform.near_aspect_ratio_reserved.y;
 
-        let l = -self.base.uniform.near_aspect_ratio_reserved.x;
+        let l = self.base.uniform.near_aspect_ratio_reserved.x;
         let x = self.base.uniform.x.truncate() * w;
         let y = self.base.uniform.y.truncate() * self.size;
         let mut z =
@@ -945,8 +847,8 @@ impl Camera for Orthographic {
         result[0][2] = z + xpy;
         result[0][3] = z - xpy;
 
-        let unisecinc = (-self.base.uniform.position_far.w
-            + self.base.uniform.near_aspect_ratio_reserved.x)
+        let unisecinc = (self.base.uniform.position_far.w
+            - self.base.uniform.near_aspect_ratio_reserved.x)
             / (sections_count as Real);
         let unisecinc = self.base.uniform.z.truncate() * unisecinc;
 

@@ -1,10 +1,10 @@
+use vulkust::cgmath;
 use vulkust::core::application::Application as CoreAppTrait;
 use vulkust::core::event::{
     Button, ButtonAction, Event, Keyboard, Mouse, Move, Touch, TouchGesture, Type as EventType,
 };
 use vulkust::core::gesture;
 use vulkust::core::types::Real;
-use vulkust::math;
 use vulkust::render::camera::{Camera, Orthographic, Perspective};
 use vulkust::render::engine::Engine as Renderer;
 use vulkust::render::light::Sun;
@@ -21,11 +21,11 @@ use rand::{thread_rng, Rng};
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct MyGame {
-    pub os_app: Option<Arc<RwLock<OsApp>>>,
-    pub renderer: Option<Arc<RwLock<Renderer>>>,
-    pub scene: Option<Arc<RwLock<GameScene>>>,
-    pub ui_scene: Option<Arc<RwLock<UiScene>>>,
-    pub camera: Option<Arc<RwLock<Camera>>>,
+    os_app: Option<Arc<RwLock<OsApp>>>,
+    renderer: Option<Arc<RwLock<Renderer>>>,
+    scene: Option<Arc<RwLock<GameScene>>>,
+    ui_scene: Option<Arc<RwLock<UiScene>>>,
+    camera: Option<Arc<RwLock<Camera>>>,
     keys_state: Arc<RwLock<KeysState>>,
 }
 
@@ -76,7 +76,7 @@ impl CoreAppTrait for MyGame {
             vxresult!(asset_manager.get_camera_manager().write()).create();
         {
             let mut camera = vxresult!(camera.write());
-            camera.set_location(&math::Vector3::new(0.0, 0.0, 4.0));
+            camera.set_location(&cgmath::Vector3::new(0.0, 0.0, 4.0));
         }
         self.camera = Some(camera.clone());
 
@@ -88,30 +88,30 @@ impl CoreAppTrait for MyGame {
             scn.add_light(sun);
         }
         self.scene = Some(scene);
-        // let ui_scene: Arc<RwLock<UiScene>> =
-        //     vxresult!(asset_manager.get_scene_manager().write()).create();
-        // let camera: Arc<RwLock<Orthographic>> =
-        //     vxresult!(asset_manager.get_camera_manager().write()).create();
-        // {
-        //     let mut camera = vxresult!(camera.write());
-        //     camera.move_local_z(-1.999);
-        // }
-        // let label: Arc<RwLock<Label>> =
-        //     vxresult!(asset_manager.get_model_manager().write()).create();
-        // {
-        //     let mut label = vxresult!(label.write());
-        //     label.set_size(0.05, &renderer);
-        //     label.set_text_size(50.0, &renderer);
-        //     label.set_text_color(1.0, 0.0, 0.0, 1.0, &renderer);
-        //     label.set_background_color(1.0, 0.0, 0.0, 0.0, &renderer);
-        //     label.set_text("More things from Vulkust!", &renderer);
-        // }
-        // {
-        //     let mut uiscn = vxresult!(ui_scene.write());
-        //     uiscn.add_camera(camera);
-        //     uiscn.add_model(label);
-        // }
-        // self.ui_scene = Some(ui_scene);
+        let ui_scene: Arc<RwLock<UiScene>> =
+            vxresult!(asset_manager.get_scene_manager().write()).create();
+        let camera: Arc<RwLock<Orthographic>> =
+            vxresult!(asset_manager.get_camera_manager().write()).create();
+        {
+            let mut camera = vxresult!(camera.write());
+            camera.move_local_z(1.999);
+        }
+        let label: Arc<RwLock<Label>> =
+            vxresult!(asset_manager.get_model_manager().write()).create();
+        {
+            let mut label = vxresult!(label.write());
+            label.set_size(0.05, &renderer);
+            label.set_text_size(50.0, &renderer);
+            label.set_text_color(1.0, 0.0, 0.0, 1.0, &renderer);
+            label.set_background_color(1.0, 0.0, 0.0, 0.0, &renderer);
+            label.set_text("More things from Vulkust!", &renderer);
+        }
+        {
+            let mut uiscn = vxresult!(ui_scene.write());
+            uiscn.add_camera(camera);
+            uiscn.add_model(label);
+        }
+        self.ui_scene = Some(ui_scene);
     }
 
     fn on_event(&self, e: Event) {
@@ -255,7 +255,7 @@ fn place_cubes(scn: &mut Scene, eng: &Renderer) {
                 let mut m = vxresult!(m.write());
                 let (mesh, mat) = &ground_meshes[ground_mesh_index];
                 m.add_mesh(mesh.clone(), mat.clone());
-                m.translate(&math::Vector3::new(x, y, -5.0));
+                m.translate(&cgmath::Vector3::new(x, y, -5.0));
             }
             scn.add_model(m);
             x += ROW_INC;
@@ -278,7 +278,7 @@ fn place_cubes(scn: &mut Scene, eng: &Renderer) {
             let mut m = vxresult!(m.write());
             let (mesh, mat) = &ground_meshes[ground_mesh_index];
             m.add_mesh(mesh.clone(), mat.clone());
-            m.translate(&math::Vector3::new(x, y, z));
+            m.translate(&cgmath::Vector3::new(x, y, z));
             m.scale(s);
         }
         scn.add_model(m);
