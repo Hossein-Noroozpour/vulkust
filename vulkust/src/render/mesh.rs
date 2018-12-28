@@ -4,9 +4,7 @@ use super::super::core::types::{Id, Real};
 use super::buffer::Static as StaticBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::engine::Engine;
-use super::model::Model;
 use super::object::{Base as ObjectBase, Object};
-use super::scene::Scene;
 use std::collections::BTreeMap;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
@@ -27,6 +25,7 @@ pub trait Mesh: Object {
     fn get_occlusion_culling_radius(&self) -> Real;
     fn update(&mut self, usize);
     fn render_gbuffer(&self, &mut CmdBuffer, usize);
+    fn render_unlit(&self, &mut CmdBuffer, usize);
     fn render_shadow(&self, &mut CmdBuffer, usize);
 }
 
@@ -399,13 +398,17 @@ impl Mesh for Base {
         return self.occlusion_culling_radius;
     }
 
-    fn update(&mut self, _frame_number: usize) {}
+    fn update(&mut self, _: usize) {}
 
-    fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+    fn render_gbuffer(&self, cmd: &mut CmdBuffer, _: usize) {
         cmd.render_gbuff(&self.vertex_buffer, &self.index_buffer, self.indices_count);
     }
 
-    fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+    fn render_unlit(&self, cmd: &mut CmdBuffer, _: usize) {
+        cmd.render_unlit(&self.vertex_buffer, &self.index_buffer, self.indices_count);
+    }
+
+    fn render_shadow(&self, cmd: &mut CmdBuffer, _: usize) {
         cmd.render_shadow_mapper(&self.vertex_buffer, &self.index_buffer, self.indices_count);
     }
 }

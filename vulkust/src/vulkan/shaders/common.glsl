@@ -51,6 +51,7 @@ struct Deferred {
 
 struct Model {
     mat4 model;
+    mat4 model_view_projection;
 };
 
 struct Material {

@@ -119,6 +119,10 @@ impl Model for Base {
         self.model_base.render_gbuffer(cmd, frame_number);
     }
 
+    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &Camera, frame_number: usize) {
+        self.model_base.render_unlit(cmd, camera, frame_number);
+    }
+
     fn render_shadow(&self, _: &mut CmdBuffer, _: usize) {
         vxlogf!("Widget does not make shadow");
     }
@@ -387,6 +391,10 @@ impl Model for Label {
 
     fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         self.base.render_gbuffer(cmd, frame_number);
+    }
+
+    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &Camera, frame_number: usize) {
+        self.base.render_unlit(cmd, camera, frame_number);
     }
 
     fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {

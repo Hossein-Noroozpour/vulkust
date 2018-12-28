@@ -9,7 +9,7 @@ use super::super::g_buffer_filler::GBufferFiller;
 use super::super::gapi::GraphicApiEngine;
 use super::super::light::Light;
 use super::super::model::Model;
-use super::super::object::{Loadable as ObjectLoadable, Object};
+use super::super::object::Object;
 use super::super::shadower::Shadower;
 use super::super::ssao::SSAO;
 use super::super::sync::Semaphore;

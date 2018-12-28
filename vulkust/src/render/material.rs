@@ -4,14 +4,12 @@ use super::buffer::Dynamic as DynamicBuffer;
 use super::command::Buffer as CmdBuffer;
 use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
-use super::model::Model;
-use super::scene::Scene;
 use super::texture::{Manager as TextureManager, Texture};
 use std::default::Default;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock};
 
-use gltf;
+// use gltf;
 
 #[repr(u8)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -77,9 +75,9 @@ pub struct Material {
 }
 
 impl Material {
-    pub(crate) fn new_with_gltf(_engine: &Engine, _mat: &gltf::Material) -> Self {
-        vxunimplemented!();
-    }
+    // pub(crate) fn new_with_gltf(_engine: &Engine, _mat: &gltf::Material) -> Self {
+    //     vxunimplemented!();
+    // }
 
     // pub(crate) fn get_uniform_buffer(&self) -> &DynamicBuffer {
     //     return &self.uniform_buffer;
@@ -480,9 +478,14 @@ impl Material {
         self.uniform_buffer.update(&self.uniform, frame_number);
     }
 
-    pub fn bind_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+    pub(crate) fn bind_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let buffer = vxresult!(self.uniform_buffer.get_buffer(frame_number).read());
         cmd.bind_gbuff_material_descriptor(&*self.descriptor_set, &*buffer);
+    }
+
+    pub(crate) fn bind_unlit(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        let buffer = vxresult!(self.uniform_buffer.get_buffer(frame_number).read());
+        cmd.bind_unlit_material_descriptor(&*self.descriptor_set, &*buffer);
     }
 
     pub(crate) fn bind_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize) {

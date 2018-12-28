@@ -45,7 +45,7 @@ impl CoreAppTrait for MyGame {
             vxresult!(asset_manager.get_camera_manager().write()).create();
         {
             let mut camera = vxresult!(camera.write());
-            camera.move_local_z(-2.0);
+            camera.move_local_z(2.0);
         }
         let label: Arc<RwLock<Label>> =
             vxresult!(asset_manager.get_model_manager().write()).create();

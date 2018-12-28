@@ -16,9 +16,8 @@ use super::super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Objec
 use super::super::shadower::Shadower;
 use super::super::ssao::SSAO;
 use super::super::sync::Semaphore;
-use super::{Scene, DefaultScene};
+use super::{DefaultScene, Scene};
 use std::collections::BTreeMap;
-use std::io::BufReader;
 use std::mem::size_of;
 use std::sync::{Arc, Mutex, RwLock, Weak};
 

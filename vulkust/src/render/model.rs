@@ -30,6 +30,7 @@ pub trait Model: Object + Transferable {
     fn get_uniform(&self) -> &Uniform;
     fn render_gbuffer(&self, &mut CmdBuffer, usize);
     fn render_shadow(&self, &mut CmdBuffer, usize);
+    fn render_unlit(&mut self, &mut CmdBuffer, &Camera, usize);
 }
 
 pub trait DefaultModel: Model + Sized {
@@ -113,6 +114,7 @@ impl Manager {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Uniform {
     model: cgmath::Matrix4<Real>,
+    model_view_projection: cgmath::Matrix4<Real>,
 }
 
 impl Uniform {
@@ -122,7 +124,10 @@ impl Uniform {
             m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0],
             m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3],
         );
-        Uniform { model }
+        Uniform {
+            model,
+            model_view_projection: model,
+        }
     }
 
     fn new_with_gx3d(reader: &mut Gx3DReader) -> Self {
@@ -144,7 +149,10 @@ impl Uniform {
             reader.read(),
             reader.read(),
         );
-        Uniform { model }
+        Uniform {
+            model,
+            model_view_projection: model,
+        }
     }
 
     pub(crate) fn get_model(&self) -> &cgmath::Matrix4<Real> {
@@ -155,7 +163,10 @@ impl Uniform {
         let m = cgmath::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
-        Uniform { model: m }
+        Uniform {
+            model: m,
+            model_view_projection: m,
+        }
     }
 }
 
@@ -347,14 +358,14 @@ impl Transferable for Base {
 }
 
 impl Model for Base {
-    fn update(&mut self, scene: &Scene, camera: &Camera, frame_number: usize) {
+    fn update(&mut self, _: &Scene, camera: &Camera, frame_number: usize) {
         let location = self.uniform.model.w.truncate();
         self.is_visible = camera.is_in_frustum(self.occlusion_culling_radius, &location);
         if !self.is_visible {
             return;
         }
         if self.has_transparent {
-            let dis = camera.get_location() - location;
+            let dis = camera.get_location() - location; // todo
             self.distance_from_camera = cgmath::dot(dis, dis);
         }
         self.uniform_buffer.update(&self.uniform, frame_number);
@@ -426,6 +437,20 @@ impl Model for Base {
         for (_, mesh) in &self.meshes {
             mesh.1.bind_shadow(cmd, frame_number);
             vxresult!(mesh.0.read()).render_shadow(cmd, frame_number);
+        }
+    }
+
+    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &Camera, frame_number: usize) {
+        if !self.is_visible {
+            return;
+        }
+        self.uniform.model_view_projection = camera.get_view_projection() * self.uniform.model;
+        self.uniform_buffer.update(&self.uniform, frame_number);
+        let buffer = self.uniform_buffer.get_buffer(frame_number);
+        cmd.bind_unlit_model_descriptor(&*self.descriptor_set, &*vxresult!(buffer.read()));
+        for (_, mesh) in &self.meshes {
+            mesh.1.bind_unlit(cmd, frame_number);
+            vxresult!(mesh.0.read()).render_unlit(cmd, frame_number);
         }
     }
 }

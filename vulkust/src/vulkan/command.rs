@@ -29,6 +29,12 @@ const GBUFF_MATERIAL_DESCRIPTOR_OFFSET: usize = 2;
 const GBUFF_DESCRIPTOR_SETS_COUNT: usize = 3;
 const GBUFF_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 3;
 
+const UNLIT_MODEL_DESCRIPTOR_OFFSET: usize = 0;
+const UNLIT_MATERIAL_DESCRIPTOR_OFFSET: usize = 1;
+
+const UNLIT_DESCRIPTOR_SETS_COUNT: usize = 2;
+const UNLIT_DYNAMIC_BUFFER_OFFSETS_COUNT: usize = 2;
+
 const DEFERRED_SCENE_DESCRIPTOR_OFFSET: usize = 0;
 const DEFERRED_DEFERRED_DESCRIPTOR_OFFSET: usize = 1;
 
@@ -347,6 +353,50 @@ impl Buffer {
                 GBUFF_DESCRIPTOR_SETS_COUNT as u32,
                 self.bound_descriptor_sets.as_ptr(),
                 GBUFF_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
+                self.bound_dynamic_buffer_offsets.as_ptr(),
+            );
+        }
+        self.bind_vertex_buffer(vertex_buffer.get_buffer());
+        self.bind_index_buffer(index_buffer.get_buffer());
+        self.draw_index(indices_count);
+    }
+
+    pub(crate) fn bind_unlit_model_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[UNLIT_MODEL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[UNLIT_MODEL_DESCRIPTOR_OFFSET] =
+            buffer.get_allocated_memory().get_offset() as u32;
+    }
+
+    pub(crate) fn bind_unlit_material_descriptor(
+        &mut self,
+        descriptor_set: &DescriptorSet,
+        buffer: &BufBuffer,
+    ) {
+        self.bound_descriptor_sets[UNLIT_MATERIAL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_dynamic_buffer_offsets[UNLIT_MATERIAL_DESCRIPTOR_OFFSET] =
+            buffer.get_allocated_memory().get_offset() as u32;
+    }
+
+    pub(crate) fn render_unlit(
+        &mut self,
+        vertex_buffer: &StaticBuffer,
+        index_buffer: &StaticBuffer,
+        indices_count: u32,
+    ) {
+        self.has_render_record = true;
+        unsafe {
+            vk::vkCmdBindDescriptorSets(
+                self.vk_data,
+                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                self.bound_pipeline_layout,
+                0,
+                UNLIT_DESCRIPTOR_SETS_COUNT as u32,
+                self.bound_descriptor_sets.as_ptr(),
+                UNLIT_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
                 self.bound_dynamic_buffer_offsets.as_ptr(),
             );
         }

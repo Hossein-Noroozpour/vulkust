@@ -1,26 +1,19 @@
-use super::super::core::constants::{MAX_DIRECTIONAL_LIGHTS_COUNT, MAX_POINT_LIGHTS_COUNT};
-use super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
-use super::super::core::object::Object as CoreObject;
-use super::super::core::types::{Id, Real, TypeId as CoreTypeId};
-use super::super::system::file::File;
-use super::buffer::Dynamic as DynamicBuffer;
-use super::camera::{Camera, Uniform as CameraUniform};
-use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
+use super::super::core::gx3d::Gx3DReader;
+use super::super::core::types::Id;
+use super::camera::Camera;
+use super::command::Pool as CmdPool;
 use super::deferred::Deferred;
-use super::descriptor::Set as DescriptorSet;
 use super::engine::Engine;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
-use super::light::{DirectionalUniform, Light, PointUniform};
-use super::model::{Base as ModelBase, Model};
-use super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
+use super::light::Light;
+use super::model::Model;
+use super::object::Object;
 use super::shadower::Shadower;
 use super::ssao::SSAO;
 use super::sync::Semaphore;
 use std::collections::BTreeMap;
-use std::io::BufReader;
-use std::mem::size_of;
-use std::sync::{Arc, Mutex, RwLock, Weak};
+use std::sync::{Arc, RwLock, Weak};
 
 mod base_deferred_shadow;
 mod base_unlit;
@@ -28,9 +21,10 @@ pub mod game;
 pub mod manager;
 pub mod ui;
 
+pub use self::game::Game;
 pub use self::manager::Manager;
+pub use self::ui::Ui;
 
-use cgmath;
 use gltf;
 
 #[repr(u8)]

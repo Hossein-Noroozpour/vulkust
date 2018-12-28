@@ -23,12 +23,12 @@ impl Aabb3 {
         }
     }
 
-    pub(crate) fn new_with_points(pmin: &Vec3, pmax: &Vec3) -> Self {
-        Self {
-            max: *pmax,
-            min: *pmin,
-        }
-    }
+    // pub(crate) fn new_with_points(pmin: &Vec3, pmax: &Vec3) -> Self {
+    //     Self {
+    //         max: *pmax,
+    //         min: *pmin,
+    //     }
+    // }
 
     pub(crate) fn new_with_center_radius(c: &Vec3, r: Real) -> Self {
         let r = Vec3::new(r, r, r);
@@ -80,16 +80,16 @@ impl Aabb3 {
         }
     }
 
-    pub(crate) fn intersects_aabb(&self, o: &Self) -> bool {
-        let mr = (self.max - self.min) * 0.5;
-        let mc = (self.max + self.min) * 0.5;
-        let or = (o.max - o.min) * 0.5;
-        let oc = (o.max + o.min) * 0.5;
-        let r = or + mr;
-        let d = mc - oc;
-        let d = Vec3::new(d.x.abs(), d.y.abs(), d.z.abs());
-        return d.x < r.x || d.y < r.y || d.z < r.z;
-    }
+    // pub(crate) fn intersects_aabb(&self, o: &Self) -> bool {
+    //     let mr = (self.max - self.min) * 0.5;
+    //     let mc = (self.max + self.min) * 0.5;
+    //     let or = (o.max - o.min) * 0.5;
+    //     let oc = (o.max + o.min) * 0.5;
+    //     let r = or + mr;
+    //     let d = mc - oc;
+    //     let d = Vec3::new(d.x.abs(), d.y.abs(), d.z.abs());
+    //     return d.x < r.x || d.y < r.y || d.z < r.z;
+    // }
 
     pub(crate) fn get_intersection_with_aabb(&self, o: &Self) -> Self {
         return Self {
@@ -127,7 +127,7 @@ impl Aabb3 {
         return self.max;
     }
 
-    pub(crate) fn get_min(&self) -> Vec3 {
-        return self.min;
-    }
+    // pub(crate) fn get_min(&self) -> Vec3 {
+    //     return self.min;
+    // }
 }

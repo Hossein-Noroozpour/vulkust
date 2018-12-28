@@ -41,6 +41,22 @@ impl Layout {
         Self::new(&layout, descriptor_set_layouts)
     }
 
+    pub fn new_unlit(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
+        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let unlit_descriptor_set_layout = descriptor_manager.get_gbuff_set_layout().clone();
+        let buffer_only_descriptor_set_layout =
+            descriptor_manager.get_buffer_only_set_layout().clone();
+        let layout = [
+            buffer_only_descriptor_set_layout.vk_data,
+            unlit_descriptor_set_layout.vk_data,
+        ];
+        let descriptor_set_layouts = vec![
+            unlit_descriptor_set_layout,
+            buffer_only_descriptor_set_layout,
+        ];
+        Self::new(&layout, descriptor_set_layouts)
+    }
+
     pub fn new_shadow_mapper(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
         let descriptor_manager = vxresult!(descriptor_manager.read());
         let gbuff_descriptor_set_layout = descriptor_manager.get_gbuff_set_layout().clone();
@@ -200,7 +216,7 @@ impl Pipeline {
                 include_shader!("shadow-accumulator-directional.vert")
             }
             PipelineType::SSAO => include_shader!("ssao.vert"),
-            _ => vxunimplemented!(),
+            PipelineType::Unlit => include_shader!("unlit.vert"),
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
@@ -210,7 +226,7 @@ impl Pipeline {
                 include_shader!("shadow-accumulator-directional.frag")
             }
             PipelineType::SSAO => include_shader!("ssao.frag"),
-            _ => vxunimplemented!(),
+            PipelineType::Unlit => include_shader!("unlit.frag"),
         };
 
         let vertex_shader = Module::new(vert_bytes, device.clone());
@@ -224,7 +240,7 @@ impl Pipeline {
                 Layout::new_shadow_accumulator_directional(descriptor_manager)
             }
             PipelineType::SSAO => Layout::new_ssao(descriptor_manager),
-            _ => vxunimplemented!(),
+            PipelineType::Unlit => Layout::new_unlit(descriptor_manager),
         };
 
         let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
@@ -246,7 +262,7 @@ impl Pipeline {
             vec![vk::VkPipelineColorBlendAttachmentState::default(); blend_attachment_state_size];
         for i in 0..blend_attachment_state_size {
             match pipeline_type {
-                PipelineType::Deferred => {
+                PipelineType::Deferred | PipelineType::Unlit => {
                     blend_attachment_state[i].blendEnable = vk::VK_TRUE;
                     blend_attachment_state[i].srcColorBlendFactor =
                         vk::VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
@@ -365,7 +381,7 @@ impl Pipeline {
         vertex_input_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         match pipeline_type {
-            PipelineType::GBuffer | PipelineType::ShadowMapper => {
+            PipelineType::GBuffer | PipelineType::ShadowMapper | PipelineType::Unlit => {
                 vertex_input_state.vertexBindingDescriptionCount = 1;
                 vertex_input_state.pVertexBindingDescriptions = &vertex_input_binding;
                 vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.len() as u32;
