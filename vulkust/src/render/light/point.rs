@@ -14,14 +14,14 @@ pub trait Point: Light {
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct PointUniform {
-    color: cgmath::Vector4<Real>,
+    color_minradius: cgmath::Vector4<Real>,
     position_radius: cgmath::Vector4<Real>,
 }
 
 impl PointUniform {
     pub fn new() -> Self {
         PointUniform {
-            color: cgmath::Vector4::new(0.0, 0.0, 0.0, 0.0),
+            color_minradius: cgmath::Vector4::new(0.0, 0.0, 0.0, 0.0),
             position_radius: cgmath::Vector4::new(0.0, 0.0, 0.0, 0.0),
         }
     }
@@ -34,6 +34,7 @@ pub struct Base {
     color: cgmath::Vector3<Real>,
     strength: Real,
     radius: Real, // by default I calculate the effective radius by `0.001 < (strength / (4 * VX_PI * radius * radius))`
+    min_radius: Real,
 }
 
 impl Base {
@@ -48,6 +49,7 @@ impl Base {
             color: cgmath::Vector3::new(1.0, 1.0, 1.0),
             strength: 1.0,
             radius: 80.0,
+            min_radius: 0.1,
         }
     }
 
@@ -178,7 +180,7 @@ impl Loadable for Base {
 
 impl Point for Base {
     fn update_uniform(&self, u: &mut PointUniform) {
-        u.color = (self.color * self.strength).extend(1.0);
+        u.color_minradius = (self.color * self.strength).extend(self.min_radius);
         u.position_radius = self.location.extend(self.radius);
     }
 }

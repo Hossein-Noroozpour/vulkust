@@ -2,7 +2,7 @@ use super::super::super::core::gx3d::{Gx3DReader, Table as Gx3dTable};
 use super::super::super::core::types::Id;
 use super::super::engine::Engine;
 use super::super::object::Loadable;
-use super::{DefaultLighting, DirectionalBase, Light, Sun, TypeId};
+use super::{DefaultLighting, DirectionalBase, Light, PointBase, Sun, TypeId};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 
@@ -62,7 +62,7 @@ impl Manager {
             if reader.read_bool() {
                 vxunimplemented!();
             } else {
-                vxunimplemented!();
+                Arc::new(RwLock::new(PointBase::new_with_gx3d(eng, reader, id)))
             }
         } else {
             vxunexpected!();

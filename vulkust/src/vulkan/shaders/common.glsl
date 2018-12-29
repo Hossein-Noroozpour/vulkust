@@ -24,7 +24,7 @@ struct Camera {
 };
 
 struct PointLight {
-	vec4 color;
+	vec4 color_minradius;
 	vec4 position_radius;
 };
 

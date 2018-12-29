@@ -17,7 +17,7 @@ pub use self::directional::{
     Base as DirectionalBase, Directional, DirectionalUniform, ShadowAccumulatorDirectionalUniform,
 };
 pub use self::manager::Manager;
-pub use self::point::{Point, PointUniform};
+pub use self::point::{Base as PointBase, Point, PointUniform};
 pub use self::sun::Sun;
 
 #[cfg_attr(debug_mode, derive(Debug))]

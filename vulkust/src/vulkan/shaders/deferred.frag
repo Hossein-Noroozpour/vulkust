@@ -20,11 +20,15 @@ layout (set = 1, binding = 4) uniform sampler2D screen_space_depth;
 layout (set = 1, binding = 5) uniform sampler2D ambient_occlusion;
 layout (set = 1, binding = 6) uniform sampler2D shadow_directional_flagbits;
 
-vec3 calc_lights(const vec3 alb, const vec3 nrm, const vec3 eye, const float roughness, const float metallic) {
+vec3 calc_lights(const vec3 alb, const vec3 nrm, const vec3 eye, const vec3 pos, const float roughness, const float metallic) {
 	const vec2 start_uv = uv - (vec2(deferred_ubo.s.pixel_step.x, deferred_ubo.s.pixel_step.y) * float((BLUR_KERNEL_LENGTH - 1) >> 1));
 	float directional_lights_shadowness[MAX_DIRECTIONAL_LIGHTS_COUNT];
+	float point_lights_shadowness[MAX_POINT_LIGHTS_COUNT];
 	for(uint i = 0; i < MAX_DIRECTIONAL_LIGHTS_COUNT; ++i) {
 		directional_lights_shadowness[i] = 1.0;
+	}
+	for(uint i = 0; i < MAX_POINT_LIGHTS_COUNT; ++i) {
+		point_lights_shadowness[i] = 1.0;
 	}
 	vec2 shduv = start_uv;
 	for(uint si = 0; si < BLUR_KERNEL_LENGTH; ++si, shduv.y = start_uv.y, shduv.x += deferred_ubo.s.pixel_step.x) {
@@ -40,6 +44,7 @@ vec3 calc_lights(const vec3 alb, const vec3 nrm, const vec3 eye, const float rou
 	}
 	const vec3 base_reflectivity = mix(vec3(0.02), alb, metallic);
 	vec3 result = vec3(0.0);
+	// Directional lights
 	for(uint light_index = 0; light_index < scene_ubo.s.lights_count.x; ++light_index) {
 		const vec3 l = normalize(-scene_ubo.s.directional_lights[light_index].direction_strength.xyz);
 		const float slope = dot(nrm, l);
@@ -57,6 +62,33 @@ vec3 calc_lights(const vec3 alb, const vec3 nrm, const vec3 eye, const float rou
         const vec3 specular = nom / max(denom, 0.001);
 		result += (kd * (alb / VX_PI) + specular) * radiance * smoothstep(0.005, 1.0, slope) * directional_lights_shadowness[light_index];
 	}
+	// Point lights
+	for(uint light_index = 0; light_index < scene_ubo.s.lights_count.y; ++light_index) {
+		const vec3 lm = scene_ubo.s.point_lights[light_index].position_radius.xyz - pos;
+		float ll = length(lm);
+		if(ll > scene_ubo.s.point_lights[light_index].position_radius.w) {
+			continue;
+		} else if(ll < scene_ubo.s.point_lights[light_index].color_minradius.w) {
+			ll = scene_ubo.s.point_lights[light_index].color_minradius.w;
+		}
+		const float ill = 1.0 / ll;
+		const vec3 l = lm * ill;
+		const float slope = dot(nrm, l);
+		if(slope < 0.005) {
+			continue;
+		}
+		const vec3 halfway = normalize(eye + l);
+		const float attenuation = ill * ill;
+		const vec3 radiance = scene_ubo.s.directional_lights[light_index].color.xyz * attenuation;
+		const float distribution = NDFTRGGX(nrm, halfway, roughness);
+		const float geometry = GFSCHGGX(nrm, eye, l, roughness);
+		const vec3 fresnel = FFSCHGGX(clamp(dot(halfway, eye), 0.0, 1.0), base_reflectivity);
+		const vec3 kd = (vec3(1.0) - fresnel) * (1.0 - metallic);
+		const vec3 nom = distribution * geometry * fresnel;
+		const float denom = 4 * max(dot(nrm, eye), 0.0) * max(dot(nrm, l), 0.0);
+        const vec3 specular = nom / max(denom, 0.001);
+		result += (kd * (alb / VX_PI) + specular) * radiance * smoothstep(0.005, 1.0, slope) * point_lights_shadowness[light_index];
+	}
 	return result;
 }
 
@@ -70,7 +102,7 @@ void main() {
 	const float metallic = nrm_txt.w;
 	const vec3 eye = normalize(scene_ubo.s.camera.position_far.xyz - pos);
 	out_color.xyz = alb.xyz * 0.3; // todo it must come along scene
-	out_color.xyz += calc_lights(alb.xyz, nrm, eye, roughness, metallic);
+	out_color.xyz += calc_lights(alb.xyz, nrm, eye, pos, roughness, metallic);
 	out_color.xyz *= texture(ambient_occlusion, uv).x;
 	out_color.xyz = pow(out_color.xyz / (out_color.xyz + vec3(1.0)), vec3(1.0 / 2.2)); // todo gamma must come along scene
 	out_color.w = alb.w;
