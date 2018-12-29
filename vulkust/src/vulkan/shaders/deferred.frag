@@ -79,7 +79,7 @@ vec3 calc_lights(const vec3 alb, const vec3 nrm, const vec3 eye, const vec3 pos,
 		}
 		const vec3 halfway = normalize(eye + l);
 		const float attenuation = ill * ill;
-		const vec3 radiance = scene_ubo.s.directional_lights[light_index].color.xyz * attenuation;
+		const vec3 radiance = scene_ubo.s.point_lights[light_index].color_minradius.xyz * attenuation;
 		const float distribution = NDFTRGGX(nrm, halfway, roughness);
 		const float geometry = GFSCHGGX(nrm, eye, l, roughness);
 		const vec3 fresnel = FFSCHGGX(clamp(dot(halfway, eye), 0.0, 1.0), base_reflectivity);
