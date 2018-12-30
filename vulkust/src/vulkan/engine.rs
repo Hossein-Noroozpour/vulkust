@@ -65,21 +65,19 @@ impl Engine {
             CmdPoolType::Graphic,
             0,
         ));
-        let mut data_primary_cmds = Vec::new();
-        let mut wait_fences = Vec::new();
+        let mut data_primary_cmds = Vec::with_capacity(swapchain.image_views.len());
+        let mut wait_fences = Vec::with_capacity(swapchain.image_views.len());
         for _ in 0..swapchain.image_views.len() {
             data_primary_cmds.push(Arc::new(Mutex::new(CmdBuffer::new_primary(
                 graphic_cmd_pool.clone(),
             ))));
             wait_fences.push(Arc::new(Fence::new_signaled(logical_device.clone())));
         }
-        wait_fences.shrink_to_fit();
-        data_primary_cmds.shrink_to_fit();
         let memory_manager = MemoryManager::new(&logical_device);
         let render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), false));
         let clear_render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), true));
-        let mut framebuffers = Vec::new();
-        let mut clear_framebuffers = Vec::new();
+        let mut framebuffers = Vec::with_capacity(swapchain.image_views.len());
+        let mut clear_framebuffers = Vec::with_capacity(swapchain.image_views.len());
         for v in &swapchain.image_views {
             framebuffers.push(Arc::new(Framebuffer::new(
                 vec![v.clone()],
@@ -90,8 +88,6 @@ impl Engine {
                 clear_render_pass.clone(),
             )));
         }
-        framebuffers.shrink_to_fit();
-        clear_framebuffers.shrink_to_fit();
         let linear_repeat_sampler = Arc::new(Sampler::new(logical_device.clone()));
         let nearest_repeat_sampler = Arc::new(Sampler::new_with_filter(
             logical_device.clone(),

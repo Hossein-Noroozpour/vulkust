@@ -295,14 +295,12 @@ impl Manager {
         let copy_buffers = Vec::new();
         let copy_ranges = Vec::new();
         let copy_to_image_ranges = Vec::new();
-        let mut frame_copy_buffers = Vec::new();
-        let mut frame_copy_to_image_ranges = Vec::new();
+        let mut frame_copy_buffers = Vec::with_capacity(frames_count as usize);
+        let mut frame_copy_to_image_ranges = Vec::with_capacity(frames_count as usize);
         for _ in 0..frames_count {
             frame_copy_buffers.push(Vec::new());
             frame_copy_to_image_ranges.push(Vec::new());
         }
-        frame_copy_buffers.shrink_to_fit();
-        frame_copy_to_image_ranges.shrink_to_fit();
         let cmd_pool = cmd_pool.clone();
         Manager {
             cpu_buffer,
@@ -392,7 +390,7 @@ impl Manager {
     }
 
     pub(crate) fn create_dynamic_buffer(&mut self, actual_size: isize) -> Dynamic {
-        let mut buffers = Vec::new();
+        let mut buffers = Vec::with_capacity(self.dynamic_buffers.len());
         for dynamic_buffer in &self.dynamic_buffers {
             let buffer = vxresult!(dynamic_buffer.write()).allocate(actual_size);
             let ptr = {
@@ -403,7 +401,6 @@ impl Manager {
             };
             buffers.push((buffer, ptr));
         }
-        buffers.shrink_to_fit();
         Dynamic::new(buffers, actual_size)
     }
 
