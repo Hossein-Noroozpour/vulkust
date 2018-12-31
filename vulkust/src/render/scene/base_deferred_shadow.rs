@@ -52,6 +52,7 @@ struct BaseKernelFramedata {
 #[cfg_attr(debug_mode, derive(Debug))]
 struct BaseKernelData {
     frames_data: Vec<BaseKernelFramedata>,
+    distance_transparent_models: Vec<(Real, Weak<RwLock<Model>>)>,
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -111,6 +112,7 @@ pub(super) struct Base {
     all_models: BTreeMap<Id, Weak<RwLock<Model>>>,
     descriptor_set: Arc<DescriptorSet>,
     kernels_data: Vec<Arc<Mutex<BaseKernelData>>>,
+    distance_transparent_models: Vec<(Real, Weak<RwLock<Model>>)>,
     frames_data: Vec<BaseFramedata>,
     // skybox: Option<Arc<RwLock<Skybox>>>, // todo
     // constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
@@ -156,6 +158,7 @@ impl Base {
         for _ in 0..kernels_count {
             kernels_data.push(Arc::new(Mutex::new(BaseKernelData {
                 frames_data: Vec::with_capacity(frames_count),
+                distance_transparent_models: Vec::new(),
             })));
         }
         Self {
@@ -170,6 +173,7 @@ impl Base {
             models,
             all_models,
             kernels_data,
+            distance_transparent_models: Vec::new(),
             frames_data: Vec::new(),
         }
     }
@@ -245,6 +249,7 @@ impl Base {
         for _ in 0..kernels_count {
             kernels_data.push(Arc::new(Mutex::new(BaseKernelData {
                 frames_data: Vec::with_capacity(frames_count),
+                distance_transparent_models: Vec::new(),
             })));
         }
         Self {
@@ -259,8 +264,47 @@ impl Base {
             shadow_maker_lights,
             lights,
             kernels_data,
+            distance_transparent_models: Vec::new(),
             frames_data: Vec::new(),
         }
+    }
+
+    fn render_transparent_forward(&self) -> Vec<Weak<RwLock<Model>>> {
+        let kernels_count = self.kernels_data.len();
+        let mut kernels_data = Vec::with_capacity(kernels_count);
+        let mut s = 0;
+        for kd in &self.kernels_data {
+            let kernel_data = vxresult!(kd.lock());
+            s += kernel_data.distance_transparent_models.len();
+            kernels_data.push(kernel_data);
+        }
+        let mut sorteds = [Vec::with_capacity(s), Vec::with_capacity(s)];
+        let mut result = Vec::with_capacity(s);
+        for d in &kernels_data[0].distance_transparent_models {
+            sorteds[0].push(d.clone());
+        }
+        for i in 1..kernels_count {
+            let si = i & 1;
+            let psi = (!si) & 1;
+            let kds = &kernels_data[i].distance_transparent_models;
+            let mut pi = 0;
+            for kd in kds {
+                while pi < sorteds[psi].len() {
+                    if sorteds[psi][pi].0 < kd.0 {
+                        let d = sorteds[psi][pi].clone();
+                        sorteds[si].push(d);
+                    } else {
+                        break;
+                    }
+                    pi += 1;
+                }
+                sorteds[si].push(kd.clone());
+            }
+        }
+        for k in &sorteds[(!kernels_count) & 1] {
+            result.push(k.1.clone());
+        }
+        return result;
     }
 }
 
@@ -441,33 +485,39 @@ impl Scene for Base {
                 });
             }
         }
-        let cmd = &mut kernel_data.frames_data[frame_number].gbuff;
-        g_buffer_filler.begin_secondary(cmd);
+        kernel_data.distance_transparent_models.clear();
         {
+            let cmd = &mut kernel_data.frames_data[frame_number].gbuff;
+            g_buffer_filler.begin_secondary(cmd);
             let buffer = self.uniform_buffer.get_buffer(frame_number);
             let buffer = vxresult!(buffer.read());
             cmd.bind_gbuff_scene_descriptor(&*self.descriptor_set, &*buffer);
         }
+        let camera = vxunwrap!(&self.active_camera).upgrade();
+        let camera = vxunwrap!(camera);
+        let camera = vxresult!(camera.read());
         let mut task_index = 0;
-        for (_, model) in &self.all_models {
-            let camera = vxunwrap!(&self.active_camera).upgrade();
-            let camera = vxunwrap!(camera);
-            let camera = vxresult!(camera.read());
+        for (_, mw) in &self.all_models {
             task_index += 1;
-            if task_index % kernels_count != kernel_index {
+            task_index %= kernels_count;
+            if task_index != kernel_index {
                 continue;
             }
-            let model = model.upgrade();
-            if model.is_none() {
+            let model = mw.upgrade();
+            let m = if let Some(model) = model {
+                model
+            } else {
                 continue;
-            }
-            let m = vxunwrap!(model);
+            };
             let mut model = vxresult!(m.write());
             if !model.is_renderable() {
                 continue;
             }
             model.update(self, &*camera, frame_number);
-            model.render_gbuffer(cmd, frame_number);
+            model.render_gbuffer(
+                &mut kernel_data.frames_data[frame_number].gbuff,
+                frame_number,
+            );
             if model.has_shadow() {
                 for (_, shm) in &self.shadow_maker_lights {
                     vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).shadow(
@@ -477,8 +527,17 @@ impl Scene for Base {
                     );
                 }
             }
+            if model.has_transparent() {
+                let d = model.get_distance_from_camera(&*camera);
+                kernel_data
+                    .distance_transparent_models
+                    .push((d, mw.clone()));
+            }
         }
-        cmd.end();
+        kernel_data.frames_data[frame_number].gbuff.end();
+        kernel_data
+            .distance_transparent_models
+            .sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
     }
 
     fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
@@ -628,6 +687,7 @@ impl DefaultScene for Base {
         for _ in 0..kernels_count {
             kernels_data.push(Arc::new(Mutex::new(BaseKernelData {
                 frames_data: Vec::with_capacity(frames_count),
+                distance_transparent_models: Vec::new(),
             })));
         }
         Self {
@@ -642,6 +702,7 @@ impl DefaultScene for Base {
             lights: BTreeMap::new(),
             shadow_maker_lights: BTreeMap::new(),
             kernels_data,
+            distance_transparent_models: Vec::new(),
             frames_data: Vec::new(),
         }
     }

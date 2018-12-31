@@ -12,7 +12,6 @@ use super::mesh::Mesh;
 use super::object::{Base as ObjectBase, Loadable, Object, Transferable};
 use super::scene::Scene;
 use std::collections::BTreeMap;
-use std::f32::MAX as F32MAX;
 use std::mem::size_of;
 use std::sync::{Arc, RwLock, Weak};
 
@@ -26,7 +25,9 @@ pub trait Model: Object + Transferable {
     fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)>;
     fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)>;
     fn has_shadow(&self) -> bool;
+    fn has_transparent(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
+    fn get_distance_from_camera(&self, &Camera) -> Real;
     fn get_uniform(&self) -> &Uniform;
     fn render_gbuffer(&self, &mut CmdBuffer, usize);
     fn render_shadow(&self, &mut CmdBuffer, usize);
@@ -174,10 +175,9 @@ impl Uniform {
 pub struct Base {
     obj_base: ObjectBase,
     has_shadow_caster: bool,
-    has_transparent: bool,
+    has_transparent_mesh: bool,
     occlusion_culling_radius: Real,
     is_visible: bool,
-    distance_from_camera: Real,
     collider: Arc<RwLock<Collider>>,
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
@@ -226,14 +226,14 @@ impl Loadable for Base {
         let primitives = model.primitives();
         let mut meshes = BTreeMap::new();
         let mut has_shadow_caster = false;
-        let mut has_transparent = false;
+        let mut has_transparent_mesh = false;
         let mut occlusion_culling_radius = 0.0001;
         for primitive in primitives {
             let mesh = mesh_manager.load_gltf(&primitive, &engine, data);
             let id = {
                 let mesh = vxresult!(mesh.read());
-                has_shadow_caster |= mesh.is_shadow_caster();
-                has_transparent |= mesh.is_transparent();
+                has_shadow_caster |= mesh.is_shadow_caster(); // todo remove
+                has_transparent_mesh |= mesh.is_transparent(); // todo remove
                 let occ = mesh.get_occlusion_culling_radius();
                 if occ > occlusion_culling_radius {
                     occlusion_culling_radius = occ;
@@ -255,10 +255,9 @@ impl Loadable for Base {
         Base {
             obj_base,
             has_shadow_caster,
-            has_transparent,
+            has_transparent_mesh,
             occlusion_culling_radius,
             is_visible: false,
-            distance_from_camera: F32MAX,
             collider: Arc::new(RwLock::new(GhostCollider::new())),
             uniform,
             uniform_buffer,
@@ -278,14 +277,14 @@ impl Loadable for Base {
         let mut mesh_manager = vxresult!(eng.get_asset_manager().get_mesh_manager().write());
         let mut meshes = BTreeMap::new();
         let mut has_shadow_caster = false;
-        let mut has_transparent = false;
+        let mut has_transparent_mesh = false;
         for mesh_id in meshes_ids {
             let mat = Material::new_with_gx3d(eng, reader);
             let mesh = mesh_manager.load_gx3d(eng, mesh_id);
             {
                 let mesh = vxresult!(mesh.read());
                 has_shadow_caster |= mesh.is_shadow_caster();
-                has_transparent |= mesh.is_transparent();
+                has_transparent_mesh |= mesh.is_transparent();
             }
             meshes.insert(mesh_id, (mesh, mat));
         }
@@ -297,10 +296,9 @@ impl Loadable for Base {
         Base {
             obj_base,
             has_shadow_caster,
-            has_transparent,
+            has_transparent_mesh,
             occlusion_culling_radius,
             is_visible: false,
-            distance_from_camera: F32MAX,
             collider,
             uniform,
             uniform_buffer,
@@ -364,9 +362,6 @@ impl Model for Base {
         if !self.is_visible {
             return;
         }
-        if self.has_transparent {
-            self.distance_from_camera = camera.get_distance(&location);
-        }
         self.uniform_buffer.update(&self.uniform, frame_number);
         for (_, m) in &mut self.meshes {
             vxresult!(m.0.write()).update(frame_number);
@@ -377,7 +372,7 @@ impl Model for Base {
     fn clear_meshes(&mut self) {
         self.meshes.clear();
         self.has_shadow_caster = false;
-        self.has_transparent = false;
+        self.has_transparent_mesh = false;
         self.occlusion_culling_radius = 0.0;
         self.is_visible = false;
     }
@@ -416,8 +411,16 @@ impl Model for Base {
         return self.has_shadow_caster;
     }
 
+    fn has_transparent(&self) -> bool {
+        return self.has_transparent_mesh;
+    }
+
     fn get_occlusion_culling_radius(&self) -> Real {
         return self.occlusion_culling_radius;
+    }
+
+    fn get_distance_from_camera(&self, c: &Camera) -> Real {
+        return c.get_distance(&self.uniform.model.w.truncate());
     }
 
     fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize) {
@@ -464,10 +467,9 @@ impl DefaultModel for Base {
         Base {
             obj_base: ObjectBase::new(),
             has_shadow_caster: true,
-            has_transparent: false,
+            has_transparent_mesh: false,
             occlusion_culling_radius: 0.0,
             is_visible: false,
-            distance_from_camera: 100000.0,
             collider: Arc::new(RwLock::new(GhostCollider::new())),
             uniform: Uniform::default(),
             uniform_buffer,

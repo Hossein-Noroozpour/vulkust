@@ -107,8 +107,16 @@ impl Model for Base {
         return false;
     }
 
+    fn has_transparent(&self) -> bool {
+        return true;
+    }
+
     fn get_occlusion_culling_radius(&self) -> Real {
         return self.model_base.get_occlusion_culling_radius();
+    }
+
+    fn get_distance_from_camera(&self, c: &Camera) -> Real {
+        return self.model_base.get_distance_from_camera(c);
     }
 
     fn get_uniform(&self) -> &Uniform {
@@ -381,8 +389,16 @@ impl Model for Label {
         return self.base.has_shadow();
     }
 
+    fn has_transparent(&self) -> bool {
+        return self.base.has_transparent();
+    }
+
     fn get_occlusion_culling_radius(&self) -> Real {
         return self.base.get_occlusion_culling_radius();
+    }
+
+    fn get_distance_from_camera(&self, c: &Camera) -> Real {
+        return self.base.get_distance_from_camera(c);
     }
 
     fn get_uniform(&self) -> &Uniform {
