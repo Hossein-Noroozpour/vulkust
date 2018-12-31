@@ -42,15 +42,20 @@ It is under lots of changes.
 - Shadow Accumulation
 - Soft Shadowing
 - SSAO
+- PBR rendering
 
 #### 2-1-2- Underdeveloment features:
 
-- PBR rendering
-- Supporting GLTF
+- Forward transparent pass
 
 #### 2-1-3- In near future:
 
+- Auto exposure
+- Light blooming
+- Light streak
+- PBR IBL
 - More UI widgets
+- Supporting GLTF
 
 ## 3- Examples
 
