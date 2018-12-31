@@ -1,3 +1,4 @@
+pub mod algorithms;
 pub mod allocate;
 pub mod application;
 pub mod asset;
