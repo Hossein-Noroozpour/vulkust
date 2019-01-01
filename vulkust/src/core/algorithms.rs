@@ -1,59 +1,79 @@
 use std::cmp::Ordering;
 
-pub(crate) fn merge_all_sorted<T, F>(vectors: &[&[T]], mut compare: F) -> Vec<T>
+pub(crate) fn merge_all_sorted<T, F>(vectors: &[&[T]], compare: &mut F) -> Vec<T>
 where
     F: FnMut(&T, &T) -> Ordering,
     T: Clone,
 {
-    let vectors_count = vectors.len();
-    let mut result_len = 0;
-    let mut max_len = 0;
-    for v in vectors {
-        result_len += v.len();
-        if v.len() > max_len {
-            max_len = v.len();
-        }
-    }
-    result_len += 1;
-    max_len += 1;
-    let mut temp_vecs = [Vec::with_capacity(max_len), Vec::with_capacity(max_len)];
-    let mut result = Vec::with_capacity(result_len);
-    for e in vectors[0] {
-        temp_vecs[0].push(e.clone());
-    }
-    for i in 1..vectors_count {
-        let si = i & 1;
-        let psi = (!si) & 1;
-        let es = vectors[i];
-        let mut pi = 0;
-        for e in es {
-            while pi < temp_vecs[psi].len() {
-                if compare(&temp_vecs[psi][pi], e) == Ordering::Less {
-                    let d = temp_vecs[psi][pi].clone();
-                    temp_vecs[si].push(d);
+    if vectors.len() == 1 {
+        return vectors[0].to_vec();
+    } else if vectors.len() > 1 {
+        let l = vectors.len() >> 1;
+        let v1 = merge_all_sorted(&vectors[..l], compare);
+        let v2 = merge_all_sorted(&vectors[l..], compare);
+        let v1l = v1.len();
+        let v2l = v2.len();
+        let mut result = Vec::with_capacity(v1l + v2l + 1);
+        let mut v1i = 0;
+        let mut v2i = 0;
+        loop {
+            if v1i < v1l && v2i < v2l {
+                if compare(&v1[v1i], &v2[v2i]) == Ordering::Less {
+                    result.push(v1[v1i].clone());
+                    v1i += 1;
                 } else {
-                    break;
+                    result.push(v2[v2i].clone());
+                    v2i += 1;
                 }
-                pi += 1;
+            } else if v1i < v1l {
+                for i in v1i..v1l {
+                    result.push(v1[i].clone());
+                }
+                break;
+            } else if v2i < v2l {
+                for i in v2i..v2l {
+                    result.push(v2[i].clone());
+                }
+                break;
+            } else {
+                break;
             }
-            temp_vecs[si].push(e.clone());
         }
+        return result;
+    } else {
+        vxunexpected!();
     }
-    for k in &temp_vecs[(!vectors_count) & 1] {
-        result.push(k.clone());
-    }
-    return result;
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
+#[cfg(test)]
+mod test {
+    use super::*;
 
-//     #[test]
-//     fn check() {
-//         let mut
-//         check_power_of_two(3 * 1024);
-//     }
-// }
-
-// s = 5.172 / 6.87
+    #[test]
+    fn merge_all_sorted_test() {
+        use rand::distributions::Distribution;
+        let between1 = rand::distributions::Uniform::from(30..80);
+        let between2 = rand::distributions::Uniform::from(-5f32..5f32);
+        let mut rng = rand::thread_rng();
+        let mut final_cmp = Vec::new();
+        let mut v = Vec::new();
+        for _ in 0..100 {
+            let mut c = Vec::new();
+            for _ in 0..between1.sample(&mut rng) {
+                let f = between2.sample(&mut rng);
+                final_cmp.push(f);
+                c.push(f);
+            }
+            c.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
+            v.push(c);
+        }
+        let mut vref: Vec<&[f32]> = Vec::new();
+        for e in &v {
+            vref.push(e);
+        }
+        let mut ordfun = |a: &f32, b: &f32| a.partial_cmp(b).unwrap();
+        let v1 = merge_all_sorted(&vref, &mut ordfun);
+        final_cmp.sort_unstable_by(ordfun);
+        assert_eq!(final_cmp, v1);
+    }
+}

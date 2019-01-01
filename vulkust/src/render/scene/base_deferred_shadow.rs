@@ -269,43 +269,19 @@ impl Base {
         }
     }
 
-    fn render_transparent_forward(&self) -> Vec<Weak<RwLock<Model>>> {
-        let kernels_count = self.kernels_data.len();
-        let mut kernels_data = Vec::with_capacity(kernels_count);
-        let mut s = 0;
-        for kd in &self.kernels_data {
-            let kernel_data = vxresult!(kd.lock());
-            s += kernel_data.distance_transparent_models.len();
-            kernels_data.push(kernel_data);
-        }
-        let mut sorteds = [Vec::with_capacity(s), Vec::with_capacity(s)];
-        let mut result = Vec::with_capacity(s);
-        for d in &kernels_data[0].distance_transparent_models {
-            sorteds[0].push(d.clone());
-        }
-        for i in 1..kernels_count {
-            let si = i & 1;
-            let psi = (!si) & 1;
-            let kds = &kernels_data[i].distance_transparent_models;
-            let mut pi = 0;
-            for kd in kds {
-                while pi < sorteds[psi].len() {
-                    if sorteds[psi][pi].0 < kd.0 {
-                        let d = sorteds[psi][pi].clone();
-                        sorteds[si].push(d);
-                    } else {
-                        break;
-                    }
-                    pi += 1;
-                }
-                sorteds[si].push(kd.clone());
-            }
-        }
-        for k in &sorteds[(!kernels_count) & 1] {
-            result.push(k.1.clone());
-        }
-        return result;
-    }
+    // fn render_transparent_forward(&self) -> Vec<Weak<RwLock<Model>>> {
+    //     let kernels_count = self.kernels_data.len();
+    //     let mut kernels_data = Vec::with_capacity(kernels_count);
+    //     for kd in &self.kernels_data {
+    //         kernels_data.push(vxresult!(kd.lock()));
+    //     }
+    //     // let mut ds = Vec<&[(Real)]>
+    //     let mut result = Vec::with_capacity(s);
+    //     for d in &kernels_data[0].distance_transparent_models {
+    //         sorteds[0].push(d.clone());
+    //     }
+    //     return result;
+    // }
 }
 
 impl CoreObject for Base {

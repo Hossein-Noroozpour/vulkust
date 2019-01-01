@@ -1,7 +1,6 @@
 #![feature(repr_simd)]
 #![feature(integer_atomics)]
 #![feature(stmt_expr_attributes)]
-#![feature(duration_as_u128)]
 #![feature(concat_idents)]
 
 pub extern crate cgmath;
