@@ -4,6 +4,7 @@ use super::config::Configurations;
 use super::deferred::Deferred;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
+use super::pass::transparent::Transparent;
 use super::scene::Manager as SceneManager;
 use super::shadower::Shadower;
 use super::ssao::SSAO;
@@ -151,6 +152,7 @@ pub(super) struct Engine {
     g_buffer_filler: Arc<RwLock<GBufferFiller>>,
     deferred: Arc<RwLock<Deferred>>,
     shadower: Arc<RwLock<Shadower>>,
+    transparent_pass: Arc<RwLock<Transparent>>,
     ssao: Option<Arc<RwLock<SSAO>>>,
 }
 
@@ -178,6 +180,12 @@ impl Engine {
             ssao.as_ref(),
             config,
             &mut *texmgr,
+        )));
+        let transparent_pass = Arc::new(RwLock::new(Transparent::new(
+            &eng,
+            &mut *texmgr,
+            &g_buffer_filler,
+            config,
         )));
         let g_buffer_filler = Arc::new(RwLock::new(g_buffer_filler));
         let shadower = Arc::new(RwLock::new(shadower));
@@ -207,6 +215,7 @@ impl Engine {
             deferred,
             shadower,
             ssao,
+            transparent_pass,
         }
     }
 

@@ -13,8 +13,9 @@ pub(crate) use super::super::vulkan::pipeline::*;
 pub enum PipelineType {
     Deferred,
     GBuffer,
-    ShadowMapper,
     ShadowAccumulatorDirectional,
+    ShadowMapper,
     SSAO,
+    TransparentPBR,
     Unlit,
 }

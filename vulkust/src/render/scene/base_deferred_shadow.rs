@@ -1,3 +1,4 @@
+use super::super::super::core::algorithms::merge_all_sorted;
 use super::super::super::core::constants::{MAX_DIRECTIONAL_LIGHTS_COUNT, MAX_POINT_LIGHTS_COUNT};
 use super::super::super::core::gx3d::Gx3DReader;
 use super::super::super::core::object::Object as CoreObject;
@@ -269,18 +270,32 @@ impl Base {
         }
     }
 
-    // fn render_transparent_forward(&self) -> Vec<Weak<RwLock<Model>>> {
-    //     let kernels_count = self.kernels_data.len();
-    //     let mut kernels_data = Vec::with_capacity(kernels_count);
-    //     for kd in &self.kernels_data {
-    //         kernels_data.push(vxresult!(kd.lock()));
-    //     }
-    //     // let mut ds = Vec<&[(Real)]>
-    //     let mut result = Vec::with_capacity(s);
-    //     for d in &kernels_data[0].distance_transparent_models {
-    //         sorteds[0].push(d.clone());
-    //     }
-    //     return result;
+    fn gather_all_transparent_models_sorted(&self) -> Vec<Weak<RwLock<Model>>> {
+        let kernels_count = self.kernels_data.len();
+        let mut kernels_data = Vec::with_capacity(kernels_count);
+        for kd in &self.kernels_data {
+            kernels_data.push(vxresult!(kd.lock()));
+        }
+        let mut ds: Vec<&[(Real, Weak<RwLock<Model>>)]> = Vec::with_capacity(kernels_count);
+        for kd in &kernels_data {
+            ds.push(&kd.distance_transparent_models);
+        }
+        let sorted = merge_all_sorted(
+            &ds,
+            &mut |b: &(Real, Weak<RwLock<Model>>), a: &(Real, Weak<RwLock<Model>>)| {
+                a.0.partial_cmp(&b.0).unwrap()
+            },
+        );
+        let mut result = Vec::with_capacity(sorted.len());
+        for e in sorted {
+            result.push(e.1);
+        }
+        return result;
+    }
+
+    // fn render_transparent_models(&self) {
+    //     let models = self.gather_all_transparent_models_sorted();
+    //     for
     // }
 }
 

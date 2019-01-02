@@ -17,6 +17,7 @@ pub mod mesh;
 pub mod model;
 pub mod multithreaded;
 pub mod object;
+pub mod pass;
 pub mod pipeline;
 pub mod render_pass;
 pub mod sampler;

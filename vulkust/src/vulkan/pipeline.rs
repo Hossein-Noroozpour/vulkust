@@ -217,6 +217,7 @@ impl Pipeline {
             }
             PipelineType::SSAO => include_shader!("ssao.vert"),
             PipelineType::Unlit => include_shader!("unlit.vert"),
+            PipelineType::TransparentPBR => include_shader!("transparent_pbr.vert"),
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler.frag"),
@@ -227,13 +228,16 @@ impl Pipeline {
             }
             PipelineType::SSAO => include_shader!("ssao.frag"),
             PipelineType::Unlit => include_shader!("unlit.frag"),
+            PipelineType::TransparentPBR => include_shader!("transparent_pbr.frag"),
         };
 
         let vertex_shader = Module::new(vert_bytes, device.clone());
         let fragment_shader = Module::new(frag_bytes, device.clone());
         let shaders = vec![vertex_shader, fragment_shader];
         let layout = match pipeline_type {
-            PipelineType::GBuffer => Layout::new_gbuff(descriptor_manager),
+            PipelineType::GBuffer | PipelineType::TransparentPBR => {
+                Layout::new_gbuff(descriptor_manager)
+            }
             PipelineType::Deferred => Layout::new_deferred(descriptor_manager),
             PipelineType::ShadowMapper => Layout::new_shadow_mapper(descriptor_manager),
             PipelineType::ShadowAccumulatorDirectional => {
@@ -262,7 +266,7 @@ impl Pipeline {
             vec![vk::VkPipelineColorBlendAttachmentState::default(); blend_attachment_state_size];
         for i in 0..blend_attachment_state_size {
             match pipeline_type {
-                PipelineType::Deferred | PipelineType::Unlit => {
+                PipelineType::Deferred | PipelineType::Unlit | PipelineType::TransparentPBR => {
                     blend_attachment_state[i].blendEnable = vk::VK_TRUE;
                     blend_attachment_state[i].srcColorBlendFactor =
                         vk::VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
@@ -381,7 +385,10 @@ impl Pipeline {
         vertex_input_state.sType =
             vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         match pipeline_type {
-            PipelineType::GBuffer | PipelineType::ShadowMapper | PipelineType::Unlit => {
+            PipelineType::GBuffer
+            | PipelineType::ShadowMapper
+            | PipelineType::Unlit
+            | PipelineType::TransparentPBR => {
                 vertex_input_state.vertexBindingDescriptionCount = 1;
                 vertex_input_state.pVertexBindingDescriptions = &vertex_input_binding;
                 vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.len() as u32;
