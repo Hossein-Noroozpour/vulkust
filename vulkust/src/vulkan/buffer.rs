@@ -4,7 +4,7 @@ use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::device::Logical as LogicalDevice;
 use super::image::Image;
 use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
-use super::vulkan as vk;
+use ash::vk;
 use libc;
 use std::mem::{size_of, transmute};
 use std::os::raw::c_void;
@@ -15,11 +15,11 @@ use std::sync::{Arc, RwLock};
 pub struct Buffer {
     memory_offset: isize,
     info: alc::Container,
-    vk_data: vk::VkBuffer,
+    vk_data: vk::Buffer,
 }
 
 impl Buffer {
-    pub fn new(size: isize, memory_offset: isize, vk_data: vk::VkBuffer, alignment: isize) -> Self {
+    pub fn new(size: isize, memory_offset: isize, vk_data: vk::Buffer, alignment: isize) -> Self {
         let info = alc::Container::new(size, alignment);
         Buffer {
             memory_offset,
@@ -40,7 +40,7 @@ impl Buffer {
         return buffer;
     }
 
-    pub(super) fn get_data(&self) -> vk::VkBuffer {
+    pub(super) fn get_data(&self) -> vk::Buffer {
         return self.vk_data;
     }
 }
@@ -81,7 +81,7 @@ pub enum Location {
 pub(crate) struct RootBuffer {
     logical_device: Arc<LogicalDevice>,
     memory: Arc<RwLock<Memory>>,
-    vk_data: vk::VkBuffer,
+    vk_data: vk::Buffer,
     container: alc::Container,
     location: Location,
 }
@@ -95,32 +95,31 @@ impl RootBuffer {
         let (memloc, usage) = match location {
             Location::CPU => (
                 MemoryLocation::CPU,
-                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT as u32
-                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT as u32
-                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT as u32
-                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT as u32,
+                vk::BufferUsageFlags::TRANSFER_SRC
+                    | vk::BufferUsageFlags::VERTEX_BUFFER
+                    | vk::BufferUsageFlags::INDEX_BUFFER
+                    | vk::BufferUsageFlags::UNIFORM_BUFFER,
             ),
             Location::GPU => (
                 MemoryLocation::GPU,
-                vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT as u32
-                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT as u32
-                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT as u32
-                    | vk::VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT as u32,
+                vk::BufferUsageFlags::VERTEX_BUFFER
+                    | vk::BufferUsageFlags::INDEX_BUFFER
+                    | vk::BufferUsageFlags::UNIFORM_BUFFER
+                    | vk::BufferUsageFlags::TRANSFER_DST,
             ),
         };
         let logical_device = vxresult!(memmgr.read()).get_device().clone();
-        let mut buffer_info = vk::VkBufferCreateInfo::default();
-        buffer_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_info.size = size as vk::VkDeviceSize;
+        let mut buffer_info = vk::BufferCreateInfo::default();
+        buffer_info.size = size as vk::DeviceSize;
         buffer_info.usage = usage;
-        let mut vk_data = 0 as vk::VkBuffer;
+        let mut vk_data = vk::Buffer::null();
         vulkan_check!(vk::vkCreateBuffer(
             logical_device.get_data(),
             &buffer_info,
             null(),
             &mut vk_data,
         ));
-        let mut mem_reqs = vk::VkMemoryRequirements::default();
+        let mut mem_reqs = vk::MemoryRequirements::default();
         unsafe {
             vk::vkGetBufferMemoryRequirements(logical_device.get_data(), vk_data, &mut mem_reqs);
         }
@@ -243,11 +242,11 @@ pub(crate) struct Manager {
     static_buffer: Arc<RwLock<Buffer>>,
     static_uploader_buffer: Arc<RwLock<Buffer>>,
     dynamic_buffers: Vec<Arc<RwLock<Buffer>>>,
-    copy_ranges: Vec<vk::VkBufferCopy>,
+    copy_ranges: Vec<vk::BufferCopy>,
     copy_buffers: Vec<Arc<RwLock<Buffer>>>,
-    copy_to_image_ranges: Vec<(vk::VkBufferImageCopy, Arc<RwLock<Image>>)>,
+    copy_to_image_ranges: Vec<(vk::BufferImageCopy, Arc<RwLock<Image>>)>,
     frame_copy_buffers: Vec<Vec<Arc<RwLock<Buffer>>>>,
-    frame_copy_to_image_ranges: Vec<Vec<(vk::VkBufferImageCopy, Arc<RwLock<Image>>)>>,
+    frame_copy_to_image_ranges: Vec<Vec<(vk::BufferImageCopy, Arc<RwLock<Image>>)>>,
     cmd_pool: Arc<CmdPool>,
 }
 
@@ -326,7 +325,7 @@ impl Manager {
         let buffer = vxresult!(self.static_buffer.write()).allocate(data_len as isize);
         let upbuff = self.create_staging_buffer_with_ptr(data, data_len as usize);
         let upbuffer = vxresult!(upbuff.read());
-        let mut range = vk::VkBufferCopy::default();
+        let mut range = vk::BufferCopy::default();
         range.srcOffset = upbuffer.get_allocated_memory().get_offset() as vk::VkDeviceSize;
         range.dstOffset =
             vxresult!(buffer.read()).get_allocated_memory().get_offset() as vk::VkDeviceSize;
@@ -376,7 +375,7 @@ impl Manager {
     ) {
         let upbuff = self.create_staging_buffer_with_vec(pixels);
         let upbuffer = vxresult!(upbuff.read());
-        let mut copy_info = vk::VkBufferImageCopy::default();
+        let mut copy_info = vk::BufferImageCopy::default();
         copy_info.imageSubresource.aspectMask =
             vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32;
         copy_info.imageSubresource.mipLevel = 0;

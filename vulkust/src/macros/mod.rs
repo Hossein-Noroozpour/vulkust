@@ -193,3 +193,9 @@ macro_rules! vxtodo {
         vxloge!("TODO")
     };
 }
+
+macro_rules! vxflagcheck {
+    ($f:expr, $b:expr) => {
+        $f & $b == $b
+    };
+}

@@ -2,7 +2,7 @@ use super::super::core::string::{cstrings_to_ptrs, strings_to_cstrings};
 use super::super::render::config::Configurations;
 use super::super::render::image::Format;
 use super::surface::Surface;
-use super::vulkan as vk;
+use ash::vk;
 use std::collections::HashSet;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
@@ -15,11 +15,11 @@ pub(super) struct Physical {
     transfer_queue_node_index: u32,
     compute_queue_node_index: u32,
     present_queue_node_index: u32,
-    vk_data: vk::VkPhysicalDevice,
-    memory_properties: vk::VkPhysicalDeviceMemoryProperties,
-    properties: vk::VkPhysicalDeviceProperties,
-    surface_caps: vk::VkSurfaceCapabilitiesKHR,
-    supported_depth_format: vk::VkFormat,
+    vk_data: vk::PhysicalDevice,
+    memory_properties: vk::PhysicalDeviceMemoryProperties,
+    properties: vk::PhysicalDeviceProperties,
+    surface_caps: vk::SurfaceCapabilitiesKHR,
+    supported_depth_format: vk::Format,
 }
 
 impl Physical {
@@ -31,9 +31,9 @@ impl Physical {
             compute_queue_node_index,
             present_queue_node_index,
         ) = Self::find_device(surface);
-        let mut memory_properties = vk::VkPhysicalDeviceMemoryProperties::default();
-        let mut properties = vk::VkPhysicalDeviceProperties::default();
-        let mut surface_caps = vk::VkSurfaceCapabilitiesKHR::default();
+        let mut memory_properties = vk::PhysicalDeviceMemoryProperties::default();
+        let mut properties = vk::PhysicalDeviceProperties::default();
+        let mut surface_caps = vk::SurfaceCapabilitiesKHR::default();
         vulkan_check!(vk::vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
             vk_data,
             surface.get_data(),
@@ -68,7 +68,7 @@ impl Physical {
         return &self.surface_caps;
     }
 
-    fn find_device(surface: &Arc<Surface>) -> (vk::VkPhysicalDevice, u32, u32, u32, u32) {
+    fn find_device(surface: &Arc<Surface>) -> (vk::PhysicalDevice, u32, u32, u32, u32) {
         let devices = Self::enumerate_devices(surface.get_instance().get_data());
         vxlogi!("Number of physical devices is: {}", devices.len());
         for device in &devices {
@@ -90,19 +90,19 @@ impl Physical {
         vxlogf!("Required device not found!");
     }
 
-    fn device_is_discrete(device: vk::VkPhysicalDevice) -> bool {
+    fn device_is_discrete(device: vk::PhysicalDevice) -> bool {
         get_properties(device).deviceType as u32
-            == vk::VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU as u32
+            == vk::PhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU as u32
     }
 
-    fn enumerate_devices(vk_instance: vk::VkInstance) -> Vec<vk::VkPhysicalDevice> {
+    fn enumerate_devices(vk_instance: vk::VkInstance) -> Vec<vk::PhysicalDevice> {
         let mut gpu_count = 0u32;
         vulkan_check!(vk::vkEnumeratePhysicalDevices(
             vk_instance,
             &mut gpu_count as *mut u32,
             null_mut(),
         ));
-        let mut devices = vec![0 as vk::VkPhysicalDevice; gpu_count as usize];
+        let mut devices = vec![0 as vk::PhysicalDevice; gpu_count as usize];
         vulkan_check!(vk::vkEnumeratePhysicalDevices(
             vk_instance,
             &mut gpu_count,
@@ -112,7 +112,7 @@ impl Physical {
     }
 
     fn fetch_queues(
-        device: vk::VkPhysicalDevice,
+        device: vk::PhysicalDevice,
         surface: &Arc<Surface>,
     ) -> Option<(u32, u32, u32, u32)> {
         let queue_family_properties = Self::get_device_queue_family_properties(device);
@@ -191,7 +191,7 @@ impl Physical {
     }
 
     fn get_device_queue_family_properties(
-        device: vk::VkPhysicalDevice,
+        device: vk::PhysicalDevice,
     ) -> Vec<vk::VkQueueFamilyProperties> {
         let mut count = 0u32;
         unsafe {
@@ -296,8 +296,8 @@ impl Physical {
     //     )
     // }
 
-    pub(super) fn get_vk_features(&self) -> vk::VkPhysicalDeviceFeatures {
-        let mut result = vk::VkPhysicalDeviceFeatures::default();
+    pub(super) fn get_vk_features(&self) -> vk::PhysicalDeviceFeatures {
+        let mut result = vk::PhysicalDeviceFeatures::default();
         unsafe {
             vk::vkGetPhysicalDeviceFeatures(self.vk_data, &mut result);
         }
@@ -320,11 +320,11 @@ impl Physical {
         return self.present_queue_node_index;
     }
 
-    pub(super) fn get_data(&self) -> vk::VkPhysicalDevice {
+    pub(super) fn get_data(&self) -> vk::PhysicalDevice {
         return self.vk_data;
     }
 
-    pub(super) fn get_properties(&self) -> &vk::VkPhysicalDeviceProperties {
+    pub(super) fn get_properties(&self) -> &vk::PhysicalDeviceProperties {
         return &self.properties;
     }
 
@@ -348,8 +348,8 @@ unsafe impl Send for Physical {}
 
 unsafe impl Sync for Physical {}
 
-fn get_properties(device: vk::VkPhysicalDevice) -> vk::VkPhysicalDeviceProperties {
-    let mut properties = vk::VkPhysicalDeviceProperties::default();
+fn get_properties(device: vk::PhysicalDevice) -> vk::PhysicalDeviceProperties {
+    let mut properties = vk::PhysicalDeviceProperties::default();
     unsafe {
         vk::vkGetPhysicalDeviceProperties(device, &mut properties);
     }
@@ -390,7 +390,7 @@ impl Logical {
             queue_create_info_s.push(queue_create_info);
         }
         let available_features = physical_device.get_vk_features();
-        let mut features = vk::VkPhysicalDeviceFeatures::default();
+        let mut features = vk::PhysicalDeviceFeatures::default();
         if config.get_enable_anistropic_texture() {
             features.samplerAnisotropy = available_features.samplerAnisotropy;
         }

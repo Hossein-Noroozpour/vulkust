@@ -17,4 +17,3 @@ pub mod shader;
 pub mod surface;
 pub mod swapchain;
 pub mod sync;
-pub mod vulkan;

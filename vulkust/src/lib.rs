@@ -22,6 +22,10 @@ pub extern crate bitflags;
 #[cfg(target_os = "windows")]
 pub extern crate winapi;
 
+#[cfg(vulkan_api)]
+#[macro_use]
+pub extern crate ash;
+
 #[macro_use]
 pub mod macros;
 

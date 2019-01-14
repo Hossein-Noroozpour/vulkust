@@ -2,13 +2,13 @@ use std::ffi::CString;
 use std::iter::once;
 use std::os::raw::c_char;
 
-pub fn slice_to_string(s: &[u8]) -> String {
+pub fn slice_to_string(s: &[i8]) -> String {
     let mut r = String::new();
     for c in s {
         if *c == 0 {
             break;
         }
-        r.push(*c as char);
+        r.push(*c as u8 as char);
     }
     r
 }
