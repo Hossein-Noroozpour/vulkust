@@ -2,6 +2,7 @@ use super::super::core::string::{cstrings_to_ptrs, strings_to_cstrings};
 use super::super::render::config::Configurations;
 use super::super::render::image::Format;
 use super::surface::Surface;
+use ash::version::InstanceV1_0;
 use ash::vk;
 use std::collections::HashSet;
 use std::ptr::{null, null_mut};
@@ -24,6 +25,8 @@ pub(super) struct Physical {
 
 impl Physical {
     pub(super) fn new(surface: &Arc<Surface>) -> Self {
+        let instance = surface.get_instance();
+        let vk_instance = instance.get_data();
         let (
             vk_data,
             graphics_queue_node_index,
@@ -31,8 +34,8 @@ impl Physical {
             compute_queue_node_index,
             present_queue_node_index,
         ) = Self::find_device(surface);
-        let mut memory_properties = vk::PhysicalDeviceMemoryProperties::default();
-        let mut properties = vk::PhysicalDeviceProperties::default();
+        let memory_properties = vk_instance.get_physical_device_memory_properties(vk_data);
+        let properties = vk_instance.get_physical_device_properties(vk_data);
         let mut surface_caps = vk::SurfaceCapabilitiesKHR::default();
         vulkan_check!(vk::vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
             vk_data,
@@ -40,7 +43,7 @@ impl Physical {
             &mut surface_caps,
         ));
         unsafe {
-            vk::vkGetPhysicalDeviceMemoryProperties(vk_data, &mut memory_properties);
+            (vk_data, &mut memory_properties);
             vk::vkGetPhysicalDeviceProperties(vk_data, &mut properties);
         }
         vxlogi!("{:?}", &surface_caps);

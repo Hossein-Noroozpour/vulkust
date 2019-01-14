@@ -1,19 +1,21 @@
-use std::default::Default;
 use std::ffi::CString;
 use std::ptr::{null, null_mut};
 
 use super::super::core::string::{cstrings_to_ptrs, slice_to_string, strings_to_cstrings};
+use ash::version::EntryV1_0;
+use ash::version::InstanceV1_0;
 use ash::vk;
 
 #[cfg(debug_mode)]
 mod debug {
     use std::collections::BTreeMap;
     use std::ffi::{CStr, CString};
-    use std::mem::transmute;
     use std::os::raw::{c_char, c_void};
-    use std::ptr::{null, null_mut};
+    use std::ptr::null_mut;
 
     use super::vk;
+    use ash::extensions::ext::DebugReport;
+    use ash::version::EntryV1_0;
 
     use super::super::super::core::string::{slice_to_string, strings_to_cstrings};
 
@@ -58,17 +60,14 @@ mod debug {
         0u32
     }
 
-    #[derive(Debug)]
     pub struct Debugger {
-        vk_data: Option<vk::DebugReportCallbackEXT>,
+        loader: DebugReport,
+        vk_data: vk::DebugReportCallbackEXT,
     }
 
     impl Debugger {
-        pub fn new(vk_instance: vk::Instance) -> Self {
-            if !super::contain_extension("VK_EXT_debug_report") {
-                return Debugger { vk_data: None };
-            }
-            let report_callback_create_info = vk::DebugReportCallbackCreateInfoEXT::builder()
+        pub fn new(vk_entry: &ash::Entry, vk_instance: &ash::Instance) -> Self {
+            let create_info = vk::DebugReportCallbackCreateInfoEXT::builder()
                 .flags(
                     vk::DebugReportFlagsEXT::INFORMATION
                         | vk::DebugReportFlagsEXT::WARNING
@@ -76,41 +75,15 @@ mod debug {
                         | vk::DebugReportFlagsEXT::ERROR
                         | vk::DebugReportFlagsEXT::DEBUG,
                 )
-                .pfn_callback(Some(vulkan_debug_callback))
-                .build();
-            let mut vk_debug_callback = 0 as vk::VkDebugReportCallbackEXT;
-            let create_debug_report_callback: vk::PFN_vkCreateDebugReportCallbackEXT =
-                unsafe { transmute(get_function(vk_instance, "vkCreateDebugReportCallbackEXT")) };
-            vulkan_check!(create_debug_report_callback(
-                vk_instance,
-                &report_callback_create_info,
-                null(),
-                &mut vk_debug_callback,
-            ));
-            Debugger {
-                vk_data: Some(vk_debug_callback),
-                // vk_data: None,
-            }
+                .pfn_callback(Some(vulkan_debug_callback));
+            let loader = DebugReport::new(vk_entry, vk_instance);
+            let vk_data = vxunwrap!(loader.create_debug_report_callback(&create_info, None));
+            Self { loader, vk_data }
         }
 
-        pub fn terminate(&mut self, vk_instance: vk::Instance) {
-            if self.vk_data.is_none() {
-                return;
-            }
-            let destroy_debug_report_callback: vk::PFN_vkDestroyDebugReportCallbackEXT =
-                unsafe { transmute(get_function(vk_instance, "vkDestroyDebugReportCallbackEXT")) };
-            unsafe {
-                destroy_debug_report_callback(vk_instance, *vxunwrap!(&self.vk_data), null());
-            }
-            self.vk_data = None;
-        }
-    }
-
-    impl Drop for Debugger {
-        fn drop(&mut self) {
-            if self.vk_data.is_some() {
-                vxlogf!("Unexpected drop of debugger.");
-            }
+        pub fn terminate(&mut self) {
+            self.loader
+                .destroy_debug_report_callback(self.vk_data, None);
         }
     }
 
@@ -167,11 +140,11 @@ mod debug {
     pub struct Debugger {}
 
     impl Debugger {
-        pub fn new(_vk_instance: vk::Instance) -> Self {
-            Debugger {}
+        pub fn new(_vk_entry: &ash::Entry, _vk_instance: &ash::Instance) -> Self {
+            Self {}
         }
 
-        pub fn terminate(&mut self, _vk_instance: vk::Instance) {}
+        pub fn terminate(&mut self) {}
     }
 
     pub fn enumerate_layers() -> Vec<CString> {
@@ -179,7 +152,7 @@ mod debug {
     }
 }
 
-fn get_all_extensions() -> Vec<vk::VkExtensionProperties> {
+fn get_all_extensions() -> Vec<vk::ExtensionProperties> {
     let mut count = 0u32;
     unsafe {
         vulkan_check!(vk::vkEnumerateInstanceExtensionProperties(
@@ -188,7 +161,7 @@ fn get_all_extensions() -> Vec<vk::VkExtensionProperties> {
             null_mut()
         ));
     }
-    let mut properties = vec![vk::VkExtensionProperties::default(); count as usize];
+    let mut properties = vec![vk::ExtensionProperties::default(); count as usize];
     unsafe {
         vulkan_check!(vk::vkEnumerateInstanceExtensionProperties(
             null(),
@@ -203,7 +176,7 @@ fn enumerate_extensions() -> Vec<String> {
     let properties = get_all_extensions();
     let mut extensions = Vec::new();
     for p in properties {
-        let name = slice_to_string(&p.extensionName);
+        let name = slice_to_string(&p.extension_name);
         let name: &str = &name;
         match name {
             "VK_KHR_surface"
@@ -232,7 +205,7 @@ fn enumerate_extensions() -> Vec<String> {
 fn contain_extension(s: &str) -> bool {
     let properties = get_all_extensions();
     for p in properties {
-        let name = slice_to_string(&p.extensionName);
+        let name = slice_to_string(&p.extension_name);
         if name == s {
             return true;
         }
@@ -240,15 +213,16 @@ fn contain_extension(s: &str) -> bool {
     return false;
 }
 
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct Instance {
-    vk_data: vk::Instance,
+pub(crate) struct Instance {
+    entry: ash::Entry,
+    vk_data: ash::Instance,
     debugger: debug::Debugger,
 }
 
 impl Instance {
-    pub(super) fn new() -> Self {
-        let application_name = CString::new("Vulkust App").unwrap();
+    pub(super) fn new(application_name: &str) -> Self {
+        let entry = ash::Entry::new().unwrap();
+        let application_name = CString::new(application_name).unwrap();
         let engine_name = CString::new("Vulkust").unwrap();
         let application_info = vk::ApplicationInfo::builder()
             .api_version(vk_make_version!(1, 0, 0))
@@ -256,42 +230,44 @@ impl Instance {
             .application_name(&application_name)
             .engine_name(&engine_name)
             .engine_version(vk_make_version!(0, 1, 0));
-        let vulkan_layers = debug::enumerate_layers();
+        let vulkan_layers = debug::enumerate_layers(entry.fp_v1_0());
         let vulkan_layers = cstrings_to_ptrs(&vulkan_layers);
         let vulkan_extensions = enumerate_extensions();
         let vulkan_extensions = strings_to_cstrings(vulkan_extensions);
         let vulkan_extensions = cstrings_to_ptrs(&vulkan_extensions);
-        let mut instance_create_info = vk::InstanceCreateInfo::default();
-        instance_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        instance_create_info.pApplicationInfo = &application_info;
-        instance_create_info.enabledLayerCount = vulkan_layers.len() as u32;
-        instance_create_info.ppEnabledLayerNames = vulkan_layers.as_ptr();
-        instance_create_info.enabledExtensionCount = vulkan_extensions.len() as u32;
-        instance_create_info.ppEnabledExtensionNames = vulkan_extensions.as_ptr();
-        let mut vk_instance = 0 as vk::Instance;
-        vulkan_check!(vk::vkCreateInstance(
-            &instance_create_info,
-            null(),
-            &mut vk_instance,
-        ));
-        Instance {
-            vk_data: vk_instance,
-            debugger: debug::Debugger::new(vk_instance),
+        let instance_create_info = vk::InstanceCreateInfo::builder()
+            .application_info(&application_info)
+            .enabled_layer_names(&vulkan_layers)
+            .enabled_extension_names(&vulkan_extensions);
+        let vk_data = vxresult!(entry.create_instance(&instance_create_info, None));
+        let debugger = debug::Debugger::new(&entry, &vk_data);
+        Self {
+            entry,
+            vk_data,
+            debugger,
         }
     }
 
-    pub(super) fn get_data(&self) -> vk::Instance {
-        return self.vk_data;
+    pub(super) fn get_data(&self) -> &ash::Instance {
+        return &self.vk_data;
+    }
+
+    pub(super) fn get_entry(&self) -> &ash::Entry {
+        return &self.entry;
     }
 }
 
 impl Drop for Instance {
     fn drop(&mut self) {
-        self.debugger.terminate(self.vk_data);
-        unsafe {
-            vk::vkDestroyInstance(self.vk_data, null());
-        }
-        self.vk_data = 0 as vk::Instance;
+        self.debugger.terminate();
+        self.vk_data.destroy_instance(None);
+    }
+}
+
+#[cfg(debug_mode)]
+impl std::fmt::Debug for Instance {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Vulkan instance")
     }
 }
 

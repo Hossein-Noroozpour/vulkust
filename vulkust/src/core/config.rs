@@ -8,6 +8,7 @@ pub struct Configurations {
     window_height: usize,
     fullscreen: bool,
     render: RenderConfig,
+    application_name: String,
 }
 
 impl Configurations {
@@ -50,6 +51,14 @@ impl Configurations {
     pub fn get_fullscreen(&self) -> bool {
         return self.fullscreen;
     }
+
+    pub fn get_application_name(&self) -> &str {
+        return &self.application_name;
+    }
+
+    pub fn set_application_name(&mut self, name: String) {
+        self.application_name = name;
+    }
 }
 
 impl Default for Configurations {
@@ -60,6 +69,7 @@ impl Default for Configurations {
             window_height: 700,
             fullscreen: false,
             render: RenderConfig::default(),
+            application_name: "Vulkust Application".to_string(),
         }
     }
 }
