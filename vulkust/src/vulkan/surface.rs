@@ -116,6 +116,10 @@ impl Surface {
     pub(super) fn get_instance(&self) -> &Instance {
         return &self.instance;
     }
+
+    pub(super) fn get_loader(&self) -> &SurfaceLoader {
+        return &self.loader;
+    }
 }
 
 impl Drop for Surface {

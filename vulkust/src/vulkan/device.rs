@@ -2,12 +2,43 @@ use super::super::core::string::{cstrings_to_ptrs, strings_to_cstrings};
 use super::super::render::config::Configurations;
 use super::super::render::image::Format;
 use super::surface::Surface;
+use ash::version::DeviceV1_0;
 use ash::version::InstanceV1_0;
 use ash::vk;
 use std::collections::HashSet;
-use std::ptr::{null, null_mut};
 use std::sync::Arc;
 // use std::cmp::max;
+
+fn get_supported_depth_format(ins: &ash::Instance, s: &vk::PhysicalDevice) -> vk::Format {
+    let depth_formats = vec![
+        vk::Format::D32_SFLOAT,
+        vk::Format::D32_SFLOAT_S8_UINT,
+        vk::Format::D24_UNORM_S8_UINT,
+        vk::Format::D16_UNORM_S8_UINT,
+        vk::Format::D16_UNORM,
+    ];
+    for format in depth_formats {
+        let format_props = ins.get_physical_device_format_properties(*s, format);
+        if vxflagcheck!(
+            format_props.optimal_tiling_features,
+            vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT
+        ) {
+            return format;
+        }
+    }
+    vxlogf!("No depth format found!");
+}
+
+fn get_surface_formats(
+    surface: &Arc<Surface>,
+    physical_device: &vk::PhysicalDevice,
+) -> Vec<vk::SurfaceFormatKHR> {
+    let surface_loader = surface.get_loader();
+    let vk_surface = surface.get_data();
+    return vxresult!(unsafe {
+        surface_loader.get_physical_device_surface_formats(*physical_device, vk_surface)
+    });
+}
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(super) struct Physical {
@@ -21,6 +52,8 @@ pub(super) struct Physical {
     properties: vk::PhysicalDeviceProperties,
     surface_caps: vk::SurfaceCapabilitiesKHR,
     supported_depth_format: vk::Format,
+    surface_formats: Vec<vk::SurfaceFormatKHR>,
+    features: vk::PhysicalDeviceFeatures,
 }
 
 impl Physical {
@@ -36,19 +69,17 @@ impl Physical {
         ) = Self::find_device(surface);
         let memory_properties = vk_instance.get_physical_device_memory_properties(vk_data);
         let properties = vk_instance.get_physical_device_properties(vk_data);
-        let mut surface_caps = vk::SurfaceCapabilitiesKHR::default();
-        vulkan_check!(vk::vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-            vk_data,
-            surface.get_data(),
-            &mut surface_caps,
-        ));
-        unsafe {
-            (vk_data, &mut memory_properties);
-            vk::vkGetPhysicalDeviceProperties(vk_data, &mut properties);
-        }
-        vxlogi!("{:?}", &surface_caps);
-        let mut physical = Physical {
-            surface: surface.clone(),
+        let surface_caps = vxresult!(surface
+            .get_loader()
+            .get_physical_device_surface_capabilities(vk_data, surface.get_data()));
+        #[cfg(debug_mode)]
+        vxlogi!("Surface capacities are {:?}", &surface_caps);
+        let supported_depth_format = get_supported_depth_format(vk_instance, &vk_data);
+        let surface_formats = get_surface_formats(surface, &vk_data);
+        let features = unsafe { vk_instance.get_physical_device_features(vk_data) };
+        let surface = surface.clone();
+        Self {
+            surface,
             graphics_queue_node_index,
             transfer_queue_node_index,
             compute_queue_node_index,
@@ -57,25 +88,28 @@ impl Physical {
             memory_properties,
             properties,
             surface_caps,
-            supported_depth_format: vk::VkFormat::VK_FORMAT_D32_SFLOAT,
-        };
-        physical.supported_depth_format = physical.get_supported_depth_format();
-        return physical;
+            supported_depth_format,
+            surface_formats,
+            features,
+        }
     }
 
     pub(super) fn get_surface(&self) -> &Surface {
         return &self.surface;
     }
 
-    pub(super) fn get_surface_capabilities(&self) -> &vk::VkSurfaceCapabilitiesKHR {
+    pub(super) fn get_surface_capabilities(&self) -> &vk::SurfaceCapabilitiesKHR {
         return &self.surface_caps;
     }
 
     fn find_device(surface: &Arc<Surface>) -> (vk::PhysicalDevice, u32, u32, u32, u32) {
-        let devices = Self::enumerate_devices(surface.get_instance().get_data());
+        let instance = surface.get_instance();
+        let vk_instance = instance.get_data();
+        let devices = Self::enumerate_devices(vk_instance);
+        #[cfg(debug_mode)]
         vxlogi!("Number of physical devices is: {}", devices.len());
         for device in &devices {
-            if Self::device_is_discrete(*device) {
+            if Self::device_is_discrete(vk_instance, device) {
                 match Self::fetch_queues(*device, surface) {
                     Some((g, t, c, p)) => return (*device, g, t, c, p),
                     None => {}
@@ -83,7 +117,7 @@ impl Physical {
             }
         }
         for device in &devices {
-            if !Self::device_is_discrete(*device) {
+            if !Self::device_is_discrete(vk_instance, device) {
                 match Self::fetch_queues(*device, surface) {
                     Some((g, t, c, p)) => return (*device, g, t, c, p),
                     None => {}
@@ -93,32 +127,23 @@ impl Physical {
         vxlogf!("Required device not found!");
     }
 
-    fn device_is_discrete(device: vk::PhysicalDevice) -> bool {
-        get_properties(device).deviceType as u32
-            == vk::PhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU as u32
+    fn device_is_discrete(instance: &ash::Instance, device: &vk::PhysicalDevice) -> bool {
+        get_properties(instance, device).device_type == vk::PhysicalDeviceType::DISCRETE_GPU
     }
 
-    fn enumerate_devices(vk_instance: vk::VkInstance) -> Vec<vk::PhysicalDevice> {
-        let mut gpu_count = 0u32;
-        vulkan_check!(vk::vkEnumeratePhysicalDevices(
-            vk_instance,
-            &mut gpu_count as *mut u32,
-            null_mut(),
-        ));
-        let mut devices = vec![0 as vk::PhysicalDevice; gpu_count as usize];
-        vulkan_check!(vk::vkEnumeratePhysicalDevices(
-            vk_instance,
-            &mut gpu_count,
-            devices.as_mut_ptr(),
-        ));
-        devices
+    fn enumerate_devices(vk_instance: &ash::Instance) -> Vec<vk::PhysicalDevice> {
+        return vxresult!(vk_instance.enumerate_physical_devices());
     }
 
     fn fetch_queues(
         device: vk::PhysicalDevice,
         surface: &Arc<Surface>,
     ) -> Option<(u32, u32, u32, u32)> {
-        let queue_family_properties = Self::get_device_queue_family_properties(device);
+        let instance = surface.get_instance();
+        let vk_instance = instance.get_data();
+        let vk_surface = surface.get_data();
+        let surface_loader = surface.get_loader();
+        let queue_family_properties = Self::get_device_queue_family_properties(vk_instance, device);
         if queue_family_properties.len() == 0 {
             return None;
         }
@@ -129,21 +154,14 @@ impl Physical {
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            let mut b = 0 as vk::VkBool32;
-            unsafe {
-                vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.get_data(), &mut b);
-            }
-            if queue_family.queueCount > 0
-                && b != 0
-                && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)
-                    != 0
-                && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)
-                    != 0
-                && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)
-                    != 0
+            let b = unsafe {
+                surface_loader.get_physical_device_surface_support(device, i, vk_surface)
+            };
+            if queue_family.queue_count > 0
+                && b
+                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::GRAPHICS)
+                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::COMPUTE)
+                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::TRANSFER)
             {
                 return Some((i, i, i, i));
             }
@@ -151,27 +169,20 @@ impl Physical {
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            let mut b = 0 as vk::VkBool32;
-            unsafe {
-                vk::vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.get_data(), &mut b);
-            }
-            if queue_family.queueCount > 0
-                && b != 0
-                && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT as u32)
-                    != 0
-                && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT as u32)
-                    != 0
+            let b = unsafe {
+                surface_loader.get_physical_device_surface_support(device, i, vk_surface)
+            };
+            if queue_family.queue_count > 0
+                && b
+                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::GRAPHICS)
+                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::COMPUTE)
             {
                 graphics_queue_node_index = i;
                 compute_queue_node_index = i;
                 present_queue_node_index = i;
             }
-            if queue_family.queueCount > 0
-                && (queue_family.queueFlags as u32
-                    & vk::VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT as u32)
-                    != 0
+            if queue_family.queue_count > 0
+                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::TRANSFER)
             {
                 transfer_queue_node_index = i;
             }
@@ -194,80 +205,38 @@ impl Physical {
     }
 
     fn get_device_queue_family_properties(
+        vk_instance: &ash::Instance,
         device: vk::PhysicalDevice,
-    ) -> Vec<vk::VkQueueFamilyProperties> {
-        let mut count = 0u32;
+    ) -> Vec<vk::QueueFamilyProperties> {
         unsafe {
-            vk::vkGetPhysicalDeviceQueueFamilyProperties(device, &mut count, null_mut());
+            return vxresult!(vk_instance.get_physical_device_queue_family_properties(device));
         }
-        if count == 0 {
-            return Vec::new();
-        }
-        let mut queue_props = vec![vk::VkQueueFamilyProperties::default(); count as usize];
-        unsafe {
-            vk::vkGetPhysicalDeviceQueueFamilyProperties(
-                device,
-                &mut count,
-                queue_props.as_mut_ptr(),
-            );
-        }
-        queue_props
     }
 
     // pub(super) fn get_queue_family_properties(&self) -> Vec<vk::VkQueueFamilyProperties> {
     //     Self::get_device_queue_family_properties(self.vk_data)
     // }
 
-    fn get_supported_depth_format(&self) -> vk::VkFormat {
-        let depth_formats = vec![
-            vk::VkFormat::VK_FORMAT_D32_SFLOAT,
-            vk::VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT,
-            vk::VkFormat::VK_FORMAT_D24_UNORM_S8_UINT,
-            vk::VkFormat::VK_FORMAT_D16_UNORM_S8_UINT,
-            vk::VkFormat::VK_FORMAT_D16_UNORM,
-        ];
-        for format in depth_formats {
-            let mut format_props = vk::VkFormatProperties::default();
-            unsafe {
-                vk::vkGetPhysicalDeviceFormatProperties(self.vk_data, format, &mut format_props);
-            }
-            if format_props.optimalTilingFeatures as u32
-                & vk::VkFormatFeatureFlagBits::VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
-                != 0
-            {
-                return format;
-            }
-        }
-        vxlogf!("No depth format found!");
+    fn get_supported_depth_format(&self) -> vk::Format {
+        return self.supported_depth_format;
     }
 
-    pub(super) fn get_surface_formats(&self) -> Vec<vk::VkSurfaceFormatKHR> {
-        let mut count = 0u32;
-        vulkan_check!(vk::vkGetPhysicalDeviceSurfaceFormatsKHR(
-            self.vk_data,
-            self.surface.get_data(),
-            &mut count,
-            null_mut(),
-        ));
-        let mut result = vec![vk::VkSurfaceFormatKHR::default(); count as usize];
-        vulkan_check!(vk::vkGetPhysicalDeviceSurfaceFormatsKHR(
-            self.vk_data,
-            self.surface.get_data(),
-            &mut count,
-            result.as_mut_ptr(),
-        ));
-        result
+    pub(super) fn get_surface_formats(&self) -> &[vk::SurfaceFormatKHR] {
+        return &self.surface_formats;
     }
 
-    pub(super) fn get_memory_type_index(&self, type_bits: u32, properties: u32) -> u32 {
-        // Iterate over all memory types available for the device used in this example
+    pub(super) fn get_memory_type_index(
+        &self,
+        type_bits: u32,
+        properties: ash::vk::MemoryPropertyFlags,
+    ) -> u32 {
         let mut type_bits = type_bits;
-        for i in 0..self.memory_properties.memoryTypeCount {
+        for i in 0..self.memory_properties.memory_type_count {
             if (type_bits & 1) == 1 {
-                if (self.memory_properties.memoryTypes[i as usize].propertyFlags as u32)
-                    & properties
-                    == properties
-                {
+                if vxflagcheck!(
+                    self.memory_properties.memory_types[i as usize].property_flags,
+                    properties
+                ) {
                     return i;
                 }
             }
@@ -299,12 +268,8 @@ impl Physical {
     //     )
     // }
 
-    pub(super) fn get_vk_features(&self) -> vk::PhysicalDeviceFeatures {
-        let mut result = vk::PhysicalDeviceFeatures::default();
-        unsafe {
-            vk::vkGetPhysicalDeviceFeatures(self.vk_data, &mut result);
-        }
-        return result;
+    pub(super) fn get_vk_features(&self) -> &vk::PhysicalDeviceFeatures {
+        return &self.features;
     }
 
     pub(super) fn get_graphics_queue_node_index(&self) -> u32 {
@@ -331,15 +296,19 @@ impl Physical {
         return &self.properties;
     }
 
-    pub(super) fn convert_format(&self, f: Format) -> vk::VkFormat {
+    pub(super) fn convert_format(&self, f: Format) -> vk::Format {
         match f {
-            Format::RgbaFloat => return vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT,
+            Format::RgbaFloat => return vk::Format::R32G32B32A32_SFLOAT,
             Format::DepthFloat => return self.get_supported_depth_format(),
-            Format::Float => return vk::VkFormat::VK_FORMAT_R32_SFLOAT,
-            Format::FlagBits8 => return vk::VkFormat::VK_FORMAT_R8_UNORM,
-            Format::FlagBits64 => return vk::VkFormat::VK_FORMAT_R32G32_UINT,
+            Format::Float => return vk::Format::R32_SFLOAT,
+            Format::FlagBits8 => return vk::Format::R8_UNORM,
+            Format::FlagBits64 => return vk::Format::R32G32_UINT,
             _ => vxunexpected!(),
         }
+    }
+
+    pub(super) fn get_vk_instance(&self) -> &ash::Instance {
+        return self.surface.get_instance().get_data();
     }
 }
 
@@ -351,21 +320,21 @@ unsafe impl Send for Physical {}
 
 unsafe impl Sync for Physical {}
 
-fn get_properties(device: vk::PhysicalDevice) -> vk::PhysicalDeviceProperties {
-    let mut properties = vk::PhysicalDeviceProperties::default();
+fn get_properties(
+    instance: &ash::Instance,
+    device: &vk::PhysicalDevice,
+) -> vk::PhysicalDeviceProperties {
     unsafe {
-        vk::vkGetPhysicalDeviceProperties(device, &mut properties);
+        return instance.get_physical_device_properties(*device);
     }
-    properties
 }
 
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct Logical {
+pub(crate) struct Logical {
     physical_device: Arc<Physical>,
-    vk_data: vk::VkDevice,
-    vk_graphic_queue: vk::VkQueue,
-    vk_compute_queue: vk::VkQueue,
-    vk_present_queue: vk::VkQueue,
+    vk_data: ash::Device,
+    vk_graphic_queue: vk::Queue,
+    vk_compute_queue: vk::Queue,
+    vk_present_queue: vk::Queue,
 }
 
 impl Logical {
@@ -380,65 +349,37 @@ impl Logical {
         queue_family_index_set.insert(physical_device.get_compute_queue_node_index());
         queue_family_index_set.insert(physical_device.get_present_queue_node_index());
         let mut queue_create_info_s = Vec::new();
-        let queue_priorities = vec![1f32];
+        let queue_priorities = [1f32];
         // TODO: create as many as possible queue to separate independent works as many as possible
         // on the queues but it is not required currently
         for q in queue_family_index_set {
-            let mut queue_create_info = vk::VkDeviceQueueCreateInfo::default();
-            queue_create_info.sType =
-                vk::VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queue_create_info.queueCount = 1;
-            queue_create_info.queueFamilyIndex = q;
-            queue_create_info.pQueuePriorities = queue_priorities.as_ptr();
-            queue_create_info_s.push(queue_create_info);
+            queue_create_info_s.push(
+                vk::DeviceQueueCreateInfo::builder()
+                    .queue_family_index(q)
+                    .queue_priorities(&queue_priorities)
+                    .build(),
+            );
         }
         let available_features = physical_device.get_vk_features();
         let mut features = vk::PhysicalDeviceFeatures::default();
         if config.get_enable_anistropic_texture() {
-            features.samplerAnisotropy = available_features.samplerAnisotropy;
+            features.sampler_anisotropy = available_features.sampler_anisotropy;
         }
-        let mut device_create_info = vk::VkDeviceCreateInfo::default();
-        device_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        device_create_info.queueCreateInfoCount = queue_create_info_s.len() as u32;
-        device_create_info.pQueueCreateInfos = queue_create_info_s.as_ptr();
-        device_create_info.enabledExtensionCount = device_extensions.len() as u32;
-        device_create_info.ppEnabledExtensionNames = device_extensions.as_ptr();
-        device_create_info.pEnabledFeatures = &features;
-        let mut vk_data = 0 as vk::VkDevice;
-        vulkan_check!(vk::vkCreateDevice(
-            physical_device.get_data(),
-            &device_create_info,
-            null(),
-            &mut vk_data,
-        ));
-        let mut vk_graphic_queue = 0 as vk::VkQueue;
-        unsafe {
-            vk::vkGetDeviceQueue(
-                vk_data,
-                physical_device.get_graphics_queue_node_index(),
-                0,
-                &mut vk_graphic_queue,
-            );
-        }
-        let mut vk_compute_queue = 0 as vk::VkQueue;
-        unsafe {
-            vk::vkGetDeviceQueue(
-                vk_data,
-                physical_device.get_compute_queue_node_index(),
-                0,
-                &mut vk_compute_queue,
-            );
-        }
-        let mut vk_present_queue = 0 as vk::VkQueue;
-        unsafe {
-            vk::vkGetDeviceQueue(
-                vk_data,
-                physical_device.get_present_queue_node_index(),
-                0,
-                &mut vk_present_queue,
-            );
-        }
-        Logical {
+        let device_create_info = vk::DeviceCreateInfo::builder()
+            .queue_create_infos(&queue_create_info_s)
+            .enabled_extension_names(&device_extensions)
+            .enabled_features(&features);
+        let vk_instance = physical_device.get_vk_instance();
+        let vk_data = vxresult!(unsafe {
+            vk_instance.create_device(physical_device.get_data(), &device_create_info, None)
+        });
+        let vk_graphic_queue =
+            unsafe { vk_data.get_device_queue(physical_device.get_graphics_queue_node_index(), 0) };
+        let vk_compute_queue =
+            unsafe { vk_data.get_device_queue(physical_device.get_compute_queue_node_index(), 0) };
+        let vk_present_queue =
+            unsafe { vk_data.get_device_queue(physical_device.get_present_queue_node_index(), 0) };
+        Self {
             physical_device: physical_device.clone(),
             vk_data,
             vk_graphic_queue,
@@ -451,28 +392,26 @@ impl Logical {
         self.physical_device
             .get_properties()
             .limits
-            .minUniformBufferOffsetAlignment as isize
+            .min_uniform_buffer_offset_alignment as isize
     }
 
     pub(super) fn wait_idle(&self) {
-        unsafe {
-            vk::vkDeviceWaitIdle(self.vk_data);
-        }
+        vxresult!(unsafe { self.vk_data.device_wait_idle() });
     }
 
-    pub(super) fn get_data(&self) -> vk::VkDevice {
-        return self.vk_data;
+    pub(super) fn get_data(&self) -> &ash::Device {
+        return &self.vk_data;
     }
 
     pub(super) fn get_physical(&self) -> &Physical {
         return &self.physical_device;
     }
 
-    pub(super) fn get_vk_graphic_queue(&self) -> vk::VkQueue {
+    pub(super) fn get_vk_graphic_queue(&self) -> vk::Queue {
         return self.vk_graphic_queue;
     }
 
-    pub(super) fn convert_format(&self, f: Format) -> vk::VkFormat {
+    pub(super) fn convert_format(&self, f: Format) -> vk::Format {
         return self.physical_device.convert_format(f);
     }
 
@@ -487,9 +426,14 @@ impl Logical {
 
 impl Drop for Logical {
     fn drop(&mut self) {
-        unsafe {
-            vk::vkDestroyDevice(self.vk_data, null());
-        }
+        self.wait_idle();
+    }
+}
+
+#[cfg(debug_mode)]
+impl std::fmt::Debug for Logical {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Vulkan Logical Device")
     }
 }
 
