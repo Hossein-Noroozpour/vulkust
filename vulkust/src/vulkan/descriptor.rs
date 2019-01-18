@@ -6,9 +6,9 @@ use super::super::render::config::MAX_DIRECTIONAL_CASCADES_COUNT;
 use super::super::render::texture::Texture;
 use super::buffer::Dynamic as DynamicBuffer;
 use super::device::Logical as LogicalDevice;
-use super::vulkan as vk;
+use ash::version::DeviceV1_0;
+use ash::vk;
 use std::collections::BTreeMap;
-use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
 
 const SSAO_TEX_COUNT: usize = 3;
@@ -16,36 +16,32 @@ const DEFERRED_TEX_COUNT: usize = 6;
 const GBUFF_TEX_COUNT: usize = 7;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Pool {
-    pub logical_device: Arc<LogicalDevice>,
-    pub vk_data: vk::VkDescriptorPool,
+pub(crate) struct Pool {
+    logical_device: Arc<LogicalDevice>,
+    vk_data: vk::DescriptorPool,
 }
 
 impl Pool {
     pub fn new(logical_device: Arc<LogicalDevice>, conf: &Configurations) -> Self {
         let buffers_count =
             conf.get_max_meshes_count() + conf.get_max_models_count() + conf.get_max_scenes_count();
-        let mut type_counts = [vk::VkDescriptorPoolSize::default(); 2];
-        type_counts[0].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        type_counts[0].descriptorCount = buffers_count as u32;
-        type_counts[1].type_ = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        type_counts[1].descriptorCount = conf.get_max_textures_count() as u32;
-        let mut descriptor_pool_info = vk::VkDescriptorPoolCreateInfo::default();
-        descriptor_pool_info.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptor_pool_info.poolSizeCount = type_counts.len() as u32;
-        descriptor_pool_info.pPoolSizes = type_counts.as_ptr();
-        descriptor_pool_info.maxSets = buffers_count as u32 + 1; // todo I must find the exact number after everything got stable
-        let mut vk_data = 0 as vk::VkDescriptorPool;
-        vulkan_check!(vk::vkCreateDescriptorPool(
-            logical_device.get_data(),
-            &descriptor_pool_info,
-            null(),
-            &mut vk_data,
-        ));
-        Pool {
-            logical_device: logical_device,
-            vk_data: vk_data,
+        let mut type_counts = [vk::DescriptorPoolSize::default(); 2];
+        type_counts[0].ty = vk::DescriptorType::UNIFORM_BUFFER_DYNAMIC;
+        type_counts[0].descriptor_count = buffers_count as u32;
+        type_counts[1].ty = vk::DescriptorType::COMBINED_IMAGE_SAMPLER;
+        type_counts[1].descriptor_count = conf.get_max_textures_count() as u32;
+        let mut descriptor_pool_info = vk::DescriptorPoolCreateInfo::default();
+        descriptor_pool_info.pool_size_count = type_counts.len() as u32;
+        descriptor_pool_info.p_pool_sizes = type_counts.as_ptr();
+        descriptor_pool_info.max_sets = buffers_count as u32 + 1; // todo I must find the exact number after everything got stable
+        let vk_data = vxresult!(unsafe {
+            logical_device
+                .get_data()
+                .create_descriptor_pool(&descriptor_pool_info, None)
+        });
+        Self {
+            logical_device,
+            vk_data,
         }
     }
 }
@@ -53,15 +49,17 @@ impl Pool {
 impl Drop for Pool {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyDescriptorPool(self.logical_device.get_data(), self.vk_data, null());
+            self.logical_device
+                .get_data()
+                .destroy_descriptor_pool(self.vk_data, None);
         }
     }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct SetLayout {
-    pub logical_device: Arc<LogicalDevice>,
-    pub vk_data: vk::VkDescriptorSetLayout,
+pub(crate) struct SetLayout {
+    logical_device: Arc<LogicalDevice>,
+    vk_data: vk::DescriptorSetLayout,
 }
 
 impl SetLayout {
@@ -96,46 +94,38 @@ impl SetLayout {
 
     fn new_with_bindings_info(
         logical_device: Arc<LogicalDevice>,
-        layout_bindings: &Vec<vk::VkDescriptorSetLayoutBinding>,
+        layout_bindings: &Vec<vk::DescriptorSetLayoutBinding>,
     ) -> Self {
-        let mut descriptor_layout = vk::VkDescriptorSetLayoutCreateInfo::default();
-        descriptor_layout.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptor_layout.bindingCount = layout_bindings.len() as u32;
-        descriptor_layout.pBindings = layout_bindings.as_ptr();
-        let mut vk_data = 0 as vk::VkDescriptorSetLayout;
-        vulkan_check!(vk::vkCreateDescriptorSetLayout(
-            logical_device.get_data(),
-            &descriptor_layout,
-            null(),
-            &mut vk_data,
-        ));
-        SetLayout {
+        let mut descriptor_layout = vk::DescriptorSetLayoutCreateInfo::default();
+        descriptor_layout.binding_count = layout_bindings.len() as u32;
+        descriptor_layout.p_bindings = layout_bindings.as_ptr();
+        let mut vk_data = vxresult!(unsafe {
+            logical_device
+                .get_data()
+                .create_descriptor_set_layout(&descriptor_layout, None)
+        });
+        Self {
             logical_device,
             vk_data,
         }
     }
 
-    fn create_binding_info(images: &[u32]) -> Vec<vk::VkDescriptorSetLayoutBinding> {
+    fn create_binding_info(images: &[u32]) -> Vec<vk::DescriptorSetLayoutBinding> {
         let images_count = images.len();
-        let mut layout_bindings =
-            vec![vk::VkDescriptorSetLayoutBinding::default(); 1 + images_count];
+        let mut layout_bindings = vec![vk::DescriptorSetLayoutBinding::default(); 1 + images_count];
         layout_bindings[0].binding = 0;
-        layout_bindings[0].descriptorType =
-            vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        layout_bindings[0].descriptorCount = 1;
-        layout_bindings[0].stageFlags = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT
-            as u32
-            | vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32;
+        layout_bindings[0].descriptor_type = vk::DescriptorType::UNIFORM_BUFFER_DYNAMIC;
+        layout_bindings[0].descriptor_count = 1;
+        layout_bindings[0].stage_flags =
+            vk::ShaderStageFlags::VERTEX | vk::ShaderStageFlags::FRAGMENT;
         let mut binding_index = 0;
         for image_count in images {
             binding_index += 1;
             layout_bindings[binding_index].binding = binding_index as u32;
-            layout_bindings[binding_index].descriptorCount = *image_count;
-            layout_bindings[binding_index].descriptorType =
-                vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            layout_bindings[binding_index].stageFlags =
-                vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT as u32;
+            layout_bindings[binding_index].descriptor_count = *image_count;
+            layout_bindings[binding_index].descriptor_type =
+                vk::DescriptorType::COMBINED_IMAGE_SAMPLER;
+            layout_bindings[binding_index].stage_flags = vk::ShaderStageFlags::FRAGMENT;
         }
         return layout_bindings;
     }
@@ -144,17 +134,19 @@ impl SetLayout {
 impl Drop for SetLayout {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyDescriptorSetLayout(self.logical_device.get_data(), self.vk_data, null());
+            self.logical_device
+                .get_data()
+                .destroy_descriptor_set_layout(self.vk_data, None);
         }
     }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Set {
-    pub pool: Arc<Pool>,
-    pub layout: Arc<SetLayout>,
-    pub texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
-    pub vk_data: vk::VkDescriptorSet,
+    pool: Arc<Pool>,
+    layout: Arc<SetLayout>,
+    texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
+    vk_data: vk::DescriptorSet,
 }
 
 impl Set {
@@ -242,28 +234,25 @@ impl Set {
         Self::new(pool, layout, uniform, texturess)
     }
 
-    fn create_buffer_info(uniform: &DynamicBuffer) -> vk::VkDescriptorBufferInfo {
+    fn create_buffer_info(uniform: &DynamicBuffer) -> vk::DescriptorBufferInfo {
         let buffer = vxresult!(uniform.get_buffer(0).read());
-        let mut buff_info = vk::VkDescriptorBufferInfo::default();
+        let mut buff_info = vk::DescriptorBufferInfo::default();
         buff_info.buffer = buffer.get_data();
-        buff_info.range = buffer.get_allocated_memory().get_size() as vk::VkDeviceSize;
+        buff_info.range = buffer.get_allocated_memory().get_size() as vk::DeviceSize;
         // for offset: it is dynamic uniform buffer, it will be fill later
         return buff_info;
     }
 
-    fn allocate_set(pool: &Arc<Pool>, layout: &Arc<SetLayout>) -> vk::VkDescriptorSet {
-        let mut alloc_info = vk::VkDescriptorSetAllocateInfo::default();
-        alloc_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        alloc_info.descriptorPool = pool.vk_data;
-        alloc_info.descriptorSetCount = 1;
-        alloc_info.pSetLayouts = &layout.vk_data;
-        let mut vk_data = 0 as vk::VkDescriptorSet;
-        vulkan_check!(vk::vkAllocateDescriptorSets(
-            pool.logical_device.get_data(),
-            &alloc_info,
-            &mut vk_data,
-        ));
-        return vk_data;
+    fn allocate_set(pool: &Arc<Pool>, layout: &Arc<SetLayout>) -> vk::DescriptorSet {
+        let mut alloc_info = vk::DescriptorSetAllocateInfo::default();
+        alloc_info.descriptor_pool = pool.vk_data;
+        alloc_info.descriptor_set_count = 1;
+        alloc_info.p_set_layouts = &layout.vk_data;
+        return vxresult!(unsafe {
+            pool.logical_device
+                .get_data()
+                .allocate_descriptor_sets(&alloc_info)
+        });
     }
 
     fn new(
@@ -274,22 +263,21 @@ impl Set {
     ) -> Self {
         let vk_data = Self::allocate_set(&pool, &layout);
         let buff_info = Self::create_buffer_info(uniform);
-        let mut infos = vec![vk::VkWriteDescriptorSet::default(); 1 + texturess.len()];
-        infos[0].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        infos[0].dstSet = vk_data;
-        infos[0].descriptorCount = 1;
-        infos[0].descriptorType = vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        infos[0].pBufferInfo = &buff_info;
-        infos[0].dstBinding = 0;
+        let mut infos = vec![vk::WriteDescriptorSet::default(); 1 + texturess.len()];
+        infos[0].dst_set = vk_data;
+        infos[0].descriptor_count = 1;
+        infos[0].descriptor_type = vk::DescriptorType::UNIFORM_BUFFER_DYNAMIC;
+        infos[0].p_buffer_info = &buff_info;
+        infos[0].dst_binding = 0;
         let mut img_infoss = Vec::new();
         for textures in &texturess {
             let mut img_infos = Vec::new();
             for texture in textures {
                 let texture = vxresult!(texture.read());
-                let mut img_info = vk::VkDescriptorImageInfo::default();
-                img_info.imageLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                img_info.imageView = texture.get_image_view().get_data();
-                img_info.sampler = texture.get_sampler().get_data();
+                let mut img_info = vk::DescriptorImageInfo::default();
+                img_info.image_layout = vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL;
+                img_info.image_view = texture.get_image_view().get_data();
+                img_info.sampler = *texture.get_sampler().get_data();
                 img_infos.push(img_info);
             }
             img_infoss.push(img_infos);
@@ -297,26 +285,20 @@ impl Set {
         let mut last_info_i = 1;
         let mut last_img_info_i = 0;
         for _ in &texturess {
-            infos[last_info_i].sType = vk::VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            infos[last_info_i].dstSet = vk_data;
-            infos[last_info_i].descriptorCount = img_infoss[last_img_info_i].len() as u32;
-            infos[last_info_i].descriptorType =
-                vk::VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            infos[last_info_i].pImageInfo = img_infoss[last_img_info_i].as_ptr();
-            infos[last_info_i].dstBinding = last_info_i as u32;
+            infos[last_info_i].dst_set = vk_data;
+            infos[last_info_i].descriptor_count = img_infoss[last_img_info_i].len() as u32;
+            infos[last_info_i].descriptor_type = vk::DescriptorType::COMBINED_IMAGE_SAMPLER;
+            infos[last_info_i].p_image_info = img_infoss[last_img_info_i].as_ptr();
+            infos[last_info_i].dst_binding = last_info_i as u32;
             last_info_i += 1;
             last_img_info_i += 1;
         }
         unsafe {
-            vk::vkUpdateDescriptorSets(
-                pool.logical_device.get_data(),
-                infos.len() as u32,
-                infos.as_ptr(),
-                0,
-                null(),
-            );
+            pool.logical_device
+                .get_data()
+                .update_descriptor_sets(&infos, &[]);
         }
-        Set {
+        Self {
             pool,
             layout,
             texturess,
