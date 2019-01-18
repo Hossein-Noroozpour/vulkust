@@ -5,18 +5,17 @@ use super::device::Logical as LogicalDevice;
 use super::framebuffer::Framebuffer;
 use super::pipeline::Pipeline;
 // use super::sync::Fence;
-use super::vulkan as vk;
-use std::default::Default;
-use std::ptr::null;
+use ash::version::DeviceV1_0;
+use ash::vk;
 use std::sync::{Arc, RwLock};
 
-#[cfg_attr(debug_mode, derive(Debug))]
-pub struct Buffer {
+pub(crate) struct Buffer {
     pool: Arc<Pool>,
-    vk_data: vk::VkCommandBuffer,
+    vk_device: ash::Device,
+    vk_data: vk::CommandBuffer,
     has_render_record: bool,
-    bound_pipeline_layout: vk::VkPipelineLayout,
-    bound_descriptor_sets: [vk::VkDescriptorSet; 3],
+    bound_pipeline_layout: vk::PipelineLayout,
+    bound_descriptor_sets: [vk::DescriptorSet; 3],
     bound_dynamic_buffer_offsets: [u32; 3],
     #[cfg(debug_mode)]
     is_secondary: bool,
@@ -68,49 +67,47 @@ impl Buffer {
 
     fn new(pool: Arc<Pool>, is_secondary: bool) -> Self {
         let level = if is_secondary {
-            vk::VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY
+            vk::CommandBufferLevel::SECONDARY
         } else {
-            vk::VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY
+            vk::CommandBufferLevel::PRIMARY
         };
-        let mut cmd_buf_allocate_info = vk::VkCommandBufferAllocateInfo::default();
-        cmd_buf_allocate_info.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        cmd_buf_allocate_info.commandPool = pool.vk_data;
+        let mut cmd_buf_allocate_info = vk::CommandBufferAllocateInfo::default();
+        cmd_buf_allocate_info.command_pool = pool.vk_data;
         cmd_buf_allocate_info.level = level;
-        cmd_buf_allocate_info.commandBufferCount = 1;
-        let mut vk_data = 0 as vk::VkCommandBuffer;
-        vulkan_check!(vk::vkAllocateCommandBuffers(
-            pool.logical_device.get_data(),
-            &cmd_buf_allocate_info,
-            &mut vk_data,
-        ));
-        Buffer {
-            pool: pool.clone(),
-            vk_data: vk_data,
+        cmd_buf_allocate_info.command_buffer_count = 1;
+        let vk_device = *pool.logical_device.get_data();
+        let vk_data =
+            vxresult!(unsafe { vk_device.allocate_command_buffers(&cmd_buf_allocate_info) });
+        let vk_data = vk_data[0];
+        let pool = pool.clone();
+        Self {
+            pool,
+            vk_data,
+            vk_device,
             has_render_record: false,
-            bound_pipeline_layout: 0 as vk::VkPipelineLayout,
-            bound_descriptor_sets: [0 as vk::VkDescriptorSet; MAX_DESCRIPTOR_SETS_COUNT],
+            bound_pipeline_layout: vk::PipelineLayout::null(),
+            bound_descriptor_sets: [vk::DescriptorSet::null(); MAX_DESCRIPTOR_SETS_COUNT],
             bound_dynamic_buffer_offsets: [0; MAX_DYNAMIC_BUFFER_OFFSETS_COUNT],
             #[cfg(debug_mode)]
             is_secondary,
         }
     }
 
-    pub(crate) fn get_data(&self) -> vk::VkCommandBuffer {
-        return self.vk_data;
+    pub(crate) fn get_data(&self) -> &vk::CommandBuffer {
+        return &self.vk_data;
     }
 
     pub(crate) fn get_has_render_record(&self) -> bool {
         return self.has_render_record;
     }
 
-    pub(crate) fn exe_cmds_with_data(&mut self, data: &[vk::VkCommandBuffer]) {
+    pub(crate) fn exe_cmds_with_data(&mut self, data: &[vk::CommandBuffer]) {
         if data.len() < 1 {
             return;
         }
         self.has_render_record = true;
         unsafe {
-            vk::vkCmdExecuteCommands(self.vk_data, data.len() as u32, data.as_ptr());
+            self.vk_device.cmd_execute_commands(self.vk_data, &data);
         }
     }
 
@@ -128,9 +125,11 @@ impl Buffer {
             }
         }
         self.has_render_record = false;
-        let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
-        cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        vulkan_check!(vk::vkBeginCommandBuffer(self.vk_data, &cmd_buf_info));
+        let mut cmd_buf_info = vk::CommandBufferBeginInfo::default();
+        vxresult!(unsafe {
+            self.vk_device
+                .begin_command_buffer(self.vk_data, &cmd_buf_info)
+        });
     }
 
     pub(crate) fn begin_secondary(&mut self, framebuffer: &Framebuffer) {
@@ -142,69 +141,63 @@ impl Buffer {
         }
         self.has_render_record = false;
 
-        let mut inheritance_info = vk::VkCommandBufferInheritanceInfo::default();
-        inheritance_info.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-        inheritance_info.framebuffer = framebuffer.get_data();
-        inheritance_info.renderPass = framebuffer.get_render_pass().get_data();
+        let mut inheritance_info = vk::CommandBufferInheritanceInfo::default();
+        inheritance_info.framebuffer = *framebuffer.get_data();
+        inheritance_info.render_pass = *framebuffer.get_render_pass().get_data();
 
-        let mut cmd_buf_info = vk::VkCommandBufferBeginInfo::default();
-        cmd_buf_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        cmd_buf_info.pInheritanceInfo = &inheritance_info;
-        cmd_buf_info.flags =
-            vk::VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT
-                as vk::VkCommandBufferUsageFlags;
-        vulkan_check!(vk::vkBeginCommandBuffer(self.vk_data, &cmd_buf_info));
+        let mut cmd_buf_info = vk::CommandBufferBeginInfo::default();
+        cmd_buf_info.p_inheritance_info = &inheritance_info;
+        cmd_buf_info.flags = vk::CommandBufferUsageFlags::RENDER_PASS_CONTINUE;
+        vxresult!(unsafe {
+            self.vk_device
+                .begin_command_buffer(self.vk_data, &cmd_buf_info)
+        });
         unsafe {
-            vk::vkCmdSetViewport(self.vk_data, 0, 1, framebuffer.get_vk_viewport());
-            vk::vkCmdSetScissor(self.vk_data, 0, 1, framebuffer.get_vk_scissor());
+            self.vk_device
+                .cmd_set_viewport(self.vk_data, 0, &[*framebuffer.get_vk_viewport()]);
+            self.vk_device
+                .cmd_set_scissor(self.vk_data, 0, &[*framebuffer.get_vk_scissor()]);
         }
     }
 
     pub(crate) fn begin_render_pass_with_info(
         &mut self,
-        render_pass_begin_info: vk::VkRenderPassBeginInfo,
+        render_pass_begin_info: &vk::RenderPassBeginInfo,
     ) {
         unsafe {
-            vk::vkCmdBeginRenderPass(
+            self.vk_device.cmd_begin_render_pass(
                 self.vk_data,
-                &render_pass_begin_info,
-                vk::VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS,
+                render_pass_begin_info,
+                vk::SubpassContents::SECONDARY_COMMAND_BUFFERS,
             );
         }
     }
 
     pub(crate) fn copy_buffer(
         &mut self,
-        src: vk::VkBuffer,
-        dst: vk::VkBuffer,
-        regions: &Vec<vk::VkBufferCopy>,
+        src: vk::Buffer,
+        dst: vk::Buffer,
+        regions: &[vk::BufferCopy],
     ) {
         unsafe {
-            vk::vkCmdCopyBuffer(
-                self.vk_data,
-                src,
-                dst,
-                regions.len() as u32,
-                regions.as_ptr(),
-            );
+            self.vk_device
+                .cmd_copy_buffer(self.vk_data, src, dst, regions);
         }
     }
 
     pub(crate) fn copy_buffer_to_image(
         &mut self,
-        src: vk::VkBuffer,
-        dst: vk::VkImage,
-        region: &vk::VkBufferImageCopy,
+        src: vk::Buffer,
+        dst: vk::Image,
+        region: &vk::BufferImageCopy,
     ) {
         unsafe {
-            vk::vkCmdCopyBufferToImage(
+            self.vk_device.cmd_copy_buffer_to_image(
                 self.vk_data,
                 src,
                 dst,
-                vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                1,
-                region,
+                vk::ImageLayout::TRANSFER_DST_OPTIMAL,
+                &[*region],
             );
         }
     }
@@ -217,12 +210,12 @@ impl Buffer {
 
     // pub(crate) fn flush(&mut self) {
     //     let fence = Fence::new(self.pool.logical_device.clone());
-    //     vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
+    //     vxresult!(unsafe { self.vk_device.EndCommandBuffer(self.vk_data));
     //     let mut submit_info = vk::VkSubmitInfo::default();
     //     submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
     //     submit_info.commandBufferCount = 1;
     //     submit_info.pCommandBuffers = &self.vk_data;
-    //     vulkan_check!(vk::vkQueueSubmit(
+    //     vxresult!(unsafe { self.vk_device.QueueSubmit(
     //         self.pool.logical_device.vk_graphic_queue,
     //         1,
     //         &submit_info,
@@ -233,76 +226,77 @@ impl Buffer {
 
     pub(crate) fn end_render_pass(&mut self) {
         unsafe {
-            vk::vkCmdEndRenderPass(self.vk_data);
+            self.vk_device.cmd_end_render_pass(self.vk_data);
         }
     }
 
     pub(crate) fn end(&mut self) {
-        vulkan_check!(vk::vkEndCommandBuffer(self.vk_data));
+        vxresult!(unsafe { self.vk_device.end_command_buffer(self.vk_data) });
     }
 
     pub(crate) fn bind_pipeline(&mut self, p: &Pipeline) {
         let info = p.get_info_for_binding();
         self.bound_pipeline_layout = p.get_layout().vk_data;
         unsafe {
-            vk::vkCmdBindPipeline(self.vk_data, info.0, info.1);
+            self.vk_device
+                .cmd_bind_pipeline(self.vk_data, info.0, info.1);
         }
     }
 
     pub(crate) fn bind_vertex_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
         let vkbuff = buffer.get_data();
-        let offset = buffer.get_allocated_memory().get_offset() as vk::VkDeviceSize;
+        let offset = buffer.get_allocated_memory().get_offset() as vk::DeviceSize;
         unsafe {
-            vk::vkCmdBindVertexBuffers(self.vk_data, 0, 1, &vkbuff, &offset);
+            self.vk_device
+                .cmd_bind_vertex_buffers(self.vk_data, 0, &[vkbuff], &[offset]);
         }
     }
 
     pub(crate) fn bind_index_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
         let buffer = vxresult!(buffer.read());
         let vkbuff = buffer.get_data();
-        let offset = buffer.get_allocated_memory().get_offset() as vk::VkDeviceSize;
+        let offset = buffer.get_allocated_memory().get_offset() as vk::DeviceSize;
         unsafe {
-            vk::vkCmdBindIndexBuffer(
+            self.vk_device.cmd_bind_index_buffer(
                 self.vk_data,
                 vkbuff,
                 offset,
-                vk::VkIndexType::VK_INDEX_TYPE_UINT32,
+                vk::IndexType::UINT32,
             );
         }
     }
 
     pub(crate) fn draw_index(&mut self, indices_count: u32) {
         unsafe {
-            vk::vkCmdDrawIndexed(self.vk_data, indices_count, 1, 0, 0, 1);
+            self.vk_device
+                .cmd_draw_indexed(self.vk_data, indices_count, 1, 0, 0, 1);
         }
     }
 
     pub(crate) fn draw(&mut self, vertices_count: u32) {
         unsafe {
-            vk::vkCmdDraw(self.vk_data, vertices_count, 1, 0, 0);
+            self.vk_device
+                .cmd_draw(self.vk_data, vertices_count, 1, 0, 0);
         }
     }
 
     pub(crate) fn pipeline_image_barrier(
         &mut self,
-        src_stage: vk::VkPipelineStageFlags,
-        dst_stage: vk::VkPipelineStageFlags,
-        dependancy: vk::VkDependencyFlags,
-        info: &vk::VkImageMemoryBarrier,
+        src_stage: vk::PipelineStageFlags,
+        dst_stage: vk::PipelineStageFlags,
+        dependancy: vk::DependencyFlags,
+        info: &vk::ImageMemoryBarrier,
     ) {
         unsafe {
-            vk::vkCmdPipelineBarrier(
+            self.vk_device.cmd_pipeline_barrier(
                 self.vk_data,
                 src_stage,
                 dst_stage,
                 dependancy,
-                0,
-                null(),
-                0,
-                null(),
-                1,
-                info,
+                &[],
+                &[],
+                &[*info],
             );
         }
     }
@@ -312,7 +306,7 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[GBUFF_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[GBUFF_SCENE_DESCRIPTOR_OFFSET] = *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[GBUFF_SCENE_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -322,7 +316,7 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[GBUFF_MODEL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[GBUFF_MODEL_DESCRIPTOR_OFFSET] = *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[GBUFF_MODEL_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -332,7 +326,7 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[GBUFF_MATERIAL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[GBUFF_MATERIAL_DESCRIPTOR_OFFSET] = *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[GBUFF_MATERIAL_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -345,15 +339,13 @@ impl Buffer {
     ) {
         self.has_render_record = true;
         unsafe {
-            vk::vkCmdBindDescriptorSets(
+            self.vk_device.cmd_bind_descriptor_sets(
                 self.vk_data,
-                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                vk::PipelineBindPoint::GRAPHICS,
                 self.bound_pipeline_layout,
                 0,
-                GBUFF_DESCRIPTOR_SETS_COUNT as u32,
-                self.bound_descriptor_sets.as_ptr(),
-                GBUFF_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
-                self.bound_dynamic_buffer_offsets.as_ptr(),
+                &self.bound_descriptor_sets[..GBUFF_DESCRIPTOR_SETS_COUNT],
+                &self.bound_dynamic_buffer_offsets[..GBUFF_DYNAMIC_BUFFER_OFFSETS_COUNT],
             );
         }
         self.bind_vertex_buffer(vertex_buffer.get_buffer());
@@ -366,7 +358,7 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[UNLIT_MODEL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[UNLIT_MODEL_DESCRIPTOR_OFFSET] = *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[UNLIT_MODEL_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -376,7 +368,7 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[UNLIT_MATERIAL_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[UNLIT_MATERIAL_DESCRIPTOR_OFFSET] = *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[UNLIT_MATERIAL_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -389,15 +381,13 @@ impl Buffer {
     ) {
         self.has_render_record = true;
         unsafe {
-            vk::vkCmdBindDescriptorSets(
+            self.vk_device.cmd_bind_descriptor_sets(
                 self.vk_data,
-                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                vk::PipelineBindPoint::GRAPHICS,
                 self.bound_pipeline_layout,
                 0,
-                UNLIT_DESCRIPTOR_SETS_COUNT as u32,
-                self.bound_descriptor_sets.as_ptr(),
-                UNLIT_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
-                self.bound_dynamic_buffer_offsets.as_ptr(),
+                &self.bound_descriptor_sets[..UNLIT_DESCRIPTOR_SETS_COUNT],
+                &self.bound_dynamic_buffer_offsets[..UNLIT_DYNAMIC_BUFFER_OFFSETS_COUNT],
             );
         }
         self.bind_vertex_buffer(vertex_buffer.get_buffer());
@@ -408,15 +398,13 @@ impl Buffer {
     pub(crate) fn render_deferred(&mut self) {
         self.has_render_record = true;
         unsafe {
-            vk::vkCmdBindDescriptorSets(
+            self.vk_device.cmd_bind_descriptor_sets(
                 self.vk_data,
-                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                vk::PipelineBindPoint::GRAPHICS,
                 self.bound_pipeline_layout,
                 0,
-                DEFERRED_DESCRIPTOR_SETS_COUNT as u32,
-                self.bound_descriptor_sets.as_ptr(),
-                DEFERRED_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
-                self.bound_dynamic_buffer_offsets.as_ptr(),
+                &self.bound_descriptor_sets[..DEFERRED_DESCRIPTOR_SETS_COUNT],
+                &self.bound_dynamic_buffer_offsets[..DEFERRED_DYNAMIC_BUFFER_OFFSETS_COUNT],
             );
         }
         self.draw(3);
@@ -425,15 +413,13 @@ impl Buffer {
     pub(crate) fn render_ssao(&mut self) {
         self.has_render_record = true;
         unsafe {
-            vk::vkCmdBindDescriptorSets(
+            self.vk_device.cmd_bind_descriptor_sets(
                 self.vk_data,
-                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                vk::PipelineBindPoint::GRAPHICS,
                 self.bound_pipeline_layout,
                 0,
-                SSAO_DESCRIPTOR_SETS_COUNT as u32,
-                self.bound_descriptor_sets.as_ptr(),
-                SSAO_DYNAMIC_BUFFER_OFFSETS_COUNT as u32,
-                self.bound_dynamic_buffer_offsets.as_ptr(),
+                &self.bound_descriptor_sets[..SSAO_DESCRIPTOR_SETS_COUNT],
+                &self.bound_dynamic_buffer_offsets[..SSAO_DYNAMIC_BUFFER_OFFSETS_COUNT],
             );
         }
         self.draw(3);
@@ -442,15 +428,14 @@ impl Buffer {
     pub(crate) fn render_shadow_accumulator_directional(&mut self) {
         self.has_render_record = true;
         unsafe {
-            vk::vkCmdBindDescriptorSets(
+            self.vk_device.cmd_bind_descriptor_sets(
                 self.vk_data,
-                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                vk::PipelineBindPoint::GRAPHICS,
                 self.bound_pipeline_layout,
                 0,
-                SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_SETS_COUNT as u32,
-                self.bound_descriptor_sets.as_ptr(),
-                SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_SETS_COUNT as u32,
-                self.bound_dynamic_buffer_offsets.as_ptr(),
+                &self.bound_descriptor_sets[..SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_SETS_COUNT],
+                &self.bound_dynamic_buffer_offsets
+                    [..SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_SETS_COUNT],
             );
         }
         self.draw(3);
@@ -461,7 +446,7 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] = *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[DEFERRED_SCENE_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -471,7 +456,8 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] =
+            *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[DEFERRED_DEFERRED_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -481,7 +467,7 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[SSAO_SCENE_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[SSAO_SCENE_DESCRIPTOR_OFFSET] = *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[SSAO_SCENE_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -491,7 +477,7 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[SSAO_SSAO_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[SSAO_SSAO_DESCRIPTOR_OFFSET] = *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[SSAO_SSAO_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -501,7 +487,8 @@ impl Buffer {
         descriptor_set: &DescriptorSet,
         buffer: &BufBuffer,
     ) {
-        self.bound_descriptor_sets[SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET] = descriptor_set.vk_data;
+        self.bound_descriptor_sets[SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET] =
+            *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[SHADOW_MAPPER_LIGHT_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -512,7 +499,7 @@ impl Buffer {
         buffer: &BufBuffer,
     ) {
         self.bound_descriptor_sets[SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET] =
-            descriptor_set.vk_data;
+            *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[SHADOW_MAPPER_MATERIAL_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -523,7 +510,7 @@ impl Buffer {
         buffer: &BufBuffer,
     ) {
         self.bound_descriptor_sets[SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_OFFSET] =
-            descriptor_set.vk_data;
+            *descriptor_set.get_data();
         self.bound_dynamic_buffer_offsets[SHADOW_ACCUMULATOR_DIRECTIONAL_DESCRIPTOR_OFFSET] =
             buffer.get_allocated_memory().get_offset() as u32;
     }
@@ -536,15 +523,13 @@ impl Buffer {
     ) {
         self.has_render_record = true;
         unsafe {
-            vk::vkCmdBindDescriptorSets(
+            self.vk_device.cmd_bind_descriptor_sets(
                 self.vk_data,
-                vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                vk::PipelineBindPoint::GRAPHICS,
                 self.bound_pipeline_layout,
                 0,
-                SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT as u32,
-                self.bound_descriptor_sets.as_ptr(),
-                SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT as u32,
-                self.bound_dynamic_buffer_offsets.as_ptr(),
+                &self.bound_descriptor_sets[..SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT],
+                &self.bound_dynamic_buffer_offsets[..SHADOW_MAPPER_DESCRIPTOR_SETS_COUNT],
             );
         }
         self.bind_vertex_buffer(vertex_buffer.get_buffer());
@@ -556,12 +541,8 @@ impl Buffer {
 impl Drop for Buffer {
     fn drop(&mut self) {
         unsafe {
-            vk::vkFreeCommandBuffers(
-                self.pool.logical_device.get_data(),
-                self.pool.vk_data,
-                1,
-                &mut self.vk_data,
-            );
+            self.vk_device
+                .free_command_buffers(self.pool.vk_data, &[self.vk_data]);
         }
     }
 }
@@ -577,41 +558,40 @@ pub enum Type {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Pool {
-    pub pool_type: Type,
-    pub logical_device: Arc<LogicalDevice>,
-    pub vk_data: vk::VkCommandPool,
+pub(crate) struct Pool {
+    pool_type: Type,
+    logical_device: Arc<LogicalDevice>,
+    vk_data: vk::CommandPool,
 }
 
 impl Pool {
-    pub fn new(logical_device: Arc<LogicalDevice>, pool_type: Type, flags: u32) -> Self {
-        let mut vk_cmd_pool_info = vk::VkCommandPoolCreateInfo::default();
-        vk_cmd_pool_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    pub fn new(
+        logical_device: Arc<LogicalDevice>,
+        pool_type: Type,
+        flags: vk::CommandPoolCreateFlags,
+    ) -> Self {
+        let mut vk_cmd_pool_info = vk::CommandPoolCreateInfo::default();
         match pool_type {
             Type::Graphic => {
-                vk_cmd_pool_info.queueFamilyIndex = logical_device
+                vk_cmd_pool_info.queue_family_index = logical_device
                     .get_physical()
                     .get_graphics_queue_node_index();
             }
             Type::Compute => {
-                vk_cmd_pool_info.queueFamilyIndex =
+                vk_cmd_pool_info.queue_family_index =
                     logical_device.get_physical().get_compute_queue_node_index();
             }
         }
-        vk_cmd_pool_info.flags =
-            vk::VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT as u32
-                | flags;
-        let mut vk_data = 0 as vk::VkCommandPool;
-        vulkan_check!(vk::vkCreateCommandPool(
-            logical_device.get_data(),
-            &vk_cmd_pool_info,
-            null(),
-            &mut vk_data,
-        ));
-        Pool {
+        vk_cmd_pool_info.flags = vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER | flags;
+        let vk_data = vxresult!(unsafe {
+            logical_device
+                .get_data()
+                .create_command_pool(&vk_cmd_pool_info, None)
+        });
+        Self {
             pool_type,
             logical_device,
-            vk_data: vk_data,
+            vk_data,
         }
     }
 }
@@ -619,8 +599,17 @@ impl Pool {
 impl Drop for Pool {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyCommandPool(self.logical_device.get_data(), self.vk_data, null());
+            self.logical_device
+                .get_data()
+                .destroy_command_pool(self.vk_data, None);
         }
+    }
+}
+
+#[cfg(debug_mode)]
+impl std::fmt::Debug for Buffer {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Vulkan CommandBuffer")
     }
 }
 

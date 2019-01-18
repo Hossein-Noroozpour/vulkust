@@ -100,15 +100,15 @@ impl Framebuffer {
         render_pass_begin_info.p_clear_values = self.clear_values.as_ptr();
         render_pass_begin_info.framebuffer = self.vk_data;
 
-        cmd_buffer.begin_render_pass_with_info(render_pass_begin_info);
+        cmd_buffer.begin_render_pass_with_info(&render_pass_begin_info);
     }
 
     // pub(crate) fn get_buffers(&self) -> &Vec<Arc<ImageView>> {
     //     return &self.buffers;
     // }
 
-    pub(crate) fn get_data(&self) -> vk::Framebuffer {
-        return self.vk_data;
+    pub(crate) fn get_data(&self) -> &vk::Framebuffer {
+        return &self.vk_data;
     }
 
     pub(crate) fn get_render_pass(&self) -> &Arc<RenderPass> {

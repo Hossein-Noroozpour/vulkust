@@ -305,6 +305,11 @@ impl Set {
             vk_data,
         }
     }
+
+    #[inline]
+    pub(super) fn get_data(&self) -> &vk::DescriptorSet {
+        return &self.vk_data;
+    }
 }
 
 impl Drop for Set {
