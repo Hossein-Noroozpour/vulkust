@@ -1,22 +1,22 @@
 use super::device::Logical as LogicalDevice;
 use super::image::View as ImageView;
 use super::sync::Semaphore;
-use super::vulkan as vk;
+use ash::vk;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub enum NextImageResult {
+pub(crate) enum NextImageResult {
     NeedsRefresh,
     Next(u32),
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Swapchain {
-    pub logical_device: Arc<LogicalDevice>,
-    pub surface_format: vk::VkSurfaceFormatKHR,
-    pub image_views: Vec<Arc<ImageView>>,
-    pub vk_data: vk::VkSwapchainKHR,
+pub(crate) struct Swapchain {
+    logical_device: Arc<LogicalDevice>,
+    surface_format: vk::SurfaceFormatKHR,
+    image_views: Vec<Arc<ImageView>>,
+    vk_data: vk::SwapchainKHR,
 }
 
 impl Swapchain {

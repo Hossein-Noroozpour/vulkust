@@ -1,8 +1,6 @@
 use super::device::Logical as LogicalDevice;
 use ash::version::DeviceV1_0;
 use ash::vk;
-use std::default::Default;
-use std::ptr::null;
 use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]

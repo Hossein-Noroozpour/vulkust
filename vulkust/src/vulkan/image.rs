@@ -4,21 +4,20 @@ use super::buffer::Manager as BufferManager;
 use super::command::Buffer as CmdBuffer;
 use super::device::Logical as LogicalDevice;
 use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
-use super::vulkan as vk;
-
-use std::default::Default;
+use ash::version::DeviceV1_0;
+use ash::vk;
 use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
-pub(super) fn convert_layout(f: &Layout) -> vk::VkImageLayout {
+pub(super) fn convert_layout(f: &Layout) -> vk::ImageLayout {
     match f {
-        &Layout::Uninitialized => return vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+        &Layout::Uninitialized => return vk::ImageLayout::UNDEFINED,
         &Layout::DepthStencil => {
-            return vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+            return vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         }
-        &Layout::Display => return vk::VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        &Layout::Display => return vk::ImageLayout::PRESENT_SRC_KHR,
         &Layout::ShaderReadOnly => {
-            return vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            return vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL
         }
         // _ => vxunexpected!(),
     }
@@ -27,50 +26,43 @@ pub(super) fn convert_layout(f: &Layout) -> vk::VkImageLayout {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Image {
     logical_device: Arc<LogicalDevice>,
-    layout: vk::VkImageLayout,
-    format: vk::VkFormat,
+    layout: vk::ImageLayout,
+    format: vk::Format,
     mips_count: u8,
-    usage: vk::VkImageUsageFlags,
+    usage: vk::ImageUsageFlags,
     memory: Option<Arc<RwLock<Memory>>>,
     width: u32,
     height: u32,
-    vk_data: vk::VkImage,
+    vk_data: vk::Image,
 }
 
 impl Image {
     pub(crate) fn new_with_info(
-        info: &vk::VkImageCreateInfo,
+        info: &vk::ImageCreateInfo,
         memory_mgr: &Arc<RwLock<MemoryManager>>,
     ) -> Self {
         let logical_device = vxresult!(memory_mgr.read()).get_device().clone();
-        let mut vk_data = 0 as vk::VkImage;
-        vulkan_check!(vk::vkCreateImage(
-            logical_device.get_data(),
-            info,
-            null(),
-            &mut vk_data,
-        ));
-        let mut mem_reqs = vk::VkMemoryRequirements::default();
-        unsafe {
-            vk::vkGetImageMemoryRequirements(logical_device.get_data(), vk_data, &mut mem_reqs);
-        }
+        let vk_dev = logical_device.get_data();
+        let vk_data = vxresult!(unsafe { vk_dev.create_image(info, None) });
+        let mem_reqs = unsafe { vk_dev.get_image_memory_requirements(vk_data) };
         let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemoryLocation::GPU);
         {
             let memory_r = vxresult!(memory.read());
             let root_memory = vxresult!(memory_r.get_root().read());
-            vulkan_check!(vk::vkBindImageMemory(
-                logical_device.get_data(),
-                vk_data,
-                root_memory.get_data(),
-                memory_r.get_allocated_memory().get_offset() as vk::VkDeviceSize,
-            ));
+            vxresult!(unsafe {
+                vk_dev.bind_image_memory(
+                    vk_data,
+                    root_memory.get_data(),
+                    memory_r.get_allocated_memory().get_offset() as vk::DeviceSize,
+                )
+            });
         }
-        Image {
+        Self {
             logical_device,
             vk_data,
-            layout: info.initialLayout,
+            layout: info.initial_layout,
             format: info.format,
-            mips_count: info.mipLevels as u8,
+            mips_count: info.mip_levels as u8,
             usage: info.usage,
             width: info.extent.width,
             height: info.extent.height,
@@ -80,14 +72,14 @@ impl Image {
 
     pub(crate) fn new_with_vk_data(
         logical_device: Arc<LogicalDevice>,
-        vk_data: vk::VkImage,
-        layout: vk::VkImageLayout,
-        format: vk::VkFormat,
-        usage: vk::VkImageUsageFlags,
+        vk_data: vk::Image,
+        layout: vk::ImageLayout,
+        format: vk::Format,
+        usage: vk::ImageUsageFlags,
         width: u32,
         height: u32,
     ) -> Self {
-        Image {
+        Self {
             logical_device,
             layout,
             format,
@@ -106,8 +98,8 @@ impl Image {
         data: &[u8],
         buffmgr: &Arc<RwLock<BufferManager>>,
     ) -> Arc<RwLock<Self>> {
-        let format = vk::VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
-        let mut image_info = vk::VkImageCreateInfo::default();
+        let format = vk::Format::R8G8B8A8_UNORM;
+        let mut image_info = vk::ImageCreateInfo::default();
         image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
         image_info.format = format;

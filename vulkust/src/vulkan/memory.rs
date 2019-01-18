@@ -1,29 +1,28 @@
 use super::super::core::allocate as alc;
 use super::super::core::allocate::{Allocator, Object};
 use super::device::Logical as LogicalDevice;
-use super::vulkan as vk;
-
+use ash::version::DeviceV1_0;
+use ash::vk;
 use std::collections::BTreeMap;
-use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Memory {
+pub(crate) struct Memory {
     info: alc::Memory,
-    vk_data: vk::VkDeviceMemory,
+    vk_data: vk::DeviceMemory,
     manager: Arc<RwLock<Manager>>,
     root_memory: Arc<RwLock<RootMemory>>,
 }
 
 impl Memory {
     pub(crate) fn new(
-        mem_req: &vk::VkMemoryRequirements,
-        vk_data: vk::VkDeviceMemory,
+        mem_req: &vk::MemoryRequirements,
+        vk_data: vk::DeviceMemory,
         manager: Arc<RwLock<Manager>>,
         root_memory: Arc<RwLock<RootMemory>>,
     ) -> Self {
         let info = alc::Memory::new(mem_req.size as isize, mem_req.alignment as isize);
-        Memory {
+        Self {
             info,
             vk_data,
             manager,
@@ -35,7 +34,7 @@ impl Memory {
         return &self.root_memory;
     }
 
-    pub(crate) fn get_data(&self) -> vk::VkDeviceMemory {
+    pub(crate) fn get_data(&self) -> vk::DeviceMemory {
         return self.vk_data;
     }
 
@@ -63,11 +62,11 @@ pub(crate) struct RootMemory {
     logical_device: Arc<LogicalDevice>,
     manager: Weak<RwLock<Manager>>,
     itself: Option<Weak<RwLock<RootMemory>>>,
-    vk_data: vk::VkDeviceMemory,
+    vk_data: vk::DeviceMemory,
     container: alc::Container,
 }
 
-const DEFAULT_MEMORY_SIZE: vk::VkDeviceSize = 225 * 1024 * 1024;
+const DEFAULT_MEMORY_SIZE: vk::DeviceSize = 225 * 1024 * 1024;
 
 impl RootMemory {
     pub(crate) fn new(
@@ -75,17 +74,12 @@ impl RootMemory {
         manager: Weak<RwLock<Manager>>,
         logical_device: &Arc<LogicalDevice>,
     ) -> Arc<RwLock<Self>> {
-        let mut mem_alloc = vk::VkMemoryAllocateInfo::default();
-        mem_alloc.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        mem_alloc.allocationSize = DEFAULT_MEMORY_SIZE;
-        mem_alloc.memoryTypeIndex = type_index;
-        let mut vk_data = 0 as vk::VkDeviceMemory;
-        vulkan_check!(vk::vkAllocateMemory(
-            logical_device.get_data(),
-            &mem_alloc,
-            null(),
-            &mut vk_data,
-        ));
+        let mem_alloc = vk::MemoryAllocateInfo::builder()
+            .allocation_size(DEFAULT_MEMORY_SIZE)
+            .memory_type_index(type_index)
+            .build();
+        let vk_data =
+            vxresult!(unsafe { logical_device.get_data().allocate_memory(&mem_alloc, None) });
         let itself = Arc::new(RwLock::new(RootMemory {
             logical_device: logical_device.clone(),
             vk_data,
@@ -98,7 +92,7 @@ impl RootMemory {
         return itself;
     }
 
-    pub(crate) fn allocate(&mut self, mem_req: &vk::VkMemoryRequirements) -> Arc<RwLock<Memory>> {
+    pub(crate) fn allocate(&mut self, mem_req: &vk::MemoryRequirements) -> Arc<RwLock<Memory>> {
         let manager = vxunwrap!(self.manager.upgrade());
         let itself = vxunwrap!(vxunwrap!(&self.itself).upgrade());
         let memory = Arc::new(RwLock::new(Memory::new(
@@ -112,7 +106,7 @@ impl RootMemory {
         return memory;
     }
 
-    pub(crate) fn get_data(&self) -> vk::VkDeviceMemory {
+    pub(crate) fn get_data(&self) -> vk::DeviceMemory {
         return self.vk_data;
     }
 
@@ -124,7 +118,9 @@ impl RootMemory {
 impl Drop for RootMemory {
     fn drop(&mut self) {
         unsafe {
-            vk::vkFreeMemory(self.logical_device.get_data(), self.vk_data, null());
+            self.logical_device
+                .get_data()
+                .free_memory(self.vk_data, None);
         }
     }
 }
@@ -140,7 +136,7 @@ pub enum Location {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Manager {
+pub(crate) struct Manager {
     logical_device: Arc<LogicalDevice>,
     itself: Option<Weak<RwLock<Manager>>>,
     root_memories: BTreeMap<u32, Arc<RwLock<RootMemory>>>,
@@ -160,27 +156,24 @@ impl Manager {
 
     pub(crate) fn get_memory_type_index(
         &self,
-        mem_req: &vk::VkMemoryRequirements,
+        mem_req: &vk::MemoryRequirements,
         l: Location,
     ) -> u32 {
         let l = match l {
-            Location::GPU => {
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT as u32
-            }
+            Location::GPU => vk::MemoryPropertyFlags::DEVICE_LOCAL,
             Location::CPU => {
-                vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT as u32
-                    | vk::VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT as u32
+                vk::MemoryPropertyFlags::HOST_VISIBLE | vk::MemoryPropertyFlags::HOST_COHERENT
             }
         };
         return self
             .logical_device
             .get_physical()
-            .get_memory_type_index(mem_req.memoryTypeBits, l);
+            .get_memory_type_index(mem_req.memory_type_bits, l);
     }
 
     pub(crate) fn allocate(
         &mut self,
-        mem_req: &vk::VkMemoryRequirements,
+        mem_req: &vk::MemoryRequirements,
         location: Location,
     ) -> Arc<RwLock<Memory>> {
         let memory_type_index = self.get_memory_type_index(mem_req, location);
