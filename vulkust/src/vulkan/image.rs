@@ -6,7 +6,6 @@ use super::device::Logical as LogicalDevice;
 use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
 use ash::version::DeviceV1_0;
 use ash::vk;
-use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 pub(super) fn convert_layout(f: &Layout) -> vk::ImageLayout {
@@ -99,21 +98,22 @@ impl Image {
         buffmgr: &Arc<RwLock<BufferManager>>,
     ) -> Arc<RwLock<Self>> {
         let format = vk::Format::R8G8B8A8_UNORM;
-        let mut image_info = vk::ImageCreateInfo::default();
-        image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
-        image_info.format = format;
-        image_info.extent.width = width;
-        image_info.extent.height = height;
-        image_info.extent.depth = 1;
-        image_info.mipLevels = 1;
-        image_info.arrayLayers = 1;
-        image_info.samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-        image_info.tiling = vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
-        image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-        image_info.sharingMode = vk::VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
-        image_info.usage = vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT as u32
-            | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32;
+        let extent = vk::Extent3D::builder()
+            .width(width)
+            .height(height)
+            .depth(1)
+            .build();
+        let image_info = vk::ImageCreateInfo::builder()
+            .image_type(vk::ImageType::TYPE_2D)
+            .format(format)
+            .extent(extent)
+            .mip_levels(1)
+            .array_layers(1)
+            .samples(vk::SampleCountFlags::TYPE_1)
+            .tiling(vk::ImageTiling::OPTIMAL)
+            .initial_layout(vk::ImageLayout::UNDEFINED)
+            .sharing_mode(vk::SharingMode::EXCLUSIVE)
+            .usage(vk::ImageUsageFlags::TRANSFER_DST | vk::ImageUsageFlags::SAMPLED);
         let memmgr = {
             let buffmgr = vxresult!(buffmgr.read());
             let memmgr = vxresult!(buffmgr.get_gpu_root_buffer().get_memory().read())
@@ -126,66 +126,53 @@ impl Image {
         myself
     }
 
-    pub(crate) fn change_layout(&mut self, cmd: &mut CmdBuffer, new_layout: vk::VkImageLayout) {
-        let mut dst_stage = vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT as u32;
-        let mut barrier = vk::VkImageMemoryBarrier::default();
-        barrier.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.srcQueueFamilyIndex = vk::VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = vk::VK_QUEUE_FAMILY_IGNORED;
-        barrier.oldLayout = self.layout;
-        barrier.newLayout = new_layout;
-        barrier.image = self.vk_data;
-        barrier.subresourceRange.aspectMask =
-            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32;
-        barrier.subresourceRange.layerCount = 1;
-        barrier.subresourceRange.levelCount = self.mips_count as u32;
-        barrier.srcAccessMask = match self.layout {
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED => 0u32,
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED => {
-                vk::VkAccessFlagBits::VK_ACCESS_HOST_WRITE_BIT as u32
+    pub(crate) fn change_layout(&mut self, cmd: &mut CmdBuffer, new_layout: vk::ImageLayout) {
+        let mut dst_stage = vk::PipelineStageFlags::TRANSFER;
+        let mut src_access_mask = match self.layout {
+            vk::ImageLayout::UNDEFINED => vk::AccessFlags::empty(),
+            vk::ImageLayout::PREINITIALIZED => vk::AccessFlags::HOST_WRITE,
+            vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL => vk::AccessFlags::COLOR_ATTACHMENT_WRITE,
+            vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL => {
+                vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE
             }
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL => {
-                vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32
-            }
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL => {
-                vk::VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT as u32
-            }
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL => {
-                vk::VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT as u32
-            }
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL => {
-                vk::VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT as u32
-            }
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL => {
-                vk::VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT as u32
-            }
+            vk::ImageLayout::TRANSFER_SRC_OPTIMAL => vk::AccessFlags::TRANSFER_READ,
+            vk::ImageLayout::TRANSFER_DST_OPTIMAL => vk::AccessFlags::TRANSFER_WRITE,
+            vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL => vk::AccessFlags::SHADER_READ,
             _ => vxunexpected!(),
         };
-        barrier.dstAccessMask = match new_layout {
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL => {
-                vk::VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT as u32
+        let mut dst_access_mask = match new_layout {
+            vk::ImageLayout::TRANSFER_DST_OPTIMAL => vk::AccessFlags::TRANSFER_WRITE,
+            vk::ImageLayout::TRANSFER_SRC_OPTIMAL => vk::AccessFlags::TRANSFER_READ,
+            vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL => vk::AccessFlags::COLOR_ATTACHMENT_WRITE,
+            vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL => {
+                vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE
             }
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL => {
-                vk::VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT as u32
-            }
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL => {
-                vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32
-            }
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL => {
-                vk::VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT as u32
-            }
-            vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL => {
-                dst_stage =
-                    vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT as u32;
-                if barrier.srcAccessMask == 0u32 {
-                    barrier.srcAccessMask = vk::VkAccessFlagBits::VK_ACCESS_HOST_WRITE_BIT as u32
-                        | vk::VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT as u32;
+            vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL => {
+                dst_stage = vk::PipelineStageFlags::FRAGMENT_SHADER;
+                if src_access_mask.is_empty() {
+                    src_access_mask = vk::AccessFlags::HOST_WRITE | vk::AccessFlags::TRANSFER_WRITE;
                 }
-                vk::VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT as u32
+                vk::AccessFlags::SHADER_READ
             }
             _ => vxunexpected!(),
         };
-        let src_stage = vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT as u32;
+        let mut barrier = vk::ImageMemoryBarrier::builder()
+            .src_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
+            .dst_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
+            .old_layout(self.layout)
+            .new_layout(new_layout)
+            .image(self.vk_data)
+            .subresource_range(
+                vk::ImageSubresourceRange::builder()
+                    .aspect_mask(vk::ImageAspectFlags::COLOR)
+                    .layer_count(1)
+                    .level_count(self.mips_count as u32)
+                    .build(),
+            )
+            .src_access_mask(src_access_mask)
+            .dst_access_mask(dst_access_mask)
+            .build();
+        let src_stage = vk::PipelineStageFlags::TRANSFER;
         cmd.pipeline_image_barrier(src_stage, dst_stage, 0, &barrier);
         self.layout = new_layout;
     }
@@ -198,7 +185,7 @@ impl Image {
     //     return convert_to_format(self.format);
     // }
 
-    pub(crate) fn get_data(&self) -> vk::VkImage {
+    pub(crate) fn get_data(&self) -> vk::Image {
         return self.vk_data;
     }
 
@@ -206,11 +193,11 @@ impl Image {
         return &self.logical_device;
     }
 
-    pub(super) fn get_vk_usage(&self) -> vk::VkImageUsageFlags {
+    pub(super) fn get_vk_usage(&self) -> vk::ImageUsageFlags {
         return self.usage;
     }
 
-    pub(super) fn get_vk_format(&self) -> vk::VkFormat {
+    pub(super) fn get_vk_format(&self) -> vk::Format {
         return self.format;
     }
 }
@@ -219,7 +206,9 @@ impl Drop for Image {
     fn drop(&mut self) {
         if self.memory.is_some() {
             unsafe {
-                vk::vkDestroyImage(self.logical_device.get_data(), self.vk_data, null());
+                self.logical_device
+                    .get_data()
+                    .destroy_image(self.vk_data, None);
             }
         }
     }
@@ -232,16 +221,16 @@ unsafe impl Sync for Image {}
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct View {
     image: Arc<RwLock<Image>>,
-    vk_data: vk::VkImageView,
+    vk_data: vk::ImageView,
 }
 
 impl View {
     pub(crate) fn new_with_vk_image(
         logical_device: Arc<LogicalDevice>,
-        vk_image: vk::VkImage,
-        format: vk::VkFormat,
-        layout: vk::VkImageLayout,
-        usage: vk::VkImageUsageFlags,
+        vk_image: vk::Image,
+        format: vk::Format,
+        layout: vk::ImageLayout,
+        usage: vk::ImageUsageFlags,
         width: u32,
         height: u32,
     ) -> Self {
@@ -267,37 +256,38 @@ impl View {
     }
 
     pub(crate) fn new_with_image(image: Arc<RwLock<Image>>) -> Self {
-        return Self::new_with_image_aspect(
-            image,
-            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32,
-        );
+        return Self::new_with_image_aspect(image, vk::ImageAspectFlags::COLOR);
     }
 
-    pub(crate) fn new_with_image_aspect(image: Arc<RwLock<Image>>, aspect_mask: u32) -> Self {
-        let mut vk_data = 0 as vk::VkImageView;
-        {
+    pub(crate) fn new_with_image_aspect(
+        image: Arc<RwLock<Image>>,
+        aspect_mask: vk::ImageAspectFlags,
+    ) -> Self {
+        let vk_data = {
             let img = vxresult!(image.read());
             let ref dev = &img.logical_device;
-            let mut view_create_info = vk::VkImageViewCreateInfo::default();
-            view_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            view_create_info.image = img.vk_data;
-            view_create_info.viewType = vk::VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
-            view_create_info.format = img.format;
-            view_create_info.components.r = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R;
-            view_create_info.components.g = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G;
-            view_create_info.components.b = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B;
-            view_create_info.components.a = vk::VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A;
-            view_create_info.subresourceRange.aspectMask = aspect_mask;
-            view_create_info.subresourceRange.levelCount = img.mips_count as u32;
-            view_create_info.subresourceRange.layerCount = 1;
-            vulkan_check!(vk::vkCreateImageView(
-                dev.get_data(),
-                &view_create_info,
-                null(),
-                &mut vk_data,
-            ));
-        }
-        View { image, vk_data }
+            let view_create_info = vk::ImageViewCreateInfo::builder()
+                .image(img.vk_data)
+                .view_type(vk::ImageViewType::TYPE_2D)
+                .format(img.format)
+                .components(
+                    vk::ComponentMapping::builder()
+                        .r(vk::ComponentSwizzle::R)
+                        .g(vk::ComponentSwizzle::G)
+                        .b(vk::ComponentSwizzle::B)
+                        .a(vk::ComponentSwizzle::A)
+                        .build(),
+                )
+                .subresource_range(
+                    vk::ImageSubresourceRange::builder()
+                        .aspect_mask(aspect_mask)
+                        .level_count(img.mips_count as u32)
+                        .layer_count(1)
+                        .build(),
+                );
+            vxresult!(unsafe { dev.get_data().create_image_view(&view_create_info, None,) })
+        };
+        Self { image, vk_data }
     }
 
     pub(crate) fn new_surface_attachment(
@@ -311,8 +301,8 @@ impl View {
             memory_mgr,
             format,
             attachment_type,
-            surface_caps.currentExtent.width,
-            surface_caps.currentExtent.height,
+            surface_caps.current_extent.width,
+            surface_caps.current_extent.height,
         );
     }
 
@@ -325,55 +315,48 @@ impl View {
     ) -> Self {
         let aspect_mask = match attachment_type {
             AttachmentType::ColorGBuffer | AttachmentType::ColorDisplay => {
-                vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
+                vk::ImageAspectFlags::COLOR
             }
-            AttachmentType::ShadowAccumulator => {
-                vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32
-            }
+            AttachmentType::ShadowAccumulator => vk::ImageAspectFlags::COLOR,
             AttachmentType::DepthGBuffer | AttachmentType::DepthShadowBuffer => {
-                vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32
+                vk::ImageAspectFlags::DEPTH
             }
             AttachmentType::DepthStencilDisplay => {
-                vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT as u32
-                    | vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT as u32
+                vk::ImageAspectFlags::DEPTH | vk::ImageAspectFlags::STENCIL
             }
         };
         let usage = match attachment_type {
             AttachmentType::ColorGBuffer => {
-                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
-                    | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
+                vk::ImageUsageFlags::COLOR_ATTACHMENT | vk::ImageUsageFlags::SAMPLED
             }
             AttachmentType::ShadowAccumulator => {
-                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
-                    | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
+                vk::ImageUsageFlags::COLOR_ATTACHMENT | vk::ImageUsageFlags::SAMPLED
             }
-            AttachmentType::ColorDisplay => {
-                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT as u32
-            }
+            AttachmentType::ColorDisplay => vk::ImageUsageFlags::COLOR_ATTACHMENT,
             AttachmentType::DepthGBuffer | AttachmentType::DepthShadowBuffer => {
-                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
-                    | vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT as u32
+                vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT | vk::ImageUsageFlags::SAMPLED
             }
-            AttachmentType::DepthStencilDisplay => {
-                vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT as u32
-            }
+            AttachmentType::DepthStencilDisplay => vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT,
         };
         let vkfmt = vxresult!(memory_mgr.read())
             .get_device()
             .convert_format(format);
-        let mut image_info = vk::VkImageCreateInfo::default();
-        image_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        image_info.imageType = vk::VkImageType::VK_IMAGE_TYPE_2D;
-        image_info.format = vkfmt;
-        image_info.extent.width = width;
-        image_info.extent.height = height;
-        image_info.extent.depth = 1;
-        image_info.mipLevels = 1;
-        image_info.arrayLayers = 1;
-        image_info.tiling = vk::VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
-        image_info.usage = usage;
-        image_info.initialLayout = vk::VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-        image_info.samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+        let image_info = vk::ImageCreateInfo::builder()
+            .image_type(vk::ImageType::TYPE_2D)
+            .format(vkfmt)
+            .extent(
+                vk::Extent3D::builder()
+                    .width(width)
+                    .height(height)
+                    .depth(1)
+                    .build(),
+            )
+            .mip_levels(1)
+            .array_layers(1)
+            .tiling(vk::ImageTiling::OPTIMAL)
+            .usage(usage)
+            .initial_layout(vk::ImageLayout::UNDEFINED)
+            .samples(vk::SampleCountFlags::TYPE_1);
         let image = Arc::new(RwLock::new(Image::new_with_info(&image_info, memory_mgr)));
         return Self::new_with_image_aspect(image, aspect_mask);
     }
@@ -382,7 +365,7 @@ impl View {
         return &self.image;
     }
 
-    pub(crate) fn get_data(&self) -> vk::VkImageView {
+    pub(crate) fn get_data(&self) -> vk::ImageView {
         return self.vk_data;
     }
 }
@@ -391,7 +374,9 @@ impl Drop for View {
     fn drop(&mut self) {
         unsafe {
             let img = vxresult!(self.image.read());
-            vk::vkDestroyImageView(img.logical_device.get_data(), self.vk_data, null());
+            img.logical_device
+                .get_data()
+                .destroy_image_view(self.vk_data, None);
         }
     }
 }
