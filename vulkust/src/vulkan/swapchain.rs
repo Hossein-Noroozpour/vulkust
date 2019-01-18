@@ -142,7 +142,7 @@ impl Swapchain {
         }
     }
 
-    pub fn get_next_image_index(&self, sem: &Arc<Semaphore>) -> NextImageResult {
+    pub(crate) fn get_next_image_index(&self, sem: &Arc<Semaphore>) -> NextImageResult {
         let (image_index, is_suboptimal) = vxresult!(unsafe {
             self.loader.acquire_next_image(
                 self.vk_data,
@@ -155,6 +155,14 @@ impl Swapchain {
             return NextImageResult::NeedsRefresh;
         }
         return NextImageResult::Next(image_index);
+    }
+
+    pub(crate) fn get_image_views(&self) -> &[Arc<ImageView>] {
+        return &self.image_views;
+    }
+
+    pub(crate) fn get_logical_device(&self) -> &Arc<LogicalDevice> {
+        return &self.logical_device;
     }
 }
 

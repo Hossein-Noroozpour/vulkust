@@ -2,8 +2,8 @@ use super::super::render::image::Layout;
 use super::image::convert_layout;
 use super::image::View as ImageView;
 use super::swapchain::Swapchain;
-use super::vulkan as vk;
-use std::ptr::null;
+use ash::version::DeviceV1_0;
+use ash::vk;
 use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -11,12 +11,12 @@ pub(crate) struct RenderPass {
     swapchain: Option<Arc<Swapchain>>,
     colors: Vec<Arc<ImageView>>,
     depth: Option<Arc<ImageView>>,
-    vk_data: vk::VkRenderPass,
+    vk_data: vk::RenderPass,
 }
 
 impl RenderPass {
     pub(crate) fn new_with_swapchain(swapchain: Arc<Swapchain>, clear: bool) -> Self {
-        let vs = vec![swapchain.image_views[0].clone()];
+        let vs = vec![swapchain.get_image_views()[0].clone()];
         let mut result = Self::new(vs, clear, false);
         result.swapchain = Some(swapchain);
         return result;
@@ -28,50 +28,43 @@ impl RenderPass {
         start_layouts: &[Layout],
         end_layouts: &[Layout],
     ) -> Self {
-        let mut attachment_descriptions = Vec::new(); // vec![vk::VkAttachmentDescription::default(); views_len];
-        let mut color_attachments_refs = Vec::new(); // vec![vk::VkAttachmentReference::default(); views_len - 1];
-        let mut depth_attachment_ref = vk::VkAttachmentReference::default();
-        let mut vkdev = 0 as vk::VkDevice;
+        let mut attachment_descriptions = Vec::with_capacity(views.len()); // vec![vk::VkAttachmentDescription::default(); views_len];
+        let mut color_attachments_refs = Vec::with_capacity(views.len()); // vec![vk::VkAttachmentReference::default(); views_len - 1];
+        let mut colors = Vec::with_capacity(views.len());
+        let mut depth_attachment_ref = vk::AttachmentReference::default();
+        let mut vk_dev = None;
         let mut depth = None;
-        let mut colors = Vec::new();
         let mut view_index = 0;
         for v in &views {
             let img = vxresult!(v.get_image().read());
-            vkdev = img.get_device().get_data();
+            vk_dev = Some(*img.get_device().get_data());
 
-            let mut attachment_description = vk::VkAttachmentDescription::default();
-            attachment_description.format = img.get_vk_format();
-            attachment_description.samples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-            attachment_description.loadOp = if clear {
-                vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR
-            } else {
-                vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD
-            };
-            attachment_description.storeOp = vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
-            attachment_description.stencilLoadOp =
-                vk::VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            attachment_description.stencilStoreOp =
-                vk::VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            attachment_description.initialLayout = convert_layout(&start_layouts[view_index]);
-            attachment_description.finalLayout = convert_layout(&end_layouts[view_index]);
-            if img.get_vk_usage()
-                & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
-                    as vk::VkImageUsageFlags
-                != 0
-            {
-                let mut color_attachment_ref = vk::VkAttachmentReference::default();
-                color_attachment_ref.attachment = attachment_descriptions.len() as u32;
-                color_attachment_ref.layout =
-                    vk::VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            let mut attachment_description = vk::AttachmentDescription::builder()
+                .format(img.get_vk_format())
+                .samples(vk::SampleCountFlags::TYPE_1)
+                .load_op(if clear {
+                    vk::AttachmentLoadOp::CLEAR
+                } else {
+                    vk::AttachmentLoadOp::LOAD
+                })
+                .store_op(vk::AttachmentStoreOp::STORE)
+                .stencil_load_op(vk::AttachmentLoadOp::DONT_CARE)
+                .stencil_store_op(vk::AttachmentStoreOp::DONT_CARE)
+                .initial_layout(convert_layout(&start_layouts[view_index]))
+                .final_layout(convert_layout(&end_layouts[view_index]))
+                .build();
+            if vxflagcheck!(img.get_vk_usage(), vk::ImageUsageFlags::COLOR_ATTACHMENT) {
+                let mut color_attachment_ref = vk::AttachmentReference::builder()
+                    .attachment(attachment_descriptions.len() as u32)
+                    .layout(vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL)
+                    .build();
                 color_attachments_refs.push(color_attachment_ref);
                 colors.push(v.clone());
-            } else if img.get_vk_usage()
-                & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-                    as vk::VkImageUsageFlags
-                != 0
-            {
-                depth_attachment_ref.layout =
-                    vk::VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            } else if vxflagcheck!(
+                img.get_vk_usage(),
+                vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT
+            ) {
+                depth_attachment_ref.layout = vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 depth_attachment_ref.attachment = attachment_descriptions.len() as u32;
                 depth = Some(v.clone());
             } else {
@@ -82,58 +75,51 @@ impl RenderPass {
         }
         colors.shrink_to_fit();
 
-        let mut subpass_description = vk::VkSubpassDescription::default();
-        subpass_description.pipelineBindPoint =
-            vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass_description.colorAttachmentCount = color_attachments_refs.len() as u32;
-        subpass_description.pColorAttachments = color_attachments_refs.as_ptr();
+        let mut subpass_description = vk::SubpassDescription::builder()
+            .pipeline_bind_point(vk::PipelineBindPoint::GRAPHICS)
+            .color_attachments(&color_attachments_refs);
         if depth.is_some() {
-            subpass_description.pDepthStencilAttachment = &depth_attachment_ref;
+            subpass_description =
+                subpass_description.depth_stencil_attachment(&depth_attachment_ref);
         }
+        let subpass_description = subpass_description.build();
 
-        let mut dependencies = [vk::VkSubpassDependency::default(); 2];
-        dependencies[0].srcSubpass = vk::VK_SUBPASS_EXTERNAL;
-        dependencies[0].srcStageMask =
-            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT as u32;
-        dependencies[0].dstStageMask =
-            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
-        dependencies[0].srcAccessMask = vk::VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT as u32;
-        dependencies[0].dstAccessMask = vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT
-            as u32
-            | vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
-        dependencies[0].dependencyFlags =
-            vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;
-        dependencies[1].dstSubpass = vk::VK_SUBPASS_EXTERNAL;
-        dependencies[1].srcStageMask =
-            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
-        dependencies[1].dstStageMask =
-            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT as u32;
-        dependencies[1].srcAccessMask = vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT
-            as u32
-            | vk::VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT as u32;
-        dependencies[1].dstAccessMask = vk::VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT as u32;
-        dependencies[1].dependencyFlags =
-            vk::VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT as u32;
+        let mut dependencies = [
+            vk::SubpassDependency::builder()
+                .src_subpass(vk::SUBPASS_EXTERNAL)
+                .src_stage_mask(vk::PipelineStageFlags::BOTTOM_OF_PIPE)
+                .dst_stage_mask(vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT)
+                .src_access_mask(vk::AccessFlags::MEMORY_READ)
+                .dst_access_mask(
+                    vk::AccessFlags::COLOR_ATTACHMENT_READ
+                        | vk::AccessFlags::COLOR_ATTACHMENT_WRITE,
+                )
+                .dependency_flags(vk::DependencyFlags::BY_REGION)
+                .build(),
+            vk::SubpassDependency::builder()
+                .dst_subpass(vk::SUBPASS_EXTERNAL)
+                .src_stage_mask(vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT)
+                .dst_stage_mask(vk::PipelineStageFlags::BOTTOM_OF_PIPE)
+                .src_access_mask(
+                    vk::AccessFlags::COLOR_ATTACHMENT_READ
+                        | vk::AccessFlags::COLOR_ATTACHMENT_WRITE,
+                )
+                .dst_access_mask(vk::AccessFlags::MEMORY_READ)
+                .dependency_flags(vk::DependencyFlags::BY_REGION)
+                .build(),
+        ];
 
-        let mut render_pass_create_info = vk::VkRenderPassCreateInfo::default();
-        render_pass_create_info.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        render_pass_create_info.attachmentCount = attachment_descriptions.len() as u32;
-        render_pass_create_info.pAttachments = attachment_descriptions.as_ptr();
-        render_pass_create_info.subpassCount = 1;
-        render_pass_create_info.pSubpasses = &subpass_description;
-        render_pass_create_info.dependencyCount = dependencies.len() as u32;
-        render_pass_create_info.pDependencies = dependencies.as_ptr();
+        let mut render_pass_create_info = vk::RenderPassCreateInfo::builder()
+            .attachments(&attachment_descriptions)
+            .subpasses(&[subpass_description])
+            .dependencies(&dependencies);
 
-        let mut vk_data = 0 as vk::VkRenderPass;
-        vulkan_check!(vk::vkCreateRenderPass(
-            vkdev,
-            &render_pass_create_info,
-            null(),
-            &mut vk_data,
-        ));
+        let vk_dev = vxunwrap!(vk_dev);
 
-        RenderPass {
+        let vk_data =
+            vxresult!(unsafe { vk_dev.create_render_pass(&render_pass_create_info, None) });
+
+        Self {
             swapchain: None,
             colors,
             depth,
@@ -152,21 +138,16 @@ impl RenderPass {
             });
             let img = vxresult!(v.get_image().read());
             end_layouts.push(
-                if img.get_vk_usage()
-                    & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
-                        as vk::VkImageUsageFlags
-                    != 0
-                {
+                if vxflagcheck!(img.get_vk_usage(), vk::ImageUsageFlags::COLOR_ATTACHMENT) {
                     if has_reader {
                         Layout::ShaderReadOnly
                     } else {
                         Layout::Display
                     }
-                } else if img.get_vk_usage()
-                    & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-                        as vk::VkImageUsageFlags
-                    != 0
-                {
+                } else if vxflagcheck!(
+                    img.get_vk_usage(),
+                    vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT
+                ) {
                     if has_reader {
                         Layout::ShaderReadOnly
                     } else {
@@ -188,15 +169,15 @@ impl RenderPass {
     //     return self.depth.as_ref();
     // }
 
-    pub(crate) fn get_data(&self) -> vk::VkRenderPass {
-        return self.vk_data;
+    pub(super) fn get_data(&self) -> &vk::RenderPass {
+        return &self.vk_data;
     }
 }
 
 impl Drop for RenderPass {
     fn drop(&mut self) {
         let vkdev = if let Some(swapchain) = &self.swapchain {
-            swapchain.logical_device.get_data()
+            swapchain.get_logical_device().get_data()
         } else if self.colors.len() > 0 {
             let i = vxresult!(self.colors[0].get_image().read());
             i.get_device().get_data()
@@ -207,7 +188,7 @@ impl Drop for RenderPass {
             vxunexpected!();
         };
         unsafe {
-            vk::vkDestroyRenderPass(vkdev, self.vk_data, null());
+            vkdev.destroy_render_pass(self.vk_data, None);
         }
     }
 }
