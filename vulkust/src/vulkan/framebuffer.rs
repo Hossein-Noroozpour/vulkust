@@ -1,86 +1,79 @@
 use super::command::Buffer as CmdBuffer;
 use super::image::View as ImageView;
 use super::render_pass::RenderPass;
-use super::vulkan as vk;
-
-use std::ptr::null;
+use ash::version::DeviceV1_0;
+use ash::vk;
 use std::sync::Arc;
 
-#[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Framebuffer {
-    clear_values: Vec<vk::VkClearValue>,
+    clear_values: Vec<vk::ClearValue>,
     buffers: Vec<Arc<ImageView>>,
     render_pass: Arc<RenderPass>,
-    viewport: vk::VkViewport,
-    scissor: vk::VkRect2D,
-    vk_data: vk::VkFramebuffer,
+    viewport: vk::Viewport,
+    scissor: vk::Rect2D,
+    vk_data: vk::Framebuffer,
 }
 
 impl Framebuffer {
     pub(crate) fn new(buffers: Vec<Arc<ImageView>>, render_pass: Arc<RenderPass>) -> Self {
         let mut width: u32 = 0;
         let mut height: u32 = 0;
-        let mut vkdev = 0 as vk::VkDevice;
+        let mut vkdev = None;
         let mut has_depth = false;
 
-        let mut attachments = Vec::<vk::VkImageView>::new();
+        let mut attachments = Vec::<vk::ImageView>::new();
         for v in &buffers {
             attachments.push(v.get_data());
             let img = vxresult!(v.get_image().read());
             let a = img.get_dimensions();
-            if img.get_vk_usage()
-                & vk::VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-                    as vk::VkImageUsageFlags
-                != 0
-            {
+            if vxflagcheck!(
+                img.get_vk_usage(),
+                vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT
+            ) {
                 has_depth = true;
             }
             width = a.0;
             height = a.1;
-            vkdev = img.get_device().get_data();
+            vkdev = Some(img.get_device().get_data());
         }
+        let vkdev = vxunwrap!(vkdev);
 
-        let mut fb_create_info = vk::VkFramebufferCreateInfo::default();
-        fb_create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        fb_create_info.renderPass = render_pass.get_data();
-        fb_create_info.layers = 1;
-        fb_create_info.attachmentCount = attachments.len() as u32;
-        fb_create_info.pAttachments = attachments.as_ptr();
-        fb_create_info.width = width;
-        fb_create_info.height = height;
-        let mut vk_data = 0 as vk::VkFramebuffer;
-        vulkan_check!(vk::vkCreateFramebuffer(
-            vkdev,
-            &fb_create_info,
-            null(),
-            &mut vk_data,
-        ));
+        let mut fb_create_info = vk::FramebufferCreateInfo::builder()
+            .render_pass(*render_pass.get_data())
+            .layers(1)
+            .attachments(&attachments)
+            .width(width)
+            .height(height);
+        let vk_data = vxresult!(unsafe { vkdev.create_framebuffer(&fb_create_info, None) });
 
         let mut clear_values = vec![
-            vk::VkClearValue {
-                data: [0.0, 0.0, 0.0, 0.0],
+            vk::ClearValue {
+                color: vk::ClearColorValue {
+                    float32: [0.0, 0.0, 0.0, 0.0],
+                },
             };
             buffers.len()
         ];
         if has_depth {
-            clear_values[buffers.len() - 1].data[0] = 1.0;
+            clear_values[buffers.len() - 1].color.float32[0] = 1.0;
         }
 
-        let mut viewport = vk::VkViewport::default();
-        viewport.x = 0.0;
-        viewport.y = 0.0;
-        viewport.height = height as f32;
-        viewport.width = width as f32;
-        viewport.minDepth = 0.0;
-        viewport.maxDepth = 1.0;
+        let mut viewport = vk::Viewport::builder()
+            .x(0.0)
+            .y(0.0)
+            .height(height as f32)
+            .width(width as f32)
+            .min_depth(0.0)
+            .max_depth(1.0)
+            .build();
 
-        let mut scissor = vk::VkRect2D::default();
+        let mut scissor = vk::Rect2D::default();
         scissor.extent.width = width;
         scissor.extent.height = height;
         scissor.offset.x = 0;
         scissor.offset.y = 0;
 
-        Framebuffer {
+        Self {
             clear_values,
             buffers,
             render_pass,
@@ -97,16 +90,14 @@ impl Framebuffer {
     pub(crate) fn begin(&self, cmd_buffer: &mut CmdBuffer) {
         let (width, height) = self.get_dimensions();
 
-        let mut render_pass_begin_info = vk::VkRenderPassBeginInfo::default();
-        render_pass_begin_info.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_begin_info.renderPass = self.render_pass.get_data();
-        render_pass_begin_info.renderArea.offset.x = 0;
-        render_pass_begin_info.renderArea.offset.y = 0;
-        render_pass_begin_info.renderArea.extent.width = width;
-        render_pass_begin_info.renderArea.extent.height = height;
-        render_pass_begin_info.clearValueCount = self.clear_values.len() as u32;
-        render_pass_begin_info.pClearValues = self.clear_values.as_ptr();
+        let mut render_pass_begin_info = vk::RenderPassBeginInfo::default();
+        render_pass_begin_info.render_pass = *self.render_pass.get_data();
+        render_pass_begin_info.render_area.offset.x = 0;
+        render_pass_begin_info.render_area.offset.y = 0;
+        render_pass_begin_info.render_area.extent.width = width;
+        render_pass_begin_info.render_area.extent.height = height;
+        render_pass_begin_info.clear_value_count = self.clear_values.len() as u32;
+        render_pass_begin_info.p_clear_values = self.clear_values.as_ptr();
         render_pass_begin_info.framebuffer = self.vk_data;
 
         cmd_buffer.begin_render_pass_with_info(render_pass_begin_info);
@@ -116,7 +107,7 @@ impl Framebuffer {
     //     return &self.buffers;
     // }
 
-    pub(crate) fn get_data(&self) -> vk::VkFramebuffer {
+    pub(crate) fn get_data(&self) -> vk::Framebuffer {
         return self.vk_data;
     }
 
@@ -124,11 +115,11 @@ impl Framebuffer {
         return &self.render_pass;
     }
 
-    pub(crate) fn get_vk_viewport(&self) -> &vk::VkViewport {
+    pub(crate) fn get_vk_viewport(&self) -> &vk::Viewport {
         return &self.viewport;
     }
 
-    pub(crate) fn get_vk_scissor(&self) -> &vk::VkRect2D {
+    pub(crate) fn get_vk_scissor(&self) -> &vk::Rect2D {
         return &self.scissor;
     }
 }
@@ -139,7 +130,14 @@ impl Drop for Framebuffer {
             .get_device()
             .get_data();
         unsafe {
-            vk::vkDestroyFramebuffer(vkdev, self.vk_data, null());
+            vkdev.destroy_framebuffer(self.vk_data, None);
         }
+    }
+}
+
+#[cfg(debug_mode)]
+impl std::fmt::Debug for Framebuffer {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Vulkan Framebuffer")
     }
 }

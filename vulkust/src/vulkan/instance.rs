@@ -1,5 +1,4 @@
 use std::ffi::CString;
-use std::ptr::{null, null_mut};
 
 use super::super::core::string::{cstrings_to_ptrs, slice_to_string, strings_to_cstrings};
 use ash::version::EntryV1_0;
@@ -152,28 +151,12 @@ mod debug {
     }
 }
 
-fn get_all_extensions() -> Vec<vk::ExtensionProperties> {
-    let mut count = 0u32;
-    unsafe {
-        vulkan_check!(vk::vkEnumerateInstanceExtensionProperties(
-            null(),
-            &mut count,
-            null_mut()
-        ));
-    }
-    let mut properties = vec![vk::ExtensionProperties::default(); count as usize];
-    unsafe {
-        vulkan_check!(vk::vkEnumerateInstanceExtensionProperties(
-            null(),
-            &mut count,
-            properties.as_mut_ptr()
-        ));
-    }
-    properties
+fn get_all_extensions(entry: &ash::Entry) -> Vec<vk::ExtensionProperties> {
+    return vxresult!(unsafe { entry.enumerate_instance_extension_properties() });
 }
 
-fn enumerate_extensions() -> Vec<String> {
-    let properties = get_all_extensions();
+fn enumerate_extensions(entry: &ash::Entry) -> Vec<String> {
+    let properties = get_all_extensions(entry);
     let mut extensions = Vec::new();
     for p in properties {
         let name = slice_to_string(&p.extension_name);
@@ -202,8 +185,8 @@ fn enumerate_extensions() -> Vec<String> {
     extensions
 }
 
-fn contain_extension(s: &str) -> bool {
-    let properties = get_all_extensions();
+fn contain_extension(s: &str, entry: &ash::Entry) -> bool {
+    let properties = get_all_extensions(entry);
     for p in properties {
         let name = slice_to_string(&p.extension_name);
         if name == s {
@@ -232,7 +215,7 @@ impl Instance {
             .engine_version(vk_make_version!(0, 1, 0));
         let vulkan_layers = debug::enumerate_layers(entry.fp_v1_0());
         let vulkan_layers = cstrings_to_ptrs(&vulkan_layers);
-        let vulkan_extensions = enumerate_extensions();
+        let vulkan_extensions = enumerate_extensions(&entry);
         let vulkan_extensions = strings_to_cstrings(vulkan_extensions);
         let vulkan_extensions = cstrings_to_ptrs(&vulkan_extensions);
         let instance_create_info = vk::InstanceCreateInfo::builder()
