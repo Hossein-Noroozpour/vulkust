@@ -248,10 +248,12 @@ impl Instance {
         }
     }
 
+    #[inline]
     pub(super) fn get_data(&self) -> &ash::Instance {
         return &self.vk_data;
     }
 
+    #[inline]
     pub(super) fn get_entry(&self) -> &ash::Entry {
         return &self.entry;
     }

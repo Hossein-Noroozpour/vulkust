@@ -36,7 +36,7 @@ fn get_surface_formats(
     let surface_loader = surface.get_loader();
     let vk_surface = surface.get_data();
     return vxresult!(unsafe {
-        surface_loader.get_physical_device_surface_formats(*physical_device, vk_surface)
+        surface_loader.get_physical_device_surface_formats(*physical_device, *vk_surface)
     });
 }
 
@@ -71,7 +71,7 @@ impl Physical {
         let properties = vk_instance.get_physical_device_properties(vk_data);
         let surface_caps = vxresult!(surface
             .get_loader()
-            .get_physical_device_surface_capabilities(vk_data, surface.get_data()));
+            .get_physical_device_surface_capabilities(vk_data, *surface.get_data()));
         #[cfg(debug_mode)]
         vxlogi!("Surface capacities are {:?}", &surface_caps);
         let supported_depth_format = get_supported_depth_format(vk_instance, &vk_data);
@@ -94,10 +94,12 @@ impl Physical {
         }
     }
 
+    #[inline]
     pub(super) fn get_surface(&self) -> &Surface {
         return &self.surface;
     }
 
+    #[inline]
     pub(super) fn get_surface_capabilities(&self) -> &vk::SurfaceCapabilitiesKHR {
         return &self.surface_caps;
     }
@@ -155,7 +157,7 @@ impl Physical {
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
             let b = unsafe {
-                surface_loader.get_physical_device_surface_support(device, i, vk_surface)
+                surface_loader.get_physical_device_surface_support(device, i, *vk_surface)
             };
             if queue_family.queue_count > 0
                 && b
@@ -170,7 +172,7 @@ impl Physical {
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
             let b = unsafe {
-                surface_loader.get_physical_device_surface_support(device, i, vk_surface)
+                surface_loader.get_physical_device_surface_support(device, i, *vk_surface)
             };
             if queue_family.queue_count > 0
                 && b
@@ -217,10 +219,12 @@ impl Physical {
     //     Self::get_device_queue_family_properties(self.vk_data)
     // }
 
+    #[inline]
     fn get_supported_depth_format(&self) -> vk::Format {
         return self.supported_depth_format;
     }
 
+    #[inline]
     pub(super) fn get_surface_formats(&self) -> &[vk::SurfaceFormatKHR] {
         return &self.surface_formats;
     }
@@ -268,30 +272,37 @@ impl Physical {
     //     )
     // }
 
+    #[inline]
     pub(super) fn get_vk_features(&self) -> &vk::PhysicalDeviceFeatures {
         return &self.features;
     }
 
+    #[inline]
     pub(super) fn get_graphics_queue_node_index(&self) -> u32 {
         return self.graphics_queue_node_index;
     }
 
+    #[inline]
     pub(super) fn get_transfer_queue_node_index(&self) -> u32 {
         return self.transfer_queue_node_index;
     }
 
+    #[inline]
     pub(super) fn get_compute_queue_node_index(&self) -> u32 {
         return self.compute_queue_node_index;
     }
 
+    #[inline]
     pub(super) fn get_present_queue_node_index(&self) -> u32 {
         return self.present_queue_node_index;
     }
 
-    pub(super) fn get_data(&self) -> vk::PhysicalDevice {
-        return self.vk_data;
+    #[inline]
+    pub(super) fn get_data(&self) -> &vk::PhysicalDevice {
+        return &self.vk_data;
     }
 
+    #[inline]
     pub(super) fn get_properties(&self) -> &vk::PhysicalDeviceProperties {
         return &self.properties;
     }
@@ -307,6 +318,7 @@ impl Physical {
         }
     }
 
+    #[inline]
     pub(super) fn get_vk_instance(&self) -> &ash::Instance {
         return self.surface.get_instance().get_data();
     }
@@ -371,7 +383,7 @@ impl Logical {
             .enabled_features(&features);
         let vk_instance = physical_device.get_vk_instance();
         let vk_data = vxresult!(unsafe {
-            vk_instance.create_device(physical_device.get_data(), &device_create_info, None)
+            vk_instance.create_device(*physical_device.get_data(), &device_create_info, None)
         });
         let vk_graphic_queue =
             unsafe { vk_data.get_device_queue(physical_device.get_graphics_queue_node_index(), 0) };
@@ -395,24 +407,34 @@ impl Logical {
             .min_uniform_buffer_offset_alignment as isize
     }
 
+    #[inline]
     pub(super) fn wait_idle(&self) {
         vxresult!(unsafe { self.vk_data.device_wait_idle() });
     }
 
+    #[inline]
     pub(super) fn get_data(&self) -> &ash::Device {
         return &self.vk_data;
     }
 
+    #[inline]
     pub(super) fn get_physical(&self) -> &Physical {
         return &self.physical_device;
     }
 
+    #[inline]
     pub(super) fn get_vk_graphic_queue(&self) -> vk::Queue {
         return self.vk_graphic_queue;
     }
 
+    #[inline]
     pub(super) fn convert_format(&self, f: Format) -> vk::Format {
         return self.physical_device.convert_format(f);
+    }
+
+    #[inline]
+    pub(super) fn get_vk_instance(&self) -> &ash::Instance {
+        return self.physical_device.get_vk_instance();
     }
 
     // pub(super) fn get_vk_compute_queue(&self) -> vk::VkQueue {

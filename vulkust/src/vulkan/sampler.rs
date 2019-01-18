@@ -1,13 +1,13 @@
 use super::super::render::sampler::Filter;
 use super::device::Logical as LogicalDevice;
-use super::vulkan as vk;
-use std::ptr::null;
+use ash::version::DeviceV1_0;
+use ash::vk;
 use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Sampler {
+pub(crate) struct Sampler {
     logical_device: Arc<LogicalDevice>,
-    vk_data: vk::VkSampler,
+    vk_data: vk::Sampler,
 }
 
 impl Sampler {
@@ -17,62 +17,60 @@ impl Sampler {
 
     pub(crate) fn new_with_filter(logical_device: Arc<LogicalDevice>, f: Filter) -> Self {
         let filter = Self::convert_filter(f);
-        let mut info = vk::VkSamplerCreateInfo::default();
-        info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        info.borderColor = vk::VkBorderColor::VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
-        info.unnormalizedCoordinates = vk::VK_FALSE;
-        info.compareOp = vk::VkCompareOp::VK_COMPARE_OP_ALWAYS;
-        info.magFilter = filter;
-        info.minFilter = filter;
-        info.addressModeU = vk::VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        info.addressModeV = info.addressModeU;
-        info.addressModeW = info.addressModeU;
+        let mut info = vk::SamplerCreateInfo::builder()
+            .border_color(vk::BorderColor::FLOAT_TRANSPARENT_BLACK)
+            .unnormalized_coordinates(false)
+            .compare_op(vk::CompareOp::ALWAYS)
+            .mag_filter(filter)
+            .min_filter(filter)
+            .address_mode_u(vk::SamplerAddressMode::REPEAT)
+            .address_mode_v(vk::SamplerAddressMode::REPEAT)
+            .address_mode_w(vk::SamplerAddressMode::REPEAT);
         match f {
             Filter::Nearest => {
-                info.anisotropyEnable = vk::VK_FALSE;
-                info.maxAnisotropy = 0f32;
-                info.compareEnable = vk::VK_FALSE;
-                info.mipmapMode = vk::VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_NEAREST;
-                info.mipLodBias = 0f32;
-                info.minLod = 0f32;
-                info.maxLod = 0f32;
+                info = info
+                    .anisotropy_enable(false)
+                    .max_anisotropy(0.0)
+                    .compare_enable(false)
+                    .mipmap_mode(vk::SamplerMipmapMode::NEAREST)
+                    .mip_lod_bias(0.0)
+                    .min_lod(0.0)
+                    .max_lod(0.0)
             }
             _ => {
-                info.anisotropyEnable = vk::VK_TRUE;
-                info.maxAnisotropy = logical_device
-                    .get_physical()
-                    .get_properties()
-                    .limits
-                    .maxSamplerAnisotropy;
-                info.compareEnable = vk::VK_FALSE;
-                info.mipmapMode = vk::VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR;
-                info.mipLodBias = 0f32;
-                info.minLod = 0f32;
-                info.maxLod = 0f32;
+                info = info
+                    .anisotropy_enable(true)
+                    .max_anisotropy(
+                        logical_device
+                            .get_physical()
+                            .get_properties()
+                            .limits
+                            .max_sampler_anisotropy,
+                    )
+                    .compare_enable(false)
+                    .mipmap_mode(vk::SamplerMipmapMode::LINEAR)
+                    .mip_lod_bias(0.0)
+                    .min_lod(0.0)
+                    .max_lod(0.0)
             }
         }
-        let mut vk_data = 0 as vk::VkSampler;
-        vulkan_check!(vk::vkCreateSampler(
-            logical_device.get_data(),
-            &info,
-            null(),
-            &mut vk_data
-        ));
-        Sampler {
+        let mut vk_data =
+            vxresult!(unsafe { logical_device.get_data().create_sampler(&info, None) });
+        Self {
             logical_device,
             vk_data,
         }
     }
 
-    pub(crate) fn get_data(&self) -> vk::VkSampler {
-        return self.vk_data;
+    pub(crate) fn get_data(&self) -> &vk::Sampler {
+        return &self.vk_data;
     }
 
-    pub(super) fn convert_filter(f: Filter) -> vk::VkFilter {
+    pub(super) fn convert_filter(f: Filter) -> vk::Filter {
         match f {
-            Filter::Nearest => vk::VkFilter::VK_FILTER_NEAREST,
-            Filter::Linear => vk::VkFilter::VK_FILTER_LINEAR,
-            Filter::Cube => vk::VkFilter::VK_FILTER_CUBIC_IMG,
+            Filter::Nearest => vk::Filter::NEAREST,
+            Filter::Linear => vk::Filter::LINEAR,
+            Filter::Cube => vk::Filter::CUBIC_IMG,
         }
     }
 }
@@ -80,7 +78,9 @@ impl Sampler {
 impl Drop for Sampler {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroySampler(self.logical_device.get_data(), self.vk_data, null());
+            self.logical_device
+                .get_data()
+                .destroy_sampler(self.vk_data, None);
         }
     }
 }

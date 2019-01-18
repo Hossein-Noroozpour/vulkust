@@ -109,14 +109,17 @@ impl Surface {
         }
     }
 
-    pub(super) fn get_data(&self) -> vk::SurfaceKHR {
-        return self.vk_data;
+    #[inline]
+    pub(super) fn get_data(&self) -> &vk::SurfaceKHR {
+        return &self.vk_data;
     }
 
+    #[inline]
     pub(super) fn get_instance(&self) -> &Instance {
         return &self.instance;
     }
 
+    #[inline]
     pub(super) fn get_loader(&self) -> &SurfaceLoader {
         return &self.loader;
     }
