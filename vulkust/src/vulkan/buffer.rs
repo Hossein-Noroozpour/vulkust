@@ -4,15 +4,15 @@ use super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::device::Logical as LogicalDevice;
 use super::image::Image;
 use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
+use ash::version::DeviceV1_0;
 use ash::vk;
 use libc;
 use std::mem::{size_of, transmute};
 use std::os::raw::c_void;
-use std::ptr::null;
 use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Buffer {
+pub(crate) struct Buffer {
     memory_offset: isize,
     info: alc::Container,
     vk_data: vk::Buffer,
@@ -112,26 +112,19 @@ impl RootBuffer {
         let mut buffer_info = vk::BufferCreateInfo::default();
         buffer_info.size = size as vk::DeviceSize;
         buffer_info.usage = usage;
-        let mut vk_data = vk::Buffer::null();
-        vulkan_check!(vk::vkCreateBuffer(
-            logical_device.get_data(),
-            &buffer_info,
-            null(),
-            &mut vk_data,
-        ));
-        let mut mem_reqs = vk::MemoryRequirements::default();
-        unsafe {
-            vk::vkGetBufferMemoryRequirements(logical_device.get_data(), vk_data, &mut mem_reqs);
-        }
+        let vk_dev = logical_device.get_data();
+        let vk_data = vxresult!(unsafe { vk_dev.create_buffer(&buffer_info, None,) });
+        let mem_reqs = unsafe { vk_dev.get_buffer_memory_requirements(vk_data) };
         let memory = vxresult!(memmgr.write()).allocate(&mem_reqs, memloc);
         {
             let mem = vxresult!(memory.read());
-            vulkan_check!(vk::vkBindBufferMemory(
-                logical_device.get_data(),
-                vk_data,
-                mem.get_data(),
-                mem.get_allocated_memory().get_offset() as vk::VkDeviceSize,
-            ));
+            vxresult!(unsafe {
+                vk_dev.bind_buffer_memory(
+                    vk_data,
+                    mem.get_data(),
+                    mem.get_allocated_memory().get_offset() as vk::DeviceSize,
+                )
+            });
         }
         let container = alc::Container::new(size, logical_device.get_uniform_buffer_alignment());
         RootBuffer {
@@ -169,7 +162,9 @@ impl RootBuffer {
 impl Drop for RootBuffer {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyBuffer(self.logical_device.get_data(), self.vk_data, null());
+            self.logical_device
+                .get_data()
+                .destroy_buffer(self.vk_data, None);
         }
     }
 }
@@ -276,16 +271,12 @@ impl Manager {
             (size, vk_memory)
         };
         let cpu_memory_mapped_ptr = unsafe {
-            let mut data_ptr = 0 as *mut c_void;
-            vulkan_check!(vk::vkMapMemory(
-                vk_device,
+            transmute(vxresult!(vk_device.map_memory(
                 vk_memory,
-                0,
-                memory_size as u64,
-                0,
-                &mut data_ptr
-            ));
-            transmute(data_ptr)
+                0 as vk::DeviceSize,
+                memory_size as vk::DeviceSize,
+                vk::MemoryMapFlags::empty()
+            )))
         };
         let mut dynamic_buffers = Vec::with_capacity(frames_count as usize);
         for _ in 0..frames_count {
@@ -326,10 +317,10 @@ impl Manager {
         let upbuff = self.create_staging_buffer_with_ptr(data, data_len as usize);
         let upbuffer = vxresult!(upbuff.read());
         let mut range = vk::BufferCopy::default();
-        range.srcOffset = upbuffer.get_allocated_memory().get_offset() as vk::VkDeviceSize;
-        range.dstOffset =
-            vxresult!(buffer.read()).get_allocated_memory().get_offset() as vk::VkDeviceSize;
-        range.size = data_len as vk::VkDeviceSize;
+        range.src_offset = upbuffer.get_allocated_memory().get_offset() as vk::DeviceSize;
+        range.dst_offset =
+            vxresult!(buffer.read()).get_allocated_memory().get_offset() as vk::DeviceSize;
+        range.size = data_len as vk::DeviceSize;
         self.copy_ranges.push(range);
         Static::new(buffer)
     }
@@ -371,20 +362,19 @@ impl Manager {
         &mut self,
         image: &Arc<RwLock<Image>>,
         pixels: &[u8],
-        img_info: &vk::VkImageCreateInfo,
+        img_info: &vk::ImageCreateInfo,
     ) {
         let upbuff = self.create_staging_buffer_with_vec(pixels);
         let upbuffer = vxresult!(upbuff.read());
         let mut copy_info = vk::BufferImageCopy::default();
-        copy_info.imageSubresource.aspectMask =
-            vk::VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT as u32;
-        copy_info.imageSubresource.mipLevel = 0;
-        copy_info.imageSubresource.baseArrayLayer = 0;
-        copy_info.imageSubresource.layerCount = 1;
-        copy_info.imageExtent.width = img_info.extent.width;
-        copy_info.imageExtent.height = img_info.extent.height;
-        copy_info.imageExtent.depth = img_info.extent.depth;
-        copy_info.bufferOffset = upbuffer.get_allocated_memory().get_offset() as vk::VkDeviceSize;
+        copy_info.image_subresource.aspect_mask = vk::ImageAspectFlags::COLOR;
+        copy_info.image_subresource.mip_level = 0;
+        copy_info.image_subresource.base_array_layer = 0;
+        copy_info.image_subresource.layer_count = 1;
+        copy_info.image_extent.width = img_info.extent.width;
+        copy_info.image_extent.height = img_info.extent.height;
+        copy_info.image_extent.depth = img_info.extent.depth;
+        copy_info.buffer_offset = upbuffer.get_allocated_memory().get_offset() as vk::DeviceSize;
         self.copy_to_image_ranges.push((copy_info, image.clone()));
     }
 
@@ -420,7 +410,7 @@ impl Manager {
         if self.copy_to_image_ranges.len() != 0 {
             for copy_img in &self.copy_to_image_ranges {
                 let mut image = vxresult!(copy_img.1.write());
-                image.change_layout(cmd, vk::VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                image.change_layout(cmd, vk::ImageLayout::TRANSFER_DST_OPTIMAL);
             }
             for copy_img in &self.copy_to_image_ranges {
                 let image = vxresult!(copy_img.1.read());
@@ -428,10 +418,7 @@ impl Manager {
             }
             for copy_img in &self.copy_to_image_ranges {
                 let mut image = vxresult!(copy_img.1.write());
-                image.change_layout(
-                    cmd,
-                    vk::VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                );
+                image.change_layout(cmd, vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL);
             }
         }
         self.frame_copy_buffers[frame_number].append(&mut self.copy_buffers);
