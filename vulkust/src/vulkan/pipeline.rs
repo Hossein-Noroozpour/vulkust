@@ -4,7 +4,7 @@ use super::descriptor::{Manager as DescriptorManager, SetLayout as DescriptorSet
 use super::device::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
 use super::shader::Module;
-use super::vulkan as vk;
+use ash::vk;
 use std::collections::BTreeMap;
 use std::ffi::CString;
 use std::mem::{size_of, transmute};
@@ -19,8 +19,8 @@ macro_rules! include_shader {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(crate) struct Layout {
-    pub descriptor_set_layouts: Vec<Arc<DescriptorSetLayout>>,
-    pub vk_data: vk::VkPipelineLayout,
+    descriptor_set_layouts: Vec<Arc<DescriptorSetLayout>>,
+    vk_data: vk::PipelineLayout,
 }
 
 impl Layout {
@@ -118,23 +118,16 @@ impl Layout {
     }
 
     fn new(
-        layout: &[vk::VkDescriptorSetLayout],
+        layout: &[vk::DescriptorSetLayout],
         descriptor_set_layouts: Vec<Arc<DescriptorSetLayout>>,
     ) -> Self {
-        let mut vk_data = 0 as vk::VkPipelineLayout;
         let vkdev = descriptor_set_layouts[0].logical_device.get_data();
-        let mut pipeline_layout_create_info = vk::VkPipelineLayoutCreateInfo::default();
-        pipeline_layout_create_info.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipeline_layout_create_info.setLayoutCount = layout.len() as u32;
-        pipeline_layout_create_info.pSetLayouts = layout.as_ptr();
-        vulkan_check!(vk::vkCreatePipelineLayout(
-            vkdev,
-            &pipeline_layout_create_info,
-            null(),
-            &mut vk_data,
-        ));
-        Layout {
+        let mut pipeline_layout_create_info = vk::PipelineLayoutCreateInfo::default();
+        pipeline_layout_create_info.set_layout_count = layout.len() as u32;
+        pipeline_layout_create_info.p_set_layouts = layout.as_ptr();
+        let vk_data =
+            vxresult!(unsafe { vkdev.create_pipeline_layout(&pipeline_layout_create_info, None) });
+        Self {
             descriptor_set_layouts,
             vk_data,
         }
@@ -144,11 +137,10 @@ impl Layout {
 impl Drop for Layout {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyPipelineLayout(
-                self.descriptor_set_layouts[0].logical_device.get_data(),
-                self.vk_data,
-                null(),
-            );
+            self.descriptor_set_layouts[0]
+                .logical_device
+                .get_data()
+                .destroy_pipeline_layout(self.vk_data, None);
         }
     }
 }
@@ -156,22 +148,18 @@ impl Drop for Layout {
 #[cfg_attr(debug_mode, derive(Debug))]
 struct Cache {
     logical_device: Arc<LogicalDevice>,
-    vk_data: vk::VkPipelineCache,
+    vk_data: vk::PipelineCache,
 }
 
 impl Cache {
     fn new(logical_device: Arc<LogicalDevice>) -> Self {
-        let mut vk_data = 0 as vk::VkPipelineCache;
-        let mut pipeline_cache_create_info = vk::VkPipelineCacheCreateInfo::default();
-        pipeline_cache_create_info.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-        vulkan_check!(vk::vkCreatePipelineCache(
-            logical_device.get_data(),
-            &pipeline_cache_create_info,
-            null(),
-            &mut vk_data,
-        ));
-        Cache {
+        let pipeline_cache_create_info = vk::PipelineCacheCreateInfo::default();
+        let vk_data = vxresult!(unsafe {
+            logical_device
+                .get_data()
+                .CreatePipelineCache(&pipeline_cache_create_info, None)
+        });
+        Self {
             logical_device,
             vk_data,
         }
@@ -181,18 +169,20 @@ impl Cache {
 impl Drop for Cache {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyPipelineCache(self.logical_device.get_data(), self.vk_data, null());
+            self.logical_device
+                .get_data()
+                .destroy_pipeline_cache(self.vk_data, None);
         }
     }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub struct Pipeline {
+pub(crate) struct Pipeline {
     cache: Arc<Cache>,
     layout: Layout,
     shaders: Vec<Module>,
     render_pass: Arc<RenderPass>,
-    vk_data: vk::VkPipeline,
+    vk_data: vk::Pipeline,
 }
 
 impl Pipeline {
@@ -247,143 +237,101 @@ impl Pipeline {
             PipelineType::Unlit => Layout::new_unlit(descriptor_manager),
         };
 
-        let mut input_assembly_state = vk::VkPipelineInputAssemblyStateCreateInfo::default();
-        input_assembly_state.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        input_assembly_state.topology =
-            vk::VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        let mut input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::default();
+        input_assembly_state.topology = vk::PrimitiveTopology::TRIANGLE_LIST;
 
-        let mut rasterization_state = vk::VkPipelineRasterizationStateCreateInfo::default();
-        rasterization_state.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterization_state.polygonMode = vk::VkPolygonMode::VK_POLYGON_MODE_FILL;
-        rasterization_state.cullMode = vk::VkCullModeFlagBits::VK_CULL_MODE_FRONT_BIT as u32;
-        rasterization_state.frontFace = vk::VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
-        rasterization_state.lineWidth = 1f32;
+        let mut rasterization_state = vk::PipelineRasterizationStateCreateInfo::default();
+        rasterization_state.polygon_mode = vk::PolygonMode::FILL;
+        rasterization_state.cull_mode = vk::CullModeFlags::FRONT_BIT as u32;
+        rasterization_state.front_face = vk::FrontFace::CLOCKWISE;
+        rasterization_state.line_width = 1f32;
 
         let blend_attachment_state_size = render_pass.get_color_attachments().len();
         let mut blend_attachment_state =
-            vec![vk::VkPipelineColorBlendAttachmentState::default(); blend_attachment_state_size];
+            vec![vk::PipelineColorBlendAttachmentState::default(); blend_attachment_state_size];
         for i in 0..blend_attachment_state_size {
             match pipeline_type {
                 PipelineType::Deferred | PipelineType::Unlit | PipelineType::TransparentPBR => {
-                    blend_attachment_state[i].blendEnable = vk::VK_TRUE;
-                    blend_attachment_state[i].srcColorBlendFactor =
-                        vk::VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
-                    blend_attachment_state[i].dstColorBlendFactor =
-                        vk::VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-                    blend_attachment_state[i].colorBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
-                    blend_attachment_state[i].srcAlphaBlendFactor =
-                        vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
-                    blend_attachment_state[i].dstAlphaBlendFactor =
-                        vk::VkBlendFactor::VK_BLEND_FACTOR_ZERO;
-                    blend_attachment_state[i].alphaBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
-                    blend_attachment_state[i].colorWriteMask =
-                        vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT
-                            as vk::VkColorComponentFlags
-                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT
-                                as vk::VkColorComponentFlags
-                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
-                                as vk::VkColorComponentFlags
-                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT
-                                as vk::VkColorComponentFlags;
+                    blend_attachment_state[i].blend_enable = vk::TRUE;
+                    blend_attachment_state[i].src_color_blend_factor = vk::BlendFactor::SRC_ALPHA;
+                    blend_attachment_state[i].dst_color_blend_factor =
+                        vk::BlendFactor::ONE_MINUS_SRC_ALPHA;
+                    blend_attachment_state[i].color_blend_op = vk::BlendOp::ADD;
+                    blend_attachment_state[i].src_alpha_blend_factor = vk::BlendFactor::ONE;
+                    blend_attachment_state[i].dst_alpha_blend_factor = vk::BlendFactor::ZERO;
+                    blend_attachment_state[i].alpha_blend_op = vk::BlendOp::ADD;
+                    blend_attachment_state[i].color_write_mask = vk::ColorComponentFlags::R
+                        | vk::ColorComponentFlags::G
+                        | vk::ColorComponentFlags::B
+                        | vk::ColorComponentFlags::A;
                 }
                 PipelineType::ShadowAccumulatorDirectional => {
-                    blend_attachment_state[i].blendEnable = vk::VK_TRUE;
-                    blend_attachment_state[i].srcColorBlendFactor =
-                        vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
-                    blend_attachment_state[i].dstColorBlendFactor =
-                        vk::VkBlendFactor::VK_BLEND_FACTOR_ONE;
-                    blend_attachment_state[i].colorBlendOp = vk::VkBlendOp::VK_BLEND_OP_ADD;
-                    blend_attachment_state[i].colorWriteMask =
-                        vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT
-                            as vk::VkColorComponentFlags
-                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT
-                                as vk::VkColorComponentFlags
-                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
-                                as vk::VkColorComponentFlags
-                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT
-                                as vk::VkColorComponentFlags;
+                    blend_attachment_state[i].blendEnable = vk::TRUE;
+                    blend_attachment_state[i].src_color_blend_factor = vk::BlendFactor::ONE;
+                    blend_attachment_state[i].dst_color_blend_factor = vk::BlendFactor::ONE;
+                    blend_attachment_state[i].color_blend_op = vk::BlendOp::ADD;
+                    blend_attachment_state[i].color_write_mask = vk::ColorComponentFlags::R
+                        | vk::ColorComponentFlags::G
+                        | vk::ColorComponentFlags::B
+                        | vk::ColorComponentFlags::A;
                 }
                 PipelineType::SSAO => {
-                    blend_attachment_state[i].colorWriteMask =
-                        vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT
-                            as vk::VkColorComponentFlags;
+                    blend_attachment_state[i].color_write_mask = vk::ColorComponentFlags::R;
                 }
                 _ => {
-                    blend_attachment_state[i].colorWriteMask =
-                        vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT
-                            as vk::VkColorComponentFlags
-                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT
-                                as vk::VkColorComponentFlags
-                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
-                                as vk::VkColorComponentFlags
-                            | vk::VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT
-                                as vk::VkColorComponentFlags;
+                    blend_attachment_state[i].color_write_mask = vk::ColorComponentFlags::R
+                        | vk::ColorComponentFlags::G
+                        | vk::ColorComponentFlags::B
+                        | vk::ColorComponentFlags::A;
                 }
             }
         }
 
-        let mut color_blend_state = vk::VkPipelineColorBlendStateCreateInfo::default();
-        color_blend_state.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        color_blend_state.attachmentCount = blend_attachment_state.len() as u32;
-        color_blend_state.pAttachments = blend_attachment_state.as_ptr();
+        let mut color_blend_state = vk::PipelineColorBlendStateCreateInfo::default();
+        color_blend_state.attachment_count = blend_attachment_state.len() as u32;
+        color_blend_state.p_attachments = blend_attachment_state.as_ptr();
 
-        let mut viewport_state = vk::VkPipelineViewportStateCreateInfo::default();
-        viewport_state.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        viewport_state.viewportCount = 1;
-        viewport_state.scissorCount = 1;
+        let mut viewport_state = vk::PipelineViewportStateCreateInfo::default();
+        viewport_state.viewport_count = 1;
+        viewport_state.scissor_count = 1;
 
-        let dynamic_state_enables = [
-            vk::VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT,
-            vk::VkDynamicState::VK_DYNAMIC_STATE_SCISSOR,
-        ];
+        let dynamic_state_enables = [vk::DynamicState::VIEWPORT, vk::DynamicState::SCISSOR];
 
-        let mut dynamic_state = vk::VkPipelineDynamicStateCreateInfo::default();
-        dynamic_state.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        dynamic_state.pDynamicStates = dynamic_state_enables.as_ptr();
-        dynamic_state.dynamicStateCount = dynamic_state_enables.len() as u32;
+        let mut dynamic_state = vk::PipelineDynamicStateCreateInfo::default();
+        dynamic_state.p_dynamic_states = dynamic_state_enables.as_ptr();
+        dynamic_state.dynamic_state_count = dynamic_state_enables.len() as u32;
 
-        let mut depth_stencil_state = vk::VkPipelineDepthStencilStateCreateInfo::default();
-        depth_stencil_state.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depth_stencil_state.depthTestEnable = vk::VK_TRUE;
-        depth_stencil_state.depthWriteEnable = vk::VK_TRUE;
-        depth_stencil_state.depthCompareOp = vk::VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL;
-        depth_stencil_state.depthBoundsTestEnable = vk::VK_FALSE;
-        depth_stencil_state.back.failOp = vk::VkStencilOp::VK_STENCIL_OP_KEEP;
-        depth_stencil_state.back.passOp = vk::VkStencilOp::VK_STENCIL_OP_KEEP;
-        depth_stencil_state.back.compareOp = vk::VkCompareOp::VK_COMPARE_OP_ALWAYS;
-        depth_stencil_state.stencilTestEnable = vk::VK_FALSE;
+        let mut depth_stencil_state = vk::PipelineDepthStencilStateCreateInfo::default();
+        depth_stencil_state.depth_test_enable = vk::TRUE;
+        depth_stencil_state.depth_write_enable = vk::TRUE;
+        depth_stencil_state.depth_compare_op = vk::CompareOp::LESS_OR_EQUAL;
+        depth_stencil_state.depthBoundsTestEnable = vk::FALSE;
+        depth_stencil_state.back.failOp = vk::StencilOp::KEEP;
+        depth_stencil_state.back.passOp = vk::StencilOp::KEEP;
+        depth_stencil_state.back.compareOp = vk::CompareOp::ALWAYS;
+        depth_stencil_state.stencilTestEnable = vk::FALSE;
         depth_stencil_state.front = depth_stencil_state.back;
 
-        let mut multisample_state = vk::VkPipelineMultisampleStateCreateInfo::default();
-        multisample_state.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisample_state.rasterizationSamples = vk::VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+        let mut multisample_state = vk::PipelineMultisampleStateCreateInfo::default();
+        multisample_state.rasterizationSamples = vk::SampleCountFlags::TYPE_1;
 
-        let mut vertex_input_binding = vk::VkVertexInputBindingDescription::default();
+        let mut vertex_input_binding = vk::VertexInputBindingDescription::default();
         vertex_input_binding.stride = 48; // bytes of vertex
-        vertex_input_binding.inputRate = vk::VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+        vertex_input_binding.inputRate = vk::VertexInputRate::VERTEX;
 
-        let mut vertex_attributes = vec![vk::VkVertexInputAttributeDescription::default(); 4];
-        vertex_attributes[0].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+        let mut vertex_attributes = vec![vk::VertexInputAttributeDescription::default(); 4];
+        vertex_attributes[0].format = vk::Format::R32G32B32_SFLOAT;
         vertex_attributes[1].location = 1;
         vertex_attributes[1].offset = 12;
-        vertex_attributes[1].format = vk::VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+        vertex_attributes[1].format = vk::Format::R32G32B32_SFLOAT;
         vertex_attributes[2].location = 2;
         vertex_attributes[2].offset = 24;
-        vertex_attributes[2].format = vk::VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+        vertex_attributes[2].format = vk::Format::R32G32B32A32_SFLOAT;
         vertex_attributes[3].location = 3;
         vertex_attributes[3].offset = 40;
-        vertex_attributes[3].format = vk::VkFormat::VK_FORMAT_R32G32_SFLOAT;
+        vertex_attributes[3].format = vk::Format::R32G32_SFLOAT;
 
-        let mut vertex_input_state = vk::VkPipelineVertexInputStateCreateInfo::default();
-        vertex_input_state.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        let mut vertex_input_state = vk::PipelineVertexInputStateCreateInfo::default();
         match pipeline_type {
             PipelineType::GBuffer
             | PipelineType::ShadowMapper
@@ -401,12 +349,12 @@ impl Pipeline {
 
         let mut specialization_map_entries = match pipeline_type {
             PipelineType::ShadowAccumulatorDirectional => {
-                vec![vk::VkSpecializationMapEntry::default(); 1]
+                vec![vk::SpecializationMapEntry::default(); 1]
             }
             _ => Vec::new(),
         };
 
-        let mut specialization_info = vk::VkSpecializationInfo::default();
+        let mut specialization_info = vk::SpecializationInfo::default();
 
         match pipeline_type {
             PipelineType::ShadowAccumulatorDirectional => {
@@ -424,19 +372,16 @@ impl Pipeline {
 
         let stage_name = CString::new("main").unwrap();
         let stages_count = shaders.len();
-        let mut shader_stages = vec![vk::VkPipelineShaderStageCreateInfo::default(); stages_count];
+        let mut shader_stages = vec![vk::PipelineShaderStageCreateInfo::default(); stages_count];
         for i in 0..stages_count {
-            shader_stages[i].sType =
-                vk::VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             shader_stages[i].pName = stage_name.as_ptr();
             shader_stages[i].module = shaders[i].vk_data;
             match i {
                 0 => {
-                    shader_stages[i].stage = vk::VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+                    shader_stages[i].stage = vk::ShaderStageFlags::VERTEX;
                 }
                 1 => {
-                    shader_stages[i].stage =
-                        vk::VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+                    shader_stages[i].stage = vk::ShaderStageFlags::FRAGMENT;
                 }
                 n @ _ => {
                     vxlogf!("Stage {} is not implemented yet!", n);
@@ -450,33 +395,28 @@ impl Pipeline {
             }
         }
 
-        let mut pipeline_create_info = vk::VkGraphicsPipelineCreateInfo::default();
-        pipeline_create_info.sType =
-            vk::VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        let mut pipeline_create_info = vk::GraphicsPipelineCreateInfo::default();
         pipeline_create_info.layout = layout.vk_data;
-        pipeline_create_info.renderPass = render_pass.get_data();
-        pipeline_create_info.stageCount = shader_stages.len() as u32;
-        pipeline_create_info.pStages = shader_stages.as_ptr();
-        pipeline_create_info.pVertexInputState = &vertex_input_state;
-        pipeline_create_info.pInputAssemblyState = &input_assembly_state;
-        pipeline_create_info.pRasterizationState = &rasterization_state;
-        pipeline_create_info.pColorBlendState = &color_blend_state;
-        pipeline_create_info.pMultisampleState = &multisample_state;
-        pipeline_create_info.pViewportState = &viewport_state;
-        pipeline_create_info.pDepthStencilState = &depth_stencil_state;
-        pipeline_create_info.renderPass = render_pass.get_data();
-        pipeline_create_info.pDynamicState = &dynamic_state;
+        pipeline_create_info.render_pass = render_pass.get_data();
+        pipeline_create_info.stage_count = shader_stages.len() as u32;
+        pipeline_create_info.p_stages = shader_stages.as_ptr();
+        pipeline_create_info.p_vertex_input_state = &vertex_input_state;
+        pipeline_create_info.p_input_assembly_state = &input_assembly_state;
+        pipeline_create_info.p_rasterization_state = &rasterization_state;
+        pipeline_create_info.p_color_blend_state = &color_blend_state;
+        pipeline_create_info.p_multisample_state = &multisample_state;
+        pipeline_create_info.p_viewport_state = &viewport_state;
+        pipeline_create_info.p_depth_stencil_state = &depth_stencil_state;
+        pipeline_create_info.render_pass = render_pass.get_data();
+        pipeline_create_info.p_dynamic_state = &dynamic_state;
 
-        let mut vk_data = 0 as vk::VkPipeline;
-        vulkan_check!(vk::vkCreateGraphicsPipelines(
-            device.get_data(),
-            cache.vk_data,
-            1,
-            &pipeline_create_info,
-            null(),
-            &mut vk_data,
-        ));
-        Pipeline {
+        let vkdev = device.get_data();
+
+        let mut vk_data = 0 as vk::Pipeline;
+        vxresult!(unsafe {
+            vkdev.create_graphics_pipelines(cache.vk_data, 1, &pipeline_create_info, None)
+        });
+        Self {
             cache,
             layout,
             shaders,
@@ -485,9 +425,9 @@ impl Pipeline {
         }
     }
 
-    pub(super) fn get_info_for_binding(&self) -> (vk::VkPipelineBindPoint, vk::VkPipeline) {
+    pub(super) fn get_info_for_binding(&self) -> (vk::PipelineBindPoint, vk::Pipeline) {
         return (
-            vk::VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+            vk::PipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
             self.vk_data,
         );
     }
@@ -500,7 +440,10 @@ impl Pipeline {
 impl Drop for Pipeline {
     fn drop(&mut self) {
         unsafe {
-            vk::vkDestroyPipeline(self.cache.logical_device.get_data(), self.vk_data, null());
+            self.cache
+                .logical_device
+                .get_data()
+                .destroy_pipeline(self.vk_data, None);
         }
     }
 }

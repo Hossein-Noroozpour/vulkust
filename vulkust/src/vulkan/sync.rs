@@ -72,13 +72,11 @@ impl Fence {
     }
 
     pub(crate) fn wait(&self) {
-        vulkan_check!(vk::vkWaitForFences(
-            self.logical_device.get_data(),
-            1,
-            &self.vk_data,
-            1u32,
-            100000000000,
-        ));
+        vxresult!(unsafe {
+            self.logical_device
+                .get_data()
+                .wait_for_fences(1, &self.vk_data, 1u32, 100000000000)
+        });
     }
 }
 
