@@ -14,7 +14,7 @@ pub(crate) enum NextImageResult {
 
 pub(crate) struct Swapchain {
     logical_device: Arc<LogicalDevice>,
-    surface_format: vk::SurfaceFormatKHR,
+    _surface_format: vk::SurfaceFormatKHR,
     image_views: Vec<Arc<ImageView>>,
     vk_data: vk::SwapchainKHR,
     loader: SwapchainLoader,
@@ -74,7 +74,7 @@ impl Swapchain {
             logical_device.get_physical().get_present_queue_node_index(),
         ];
         let shared = queue_family_indices[0] != queue_family_indices[1];
-        let mut swapchain_create_info = vk::SwapchainCreateInfoKHR::builder()
+        let swapchain_create_info = vk::SwapchainCreateInfoKHR::builder()
             .surface(*logical_device.get_physical().get_surface().get_data())
             .min_image_count(swapchain_images_count)
             .image_format(best_surface_format.format)
@@ -135,7 +135,7 @@ impl Swapchain {
         }
         Self {
             logical_device: logical_device.clone(),
-            surface_format: best_surface_format,
+            _surface_format: best_surface_format,
             image_views,
             vk_data,
             loader,
@@ -163,6 +163,14 @@ impl Swapchain {
 
     pub(crate) fn get_logical_device(&self) -> &Arc<LogicalDevice> {
         return &self.logical_device;
+    }
+
+    pub(super) fn get_loader(&self) -> &SwapchainLoader {
+        return &self.loader;
+    }
+
+    pub(super) fn get_data(&self) -> &vk::SwapchainKHR {
+        return &self.vk_data;
     }
 }
 

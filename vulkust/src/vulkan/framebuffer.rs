@@ -34,11 +34,11 @@ impl Framebuffer {
             }
             width = a.0;
             height = a.1;
-            vkdev = Some(img.get_device().get_data());
+            vkdev = Some(img.get_device().get_data().clone());
         }
         let vkdev = vxunwrap!(vkdev);
 
-        let mut fb_create_info = vk::FramebufferCreateInfo::builder()
+        let fb_create_info = vk::FramebufferCreateInfo::builder()
             .render_pass(*render_pass.get_data())
             .layers(1)
             .attachments(&attachments)
@@ -55,10 +55,12 @@ impl Framebuffer {
             buffers.len()
         ];
         if has_depth {
-            clear_values[buffers.len() - 1].color.float32[0] = 1.0;
+            unsafe {
+                clear_values[buffers.len() - 1].color.float32[0] = 1.0;
+            }
         }
 
-        let mut viewport = vk::Viewport::builder()
+        let viewport = vk::Viewport::builder()
             .x(0.0)
             .y(0.0)
             .height(height as f32)
@@ -126,9 +128,8 @@ impl Framebuffer {
 
 impl Drop for Framebuffer {
     fn drop(&mut self) {
-        let vkdev = vxresult!(self.buffers[0].get_image().read())
-            .get_device()
-            .get_data();
+        let img = vxresult!(self.buffers[0].get_image().read());
+        let vkdev = img.get_device().get_data();
         unsafe {
             vkdev.destroy_framebuffer(self.vk_data, None);
         }

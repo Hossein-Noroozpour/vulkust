@@ -44,6 +44,10 @@ impl Pool {
             vk_data,
         }
     }
+
+    pub(crate) fn get_logical_device(&self) -> &Arc<LogicalDevice> {
+        return &self.logical_device;
+    }
 }
 
 impl Drop for Pool {
@@ -99,7 +103,7 @@ impl SetLayout {
         let mut descriptor_layout = vk::DescriptorSetLayoutCreateInfo::default();
         descriptor_layout.binding_count = layout_bindings.len() as u32;
         descriptor_layout.p_bindings = layout_bindings.as_ptr();
-        let mut vk_data = vxresult!(unsafe {
+        let vk_data = vxresult!(unsafe {
             logical_device
                 .get_data()
                 .create_descriptor_set_layout(&descriptor_layout, None)
@@ -128,6 +132,14 @@ impl SetLayout {
             layout_bindings[binding_index].stage_flags = vk::ShaderStageFlags::FRAGMENT;
         }
         return layout_bindings;
+    }
+
+    pub(super) fn get_data(&self) -> &vk::DescriptorSetLayout {
+        return &self.vk_data;
+    }
+
+    pub(crate) fn get_logical_device(&self) -> &Arc<LogicalDevice> {
+        return &self.logical_device;
     }
 }
 
@@ -252,7 +264,7 @@ impl Set {
             pool.logical_device
                 .get_data()
                 .allocate_descriptor_sets(&alloc_info)
-        });
+        })[0];
     }
 
     fn new(

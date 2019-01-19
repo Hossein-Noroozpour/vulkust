@@ -19,8 +19,8 @@ struct AppData {
 }
 
 pub struct Application {
-    pub instance: winapi::shared::minwindef::HINSTANCE,
-    pub window: winapi::shared::windef::HWND,
+    instance: winapi::shared::minwindef::HINSTANCE,
+    window: winapi::shared::windef::HWND,
     core_app: Option<Arc<RwLock<CoreAppTrait>>>,
     renderer: Option<Arc<RwLock<RenderEngine>>>,
     data: Arc<RwLock<AppData>>,
@@ -429,6 +429,10 @@ impl Application {
 
     pub(crate) fn get_window(&self) -> winapi::shared::windef::HWND {
         return self.window;
+    }
+
+    pub(crate) fn get_instance(&self) -> winapi::shared::minwindef::HINSTANCE {
+        return self.instance;
     }
 }
 

@@ -7,16 +7,13 @@ use ash::vk;
 
 #[cfg(debug_mode)]
 mod debug {
+    use super::super::super::core::string::{slice_to_string, strings_to_cstrings};
+    use super::vk;
+    use ash::extensions::ext::DebugReport;
     use std::collections::BTreeMap;
     use std::ffi::{CStr, CString};
     use std::os::raw::{c_char, c_void};
     use std::ptr::null_mut;
-
-    use super::vk;
-    use ash::extensions::ext::DebugReport;
-    use ash::version::EntryV1_0;
-
-    use super::super::super::core::string::{slice_to_string, strings_to_cstrings};
 
     extern "system" fn vulkan_debug_callback(
         flags: vk::DebugReportFlagsEXT,
@@ -76,13 +73,16 @@ mod debug {
                 )
                 .pfn_callback(Some(vulkan_debug_callback));
             let loader = DebugReport::new(vk_entry, vk_instance);
-            let vk_data = vxunwrap!(loader.create_debug_report_callback(&create_info, None));
+            let vk_data =
+                vxresult!(unsafe { loader.create_debug_report_callback(&create_info, None) });
             Self { loader, vk_data }
         }
 
         pub fn terminate(&mut self) {
-            self.loader
-                .destroy_debug_report_callback(self.vk_data, None);
+            unsafe {
+                self.loader
+                    .destroy_debug_report_callback(self.vk_data, None);
+            }
         }
     }
 
@@ -152,7 +152,7 @@ mod debug {
 }
 
 fn get_all_extensions(entry: &ash::Entry) -> Vec<vk::ExtensionProperties> {
-    return vxresult!(unsafe { entry.enumerate_instance_extension_properties() });
+    return vxresult!(entry.enumerate_instance_extension_properties());
 }
 
 fn enumerate_extensions(entry: &ash::Entry) -> Vec<String> {
@@ -185,16 +185,16 @@ fn enumerate_extensions(entry: &ash::Entry) -> Vec<String> {
     extensions
 }
 
-fn contain_extension(s: &str, entry: &ash::Entry) -> bool {
-    let properties = get_all_extensions(entry);
-    for p in properties {
-        let name = slice_to_string(&p.extension_name);
-        if name == s {
-            return true;
-        }
-    }
-    return false;
-}
+// fn contain_extension(s: &str, entry: &ash::Entry) -> bool {
+//     let properties = get_all_extensions(entry);
+//     for p in properties {
+//         let name = slice_to_string(&p.extension_name);
+//         if name == s {
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
 pub(crate) struct Instance {
     entry: ash::Entry,
@@ -222,7 +222,7 @@ impl Instance {
             .application_info(&application_info)
             .enabled_layer_names(&vulkan_layers)
             .enabled_extension_names(&vulkan_extensions);
-        let vk_data = vxresult!(entry.create_instance(&instance_create_info, None));
+        let vk_data = vxresult!(unsafe { entry.create_instance(&instance_create_info, None) });
         let debugger = debug::Debugger::new(&entry, &vk_data);
         Self {
             entry,
@@ -245,7 +245,7 @@ impl Instance {
 impl Drop for Instance {
     fn drop(&mut self) {
         self.debugger.terminate();
-        self.vk_data.destroy_instance(None);
+        unsafe { self.vk_data.destroy_instance(None) };
     }
 }
 

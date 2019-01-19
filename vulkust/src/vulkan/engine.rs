@@ -1,4 +1,4 @@
-use super::super::render::config::Configurations;
+use super::super::core::config::Configurations;
 use super::super::render::sampler::Filter as SamplerFilter;
 use super::super::system::os::application::Application as OsApp;
 use super::buffer::Manager as BufferManager;
@@ -17,8 +17,8 @@ use super::surface::Surface;
 use super::swapchain::{NextImageResult, Swapchain};
 use super::sync::Fence;
 use super::sync::Semaphore;
-use super::vulkan as vk;
-use std::ptr::null_mut;
+use ash::version::DeviceV1_0;
+use ash::vk;
 use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -52,10 +52,10 @@ pub struct Engine {
 
 impl Engine {
     pub(crate) fn new(os_app: &Arc<RwLock<OsApp>>, conf: &Configurations) -> Self {
-        let instance = Arc::new(Instance::new());
+        let instance = Arc::new(Instance::new(conf.get_application_name()));
         let surface = Arc::new(Surface::new(&instance, os_app));
         let physical_device = Arc::new(PhysicalDevice::new(&surface));
-        let logical_device = Arc::new(LogicalDevice::new(&physical_device, conf));
+        let logical_device = Arc::new(LogicalDevice::new(&physical_device, conf.get_render()));
         let swapchain = Arc::new(Swapchain::new(&logical_device));
         let present_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let data_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
@@ -63,11 +63,11 @@ impl Engine {
         let graphic_cmd_pool = Arc::new(CmdPool::new(
             logical_device.clone(),
             CmdPoolType::Graphic,
-            0,
+            vk::CommandPoolCreateFlags::empty(),
         ));
-        let mut data_primary_cmds = Vec::with_capacity(swapchain.image_views.len());
-        let mut wait_fences = Vec::with_capacity(swapchain.image_views.len());
-        for _ in 0..swapchain.image_views.len() {
+        let mut data_primary_cmds = Vec::with_capacity(swapchain.get_image_views().len());
+        let mut wait_fences = Vec::with_capacity(swapchain.get_image_views().len());
+        for _ in 0..swapchain.get_image_views().len() {
             data_primary_cmds.push(Arc::new(Mutex::new(CmdBuffer::new_primary(
                 graphic_cmd_pool.clone(),
             ))));
@@ -76,9 +76,9 @@ impl Engine {
         let memory_manager = MemoryManager::new(&logical_device);
         let render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), false));
         let clear_render_pass = Arc::new(RenderPass::new_with_swapchain(swapchain.clone(), true));
-        let mut framebuffers = Vec::with_capacity(swapchain.image_views.len());
-        let mut clear_framebuffers = Vec::with_capacity(swapchain.image_views.len());
-        for v in &swapchain.image_views {
+        let mut framebuffers = Vec::with_capacity(swapchain.get_image_views().len());
+        let mut clear_framebuffers = Vec::with_capacity(swapchain.get_image_views().len());
+        for v in swapchain.get_image_views() {
             framebuffers.push(Arc::new(Framebuffer::new(
                 vec![v.clone()],
                 render_pass.clone(),
@@ -99,10 +99,12 @@ impl Engine {
             32 * 1024 * 1024,
             32 * 1024 * 1024,
             32 * 1024 * 1024,
-            swapchain.image_views.len() as isize,
+            swapchain.get_image_views().len() as isize,
         )));
-        let descriptor_manager =
-            Arc::new(RwLock::new(DescriptorManager::new(&logical_device, conf)));
+        let descriptor_manager = Arc::new(RwLock::new(DescriptorManager::new(
+            &logical_device,
+            conf.get_render(),
+        )));
         let pipeline_manager = Arc::new(RwLock::new(PipelineManager::new(
             logical_device.clone(),
             descriptor_manager.clone(),
@@ -142,18 +144,8 @@ impl Engine {
                 vxlogf!("Problem with rereshing screen, engine needs refreshing.");
             }
         } as usize;
-        vulkan_check!(vk::vkWaitForFences(
-            self.logical_device.get_data(),
-            1,
-            &self.wait_fences[current_buffer].vk_data,
-            1,
-            u64::max_value(),
-        ));
-        vulkan_check!(vk::vkResetFences(
-            self.logical_device.get_data(),
-            1,
-            &self.wait_fences[current_buffer].vk_data,
-        ));
+        self.wait_fences[current_buffer].wait();
+        self.wait_fences[current_buffer].reset();
         self.current_frame_number = current_buffer as u32;
 
         let mut pcmd = vxresult!(self.data_primary_cmds[self.current_frame_number as usize].lock());
@@ -168,42 +160,42 @@ impl Engine {
 
     pub(crate) fn submit(&self, wait: &Semaphore, cmd: &CmdBuffer, signal: &Semaphore) {
         self.submit_with_fence(
-            &[wait.get_data()],
-            &[cmd.get_data()],
-            &[signal.get_data()],
+            &[*wait.get_data()],
+            &[*cmd.get_data()],
+            &[*signal.get_data()],
             None,
         );
     }
 
     pub(crate) fn submit_with_fence(
         &self,
-        waits: &[vk::VkSemaphore],
-        cmds: &[vk::VkCommandBuffer],
-        signals: &[vk::VkSemaphore],
+        waits: &[vk::Semaphore],
+        cmds: &[vk::CommandBuffer],
+        signals: &[vk::Semaphore],
         fence: Option<&Fence>,
     ) {
-        let wait_stage_mask =
-            vk::VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT as u32;
-        let mut submit_info = vk::VkSubmitInfo::default();
-        submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.pWaitDstStageMask = &wait_stage_mask;
-        submit_info.pWaitSemaphores = waits.as_ptr();
-        submit_info.waitSemaphoreCount = waits.len() as u32;
-        submit_info.pSignalSemaphores = signals.as_ptr();
-        submit_info.signalSemaphoreCount = signals.len() as u32;
-        submit_info.pCommandBuffers = cmds.as_ptr();
-        submit_info.commandBufferCount = cmds.len() as u32;
+        let wait_stage_mask = vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT;
+        let mut submit_info = vk::SubmitInfo::default();
+        submit_info.p_wait_dst_stage_mask = &wait_stage_mask;
+        submit_info.p_wait_semaphores = waits.as_ptr();
+        submit_info.wait_semaphore_count = waits.len() as u32;
+        submit_info.p_signal_semaphores = signals.as_ptr();
+        submit_info.signal_semaphore_count = signals.len() as u32;
+        submit_info.p_command_buffers = cmds.as_ptr();
+        submit_info.command_buffer_count = cmds.len() as u32;
         let fence = if let Some(fence) = fence {
-            fence.vk_data
+            *fence.get_data()
         } else {
-            null_mut()
+            vk::Fence::null()
         };
-        vulkan_check!(vk::vkQueueSubmit(
-            self.logical_device.get_vk_graphic_queue(),
-            1,
-            &submit_info,
-            fence,
-        ));
+        let vk_dev = self.logical_device.get_data();
+        vxresult!(unsafe {
+            vk_dev.queue_submit(
+                self.logical_device.get_vk_graphic_queue(),
+                &[submit_info],
+                fence,
+            )
+        });
     }
 
     pub(crate) fn submit_multiple(
@@ -216,36 +208,36 @@ impl Engine {
         let mut signals_data = Vec::with_capacity(signals.len());
         let mut cmds_data = Vec::with_capacity(cmds.len());
         for w in waits {
-            waits_data.push(w.get_data());
+            waits_data.push(*w.get_data());
         }
         for s in signals {
-            signals_data.push(s.get_data());
+            signals_data.push(*s.get_data());
         }
         for c in cmds {
-            cmds_data.push(c.get_data());
+            cmds_data.push(*c.get_data());
         }
         self.submit_with_fence(&waits_data, &cmds_data, &signals_data, None);
     }
 
     pub(crate) fn end(&self, wait: &Semaphore) {
         self.submit_with_fence(
-            &[wait.get_data()],
+            &[*wait.get_data()],
             &[],
-            &[self.render_semaphore.get_data()],
+            &[*self.render_semaphore.get_data()],
             Some(&self.wait_fences[self.current_frame_number as usize]),
         );
 
-        let mut present_info = vk::VkPresentInfoKHR::default();
-        present_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present_info.swapchainCount = 1;
-        present_info.pSwapchains = &self.swapchain.vk_data;
-        present_info.pImageIndices = &self.current_frame_number;
-        present_info.pWaitSemaphores = &self.render_semaphore.vk_data;
-        present_info.waitSemaphoreCount = 1;
-        vulkan_check!(vk::vkQueuePresentKHR(
-            self.logical_device.get_vk_graphic_queue(),
-            &present_info,
-        ));
+        let mut present_info = vk::PresentInfoKHR::default();
+        present_info.swapchain_count = 1;
+        present_info.p_swapchains = self.swapchain.get_data();
+        present_info.p_image_indices = &self.current_frame_number;
+        present_info.p_wait_semaphores = self.render_semaphore.get_data();
+        present_info.wait_semaphore_count = 1;
+        vxresult!(unsafe {
+            self.swapchain
+                .get_loader()
+                .queue_present(self.logical_device.get_vk_graphic_queue(), &present_info)
+        });
     }
 
     // pub(crate) fn terminate(&mut self) {
@@ -270,7 +262,7 @@ impl Engine {
         return Arc::new(CmdPool::new(
             self.logical_device.clone(),
             CmdPoolType::Graphic,
-            0,
+            vk::CommandPoolCreateFlags::empty(),
         ));
     }
 

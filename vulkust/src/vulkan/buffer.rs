@@ -112,14 +112,18 @@ impl RootBuffer {
         let mut buffer_info = vk::BufferCreateInfo::default();
         buffer_info.size = size as vk::DeviceSize;
         buffer_info.usage = usage;
-        let vk_dev = logical_device.get_data();
-        let vk_data = vxresult!(unsafe { vk_dev.create_buffer(&buffer_info, None,) });
-        let mem_reqs = unsafe { vk_dev.get_buffer_memory_requirements(vk_data) };
+        let vk_data =
+            vxresult!(unsafe { logical_device.get_data().create_buffer(&buffer_info, None,) });
+        let mem_reqs = unsafe {
+            logical_device
+                .get_data()
+                .get_buffer_memory_requirements(vk_data)
+        };
         let memory = vxresult!(memmgr.write()).allocate(&mem_reqs, memloc);
         {
             let mem = vxresult!(memory.read());
             vxresult!(unsafe {
-                vk_dev.bind_buffer_memory(
+                logical_device.get_data().bind_buffer_memory(
                     vk_data,
                     mem.get_data(),
                     mem.get_allocated_memory().get_offset() as vk::DeviceSize,
@@ -127,7 +131,7 @@ impl RootBuffer {
             });
         }
         let container = alc::Container::new(size, logical_device.get_uniform_buffer_alignment());
-        RootBuffer {
+        Self {
             logical_device,
             memory,
             vk_data,
@@ -262,8 +266,8 @@ impl Manager {
         let mut gpu_buffer = RootBuffer::new(static_size, Location::GPU, memmgr);
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
-
-        let vk_device = vxresult!(memmgr.read()).get_device().get_data();
+        let memmgr = vxresult!(memmgr.read());
+        let vk_device = memmgr.get_device().get_data();
         let (memory_size, vk_memory) = {
             let cpu_memory = vxresult!(cpu_buffer.memory.read());
             let vk_memory = cpu_memory.get_data();
@@ -292,7 +296,7 @@ impl Manager {
             frame_copy_to_image_ranges.push(Vec::new());
         }
         let cmd_pool = cmd_pool.clone();
-        Manager {
+        Self {
             cpu_buffer,
             gpu_buffer,
             cpu_memory_mapped_ptr,

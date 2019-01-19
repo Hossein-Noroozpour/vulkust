@@ -4,11 +4,11 @@ use super::descriptor::{Manager as DescriptorManager, SetLayout as DescriptorSet
 use super::device::Logical as LogicalDevice;
 use super::render_pass::RenderPass;
 use super::shader::Module;
+use ash::version::DeviceV1_0;
 use ash::vk;
 use std::collections::BTreeMap;
 use std::ffi::CString;
 use std::mem::{size_of, transmute};
-use std::ptr::null;
 use std::sync::{Arc, RwLock, Weak};
 
 macro_rules! include_shader {
@@ -30,9 +30,9 @@ impl Layout {
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
         let layout = [
-            buffer_only_descriptor_set_layout.vk_data,
-            buffer_only_descriptor_set_layout.vk_data,
-            gbuff_descriptor_set_layout.vk_data,
+            *buffer_only_descriptor_set_layout.get_data(),
+            *buffer_only_descriptor_set_layout.get_data(),
+            *gbuff_descriptor_set_layout.get_data(),
         ];
         let descriptor_set_layouts = vec![
             gbuff_descriptor_set_layout,
@@ -47,8 +47,8 @@ impl Layout {
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
         let layout = [
-            buffer_only_descriptor_set_layout.vk_data,
-            unlit_descriptor_set_layout.vk_data,
+            *buffer_only_descriptor_set_layout.get_data(),
+            *unlit_descriptor_set_layout.get_data(),
         ];
         let descriptor_set_layouts = vec![
             unlit_descriptor_set_layout,
@@ -63,8 +63,8 @@ impl Layout {
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
         let layout = [
-            buffer_only_descriptor_set_layout.vk_data,
-            gbuff_descriptor_set_layout.vk_data,
+            *buffer_only_descriptor_set_layout.get_data(),
+            *gbuff_descriptor_set_layout.get_data(),
         ];
         let descriptor_set_layouts = vec![
             buffer_only_descriptor_set_layout,
@@ -80,7 +80,7 @@ impl Layout {
         let shadow_accumulator_directional_descriptor_set_layout = descriptor_manager
             .get_shadow_accumulator_directional_set_layout()
             .clone();
-        let layout = [shadow_accumulator_directional_descriptor_set_layout.vk_data];
+        let layout = [*shadow_accumulator_directional_descriptor_set_layout.get_data()];
         let descriptor_set_layouts = vec![shadow_accumulator_directional_descriptor_set_layout];
         Self::new(&layout, descriptor_set_layouts)
     }
@@ -91,8 +91,8 @@ impl Layout {
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
         let layout = [
-            buffer_only_descriptor_set_layout.vk_data,
-            deferred_descriptor_set_layout.vk_data,
+            *buffer_only_descriptor_set_layout.get_data(),
+            *deferred_descriptor_set_layout.get_data(),
         ];
         let descriptor_set_layouts = vec![
             buffer_only_descriptor_set_layout,
@@ -107,8 +107,8 @@ impl Layout {
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
         let layout = [
-            buffer_only_descriptor_set_layout.vk_data,
-            ssao_descriptor_set_layout.vk_data,
+            *buffer_only_descriptor_set_layout.get_data(),
+            *ssao_descriptor_set_layout.get_data(),
         ];
         let descriptor_set_layouts = vec![
             buffer_only_descriptor_set_layout,
@@ -121,16 +121,23 @@ impl Layout {
         layout: &[vk::DescriptorSetLayout],
         descriptor_set_layouts: Vec<Arc<DescriptorSetLayout>>,
     ) -> Self {
-        let vkdev = descriptor_set_layouts[0].logical_device.get_data();
         let mut pipeline_layout_create_info = vk::PipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.set_layout_count = layout.len() as u32;
         pipeline_layout_create_info.p_set_layouts = layout.as_ptr();
-        let vk_data =
-            vxresult!(unsafe { vkdev.create_pipeline_layout(&pipeline_layout_create_info, None) });
+        let vk_data = vxresult!(unsafe {
+            descriptor_set_layouts[0]
+                .get_logical_device()
+                .get_data()
+                .create_pipeline_layout(&pipeline_layout_create_info, None)
+        });
         Self {
             descriptor_set_layouts,
             vk_data,
         }
+    }
+
+    pub(super) fn get_data(&self) -> &vk::PipelineLayout {
+        return &self.vk_data;
     }
 }
 
@@ -138,7 +145,7 @@ impl Drop for Layout {
     fn drop(&mut self) {
         unsafe {
             self.descriptor_set_layouts[0]
-                .logical_device
+                .get_logical_device()
                 .get_data()
                 .destroy_pipeline_layout(self.vk_data, None);
         }
@@ -157,7 +164,7 @@ impl Cache {
         let vk_data = vxresult!(unsafe {
             logical_device
                 .get_data()
-                .CreatePipelineCache(&pipeline_cache_create_info, None)
+                .create_pipeline_cache(&pipeline_cache_create_info, None)
         });
         Self {
             logical_device,
@@ -195,7 +202,7 @@ impl Pipeline {
     ) -> Self {
         let device = vxresult!(descriptor_manager.read())
             .get_pool()
-            .logical_device
+            .get_logical_device()
             .clone();
 
         let vert_bytes: &'static [u8] = match pipeline_type {
@@ -242,7 +249,7 @@ impl Pipeline {
 
         let mut rasterization_state = vk::PipelineRasterizationStateCreateInfo::default();
         rasterization_state.polygon_mode = vk::PolygonMode::FILL;
-        rasterization_state.cull_mode = vk::CullModeFlags::FRONT_BIT as u32;
+        rasterization_state.cull_mode = vk::CullModeFlags::FRONT;
         rasterization_state.front_face = vk::FrontFace::CLOCKWISE;
         rasterization_state.line_width = 1f32;
 
@@ -266,7 +273,7 @@ impl Pipeline {
                         | vk::ColorComponentFlags::A;
                 }
                 PipelineType::ShadowAccumulatorDirectional => {
-                    blend_attachment_state[i].blendEnable = vk::TRUE;
+                    blend_attachment_state[i].blend_enable = vk::TRUE;
                     blend_attachment_state[i].src_color_blend_factor = vk::BlendFactor::ONE;
                     blend_attachment_state[i].dst_color_blend_factor = vk::BlendFactor::ONE;
                     blend_attachment_state[i].color_blend_op = vk::BlendOp::ADD;
@@ -305,19 +312,19 @@ impl Pipeline {
         depth_stencil_state.depth_test_enable = vk::TRUE;
         depth_stencil_state.depth_write_enable = vk::TRUE;
         depth_stencil_state.depth_compare_op = vk::CompareOp::LESS_OR_EQUAL;
-        depth_stencil_state.depthBoundsTestEnable = vk::FALSE;
-        depth_stencil_state.back.failOp = vk::StencilOp::KEEP;
-        depth_stencil_state.back.passOp = vk::StencilOp::KEEP;
-        depth_stencil_state.back.compareOp = vk::CompareOp::ALWAYS;
-        depth_stencil_state.stencilTestEnable = vk::FALSE;
+        depth_stencil_state.depth_bounds_test_enable = vk::FALSE;
+        depth_stencil_state.back.fail_op = vk::StencilOp::KEEP;
+        depth_stencil_state.back.pass_op = vk::StencilOp::KEEP;
+        depth_stencil_state.back.compare_op = vk::CompareOp::ALWAYS;
+        depth_stencil_state.stencil_test_enable = vk::FALSE;
         depth_stencil_state.front = depth_stencil_state.back;
 
         let mut multisample_state = vk::PipelineMultisampleStateCreateInfo::default();
-        multisample_state.rasterizationSamples = vk::SampleCountFlags::TYPE_1;
+        multisample_state.rasterization_samples = vk::SampleCountFlags::TYPE_1;
 
         let mut vertex_input_binding = vk::VertexInputBindingDescription::default();
         vertex_input_binding.stride = 48; // bytes of vertex
-        vertex_input_binding.inputRate = vk::VertexInputRate::VERTEX;
+        vertex_input_binding.input_rate = vk::VertexInputRate::VERTEX;
 
         let mut vertex_attributes = vec![vk::VertexInputAttributeDescription::default(); 4];
         vertex_attributes[0].format = vk::Format::R32G32B32_SFLOAT;
@@ -337,10 +344,11 @@ impl Pipeline {
             | PipelineType::ShadowMapper
             | PipelineType::Unlit
             | PipelineType::TransparentPBR => {
-                vertex_input_state.vertexBindingDescriptionCount = 1;
-                vertex_input_state.pVertexBindingDescriptions = &vertex_input_binding;
-                vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.len() as u32;
-                vertex_input_state.pVertexAttributeDescriptions = vertex_attributes.as_ptr();
+                vertex_input_state.vertex_binding_description_count = 1;
+                vertex_input_state.p_vertex_binding_descriptions = &vertex_input_binding;
+                vertex_input_state.vertex_attribute_description_count =
+                    vertex_attributes.len() as u32;
+                vertex_input_state.p_vertex_attribute_descriptions = vertex_attributes.as_ptr();
             }
             _ => {}
         }
@@ -358,14 +366,14 @@ impl Pipeline {
 
         match pipeline_type {
             PipelineType::ShadowAccumulatorDirectional => {
-                specialization_map_entries[0].constantID = 0;
+                specialization_map_entries[0].constant_id = 0;
                 specialization_map_entries[0].size = size_of::<u32>();
                 specialization_map_entries[0].offset = 0;
 
-                specialization_info.dataSize = size_of::<u32>();
-                specialization_info.mapEntryCount = specialization_map_entries.len() as u32;
-                specialization_info.pMapEntries = specialization_map_entries.as_ptr();
-                specialization_info.pData = unsafe { transmute(&cascades_count) };
+                specialization_info.data_size = size_of::<u32>();
+                specialization_info.map_entry_count = specialization_map_entries.len() as u32;
+                specialization_info.p_map_entries = specialization_map_entries.as_ptr();
+                specialization_info.p_data = unsafe { transmute(&cascades_count) };
             }
             _ => {}
         };
@@ -374,8 +382,8 @@ impl Pipeline {
         let stages_count = shaders.len();
         let mut shader_stages = vec![vk::PipelineShaderStageCreateInfo::default(); stages_count];
         for i in 0..stages_count {
-            shader_stages[i].pName = stage_name.as_ptr();
-            shader_stages[i].module = shaders[i].vk_data;
+            shader_stages[i].p_name = stage_name.as_ptr();
+            shader_stages[i].module = *shaders[i].get_data();
             match i {
                 0 => {
                     shader_stages[i].stage = vk::ShaderStageFlags::VERTEX;
@@ -389,7 +397,7 @@ impl Pipeline {
             };
             match pipeline_type {
                 PipelineType::ShadowAccumulatorDirectional => {
-                    shader_stages[i].pSpecializationInfo = &specialization_info;
+                    shader_stages[i].p_specialization_info = &specialization_info;
                 }
                 _ => {}
             }
@@ -397,7 +405,7 @@ impl Pipeline {
 
         let mut pipeline_create_info = vk::GraphicsPipelineCreateInfo::default();
         pipeline_create_info.layout = layout.vk_data;
-        pipeline_create_info.render_pass = render_pass.get_data();
+        pipeline_create_info.render_pass = *render_pass.get_data();
         pipeline_create_info.stage_count = shader_stages.len() as u32;
         pipeline_create_info.p_stages = shader_stages.as_ptr();
         pipeline_create_info.p_vertex_input_state = &vertex_input_state;
@@ -407,15 +415,14 @@ impl Pipeline {
         pipeline_create_info.p_multisample_state = &multisample_state;
         pipeline_create_info.p_viewport_state = &viewport_state;
         pipeline_create_info.p_depth_stencil_state = &depth_stencil_state;
-        pipeline_create_info.render_pass = render_pass.get_data();
         pipeline_create_info.p_dynamic_state = &dynamic_state;
 
         let vkdev = device.get_data();
 
-        let mut vk_data = 0 as vk::Pipeline;
-        vxresult!(unsafe {
-            vkdev.create_graphics_pipelines(cache.vk_data, 1, &pipeline_create_info, None)
+        let vk_data = vxresult!(unsafe {
+            vkdev.create_graphics_pipelines(cache.vk_data, &[pipeline_create_info], None)
         });
+        let vk_data = vk_data[0];
         Self {
             cache,
             layout,
@@ -426,10 +433,7 @@ impl Pipeline {
     }
 
     pub(super) fn get_info_for_binding(&self) -> (vk::PipelineBindPoint, vk::Pipeline) {
-        return (
-            vk::PipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-            self.vk_data,
-        );
+        return (vk::PipelineBindPoint::GRAPHICS, self.vk_data);
     }
 
     pub(crate) fn get_layout(&self) -> &Layout {

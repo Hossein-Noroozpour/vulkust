@@ -37,7 +37,7 @@ impl RenderPass {
         let mut view_index = 0;
         for v in &views {
             let img = vxresult!(v.get_image().read());
-            vk_dev = Some(*img.get_device().get_data());
+            vk_dev = Some(img.get_device().get_data().clone());
 
             let mut attachment_description = vk::AttachmentDescription::builder()
                 .format(img.get_vk_format())
@@ -84,7 +84,7 @@ impl RenderPass {
         }
         let subpass_description = subpass_description.build();
 
-        let mut dependencies = [
+        let dependencies = [
             vk::SubpassDependency::builder()
                 .src_subpass(vk::SUBPASS_EXTERNAL)
                 .src_stage_mask(vk::PipelineStageFlags::BOTTOM_OF_PIPE)
@@ -109,9 +109,11 @@ impl RenderPass {
                 .build(),
         ];
 
-        let mut render_pass_create_info = vk::RenderPassCreateInfo::builder()
+        let subpasses = [subpass_description];
+
+        let render_pass_create_info = vk::RenderPassCreateInfo::builder()
             .attachments(&attachment_descriptions)
-            .subpasses(&[subpass_description])
+            .subpasses(&subpasses)
             .dependencies(&dependencies);
 
         let vk_dev = vxunwrap!(vk_dev);
@@ -177,13 +179,13 @@ impl RenderPass {
 impl Drop for RenderPass {
     fn drop(&mut self) {
         let vkdev = if let Some(swapchain) = &self.swapchain {
-            swapchain.get_logical_device().get_data()
+            swapchain.get_logical_device().get_data().clone()
         } else if self.colors.len() > 0 {
             let i = vxresult!(self.colors[0].get_image().read());
-            i.get_device().get_data()
+            i.get_device().get_data().clone()
         } else if let Some(depth) = &self.depth {
             let i = vxresult!(depth.get_image().read());
-            i.get_device().get_data()
+            i.get_device().get_data().clone()
         } else {
             vxunexpected!();
         };

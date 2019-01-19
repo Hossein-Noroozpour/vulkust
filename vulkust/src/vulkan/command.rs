@@ -9,7 +9,7 @@ use ash::version::DeviceV1_0;
 use ash::vk;
 use std::sync::{Arc, RwLock};
 
-pub(crate) struct Buffer {
+pub struct Buffer {
     pool: Arc<Pool>,
     vk_device: ash::Device,
     vk_data: vk::CommandBuffer,
@@ -75,7 +75,7 @@ impl Buffer {
         cmd_buf_allocate_info.command_pool = pool.vk_data;
         cmd_buf_allocate_info.level = level;
         cmd_buf_allocate_info.command_buffer_count = 1;
-        let vk_device = *pool.logical_device.get_data();
+        let vk_device = pool.logical_device.get_data().clone();
         let vk_data =
             vxresult!(unsafe { vk_device.allocate_command_buffers(&cmd_buf_allocate_info) });
         let vk_data = vk_data[0];
@@ -125,7 +125,7 @@ impl Buffer {
             }
         }
         self.has_render_record = false;
-        let mut cmd_buf_info = vk::CommandBufferBeginInfo::default();
+        let cmd_buf_info = vk::CommandBufferBeginInfo::default();
         vxresult!(unsafe {
             self.vk_device
                 .begin_command_buffer(self.vk_data, &cmd_buf_info)
@@ -236,7 +236,7 @@ impl Buffer {
 
     pub(crate) fn bind_pipeline(&mut self, p: &Pipeline) {
         let info = p.get_info_for_binding();
-        self.bound_pipeline_layout = p.get_layout().vk_data;
+        self.bound_pipeline_layout = *p.get_layout().get_data();
         unsafe {
             self.vk_device
                 .cmd_bind_pipeline(self.vk_data, info.0, info.1);
@@ -558,14 +558,14 @@ pub enum Type {
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct Pool {
+pub struct Pool {
     pool_type: Type,
     logical_device: Arc<LogicalDevice>,
     vk_data: vk::CommandPool,
 }
 
 impl Pool {
-    pub fn new(
+    pub(super) fn new(
         logical_device: Arc<LogicalDevice>,
         pool_type: Type,
         flags: vk::CommandPoolCreateFlags,

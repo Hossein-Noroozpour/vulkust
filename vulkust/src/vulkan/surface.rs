@@ -97,10 +97,10 @@ impl Surface {
         use ash::extensions::khr::Win32Surface;
         let os_app = vxresult!(os_app.read());
         let create_info = vk::Win32SurfaceCreateInfoKHR::builder()
-            .hinstance(transmute(os_app.instance))
-            .hwnd(transmute(os_app.window));
+            .hinstance(unsafe { transmute(os_app.get_instance()) })
+            .hwnd(unsafe { transmute(os_app.get_window()) });
         let loader = Win32Surface::new(instance.get_entry(), instance.get_data());
-        let vk_data = vxresult!(loader.create_win32_surface(&create_info, None));
+        let vk_data = vxresult!(unsafe { loader.create_win32_surface(&create_info, None) });
         let loader = SurfaceLoader::new(instance.get_entry(), instance.get_data());
         Self {
             instance: instance.clone(),

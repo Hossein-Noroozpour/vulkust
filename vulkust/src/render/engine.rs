@@ -22,10 +22,10 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
-        let config = &vxresult!(core_app.read()).get_config();
-        let asset_manager = AssetManager::new(&config);
-        let config = config.get_render().clone();
-        let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app, &config)));
+        let core_config = &vxresult!(core_app.read()).get_config();
+        let asset_manager = AssetManager::new(&core_config);
+        let config = core_config.get_render().clone();
+        let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app, core_config)));
         let myself = None;
         let multithreaded_engine =
             MultithreadedEngine::new(gapi_engine.clone(), &asset_manager, &config);

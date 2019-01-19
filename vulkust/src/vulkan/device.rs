@@ -18,7 +18,7 @@ fn get_supported_depth_format(ins: &ash::Instance, s: &vk::PhysicalDevice) -> vk
         vk::Format::D16_UNORM,
     ];
     for format in depth_formats {
-        let format_props = ins.get_physical_device_format_properties(*s, format);
+        let format_props = unsafe { ins.get_physical_device_format_properties(*s, format) };
         if vxflagcheck!(
             format_props.optimal_tiling_features,
             vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT
@@ -67,11 +67,14 @@ impl Physical {
             compute_queue_node_index,
             present_queue_node_index,
         ) = Self::find_device(surface);
-        let memory_properties = vk_instance.get_physical_device_memory_properties(vk_data);
-        let properties = vk_instance.get_physical_device_properties(vk_data);
-        let surface_caps = vxresult!(surface
-            .get_loader()
-            .get_physical_device_surface_capabilities(vk_data, *surface.get_data()));
+        let memory_properties =
+            unsafe { vk_instance.get_physical_device_memory_properties(vk_data) };
+        let properties = unsafe { vk_instance.get_physical_device_properties(vk_data) };
+        let surface_caps = vxresult!(unsafe {
+            surface
+                .get_loader()
+                .get_physical_device_surface_capabilities(vk_data, *surface.get_data())
+        });
         #[cfg(debug_mode)]
         vxlogi!("Surface capacities are {:?}", &surface_caps);
         let supported_depth_format = get_supported_depth_format(vk_instance, &vk_data);
@@ -134,7 +137,7 @@ impl Physical {
     }
 
     fn enumerate_devices(vk_instance: &ash::Instance) -> Vec<vk::PhysicalDevice> {
-        return vxresult!(vk_instance.enumerate_physical_devices());
+        return vxresult!(unsafe { vk_instance.enumerate_physical_devices() });
     }
 
     fn fetch_queues(
@@ -211,7 +214,7 @@ impl Physical {
         device: vk::PhysicalDevice,
     ) -> Vec<vk::QueueFamilyProperties> {
         unsafe {
-            return vxresult!(vk_instance.get_physical_device_queue_family_properties(device));
+            return vk_instance.get_physical_device_queue_family_properties(device);
         }
     }
 
@@ -345,8 +348,8 @@ pub(crate) struct Logical {
     physical_device: Arc<Physical>,
     vk_data: ash::Device,
     vk_graphic_queue: vk::Queue,
-    vk_compute_queue: vk::Queue,
-    vk_present_queue: vk::Queue,
+    _vk_compute_queue: vk::Queue,
+    _vk_present_queue: vk::Queue,
 }
 
 impl Logical {
@@ -387,16 +390,16 @@ impl Logical {
         });
         let vk_graphic_queue =
             unsafe { vk_data.get_device_queue(physical_device.get_graphics_queue_node_index(), 0) };
-        let vk_compute_queue =
+        let _vk_compute_queue =
             unsafe { vk_data.get_device_queue(physical_device.get_compute_queue_node_index(), 0) };
-        let vk_present_queue =
+        let _vk_present_queue =
             unsafe { vk_data.get_device_queue(physical_device.get_present_queue_node_index(), 0) };
         Self {
             physical_device: physical_device.clone(),
             vk_data,
             vk_graphic_queue,
-            vk_compute_queue,
-            vk_present_queue,
+            _vk_compute_queue,
+            _vk_present_queue,
         }
     }
 

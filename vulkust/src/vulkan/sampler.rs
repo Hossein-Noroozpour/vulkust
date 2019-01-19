@@ -5,7 +5,7 @@ use ash::vk;
 use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
-pub(crate) struct Sampler {
+pub struct Sampler {
     logical_device: Arc<LogicalDevice>,
     vk_data: vk::Sampler,
 }
@@ -54,8 +54,7 @@ impl Sampler {
                     .max_lod(0.0)
             }
         }
-        let mut vk_data =
-            vxresult!(unsafe { logical_device.get_data().create_sampler(&info, None) });
+        let vk_data = vxresult!(unsafe { logical_device.get_data().create_sampler(&info, None) });
         Self {
             logical_device,
             vk_data,

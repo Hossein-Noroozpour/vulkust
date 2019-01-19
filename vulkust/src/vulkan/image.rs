@@ -41,7 +41,7 @@ impl Image {
         memory_mgr: &Arc<RwLock<MemoryManager>>,
     ) -> Self {
         let logical_device = vxresult!(memory_mgr.read()).get_device().clone();
-        let vk_dev = logical_device.get_data();
+        let vk_dev = logical_device.get_data().clone();
         let vk_data = vxresult!(unsafe { vk_dev.create_image(info, None) });
         let mem_reqs = unsafe { vk_dev.get_image_memory_requirements(vk_data) };
         let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemoryLocation::GPU);
@@ -140,7 +140,7 @@ impl Image {
             vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL => vk::AccessFlags::SHADER_READ,
             _ => vxunexpected!(),
         };
-        let mut dst_access_mask = match new_layout {
+        let dst_access_mask = match new_layout {
             vk::ImageLayout::TRANSFER_DST_OPTIMAL => vk::AccessFlags::TRANSFER_WRITE,
             vk::ImageLayout::TRANSFER_SRC_OPTIMAL => vk::AccessFlags::TRANSFER_READ,
             vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL => vk::AccessFlags::COLOR_ATTACHMENT_WRITE,
@@ -156,7 +156,7 @@ impl Image {
             }
             _ => vxunexpected!(),
         };
-        let mut barrier = vk::ImageMemoryBarrier::builder()
+        let barrier = vk::ImageMemoryBarrier::builder()
             .src_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
             .dst_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
             .old_layout(self.layout)
@@ -173,7 +173,7 @@ impl Image {
             .dst_access_mask(dst_access_mask)
             .build();
         let src_stage = vk::PipelineStageFlags::TRANSFER;
-        cmd.pipeline_image_barrier(src_stage, dst_stage, 0, &barrier);
+        cmd.pipeline_image_barrier(src_stage, dst_stage, vk::DependencyFlags::empty(), &barrier);
         self.layout = new_layout;
     }
 
