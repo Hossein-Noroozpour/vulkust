@@ -66,7 +66,7 @@ pub(crate) struct RootMemory {
     container: alc::Container,
 }
 
-const DEFAULT_MEMORY_SIZE: vk::DeviceSize = 225 * 1024 * 1024;
+const DEFAULT_MEMORY_SIZE: vk::DeviceSize = 256 * 1024 * 1024;
 
 impl RootMemory {
     pub(crate) fn new(

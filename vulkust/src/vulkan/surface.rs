@@ -74,21 +74,18 @@ impl Surface {
 
     #[cfg(target_os = "linux")]
     pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
-        let mut vk_surface = 0 as vk::VkSurfaceKHR;
+        use ash::extensions::khr::XcbSurface;
         let os_app = vxresult!(os_app.read());
-        let mut create_info = vk::VkXcbSurfaceCreateInfoKHR::default();
-        create_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-        create_info.window = os_app.window;
-        create_info.connection = os_app.connection;
-        vulkan_check!(vk::vkCreateXcbSurfaceKHR(
-            instance.get_data(),
-            &create_info,
-            null(),
-            &mut vk_surface,
-        ));
-        Surface {
+        let loader = XcbSurface::new(instance.get_entry(), instance.get_data());
+        let create_info = vk::XcbSurfaceCreateInfoKHR::builder()
+            .window(os_app.window)
+            .connection(unsafe { transmute(os_app.connection) });
+        let vk_data = vxresult!(unsafe { loader.create_xcb_surface(&create_info, None) });
+        let loader = SurfaceLoader::new(instance.get_entry(), instance.get_data());
+        Self {
             instance: instance.clone(),
-            vk_data: vk_surface,
+            vk_data,
+            loader,
         }
     }
 
