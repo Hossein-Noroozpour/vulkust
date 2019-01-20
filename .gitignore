@@ -48,3 +48,4 @@ toolchains/
 *.bin
 *.blend
 *.cap
+*.log

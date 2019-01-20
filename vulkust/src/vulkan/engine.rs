@@ -31,9 +31,11 @@ pub struct Engine {
     swapchain: Arc<Swapchain>,
     present_semaphore: Arc<Semaphore>,
     data_semaphore: Arc<Semaphore>,
+    second_data_semaphore: Arc<Semaphore>,
     render_semaphore: Arc<Semaphore>,
     graphic_cmd_pool: Arc<CmdPool>,
     data_primary_cmds: Vec<Arc<Mutex<CmdBuffer>>>,
+    second_data_primary_cmds: Vec<Arc<Mutex<CmdBuffer>>>,
     memory_manager: Arc<RwLock<MemoryManager>>,
     buffer_manager: Arc<RwLock<BufferManager>>,
     descriptor_manager: Arc<RwLock<DescriptorManager>>,
@@ -59,6 +61,7 @@ impl Engine {
         let swapchain = Arc::new(Swapchain::new(&logical_device));
         let present_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let data_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
+        let second_data_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let render_semaphore = Arc::new(Semaphore::new(logical_device.clone()));
         let graphic_cmd_pool = Arc::new(CmdPool::new(
             logical_device.clone(),
@@ -66,9 +69,13 @@ impl Engine {
             vk::CommandPoolCreateFlags::empty(),
         ));
         let mut data_primary_cmds = Vec::with_capacity(swapchain.get_image_views().len());
+        let mut second_data_primary_cmds = Vec::with_capacity(swapchain.get_image_views().len());
         let mut wait_fences = Vec::with_capacity(swapchain.get_image_views().len());
         for _ in 0..swapchain.get_image_views().len() {
             data_primary_cmds.push(Arc::new(Mutex::new(CmdBuffer::new_primary(
+                graphic_cmd_pool.clone(),
+            ))));
+            second_data_primary_cmds.push(Arc::new(Mutex::new(CmdBuffer::new_primary(
                 graphic_cmd_pool.clone(),
             ))));
             wait_fences.push(Arc::new(Fence::new_signaled(logical_device.clone())));
@@ -110,7 +117,7 @@ impl Engine {
             descriptor_manager.clone(),
         )));
         let os_app = os_app.clone();
-        Engine {
+        Self {
             os_app,
             instance,
             surface,
@@ -119,9 +126,11 @@ impl Engine {
             swapchain,
             present_semaphore,
             data_semaphore,
+            second_data_semaphore,
             render_semaphore,
             graphic_cmd_pool,
             data_primary_cmds,
+            second_data_primary_cmds,
             memory_manager,
             render_pass,
             clear_render_pass,
@@ -148,6 +157,12 @@ impl Engine {
         self.wait_fences[current_buffer].reset();
         self.current_frame_number = current_buffer as u32;
 
+        self.clear_copy_data();
+
+        self.secondary_data_preparing();
+    }
+
+    fn clear_copy_data(&self) {
         let mut pcmd = vxresult!(self.data_primary_cmds[self.current_frame_number as usize].lock());
         pcmd.begin();
         vxresult!(self.buffer_manager.write())
@@ -156,6 +171,15 @@ impl Engine {
         pcmd.end_render_pass();
         pcmd.end();
         self.submit(&self.present_semaphore, &pcmd, &self.data_semaphore);
+    }
+
+    fn secondary_data_preparing(&self) {
+        let mut pcmd = vxresult!(self.data_primary_cmds[self.current_frame_number as usize].lock());
+        pcmd.begin();
+        vxresult!(self.buffer_manager.write())
+            .secondary_update(&mut *pcmd, self.current_frame_number as usize);
+        pcmd.end();
+        self.submit(&self.data_semaphore, &pcmd, &self.second_data_semaphore);
     }
 
     pub(crate) fn submit(&self, wait: &Semaphore, cmd: &CmdBuffer, signal: &Semaphore) {
@@ -299,7 +323,7 @@ impl Engine {
     }
 
     pub(crate) fn get_starting_semaphore(&self) -> &Arc<Semaphore> {
-        return &self.data_semaphore;
+        return &self.second_data_semaphore;
     }
 
     pub(crate) fn get_device(&self) -> &Arc<LogicalDevice> {

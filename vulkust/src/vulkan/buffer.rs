@@ -414,7 +414,7 @@ impl Manager {
         if self.copy_to_image_ranges.len() != 0 {
             for copy_img in &self.copy_to_image_ranges {
                 let mut image = vxresult!(copy_img.1.write());
-                image.change_layout(cmd, vk::ImageLayout::TRANSFER_DST_OPTIMAL);
+                image.set_layout(cmd, vk::ImageLayout::TRANSFER_DST_OPTIMAL);
             }
             for copy_img in &self.copy_to_image_ranges {
                 let image = vxresult!(copy_img.1.read());
@@ -422,11 +422,23 @@ impl Manager {
             }
             for copy_img in &self.copy_to_image_ranges {
                 let mut image = vxresult!(copy_img.1.write());
-                image.change_layout(cmd, vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL);
+                if image.get_mips_count() == 1 {
+                    image.set_layout(cmd, vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL);
+                }
             }
         }
         self.frame_copy_buffers[frame_number].append(&mut self.copy_buffers);
         self.frame_copy_to_image_ranges[frame_number].append(&mut self.copy_to_image_ranges);
+    }
+
+    pub(super) fn secondary_update(&self, cmd: &mut CmdBuffer, frame_number: usize) {
+        for ri in &self.frame_copy_to_image_ranges[frame_number] {
+            let mut img = vxresult!(ri.1.write());
+            if img.get_mips_count() < 2 {
+                continue;
+            }
+            img.generate_mips(cmd);
+        }
     }
 
     pub(super) fn get_gpu_root_buffer(&self) -> &RootBuffer {

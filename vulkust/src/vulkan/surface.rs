@@ -78,8 +78,8 @@ impl Surface {
         let os_app = vxresult!(os_app.read());
         let loader = XcbSurface::new(instance.get_entry(), instance.get_data());
         let create_info = vk::XcbSurfaceCreateInfoKHR::builder()
-            .window(os_app.window)
-            .connection(unsafe { transmute(os_app.connection) });
+            .window(os_app.get_window())
+            .connection(unsafe { transmute(os_app.get_connection()) });
         let vk_data = vxresult!(unsafe { loader.create_xcb_surface(&create_info, None) });
         let loader = SurfaceLoader::new(instance.get_entry(), instance.get_data());
         Self {

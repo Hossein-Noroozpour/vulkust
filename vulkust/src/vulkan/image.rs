@@ -6,6 +6,7 @@ use super::device::Logical as LogicalDevice;
 use super::memory::{Location as MemoryLocation, Manager as MemoryManager, Memory};
 use ash::version::DeviceV1_0;
 use ash::vk;
+use std::cmp::{max, min};
 use std::sync::{Arc, RwLock};
 
 pub(super) fn convert_layout(f: &Layout) -> vk::ImageLayout {
@@ -32,6 +33,7 @@ pub(crate) struct Image {
     memory: Option<Arc<RwLock<Memory>>>,
     width: u32,
     height: u32,
+    depth: u32,
     vk_data: vk::Image,
 }
 
@@ -65,11 +67,12 @@ impl Image {
             usage: info.usage,
             width: info.extent.width,
             height: info.extent.height,
+            depth: info.extent.depth,
             memory: Some(memory),
         }
     }
 
-    pub(crate) fn new_with_vk_data(
+    pub(crate) fn new_2d_with_vk_data(
         logical_device: Arc<LogicalDevice>,
         vk_data: vk::Image,
         layout: vk::ImageLayout,
@@ -87,6 +90,7 @@ impl Image {
             usage,
             width,
             height,
+            depth: 1,
             memory: None,
         }
     }
@@ -97,23 +101,40 @@ impl Image {
         data: &[u8],
         buffmgr: &Arc<RwLock<BufferManager>>,
     ) -> Arc<RwLock<Self>> {
+        let mip_levels = Self::calculate_mip_levels_2d(width, height);
+        #[cfg(debug_mode)]
+        {
+            if mip_levels <= 0 {
+                vxlogf!(
+                    "Unexpected image aspects, width: {} height: {} mip-levels: {}",
+                    width,
+                    height,
+                    mip_levels
+                );
+            }
+        }
         let format = vk::Format::R8G8B8A8_UNORM;
-        let extent = vk::Extent3D::builder()
-            .width(width)
-            .height(height)
-            .depth(1)
-            .build();
         let image_info = vk::ImageCreateInfo::builder()
             .image_type(vk::ImageType::TYPE_2D)
             .format(format)
-            .extent(extent)
-            .mip_levels(1)
+            .extent(
+                vk::Extent3D::builder()
+                    .width(width)
+                    .height(height)
+                    .depth(1)
+                    .build(),
+            )
+            .mip_levels(mip_levels)
             .array_layers(1)
             .samples(vk::SampleCountFlags::TYPE_1)
             .tiling(vk::ImageTiling::OPTIMAL)
             .initial_layout(vk::ImageLayout::UNDEFINED)
             .sharing_mode(vk::SharingMode::EXCLUSIVE)
-            .usage(vk::ImageUsageFlags::TRANSFER_DST | vk::ImageUsageFlags::SAMPLED);
+            .usage(
+                vk::ImageUsageFlags::TRANSFER_DST
+                    | vk::ImageUsageFlags::TRANSFER_SRC
+                    | vk::ImageUsageFlags::SAMPLED,
+            );
         let memmgr = {
             let buffmgr = vxresult!(buffmgr.read());
             let memmgr = vxresult!(buffmgr.get_gpu_root_buffer().get_memory().read())
@@ -126,7 +147,17 @@ impl Image {
         myself
     }
 
-    pub(crate) fn change_layout(&mut self, cmd: &mut CmdBuffer, new_layout: vk::ImageLayout) {
+    fn calculate_mip_levels_2d(width: u32, height: u32) -> u32 {
+        let mut a = min(width, height);
+        let mut result = 0;
+        while a > 0 {
+            a >>= 1;
+            result += 1;
+        }
+        return result;
+    }
+
+    pub(crate) fn set_layout(&mut self, cmd: &mut CmdBuffer, new_layout: vk::ImageLayout) {
         let mut dst_stage = vk::PipelineStageFlags::TRANSFER;
         let mut src_access_mask = match self.layout {
             vk::ImageLayout::UNDEFINED => vk::AccessFlags::empty(),
@@ -166,7 +197,7 @@ impl Image {
                 vk::ImageSubresourceRange::builder()
                     .aspect_mask(vk::ImageAspectFlags::COLOR)
                     .layer_count(1)
-                    .level_count(self.mips_count as u32)
+                    .level_count(1)
                     .build(),
             )
             .src_access_mask(src_access_mask)
@@ -175,6 +206,85 @@ impl Image {
         let src_stage = vk::PipelineStageFlags::TRANSFER;
         cmd.pipeline_image_barrier(src_stage, dst_stage, vk::DependencyFlags::empty(), &barrier);
         self.layout = new_layout;
+    }
+
+    pub(super) fn generate_mips(&mut self, cmd: &mut CmdBuffer) {
+        self.set_layout(cmd, vk::ImageLayout::TRANSFER_SRC_OPTIMAL);
+        for mi in 1..self.mips_count {
+            let image_blit = vk::ImageBlit::builder()
+                .src_subresource(
+                    vk::ImageSubresourceLayers::builder()
+                        .aspect_mask(vk::ImageAspectFlags::COLOR)
+                        .layer_count(1)
+                        .mip_level(mi as u32 - 1)
+                        .build(),
+                )
+                .src_offsets([
+                    vk::Offset3D { x: 0, y: 0, z: 0 },
+                    vk::Offset3D {
+                        x: max(1, self.width as i32 >> (mi - 1) as i32),
+                        y: max(1, self.height as i32 >> (mi - 1) as i32),
+                        z: max(1, self.depth as i32 >> (mi - 1) as i32),
+                    },
+                ])
+                .dst_subresource(
+                    vk::ImageSubresourceLayers::builder()
+                        .aspect_mask(vk::ImageAspectFlags::COLOR)
+                        .layer_count(1)
+                        .mip_level(mi as u32)
+                        .build(),
+                )
+                .dst_offsets([
+                    vk::Offset3D { x: 0, y: 0, z: 0 },
+                    vk::Offset3D {
+                        x: max(1, self.width as i32 >> mi as i32),
+                        y: max(1, self.height as i32 >> mi as i32),
+                        z: max(1, self.depth as i32 >> mi as i32),
+                    },
+                ])
+                .build();
+
+            let mip_sub_range = vk::ImageSubresourceRange::builder()
+                .aspect_mask(vk::ImageAspectFlags::COLOR)
+                .base_mip_level(mi as u32)
+                .level_count(1)
+                .layer_count(1)
+                .build();
+
+            // // Transiton current mip level to transfer dest
+            // vks::tools::setImageLayout(
+            //     blitCmd,
+            //     texture.image,
+            //     VK_IMAGE_LAYOUT_UNDEFINED,
+            //     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            //     mipSubRange,
+            //     VK_PIPELINE_STAGE_TRANSFER_BIT,
+            //     VK_PIPELINE_STAGE_HOST_BIT,
+            // );
+
+            // // Blit from previous level
+            // vkCmdBlitImage(
+            //     blitCmd,
+            //     texture.image,
+            //     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            //     texture.image,
+            //     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            //     1,
+            //     &imageBlit,
+            //     VK_FILTER_LINEAR,
+            // );
+
+            // // Transiton current mip level to transfer source for read in next iteration
+            // vks::tools::setImageLayout(
+            //     blitCmd,
+            //     texture.image,
+            //     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            //     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            //     mipSubRange,
+            //     VK_PIPELINE_STAGE_HOST_BIT,
+            //     VK_PIPELINE_STAGE_TRANSFER_BIT,
+            // );
+        }
     }
 
     pub(crate) fn get_dimensions(&self) -> (u32, u32) {
@@ -199,6 +309,10 @@ impl Image {
 
     pub(super) fn get_vk_format(&self) -> vk::Format {
         return self.format;
+    }
+
+    pub(super) fn get_mips_count(&self) -> u8 {
+        return self.mips_count;
     }
 }
 
@@ -234,7 +348,7 @@ impl View {
         width: u32,
         height: u32,
     ) -> Self {
-        Self::new_with_image(Arc::new(RwLock::new(Image::new_with_vk_data(
+        Self::new_with_image(Arc::new(RwLock::new(Image::new_2d_with_vk_data(
             logical_device,
             vk_image,
             layout,

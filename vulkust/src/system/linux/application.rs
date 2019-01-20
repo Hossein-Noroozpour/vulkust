@@ -18,16 +18,16 @@ use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Application {
-    pub renderer: Option<Arc<RwLock<RenderEngine>>>,
-    pub core_app: Option<Arc<RwLock<CoreAppTrait>>>,
-    pub(crate) connection: *mut xcb::Connection,
+    renderer: Option<Arc<RwLock<RenderEngine>>>,
+    core_app: Option<Arc<RwLock<CoreAppTrait>>>,
+    connection: *mut xcb::Connection,
     screen: *mut xcb::Screen,
-    pub(crate) window: xcb::Window,
+    window: xcb::Window,
     atom_wm_delete_window: *mut xcb::InternAtomReply,
-    pub window_width: Real,
-    pub window_height: Real,
-    pub window_aspect_ratio: Real,
-    pub current_mouse_position: Arc<RwLock<(Real, Real)>>,
+    window_width: Real,
+    window_height: Real,
+    window_aspect_ratio: Real,
+    current_mouse_position: Arc<RwLock<(Real, Real)>>,
 }
 
 impl Application {
@@ -307,6 +307,14 @@ impl Application {
 
     pub fn get_window_aspect_ratio(&self) -> f32 {
         self.window_aspect_ratio
+    }
+
+    pub(crate) fn get_window(&self) -> xcb::Window {
+        return self.window;
+    }
+
+    pub(crate) fn get_connection(&self) -> *mut xcb::Connection {
+        return self.connection;
     }
 }
 
