@@ -202,6 +202,28 @@ impl Buffer {
         }
     }
 
+    pub(super) fn blit_image(
+        &mut self,
+        src_image: vk::Image,
+        src_image_layout: vk::ImageLayout,
+        dst_image: vk::Image,
+        dst_image_layout: vk::ImageLayout,
+        regions: &[vk::ImageBlit],
+        filter: vk::Filter,
+    ) {
+        unsafe {
+            self.vk_device.cmd_blit_image(
+                self.vk_data,
+                src_image,
+                src_image_layout,
+                dst_image,
+                dst_image_layout,
+                regions,
+                filter,
+            );
+        }
+    }
+
     // pub(crate) fn reset(&mut self) {
     //     unsafe {
     //         vk::vkResetCommandBuffer(self.vk_data, 0);

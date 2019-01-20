@@ -158,7 +158,23 @@ impl Image {
     }
 
     pub(crate) fn set_layout(&mut self, cmd: &mut CmdBuffer, new_layout: vk::ImageLayout) {
-        let mut dst_stage = vk::PipelineStageFlags::TRANSFER;
+        let dst_stage = match new_layout {
+            vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL => vk::PipelineStageFlags::FRAGMENT_SHADER,
+            _ => vk::PipelineStageFlags::TRANSFER,
+        };
+        let src_stage = vk::PipelineStageFlags::TRANSFER;
+        self.set_layout_2(cmd, new_layout, 0, 1, src_stage, dst_stage)
+    }
+
+    pub(super) fn set_layout_2(
+        &mut self,
+        cmd: &mut CmdBuffer,
+        new_layout: vk::ImageLayout,
+        base_mip_level: u32,
+        level_count: u32,
+        src_stage_mask: vk::PipelineStageFlags,
+        dst_stage_mask: vk::PipelineStageFlags,
+    ) {
         let mut src_access_mask = match self.layout {
             vk::ImageLayout::UNDEFINED => vk::AccessFlags::empty(),
             vk::ImageLayout::PREINITIALIZED => vk::AccessFlags::HOST_WRITE,
@@ -179,7 +195,6 @@ impl Image {
                 vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE
             }
             vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL => {
-                dst_stage = vk::PipelineStageFlags::FRAGMENT_SHADER;
                 if src_access_mask.is_empty() {
                     src_access_mask = vk::AccessFlags::HOST_WRITE | vk::AccessFlags::TRANSFER_WRITE;
                 }
@@ -196,21 +211,27 @@ impl Image {
             .subresource_range(
                 vk::ImageSubresourceRange::builder()
                     .aspect_mask(vk::ImageAspectFlags::COLOR)
+                    .base_mip_level(base_mip_level)
                     .layer_count(1)
-                    .level_count(1)
+                    .level_count(level_count)
                     .build(),
             )
             .src_access_mask(src_access_mask)
             .dst_access_mask(dst_access_mask)
             .build();
-        let src_stage = vk::PipelineStageFlags::TRANSFER;
-        cmd.pipeline_image_barrier(src_stage, dst_stage, vk::DependencyFlags::empty(), &barrier);
+        cmd.pipeline_image_barrier(
+            src_stage_mask,
+            dst_stage_mask,
+            vk::DependencyFlags::empty(),
+            &barrier,
+        );
         self.layout = new_layout;
     }
 
     pub(super) fn generate_mips(&mut self, cmd: &mut CmdBuffer) {
         self.set_layout(cmd, vk::ImageLayout::TRANSFER_SRC_OPTIMAL);
-        for mi in 1..self.mips_count {
+        let mips_count = self.mips_count as u32;
+        for mi in 1..mips_count {
             let image_blit = vk::ImageBlit::builder()
                 .src_subresource(
                     vk::ImageSubresourceLayers::builder()
@@ -243,48 +264,40 @@ impl Image {
                     },
                 ])
                 .build();
-
-            let mip_sub_range = vk::ImageSubresourceRange::builder()
-                .aspect_mask(vk::ImageAspectFlags::COLOR)
-                .base_mip_level(mi as u32)
-                .level_count(1)
-                .layer_count(1)
-                .build();
-
-            // // Transiton current mip level to transfer dest
-            // vks::tools::setImageLayout(
-            //     blitCmd,
-            //     texture.image,
-            //     VK_IMAGE_LAYOUT_UNDEFINED,
-            //     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            //     mipSubRange,
-            //     VK_PIPELINE_STAGE_TRANSFER_BIT,
-            //     VK_PIPELINE_STAGE_HOST_BIT,
-            // );
-
-            // // Blit from previous level
-            // vkCmdBlitImage(
-            //     blitCmd,
-            //     texture.image,
-            //     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            //     texture.image,
-            //     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            //     1,
-            //     &imageBlit,
-            //     VK_FILTER_LINEAR,
-            // );
-
-            // // Transiton current mip level to transfer source for read in next iteration
-            // vks::tools::setImageLayout(
-            //     blitCmd,
-            //     texture.image,
-            //     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            //     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            //     mipSubRange,
-            //     VK_PIPELINE_STAGE_HOST_BIT,
-            //     VK_PIPELINE_STAGE_TRANSFER_BIT,
-            // );
+            self.layout = vk::ImageLayout::UNDEFINED;
+            self.set_layout_2(
+                cmd,
+                vk::ImageLayout::TRANSFER_DST_OPTIMAL,
+                mi as u32,
+                1,
+                vk::PipelineStageFlags::TRANSFER,
+                vk::PipelineStageFlags::HOST,
+            );
+            cmd.blit_image(
+                self.vk_data,
+                vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
+                self.vk_data,
+                vk::ImageLayout::TRANSFER_DST_OPTIMAL,
+                &[image_blit],
+                vk::Filter::LINEAR,
+            );
+            self.set_layout_2(
+                cmd,
+                vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
+                mi as u32,
+                1,
+                vk::PipelineStageFlags::HOST,
+                vk::PipelineStageFlags::TRANSFER,
+            );
         }
+        self.set_layout_2(
+            cmd,
+            vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
+            0,
+            mips_count,
+            vk::PipelineStageFlags::HOST,
+            vk::PipelineStageFlags::TRANSFER,
+        );
     }
 
     pub(crate) fn get_dimensions(&self) -> (u32, u32) {

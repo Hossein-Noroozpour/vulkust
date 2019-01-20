@@ -134,7 +134,7 @@ impl Application {
                 | winapi::um::winuser::WS_CLIPSIBLINGS
                 | winapi::um::winuser::WS_CLIPCHILDREN
         };
-        if !config.get_fullscreen() {
+        if config.get_fullscreen() {
             let screen_width =
                 unsafe { winapi::um::winuser::GetSystemMetrics(winapi::um::winuser::SM_CXSCREEN) };
             let screen_height =
