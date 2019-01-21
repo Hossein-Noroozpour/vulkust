@@ -174,7 +174,7 @@ impl Engine {
     }
 
     fn secondary_data_preparing(&self) {
-        let mut pcmd = vxresult!(self.data_primary_cmds[self.current_frame_number as usize].lock());
+        let mut pcmd = vxresult!(self.second_data_primary_cmds[self.current_frame_number as usize].lock());
         pcmd.begin();
         vxresult!(self.buffer_manager.write())
             .secondary_update(&mut *pcmd, self.current_frame_number as usize);
