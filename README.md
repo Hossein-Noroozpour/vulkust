@@ -42,7 +42,8 @@ It is under lots of changes.
 - Shadow Accumulation
 - Soft Shadowing
 - SSAO
-- PBR rendering
+- PBR lighting
+- Texture mipmapping (2D)
 
 #### 2-1-2- Underdeveloment features:
 
