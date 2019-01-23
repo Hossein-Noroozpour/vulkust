@@ -227,7 +227,6 @@ impl Image {
 
     pub(super) fn generate_mips(&mut self, cmd: &mut CmdBuffer) {
         self.set_layout(cmd, vk::ImageLayout::TRANSFER_SRC_OPTIMAL);
-        vxlogi!("Reached");
         let mips_count = self.mips_count as u32;
         for mi in 1..mips_count {
             let image_blit = vk::ImageBlit::builder()
@@ -262,7 +261,6 @@ impl Image {
                     },
                 ])
                 .build();
-            vxlogi!("Reached");
             self.layout = vk::ImageLayout::UNDEFINED;
             self.set_layout_2(
                 cmd,
@@ -270,7 +268,7 @@ impl Image {
                 mi as u32,
                 1,
                 vk::PipelineStageFlags::TRANSFER,
-                vk::PipelineStageFlags::HOST,
+                vk::PipelineStageFlags::TRANSFER,
             );
             cmd.blit_image(
                 self.vk_data,
@@ -280,26 +278,23 @@ impl Image {
                 &[image_blit],
                 vk::Filter::LINEAR,
             );
-            vxlogi!("Reached");
             self.set_layout_2(
                 cmd,
                 vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
                 mi as u32,
                 1,
-                vk::PipelineStageFlags::HOST,
+                vk::PipelineStageFlags::TRANSFER,
                 vk::PipelineStageFlags::TRANSFER,
             );
         }
-        vxlogi!("Reached");
         self.set_layout_2(
             cmd,
-            vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
+            vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
             0,
             mips_count,
-            vk::PipelineStageFlags::HOST,
-            vk::PipelineStageFlags::TRANSFER,
+            vk::PipelineStageFlags::ALL_COMMANDS,
+            vk::PipelineStageFlags::ALL_COMMANDS,
         );
-        vxlogi!("Reached");
     }
 
     pub(crate) fn get_dimensions(&self) -> (u32, u32) {
