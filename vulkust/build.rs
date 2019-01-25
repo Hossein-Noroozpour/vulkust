@@ -57,6 +57,7 @@ fn main() {
         println!("cargo:rustc-cfg=debug_gx3d");
         println!("cargo:rustc-cfg=debug_mode");
         println!("cargo:rustc-cfg=debug_gapi");
+        println!("cargo:rustc-cfg=debug_texture");
     }
     check_shaders();
     check_fonts();
