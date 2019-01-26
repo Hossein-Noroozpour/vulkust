@@ -222,7 +222,7 @@ impl Image {
     pub(crate) fn set_layout(&mut self, cmd: &mut CmdBuffer, new_layout: vk::ImageLayout) {
         let dst_stage = vk::PipelineStageFlags::ALL_COMMANDS;
         let src_stage = vk::PipelineStageFlags::ALL_COMMANDS;
-        self.set_layout_2(cmd, new_layout, 0, 1, src_stage, dst_stage)
+        self.set_layout_2(cmd, new_layout, 0, 1, 0, 1, src_stage, dst_stage)
     }
 
     pub(super) fn set_layout_2(
@@ -231,6 +231,8 @@ impl Image {
         new_layout: vk::ImageLayout,
         base_mip_level: u32,
         level_count: u32,
+        base_array_layer: u32,
+        layer_count: u32,
         src_stage_mask: vk::PipelineStageFlags,
         dst_stage_mask: vk::PipelineStageFlags,
     ) {
@@ -271,8 +273,9 @@ impl Image {
                 vk::ImageSubresourceRange::builder()
                     .aspect_mask(vk::ImageAspectFlags::COLOR)
                     .base_mip_level(base_mip_level)
-                    .layer_count(1)
                     .level_count(level_count)
+                    .base_array_layer(base_array_layer)
+                    .layer_count(layer_count)
                     .build(),
             )
             .src_access_mask(src_access_mask)
@@ -290,70 +293,84 @@ impl Image {
     pub(super) fn generate_mips(&mut self, cmd: &mut CmdBuffer) {
         self.set_layout(cmd, vk::ImageLayout::TRANSFER_SRC_OPTIMAL);
         let mips_count = self.mips_count as u32;
-        for mi in 1..mips_count {
-            let image_blit = vk::ImageBlit::builder()
-                .src_subresource(
-                    vk::ImageSubresourceLayers::builder()
-                        .aspect_mask(vk::ImageAspectFlags::COLOR)
-                        .layer_count(1)
-                        .mip_level(mi as u32 - 1)
-                        .build(),
-                )
-                .src_offsets([
-                    vk::Offset3D { x: 0, y: 0, z: 0 },
-                    vk::Offset3D {
-                        x: max(1, self.width as i32 >> (mi - 1) as i32),
-                        y: max(1, self.height as i32 >> (mi - 1) as i32),
-                        z: max(1, self.depth as i32 >> (mi - 1) as i32),
-                    },
-                ])
-                .dst_subresource(
-                    vk::ImageSubresourceLayers::builder()
-                        .aspect_mask(vk::ImageAspectFlags::COLOR)
-                        .layer_count(1)
-                        .mip_level(mi as u32)
-                        .build(),
-                )
-                .dst_offsets([
-                    vk::Offset3D { x: 0, y: 0, z: 0 },
-                    vk::Offset3D {
-                        x: max(1, self.width as i32 >> mi as i32),
-                        y: max(1, self.height as i32 >> mi as i32),
-                        z: max(1, self.depth as i32 >> mi as i32),
-                    },
-                ])
-                .build();
-            self.layout = vk::ImageLayout::UNDEFINED;
-            self.set_layout_2(
-                cmd,
-                vk::ImageLayout::TRANSFER_DST_OPTIMAL,
-                mi as u32,
-                1,
-                vk::PipelineStageFlags::TRANSFER,
-                vk::PipelineStageFlags::TRANSFER,
-            );
-            cmd.blit_image(
-                self.vk_data,
-                vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
-                self.vk_data,
-                vk::ImageLayout::TRANSFER_DST_OPTIMAL,
-                &[image_blit],
-                vk::Filter::LINEAR,
-            );
-            self.set_layout_2(
-                cmd,
-                vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
-                mi as u32,
-                1,
-                vk::PipelineStageFlags::TRANSFER,
-                vk::PipelineStageFlags::TRANSFER,
-            );
+        let layer_count = match self.image_type {
+            ImageType::Cube => 6u32,
+            _ => 1u32,
+        };
+        for fi in 0..layer_count {
+            for mi in 1..mips_count {
+                let image_blit = vk::ImageBlit::builder()
+                    .src_subresource(
+                        vk::ImageSubresourceLayers::builder()
+                            .aspect_mask(vk::ImageAspectFlags::COLOR)
+                            .base_array_layer(fi)
+                            .layer_count(1)
+                            .mip_level(mi as u32 - 1)
+                            .build(),
+                    )
+                    .src_offsets([
+                        vk::Offset3D { x: 0, y: 0, z: 0 },
+                        vk::Offset3D {
+                            x: max(1, self.width as i32 >> (mi - 1) as i32),
+                            y: max(1, self.height as i32 >> (mi - 1) as i32),
+                            z: max(1, self.depth as i32 >> (mi - 1) as i32),
+                        },
+                    ])
+                    .dst_subresource(
+                        vk::ImageSubresourceLayers::builder()
+                            .aspect_mask(vk::ImageAspectFlags::COLOR)
+                            .base_array_layer(fi)
+                            .layer_count(1)
+                            .mip_level(mi as u32)
+                            .build(),
+                    )
+                    .dst_offsets([
+                        vk::Offset3D { x: 0, y: 0, z: 0 },
+                        vk::Offset3D {
+                            x: max(1, self.width as i32 >> mi as i32),
+                            y: max(1, self.height as i32 >> mi as i32),
+                            z: max(1, self.depth as i32 >> mi as i32),
+                        },
+                    ])
+                    .build();
+                self.layout = vk::ImageLayout::UNDEFINED;
+                self.set_layout_2(
+                    cmd,
+                    vk::ImageLayout::TRANSFER_DST_OPTIMAL,
+                    mi as u32,
+                    1,
+                    fi,
+                    1,
+                    vk::PipelineStageFlags::TRANSFER,
+                    vk::PipelineStageFlags::TRANSFER,
+                );
+                cmd.blit_image(
+                    self.vk_data,
+                    vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
+                    self.vk_data,
+                    vk::ImageLayout::TRANSFER_DST_OPTIMAL,
+                    &[image_blit],
+                    vk::Filter::LINEAR,
+                );
+                self.set_layout_2(
+                    cmd,
+                    vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
+                    mi as u32,
+                    1,
+                    fi,
+                    1,
+                    vk::PipelineStageFlags::TRANSFER,
+                    vk::PipelineStageFlags::TRANSFER,
+                );
+            }
         }
         self.set_layout_2(
             cmd,
             vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
             0,
             mips_count,
+            0,
+            layer_count,
             vk::PipelineStageFlags::ALL_COMMANDS,
             vk::PipelineStageFlags::ALL_COMMANDS,
         );
