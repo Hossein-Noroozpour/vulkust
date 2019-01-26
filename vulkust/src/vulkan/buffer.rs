@@ -367,13 +367,14 @@ impl Manager {
         image: &Arc<RwLock<Image>>,
         pixels: &[u8],
         img_info: &vk::ImageCreateInfo,
+        base_array_layer: u32,
     ) {
         let upbuff = self.create_staging_buffer_with_vec(pixels);
         let upbuffer = vxresult!(upbuff.read());
         let mut copy_info = vk::BufferImageCopy::default();
         copy_info.image_subresource.aspect_mask = vk::ImageAspectFlags::COLOR;
         copy_info.image_subresource.mip_level = 0;
-        copy_info.image_subresource.base_array_layer = 0;
+        copy_info.image_subresource.base_array_layer = base_array_layer;
         copy_info.image_subresource.layer_count = 1;
         copy_info.image_extent.width = img_info.extent.width;
         copy_info.image_extent.height = img_info.extent.height;

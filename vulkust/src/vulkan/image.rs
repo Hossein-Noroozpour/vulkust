@@ -1,5 +1,5 @@
 use super::super::core::allocate::Object as AlcObject;
-use super::super::render::image::{AttachmentType, Format, Layout};
+use super::super::render::image::{AttachmentType, Format, ImageType, Layout};
 use super::buffer::Manager as BufferManager;
 use super::command::Buffer as CmdBuffer;
 use super::device::Logical as LogicalDevice;
@@ -35,6 +35,7 @@ pub(crate) struct Image {
     height: u32,
     depth: u32,
     vk_data: vk::Image,
+    image_type: ImageType,
 }
 
 impl Image {
@@ -69,6 +70,7 @@ impl Image {
             height: info.extent.height,
             depth: info.extent.depth,
             memory: Some(memory),
+            image_type: ImageType::D2,
         }
     }
 
@@ -92,6 +94,7 @@ impl Image {
             height,
             depth: 1,
             memory: None,
+            image_type: ImageType::D2,
         }
     }
 
@@ -143,7 +146,66 @@ impl Image {
             memmgr
         };
         let myself = Arc::new(RwLock::new(Self::new_with_info(&image_info, &memmgr)));
-        vxresult!(buffmgr.write()).create_staging_image(&myself, data, &image_info);
+        vxresult!(buffmgr.write()).create_staging_image(&myself, data, &image_info, 0);
+        myself
+    }
+
+    pub(crate) fn new_cube_with_pixels(
+        width: u32,
+        height: u32,
+        data: &[&[u8]; 6],
+        buffmgr: &Arc<RwLock<BufferManager>>,
+    ) -> Arc<RwLock<Self>> {
+        let mip_levels = Self::calculate_mip_levels_2d(width, height);
+        #[cfg(debug_mode)]
+        {
+            if mip_levels <= 0 {
+                vxlogf!(
+                    "Unexpected image aspects, width: {} height: {} mip-levels: {}",
+                    width,
+                    height,
+                    mip_levels
+                );
+            }
+        }
+        let format = vk::Format::R8G8B8A8_UNORM;
+        let image_info = vk::ImageCreateInfo::builder()
+            .image_type(vk::ImageType::TYPE_2D)
+            .format(format)
+            .extent(
+                vk::Extent3D::builder()
+                    .width(width)
+                    .height(height)
+                    .depth(1)
+                    .build(),
+            )
+            .mip_levels(mip_levels)
+            .array_layers(6)
+            .samples(vk::SampleCountFlags::TYPE_1)
+            .tiling(vk::ImageTiling::OPTIMAL)
+            .initial_layout(vk::ImageLayout::UNDEFINED)
+            .sharing_mode(vk::SharingMode::EXCLUSIVE)
+            .usage(
+                vk::ImageUsageFlags::TRANSFER_DST
+                    | vk::ImageUsageFlags::TRANSFER_SRC
+                    | vk::ImageUsageFlags::SAMPLED,
+            )
+            .flags(vk::ImageCreateFlags::CUBE_COMPATIBLE)
+            .build();
+        let memmgr = {
+            let buffmgr = vxresult!(buffmgr.read());
+            let memmgr = vxresult!(buffmgr.get_gpu_root_buffer().get_memory().read())
+                .get_manager()
+                .clone();
+            memmgr
+        };
+        let mut myself = Self::new_with_info(&image_info, &memmgr);
+        myself.image_type = ImageType::Cube;
+        let myself = Arc::new(RwLock::new(myself));
+        let mut bufmgr = vxresult!(buffmgr.write());
+        for i in 0..6 {
+            bufmgr.create_staging_image(&myself, data[i], &image_info, i as u32);
+        }
         myself
     }
 
@@ -379,6 +441,16 @@ impl View {
         Self::new_with_image(image)
     }
 
+    pub(crate) fn new_texture_cube_with_pixels(
+        width: u32,
+        height: u32,
+        data: &[&[u8]; 6],
+        buffmgr: &Arc<RwLock<BufferManager>>,
+    ) -> Self {
+        let image = Image::new_cube_with_pixels(width, height, data, buffmgr);
+        Self::new_with_image(image)
+    }
+
     pub(crate) fn new_with_image(image: Arc<RwLock<Image>>) -> Self {
         return Self::new_with_image_aspect(image, vk::ImageAspectFlags::COLOR);
     }
@@ -392,7 +464,11 @@ impl View {
             let ref dev = &img.logical_device;
             let view_create_info = vk::ImageViewCreateInfo::builder()
                 .image(img.vk_data)
-                .view_type(vk::ImageViewType::TYPE_2D)
+                .view_type(match img.image_type {
+                    ImageType::Cube => vk::ImageViewType::CUBE,
+                    ImageType::D2 => vk::ImageViewType::TYPE_2D,
+                    ImageType::D3 => vk::ImageViewType::TYPE_3D,
+                })
                 .format(img.format)
                 .components(
                     vk::ComponentMapping::builder()
@@ -406,9 +482,13 @@ impl View {
                     vk::ImageSubresourceRange::builder()
                         .aspect_mask(aspect_mask)
                         .level_count(img.mips_count as u32)
-                        .layer_count(1)
+                        .layer_count(match img.image_type {
+                            ImageType::Cube => 6,
+                            _ => 1,
+                        })
                         .build(),
-                );
+                )
+                .build();
             vxresult!(unsafe { dev.get_data().create_image_view(&view_create_info, None,) })
         };
         Self { image, vk_data }

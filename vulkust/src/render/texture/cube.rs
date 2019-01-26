@@ -37,8 +37,7 @@ impl Cube {
         data: &[&[u8]; 6],
         name: Option<String>,
     ) -> Self {
-        // let image_view = engine.create_cube_texture_with_pixels(width, height, data);
-        let image_view = engine.create_texture_2d_with_pixels(width, height, data[0]);
+        let image_view = engine.create_texture_cube_with_pixels(width, height, data);
         let sampler = engine.get_linear_repeat_sampler().clone();
         Self {
             obj_base,
@@ -117,7 +116,7 @@ impl Loadable for Cube {
         let img = vxresult!(image::load_from_memory(&data)).to_rgba();
         let (width, height) = img.dimensions();
         faces_data.push(img.into_raw());
-        for i in 1..6 {
+        for _ in 1..6 {
             let size: Size = reader.read();
             let data = reader.read_bytes(size);
             let img = vxresult!(image::load_from_memory(&data)).to_rgba();

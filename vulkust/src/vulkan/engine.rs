@@ -174,7 +174,8 @@ impl Engine {
     }
 
     fn secondary_data_preparing(&self) {
-        let mut pcmd = vxresult!(self.second_data_primary_cmds[self.current_frame_number as usize].lock());
+        let mut pcmd =
+            vxresult!(self.second_data_primary_cmds[self.current_frame_number as usize].lock());
         pcmd.begin();
         vxresult!(self.buffer_manager.write())
             .secondary_update(&mut *pcmd, self.current_frame_number as usize);
@@ -275,6 +276,20 @@ impl Engine {
         data: &[u8],
     ) -> Arc<ImageView> {
         Arc::new(ImageView::new_texture_2d_with_pixels(
+            width,
+            height,
+            data,
+            &self.buffer_manager,
+        ))
+    }
+
+    pub(crate) fn create_texture_cube_with_pixels(
+        &self,
+        width: u32,
+        height: u32,
+        data: &[&[u8]; 6],
+    ) -> Arc<ImageView> {
+        Arc::new(ImageView::new_texture_cube_with_pixels(
             width,
             height,
             data,

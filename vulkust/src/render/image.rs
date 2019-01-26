@@ -41,3 +41,10 @@ pub enum Usage {
     Color,
     DepthStencil,
 }
+
+#[cfg_attr(debug_mode, derive(Debug))]
+pub enum ImageType {
+    Cube,
+    D2,
+    D3,
+}
