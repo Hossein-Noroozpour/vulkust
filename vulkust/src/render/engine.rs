@@ -29,7 +29,7 @@ impl Engine {
         let myself = None;
         let multithreaded_engine =
             MultithreadedEngine::new(gapi_engine.clone(), &asset_manager, &config);
-        Engine {
+        Self {
             myself,
             gapi_engine,
             os_app: Arc::downgrade(os_app),

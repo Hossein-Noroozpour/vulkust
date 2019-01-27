@@ -5,6 +5,7 @@ use super::deferred::Deferred;
 use super::g_buffer_filler::GBufferFiller;
 use super::gapi::GraphicApiEngine;
 use super::pass::transparent::Transparent;
+use super::pass::unlit::Unlit as UnlitPass;
 use super::scene::Manager as SceneManager;
 use super::shadower::Shadower;
 use super::ssao::SSAO;
@@ -154,6 +155,7 @@ pub(super) struct Engine {
     shadower: Arc<RwLock<Shadower>>,
     transparent_pass: Arc<RwLock<Transparent>>,
     ssao: Option<Arc<RwLock<SSAO>>>,
+    unlit_pass: Arc<UnlitPass>,
 }
 
 impl Engine {
@@ -206,7 +208,8 @@ impl Engine {
             ));
         }
         let cmd_pool = eng.create_command_pool();
-        Engine {
+        let unlit_pass = Arc::new(UnlitPass::new(&*eng, config));
+        Self {
             kernels,
             engine,
             scene_manager,
@@ -216,6 +219,7 @@ impl Engine {
             shadower,
             ssao,
             transparent_pass,
+            unlit_pass,
         }
     }
 

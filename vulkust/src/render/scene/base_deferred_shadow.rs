@@ -9,12 +9,16 @@ use super::super::command::{Buffer as CmdBuffer, Pool as CmdPool};
 use super::super::deferred::Deferred;
 use super::super::descriptor::Set as DescriptorSet;
 use super::super::engine::Engine;
+use super::super::framebuffer::Framebuffer;
 use super::super::g_buffer_filler::GBufferFiller;
 use super::super::gapi::GraphicApiEngine;
 use super::super::light::{DirectionalUniform, Light, PointUniform};
 use super::super::model::{Base as ModelBase, Model};
 use super::super::object::{Base as ObjectBase, Loadable as ObjectLoadable, Object};
+use super::super::pipeline::{Pipeline, PipelineType};
+use super::super::render_pass::RenderPass;
 use super::super::shadower::Shadower;
+use super::super::skybox::Skybox;
 use super::super::ssao::SSAO;
 use super::super::sync::Semaphore;
 use super::{DefaultScene, Scene};
@@ -115,7 +119,10 @@ pub(super) struct Base {
     kernels_data: Vec<Arc<Mutex<BaseKernelData>>>,
     distance_transparent_models: Vec<(Real, Weak<RwLock<Model>>)>,
     frames_data: Vec<BaseFramedata>,
-    // skybox: Option<Arc<RwLock<Skybox>>>, // todo
+    skybox: Option<Arc<RwLock<Skybox>>>,
+    render_pass: Arc<RenderPass>,
+    framebuffers: Vec<Arc<Framebuffer>>,
+    unlit_pipeline: Arc<Pipeline>,
     // constraints: BTreeMap<Id, Arc<RwLock<Constraint>>>, // todo
 }
 
@@ -151,6 +158,13 @@ impl Base {
         let gapi_engine = vxresult!(engine.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let render_pass = gapi_engine.get_render_pass().clone();
+        let framebuffers = gapi_engine.get_framebuffers().clone();
+        let unlit_pipeline = vxresult!(gapi_engine.get_pipeline_manager().write()).create(
+            render_pass.clone(),
+            PipelineType::Unlit,
+            engine.get_config(),
+        );
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let frames_count = gapi_engine.get_frames_count();
@@ -176,22 +190,31 @@ impl Base {
             kernels_data,
             distance_transparent_models: Vec::new(),
             frames_data: Vec::new(),
+            skybox: None,
+            unlit_pipeline,
+            framebuffers,
+            render_pass,
         }
     }
 
     pub fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
+        let asset_manager = eng.get_asset_manager();
         let cameras_ids = reader.read_array::<Id>();
         let _audios_ids = reader.read_array::<Id>(); // todo
         let lights_ids = reader.read_array::<Id>();
         let models_ids = reader.read_array::<Id>();
-        if reader.read_bool() {
-            let _skybox_id: Id = reader.read();
-        }
+        let skybox = if reader.read_bool() {
+            let skybox_id: Id = reader.read();
+            let skyboxmgr = asset_manager.get_skybox_manager();
+            let mut skyboxmgr = vxresult!(skyboxmgr.write());
+            Some(skyboxmgr.load_gx3d(eng, skybox_id))
+        } else {
+            None
+        };
         let _constraits_ids = reader.read_array::<Id>(); // todo
         if reader.read_bool() {
             vxunimplemented!(); // todo
         }
-        let asset_manager = eng.get_asset_manager();
         let camera_manager = asset_manager.get_camera_manager();
         let light_manager = asset_manager.get_light_manager();
         let model_manager = asset_manager.get_model_manager();
@@ -242,6 +265,13 @@ impl Base {
         let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let render_pass = gapi_engine.get_render_pass().clone();
+        let framebuffers = gapi_engine.get_framebuffers().clone();
+        let unlit_pipeline = vxresult!(gapi_engine.get_pipeline_manager().write()).create(
+            render_pass.clone(),
+            PipelineType::Unlit,
+            eng.get_config(),
+        );
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let frames_count = gapi_engine.get_frames_count();
@@ -267,6 +297,10 @@ impl Base {
             kernels_data,
             distance_transparent_models: Vec::new(),
             frames_data: Vec::new(),
+            skybox,
+            render_pass,
+            framebuffers,
+            unlit_pipeline,
         }
     }
 
@@ -433,6 +467,9 @@ impl Scene for Base {
         self.uniform.lights_count.x = last_directional_light_index as u32;
         self.uniform.lights_count.y = last_point_light_index as u32;
         self.uniform_buffer.update(&self.uniform, frame_number);
+        if let Some(skybox) = &self.skybox {
+            vxresult!(skybox.write()).update(&*camera, frame_number);
+        }
     }
 
     fn update_shadow_makers(&self) {
@@ -636,6 +673,9 @@ impl Scene for Base {
         frame_data
             .deferred_secondary
             .begin_secondary(geng.get_current_framebuffer());
+        // deferred -> skybox
+
+        // deferred -> final
         deferred.render(&mut frame_data.deferred_secondary, frame_number);
         frame_data
             .deferred_secondary
@@ -670,6 +710,13 @@ impl DefaultScene for Base {
         let gapi_engine = vxresult!(engine.get_gapi_engine().read());
         let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
+        let render_pass = gapi_engine.get_render_pass().clone();
+        let framebuffers = gapi_engine.get_framebuffers().clone();
+        let unlit_pipeline = vxresult!(gapi_engine.get_pipeline_manager().write()).create(
+            render_pass.clone(),
+            PipelineType::Unlit,
+            engine.get_config(),
+        );
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let frames_count = gapi_engine.get_frames_count();
@@ -695,6 +742,10 @@ impl DefaultScene for Base {
             kernels_data,
             distance_transparent_models: Vec::new(),
             frames_data: Vec::new(),
+            skybox: None,
+            render_pass,
+            framebuffers,
+            unlit_pipeline,
         }
     }
 }
