@@ -12,6 +12,7 @@ pub mod t2d;
 
 use gltf;
 
+pub use self::cube::Cube;
 pub use self::manager::Manager;
 pub use self::t2d::Texture2D;
 

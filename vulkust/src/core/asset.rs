@@ -5,6 +5,7 @@ use super::super::render::light::Manager as LightManager;
 use super::super::render::mesh::Manager as MeshManager;
 use super::super::render::model::Manager as ModelManager;
 use super::super::render::scene::Manager as SceneManager;
+use super::super::render::skybox::Manager as SkyboxManager;
 use super::super::render::texture::Manager as TextureManager;
 use super::config::Configurations;
 use super::gx3d::{Gx3DReader, Table as Gx3dTable};
@@ -17,6 +18,7 @@ use std::sync::{Arc, RwLock, Weak};
 pub struct Manager {
     scene_manager: Arc<RwLock<SceneManager>>,
     texture_manager: Arc<RwLock<TextureManager>>,
+    skybox_manager: Arc<RwLock<SkyboxManager>>,
     light_manager: Arc<RwLock<LightManager>>,
     camera_manager: Arc<RwLock<CameraManager>>,
     mesh_manager: Arc<RwLock<MeshManager>>,
@@ -29,6 +31,7 @@ impl Manager {
         let scene_manager = Arc::new(RwLock::new(SceneManager::new()));
         let texture_manager = Arc::new(RwLock::new(TextureManager::new()));
         let light_manager = Arc::new(RwLock::new(LightManager::new()));
+        let skybox_manager = Arc::new(RwLock::new(SkyboxManager::new()));
         let camera_manager = Arc::new(RwLock::new(CameraManager::new()));
         let mesh_manager = Arc::new(RwLock::new(MeshManager::new()));
         let font_manager = Arc::new(RwLock::new(FontManager::new()));
@@ -52,12 +55,12 @@ impl Manager {
             set_table!(font_manager);
             set_table!(mesh_manager);
             set_table!(model_manager);
-            let _skybox_table = Gx3dTable::new(gx3d_file, config);
+            set_table!(skybox_manager);
             let _constraint_table = Gx3dTable::new(gx3d_file, config);
             set_table!(scene_manager);
         }
 
-        Manager {
+        Self {
             scene_manager,
             texture_manager,
             light_manager,
@@ -65,6 +68,7 @@ impl Manager {
             mesh_manager,
             font_manager,
             model_manager,
+            skybox_manager,
         }
     }
 
@@ -75,6 +79,7 @@ impl Manager {
         vxresult!(self.camera_manager.write()).set_engine(engine.clone());
         vxresult!(self.mesh_manager.write()).set_engine(engine.clone());
         vxresult!(self.model_manager.write()).set_engine(engine.clone());
+        vxresult!(self.skybox_manager.write()).set_engine(engine.clone());
     }
 
     pub fn get_scene_manager(&self) -> &Arc<RwLock<SceneManager>> {
@@ -103,6 +108,10 @@ impl Manager {
 
     pub fn get_model_manager(&self) -> &Arc<RwLock<ModelManager>> {
         return &self.model_manager;
+    }
+
+    pub fn get_skybox_manager(&self) -> &Arc<RwLock<SkyboxManager>> {
+        return &self.skybox_manager;
     }
 }
 

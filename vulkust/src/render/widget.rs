@@ -286,13 +286,14 @@ impl Label {
             let indices = [0u32, 2, 1, 1, 2, 3];
             let mut material = Material::default(engine);
             let asset_manager = engine.get_asset_manager();
-            material.base_color = vxresult!(asset_manager.get_texture_manager().write())
-                .create_2d_with_pixels(
+            material.set_base_color_texture(
+                vxresult!(asset_manager.get_texture_manager().write()).create_2d_with_pixels(
                     imgw as u32,
                     imgh as u32,
                     &*vxresult!(engine.get_gapi_engine().read()),
                     &img,
-                );
+                ),
+            );
             material.finalize_textures_change(engine);
             let radius = cgmath::Vector2::new(w, h);
             let radius = cgmath::dot(radius, radius).sqrt();

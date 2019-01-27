@@ -46,7 +46,7 @@ impl Uniform {
         let uniform_projection = cgmath::Matrix4::new(
             0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0,
         ) * projection;
-        Uniform {
+        Self {
             x,
             y,
             z,
@@ -60,6 +60,22 @@ impl Uniform {
             uniform_view_projection: uniform_projection,
         }
     }
+
+    pub(super) fn get_inversed_rotation(&self) -> &cgmath::Matrix4<Real> {
+        return &self.inversed_rotation;
+    }
+
+    pub(super) fn get_projection(&self) -> &cgmath::Matrix4<Real> {
+        return &self.projection;
+    }
+
+    pub(super) fn get_far(&self) -> Real {
+        return self.position_far.w;
+    }
+
+    pub(super) fn get_near(&self) -> Real {
+        return self.near_aspect_ratio_reserved.x;
+    }
 }
 
 pub trait Camera: Object + Transferable {
@@ -68,6 +84,7 @@ pub trait Camera: Object + Transferable {
     fn is_in_frustum(&self, Real, &cgmath::Vector3<Real>) -> bool;
     fn update_uniform(&self, &mut Uniform);
     fn get_distance(&self, &cgmath::Vector3<Real>) -> Real;
+    fn get_uniform(&self) -> &Uniform;
 }
 
 pub trait DefaultCamera: Camera {
@@ -372,6 +389,10 @@ impl Camera for Base {
     fn get_distance(&self, _: &cgmath::Vector3<Real>) -> Real {
         vxunexpected!();
     }
+
+    fn get_uniform(&self) -> &Uniform {
+        return &self.uniform;
+    }
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -653,6 +674,10 @@ impl Camera for Perspective {
     fn get_distance(&self, p: &cgmath::Vector3<Real>) -> Real {
         return (self.base.uniform.position_far.truncate() - p).magnitude();
     }
+
+    fn get_uniform(&self) -> &Uniform {
+        return self.base.get_uniform();
+    }
 }
 
 impl DefaultCamera for Perspective {
@@ -889,6 +914,10 @@ impl Camera for Orthographic {
             self.base.uniform.position_far.truncate() - p,
             self.base.uniform.z.truncate(),
         );
+    }
+
+    fn get_uniform(&self) -> &Uniform {
+        return self.base.get_uniform();
     }
 }
 

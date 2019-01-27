@@ -61,15 +61,15 @@ impl Default for TranslucencyMode {
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Material {
-    pub base_color: Arc<RwLock<Texture>>,
-    pub base_color_factor: Arc<RwLock<Texture>>,
-    pub metallic_roughness: Arc<RwLock<Texture>>,
-    pub normal: Arc<RwLock<Texture>>,
-    pub occlusion: Arc<RwLock<Texture>>,
-    pub emissive: Arc<RwLock<Texture>>,
-    pub emissive_factor: Arc<RwLock<Texture>>,
-    pub translucency: TranslucencyMode,
-    pub uniform: Uniform,
+    base_color: Arc<RwLock<Texture>>,
+    base_color_factor: Arc<RwLock<Texture>>,
+    metallic_roughness: Arc<RwLock<Texture>>,
+    normal: Arc<RwLock<Texture>>,
+    occlusion: Arc<RwLock<Texture>>,
+    emissive: Arc<RwLock<Texture>>,
+    emissive_factor: Arc<RwLock<Texture>>,
+    translucency: TranslucencyMode,
+    uniform: Uniform,
     uniform_buffer: DynamicBuffer,
     descriptor_set: Arc<DescriptorSet>,
 }
@@ -402,7 +402,7 @@ impl Material {
         let gapi_engine = vxresult!(eng.get_gapi_engine().read());
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_gbuff_set(&uniform_buffer, textures);
-        Material {
+        Self {
             base_color,
             base_color_factor,
             metallic_roughness,
@@ -444,7 +444,7 @@ impl Material {
         ];
         let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_gbuff_set(&uniform_buffer, textures);
-        Material {
+        Self {
             base_color,
             base_color_factor,
             metallic_roughness,
@@ -474,7 +474,7 @@ impl Material {
         self.descriptor_set = descriptor_manager.create_gbuff_set(&self.uniform_buffer, textures);
     }
 
-    pub fn update_uniform_buffer(&mut self, frame_number: usize) {
+    pub(crate) fn update_uniform_buffer(&mut self, frame_number: usize) {
         self.uniform_buffer.update(&self.uniform, frame_number);
     }
 
@@ -497,6 +497,10 @@ impl Material {
         let mut texmgr = vxresult!(eng.get_asset_manager().get_texture_manager().write());
         self.base_color =
             texmgr.create_2d_with_color(&*vxresult!(eng.get_gapi_engine().read()), [r, g, b, a]);
+    }
+
+    pub fn set_base_color_texture(&mut self, base_color: Arc<RwLock<Texture>>) {
+        self.base_color = base_color;
     }
 
     pub fn set_metallic_factor(&mut self, v: Real) {

@@ -5,7 +5,7 @@ use super::super::engine::Engine;
 use super::super::gapi::GraphicApiEngine;
 use super::super::image::View as ImageView;
 use super::super::sampler::Sampler;
-use super::{Loadable, Texture, Texture2D, TextureType};
+use super::{Cube, Loadable, Texture, Texture2D, TextureType};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 
@@ -74,6 +74,8 @@ impl Manager {
         let t = reader.read_type_id();
         let texture: Arc<RwLock<Texture>> = if t == TextureType::T2D as TypeId {
             Arc::new(RwLock::new(Texture2D::new_with_gx3d(engine, reader, id)))
+        } else if t == TextureType::Cube as TypeId {
+            Arc::new(RwLock::new(Cube::new_with_gx3d(engine, reader, id)))
         } else {
             vxunexpected!();
         };

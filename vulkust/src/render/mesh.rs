@@ -287,7 +287,7 @@ impl Base {
         let index_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
             .create_static_buffer_with_vec(&index_buffer);
         let obj_base = ObjectBase::new();
-        Base {
+        Self {
             obj_base,
             vertex_buffer,
             index_buffer,
@@ -307,7 +307,7 @@ impl Base {
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(indices);
         let obj_base = ObjectBase::new();
-        Base {
+        Self {
             obj_base,
             vertex_buffer,
             index_buffer,
@@ -344,7 +344,7 @@ impl Base {
         vxlogi!("Number of indices is: {}", indices_count);
         #[cfg(debug_gx3d)]
         vxlogi!("Occlusion culling radius is: {}", occlusion_culling_radius);
-        Base {
+        Self {
             obj_base,
             vertex_buffer,
             index_buffer,

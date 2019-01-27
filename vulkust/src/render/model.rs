@@ -56,7 +56,7 @@ pub struct Manager {
 
 impl Manager {
     pub fn new() -> Self {
-        Manager {
+        Self {
             engine: None,
             models: BTreeMap::new(),
             name_to_id: BTreeMap::new(),
@@ -125,7 +125,7 @@ impl Uniform {
             m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0],
             m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3],
         );
-        Uniform {
+        Self {
             model,
             model_view_projection: model,
         }
@@ -150,7 +150,7 @@ impl Uniform {
             reader.read(),
             reader.read(),
         );
-        Uniform {
+        Self {
             model,
             model_view_projection: model,
         }
@@ -160,11 +160,15 @@ impl Uniform {
         return &self.model;
     }
 
-    fn default() -> Self {
+    pub(crate) fn set_model_view_projection(&mut self, mvp: cgmath::Matrix4<Real>) {
+        return self.model_view_projection = mvp;
+    }
+
+    pub(super) fn default() -> Self {
         let m = cgmath::Matrix4::new(
             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
         );
-        Uniform {
+        Self {
             model: m,
             model_view_projection: m,
         }

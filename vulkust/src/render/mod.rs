@@ -23,6 +23,7 @@ pub mod render_pass;
 pub mod sampler;
 pub mod scene;
 pub mod shadower;
+pub mod skybox;
 pub mod ssao;
 pub mod sync;
 pub mod texture;
