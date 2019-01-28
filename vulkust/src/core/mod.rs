@@ -9,6 +9,7 @@ pub mod event;
 pub mod gesture;
 pub mod gx3d;
 pub mod object;
+pub mod storage;
 pub mod string;
 pub mod timing;
 pub mod types;
