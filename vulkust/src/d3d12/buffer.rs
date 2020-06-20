@@ -12,7 +12,7 @@ pub(crate) struct Dynamic {
 
 impl Dynamic {
     pub(crate) fn update_with_ptr(&mut self, _data: *const c_void, _frame_number: usize) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn update<T>(&mut self, data: &T, frame_number: usize)
@@ -22,14 +22,14 @@ impl Dynamic {
         #[cfg(debug_mode)]
         {
             if size_of::<T>() != self.actual_size as usize {
-                vxlogf!("Data must have same size of buffer.");
+                vx_log_f!("Data must have same size of buffer.");
             }
         }
         self.update_with_ptr(unsafe { transmute(data) }, frame_number);
     }
 
     pub(crate) fn get_buffer(&self, _frame_number: usize) -> &Arc<RwLock<Buffer>> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }
 
@@ -41,10 +41,10 @@ pub(crate) struct Manager {}
 
 impl Manager {
     pub(crate) fn create_dynamic_buffer(&mut self, _: isize) -> Dynamic {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_static_buffer_with_vec<T>(&mut self, _data: &[T]) -> Static {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }

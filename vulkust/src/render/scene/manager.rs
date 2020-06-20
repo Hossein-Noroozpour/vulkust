@@ -44,13 +44,13 @@ impl Manager {
         let file = Self::load_gltf_struct(file_name);
         let scene = Self::fetch_gltf_scene(&file, scene_name);
         let scene = {
-            let engine = vxunwrap!(&self.engine);
-            let engine = vxunwrap!(engine.upgrade());
-            let engine = vxresult!(engine.read());
+            let engine = vx_unwrap!(&self.engine);
+            let engine = vx_unwrap!(engine.upgrade());
+            let engine = vx_result!(engine.read());
             Arc::new(RwLock::new(S::new_with_gltf(
                 &*engine,
                 &scene,
-                vxunwrap!(&file.blob),
+                vx_unwrap!(&file.blob),
             )))
         };
         let s: Arc<RwLock<dyn Scene>> = scene.clone();
@@ -60,22 +60,22 @@ impl Manager {
 
     pub fn load_gx3d(&mut self, id: Id) -> Arc<RwLock<dyn Scene>> {
         let scene: Arc<RwLock<dyn Scene>> = {
-            let table = vxunwrap!(&mut self.gx3d_table);
+            let table = vx_unwrap!(&mut self.gx3d_table);
             table.goto(id);
             let reader = table.get_mut_reader();
             let type_id = reader.read_type_id();
             if type_id == TypeId::GAME as CoreTypeId {
-                let engine = vxunwrap!(&self.engine);
-                let engine = vxunwrap!(engine.upgrade());
-                let engine = vxresult!(engine.read());
+                let engine = vx_unwrap!(&self.engine);
+                let engine = vx_unwrap!(engine.upgrade());
+                let engine = vx_result!(engine.read());
                 Arc::new(RwLock::new(Game::new_with_gx3d(&engine, reader, id)))
             } else if type_id == TypeId::UI as CoreTypeId {
-                let engine = vxunwrap!(&self.engine);
-                let engine = vxunwrap!(engine.upgrade());
-                let engine = vxresult!(engine.read());
+                let engine = vx_unwrap!(&self.engine);
+                let engine = vx_unwrap!(engine.upgrade());
+                let engine = vx_result!(engine.read());
                 Arc::new(RwLock::new(Ui::new_with_gx3d(&engine, reader, id)))
             } else {
-                vxunexpected!();
+                vx_unexpected!();
             }
         };
         self.add_scene(&scene);
@@ -87,9 +87,9 @@ impl Manager {
         S: 'static + DefaultScene,
     {
         let scene = {
-            let engine = vxunwrap!(&self.engine);
-            let engine = vxunwrap!(engine.upgrade());
-            let engine = vxresult!(engine.read());
+            let engine = vx_unwrap!(&self.engine);
+            let engine = vx_unwrap!(engine.upgrade());
+            let engine = vx_result!(engine.read());
             Arc::new(RwLock::new(S::default(&engine)))
         };
         let s: Arc<RwLock<dyn Scene>> = scene.clone();
@@ -100,24 +100,24 @@ impl Manager {
     pub fn fetch_gltf_scene<'a>(file: &'a gltf::Gltf, scene_name: &str) -> gltf::Scene<'a> {
         let scenes = file.scenes();
         for scene in scenes {
-            if vxunwrap!(scene.name()) == scene_name {
+            if vx_unwrap!(scene.name()) == scene_name {
                 return scene;
             }
         }
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     pub fn load_gltf_struct(file_name: &str) -> gltf::Gltf {
-        let file = BufReader::new(vxresult!(File::open(file_name)));
+        let file = BufReader::new(vx_result!(File::open(file_name)));
         #[cfg(debug_mode)]
-        return vxresult!(gltf::Gltf::from_reader(file));
+        return vx_result!(gltf::Gltf::from_reader(file));
         #[cfg(not(debug_mode))]
-        return vxresult!(gltf::Gltf::from_reader_without_validation(file));
+        return vx_result!(gltf::Gltf::from_reader_without_validation(file));
     }
 
     pub fn add_scene(&mut self, scene: &Arc<RwLock<dyn Scene>>) {
         let id = {
-            let scene = vxresult!(scene.read());
+            let scene = vx_result!(scene.read());
             let id = scene.get_id();
             if let Some(name) = scene.get_name() {
                 self.name_to_id.insert(name, id);
@@ -132,7 +132,7 @@ impl Manager {
     }
 
     pub fn remove(&mut self, scene: Arc<RwLock<dyn Scene>>) {
-        self.remove_with_id(&vxresult!(scene.read()).get_id());
+        self.remove_with_id(&vx_result!(scene.read()).get_id());
     }
 
     pub(crate) fn get_scenes(&self) -> &BTreeMap<Id, Weak<RwLock<dyn Scene>>> {

@@ -81,11 +81,11 @@ impl Manager {
         _uniform: &DynamicBuffer,
         _textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Arc<Set> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_buffer_only_set(&mut self, _uniform: &DynamicBuffer) -> Arc<Set> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_deferred_set(
@@ -93,7 +93,7 @@ impl Manager {
         _uniform: &DynamicBuffer,
         _textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Arc<Set> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_ssao_set(
@@ -101,7 +101,7 @@ impl Manager {
         _uniform: &DynamicBuffer,
         _textures: Vec<Arc<RwLock<Texture>>>,
     ) -> Arc<Set> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_shadow_accumulator_directional_set(
@@ -109,6 +109,6 @@ impl Manager {
         _uniform: &DynamicBuffer,
         _texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
     ) -> Arc<Set> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }

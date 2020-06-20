@@ -79,7 +79,7 @@ impl RootMemory {
             .memory_type_index(type_index)
             .build();
         let vk_data =
-            vxresult!(unsafe { logical_device.get_data().allocate_memory(&mem_alloc, None) });
+            vx_result!(unsafe { logical_device.get_data().allocate_memory(&mem_alloc, None) });
         let itself = Arc::new(RwLock::new(RootMemory {
             logical_device: logical_device.clone(),
             vk_data,
@@ -88,13 +88,13 @@ impl RootMemory {
             container: alc::Container::new(DEFAULT_MEMORY_SIZE as isize, 1),
         }));
         let w = Arc::downgrade(&itself);
-        vxresult!(itself.write()).itself = Some(w);
+        vx_result!(itself.write()).itself = Some(w);
         return itself;
     }
 
     pub(crate) fn allocate(&mut self, mem_req: &vk::MemoryRequirements) -> Arc<RwLock<Memory>> {
-        let manager = vxunwrap!(self.manager.upgrade());
-        let itself = vxunwrap!(vxunwrap!(&self.itself).upgrade());
+        let manager = vx_unwrap!(self.manager.upgrade());
+        let itself = vx_unwrap!(vx_unwrap!(&self.itself).upgrade());
         let memory = Arc::new(RwLock::new(Memory::new(
             mem_req,
             self.vk_data,
@@ -150,7 +150,7 @@ impl Manager {
             root_memories: BTreeMap::new(),
         }));
         let w = Arc::downgrade(&itself);
-        vxresult!(itself.write()).itself = Some(w);
+        vx_result!(itself.write()).itself = Some(w);
         return itself;
     }
 
@@ -178,11 +178,11 @@ impl Manager {
     ) -> Arc<RwLock<Memory>> {
         let memory_type_index = self.get_memory_type_index(mem_req, location);
         if let Some(root_memory) = self.root_memories.get_mut(&memory_type_index) {
-            return vxresult!(root_memory.write()).allocate(mem_req);
+            return vx_result!(root_memory.write()).allocate(mem_req);
         }
-        let itself = vxunwrap!(&self.itself).clone();
+        let itself = vx_unwrap!(&self.itself).clone();
         let root_memory = RootMemory::new(memory_type_index, itself, &self.logical_device);
-        let allocated = vxresult!(root_memory.write()).allocate(mem_req);
+        let allocated = vx_result!(root_memory.write()).allocate(mem_req);
         self.root_memories.insert(memory_type_index, root_memory);
         return allocated;
     }

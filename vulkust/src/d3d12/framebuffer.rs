@@ -8,18 +8,18 @@ pub(crate) struct Framebuffer {}
 
 impl Framebuffer {
     pub(crate) fn new(_buffers: Vec<Arc<ImageView>>, _render_pass: Arc<RenderPass>) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn begin(&self, _cmd_buffer: &mut CmdBuffer) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_render_pass(&self) -> &Arc<RenderPass> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_dimensions(&self) -> (u32, u32) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }

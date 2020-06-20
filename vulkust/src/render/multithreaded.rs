@@ -38,14 +38,14 @@ impl Kernel {
         let handle = spawn(move || {
             let mut renderer =
                 Renderer::new(index, engine, scene_manager, g_buffer_filler, shadower);
-            while vxresult!(render_receiver.recv()) {
+            while vx_result!(render_receiver.recv()) {
                 renderer.render();
-                vxresult!(render_ready.send(()));
-                vxresult!(shadow_receiver.recv());
+                vx_result!(render_ready.send(()));
+                vx_result!(shadow_receiver.recv());
                 renderer.shadow();
-                vxresult!(shadow_ready.send(()));
+                vx_result!(shadow_ready.send(()));
             }
-            vxresult!(render_ready.send(()));
+            vx_result!(render_ready.send(()));
         });
         Self {
             render_signal,
@@ -57,26 +57,26 @@ impl Kernel {
     }
 
     fn start_rendering(&self) {
-        vxresult!(self.render_signal.send(true));
+        vx_result!(self.render_signal.send(true));
     }
 
     fn wait_rendering(&self) {
-        vxresult!(self.render_wait.recv());
+        vx_result!(self.render_wait.recv());
     }
 
     fn start_shadowing(&self) {
-        vxresult!(self.shadow_signal.send(()));
+        vx_result!(self.shadow_signal.send(()));
     }
 
     fn wait_shadowing(&self) {
-        vxresult!(self.shadow_wait.recv());
+        vx_result!(self.shadow_wait.recv());
     }
 }
 
 impl Drop for Kernel {
     fn drop(&mut self) {
-        vxresult!(self.render_signal.send(false));
-        vxresult!(self.render_wait.recv());
+        vx_result!(self.render_signal.send(false));
+        vx_result!(self.render_wait.recv());
     }
 }
 
@@ -99,7 +99,7 @@ impl Renderer {
         shadower: Arc<RwLock<Shadower>>,
     ) -> Self {
         let eng = g_engine.clone();
-        let eng = vxresult!(eng.read());
+        let eng = vx_result!(eng.read());
         let cmd_pool = eng.create_command_pool();
         Renderer {
             index,
@@ -112,14 +112,14 @@ impl Renderer {
     }
 
     pub fn render(&mut self) {
-        let geng = vxresult!(self.g_engine.read());
-        let scnmgr = vxresult!(self.scene_manager.read());
+        let geng = vx_result!(self.g_engine.read());
+        let scnmgr = vx_result!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
-        let g_buffer_filler = vxresult!(self.g_buffer_filler.read());
-        let shadower = vxresult!(self.shadower.read());
+        let g_buffer_filler = vx_result!(self.g_buffer_filler.read());
+        let shadower = vx_result!(self.shadower.read());
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
-                vxresult!(scene.read()).render_gbuffer_shadow_maps(
+                vx_result!(scene.read()).render_gbuffer_shadow_maps(
                     &*geng,
                     &self.cmd_pool,
                     &*g_buffer_filler,
@@ -131,13 +131,13 @@ impl Renderer {
     }
 
     pub fn shadow(&mut self) {
-        let frame_number = vxresult!(self.g_engine.read()).get_frame_number();
-        let shadower = vxresult!(self.shadower.read());
-        let scnmgr = vxresult!(self.scene_manager.read());
+        let frame_number = vx_result!(self.g_engine.read()).get_frame_number();
+        let shadower = vx_result!(self.shadower.read());
+        let scnmgr = vx_result!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
-                let scene = vxresult!(scene.read());
+                let scene = vx_result!(scene.read());
                 scene.render_shadow_maps(&*shadower, self.index, frame_number);
             }
         }
@@ -165,9 +165,9 @@ impl Engine {
         config: &Configurations,
     ) -> Self {
         let eng = engine.clone();
-        let eng = vxresult!(eng.read());
+        let eng = vx_result!(eng.read());
         let scene_manager = asset_manager.get_scene_manager().clone();
-        let mut texmgr = vxresult!(asset_manager.get_texture_manager().write());
+        let mut texmgr = vx_result!(asset_manager.get_texture_manager().write());
         let g_buffer_filler = GBufferFiller::new(&eng, &mut *texmgr, config);
         let shadower = Shadower::new(&eng, config, &g_buffer_filler, &mut *texmgr);
         let ssao = if config.get_enable_ssao() {
@@ -224,8 +224,8 @@ impl Engine {
     }
 
     pub(crate) fn render(&self) {
-        vxresult!(self.engine.write()).start_rendering();
-        let engine = vxresult!(self.engine.read());
+        vx_result!(self.engine.write()).start_rendering();
+        let engine = vx_result!(self.engine.read());
         let frame_number = engine.get_frame_number();
         self.update_scenes(frame_number);
         for k in &self.kernels {
@@ -246,9 +246,9 @@ impl Engine {
 
     fn update_scenes(&self, frame_number: usize) {
         let mut ids = Vec::new();
-        for (id, scene) in vxresult!(self.scene_manager.read()).get_scenes() {
+        for (id, scene) in vx_result!(self.scene_manager.read()).get_scenes() {
             if let Some(scene) = scene.upgrade() {
-                let mut scene = vxresult!(scene.write());
+                let mut scene = vx_result!(scene.write());
                 if !scene.is_renderable() {
                     continue;
                 }
@@ -258,18 +258,18 @@ impl Engine {
                 ids.push(*id);
             }
         }
-        let mut scnmgr = vxresult!(self.scene_manager.write());
+        let mut scnmgr = vx_result!(self.scene_manager.write());
         for id in ids {
             scnmgr.remove_with_id(&id);
         }
     }
 
     fn update_shadow_makers(&self) {
-        let scnmgr = vxresult!(self.scene_manager.read());
+        let scnmgr = vx_result!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
-                let scene = vxresult!(scene.write());
+                let scene = vx_result!(scene.write());
                 if !scene.is_renderable() {
                     continue;
                 }
@@ -281,10 +281,10 @@ impl Engine {
     fn submit(&self, engine: &GraphicApiEngine) {
         let mut last_semaphore = engine.get_starting_semaphore().clone();
         let frame_number = engine.get_frame_number();
-        vxresult!(self.deferred.write()).update(frame_number);
+        vx_result!(self.deferred.write()).update(frame_number);
         let ssao = if let Some(ssao) = &self.ssao {
-            vxresult!(ssao.write()).update(frame_number);
-            Some(vxresult!(ssao.read()))
+            vx_result!(ssao.write()).update(frame_number);
+            Some(vx_result!(ssao.read()))
         } else {
             None
         };
@@ -293,14 +293,14 @@ impl Engine {
         } else {
             None
         };
-        let scnmgr = vxresult!(self.scene_manager.read());
+        let scnmgr = vx_result!(self.scene_manager.read());
         let scenes = scnmgr.get_scenes();
-        let g_buffer_filler = vxresult!(self.g_buffer_filler.read());
-        let mut shadower = vxresult!(self.shadower.write());
-        let deferred = vxresult!(self.deferred.read());
+        let g_buffer_filler = vx_result!(self.g_buffer_filler.read());
+        let mut shadower = vx_result!(self.shadower.write());
+        let deferred = vx_result!(self.deferred.read());
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
-                let mut scene = vxresult!(scene.write());
+                let mut scene = vx_result!(scene.write());
                 if !scene.is_renderable() {
                     continue;
                 }

@@ -16,6 +16,6 @@ impl Manager {
         _pipeline_type: PipelineType,
         _config: &Configurations,
     ) -> Arc<Pipeline> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }

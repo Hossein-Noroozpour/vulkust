@@ -20,7 +20,7 @@ pub fn read(reader: &mut Gx3DReader) -> Arc<RwLock<dyn Collider>> {
     } else if t == TypeId::Mesh as u8 {
         return Arc::new(RwLock::new(Mesh::new_with_gx3d(reader)));
     } else {
-        vxunexpected!();
+        vx_unexpected!();
     }
 }
 

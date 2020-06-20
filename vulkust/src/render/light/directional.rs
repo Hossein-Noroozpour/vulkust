@@ -93,7 +93,7 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.obj_base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
+        vx_unimplemented!(); //it must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {
@@ -116,35 +116,35 @@ impl Transferable for Base {
     }
 
     fn set_location(&mut self, _: &cgmath::Vector3<Real>) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn get_location(&self) -> cgmath::Vector3<Real> {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn move_local_z(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn move_local_x(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn rotate_local_x(&mut self, _: Real) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn rotate_global_z(&mut self, _: Real) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn translate(&mut self, _: &cgmath::Vector3<Real>) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn scale(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 }
 
@@ -178,7 +178,7 @@ impl Light for Base {
 
 impl Loadable for Base {
     fn new_with_gltf(_node: &gltf::Node, _eng: &Engine, _: &[u8]) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn new_with_gx3d(_: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
@@ -198,9 +198,9 @@ impl Loadable for Base {
         myself.strength = reader.read::<Real>();
         #[cfg(debug_gx3d)]
         {
-            vxlogi!("Direction {:?}", &myself.direction);
-            vxlogi!("Color {:?}", &myself.color);
-            vxlogi!("Strength {:?}", &myself.strength);
+            vx_log_i!("Direction {:?}", &myself.direction);
+            vx_log_i!("Color {:?}", &myself.color);
+            vx_log_i!("Strength {:?}", &myself.strength);
         }
         return myself;
     }

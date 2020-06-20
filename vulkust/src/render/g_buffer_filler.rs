@@ -57,7 +57,7 @@ impl GBufferFiller {
         }
         let render_pass = Arc::new(RenderPass::new(buffers.clone(), true, true));
         let framebuffer = Arc::new(Framebuffer::new(buffers, render_pass.clone()));
-        let pipeline = vxresult!(eng.get_pipeline_manager().write()).create(
+        let pipeline = vx_result!(eng.get_pipeline_manager().write()).create(
             render_pass.clone(),
             PipelineType::GBuffer,
             config,

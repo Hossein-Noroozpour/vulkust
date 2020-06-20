@@ -47,9 +47,9 @@ impl File {
         };
         let path = unsafe {
             let path: *const c_char = msg_send![path, fileSystemRepresentation];
-            vxresult!(CStr::from_ptr(path).to_str())
+            vx_result!(CStr::from_ptr(path).to_str())
         };
-        let file = vxresult!(StdFile::open(path));
+        let file = vx_result!(StdFile::open(path));
         Ok(File { file })
     }
 }

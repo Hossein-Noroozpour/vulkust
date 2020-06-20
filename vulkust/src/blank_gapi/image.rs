@@ -17,15 +17,15 @@ impl View {
         _data: &[u8],
         _buffmgr: &Arc<RwLock<BufferManager>>,
     ) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn new_with_image(_image: Arc<RwLock<Image>>) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn new_with_image_aspect(_image: Arc<RwLock<Image>>, _aspect_mask: u32) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn new_surface_attachment(
@@ -34,7 +34,7 @@ impl View {
         _format: Format,
         _attachment_type: AttachmentType,
     ) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn new_attachment(
@@ -44,10 +44,10 @@ impl View {
         _width: u32,
         _height: u32,
     ) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_image(&self) -> &Arc<RwLock<Image>> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }

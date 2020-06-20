@@ -87,13 +87,13 @@ impl SSAO {
             AttachmentType::ColorGBuffer,
         ))];
         let uniform = Uniform::new();
-        let uniform_buffer = vxresult!(eng.get_buffer_manager().write())
+        let uniform_buffer = vx_result!(eng.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut textures = Vec::with_capacity(3); // position, normal, depth
         textures.push(g_buffer_filler.get_position_texture().clone());
         textures.push(g_buffer_filler.get_normal_texture().clone());
         textures.push(g_buffer_filler.get_depth_texture().clone());
-        let descriptor_set = vxresult!(eng.get_descriptor_manager().write())
+        let descriptor_set = vx_result!(eng.get_descriptor_manager().write())
             .create_ssao_set(&uniform_buffer, textures);
         let sampler = eng.get_linear_repeat_sampler();
         let mut textures = Vec::with_capacity(buffers.len());
@@ -102,7 +102,7 @@ impl SSAO {
         }
         let render_pass = Arc::new(RenderPass::new(buffers.clone(), true, true));
         let framebuffer = Arc::new(Framebuffer::new(buffers, render_pass.clone()));
-        let pipeline = vxresult!(eng.get_pipeline_manager().write()).create(
+        let pipeline = vx_result!(eng.get_pipeline_manager().write()).create(
             render_pass.clone(),
             PipelineType::SSAO,
             config,
@@ -125,7 +125,7 @@ impl SSAO {
 
     pub(super) fn end_secondary(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let buffer = self.uniform_buffer.get_buffer(frame_number);
-        let buffer = vxresult!(buffer.read());
+        let buffer = vx_result!(buffer.read());
         cmd.bind_ssao_ssao_descriptor(&*self.descriptor_set, &*buffer);
         cmd.render_ssao();
         cmd.end();

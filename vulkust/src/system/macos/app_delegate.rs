@@ -31,7 +31,7 @@ fn create_frame() -> apple::NSRect {
 }
 
 extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
-    vxlogi!("I'm initialized.");
+    vx_log_i!("I'm initialized.");
     let frame = create_frame();
     let style_mask = apple::NsWindowStyleMask::NS_TITLED_WINDOW_MASK
         | apple::NsWindowStyleMask::NS_CLOSABLE_WINDOW_MASK
@@ -81,7 +81,7 @@ extern "C" fn initialize(this: &mut Object, _cmd: Sel) {
 }
 
 extern "C" fn application_will_finish_launching(_this: &Object, _cmd: Sel, _n: apple::Id) {
-    vxlogi!("Reached");
+    vx_log_i!("Reached");
 }
 
 extern "C" fn application_did_finish_launching(this: &Object, _cmd: Sel, _n: apple::Id) {
@@ -92,7 +92,7 @@ extern "C" fn application_did_finish_launching(this: &Object, _cmd: Sel, _n: app
 }
 
 extern "C" fn application_will_terminate(_this: &Object, _cmd: Sel, _n: apple::Id) {
-    vxlogi!("Reached");
+    vx_log_i!("Reached");
 }
 
 extern "C" fn application_should_terminate_after_last_window_closed(
@@ -103,9 +103,9 @@ extern "C" fn application_should_terminate_after_last_window_closed(
     unsafe {
         let window: apple::Id = *_this.get_ivar(WINDOW_VAR_NAME);
         let b: BOOL = msg_send![window, acceptsMouseMovedEvents];
-        vxlogi!("b: {}", b);
+        vx_log_i!("b: {}", b);
     }
-    vxlogi!("Reached");
+    vx_log_i!("Reached");
     return YES;
 }
 

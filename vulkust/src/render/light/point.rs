@@ -72,7 +72,7 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.obj_base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
+        vx_unimplemented!(); //it must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {
@@ -90,7 +90,7 @@ impl Object for Base {
 
 impl Transferable for Base {
     fn set_orientation(&mut self, _: &cgmath::Quaternion<Real>) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn set_location(&mut self, l: &cgmath::Vector3<Real>) {
@@ -102,19 +102,19 @@ impl Transferable for Base {
     }
 
     fn move_local_z(&mut self, _: Real) {
-        vxunexpected!(); // it does not have meaning for point light
+        vx_unexpected!(); // it does not have meaning for point light
     }
 
     fn move_local_x(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn rotate_local_x(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn rotate_global_z(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn translate(&mut self, t: &cgmath::Vector3<Real>) {
@@ -122,7 +122,7 @@ impl Transferable for Base {
     }
 
     fn scale(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 }
 
@@ -156,7 +156,7 @@ impl Light for Base {
 
 impl Loadable for Base {
     fn new_with_gltf(_node: &gltf::Node, _eng: &Engine, _: &[u8]) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn new_with_gx3d(_: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
@@ -170,9 +170,9 @@ impl Loadable for Base {
         myself.set_strength(reader.read());
         #[cfg(debug_gx3d_light)]
         {
-            vxlogi!("Direction {:?}", &myself.location);
-            vxlogi!("Color {:?}", &myself.color);
-            vxlogi!("Strength {:?}", &myself.strength);
+            vx_log_i!("Direction {:?}", &myself.location);
+            vx_log_i!("Color {:?}", &myself.color);
+            vx_log_i!("Strength {:?}", &myself.strength);
         }
         return myself;
     }

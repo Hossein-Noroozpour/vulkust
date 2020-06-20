@@ -25,7 +25,7 @@ pub(crate) struct Layout {
 
 impl Layout {
     pub fn new_gbuff(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
-        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let descriptor_manager = vx_result!(descriptor_manager.read());
         let gbuff_descriptor_set_layout = descriptor_manager.get_gbuff_set_layout().clone();
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
@@ -42,7 +42,7 @@ impl Layout {
     }
 
     pub fn new_unlit(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
-        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let descriptor_manager = vx_result!(descriptor_manager.read());
         let unlit_descriptor_set_layout = descriptor_manager.get_gbuff_set_layout().clone();
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
@@ -58,7 +58,7 @@ impl Layout {
     }
 
     pub fn new_shadow_mapper(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
-        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let descriptor_manager = vx_result!(descriptor_manager.read());
         let gbuff_descriptor_set_layout = descriptor_manager.get_gbuff_set_layout().clone();
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
@@ -76,7 +76,7 @@ impl Layout {
     pub fn new_shadow_accumulator_directional(
         descriptor_manager: &Arc<RwLock<DescriptorManager>>,
     ) -> Self {
-        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let descriptor_manager = vx_result!(descriptor_manager.read());
         let shadow_accumulator_directional_descriptor_set_layout = descriptor_manager
             .get_shadow_accumulator_directional_set_layout()
             .clone();
@@ -86,7 +86,7 @@ impl Layout {
     }
 
     pub fn new_deferred(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
-        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let descriptor_manager = vx_result!(descriptor_manager.read());
         let deferred_descriptor_set_layout = descriptor_manager.get_deferred_set_layout().clone();
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
@@ -102,7 +102,7 @@ impl Layout {
     }
 
     pub fn new_ssao(descriptor_manager: &Arc<RwLock<DescriptorManager>>) -> Self {
-        let descriptor_manager = vxresult!(descriptor_manager.read());
+        let descriptor_manager = vx_result!(descriptor_manager.read());
         let ssao_descriptor_set_layout = descriptor_manager.get_ssao_set_layout().clone();
         let buffer_only_descriptor_set_layout =
             descriptor_manager.get_buffer_only_set_layout().clone();
@@ -124,7 +124,7 @@ impl Layout {
         let mut pipeline_layout_create_info = vk::PipelineLayoutCreateInfo::default();
         pipeline_layout_create_info.set_layout_count = layout.len() as u32;
         pipeline_layout_create_info.p_set_layouts = layout.as_ptr();
-        let vk_data = vxresult!(unsafe {
+        let vk_data = vx_result!(unsafe {
             descriptor_set_layouts[0]
                 .get_logical_device()
                 .get_data()
@@ -161,7 +161,7 @@ struct Cache {
 impl Cache {
     fn new(logical_device: Arc<LogicalDevice>) -> Self {
         let pipeline_cache_create_info = vk::PipelineCacheCreateInfo::default();
-        let vk_data = vxresult!(unsafe {
+        let vk_data = vx_result!(unsafe {
             logical_device
                 .get_data()
                 .create_pipeline_cache(&pipeline_cache_create_info, None)
@@ -200,7 +200,7 @@ impl Pipeline {
         pipeline_type: PipelineType,
         config: &Configurations,
     ) -> Self {
-        let device = vxresult!(descriptor_manager.read())
+        let device = vx_result!(descriptor_manager.read())
             .get_pool()
             .get_logical_device()
             .clone();
@@ -392,7 +392,7 @@ impl Pipeline {
                     shader_stages[i].stage = vk::ShaderStageFlags::FRAGMENT;
                 }
                 n @ _ => {
-                    vxlogf!("Stage {} is not implemented yet!", n);
+                    vx_log_f!("Stage {} is not implemented yet!", n);
                 }
             };
             match pipeline_type {
@@ -419,7 +419,7 @@ impl Pipeline {
 
         let vkdev = device.get_data();
 
-        let vk_data = vxresult!(unsafe {
+        let vk_data = vx_result!(unsafe {
             vkdev.create_graphics_pipelines(cache.vk_data, &[pipeline_create_info], None)
         });
         let vk_data = vk_data[0];

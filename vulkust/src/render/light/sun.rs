@@ -160,19 +160,19 @@ impl SunShadowMakerKernelData {
         for i in 0..self.last_render_data_index {
             let rd = &mut self.render_data[i];
             let ci = rd.cascade_index;
-            let model = vxunwrap!(&rd.model).upgrade();
+            let model = vx_unwrap!(&rd.model).upgrade();
             if model.is_none() {
                 continue;
             }
-            let model = vxunwrap!(model);
-            let model = vxresult!(model.read());
+            let model = vx_unwrap!(model);
+            let model = vx_result!(model.read());
             let mvp = &self.cascade_cameras[ci].vp * model.get_uniform().get_model();
             rd.uniform_buffer.update(&mvp, frame_number);
-            // vxloge!("{:?}", mvp);
+            // vx_log_e!("{:?}", mvp);
             let cmd = &mut self.frames_data[frame_number].cascades_cmds[ci];
             cmd.bind_shadow_mapper_light_descriptor(
                 shadower.get_shadow_map_descriptor_set(),
-                &*vxresult!(rd.uniform_buffer.get_buffer(frame_number).read()),
+                &*vx_result!(rd.uniform_buffer.get_buffer(frame_number).read()),
             );
             model.render_shadow(cmd, frame_number);
         }
@@ -216,7 +216,7 @@ impl Sun {
             eng.get_config()
                 .get_max_shadow_maker_kernel_render_data_count() as usize;
         let mut cascade_cameras = Vec::with_capacity(csc);
-        let geng = vxresult!(eng.get_gapi_engine().read());
+        let geng = vx_result!(eng.get_gapi_engine().read());
         let frames_count = geng.get_frames_count();
         let mut frames_data = Vec::with_capacity(frames_count);
         for _ in 0..frames_count {
@@ -244,7 +244,7 @@ impl Sun {
             cgmath::Vector3::new(0.0, 1.0, 0.0),
         );
         let mut kernels_data = Vec::with_capacity(num_cpus);
-        let mut buffer_manager = vxresult!(geng.get_buffer_manager().write());
+        let mut buffer_manager = vx_result!(geng.get_buffer_manager().write());
         for _ in 0..num_cpus {
             let kernel_data = Arc::new(Mutex::new(SunShadowMakerKernelData::new(
                 zero_located_view,
@@ -278,7 +278,7 @@ impl Sun {
         }
         let kernels_count = self.kernels_data.len();
         for ki in 0..kernels_count {
-            let smd = vxresult!(self.kernels_data[ki].lock());
+            let smd = vx_result!(self.kernels_data[ki].lock());
             let cc = self.cascade_cameras.len();
             for i in 0..cc {
                 let ccd = &mut self.cascade_cameras[i];
@@ -324,7 +324,7 @@ impl Object for Sun {
 
     fn set_name(&mut self, name: &str) {
         self.obj_base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
+        vx_unimplemented!(); //it must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {
@@ -396,7 +396,7 @@ impl Light for Sun {
 
 impl ShadowMaker for Sun {
     fn shadow(&self, m: &mut dyn Model, mc: &Arc<RwLock<dyn Model>>, kernel_index: usize) {
-        vxresult!(self.kernels_data[kernel_index].lock()).shadow(m, mc);
+        vx_result!(self.kernels_data[kernel_index].lock()).shadow(m, mc);
     }
 
     fn begin_secondary_commands(
@@ -407,13 +407,13 @@ impl ShadowMaker for Sun {
         kernel_index: usize,
         frame_number: usize,
     ) {
-        let mut kernel_data = vxresult!(self.kernels_data[kernel_index].lock());
+        let mut kernel_data = vx_result!(self.kernels_data[kernel_index].lock());
         kernel_data.update_camera_limits(&self.cascade_cameras, self.zero_located_view);
         kernel_data.begin_secondary_commands(geng, cmd_pool, sh, frame_number);
     }
 
     fn render_shadow_mapper(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
-        let mut kernel_data = vxresult!(self.kernels_data[kernel_index].lock());
+        let mut kernel_data = vx_result!(self.kernels_data[kernel_index].lock());
         kernel_data.update_camera_view_projection_matrices(&self.cascade_cameras);
         kernel_data.render_shadow_mapper(shadower, frame_number);
     }
@@ -436,7 +436,7 @@ impl ShadowMaker for Sun {
             pricmd.begin();
             shadower.begin_shadow_map_primary(pricmd, i);
             for kd in &self.kernels_data {
-                let kd = vxresult!(kd.lock());
+                let kd = vx_result!(kd.lock());
                 let cmd = &kd.frames_data[frame_number].cascades_cmds[i];
                 if cmd.get_has_render_record() {
                     pricmd.exe_cmd(cmd);
@@ -460,7 +460,7 @@ impl ShadowMaker for Sun {
             cmd.bind_pipeline(shadower.get_shadow_accumulator_directional_pipeline());
             cmd.bind_shadow_accumulator_directional_descriptor(
                 shadower.get_shadow_accumulator_directional_descriptor_set(),
-                &*vxresult!(self
+                &*vx_result!(self
                     .shadow_accumulator_uniform_buffer
                     .get_buffer(frame_number)
                     .read()),
@@ -525,41 +525,41 @@ impl Transferable for Sun {
 
     fn set_location(&mut self, _: &cgmath::Vector3<Real>) {
         // camera does not have location
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn get_location(&self) -> cgmath::Vector3<Real> {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn move_local_z(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn move_local_x(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn rotate_local_x(&mut self, _: Real) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn rotate_global_z(&mut self, _: Real) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn translate(&mut self, _: &cgmath::Vector3<Real>) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn scale(&mut self, _: Real) {
-        vxunexpected!();
+        vx_unexpected!();
     }
 }
 
 impl Loadable for Sun {
     fn new_with_gltf(_node: &gltf::Node, _eng: &Engine, _: &[u8]) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
@@ -579,10 +579,10 @@ impl Loadable for Sun {
         myself.strength = reader.read::<Real>();
         #[cfg(debug_gx3d)]
         {
-            vxlogi!("Matrix {:?}", &myself.zero_located_view);
-            vxlogi!("Quaternion {:?}", &r);
-            vxlogi!("Color {:?}", &myself.color);
-            vxlogi!("Strength {:?}", &myself.strength);
+            vx_log_i!("Matrix {:?}", &myself.zero_located_view);
+            vx_log_i!("Quaternion {:?}", &r);
+            vx_log_i!("Color {:?}", &myself.color);
+            vx_log_i!("Strength {:?}", &myself.strength);
         }
         return myself;
     }

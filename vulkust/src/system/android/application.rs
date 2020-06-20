@@ -62,7 +62,7 @@ impl Application {
                 }
             }
         }
-        vxloge!("Unexpected flow.");
+        vx_log_e!("Unexpected flow.");
     }
 
     pub fn set_renderer(&mut self, renderer: Arc<RwLock<RenderEngine>>) {
@@ -72,21 +72,21 @@ impl Application {
     pub fn run(&self) {
         loop {
             let _ = self.fetch_events();
-            vxresult!(vxunwrap!(&self.renderer).read()).update();
+            vx_result!(vx_unwrap!(&self.renderer).read()).update();
         }
     }
 
     fn handle_cmd(&self, cmd: i32) {
         match unsafe { transmute::<i8, AppCmd>(cmd as i8) } {
             AppCmd::InitWindow => {
-                vxlogi!("Window has been shown!");
+                vx_log_i!("Window has been shown!");
             }
             AppCmd::TermWindow => {
-                vxlogi!("Window has been terminated!");
+                vx_log_i!("Window has been terminated!");
             }
             c @ _ => {
                 let _ = c;
-                vxlogi!("event {:?} not handled.", c);
+                vx_log_i!("event {:?} not handled.", c);
             }
         }
     }
@@ -110,8 +110,8 @@ impl Application {
                             unsafe { input::AMotionEvent_getRawY(e, pi as usize) } / wh,
                         ),
                     }));
-                    let ge = vxresult!(self.gesture_translator.write()).receive(&e);
-                    let core_app = vxresult!(vxunwrap!(&self.core_app).read());
+                    let ge = vx_result!(self.gesture_translator.write()).receive(&e);
+                    let core_app = vx_result!(vx_unwrap!(&self.core_app).read());
                     core_app.on_event(e);
                     for e in ge {
                         core_app.on_event(e);
@@ -127,8 +127,8 @@ impl Application {
                             unsafe { input::AMotionEvent_getY(e, pi as usize) } / wh,
                         ),
                     }));
-                    let ge = vxresult!(self.gesture_translator.write()).receive(&e);
-                    let core_app = vxresult!(vxunwrap!(&self.core_app).read());
+                    let ge = vx_result!(self.gesture_translator.write()).receive(&e);
+                    let core_app = vx_result!(vx_unwrap!(&self.core_app).read());
                     core_app.on_event(e);
                     for e in ge {
                         core_app.on_event(e);
@@ -159,8 +159,8 @@ impl Application {
                         current,
                         delta: (current.0 - previous.0, current.1 - previous.1),
                     }));
-                    let ge = vxresult!(self.gesture_translator.write()).receive(&e);
-                    let core_app = vxresult!(vxunwrap!(&self.core_app).read());
+                    let ge = vx_result!(self.gesture_translator.write()).receive(&e);
+                    let core_app = vx_result!(vx_unwrap!(&self.core_app).read());
                     core_app.on_event(e);
                     for e in ge {
                         core_app.on_event(e);
@@ -170,9 +170,9 @@ impl Application {
                 _ => (),
             }
         } else if et & input::AInputEventType::Key as i32 != 0 {
-            vxunimplemented!();
+            vx_unimplemented!();
         } else {
-            vxunexpected!();
+            vx_unexpected!();
         }
 
         0
@@ -190,8 +190,8 @@ impl Application {
                 ((*source).process)(self.and_app, source);
             }
         }
-        let events = vxresult!(self.events.read()).clone();
-        vxresult!(self.events.write()).clear();
+        let events = vx_result!(self.events.read()).clone();
+        vx_result!(self.events.write()).clear();
         return events;
     }
 
@@ -202,19 +202,19 @@ impl Application {
 
 extern "C" fn handle_cmd(android_app: *mut AndroidApp, cmd: i32) {
     unsafe {
-        vxresult!(vxunwrap!(&(*android_app).os_app).read()).handle_cmd(cmd);
+        vx_result!(vx_unwrap!(&(*android_app).os_app).read()).handle_cmd(cmd);
     }
 }
 
 extern "C" fn handle_input(android_app: *mut AndroidApp, event: *mut input::AInputEvent) -> i32 {
     unsafe {
-        return vxresult!(vxunwrap!(&(*android_app).os_app).read()).handle_input(transmute(event));
+        return vx_result!(vx_unwrap!(&(*android_app).os_app).read()).handle_input(transmute(event));
     }
 }
 
 impl Drop for Application {
     fn drop(&mut self) {
-        vxloge!(
+        vx_log_e!(
             "Error unexpected deletion of Os Application this is a \
              TODO I will decide later how to do finall termination."
         );

@@ -47,11 +47,11 @@ extern "system" fn process_callback(
         }
     }
     if os_app == 0 {
-        vxloge!("Unexpected message for nullptr sys app uMsg is: {}", msg);
+        vx_log_e!("Unexpected message for nullptr sys app uMsg is: {}", msg);
         return unsafe { winapi::um::winuser::DefWindowProcW(hwnd, msg, w_param, l_param) };
     }
     let os_app: &'static Arc<RwLock<Application>> = unsafe { transmute(os_app) };
-    let os_app = vxresult!(os_app.read());
+    let os_app = vx_result!(os_app.read());
     let result = os_app.handle_message(hwnd, msg, w_param, l_param);
     return result;
 }
@@ -107,13 +107,13 @@ impl Application {
         if unsafe { winapi::um::winuser::RegisterClassExW(&wnd_class) }
             == 0 as winapi::shared::minwindef::ATOM
         {
-            vxlogf!("Could not register window class!");
+            vx_log_f!("Could not register window class!");
         }
         let mut window_rect: winapi::shared::windef::RECT = unsafe { zeroed() };
         let config = {
-            let myself = vxresult!(itself.read());
-            let core_app = vxunwrap!(&myself.core_app);
-            let core_app = vxresult!(core_app.read());
+            let myself = vx_result!(itself.read());
+            let core_app = vx_unwrap!(&myself.core_app);
+            let core_app = vx_result!(core_app.read());
             core_app.get_config().clone()
         };
         if !config.get_fullscreen() {
@@ -157,7 +157,7 @@ impl Application {
                     )
                 };
                 if result != winapi::um::winuser::DISP_CHANGE_SUCCESSFUL {
-                    vxloge!("ChangeDisplaySettingsW result: {:?}", result);
+                    vx_log_e!("ChangeDisplaySettingsW result: {:?}", result);
                 }
             }
             window_rect.right = screen_width;
@@ -190,7 +190,7 @@ impl Application {
             )
         };
         if window == null_mut() {
-            vxlogf!("Could not create window!");
+            vx_log_f!("Could not create window!");
         }
         if !config.get_fullscreen() {
             let x = (unsafe {
@@ -219,11 +219,11 @@ impl Application {
             winapi::um::winuser::SetFocus(window);
             winapi::um::winuser::UpdateWindow(window);
         }
-        let mut itself = vxresult!(itself.write());
+        let mut itself = vx_result!(itself.write());
         itself.instance = instance;
         itself.window = window;
         {
-            let mut data = vxresult!(itself.data.write());
+            let mut data = vx_result!(itself.data.write());
             data.width = window_rect.right as Real;
             data.width = window_rect.bottom as Real;
         }
@@ -255,19 +255,19 @@ impl Application {
                     return true;
                 }
             }
-            vxresult!(vxunwrap!(&self.core_app).write()).update();
-            vxresult!(vxunwrap!(&self.renderer).read()).update();
+            vx_result!(vx_unwrap!(&self.core_app).write()).update();
+            vx_result!(vx_unwrap!(&self.renderer).read()).update();
         }
     }
 
     pub fn get_mouse_position(&self) -> (Real, Real) {
-        let mut data = vxresult!(self.data.write());
+        let mut data = vx_result!(self.data.write());
         let mut p = winapi::shared::windef::POINT { x: 0, y: 0 };
         if unsafe { winapi::um::winuser::GetCursorPos(&mut p) } == 0 {
-            vxloge!("GetCursorPos failed");
+            vx_log_e!("GetCursorPos failed");
         }
         if unsafe { winapi::um::winuser::ScreenToClient(self.window, &mut p) } == 0 {
-            vxloge!("ScreenToClient failed");
+            vx_log_e!("ScreenToClient failed");
         }
         data.mouse_x = p.x as Real / data.height;
         data.mouse_y = p.y as Real / data.height;
@@ -340,48 +340,48 @@ impl Application {
                 let action = match we {
                     winapi::um::winuser::WM_KEYDOWN => event::ButtonAction::Press,
                     winapi::um::winuser::WM_KEYUP => event::ButtonAction::Release,
-                    _ => vxunexpected!(),
+                    _ => vx_unexpected!(),
                 };
                 let e = event::Event::new(event::Type::Button { button, action });
-                let core_app = vxunwrap!(&self.core_app);
-                let core_app = vxresult!(core_app.read());
+                let core_app = vx_unwrap!(&self.core_app);
+                let core_app = vx_result!(core_app.read());
                 core_app.on_event(e);
             }
             winapi::um::winuser::WM_RBUTTONDOWN => {
                 let action = event::ButtonAction::Press;
                 let button = event::Button::Mouse(event::Mouse::Right);
                 let e = event::Event::new(event::Type::Button { button, action });
-                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+                vx_result!(vx_unwrap!(&self.core_app).read()).on_event(e);
             }
             winapi::um::winuser::WM_LBUTTONDOWN => {
                 let action = event::ButtonAction::Press;
                 let button = event::Button::Mouse(event::Mouse::Left);
                 let e = event::Event::new(event::Type::Button { button, action });
-                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+                vx_result!(vx_unwrap!(&self.core_app).read()).on_event(e);
             }
             winapi::um::winuser::WM_MBUTTONDOWN => {
                 let action = event::ButtonAction::Press;
                 let button = event::Button::Mouse(event::Mouse::Middle);
                 let e = event::Event::new(event::Type::Button { button, action });
-                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+                vx_result!(vx_unwrap!(&self.core_app).read()).on_event(e);
             }
             winapi::um::winuser::WM_RBUTTONUP => {
                 let action = event::ButtonAction::Release;
                 let button = event::Button::Mouse(event::Mouse::Right);
                 let e = event::Event::new(event::Type::Button { button, action });
-                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+                vx_result!(vx_unwrap!(&self.core_app).read()).on_event(e);
             }
             winapi::um::winuser::WM_LBUTTONUP => {
                 let action = event::ButtonAction::Release;
                 let button = event::Button::Mouse(event::Mouse::Left);
                 let e = event::Event::new(event::Type::Button { button, action });
-                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+                vx_result!(vx_unwrap!(&self.core_app).read()).on_event(e);
             }
             winapi::um::winuser::WM_MBUTTONUP => {
                 let action = event::ButtonAction::Release;
                 let button = event::Button::Mouse(event::Mouse::Middle);
                 let e = event::Event::new(event::Type::Button { button, action });
-                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+                vx_result!(vx_unwrap!(&self.core_app).read()).on_event(e);
             }
             winapi::um::winuser::WM_MOUSEWHEEL => {
                 //short wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
@@ -391,7 +391,7 @@ impl Application {
             }
             winapi::um::winuser::WM_MOUSEMOVE => {
                 let previous = {
-                    let data = vxresult!(self.data.read());
+                    let data = vx_result!(self.data.read());
                     (data.mouse_x, data.mouse_y)
                 };
                 let current = self.get_mouse_position();
@@ -402,7 +402,7 @@ impl Application {
                     delta,
                 };
                 let e = event::Event::new(event::Type::Move(m));
-                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+                vx_result!(vx_unwrap!(&self.core_app).read()).on_event(e);
             }
             winapi::um::winuser::WM_SIZE => {
                 //if ((prepared) && (wParam != SIZE_MINIMIZED))

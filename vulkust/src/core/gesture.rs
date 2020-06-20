@@ -151,7 +151,7 @@ impl TouchDragTranslator {
                         delta,
                     } => {
                         if *index != self.index {
-                            vxunexpected!();
+                            vx_unexpected!();
                         }
                         self.current = *current;
                         return Some(Event::new(EventType::Touch(Touch::Gesture {
@@ -171,7 +171,7 @@ impl TouchDragTranslator {
                 },
                 _ => (),
             },
-            State::InMiddle => vxunexpected!(),
+            State::InMiddle => vx_unexpected!(),
             State::Ended => match &e.event_type {
                 EventType::Touch(t) => match t {
                     Touch::Raw {
@@ -207,7 +207,7 @@ impl TouchDragTranslator {
                 },
                 _ => (),
             },
-            State::Canceled => vxunexpected!(),
+            State::Canceled => vx_unexpected!(),
         }
         return None;
     }
@@ -290,8 +290,8 @@ impl TouchScaleTranslator {
                             delta: _,
                         } => {
                             self.fingers.insert(*index, *current);
-                            let f1 = vxunwrap!(self.fingers.get(&self.first));
-                            let f2 = vxunwrap!(self.fingers.get(&self.second));
+                            let f1 = vx_unwrap!(self.fingers.get(&self.first));
+                            let f2 = vx_unwrap!(self.fingers.get(&self.second));
                             let csx = f1.0 - f2.0;
                             let csy = f1.1 - f2.1;
                             let cs = (csx * csx + csy * csy).sqrt();
@@ -329,8 +329,8 @@ impl TouchScaleTranslator {
                         }
                         fi += 1;
                     }
-                    let f1 = vxunwrap!(self.fingers.get(&self.first));
-                    let f2 = vxunwrap!(self.fingers.get(&self.second));
+                    let f1 = vx_unwrap!(self.fingers.get(&self.first));
+                    let f2 = vx_unwrap!(self.fingers.get(&self.second));
                     let csx = f1.0 - f2.0;
                     let csy = f1.1 - f2.1;
                     self.current = (csx * csx + csy * csy).sqrt();
@@ -351,7 +351,7 @@ impl TouchScaleTranslator {
                     })));
                 }
             }
-            _ => vxunexpected!(),
+            _ => vx_unexpected!(),
         }
         return None;
     }

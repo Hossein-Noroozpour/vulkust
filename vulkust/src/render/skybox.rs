@@ -57,14 +57,14 @@ impl Manager {
                 return skybox;
             }
         }
-        let gx3d_table = vxunwrap!(self.gx3d_table.as_mut());
+        let gx3d_table = vx_unwrap!(self.gx3d_table.as_mut());
         gx3d_table.goto(id);
         let reader = gx3d_table.get_mut_reader();
         let t = reader.read_type_id();
         let skybox: Arc<RwLock<dyn Skybox>> = if t == TypeId::Basic as u8 {
             Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
         } else {
-            vxunexpected!()
+            vx_unexpected!()
         };
         self.skyboxes.insert(id, Arc::downgrade(&skybox));
         return skybox;
@@ -74,8 +74,8 @@ impl Manager {
     where
         M: 'static + DefaultSkybox,
     {
-        let eng = vxunwrap!(vxunwrap!(&self.engine).upgrade());
-        let eng = vxresult!(eng.read());
+        let eng = vx_unwrap!(vx_unwrap!(&self.engine).upgrade());
+        let eng = vx_result!(eng.read());
         let m = M::default(&*eng);
         let id = m.get_id();
         let m1 = Arc::new(RwLock::new(m));
@@ -118,7 +118,7 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.obj_base.set_name(name);
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn disable_rendering(&mut self) {
@@ -136,7 +136,7 @@ impl Object for Base {
 
 impl Loadable for Base {
     fn new_with_gltf(_node: &gltf::Node, _engine: &Engine, _data: &[u8]) -> Self {
-        vxunimplemented!()
+        vx_unimplemented!()
     }
 
     fn new_with_gx3d(eng: &Engine, reader: &mut Gx3DReader, my_id: Id) -> Self {
@@ -144,15 +144,15 @@ impl Loadable for Base {
         let uniform = Uniform::default();
         let texture_id: Id = reader.read();
         let astmgr = eng.get_asset_manager();
-        let mesh = vxresult!(astmgr.get_mesh_manager().write()).create_cube(1.0);
-        let texture = vxresult!(astmgr.get_texture_manager().write()).load_gx3d(eng, texture_id);
+        let mesh = vx_result!(astmgr.get_mesh_manager().write()).create_cube(1.0);
+        let texture = vx_result!(astmgr.get_texture_manager().write()).load_gx3d(eng, texture_id);
         let mut material = Material::default(eng);
         material.set_base_color_texture(texture);
         material.finalize_textures_change(eng);
-        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
-        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+        let gapi_engine = vx_result!(eng.get_gapi_engine().read());
+        let uniform_buffer = vx_result!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
+        let mut descriptor_manager = vx_result!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         Self {
             obj_base,
@@ -173,7 +173,7 @@ impl Skybox for Base {
         let mvp = mvp * cgmath::Matrix4::from_scale(s);
         self.uniform.set_model_view_projection(mvp);
         self.uniform_buffer.update(&self.uniform, frame_number);
-        vxresult!(self.mesh.write()).update(frame_number);
+        vx_result!(self.mesh.write()).update(frame_number);
         self.material.update_uniform_buffer(frame_number);
     }
 
@@ -183,21 +183,21 @@ impl Skybox for Base {
 
     fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let buffer = self.uniform_buffer.get_buffer(frame_number);
-        cmd.bind_unlit_model_descriptor(&*self.descriptor_set, &*vxresult!(buffer.read()));
+        cmd.bind_unlit_model_descriptor(&*self.descriptor_set, &*vx_result!(buffer.read()));
         self.material.bind_unlit(cmd, frame_number);
-        vxresult!(self.mesh.read()).render_unlit(cmd, frame_number);
+        vx_result!(self.mesh.read()).render_unlit(cmd, frame_number);
     }
 }
 
 impl DefaultSkybox for Base {
     fn default(eng: &Engine) -> Self {
-        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
-        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+        let gapi_engine = vx_result!(eng.get_gapi_engine().read());
+        let uniform_buffer = vx_result!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
-        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
+        let mut descriptor_manager = vx_result!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let astmgr = eng.get_asset_manager();
-        let mesh = vxresult!(astmgr.get_mesh_manager().write()).create_cube(1.0);
+        let mesh = vx_result!(astmgr.get_mesh_manager().write()).create_cube(1.0);
         Self {
             obj_base: ObjectBase::new(),
             uniform: Uniform::default(),

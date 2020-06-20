@@ -32,8 +32,8 @@ impl Manager {
     where
         L: 'static + Light + DefaultLighting,
     {
-        let eng = vxunwrap!(vxunwrap!(&self.engine).upgrade());
-        let eng = vxresult!(eng.read());
+        let eng = vx_unwrap!(vx_unwrap!(&self.engine).upgrade());
+        let eng = vx_result!(eng.read());
         let result = L::default(&*eng);
         let id = result.get_id();
         let result = Arc::new(RwLock::new(result));
@@ -48,7 +48,7 @@ impl Manager {
                 return light;
             }
         }
-        let table = vxunwrap!(&mut self.gx3d_table);
+        let table = vx_unwrap!(&mut self.gx3d_table);
         table.goto(id);
         let reader: &mut Gx3DReader = table.get_mut_reader();
         let type_id = reader.read_type_id();
@@ -60,12 +60,12 @@ impl Manager {
             }
         } else if type_id == TypeId::Lamp as u8 {
             if reader.read_bool() {
-                vxunimplemented!();
+                vx_unimplemented!();
             } else {
                 Arc::new(RwLock::new(PointBase::new_with_gx3d(eng, reader, id)))
             }
         } else {
-            vxunexpected!();
+            vx_unexpected!();
         };
         self.lights.insert(id, Arc::downgrade(&result));
         return result;

@@ -127,7 +127,7 @@ impl Manager {
     }
 
     pub fn load_gltf(&mut self, n: &gltf::Node, eng: &Engine) -> Arc<RwLock<dyn Camera>> {
-        let c = vxunwrap!(n.camera());
+        let c = vx_unwrap!(n.camera());
         let data: Vec<u8> = Vec::new();
         let camera = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
@@ -141,9 +141,9 @@ impl Manager {
                 camera
             }
         };
-        let id = vxresult!(camera.read()).get_id();
+        let id = vx_result!(camera.read()).get_id();
         #[cfg(debug_mode)]
-        vxlogi!("Camera is: {:?}", &camera);
+        vx_log_i!("Camera is: {:?}", &camera);
         self.cameras.insert(id, Arc::downgrade(&camera));
         if let Some(name) = n.name() {
             let name = name.to_string();
@@ -158,7 +158,7 @@ impl Manager {
                 return camera;
             }
         }
-        let table = vxunwrap!(&mut self.gx3d_table);
+        let table = vx_unwrap!(&mut self.gx3d_table);
         table.goto(id);
         let reader: &mut Gx3DReader = table.get_mut_reader();
         let type_id = reader.read_type_id();
@@ -167,7 +167,7 @@ impl Manager {
         } else if type_id == TypeId::Orthographic as u8 {
             Arc::new(RwLock::new(Orthographic::new_with_gx3d(engine, reader, id)))
         } else {
-            vxunexpected!();
+            vx_unexpected!();
         };
         self.cameras.insert(id, Arc::downgrade(&camera));
         camera
@@ -177,8 +177,8 @@ impl Manager {
     where
         C: 'static + DefaultCamera,
     {
-        let eng = vxunwrap!(vxunwrap!(&self.engine).upgrade());
-        let eng = vxresult!(eng.read());
+        let eng = vx_unwrap!(vx_unwrap!(&self.engine).upgrade());
+        let eng = vx_result!(eng.read());
         let camera = C::default(&*eng);
         let id = camera.get_id();
         if let Some(name) = camera.get_name() {
@@ -209,8 +209,8 @@ impl Base {
     }
 
     pub fn new_with_obj_base(eng: &Engine, obj_base: ObjectBase) -> Self {
-        let os_app = vxunwrap!(eng.get_os_app().upgrade());
-        let os_app = vxresult!(os_app.read());
+        let os_app = vx_unwrap!(eng.get_os_app().upgrade());
+        let os_app = vx_result!(os_app.read());
         let mut uniform = Uniform::new();
         uniform.near_aspect_ratio_reserved.y = os_app.get_window_aspect_ratio();
         Self {
@@ -247,7 +247,7 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.obj_base.set_name(name);
-        vxunimplemented!(); // It must update corresponding manager
+        vx_unimplemented!(); // It must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {
@@ -337,8 +337,8 @@ impl Transferable for Base {
 
 impl Loadable for Base {
     fn new_with_gltf(node: &gltf::Node, eng: &Engine, _: &[u8]) -> Self {
-        let (near, far) = match vxunwrap!(node.camera()).projection() {
-            gltf::camera::Projection::Perspective(p) => (p.znear(), vxunwrap!(p.zfar())),
+        let (near, far) = match vx_unwrap!(node.camera()).projection() {
+            gltf::camera::Projection::Perspective(p) => (p.znear(), vx_unwrap!(p.zfar())),
             gltf::camera::Projection::Orthographic(p) => (p.znear(), p.zfar()),
         };
         let mut myself = Base::new(eng);
@@ -360,11 +360,11 @@ impl Loadable for Base {
         myself.uniform.position_far.w = -reader.read::<Real>();
         myself.set_orientation(&cgmath::Quaternion::new(r[0], r[1], r[2], r[3]));
         #[cfg(debug_gx3d)]
-        vxlogi!("Camera position is: {:?}", &myself.uniform.position_far);
+        vx_log_i!("Camera position is: {:?}", &myself.uniform.position_far);
         #[cfg(debug_gx3d)]
-        vxlogi!("Camera quaternion is: {:?}", &r);
+        vx_log_i!("Camera quaternion is: {:?}", &r);
         #[cfg(debug_gx3d)]
-        vxlogi!("Camera view matrix is: {:?}", &myself.uniform.view);
+        vx_log_i!("Camera view matrix is: {:?}", &myself.uniform.view);
         return myself;
     }
 }
@@ -375,11 +375,11 @@ impl Camera for Base {
     }
 
     fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[cgmath::Vector3<Real>; 4]> {
-        vxlogf!("Base camera does not implement cascading.");
+        vx_log_f!("Base camera does not implement cascading.");
     }
 
     fn is_in_frustum(&self, _: Real, _: &cgmath::Vector3<Real>) -> bool {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn update_uniform(&self, uniform: &mut Uniform) {
@@ -387,7 +387,7 @@ impl Camera for Base {
     }
 
     fn get_distance(&self, _: &cgmath::Vector3<Real>) -> Real {
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     fn get_uniform(&self) -> &Uniform {
@@ -498,7 +498,7 @@ impl Object for Perspective {
 
     fn set_name(&mut self, name: &str) {
         self.base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
+        vx_unimplemented!(); //it must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {
@@ -516,11 +516,11 @@ impl Object for Perspective {
 
 impl Loadable for Perspective {
     fn new_with_gltf(n: &gltf::Node, eng: &Engine, data: &[u8]) -> Self {
-        let c = vxunwrap!(n.camera());
+        let c = vx_unwrap!(n.camera());
         let p = match c.projection() {
             gltf::camera::Projection::Perspective(p) => p,
             gltf::camera::Projection::Orthographic(_) => {
-                vxlogf!("Type of camera isn't perspective.")
+                vx_log_f!("Type of camera isn't perspective.")
             }
         };
         let base = Base::new_with_gltf(n, eng, data);
@@ -534,7 +534,7 @@ impl Loadable for Perspective {
         let mut myself = Self::new_with_base(base);
         myself.set_fov_vertical(reader.read());
         #[cfg(debug_gx3d)]
-        vxlogi!("{:?}", &myself.base.uniform);
+        vx_log_i!("{:?}", &myself.base.uniform);
         return myself;
     }
 }
@@ -585,7 +585,7 @@ impl Camera for Perspective {
         #[cfg(debug_mode)]
         {
             if sections_count < 1 {
-                vxlogf!("sections_count must be greater than zero.");
+                vx_log_f!("sections_count must be greater than zero.");
             }
         }
 
@@ -798,10 +798,10 @@ impl Object for Orthographic {
 
 impl Loadable for Orthographic {
     fn new_with_gltf(n: &gltf::Node, eng: &Engine, data: &[u8]) -> Self {
-        let c = vxunwrap!(n.camera());
+        let c = vx_unwrap!(n.camera());
         let o = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
-                vxlogf!("Type of camera isn't perspective.")
+                vx_log_f!("Type of camera isn't perspective.")
             }
             gltf::camera::Projection::Orthographic(o) => o,
         };
@@ -861,7 +861,7 @@ impl Camera for Orthographic {
         #[cfg(debug_mode)]
         {
             if sections_count < 1 {
-                vxlogf!("sections_count must be greater than zero.");
+                vx_log_f!("sections_count must be greater than zero.");
             }
         }
         let mut result = vec![[cgmath::Vector3::new(0.0, 0.0, 0.0); 4]; sections_count + 1];

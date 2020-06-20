@@ -33,7 +33,7 @@ impl Transparent {
                 Format::RgbaFloat,
                 AttachmentType::ColorGBuffer,
             )),
-            vxresult!(g_buffer_filler.get_depth_texture().read())
+            vx_result!(g_buffer_filler.get_depth_texture().read())
                 .get_image_view()
                 .clone(),
         ];
@@ -41,7 +41,7 @@ impl Transparent {
         let color_texture = texmgr.create_2d_with_view_sampler(buffers[0].clone(), sampler.clone());
         let render_pass = Arc::new(RenderPass::new(buffers.clone(), true, true));
         let framebuffer = Arc::new(Framebuffer::new(buffers, render_pass.clone()));
-        let pipeline = vxresult!(eng.get_pipeline_manager().write()).create(
+        let pipeline = vx_result!(eng.get_pipeline_manager().write()).create(
             render_pass.clone(),
             PipelineType::TransparentPBR,
             config,

@@ -75,7 +75,7 @@ impl Pipeline {
             // PipelineType::ShadowAccumulatorDirectional => {
             //     include_shader!("shadow-accumulator-directional.vert")
             // }
-            _ => vxunimplemented!(),
+            _ => vx_unimplemented!(),
         };
         let frag_bytes: &'static [u8] = match pipeline_type {
             PipelineType::GBuffer => include_shader!("g-buffers-filler", "frag"),
@@ -84,7 +84,7 @@ impl Pipeline {
             // PipelineType::ShadowAccumulatorDirectional => {
             //     include_shader!("shadow-accumulator-directional.frag")
             // }
-            _ => vxunimplemented!(),
+            _ => vx_unimplemented!(),
         };
         let input_element_descs = [
             winapi::um::d3d12::D3D12_INPUT_ELEMENT_DESC {

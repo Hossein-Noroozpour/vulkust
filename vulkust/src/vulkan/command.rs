@@ -77,7 +77,7 @@ impl Buffer {
         cmd_buf_allocate_info.command_buffer_count = 1;
         let vk_device = pool.logical_device.get_data().clone();
         let vk_data =
-            vxresult!(unsafe { vk_device.allocate_command_buffers(&cmd_buf_allocate_info) });
+            vx_result!(unsafe { vk_device.allocate_command_buffers(&cmd_buf_allocate_info) });
         let vk_data = vk_data[0];
         let pool = pool.clone();
         Self {
@@ -121,12 +121,12 @@ impl Buffer {
         #[cfg(debug_mode)]
         {
             if self.is_secondary {
-                vxunexpected!();
+                vx_unexpected!();
             }
         }
         self.has_render_record = false;
         let cmd_buf_info = vk::CommandBufferBeginInfo::default();
-        vxresult!(unsafe {
+        vx_result!(unsafe {
             self.vk_device
                 .begin_command_buffer(self.vk_data, &cmd_buf_info)
         });
@@ -136,7 +136,7 @@ impl Buffer {
         #[cfg(debug_mode)]
         {
             if !self.is_secondary {
-                vxunexpected!();
+                vx_unexpected!();
             }
         }
         self.has_render_record = false;
@@ -148,7 +148,7 @@ impl Buffer {
         let mut cmd_buf_info = vk::CommandBufferBeginInfo::default();
         cmd_buf_info.p_inheritance_info = &inheritance_info;
         cmd_buf_info.flags = vk::CommandBufferUsageFlags::RENDER_PASS_CONTINUE;
-        vxresult!(unsafe {
+        vx_result!(unsafe {
             self.vk_device
                 .begin_command_buffer(self.vk_data, &cmd_buf_info)
         });
@@ -232,12 +232,12 @@ impl Buffer {
 
     // pub(crate) fn flush(&mut self) {
     //     let fence = Fence::new(self.pool.logical_device.clone());
-    //     vxresult!(unsafe { self.vk_device.EndCommandBuffer(self.vk_data));
+    //     vx_result!(unsafe { self.vk_device.EndCommandBuffer(self.vk_data));
     //     let mut submit_info = vk::VkSubmitInfo::default();
     //     submit_info.sType = vk::VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
     //     submit_info.commandBufferCount = 1;
     //     submit_info.pCommandBuffers = &self.vk_data;
-    //     vxresult!(unsafe { self.vk_device.QueueSubmit(
+    //     vx_result!(unsafe { self.vk_device.QueueSubmit(
     //         self.pool.logical_device.vk_graphic_queue,
     //         1,
     //         &submit_info,
@@ -253,7 +253,7 @@ impl Buffer {
     }
 
     pub(crate) fn end(&mut self) {
-        vxresult!(unsafe { self.vk_device.end_command_buffer(self.vk_data) });
+        vx_result!(unsafe { self.vk_device.end_command_buffer(self.vk_data) });
     }
 
     pub(crate) fn bind_pipeline(&mut self, p: &Pipeline) {
@@ -266,7 +266,7 @@ impl Buffer {
     }
 
     pub(crate) fn bind_vertex_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
-        let buffer = vxresult!(buffer.read());
+        let buffer = vx_result!(buffer.read());
         let vkbuff = buffer.get_data();
         let offset = buffer.get_allocated_memory().get_offset() as vk::DeviceSize;
         unsafe {
@@ -276,7 +276,7 @@ impl Buffer {
     }
 
     pub(crate) fn bind_index_buffer(&mut self, buffer: &Arc<RwLock<BufBuffer>>) {
-        let buffer = vxresult!(buffer.read());
+        let buffer = vx_result!(buffer.read());
         let vkbuff = buffer.get_data();
         let offset = buffer.get_allocated_memory().get_offset() as vk::DeviceSize;
         unsafe {
@@ -605,7 +605,7 @@ impl Pool {
             }
         }
         vk_cmd_pool_info.flags = vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER | flags;
-        let vk_data = vxresult!(unsafe {
+        let vk_data = vx_result!(unsafe {
             logical_device
                 .get_data()
                 .create_command_pool(&vk_cmd_pool_info, None)

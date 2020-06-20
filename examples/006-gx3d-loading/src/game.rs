@@ -64,10 +64,11 @@ impl CoreAppTrait for MyGame {
     }
 
     fn initialize(&mut self) {
-        let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-        let mut scene_manager = vxresult!(renderer.get_asset_manager().get_scene_manager().write());
+        let renderer = vx_result!(vx_unwrap!(&self.renderer).read());
+        let mut scene_manager =
+            vx_result!(renderer.get_asset_manager().get_scene_manager().write());
         let scene = scene_manager.load_gx3d(data_gx3d::Scene::SceneGameSplash as Id);
-        self.camera = vxunwrap!(vxresult!(scene.read()).get_active_camera()).upgrade();
+        self.camera = vx_unwrap!(vx_result!(scene.read()).get_active_camera()).upgrade();
         self.scene = Some(scene);
     }
 
@@ -79,8 +80,8 @@ impl CoreAppTrait for MyGame {
                     current: _,
                     delta,
                 } => {
-                    if vxresult!(self.keys_state.read()).lm {
-                        let mut camera = vxresult!(vxunwrap!(&self.camera).write());
+                    if vx_result!(self.keys_state.read()).lm {
+                        let mut camera = vx_result!(vx_unwrap!(&self.camera).write());
                         camera.rotate_local_x(delta.1 * 2.5);
                         camera.rotate_global_z(delta.0 * 2.5);
                     }
@@ -90,27 +91,27 @@ impl CoreAppTrait for MyGame {
             EventType::Button { button, action } => match action {
                 ButtonAction::Press => match button {
                     Button::Keyboard(k) => match k {
-                        Keyboard::W => vxresult!(self.keys_state.write()).w = true,
-                        Keyboard::A => vxresult!(self.keys_state.write()).a = true,
-                        Keyboard::S => vxresult!(self.keys_state.write()).s = true,
-                        Keyboard::D => vxresult!(self.keys_state.write()).d = true,
+                        Keyboard::W => vx_result!(self.keys_state.write()).w = true,
+                        Keyboard::A => vx_result!(self.keys_state.write()).a = true,
+                        Keyboard::S => vx_result!(self.keys_state.write()).s = true,
+                        Keyboard::D => vx_result!(self.keys_state.write()).d = true,
                         _ => (),
                     },
                     Button::Mouse(m) => match m {
-                        Mouse::Left => vxresult!(self.keys_state.write()).lm = true,
+                        Mouse::Left => vx_result!(self.keys_state.write()).lm = true,
                         _ => (),
                     },
                 },
                 ButtonAction::Release => match button {
                     Button::Keyboard(k) => match k {
-                        Keyboard::W => vxresult!(self.keys_state.write()).w = false,
-                        Keyboard::A => vxresult!(self.keys_state.write()).a = false,
-                        Keyboard::S => vxresult!(self.keys_state.write()).s = false,
-                        Keyboard::D => vxresult!(self.keys_state.write()).d = false,
+                        Keyboard::W => vx_result!(self.keys_state.write()).w = false,
+                        Keyboard::A => vx_result!(self.keys_state.write()).a = false,
+                        Keyboard::S => vx_result!(self.keys_state.write()).s = false,
+                        Keyboard::D => vx_result!(self.keys_state.write()).d = false,
                         _ => (),
                     },
                     Button::Mouse(m) => match m {
-                        Mouse::Left => vxresult!(self.keys_state.write()).lm = false,
+                        Mouse::Left => vx_result!(self.keys_state.write()).lm = false,
                         _ => (),
                     },
                 },
@@ -130,7 +131,7 @@ impl CoreAppTrait for MyGame {
                             current: _,
                             delta,
                         } => {
-                            let mut camera = vxresult!(vxunwrap!(&self.camera).write());
+                            let mut camera = vx_result!(vx_unwrap!(&self.camera).write());
                             camera.rotate_local_x(delta.1 * 1.5);
                             camera.rotate_global_z(delta.0 * 1.5);
                         }
@@ -145,12 +146,12 @@ impl CoreAppTrait for MyGame {
     }
 
     fn update(&mut self) {
-        let keys_state = vxresult!(self.keys_state.read());
+        let keys_state = vx_result!(self.keys_state.read());
         if keys_state.w || keys_state.a || keys_state.s || keys_state.d {
-            let mut camera = vxresult!(vxunwrap!(&self.camera).write());
+            let mut camera = vx_result!(vx_unwrap!(&self.camera).write());
             let delta = {
-                let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-                let n = vxresult!(renderer.get_timing().read())
+                let renderer = vx_result!(vx_unwrap!(&self.renderer).read());
+                let n = vx_result!(renderer.get_timing().read())
                     .length_of_previous_frame
                     .as_nanos();
                 (n as f64 / 1_000_000_000.0) as f32

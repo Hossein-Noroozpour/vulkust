@@ -28,7 +28,7 @@ impl Application {
     }
 
     pub fn update(&self) {
-        vxresult!(vxunwrap!(self.renderer).read()).update();
+        vx_result!(vx_unwrap!(self.renderer).read()).update();
     }
 
     pub fn get_window_aspect_ratio(&self) -> f32 {
@@ -48,28 +48,28 @@ pub extern "C" fn vulkust_deallocate(context: *mut c_void) {
     unsafe {
         let _ = Box::from_raw(os_app);
     }
-    vxlogi!("Reached");
+    vx_log_i!("Reached");
 }
 
 #[no_mangle]
 pub extern "C" fn vulkust_set_view(context: *mut c_void, view: *mut c_void) {
     let os_app: &'static Arc<RwLock<Application>> = unsafe { transmute(context) };
-    vxresult!(os_app.write()).view = view;
-    let core_app = vxresult!(os_app.read()).core_app.clone();
+    vx_result!(os_app.write()).view = view;
+    let core_app = vx_result!(os_app.read()).core_app.clone();
     let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), os_app)));
     let renderer_w = Arc::downgrade(&renderer);
-    vxresult!(renderer.write()).set_myself(renderer_w);
-    vxresult!(os_app.write()).renderer = Some(renderer.clone());
-    let mut core_app = vxresult!(core_app.write());
+    vx_result!(renderer.write()).set_myself(renderer_w);
+    vx_result!(os_app.write()).renderer = Some(renderer.clone());
+    let mut core_app = vx_result!(core_app.write());
     core_app.set_os_app(os_app.clone());
     core_app.set_renderer(renderer);
     core_app.initialize();
-    vxlogi!("Reached");
+    vx_log_i!("Reached");
 }
 
 #[no_mangle]
 pub extern "C" fn vulkust_render(context: *mut c_void) {
     let os_app: &'static Arc<RwLock<Application>> = unsafe { transmute(context) };
-    let os_app = vxresult!(os_app.read());
+    let os_app = vx_result!(os_app.read());
     os_app.update();
 }

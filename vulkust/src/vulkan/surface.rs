@@ -15,7 +15,7 @@ impl Surface {
     #[cfg(target_os = "ios")]
     pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
-        let os_app = vxresult!(os_app.read());
+        let os_app = vx_result!(os_app.read());
         let mut create_info = vk::VkIOSSurfaceCreateInfoMVK::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_IOS_SURFACE_CREATE_INFO_MVK;
@@ -35,7 +35,7 @@ impl Surface {
     #[cfg(target_os = "macos")]
     pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
-        let os_app = vxresult!(os_app.read());
+        let os_app = vx_result!(os_app.read());
         let mut create_info = vk::VkMacOSSurfaceCreateInfoMVK::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
@@ -55,7 +55,7 @@ impl Surface {
     #[cfg(target_os = "android")]
     pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let mut vk_data = 0 as vk::VkSurfaceKHR;
-        let os_app = vxresult!(os_app.read());
+        let os_app = vx_result!(os_app.read());
         let mut create_info = vk::VkAndroidSurfaceCreateInfoKHR::default();
         create_info.structure_type =
             vk::VkStructureType::VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
@@ -75,12 +75,12 @@ impl Surface {
     #[cfg(target_os = "linux")]
     pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         use ash::extensions::khr::XcbSurface;
-        let os_app = vxresult!(os_app.read());
+        let os_app = vx_result!(os_app.read());
         let loader = XcbSurface::new(instance.get_entry(), instance.get_data());
         let create_info = vk::XcbSurfaceCreateInfoKHR::builder()
             .window(os_app.get_window())
             .connection(unsafe { transmute(os_app.get_connection()) });
-        let vk_data = vxresult!(unsafe { loader.create_xcb_surface(&create_info, None) });
+        let vk_data = vx_result!(unsafe { loader.create_xcb_surface(&create_info, None) });
         let loader = SurfaceLoader::new(instance.get_entry(), instance.get_data());
         Self {
             instance: instance.clone(),
@@ -92,12 +92,12 @@ impl Surface {
     #[cfg(target_os = "windows")]
     pub(super) fn new(instance: &Arc<Instance>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         use ash::extensions::khr::Win32Surface;
-        let os_app = vxresult!(os_app.read());
+        let os_app = vx_result!(os_app.read());
         let create_info = vk::Win32SurfaceCreateInfoKHR::builder()
             .hinstance(unsafe { transmute(os_app.get_instance()) })
             .hwnd(unsafe { transmute(os_app.get_window()) });
         let loader = Win32Surface::new(instance.get_entry(), instance.get_data());
-        let vk_data = vxresult!(unsafe { loader.create_win32_surface(&create_info, None) });
+        let vk_data = vx_result!(unsafe { loader.create_win32_surface(&create_info, None) });
         let loader = SurfaceLoader::new(instance.get_entry(), instance.get_data());
         Self {
             instance: instance.clone(),

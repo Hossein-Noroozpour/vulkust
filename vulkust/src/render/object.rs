@@ -28,11 +28,11 @@ pub trait Transferable {
     fn rotate_global_z(&mut self, degree: Real);
     fn translate(&mut self, _: &cgmath::Vector3<Real>) {
         // todo temporary
-        vxunimplemented!();
+        vx_unimplemented!();
     }
     fn scale(&mut self, _: Real) {
         // todo temporary
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }
 

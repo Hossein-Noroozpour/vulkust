@@ -22,7 +22,7 @@ pub struct AndroidPollSource {
 
 impl Drop for AndroidPollSource {
     fn drop(&mut self) {
-        vxloge!("Unexpected deletion of AndroidPollSource struct.");
+        vx_log_e!("Unexpected deletion of AndroidPollSource struct.");
     }
 }
 
@@ -60,7 +60,7 @@ pub struct AndroidApp {
 
 impl Drop for AndroidApp {
     fn drop(&mut self) {
-        vxloge!("Unexpected deletion of AndroidApp struct.");
+        vx_log_e!("Unexpected deletion of AndroidApp struct.");
     }
 }
 
@@ -96,14 +96,14 @@ pub enum AppCmd {
 
 unsafe extern "C" fn free_saved_state(android_app: *mut AndroidApp) {
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
-    //    vxloge!("locked");
+    //    vx_log_e!("locked");
     if (*android_app).saved_state != ptr::null_mut() {
         libc::free((*android_app).saved_state);
         (*android_app).saved_state = ptr::null_mut();
         (*android_app).saved_state_size = 0;
     }
     libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-    //    vxloge!("unlocked");
+    //    vx_log_e!("unlocked");
 }
 
 unsafe extern "C" fn android_app_read_cmd(android_app: *mut AndroidApp) -> i8 {
@@ -120,7 +120,7 @@ unsafe extern "C" fn android_app_read_cmd(android_app: *mut AndroidApp) -> i8 {
         }
         return cmd as i8;
     } else {
-        vxloge!("No data on command pipe!");
+        vx_log_e!("No data on command pipe!");
     }
     0
 }
@@ -128,15 +128,15 @@ unsafe extern "C" fn android_app_read_cmd(android_app: *mut AndroidApp) -> i8 {
 unsafe extern "C" fn android_app_pre_exec_cmd(android_app: *mut AndroidApp, cmd: AppCmd) {
     match cmd {
         AppCmd::InputChanged => {
-            vxlogi!("AppCmdInputChanged");
+            vx_log_i!("AppCmdInputChanged");
             libc::pthread_mutex_lock(&mut (*android_app).mutex);
-            //            vxloge!("locked");
+            //            vx_log_e!("locked");
             if (*android_app).input_queue != ptr::null_mut() {
                 input::AInputQueue_detachLooper((*android_app).input_queue);
             }
             (*android_app).input_queue = (*android_app).pending_input_queue;
             if (*android_app).input_queue != ptr::null_mut() {
-                vxlogi!("Attaching input queue to looper");
+                vx_log_i!("Attaching input queue to looper");
                 input::AInputQueue_attachLooper(
                     (*android_app).input_queue,
                     (*android_app).looper,
@@ -147,43 +147,43 @@ unsafe extern "C" fn android_app_pre_exec_cmd(android_app: *mut AndroidApp, cmd:
             }
             libc::pthread_cond_broadcast(&mut ((*android_app).cond) as *mut libc::pthread_cond_t);
             libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-            //            vxloge!("unlocked");
+            //            vx_log_e!("unlocked");
         }
         AppCmd::InitWindow => {
-            vxlogi!("AppCmdInitWindow");
+            vx_log_i!("AppCmdInitWindow");
             libc::pthread_mutex_lock(&mut (*android_app).mutex);
-            //            vxloge!("locked");
+            //            vx_log_e!("locked");
             (*android_app).window = (*android_app).pending_window;
             libc::pthread_cond_broadcast(&mut ((*android_app).cond) as *mut libc::pthread_cond_t);
             libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-            //            vxloge!("unlocked");
+            //            vx_log_e!("unlocked");
         }
         AppCmd::TermWindow => {
-            vxlogi!("AppCmdTermWindow");
+            vx_log_i!("AppCmdTermWindow");
             libc::pthread_cond_broadcast(&mut ((*android_app).cond) as *mut libc::pthread_cond_t);
         }
         AppCmd::Resume | AppCmd::Start | AppCmd::Pause | AppCmd::Stop => {
-            vxlogi!("activity_state = {:?}", cmd);
+            vx_log_i!("activity_state = {:?}", cmd);
             libc::pthread_mutex_lock(&mut (*android_app).mutex);
-            //            vxloge!("locked");
+            //            vx_log_e!("locked");
             (*android_app).activity_state = cmd as i32;
             libc::pthread_cond_broadcast(&mut ((*android_app).cond) as *mut libc::pthread_cond_t);
             libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-            //            vxloge!("unlocked");
+            //            vx_log_e!("unlocked");
         }
         AppCmd::ConfigChanged => {
-            vxlogi!("AppCmdConfigChanged {:?}", *((*android_app).config));
+            vx_log_i!("AppCmdConfigChanged {:?}", *((*android_app).config));
             config::AConfiguration_fromAssetManager(
                 (*android_app).config,
                 (*(*android_app).activity).assetManager,
             );
         }
         AppCmd::Destroy => {
-            vxlogi!("AppCmdDestroy");
+            vx_log_i!("AppCmdDestroy");
             (*android_app).destroy_requested = 1;
         }
         c @ _ => {
-            vxlogi!("Unhandled value {:?}", c);
+            vx_log_i!("Unhandled value {:?}", c);
         }
     }
 }
@@ -191,34 +191,34 @@ unsafe extern "C" fn android_app_pre_exec_cmd(android_app: *mut AndroidApp, cmd:
 unsafe extern "C" fn android_app_post_exec_cmd(android_app: *mut AndroidApp, cmd: AppCmd) {
     match cmd {
         AppCmd::TermWindow => {
-            vxlogi!("AppCmdTermWindow");
+            vx_log_i!("AppCmdTermWindow");
             libc::pthread_mutex_lock(&mut (*android_app).mutex);
-            //            vxloge!("locked");
+            //            vx_log_e!("locked");
             (*android_app).window = ptr::null_mut();
             libc::pthread_cond_broadcast(&mut ((*android_app).cond) as *mut libc::pthread_cond_t);
             libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-            //            vxloge!("unlocked");
+            //            vx_log_e!("unlocked");
         }
         AppCmd::SaveState => {
-            vxlogi!("AppCmdSaveState");
+            vx_log_i!("AppCmdSaveState");
             libc::pthread_mutex_lock(&mut (*android_app).mutex);
-            //            vxloge!("locked");
+            //            vx_log_e!("locked");
             (*android_app).state_saved = 1;
             libc::pthread_cond_broadcast(&mut ((*android_app).cond) as *mut libc::pthread_cond_t);
             libc::pthread_mutex_unlock(&mut (*android_app).mutex);
-            //            vxloge!("unlocked");
+            //            vx_log_e!("unlocked");
         }
         AppCmd::Resume => {
             free_saved_state(android_app);
         }
         _ => {
-            vxlogi!("Unexpected value: {:?}", cmd);
+            vx_log_i!("Unexpected value: {:?}", cmd);
         }
     }
 }
 
 unsafe extern "C" fn android_app_destroy(android_app: *mut AndroidApp) {
-    vxlogi!("android_app_destroy!");
+    vx_log_i!("android_app_destroy!");
     free_saved_state(android_app);
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
     if (*android_app).input_queue != ptr::null_mut() {
@@ -234,7 +234,7 @@ unsafe extern "C" fn process_input(app: *mut AndroidApp, source: *mut AndroidPol
     let _ = source;
     let mut event: *mut input::AInputEvent = ptr::null_mut();
     while input::AInputQueue_getEvent((*app).input_queue, &mut event) >= 0 {
-        vxlogi!(
+        vx_log_i!(
             "New input event: type={:?}",
             input::AInputEvent_getType(event)
         );
@@ -267,7 +267,7 @@ extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
             (*android_app).config,
             (*(*android_app).activity).assetManager,
         );
-        vxlogi!("Configure is: {:?}", *((*android_app).config));
+        vx_log_i!("Configure is: {:?}", *((*android_app).config));
         (*android_app).cmd_poll_source.id = LooperId::Main as i32;
         (*android_app).cmd_poll_source.app = android_app;
         (*android_app).cmd_poll_source.process = process_cmd;
@@ -289,24 +289,24 @@ extern "C" fn android_app_entry(param: *mut libc::c_void) -> *mut libc::c_void {
         libc::pthread_cond_broadcast(&mut ((*android_app).cond));
         libc::pthread_mutex_unlock(&mut (*android_app).mutex);
         {
-            let os_app = vxunwrap!(&(*android_app).os_app);
-            vxresult!(os_app.read()).initialize();
-            let core_app = vxunwrap!(&vxresult!(os_app.read()).core_app).clone();
+            let os_app = vx_unwrap!(&(*android_app).os_app);
+            vx_result!(os_app.read()).initialize();
+            let core_app = vx_unwrap!(&vx_result!(os_app.read()).core_app).clone();
             let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
-            vxloge!("Reached");
+            vx_log_e!("Reached");
             let renderer_w = Arc::downgrade(&renderer);
-            vxloge!("Reached");
-            vxresult!(renderer.write()).set_myself(renderer_w);
-            vxloge!("Reached");
-            vxresult!(os_app.write()).set_renderer(renderer.clone());
-            vxloge!("Reached");
+            vx_log_e!("Reached");
+            vx_result!(renderer.write()).set_myself(renderer_w);
+            vx_log_e!("Reached");
+            vx_result!(os_app.write()).set_renderer(renderer.clone());
+            vx_log_e!("Reached");
             {
-                let mut core_app = vxresult!(core_app.write());
+                let mut core_app = vx_result!(core_app.write());
                 core_app.set_os_app(os_app.clone());
                 core_app.set_renderer(renderer);
                 core_app.initialize();
             }
-            vxresult!(os_app.read()).run();
+            vx_result!(os_app.read()).run();
         }
         android_app_destroy(android_app);
         ptr::null_mut()
@@ -355,7 +355,7 @@ pub fn android_app_create(
     }
     let mut msg_pipe_fds = [0 as libc::c_int, 2];
     if unsafe { libc::pipe(msg_pipe_fds.as_mut_ptr()) } != 0 {
-        vxlogf!("Could not create pipe!");
+        vx_log_f!("Could not create pipe!");
     }
     unsafe {
         (*android_app).msg_read_fd = msg_pipe_fds[0];
@@ -386,7 +386,7 @@ pub fn android_app_create(
 
 unsafe extern "C" fn android_app_write_cmd(android_app: *mut AndroidApp, cmd: i8) {
     if libc::write((*android_app).msg_write_fd, transmute(&cmd), 1) != 1 {
-        vxlogf!("Failure writing AndroidApp cmd!");
+        vx_log_f!("Failure writing AndroidApp cmd!");
     }
 }
 
@@ -446,17 +446,17 @@ unsafe extern "C" fn android_app_free(android_app: *mut AndroidApp) {
 }
 
 pub unsafe extern "C" fn on_destroy(activity: *mut activity::ANativeActivity) {
-    vxlogi!("Destroy: {:?}", activity);
+    vx_log_i!("Destroy: {:?}", activity);
     android_app_free(transmute((*activity).instance));
 }
 
 pub unsafe extern "C" fn on_start(activity: *mut activity::ANativeActivity) {
-    vxlogi!("Start: {:?}", activity);
+    vx_log_i!("Start: {:?}", activity);
     android_app_set_activity_state(transmute((*activity).instance), AppCmd::Start as i8);
 }
 
 pub unsafe extern "C" fn on_resume(activity: *mut activity::ANativeActivity) {
-    vxlogi!("Resume: {:?}", activity);
+    vx_log_i!("Resume: {:?}", activity);
     android_app_set_activity_state(transmute((*activity).instance), AppCmd::Resume as i8);
 }
 
@@ -466,7 +466,7 @@ pub unsafe extern "C" fn on_save_instance_state(
 ) -> *mut libc::c_void {
     let android_app: *mut AndroidApp = transmute((*activity).instance);
     let mut saved_state: *mut libc::c_void = ptr::null_mut();
-    vxlogi!("SaveInstanceState: {:?}", activity);
+    vx_log_i!("SaveInstanceState: {:?}", activity);
     libc::pthread_mutex_lock(&mut (*android_app).mutex);
     (*android_app).state_saved = 0;
     android_app_write_cmd(android_app, AppCmd::SaveState as i8);
@@ -484,24 +484,24 @@ pub unsafe extern "C" fn on_save_instance_state(
 }
 
 pub unsafe extern "C" fn on_pause(activity: *mut activity::ANativeActivity) {
-    vxlogi!("Pause: {:?}", activity);
+    vx_log_i!("Pause: {:?}", activity);
     android_app_set_activity_state(transmute((*activity).instance), AppCmd::Pause as i8);
 }
 
 pub unsafe extern "C" fn on_stop(activity: *mut activity::ANativeActivity) {
-    vxlogi!("Stop: {:?}", activity);
+    vx_log_i!("Stop: {:?}", activity);
     android_app_set_activity_state(transmute((*activity).instance), AppCmd::Stop as i8);
 }
 
 pub unsafe extern "C" fn on_configuration_changed(activity: *mut activity::ANativeActivity) {
     let android_app: *mut AndroidApp = transmute((*activity).instance);
-    vxlogi!("ConfigurationChanged: {:?}", activity);
+    vx_log_i!("ConfigurationChanged: {:?}", activity);
     android_app_write_cmd(android_app, AppCmd::ConfigChanged as i8);
 }
 
 pub unsafe extern "C" fn on_low_memory(activity: *mut activity::ANativeActivity) {
     let android_app: *mut AndroidApp = transmute((*activity).instance);
-    vxlogi!("LowMemory: {:?}", activity);
+    vx_log_i!("LowMemory: {:?}", activity);
     android_app_write_cmd(android_app, AppCmd::LowMemory as i8);
 }
 
@@ -509,7 +509,7 @@ pub unsafe extern "C" fn on_window_focus_changed(
     activity: *mut activity::ANativeActivity,
     focused: libc::c_int,
 ) {
-    vxlogi!("WindowFocusChanged: {:?} -- {:?}", activity, focused);
+    vx_log_i!("WindowFocusChanged: {:?} -- {:?}", activity, focused);
     android_app_write_cmd(
         transmute((*activity).instance),
         if focused != 0 {
@@ -524,7 +524,7 @@ pub unsafe extern "C" fn on_native_window_created(
     activity: *mut activity::ANativeActivity,
     window: *mut window::ANativeWindow,
 ) {
-    vxlogi!("NativeWindowCreated: {:?} -- {:?}", activity, window);
+    vx_log_i!("NativeWindowCreated: {:?} -- {:?}", activity, window);
     android_app_set_window(transmute((*activity).instance), window);
 }
 
@@ -532,7 +532,7 @@ pub unsafe extern "C" fn on_native_window_destroyed(
     activity: *mut activity::ANativeActivity,
     window: *mut window::ANativeWindow,
 ) {
-    vxlogi!("NativeWindowDestroyed: {:?} -- {:?}", activity, window);
+    vx_log_i!("NativeWindowDestroyed: {:?} -- {:?}", activity, window);
     android_app_set_window(transmute((*activity).instance), ptr::null_mut());
 }
 
@@ -540,7 +540,7 @@ pub unsafe extern "C" fn on_input_queue_created(
     activity: *mut activity::ANativeActivity,
     queue: *mut input::AInputQueue,
 ) {
-    vxlogi!("InputQueueCreated: {:?} -- {:?}", activity, queue);
+    vx_log_i!("InputQueueCreated: {:?} -- {:?}", activity, queue);
     android_app_set_input(transmute((*activity).instance), queue);
 }
 
@@ -548,7 +548,7 @@ pub unsafe extern "C" fn on_input_queue_destroyed(
     activity: *mut activity::ANativeActivity,
     queue: *mut input::AInputQueue,
 ) {
-    vxlogi!("InputQueueDestroyed: {:?} -- {:?}", activity, queue);
+    vx_log_i!("InputQueueDestroyed: {:?} -- {:?}", activity, queue);
     android_app_set_input(transmute((*activity).instance), ptr::null_mut());
 }
 

@@ -34,7 +34,7 @@ impl Pool {
         descriptor_pool_info.pool_size_count = type_counts.len() as u32;
         descriptor_pool_info.p_pool_sizes = type_counts.as_ptr();
         descriptor_pool_info.max_sets = buffers_count as u32 + 1; // todo I must find the exact number after everything got stable
-        let vk_data = vxresult!(unsafe {
+        let vk_data = vx_result!(unsafe {
             logical_device
                 .get_data()
                 .create_descriptor_pool(&descriptor_pool_info, None)
@@ -103,7 +103,7 @@ impl SetLayout {
         let mut descriptor_layout = vk::DescriptorSetLayoutCreateInfo::default();
         descriptor_layout.binding_count = layout_bindings.len() as u32;
         descriptor_layout.p_bindings = layout_bindings.as_ptr();
-        let vk_data = vxresult!(unsafe {
+        let vk_data = vx_result!(unsafe {
             logical_device
                 .get_data()
                 .create_descriptor_set_layout(&descriptor_layout, None)
@@ -192,7 +192,7 @@ impl Set {
         #[cfg(debug_mode)]
         {
             if textures.len() != DEFERRED_TEX_COUNT {
-                vxlogf!(
+                vx_log_f!(
                     "For deferred descriptor you need {} textures.",
                     DEFERRED_TEX_COUNT
                 );
@@ -214,7 +214,7 @@ impl Set {
         #[cfg(debug_mode)]
         {
             if textures.len() != SSAO_TEX_COUNT {
-                vxlogf!("For SSAO descriptor you need {} textures.", SSAO_TEX_COUNT);
+                vx_log_f!("For SSAO descriptor you need {} textures.", SSAO_TEX_COUNT);
             }
         }
         let mut texturess = Vec::new();
@@ -233,21 +233,23 @@ impl Set {
         #[cfg(debug_mode)]
         {
             if texturess.len() != 3 {
-                vxlogf!("For shadow accumulator directional descriptor you need 3 textures.");
+                vx_log_f!("For shadow accumulator directional descriptor you need 3 textures.");
             }
             if texturess[0].len() != 1
                 || texturess[1].len() != 1
                 || texturess[2].len() < 1
                 || texturess[2].len() > MAX_DIRECTIONAL_CASCADES_COUNT as usize
             {
-                vxlogf!("Wrong number of textures for shadow accumulator directional descriptor.");
+                vx_log_f!(
+                    "Wrong number of textures for shadow accumulator directional descriptor."
+                );
             }
         }
         Self::new(pool, layout, uniform, texturess)
     }
 
     fn create_buffer_info(uniform: &DynamicBuffer) -> vk::DescriptorBufferInfo {
-        let buffer = vxresult!(uniform.get_buffer(0).read());
+        let buffer = vx_result!(uniform.get_buffer(0).read());
         let mut buff_info = vk::DescriptorBufferInfo::default();
         buff_info.buffer = buffer.get_data();
         buff_info.range = buffer.get_allocated_memory().get_size() as vk::DeviceSize;
@@ -260,7 +262,7 @@ impl Set {
         alloc_info.descriptor_pool = pool.vk_data;
         alloc_info.descriptor_set_count = 1;
         alloc_info.p_set_layouts = &layout.vk_data;
-        return vxresult!(unsafe {
+        return vx_result!(unsafe {
             pool.logical_device
                 .get_data()
                 .allocate_descriptor_sets(&alloc_info)
@@ -285,7 +287,7 @@ impl Set {
         for textures in &texturess {
             let mut img_infos = Vec::new();
             for texture in textures {
-                let texture = vxresult!(texture.read());
+                let texture = vx_result!(texture.read());
                 let mut img_info = vk::DescriptorImageInfo::default();
                 img_info.image_layout = vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL;
                 img_info.image_view = texture.get_image_view().get_data();
@@ -378,7 +380,7 @@ impl Manager {
         #[cfg(debug_mode)]
         {
             if textures.len() != GBUFF_TEX_COUNT {
-                vxlogf!(
+                vx_log_f!(
                     "For gbuffer filler descriptor you need {} textures.",
                     GBUFF_TEX_COUNT
                 );
@@ -386,9 +388,9 @@ impl Manager {
         }
         let mut id = ([0 as Id; GBUFF_TEX_COUNT], 0usize);
         for i in 0..GBUFF_TEX_COUNT {
-            id.0[i] = vxresult!(textures[i].read()).get_id();
+            id.0[i] = vx_result!(textures[i].read()).get_id();
         }
-        id.1 = vxresult!(uniform.get_buffer(0).read())
+        id.1 = vx_result!(uniform.get_buffer(0).read())
             .get_allocated_memory()
             .get_size() as usize;
         if let Some(s) = self.gbuff_sets.get(&id) {
@@ -407,7 +409,7 @@ impl Manager {
     }
 
     pub(crate) fn create_buffer_only_set(&mut self, uniform: &DynamicBuffer) -> Arc<Set> {
-        let id = vxresult!(uniform.get_buffer(0).read())
+        let id = vx_result!(uniform.get_buffer(0).read())
             .get_allocated_memory()
             .get_size() as usize;
         if let Some(s) = self.buffer_only_sets.get(&id) {

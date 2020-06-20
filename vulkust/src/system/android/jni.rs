@@ -1163,11 +1163,11 @@ const JNI_VERSION_1_6: jint = 0x00010006;
 
 #[no_mangle]
 pub unsafe extern "C" fn JNI_OnLoad(vm: *const JavaVM, reserved: *const c_void) -> jint {
-    vxlogi!("Started with vm: {:?} and reserved: {:?}!", vm, reserved);
+    vx_log_i!("Started with vm: {:?} and reserved: {:?}!", vm, reserved);
     return JNI_VERSION_1_6;
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn JNI_OnUnload(vm: *const JavaVM, reserved: *const c_void) {
-    vxlogi!("Ended with vm: {:?} and reserved: {:?}!", vm, reserved);
+    vx_log_i!("Ended with vm: {:?} and reserved: {:?}!", vm, reserved);
 }

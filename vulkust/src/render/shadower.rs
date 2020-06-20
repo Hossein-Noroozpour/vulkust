@@ -108,7 +108,7 @@ impl Shadower {
             )));
         }
         let (shadow_mapper_uniform_buffer, shadow_accumulator_directional_uniform_buffer) = {
-            let mut bufmgr = vxresult!(geng.get_buffer_manager().write());
+            let mut bufmgr = vx_result!(geng.get_buffer_manager().write());
             (
                 bufmgr.create_dynamic_buffer(size_of::<ShadowMapperUniform>() as isize),
                 bufmgr.create_dynamic_buffer(
@@ -117,7 +117,7 @@ impl Shadower {
             )
         };
         let (shadow_map_descriptor_set, shadow_accumulator_directional_descriptor_set) = {
-            let mut desmgr = vxresult!(geng.get_descriptor_manager().write());
+            let mut desmgr = vx_result!(geng.get_descriptor_manager().write());
             let gbufftex = g_buffer_filler.get_textures();
             (
                 desmgr.create_buffer_only_set(&shadow_mapper_uniform_buffer),
@@ -132,7 +132,7 @@ impl Shadower {
             )
         };
         let (shadow_map_pipeline, shadow_accumulator_directional_pipeline) = {
-            let mut pipmgr = vxresult!(geng.get_pipeline_manager().write());
+            let mut pipmgr = vx_result!(geng.get_pipeline_manager().write());
             (
                 pipmgr.create(
                     shadow_map_render_pass.clone(),

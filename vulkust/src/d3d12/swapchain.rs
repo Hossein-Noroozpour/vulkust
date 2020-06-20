@@ -21,7 +21,7 @@ impl Swapchain {
         os_app: &Arc<RwLock<OsApp>>,
         conf: &Configurations,
     ) -> Self {
-        let hwnd = vxresult!(os_app.read()).get_window();
+        let hwnd = vx_result!(os_app.read()).get_window();
         let mut swapchain_desc: winapi::shared::dxgi1_2::DXGI_SWAP_CHAIN_DESC1 =
             unsafe { zeroed() };
         swapchain_desc.BufferCount = BUFFER_COUNT as winapi::shared::minwindef::UINT;
@@ -59,7 +59,7 @@ impl Swapchain {
                 .get_data()
                 .GetDescriptorHandleIncrementSize(winapi::um::d3d12::D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
         };
-        vxlogi!("rtv_descriptor_size: {}", rtv_descriptor_size);
+        vx_log_i!("rtv_descriptor_size: {}", rtv_descriptor_size);
         let mut rtv_handle = unsafe { rtv_heap.GetCPUDescriptorHandleForHeapStart() };
         let mut render_targets: [&'static mut winapi::um::d3d12::ID3D12Resource; BUFFER_COUNT] =
             unsafe { zeroed() };

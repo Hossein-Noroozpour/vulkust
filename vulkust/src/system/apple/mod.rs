@@ -681,7 +681,7 @@ pub fn get_class(s: &str) -> &Class {
     match Class::get(s) {
         Some(c) => c,
         None => {
-            vxlogf!("Class: {:?} does not exist.", s);
+            vx_log_f!("Class: {:?} does not exist.", s);
         }
     }
 }
@@ -690,7 +690,7 @@ pub fn get_instance(s: &str) -> Id {
     let c = match Class::get(s) {
         Some(c) => c,
         None => {
-            vxlogf!("Class: {:?} does not exist.", s);
+            vx_log_f!("Class: {:?} does not exist.", s);
         }
     };
     let r: Id = unsafe { msg_send![c, alloc] };
@@ -702,7 +702,7 @@ pub fn dec_class(s: &str, c: &Class) -> ClassDecl {
     match ClassDecl::new(s, c) {
         Some(c) => c,
         None => {
-            vxlogf!("Can not create class {} with super class {:?}.", s, c);
+            vx_log_f!("Can not create class {} with super class {:?}.", s, c);
         }
     }
 }
@@ -711,13 +711,13 @@ pub fn dec_class_s(s: &str, c: &str) -> ClassDecl {
     let c = match Class::get(c) {
         Some(c) => c,
         None => {
-            vxlogf!("Class: {} does not exist.", c);
+            vx_log_f!("Class: {} does not exist.", c);
         }
     };
     match ClassDecl::new(s, c) {
         Some(c) => c,
         None => {
-            vxlogf!("Can not create class {} with super class {:?}.", s, c);
+            vx_log_f!("Can not create class {} with super class {:?}.", s, c);
         }
     }
 }
@@ -735,7 +735,7 @@ pub fn alloc(s: &str) -> Id {
     let c = match Class::get(s) {
         Some(c) => c,
         None => {
-            vxlogf!("Class: {:?} does not exist.", s);
+            vx_log_f!("Class: {:?} does not exist.", s);
         }
     };
     unsafe { msg_send![c, alloc] }

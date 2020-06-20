@@ -36,7 +36,7 @@ impl RenderPass {
         let mut depth = None;
         let mut view_index = 0;
         for v in &views {
-            let img = vxresult!(v.get_image().read());
+            let img = vx_result!(v.get_image().read());
             vk_dev = Some(img.get_device().get_data().clone());
 
             let attachment_description = vk::AttachmentDescription::builder()
@@ -53,14 +53,14 @@ impl RenderPass {
                 .initial_layout(convert_layout(&start_layouts[view_index]))
                 .final_layout(convert_layout(&end_layouts[view_index]))
                 .build();
-            if vxflagcheck!(img.get_vk_usage(), vk::ImageUsageFlags::COLOR_ATTACHMENT) {
+            if vx_flag_check!(img.get_vk_usage(), vk::ImageUsageFlags::COLOR_ATTACHMENT) {
                 let color_attachment_ref = vk::AttachmentReference::builder()
                     .attachment(attachment_descriptions.len() as u32)
                     .layout(vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL)
                     .build();
                 color_attachments_refs.push(color_attachment_ref);
                 colors.push(v.clone());
-            } else if vxflagcheck!(
+            } else if vx_flag_check!(
                 img.get_vk_usage(),
                 vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT
             ) {
@@ -68,7 +68,7 @@ impl RenderPass {
                 depth_attachment_ref.attachment = attachment_descriptions.len() as u32;
                 depth = Some(v.clone());
             } else {
-                vxunexpected!();
+                vx_unexpected!();
             }
             attachment_descriptions.push(attachment_description);
             view_index += 1;
@@ -116,10 +116,10 @@ impl RenderPass {
             .subpasses(&subpasses)
             .dependencies(&dependencies);
 
-        let vk_dev = vxunwrap!(vk_dev);
+        let vk_dev = vx_unwrap!(vk_dev);
 
         let vk_data =
-            vxresult!(unsafe { vk_dev.create_render_pass(&render_pass_create_info, None) });
+            vx_result!(unsafe { vk_dev.create_render_pass(&render_pass_create_info, None) });
 
         Self {
             swapchain: None,
@@ -138,15 +138,15 @@ impl RenderPass {
             } else {
                 Layout::Display
             });
-            let img = vxresult!(v.get_image().read());
+            let img = vx_result!(v.get_image().read());
             end_layouts.push(
-                if vxflagcheck!(img.get_vk_usage(), vk::ImageUsageFlags::COLOR_ATTACHMENT) {
+                if vx_flag_check!(img.get_vk_usage(), vk::ImageUsageFlags::COLOR_ATTACHMENT) {
                     if has_reader {
                         Layout::ShaderReadOnly
                     } else {
                         Layout::Display
                     }
-                } else if vxflagcheck!(
+                } else if vx_flag_check!(
                     img.get_vk_usage(),
                     vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT
                 ) {
@@ -156,7 +156,7 @@ impl RenderPass {
                         Layout::DepthStencil
                     }
                 } else {
-                    vxunexpected!();
+                    vx_unexpected!();
                 },
             );
         }
@@ -181,13 +181,13 @@ impl Drop for RenderPass {
         let vkdev = if let Some(swapchain) = &self.swapchain {
             swapchain.get_logical_device().get_data().clone()
         } else if self.colors.len() > 0 {
-            let i = vxresult!(self.colors[0].get_image().read());
+            let i = vx_result!(self.colors[0].get_image().read());
             i.get_device().get_data().clone()
         } else if let Some(depth) = &self.depth {
-            let i = vxresult!(depth.get_image().read());
+            let i = vx_result!(depth.get_image().read());
             i.get_device().get_data().clone()
         } else {
-            vxunexpected!();
+            vx_unexpected!();
         };
         unsafe {
             vkdev.destroy_render_pass(self.vk_data, None);

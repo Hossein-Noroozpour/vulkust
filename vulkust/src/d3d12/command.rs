@@ -79,51 +79,51 @@ impl Buffer {
     }
 
     pub(crate) fn get_has_render_record(&self) -> bool {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn exe_cmd(&mut self, _other: &Self) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn exe_cmds(&mut self, _others: &[&Self]) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn begin(&mut self) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn begin_secondary(&mut self, _framebuffer: &Framebuffer) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn end_render_pass(&mut self) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn end(&mut self) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_pipeline(&mut self, _p: &Pipeline) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_vertex_buffer(&mut self, _buffer: &Arc<RwLock<BufBuffer>>) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_index_buffer(&mut self, _buffer: &Arc<RwLock<BufBuffer>>) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn draw_index(&mut self, _indices_count: u32) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn draw(&mut self, _vertices_count: u32) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_gbuff_scene_descriptor(
@@ -131,7 +131,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_gbuff_model_descriptor(
@@ -139,7 +139,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_gbuff_material_descriptor(
@@ -147,7 +147,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn render_gbuff(
@@ -156,19 +156,19 @@ impl Buffer {
         _index_buffer: &StaticBuffer,
         _indices_count: u32,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn render_deferred(&mut self) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn render_ssao(&mut self) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn render_shadow_accumulator_directional(&mut self) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_deferred_scene_descriptor(
@@ -176,7 +176,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_deferred_deferred_descriptor(
@@ -184,7 +184,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_ssao_scene_descriptor(
@@ -192,7 +192,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_ssao_ssao_descriptor(
@@ -200,7 +200,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_shadow_mapper_light_descriptor(
@@ -208,7 +208,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_shadow_mapper_material_descriptor(
@@ -216,7 +216,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn bind_shadow_accumulator_directional_descriptor(
@@ -224,7 +224,7 @@ impl Buffer {
         _descriptor_set: &DescriptorSet,
         _buffer: &BufBuffer,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn render_shadow_mapper(
@@ -233,7 +233,7 @@ impl Buffer {
         _index_buffer: &StaticBuffer,
         _indices_count: u32,
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }
 

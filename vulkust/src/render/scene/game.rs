@@ -38,7 +38,7 @@ impl Object for Game {
 
     fn set_name(&mut self, name: &str) {
         self.base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
+        vx_unimplemented!(); //it must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {

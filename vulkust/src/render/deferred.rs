@@ -48,7 +48,7 @@ impl Deferred {
         let gbuff_framebuffer = g_buffer_filler.get_framebuffer();
         let (w, h) = gbuff_framebuffer.get_dimensions();
         let uniform = Uniform::new(w as f32, h as f32);
-        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+        let uniform_buffer = vx_result!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let mut textures = Vec::with_capacity(g_buffer_filler.get_textures().len() + 2);
         for t in g_buffer_filler.get_textures() {
@@ -60,9 +60,9 @@ impl Deferred {
             textures.push(texmgr.create_2d_with_pixels(2, 2, gapi_engine, &[255u8; 2 * 2 * 4]));
         }
         textures.push(shadower.get_shadow_accumulator_flagbits_texture().clone());
-        let descriptor_set = vxresult!(gapi_engine.get_descriptor_manager().write())
+        let descriptor_set = vx_result!(gapi_engine.get_descriptor_manager().write())
             .create_deferred_set(&uniform_buffer, textures);
-        let mut pipmgr = vxresult!(gapi_engine.get_pipeline_manager().write());
+        let mut pipmgr = vx_result!(gapi_engine.get_pipeline_manager().write());
         let render_pass = gapi_engine.get_render_pass();
         let pipeline = pipmgr.create(render_pass.clone(), PipelineType::Deferred, config);
         Deferred {
@@ -75,7 +75,7 @@ impl Deferred {
 
     pub(crate) fn render(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         let buffer = self.uniform_buffer.get_buffer(frame_number);
-        let buffer = vxresult!(buffer.read());
+        let buffer = vx_result!(buffer.read());
         cmd.bind_pipeline(&self.pipeline);
         cmd.bind_deferred_deferred_descriptor(&*self.descriptor_set, &*buffer);
     }

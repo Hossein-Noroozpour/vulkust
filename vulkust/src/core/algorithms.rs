@@ -41,7 +41,7 @@ where
         }
         return result;
     } else {
-        vxunexpected!();
+        vx_unexpected!();
     }
 }
 

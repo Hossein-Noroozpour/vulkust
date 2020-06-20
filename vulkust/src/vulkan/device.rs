@@ -19,14 +19,14 @@ fn get_supported_depth_format(ins: &ash::Instance, s: &vk::PhysicalDevice) -> vk
     ];
     for format in depth_formats {
         let format_props = unsafe { ins.get_physical_device_format_properties(*s, format) };
-        if vxflagcheck!(
+        if vx_flag_check!(
             format_props.optimal_tiling_features,
             vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT
         ) {
             return format;
         }
     }
-    vxlogf!("No depth format found!");
+    vx_log_f!("No depth format found!");
 }
 
 fn get_surface_formats(
@@ -35,7 +35,7 @@ fn get_surface_formats(
 ) -> Vec<vk::SurfaceFormatKHR> {
     let surface_loader = surface.get_loader();
     let vk_surface = surface.get_data();
-    return vxresult!(unsafe {
+    return vx_result!(unsafe {
         surface_loader.get_physical_device_surface_formats(*physical_device, *vk_surface)
     });
 }
@@ -70,13 +70,13 @@ impl Physical {
         let memory_properties =
             unsafe { vk_instance.get_physical_device_memory_properties(vk_data) };
         let properties = unsafe { vk_instance.get_physical_device_properties(vk_data) };
-        let surface_caps = vxresult!(unsafe {
+        let surface_caps = vx_result!(unsafe {
             surface
                 .get_loader()
                 .get_physical_device_surface_capabilities(vk_data, *surface.get_data())
         });
         #[cfg(debug_mode)]
-        vxlogi!("Surface capacities are {:?}", &surface_caps);
+        vx_log_i!("Surface capacities are {:?}", &surface_caps);
         let supported_depth_format = get_supported_depth_format(vk_instance, &vk_data);
         let surface_formats = get_surface_formats(surface, &vk_data);
         let features = unsafe { vk_instance.get_physical_device_features(vk_data) };
@@ -112,7 +112,7 @@ impl Physical {
         let vk_instance = instance.get_data();
         let devices = Self::enumerate_devices(vk_instance);
         #[cfg(debug_mode)]
-        vxlogi!("Number of physical devices is: {}", devices.len());
+        vx_log_i!("Number of physical devices is: {}", devices.len());
         for device in &devices {
             if Self::device_is_discrete(vk_instance, device) {
                 match Self::fetch_queues(*device, surface) {
@@ -129,7 +129,7 @@ impl Physical {
                 }
             }
         }
-        vxlogf!("Required device not found!");
+        vx_log_f!("Required device not found!");
     }
 
     fn device_is_discrete(instance: &ash::Instance, device: &vk::PhysicalDevice) -> bool {
@@ -137,7 +137,7 @@ impl Physical {
     }
 
     fn enumerate_devices(vk_instance: &ash::Instance) -> Vec<vk::PhysicalDevice> {
-        return vxresult!(unsafe { vk_instance.enumerate_physical_devices() });
+        return vx_result!(unsafe { vk_instance.enumerate_physical_devices() });
     }
 
     fn fetch_queues(
@@ -159,14 +159,14 @@ impl Physical {
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            let b = vxresult!(unsafe {
+            let b = vx_result!(unsafe {
                 surface_loader.get_physical_device_surface_support(device, i, *vk_surface)
             });
             if queue_family.queue_count > 0
                 && b
-                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::GRAPHICS)
-                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::COMPUTE)
-                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::TRANSFER)
+                && vx_flag_check!(queue_family.queue_flags, vk::QueueFlags::GRAPHICS)
+                && vx_flag_check!(queue_family.queue_flags, vk::QueueFlags::COMPUTE)
+                && vx_flag_check!(queue_family.queue_flags, vk::QueueFlags::TRANSFER)
             {
                 return Some((i, i, i, i));
             }
@@ -174,20 +174,20 @@ impl Physical {
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            let b = vxresult!(unsafe {
+            let b = vx_result!(unsafe {
                 surface_loader.get_physical_device_surface_support(device, i, *vk_surface)
             });
             if queue_family.queue_count > 0
                 && b
-                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::GRAPHICS)
-                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::COMPUTE)
+                && vx_flag_check!(queue_family.queue_flags, vk::QueueFlags::GRAPHICS)
+                && vx_flag_check!(queue_family.queue_flags, vk::QueueFlags::COMPUTE)
             {
                 graphics_queue_node_index = i;
                 compute_queue_node_index = i;
                 present_queue_node_index = i;
             }
             if queue_family.queue_count > 0
-                && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::TRANSFER)
+                && vx_flag_check!(queue_family.queue_flags, vk::QueueFlags::TRANSFER)
             {
                 transfer_queue_node_index = i;
             }
@@ -240,7 +240,7 @@ impl Physical {
         let mut type_bits = type_bits;
         for i in 0..self.memory_properties.memory_type_count {
             if (type_bits & 1) == 1 {
-                if vxflagcheck!(
+                if vx_flag_check!(
                     self.memory_properties.memory_types[i as usize].property_flags,
                     properties
                 ) {
@@ -249,7 +249,7 @@ impl Physical {
             }
             type_bits >>= 1;
         }
-        vxlogf!("Could not find the requsted memory type.");
+        vx_log_f!("Could not find the requsted memory type.");
     }
 
     // pub(super) fn get_max_min_alignment(&self) -> u64 {
@@ -317,7 +317,7 @@ impl Physical {
             Format::Float => return vk::Format::R32_SFLOAT,
             Format::FlagBits8 => return vk::Format::R8_UNORM,
             Format::FlagBits64 => return vk::Format::R32G32_UINT,
-            _ => vxunexpected!(),
+            _ => vx_unexpected!(),
         }
     }
 
@@ -385,7 +385,7 @@ impl Logical {
             .enabled_extension_names(&device_extensions)
             .enabled_features(&features);
         let vk_instance = physical_device.get_vk_instance();
-        let vk_data = vxresult!(unsafe {
+        let vk_data = vx_result!(unsafe {
             vk_instance.create_device(*physical_device.get_data(), &device_create_info, None)
         });
         let vk_graphic_queue =
@@ -412,7 +412,7 @@ impl Logical {
 
     #[inline]
     pub(super) fn wait_idle(&self) {
-        vxresult!(unsafe { self.vk_data.device_wait_idle() });
+        vx_result!(unsafe { self.vk_data.device_wait_idle() });
     }
 
     #[inline]

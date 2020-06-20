@@ -44,18 +44,18 @@ impl Manager {
     where
         T: 'static + Loadable + Texture,
     {
-        let name = vxunwrap!(texture.source().name()).to_string();
+        let name = vx_unwrap!(texture.source().name()).to_string();
         if let Some(id) = self.name_to_id.get(&name) {
             if let Some(t) = self.textures.get(id) {
                 if let Some(t) = t.upgrade() {
-                    vxlogi!("cached");
+                    vx_log_i!("cached");
                     return t;
                 }
             }
         }
         let texture: Arc<RwLock<dyn Texture>> =
             Arc::new(RwLock::new(T::new_with_gltf(texture, engine, data)));
-        let id = vxresult!(texture.read()).get_id();
+        let id = vx_result!(texture.read()).get_id();
         let weak = Arc::downgrade(&texture);
         self.name_to_id.insert(name, id);
         self.textures.insert(id, weak);
@@ -68,7 +68,7 @@ impl Manager {
                 return t;
             }
         }
-        let table = vxunwrap!(&mut self.gx3d_table);
+        let table = vx_unwrap!(&mut self.gx3d_table);
         table.goto(id);
         let reader: &mut Gx3DReader = &mut table.get_mut_reader();
         let t = reader.read_type_id();
@@ -77,7 +77,7 @@ impl Manager {
         } else if t == TextureType::Cube as TypeId {
             Arc::new(RwLock::new(Cube::new_with_gx3d(engine, reader, id)))
         } else {
-            vxunexpected!();
+            vx_unexpected!();
         };
         self.textures.insert(id, Arc::downgrade(&texture));
         return texture;
@@ -107,7 +107,7 @@ impl Manager {
         if let Some(id) = self.color_to_id.get(&color) {
             if let Some(t) = self.textures.get(id) {
                 if let Some(t) = t.upgrade() {
-                    vxlogi!("color texture cached.");
+                    vx_log_i!("color texture cached.");
                     return t;
                 }
             }

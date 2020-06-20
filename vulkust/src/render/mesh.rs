@@ -74,21 +74,21 @@ impl Manager {
                 return mesh;
             }
         }
-        let gx3d_table = vxunwrap!(self.gx3d_table.as_mut());
+        let gx3d_table = vx_unwrap!(self.gx3d_table.as_mut());
         gx3d_table.goto(id);
         let reader = gx3d_table.get_mut_reader();
         let t = reader.read_type_id();
         let mesh: Arc<RwLock<dyn Mesh>> = if t == TypeId::Base as u8 {
             Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
         } else {
-            vxunimplemented!();
+            vx_unimplemented!();
         };
         self.meshes.insert(id, Arc::downgrade(&mesh));
         return mesh;
     }
 
     pub fn add(&mut self, mesh: &Arc<RwLock<dyn Mesh>>) {
-        let id = vxresult!(mesh.read()).get_id();
+        let id = vx_result!(mesh.read()).get_id();
         self.meshes.insert(id, Arc::downgrade(&mesh));
     }
 
@@ -107,8 +107,8 @@ impl Manager {
     }
 
     pub fn create_cube(&mut self, aspect: Real) -> Arc<RwLock<dyn Mesh>> {
-        let eng = vxunwrap!(vxunwrap!(&self.engine).upgrade());
-        let eng = vxresult!(eng.read());
+        let eng = vx_unwrap!(vx_unwrap!(&self.engine).upgrade());
+        let eng = vx_result!(eng.read());
         let vertices = [
             -aspect, -aspect, aspect, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -187,7 +187,7 @@ impl Base {
         engine: &Engine,
         data: &[u8],
     ) -> Self {
-        let count = vxunwrap!(primitive.get(&gltf::Semantic::Positions)).count();
+        let count = vx_unwrap!(primitive.get(&gltf::Semantic::Positions)).count();
         let mut vertex_buffer = vec![0u8; count * size_of::<Real>() * 12];
         let occlusion_culling_radius = {
             let mut center = cgmath::Vector3::new(0.0, 0.0, 0.0);
@@ -200,20 +200,20 @@ impl Base {
             p1.distance(center)
         };
         for (sem, acc) in primitive.attributes() {
-            let view = vxunwrap!(acc.view());
+            let view = vx_unwrap!(acc.view());
             match acc.data_type() {
                 gltf::accessor::DataType::F32 => {}
-                _ => vxlogf!("Only float data type is acceptable for vertex attributes"),
+                _ => vx_log_f!("Only float data type is acceptable for vertex attributes"),
             }
             let source = view.buffer().source();
             let offset = view.offset();
             match source {
                 gltf::buffer::Source::Bin => (),
-                _ => vxlogf!("Buffer source must be binary."),
+                _ => vx_log_f!("Buffer source must be binary."),
             }
             if view.stride() != None {
                 // Its meaning is not clear yet
-                vxlogf!("Stride is unexpectable.");
+                vx_log_f!("Stride is unexpectable.");
             }
             match sem {
                 gltf::Semantic::Positions => {
@@ -254,7 +254,7 @@ impl Base {
                 }
                 gltf::Semantic::TexCoords(uv_count) => {
                     if uv_count > 0 {
-                        vxlogf!("UV index must be zero.");
+                        vx_log_f!("UV index must be zero.");
                     }
                     let mut buffer_index = 40; // previous ending index
                     let mut data_index = offset;
@@ -270,21 +270,21 @@ impl Base {
                 _ => {}
             }
         }
-        let indices = vxunwrap!(primitive.indices());
+        let indices = vx_unwrap!(primitive.indices());
         match indices.data_type() {
             gltf::accessor::DataType::U32 => {}
-            _ => vxlogf!("Only u32 data type is acceptable for indices."),
+            _ => vx_log_f!("Only u32 data type is acceptable for indices."),
         }
-        let view = vxunwrap!(indices.view());
+        let view = vx_unwrap!(indices.view());
         let indices_count = indices.count();
         let offset = view.offset();
         let end = view.length() + offset;
         let index_buffer = &data[offset..end];
         let indices_count = indices_count as u32;
-        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
-        let vertex_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+        let gapi_engine = vx_result!(engine.get_gapi_engine().read());
+        let vertex_buffer = vx_result!(gapi_engine.get_buffer_manager().write())
             .create_static_buffer_with_vec(&vertex_buffer);
-        let index_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+        let index_buffer = vx_result!(gapi_engine.get_buffer_manager().write())
             .create_static_buffer_with_vec(&index_buffer);
         let obj_base = ObjectBase::new();
         Self {
@@ -302,8 +302,8 @@ impl Base {
         occlusion_culling_radius: Real,
         engine: &Engine,
     ) -> Self {
-        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
-        let mut buffer_manager = vxresult!(gapi_engine.get_buffer_manager().write());
+        let gapi_engine = vx_result!(engine.get_gapi_engine().read());
+        let mut buffer_manager = vx_result!(gapi_engine.get_buffer_manager().write());
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(indices);
         let obj_base = ObjectBase::new();
@@ -321,12 +321,12 @@ impl Base {
         #[cfg(debug_mode)]
         {
             if number_of_vertex_attribute != 12 {
-                vxunexpected!();
+                vx_unexpected!();
             }
         }
         let vertex_count = reader.read::<u64>() as usize;
         #[cfg(debug_gx3d)]
-        vxlogi!("Number of vertices is: {}", vertex_count);
+        vx_log_i!("Number of vertices is: {}", vertex_count);
         let number_of_floats = vertex_count * number_of_vertex_attribute;
         let mut vertices = vec![0.0; number_of_floats];
         for i in 0..number_of_floats {
@@ -335,15 +335,15 @@ impl Base {
         let indices = reader.read_array::<u32>();
         let occlusion_culling_radius = reader.read();
         let obj_base = ObjectBase::new_with_id(my_id);
-        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
-        let mut buffer_manager = vxresult!(gapi_engine.get_buffer_manager().write());
+        let gapi_engine = vx_result!(engine.get_gapi_engine().read());
+        let mut buffer_manager = vx_result!(gapi_engine.get_buffer_manager().write());
         let vertex_buffer = buffer_manager.create_static_buffer_with_vec(&vertices);
         let index_buffer = buffer_manager.create_static_buffer_with_vec(&indices);
         let indices_count = indices.len() as u32;
         #[cfg(debug_gx3d)]
-        vxlogi!("Number of indices is: {}", indices_count);
+        vx_log_i!("Number of indices is: {}", indices_count);
         #[cfg(debug_gx3d)]
-        vxlogi!("Occlusion culling radius is: {}", occlusion_culling_radius);
+        vx_log_i!("Occlusion culling radius is: {}", occlusion_culling_radius);
         Self {
             obj_base,
             vertex_buffer,
@@ -367,7 +367,7 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.obj_base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
+        vx_unimplemented!(); //it must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {

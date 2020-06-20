@@ -67,39 +67,39 @@ impl CoreAppTrait for MyGame {
     }
 
     fn initialize(&mut self) {
-        let renderer = vxunwrap!(&self.renderer);
-        let renderer = vxresult!(renderer.read());
+        let renderer = vx_unwrap!(&self.renderer);
+        let renderer = vx_result!(renderer.read());
         let asset_manager = renderer.get_asset_manager();
         let scene: Arc<RwLock<GameScene>> =
-            vxresult!(asset_manager.get_scene_manager().write()).create();
+            vx_result!(asset_manager.get_scene_manager().write()).create();
         let camera: Arc<RwLock<Perspective>> =
-            vxresult!(asset_manager.get_camera_manager().write()).create();
+            vx_result!(asset_manager.get_camera_manager().write()).create();
         {
-            let mut camera = vxresult!(camera.write());
+            let mut camera = vx_result!(camera.write());
             camera.set_location(&cgmath::Vector3::new(0.0, 0.0, 4.0));
         }
         self.camera = Some(camera.clone());
 
-        let sun = vxresult!(asset_manager.get_light_manager().write()).create::<Sun>();
+        let sun = vx_result!(asset_manager.get_light_manager().write()).create::<Sun>();
         {
-            let mut scn = vxresult!(scene.write());
+            let mut scn = vx_result!(scene.write());
             scn.add_camera(camera);
             place_cubes(&mut *scn, &*renderer);
             scn.add_light(sun);
         }
         self.scene = Some(scene);
         let ui_scene: Arc<RwLock<UiScene>> =
-            vxresult!(asset_manager.get_scene_manager().write()).create();
+            vx_result!(asset_manager.get_scene_manager().write()).create();
         let camera: Arc<RwLock<Orthographic>> =
-            vxresult!(asset_manager.get_camera_manager().write()).create();
+            vx_result!(asset_manager.get_camera_manager().write()).create();
         {
-            let mut camera = vxresult!(camera.write());
+            let mut camera = vx_result!(camera.write());
             camera.move_local_z(1.999);
         }
         let label: Arc<RwLock<Label>> =
-            vxresult!(asset_manager.get_model_manager().write()).create();
+            vx_result!(asset_manager.get_model_manager().write()).create();
         {
-            let mut label = vxresult!(label.write());
+            let mut label = vx_result!(label.write());
             label.set_size(0.05, &renderer);
             label.set_text_size(50.0, &renderer);
             label.set_text_color(1.0, 0.0, 0.0, 1.0, &renderer);
@@ -107,7 +107,7 @@ impl CoreAppTrait for MyGame {
             label.set_text("More things from Vulkust!", &renderer);
         }
         {
-            let mut uiscn = vxresult!(ui_scene.write());
+            let mut uiscn = vx_result!(ui_scene.write());
             uiscn.add_camera(camera);
             uiscn.add_model(label);
         }
@@ -122,8 +122,8 @@ impl CoreAppTrait for MyGame {
                     current: _,
                     delta,
                 } => {
-                    if vxresult!(self.keys_state.read()).lm {
-                        let mut camera = vxresult!(vxunwrap!(&self.camera).write());
+                    if vx_result!(self.keys_state.read()).lm {
+                        let mut camera = vx_result!(vx_unwrap!(&self.camera).write());
                         camera.rotate_local_x(delta.1 * 1.5);
                         camera.rotate_global_z(delta.0 * 1.5);
                     }
@@ -133,27 +133,27 @@ impl CoreAppTrait for MyGame {
             EventType::Button { button, action } => match action {
                 ButtonAction::Press => match button {
                     Button::Keyboard(k) => match k {
-                        Keyboard::W => vxresult!(self.keys_state.write()).w = true,
-                        Keyboard::A => vxresult!(self.keys_state.write()).a = true,
-                        Keyboard::S => vxresult!(self.keys_state.write()).s = true,
-                        Keyboard::D => vxresult!(self.keys_state.write()).d = true,
+                        Keyboard::W => vx_result!(self.keys_state.write()).w = true,
+                        Keyboard::A => vx_result!(self.keys_state.write()).a = true,
+                        Keyboard::S => vx_result!(self.keys_state.write()).s = true,
+                        Keyboard::D => vx_result!(self.keys_state.write()).d = true,
                         _ => (),
                     },
                     Button::Mouse(m) => match m {
-                        Mouse::Left => vxresult!(self.keys_state.write()).lm = true,
+                        Mouse::Left => vx_result!(self.keys_state.write()).lm = true,
                         _ => (),
                     },
                 },
                 ButtonAction::Release => match button {
                     Button::Keyboard(k) => match k {
-                        Keyboard::W => vxresult!(self.keys_state.write()).w = false,
-                        Keyboard::A => vxresult!(self.keys_state.write()).a = false,
-                        Keyboard::S => vxresult!(self.keys_state.write()).s = false,
-                        Keyboard::D => vxresult!(self.keys_state.write()).d = false,
+                        Keyboard::W => vx_result!(self.keys_state.write()).w = false,
+                        Keyboard::A => vx_result!(self.keys_state.write()).a = false,
+                        Keyboard::S => vx_result!(self.keys_state.write()).s = false,
+                        Keyboard::D => vx_result!(self.keys_state.write()).d = false,
                         _ => (),
                     },
                     Button::Mouse(m) => match m {
-                        Mouse::Left => vxresult!(self.keys_state.write()).lm = false,
+                        Mouse::Left => vx_result!(self.keys_state.write()).lm = false,
                         _ => (),
                     },
                 },
@@ -173,7 +173,7 @@ impl CoreAppTrait for MyGame {
                             current: _,
                             delta,
                         } => {
-                            let mut camera = vxresult!(vxunwrap!(&self.camera).write());
+                            let mut camera = vx_result!(vx_unwrap!(&self.camera).write());
                             camera.rotate_local_x(delta.1 * 1.5);
                             camera.rotate_global_z(delta.0 * 1.5);
                         }
@@ -188,12 +188,12 @@ impl CoreAppTrait for MyGame {
     }
 
     fn update(&mut self) {
-        let keys_state = vxresult!(self.keys_state.read());
+        let keys_state = vx_result!(self.keys_state.read());
         if keys_state.w || keys_state.a || keys_state.s || keys_state.d {
-            let mut camera = vxresult!(vxunwrap!(&self.camera).write());
+            let mut camera = vx_result!(vx_unwrap!(&self.camera).write());
             let delta = {
-                let renderer = vxresult!(vxunwrap!(&self.renderer).read());
-                let n = vxresult!(renderer.get_timing().read())
+                let renderer = vx_result!(vx_unwrap!(&self.renderer).read());
+                let n = vx_result!(renderer.get_timing().read())
                     .length_of_previous_frame
                     .as_nanos();
                 (n as f64 / 1_000_000_000.0) as f32
@@ -226,7 +226,7 @@ fn place_cubes(scn: &mut dyn Scene, eng: &Renderer) {
         + (GROUND_CUBE_ASPECT * 2.0) * GROUND_CUBE_ROW_COUNT as Real)
         * -0.5;
     let mut y = ROW_START;
-    let ground_mesh = vxresult!(astmgr.get_mesh_manager().write()).create_cube(2.0);
+    let ground_mesh = vx_result!(astmgr.get_mesh_manager().write()).create_cube(2.0);
     let cs = [
         [50, 50, 50, 255],
         [210, 210, 210, 255],
@@ -246,13 +246,13 @@ fn place_cubes(scn: &mut dyn Scene, eng: &Renderer) {
         ground_meshes.push((ground_mesh.clone(), m));
     }
     let mut ground_mesh_index = 0;
-    let mut mdlmgr = vxresult!(astmgr.get_model_manager().write());
+    let mut mdlmgr = vx_result!(astmgr.get_model_manager().write());
     for _ in 0..GROUND_CUBE_ROW_COUNT {
         let mut x = ROW_START;
         for _ in 0..GROUND_CUBE_ROW_COUNT {
             let m: Arc<RwLock<dyn Model>> = mdlmgr.create::<ModelBase>();
             {
-                let mut m = vxresult!(m.write());
+                let mut m = vx_result!(m.write());
                 let (mesh, mat) = &ground_meshes[ground_mesh_index];
                 m.add_mesh(mesh.clone(), mat.clone());
                 m.translate(&cgmath::Vector3::new(x, y, -5.0));
@@ -275,7 +275,7 @@ fn place_cubes(scn: &mut dyn Scene, eng: &Renderer) {
         let s = rng.gen_range(0.25, 0.5);
         let m: Arc<RwLock<dyn Model>> = mdlmgr.create::<ModelBase>();
         {
-            let mut m = vxresult!(m.write());
+            let mut m = vx_result!(m.write());
             let (mesh, mat) = &ground_meshes[ground_mesh_index];
             m.add_mesh(mesh.clone(), mat.clone());
             m.translate(&cgmath::Vector3::new(x, y, z));

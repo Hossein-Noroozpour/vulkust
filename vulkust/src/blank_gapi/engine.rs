@@ -18,80 +18,80 @@ pub struct Engine {}
 
 impl Engine {
     pub(crate) fn new(_os_app: &Arc<RwLock<OsApp>>, _conf: &Configurations) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_device(&self) -> &Arc<Device> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_linear_repeat_sampler(&self) -> &Arc<Sampler> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_nearest_repeat_sampler(&self) -> &Arc<Sampler> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_buffer_manager(&self) -> &Arc<RwLock<BufferManager>> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_descriptor_manager(&self) -> &Arc<RwLock<DescriptorManager>> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_pipeline_manager(&self) -> &Arc<RwLock<PipelineManager>> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_memory_manager(&self) -> &Arc<RwLock<MemoryManager>> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_render_pass(&self) -> &Arc<RenderPass> {
         // it should be removed in future, the corresponding render pass must move to deferred structure
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     pub(crate) fn create_command_pool(&self) -> Arc<CmdPool> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_secondary_command_buffer(&self, _cmd_pool: Arc<CmdPool>) -> CmdBuffer {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_primary_command_buffer(&self, _cmd_pool: Arc<CmdPool>) -> CmdBuffer {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_primary_command_buffer_from_main_graphic_pool(&self) -> CmdBuffer {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_secondary_command_buffer_from_main_graphic_pool(&self) -> CmdBuffer {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_semaphore(&self) -> Semaphore {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_frames_count(&self) -> usize {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_frame_number(&self) -> usize {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn start_rendering(&mut self) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn submit(&self, _wait: &Semaphore, _cmd: &CmdBuffer, _signal: &Semaphore) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn submit_multiple(
@@ -100,7 +100,7 @@ impl Engine {
         _cmds: &[&CmdBuffer],
         _signals: &[&Semaphore],
     ) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn create_texture_2d_with_pixels(
@@ -109,19 +109,19 @@ impl Engine {
         _height: u32,
         _data: &[u8],
     ) -> Arc<ImageView> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_current_framebuffer(&self) -> &Arc<Framebuffer> {
         // it should be removed in future, the corresponding framebuffer must move to deferred structure
-        vxunexpected!();
+        vx_unexpected!();
     }
 
     pub(crate) fn end(&self, _wait: &Semaphore) {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     pub(crate) fn get_starting_semaphore(&self) -> &Arc<Semaphore> {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }

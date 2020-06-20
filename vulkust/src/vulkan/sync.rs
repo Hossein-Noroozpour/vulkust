@@ -12,7 +12,7 @@ pub struct Semaphore {
 impl Semaphore {
     pub(super) fn new(logical_device: Arc<LogicalDevice>) -> Self {
         let semaphore_create_info = vk::SemaphoreCreateInfo::default();
-        let vk_data = vxresult!(unsafe {
+        let vk_data = vx_result!(unsafe {
             logical_device
                 .get_data()
                 .create_semaphore(&semaphore_create_info, None)
@@ -46,7 +46,7 @@ pub(crate) struct Fence {
 impl Fence {
     // pub(super) fn new(logical_device: Arc<LogicalDevice>) -> Self {
     //     let fence_create_info = vk::FenceCreateInfo::default();
-    //     let vk_data = vxresult!(unsafe {
+    //     let vk_data = vx_result!(unsafe {
     //         logical_device
     //             .get_data()
     //             .create_fence(&fence_create_info, None)
@@ -60,7 +60,7 @@ impl Fence {
     pub(super) fn new_signaled(logical_device: Arc<LogicalDevice>) -> Self {
         let fence_create_info =
             vk::FenceCreateInfo::builder().flags(vk::FenceCreateFlags::SIGNALED);
-        let vk_data = vxresult!(unsafe {
+        let vk_data = vx_result!(unsafe {
             logical_device
                 .get_data()
                 .create_fence(&fence_create_info, None)
@@ -72,7 +72,7 @@ impl Fence {
     }
 
     pub(crate) fn wait(&self) {
-        vxresult!(unsafe {
+        vx_result!(unsafe {
             self.logical_device
                 .get_data()
                 .wait_for_fences(&[self.vk_data], true, u64::max_value())
@@ -80,7 +80,7 @@ impl Fence {
     }
 
     pub(crate) fn reset(&self) {
-        vxresult!(unsafe { self.logical_device.get_data().reset_fences(&[self.vk_data]) });
+        vx_result!(unsafe { self.logical_device.get_data().reset_fences(&[self.vk_data]) });
     }
 
     pub(super) fn get_data(&self) -> &vk::Fence {

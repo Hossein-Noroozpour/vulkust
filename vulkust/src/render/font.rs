@@ -78,13 +78,13 @@ impl fmt::Debug for Base {
 impl Base {
     pub fn new_ttf(name: &str) -> Self {
         if !name.ends_with(".ttf") {
-            vxlogf!("Only TTF file is acceptable, not {}.", name);
+            vx_log_f!("Only TTF file is acceptable, not {}.", name);
         }
         let file = format!("data/fonts/{}", name);
-        let mut file = vxresult!(File::open(&file));
+        let mut file = vx_result!(File::open(&file));
         let mut data = Vec::new();
-        vxresult!(file.read_to_end(&mut data));
-        let font = vxunwrap!(TypeFont::try_from_vec(data));
+        vx_result!(file.read_to_end(&mut data));
+        let font = vx_unwrap!(TypeFont::try_from_vec(data));
         let obj_base = ObjectBase::new();
         let name = Some(name.to_string());
         Base {
@@ -99,7 +99,7 @@ impl Default for Base {
     fn default() -> Self {
         let font = include_bytes!(concat!(env!("OUT_DIR"), "/render/fonts/Ubuntu-B.ttf"));
         let font = font.to_vec();
-        let font = vxunwrap!(TypeFont::try_from_vec(font));
+        let font = vx_unwrap!(TypeFont::try_from_vec(font));
         let obj_base = ObjectBase::new();
         let name = None;
         Self {

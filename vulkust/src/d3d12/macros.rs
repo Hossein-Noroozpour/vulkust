@@ -1,7 +1,7 @@
 macro_rules! ThrowIfFailed {
     ($e:expr) => {
         if !$crate::winapi::shared::winerror::SUCCEEDED(unsafe { $e }) {
-            vxlogf!("Handle result failed!");
+            vx_log_f!("Handle result failed!");
         }
     };
 }

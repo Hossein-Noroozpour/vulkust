@@ -72,7 +72,7 @@ impl Device {
                 transmute(&mut adapter)
             ));
             #[cfg(debug_mode)]
-            vxlogi!("Warning: Warp device created instead of Hardware device this is going to impact the performance seriously");
+            vx_log_i!("Warning: Warp device created instead of Hardware device this is going to impact the performance seriously");
         }
         let mut device: &'static mut winapi::um::d3d12::ID3D12Device = unsafe { transmute(0usize) };
         ThrowIfFailed!(winapi::um::d3d12::D3D12CreateDevice(

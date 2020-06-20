@@ -36,21 +36,21 @@ impl CoreAppTrait for MyGame {
     }
 
     fn initialize(&mut self) {
-        let renderer = vxunwrap!(&self.renderer);
-        let renderer = vxresult!(renderer.read());
+        let renderer = vx_unwrap!(&self.renderer);
+        let renderer = vx_result!(renderer.read());
         let asset_manager = renderer.get_asset_manager();
         let ui_scene: Arc<RwLock<UiScene>> =
-            vxresult!(asset_manager.get_scene_manager().write()).create();
+            vx_result!(asset_manager.get_scene_manager().write()).create();
         let camera: Arc<RwLock<Orthographic>> =
-            vxresult!(asset_manager.get_camera_manager().write()).create();
+            vx_result!(asset_manager.get_camera_manager().write()).create();
         {
-            let mut camera = vxresult!(camera.write());
+            let mut camera = vx_result!(camera.write());
             camera.move_local_z(2.0);
         }
         let label: Arc<RwLock<Label>> =
-            vxresult!(asset_manager.get_model_manager().write()).create();
+            vx_result!(asset_manager.get_model_manager().write()).create();
         {
-            let mut label = vxresult!(label.write());
+            let mut label = vx_result!(label.write());
             // by default label has Ubuntu-B.ttf font.
             // If you want custom font,
             //     place your ttf it in data/fonts/ directory
@@ -63,7 +63,7 @@ impl CoreAppTrait for MyGame {
             label.set_text("Hello Vulkust!", &renderer);
         }
         {
-            let mut uiscn = vxresult!(ui_scene.write());
+            let mut uiscn = vx_result!(ui_scene.write());
             uiscn.add_camera(camera);
             uiscn.add_model(label);
         }

@@ -28,7 +28,7 @@ extern "C" fn display_link_callback(
     display_link_context: *mut c_void,
 ) -> apple::core_video::CVReturn {
     let os_app: &Arc<RwLock<OsApp>> = unsafe { transmute(display_link_context) };
-    vxresult!(os_app.read()).update();
+    vx_result!(os_app.read()).update();
     apple::core_video::KCVRETURN_SUCCESS
 }
 
@@ -67,19 +67,19 @@ extern "C" fn deallocate(this: &mut Object, _cmd: Sel) {
         apple::core_video::CVDisplayLinkRelease(display_link);
         let os_app: *mut c_void = *this.get_ivar(APP_VAR_NAME);
         let os_app: *mut Arc<RwLock<OsApp>> = transmute(os_app);
-        let _: () = msg_send![*vxunwrap!(&this.class().superclass()), dealloc];
+        let _: () = msg_send![*vx_unwrap!(&this.class().superclass()), dealloc];
         let _ = Box::from_raw(os_app);
     }
 }
 
 //-(void) keyDown:(NSEvent*) theEvent
 extern "C" fn key_down(_this: &mut Object, _cmd: Sel, _event: apple::Id) {
-    vxlogi!("keyboard key pressed");
+    vx_log_i!("keyboard key pressed");
 }
 
 // - (void)mouseDown:(NSEvent *)event
 extern "C" fn mouse_down(this: &mut Object, _cmd: Sel, e: apple::Id) {
-    vxlogi!("PPPPPPP");
+    vx_log_i!("PPPPPPP");
     let et: apple::NSUInteger = unsafe { msg_send![e, type] };
     let mut e: Option<event::Type> = None;
     if et == apple::app_kit::NSEventType::NS_EVENT_TYPE_LEFT_MOUSE_DOWN.bits() {
@@ -90,9 +90,9 @@ extern "C" fn mouse_down(this: &mut Object, _cmd: Sel, e: apple::Id) {
     }
     let os_app: *mut c_void = unsafe { *this.get_ivar(APP_VAR_NAME) };
     let os_app: &'static mut Arc<RwLock<OsApp>> = unsafe { transmute(os_app) };
-    let core_app = vxresult!(os_app.read());
+    let core_app = vx_result!(os_app.read());
     let core_app = core_app.get_core_app();
-    let core_app = vxresult!(vxunwrap!(core_app).read());
+    let core_app = vx_result!(vx_unwrap!(core_app).read());
     if let Some(e) = e {
         core_app.on_event(event::Event::new(e));
     }
@@ -100,7 +100,7 @@ extern "C" fn mouse_down(this: &mut Object, _cmd: Sel, e: apple::Id) {
 
 // - (void)mouseUp:(NSEvent *)event
 extern "C" fn mouse_up(this: &mut Object, _cmd: Sel, e: apple::Id) {
-    vxlogi!("RRRRRRRR");
+    vx_log_i!("RRRRRRRR");
     let et: apple::NSUInteger = unsafe { msg_send![e, type] };
     let mut e: Option<event::Type> = None;
     if et == apple::app_kit::NSEventType::NS_EVENT_TYPE_LEFT_MOUSE_UP.bits() {
@@ -111,9 +111,9 @@ extern "C" fn mouse_up(this: &mut Object, _cmd: Sel, e: apple::Id) {
     }
     let os_app: *mut c_void = unsafe { *this.get_ivar(APP_VAR_NAME) };
     let os_app: &'static mut Arc<RwLock<OsApp>> = unsafe { transmute(os_app) };
-    let core_app = vxresult!(os_app.read());
+    let core_app = vx_result!(os_app.read());
     let core_app = core_app.get_core_app();
-    let core_app = vxresult!(vxunwrap!(core_app).read());
+    let core_app = vx_result!(vx_unwrap!(core_app).read());
     if let Some(e) = e {
         core_app.on_event(event::Event::new(e));
     }
@@ -129,9 +129,9 @@ extern "C" fn mouse_moved(this: &mut Object, _cmd: Sel, _event: apple::Id) {
     }
     let os_app: *mut c_void = unsafe { *this.get_ivar(APP_VAR_NAME) };
     let os_app: &'static mut Arc<RwLock<OsApp>> = unsafe { transmute(os_app) };
-    let core_app = vxresult!(os_app.read());
+    let core_app = vx_result!(os_app.read());
     let core_app = core_app.get_core_app();
-    let core_app = vxresult!(vxunwrap!(core_app).read());
+    let core_app = vx_result!(vx_unwrap!(core_app).read());
     core_app.on_event(event::Event::new(event::Type::Move(event::Move::Mouse {
         previous: (
             app_data.previous_mouse_position_x,
@@ -154,13 +154,13 @@ extern "C" fn mouse_dragged(this: &mut Object, cmd: Sel, e: apple::Id) {
 
 // -(BOOL) acceptsFirstResponder { return YES; }
 extern "C" fn accepts_first_responder(_this: &mut Object, _cmd: Sel) -> BOOL {
-    vxlogi!("Reached");
+    vx_log_i!("Reached");
     YES
 }
 
 // -(BOOL) acceptsMouseMovedEvents
 extern "C" fn accepts_mouse_moved_events(_this: &mut Object, _cmd: Sel) -> BOOL {
-    vxlogi!("Reached");
+    vx_log_i!("Reached");
     YES
 }
 

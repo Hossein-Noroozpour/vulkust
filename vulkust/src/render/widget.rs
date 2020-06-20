@@ -36,7 +36,7 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.model_base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
+        vx_unimplemented!(); //it must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {
@@ -132,7 +132,7 @@ impl Model for Base {
     }
 
     fn render_shadow(&self, _: &mut CmdBuffer, _: usize) {
-        vxlogf!("Widget does not make shadow");
+        vx_log_f!("Widget does not make shadow");
     }
 }
 
@@ -165,7 +165,8 @@ impl Label {
     }
 
     pub fn set_font_with_file_name(&mut self, name: &str, engine: &Engine) {
-        self.font = vxresult!(engine.get_asset_manager().get_font_manager().write()).load_ttf(name);
+        self.font =
+            vx_result!(engine.get_asset_manager().get_font_manager().write()).load_ttf(name);
         self.create_text_mesh(engine);
     }
 
@@ -209,7 +210,7 @@ impl Label {
                 return;
             }
             let scale = Scale::uniform(self.text_size);
-            let font = vxresult!(self.font.read());
+            let font = vx_result!(self.font.read());
             let font = font.get_font();
             let v_metrics = font.v_metrics(scale);
             let point = point(0.0, 0.0 + v_metrics.ascent);
@@ -236,7 +237,7 @@ impl Label {
                     }
                 }
             }
-            vxlogi!("{}-{}-{}-{}", max_x, max_y, min_x, min_y);
+            vx_log_i!("{}-{}-{}-{}", max_x, max_y, min_x, min_y);
             let imgw = max_x as i32 + 5;
             let imgh = max_y as i32 + 5;
             let w = self.size * (imgw as f32 / imgh as f32);
@@ -287,10 +288,10 @@ impl Label {
             let mut material = Material::default(engine);
             let asset_manager = engine.get_asset_manager();
             material.set_base_color_texture(
-                vxresult!(asset_manager.get_texture_manager().write()).create_2d_with_pixels(
+                vx_result!(asset_manager.get_texture_manager().write()).create_2d_with_pixels(
                     imgw as u32,
                     imgh as u32,
-                    &*vxresult!(engine.get_gapi_engine().read()),
+                    &*vx_result!(engine.get_gapi_engine().read()),
                     &img,
                 ),
             );
@@ -299,7 +300,7 @@ impl Label {
             let radius = cgmath::dot(radius, radius).sqrt();
             let mesh = MeshBase::new(&vertices, &indices, radius, engine);
             let mesh: Arc<RwLock<dyn Mesh>> = Arc::new(RwLock::new(mesh));
-            vxresult!(asset_manager.get_mesh_manager().write()).add(&mesh);
+            vx_result!(asset_manager.get_mesh_manager().write()).add(&mesh);
             (mesh, material)
         };
         self.add_mesh(mesh, material);
@@ -319,7 +320,7 @@ impl Object for Label {
 
     fn set_name(&mut self, name: &str) {
         self.base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
+        vx_unimplemented!(); //it must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {
@@ -421,7 +422,7 @@ impl Model for Label {
 
 impl DefaultModel for Label {
     fn default(eng: &Engine) -> Self {
-        let font = vxresult!(eng.get_asset_manager().get_font_manager().read())
+        let font = vx_result!(eng.get_asset_manager().get_font_manager().read())
             .get_default()
             .clone();
         Label {

@@ -58,12 +58,12 @@ impl Object for Buffer {
 impl Allocator for Buffer {
     fn allocate(&mut self, obj: &Arc<RwLock<dyn Object>>) {
         self.info.allocate(obj);
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn clean(&mut self) {
         self.info.clean();
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }
 
@@ -108,21 +108,21 @@ impl RootBuffer {
                     | vk::BufferUsageFlags::TRANSFER_DST,
             ),
         };
-        let logical_device = vxresult!(memmgr.read()).get_device().clone();
+        let logical_device = vx_result!(memmgr.read()).get_device().clone();
         let mut buffer_info = vk::BufferCreateInfo::default();
         buffer_info.size = size as vk::DeviceSize;
         buffer_info.usage = usage;
         let vk_data =
-            vxresult!(unsafe { logical_device.get_data().create_buffer(&buffer_info, None,) });
+            vx_result!(unsafe { logical_device.get_data().create_buffer(&buffer_info, None,) });
         let mem_reqs = unsafe {
             logical_device
                 .get_data()
                 .get_buffer_memory_requirements(vk_data)
         };
-        let memory = vxresult!(memmgr.write()).allocate(&mem_reqs, memloc);
+        let memory = vx_result!(memmgr.write()).allocate(&mem_reqs, memloc);
         {
-            let mem = vxresult!(memory.read());
-            vxresult!(unsafe {
+            let mem = vx_result!(memory.read());
+            vx_result!(unsafe {
                 logical_device.get_data().bind_buffer_memory(
                     vk_data,
                     mem.get_data(),
@@ -141,7 +141,7 @@ impl RootBuffer {
     }
 
     pub(crate) fn allocate(&mut self, size: isize) -> Arc<RwLock<Buffer>> {
-        let memoff = vxresult!(self.memory.read())
+        let memoff = vx_result!(self.memory.read())
             .get_allocated_memory()
             .get_offset();
         let buffer = Arc::new(RwLock::new(Buffer::new(
@@ -222,7 +222,7 @@ impl Dynamic {
         #[cfg(debug_mode)]
         {
             if size_of::<T>() != self.actual_size as usize {
-                vxlogf!("Data must have same size of buffer.");
+                vx_log_f!("Data must have same size of buffer.");
             }
         }
         self.update_with_ptr(unsafe { transmute(data) }, frame_number);
@@ -266,16 +266,16 @@ impl Manager {
         let mut gpu_buffer = RootBuffer::new(static_size, Location::GPU, memmgr);
         let static_buffer = gpu_buffer.allocate(static_size);
         let static_uploader_buffer = cpu_buffer.allocate(static_uploader_size);
-        let memmgr = vxresult!(memmgr.read());
+        let memmgr = vx_result!(memmgr.read());
         let vk_device = memmgr.get_device().get_data();
         let (memory_size, vk_memory) = {
-            let cpu_memory = vxresult!(cpu_buffer.memory.read());
+            let cpu_memory = vx_result!(cpu_buffer.memory.read());
             let vk_memory = cpu_memory.get_data();
-            let size = vxresult!(cpu_memory.get_root().read()).get_size();
+            let size = vx_result!(cpu_memory.get_root().read()).get_size();
             (size, vk_memory)
         };
         let cpu_memory_mapped_ptr = unsafe {
-            transmute(vxresult!(vk_device.map_memory(
+            transmute(vx_result!(vk_device.map_memory(
                 vk_memory,
                 0 as vk::DeviceSize,
                 memory_size as vk::DeviceSize,
@@ -317,13 +317,14 @@ impl Manager {
         data: *const c_void,
         data_len: usize,
     ) -> Static {
-        let buffer = vxresult!(self.static_buffer.write()).allocate(data_len as isize);
+        let buffer = vx_result!(self.static_buffer.write()).allocate(data_len as isize);
         let upbuff = self.create_staging_buffer_with_ptr(data, data_len as usize);
-        let upbuffer = vxresult!(upbuff.read());
+        let upbuffer = vx_result!(upbuff.read());
         let mut range = vk::BufferCopy::default();
         range.src_offset = upbuffer.get_allocated_memory().get_offset() as vk::DeviceSize;
-        range.dst_offset =
-            vxresult!(buffer.read()).get_allocated_memory().get_offset() as vk::DeviceSize;
+        range.dst_offset = vx_result!(buffer.read())
+            .get_allocated_memory()
+            .get_offset() as vk::DeviceSize;
         range.size = data_len as vk::DeviceSize;
         self.copy_ranges.push(range);
         Static::new(buffer)
@@ -340,9 +341,9 @@ impl Manager {
         data: *const c_void,
         data_len: usize,
     ) -> Arc<RwLock<Buffer>> {
-        let upbuffer = vxresult!(self.static_uploader_buffer.write()).allocate(data_len as isize);
+        let upbuffer = vx_result!(self.static_uploader_buffer.write()).allocate(data_len as isize);
         let off = {
-            let upbuff = vxresult!(upbuffer.read());
+            let upbuff = vx_result!(upbuffer.read());
             let mut off = upbuff.memory_offset;
             off += upbuff.get_allocated_memory().get_offset();
             off += self.cpu_memory_mapped_ptr;
@@ -370,7 +371,7 @@ impl Manager {
         base_array_layer: u32,
     ) {
         let upbuff = self.create_staging_buffer_with_vec(pixels);
-        let upbuffer = vxresult!(upbuff.read());
+        let upbuffer = vx_result!(upbuff.read());
         let mut copy_info = vk::BufferImageCopy::default();
         copy_info.image_subresource.aspect_mask = vk::ImageAspectFlags::COLOR;
         copy_info.image_subresource.mip_level = 0;
@@ -386,9 +387,9 @@ impl Manager {
     pub(crate) fn create_dynamic_buffer(&mut self, actual_size: isize) -> Dynamic {
         let mut buffers = Vec::with_capacity(self.dynamic_buffers.len());
         for dynamic_buffer in &self.dynamic_buffers {
-            let buffer = vxresult!(dynamic_buffer.write()).allocate(actual_size);
+            let buffer = vx_result!(dynamic_buffer.write()).allocate(actual_size);
             let ptr = {
-                let buffer = vxresult!(buffer.read());
+                let buffer = vx_result!(buffer.read());
                 buffer.memory_offset
                     + buffer.get_allocated_memory().get_offset()
                     + self.cpu_memory_mapped_ptr
@@ -414,15 +415,15 @@ impl Manager {
         }
         if self.copy_to_image_ranges.len() != 0 {
             for copy_img in &self.copy_to_image_ranges {
-                let mut image = vxresult!(copy_img.1.write());
+                let mut image = vx_result!(copy_img.1.write());
                 image.set_layout(cmd, vk::ImageLayout::TRANSFER_DST_OPTIMAL);
             }
             for copy_img in &self.copy_to_image_ranges {
-                let image = vxresult!(copy_img.1.read());
+                let image = vx_result!(copy_img.1.read());
                 cmd.copy_buffer_to_image(self.cpu_buffer.vk_data, image.get_data(), &copy_img.0);
             }
             for copy_img in &self.copy_to_image_ranges {
-                let mut image = vxresult!(copy_img.1.write());
+                let mut image = vx_result!(copy_img.1.write());
                 if image.get_mips_count() == 1 {
                     image.set_layout(cmd, vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL);
                 }
@@ -434,7 +435,7 @@ impl Manager {
 
     pub(super) fn secondary_update(&self, cmd: &mut CmdBuffer, frame_number: usize) {
         for ri in &self.frame_copy_to_image_ranges[frame_number] {
-            let mut img = vxresult!(ri.1.write());
+            let mut img = vx_result!(ri.1.write());
             if img.get_mips_count() < 2 {
                 continue;
             }

@@ -35,7 +35,7 @@ impl Application {
         let mut scr = 0 as c_int;
         let connection: *mut xcb::Connection = unsafe { xcb::xcb_connect(null_mut(), &mut scr) };
         if connection == null_mut() {
-            vxlogf!("Could not find a compatible Vulkan ICD!");
+            vx_log_f!("Could not find a compatible Vulkan ICD!");
         }
         let setup = unsafe { xcb::xcb_get_setup(connection) };
         let mut iter = unsafe { xcb::xcb_setup_roots_iterator(setup) };
@@ -85,7 +85,7 @@ impl Application {
         let cookie = unsafe { xcb::xcb_intern_atom(connection, 1, 12, cs.as_ptr()) };
         let reply = unsafe { xcb::xcb_intern_atom_reply(connection, cookie, null_mut()) };
         if reply == null_mut() {
-            vxlogf!("Reply is null.");
+            vx_log_f!("Reply is null.");
         }
         let cs = CString::new("WM_DELETE_WINDOW".to_string().into_bytes()).unwrap();
         let cookie2 = unsafe { xcb::xcb_intern_atom(connection, 0, 16, cs.as_ptr()) };
@@ -156,10 +156,10 @@ impl Application {
                     }
                     _ => (),
                 }
-                vxresult!(vxunwrap!(&self.core_app).read()).on_event(e);
+                vx_result!(vx_unwrap!(&self.core_app).read()).on_event(e);
             }
-            vxresult!(vxunwrap!(&self.core_app).write()).update();
-            vxresult!(vxunwrap!(&self.renderer).read()).update();
+            vx_result!(vx_unwrap!(&self.core_app).write()).update();
+            vx_result!(vx_unwrap!(&self.renderer).read()).update();
         }
     }
 
@@ -210,8 +210,8 @@ impl Application {
             }
             xproto::MOTION_NOTIFY => {
                 let pos = self.get_mouse_position();
-                let pre = *vxresult!(self.current_mouse_position.read());
-                *vxresult!(self.current_mouse_position.write()) = pos;
+                let pre = *vx_result!(self.current_mouse_position.read());
+                *vx_result!(self.current_mouse_position.write()) = pos;
                 return Some(EventType::Move(event::Move::Mouse {
                     previous: pre,
                     current: pos,
@@ -226,7 +226,7 @@ impl Application {
                     xcb::ButtonIndex::_Index2 => Mouse::Middle,
                     xcb::ButtonIndex::_Index3 => Mouse::Right,
                     _ => {
-                        vxlogi!("Unknown mouse button pressed.");
+                        vx_log_i!("Unknown mouse button pressed.");
                         Mouse::Left
                     }
                 };
@@ -243,7 +243,7 @@ impl Application {
                     xcb::ButtonIndex::_Index2 => Mouse::Middle,
                     xcb::ButtonIndex::_Index3 => Mouse::Right,
                     _ => {
-                        vxloge!("Unknown mouse button pressed.");
+                        vx_log_e!("Unknown mouse button pressed.");
                         Mouse::Left
                     }
                 };
@@ -262,7 +262,7 @@ impl Application {
                     // xproto::KEY_P => { Keyboard::P },
                     xproto::KEY_F1 => Keyboard::Function(1),
                     k @ _ => {
-                        vxlogi!("Unknown key: {:?} presse", k);
+                        vx_log_i!("Unknown key: {:?} presse", k);
                         Keyboard::W
                     }
                 });
@@ -299,7 +299,7 @@ impl Application {
                 // }
             }
             c @ _ => {
-                vxlogi!("Uncontrolled event: {:?}", c);
+                vx_log_i!("Uncontrolled event: {:?}", c);
             }
         }
         return None;

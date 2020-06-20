@@ -7,7 +7,7 @@ pub(crate) struct RenderPass {}
 
 impl RenderPass {
     pub(crate) fn new(_views: Vec<Arc<ImageView>>, _clear: bool, _has_reader: bool) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
     pub(crate) fn new_with_layouts(
         _views: Vec<Arc<ImageView>>,
@@ -15,6 +15,6 @@ impl RenderPass {
         _start_layouts: &[Layout],
         _end_layouts: &[Layout],
     ) -> Self {
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 }

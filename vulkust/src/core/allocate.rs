@@ -7,10 +7,10 @@ pub fn align(size: isize, alignment: isize, mask: isize, not_mask: isize) -> isi
     {
         check_power_of_two(alignment);
         if alignment - 1 != mask {
-            vxunexpected!();
+            vx_unexpected!();
         }
         if mask != !not_mask {
-            vxunexpected!();
+            vx_unexpected!();
         }
     }
     let tmp = size & mask;
@@ -23,13 +23,13 @@ pub fn align(size: isize, alignment: isize, mask: isize, not_mask: isize) -> isi
 #[cfg(debug_mode)]
 pub fn check_power_of_two(mut v: isize) {
     if v <= 0 {
-        vxunexpected!();
+        vx_unexpected!();
     }
     loop {
         if v & 1 == 1 {
             v >>= 1;
             if v != 0 {
-                vxunexpected!();
+                vx_unexpected!();
             }
             return;
         }
@@ -154,7 +154,7 @@ impl Object for Memory {
                     self.offset_alignment_not_mask,
                 )
             {
-                vxunexpected!();
+                vx_unexpected!();
             }
         }
         self.offset = offset;
@@ -192,15 +192,15 @@ impl Object for Container {
 
 impl Allocator for Container {
     fn allocate(&mut self, obj: &Arc<RwLock<dyn Object>>) {
-        let aligned_offset = vxresult!(obj.read())
+        let aligned_offset = vx_result!(obj.read())
             .get_allocated_memory()
             .align(self.free_offset);
-        vxresult!(obj.write()).place(aligned_offset);
-        let mobj = vxresult!(obj.read());
+        vx_result!(obj.write()).place(aligned_offset);
+        let mobj = vx_result!(obj.read());
         let aobj = mobj.get_allocated_memory();
         self.free_offset = aobj.get_end();
         if self.free_offset > self.base.end {
-            vxlogf!(
+            vx_log_f!(
                 "Out of space, you probably forget to increase \
                  the size or cleaning the allocator, \
                  offset_alignment: {}, \
@@ -227,7 +227,7 @@ impl Allocator for Container {
         self.free_offset = self.base.offset;
         for obj in &self.objects {
             if let Some(obj) = obj.upgrade() {
-                let mut mobj = vxresult!(obj.write());
+                let mut mobj = vx_result!(obj.write());
                 let aligned_offset = mobj.get_allocated_memory().align(self.free_offset);
                 if aligned_offset != self.free_offset {
                     mobj.place(aligned_offset);

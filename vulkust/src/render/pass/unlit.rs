@@ -17,7 +17,7 @@ impl Unlit {
     pub(crate) fn new(gapi_engine: &GraphicApiEngine, config: &Configurations) -> Self {
         let render_pass = gapi_engine.get_render_pass().clone();
         let framebuffers = gapi_engine.get_framebuffers().clone();
-        let pipeline = vxresult!(gapi_engine.get_pipeline_manager().write()).create(
+        let pipeline = vx_result!(gapi_engine.get_pipeline_manager().write()).create(
             render_pass.clone(),
             PipelineType::Unlit,
             config,

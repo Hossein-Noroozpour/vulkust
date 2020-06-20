@@ -14,7 +14,7 @@ pub(super) fn convert_layout(f: &Layout) -> vk::ImageLayout {
         &Layout::Uninitialized => return vk::ImageLayout::UNDEFINED,
         &Layout::DepthStencil => return vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         &Layout::Display => return vk::ImageLayout::PRESENT_SRC_KHR,
-        &Layout::ShaderReadOnly => return vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL, // _ => vxunexpected!(),
+        &Layout::ShaderReadOnly => return vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL, // _ => vx_unexpected!(),
     }
 }
 
@@ -38,15 +38,15 @@ impl Image {
         info: &vk::ImageCreateInfo,
         memory_mgr: &Arc<RwLock<MemoryManager>>,
     ) -> Self {
-        let logical_device = vxresult!(memory_mgr.read()).get_device().clone();
+        let logical_device = vx_result!(memory_mgr.read()).get_device().clone();
         let vk_dev = logical_device.get_data().clone();
-        let vk_data = vxresult!(unsafe { vk_dev.create_image(info, None) });
+        let vk_data = vx_result!(unsafe { vk_dev.create_image(info, None) });
         let mem_reqs = unsafe { vk_dev.get_image_memory_requirements(vk_data) };
-        let memory = vxresult!(memory_mgr.write()).allocate(&mem_reqs, MemoryLocation::GPU);
+        let memory = vx_result!(memory_mgr.write()).allocate(&mem_reqs, MemoryLocation::GPU);
         {
-            let memory_r = vxresult!(memory.read());
-            let root_memory = vxresult!(memory_r.get_root().read());
-            vxresult!(unsafe {
+            let memory_r = vx_result!(memory.read());
+            let root_memory = vx_result!(memory_r.get_root().read());
+            vx_result!(unsafe {
                 vk_dev.bind_image_memory(
                     vk_data,
                     root_memory.get_data(),
@@ -103,7 +103,7 @@ impl Image {
         #[cfg(debug_mode)]
         {
             if mip_levels <= 0 {
-                vxlogf!(
+                vx_log_f!(
                     "Unexpected image aspects, width: {} height: {} mip-levels: {}",
                     width,
                     height,
@@ -134,14 +134,14 @@ impl Image {
                     | vk::ImageUsageFlags::SAMPLED,
             );
         let memmgr = {
-            let buffmgr = vxresult!(buffmgr.read());
-            let memmgr = vxresult!(buffmgr.get_gpu_root_buffer().get_memory().read())
+            let buffmgr = vx_result!(buffmgr.read());
+            let memmgr = vx_result!(buffmgr.get_gpu_root_buffer().get_memory().read())
                 .get_manager()
                 .clone();
             memmgr
         };
         let myself = Arc::new(RwLock::new(Self::new_with_info(&image_info, &memmgr)));
-        vxresult!(buffmgr.write()).create_staging_image(&myself, data, &image_info, 0);
+        vx_result!(buffmgr.write()).create_staging_image(&myself, data, &image_info, 0);
         myself
     }
 
@@ -155,7 +155,7 @@ impl Image {
         #[cfg(debug_mode)]
         {
             if mip_levels <= 0 {
-                vxlogf!(
+                vx_log_f!(
                     "Unexpected image aspects, width: {} height: {} mip-levels: {}",
                     width,
                     height,
@@ -188,8 +188,8 @@ impl Image {
             .flags(vk::ImageCreateFlags::CUBE_COMPATIBLE)
             .build();
         let memmgr = {
-            let buffmgr = vxresult!(buffmgr.read());
-            let memmgr = vxresult!(buffmgr.get_gpu_root_buffer().get_memory().read())
+            let buffmgr = vx_result!(buffmgr.read());
+            let memmgr = vx_result!(buffmgr.get_gpu_root_buffer().get_memory().read())
                 .get_manager()
                 .clone();
             memmgr
@@ -197,7 +197,7 @@ impl Image {
         let mut myself = Self::new_with_info(&image_info, &memmgr);
         myself.image_type = ImageType::Cube;
         let myself = Arc::new(RwLock::new(myself));
-        let mut bufmgr = vxresult!(buffmgr.write());
+        let mut bufmgr = vx_result!(buffmgr.write());
         for i in 0..6 {
             bufmgr.create_staging_image(&myself, data[i], &image_info, i as u32);
         }
@@ -241,7 +241,7 @@ impl Image {
             vk::ImageLayout::TRANSFER_SRC_OPTIMAL => vk::AccessFlags::TRANSFER_READ,
             vk::ImageLayout::TRANSFER_DST_OPTIMAL => vk::AccessFlags::TRANSFER_WRITE,
             vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL => vk::AccessFlags::SHADER_READ,
-            _ => vxunexpected!(),
+            _ => vx_unexpected!(),
         };
         let dst_access_mask = match new_layout {
             vk::ImageLayout::TRANSFER_DST_OPTIMAL => vk::AccessFlags::TRANSFER_WRITE,
@@ -256,7 +256,7 @@ impl Image {
                 }
                 vk::AccessFlags::SHADER_READ
             }
-            _ => vxunexpected!(),
+            _ => vx_unexpected!(),
         };
         let barrier = vk::ImageMemoryBarrier::builder()
             .src_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
@@ -472,7 +472,7 @@ impl View {
         aspect_mask: vk::ImageAspectFlags,
     ) -> Self {
         let vk_data = {
-            let img = vxresult!(image.read());
+            let img = vx_result!(image.read());
             let ref dev = &img.logical_device;
             let view_create_info = vk::ImageViewCreateInfo::builder()
                 .image(img.vk_data)
@@ -501,7 +501,7 @@ impl View {
                         .build(),
                 )
                 .build();
-            vxresult!(unsafe { dev.get_data().create_image_view(&view_create_info, None,) })
+            vx_result!(unsafe { dev.get_data().create_image_view(&view_create_info, None,) })
         };
         Self { image, vk_data }
     }
@@ -554,7 +554,7 @@ impl View {
             }
             AttachmentType::DepthStencilDisplay => vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT,
         };
-        let vkfmt = vxresult!(memory_mgr.read())
+        let vkfmt = vx_result!(memory_mgr.read())
             .get_device()
             .convert_format(format);
         let image_info = vk::ImageCreateInfo::builder()
@@ -589,7 +589,7 @@ impl View {
 impl Drop for View {
     fn drop(&mut self) {
         unsafe {
-            let img = vxresult!(self.image.read());
+            let img = vx_result!(self.image.read());
             img.logical_device
                 .get_data()
                 .destroy_image_view(self.vk_data, None);

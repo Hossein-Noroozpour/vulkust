@@ -85,27 +85,27 @@ impl Texture for Cube {
 
 impl Loadable for Cube {
     fn new_with_gltf(_texture: &gltf::Texture, _engine: &Engine, _data: &[u8]) -> Self {
-        // let name = vxunwrap!(texture.source().name()).to_string();
+        // let name = vx_unwrap!(texture.source().name()).to_string();
         // let obj_base = ObjectBase::new();
         // let view = match texture.source().source() {
         //     gltf::image::Source::View { view, mime_type: _ } => view,
-        //     _ => vxlogf!("Only embeded and view texture resources is acceptable."),
+        //     _ => vx_log_f!("Only embeded and view texture resources is acceptable."),
         // };
         // if let Some(_) = view.stride() {
-        //     vxlogf!("Stride is not acceptable in textures.");
+        //     vx_log_f!("Stride is not acceptable in textures.");
         // }
         // let offset = view.offset();
         // let length = view.length();
         // match view.buffer().source() {
         //     gltf::buffer::Source::Bin => {}
-        //     _ => vxlogf!("Only embeded and view texture resources is acceptable."),
+        //     _ => vx_log_f!("Only embeded and view texture resources is acceptable."),
         // }
-        // let img = vxresult!(image::load_from_memory(&data[offset..offset + length])).to_rgba();
+        // let img = vx_result!(image::load_from_memory(&data[offset..offset + length])).to_rgba();
         // let (width, height) = img.dimensions();
         // let img = img.into_raw();
-        // let geng = vxresult!(engine.get_gapi_engine().read());
+        // let geng = vx_result!(engine.get_gapi_engine().read());
         // Self::new_with_base_pixels_name(obj_base, width, height, &geng, &img, Some(name))
-        vxunimplemented!();
+        vx_unimplemented!();
     }
 
     fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self {
@@ -113,23 +113,23 @@ impl Loadable for Cube {
         let mut faces_data = Vec::with_capacity(6);
         let size: Size = reader.read();
         let data = reader.read_bytes(size);
-        let img = vxresult!(image::load_from_memory(&data)).to_rgba();
+        let img = vx_result!(image::load_from_memory(&data)).to_rgba();
         let (width, height) = img.dimensions();
         faces_data.push(img.into_raw());
         for _ in 1..6 {
             let size: Size = reader.read();
             let data = reader.read_bytes(size);
-            let img = vxresult!(image::load_from_memory(&data)).to_rgba();
+            let img = vx_result!(image::load_from_memory(&data)).to_rgba();
             #[cfg(debug_texture)]
             {
                 let (w, h) = img.dimensions();
                 if w != width || h != height {
-                    vxlogf!("Different width and height in cube texture {}", id);
+                    vx_log_f!("Different width and height in cube texture {}", id);
                 }
             }
             faces_data.push(img.into_raw());
         }
-        let geng = vxresult!(engine.get_gapi_engine().read());
+        let geng = vx_result!(engine.get_gapi_engine().read());
         Self::new_with_base_pixels(
             obj_base,
             width,

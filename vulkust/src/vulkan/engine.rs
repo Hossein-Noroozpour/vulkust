@@ -150,7 +150,7 @@ impl Engine {
         let current_buffer = match self.swapchain.get_next_image_index(&self.present_semaphore) {
             NextImageResult::Next(c) => c,
             NextImageResult::NeedsRefresh => {
-                vxlogf!("Problem with rereshing screen, engine needs refreshing.");
+                vx_log_f!("Problem with rereshing screen, engine needs refreshing.");
             }
         } as usize;
         self.wait_fences[current_buffer].wait();
@@ -163,9 +163,10 @@ impl Engine {
     }
 
     fn clear_copy_data(&self) {
-        let mut pcmd = vxresult!(self.data_primary_cmds[self.current_frame_number as usize].lock());
+        let mut pcmd =
+            vx_result!(self.data_primary_cmds[self.current_frame_number as usize].lock());
         pcmd.begin();
-        vxresult!(self.buffer_manager.write())
+        vx_result!(self.buffer_manager.write())
             .update(&mut *pcmd, self.current_frame_number as usize);
         self.clear_framebuffers[self.current_frame_number as usize].begin(&mut *pcmd);
         pcmd.end_render_pass();
@@ -175,9 +176,9 @@ impl Engine {
 
     fn secondary_data_preparing(&self) {
         let mut pcmd =
-            vxresult!(self.second_data_primary_cmds[self.current_frame_number as usize].lock());
+            vx_result!(self.second_data_primary_cmds[self.current_frame_number as usize].lock());
         pcmd.begin();
-        vxresult!(self.buffer_manager.write())
+        vx_result!(self.buffer_manager.write())
             .secondary_update(&mut *pcmd, self.current_frame_number as usize);
         pcmd.end();
         self.submit(&self.data_semaphore, &pcmd, &self.second_data_semaphore);
@@ -214,7 +215,7 @@ impl Engine {
             vk::Fence::null()
         };
         let vk_dev = self.logical_device.get_data();
-        vxresult!(unsafe {
+        vx_result!(unsafe {
             vk_dev.queue_submit(
                 self.logical_device.get_vk_graphic_queue(),
                 &[submit_info],
@@ -258,7 +259,7 @@ impl Engine {
         present_info.p_image_indices = &self.current_frame_number;
         present_info.p_wait_semaphores = self.render_semaphore.get_data();
         present_info.wait_semaphore_count = 1;
-        vxresult!(unsafe {
+        vx_result!(unsafe {
             self.swapchain
                 .get_loader()
                 .queue_present(self.logical_device.get_vk_graphic_queue(), &present_info)

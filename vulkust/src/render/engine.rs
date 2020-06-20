@@ -22,7 +22,7 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(core_app: Arc<RwLock<dyn CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
-        let core_config = &vxresult!(core_app.read()).get_config();
+        let core_config = &vx_result!(core_app.read()).get_config();
         let asset_manager = AssetManager::new(&core_config);
         let config = core_config.get_render().clone();
         let gapi_engine = Arc::new(RwLock::new(GraphicApiEngine::new(os_app, core_config)));
@@ -63,7 +63,7 @@ impl Engine {
     }
 
     pub fn update(&self) {
-        vxresult!(self.timing.write()).update();
+        vx_result!(self.timing.write()).update();
         self.multithreaded_engine.render();
     }
 

@@ -24,9 +24,9 @@ impl Framebuffer {
         let mut attachments = Vec::<vk::ImageView>::new();
         for v in &buffers {
             attachments.push(v.get_data());
-            let img = vxresult!(v.get_image().read());
+            let img = vx_result!(v.get_image().read());
             let a = img.get_dimensions();
-            if vxflagcheck!(
+            if vx_flag_check!(
                 img.get_vk_usage(),
                 vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT
             ) {
@@ -36,7 +36,7 @@ impl Framebuffer {
             height = a.1;
             vkdev = Some(img.get_device().get_data().clone());
         }
-        let vkdev = vxunwrap!(vkdev);
+        let vkdev = vx_unwrap!(vkdev);
 
         let fb_create_info = vk::FramebufferCreateInfo::builder()
             .render_pass(*render_pass.get_data())
@@ -44,7 +44,7 @@ impl Framebuffer {
             .attachments(&attachments)
             .width(width)
             .height(height);
-        let vk_data = vxresult!(unsafe { vkdev.create_framebuffer(&fb_create_info, None) });
+        let vk_data = vx_result!(unsafe { vkdev.create_framebuffer(&fb_create_info, None) });
 
         let mut clear_values = vec![
             vk::ClearValue {
@@ -86,7 +86,7 @@ impl Framebuffer {
     }
 
     pub(crate) fn get_dimensions(&self) -> (u32, u32) {
-        return vxresult!(self.buffers[0].get_image().read()).get_dimensions();
+        return vx_result!(self.buffers[0].get_image().read()).get_dimensions();
     }
 
     pub(crate) fn begin(&self, cmd_buffer: &mut CmdBuffer) {
@@ -128,7 +128,7 @@ impl Framebuffer {
 
 impl Drop for Framebuffer {
     fn drop(&mut self) {
-        let img = vxresult!(self.buffers[0].get_image().read());
+        let img = vx_result!(self.buffers[0].get_image().read());
         let vkdev = img.get_device().get_data();
         unsafe {
             vkdev.destroy_framebuffer(self.vk_data, None);

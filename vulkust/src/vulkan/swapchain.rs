@@ -40,9 +40,9 @@ impl Swapchain {
         if best_surface_format.format != vk::Format::R8G8B8A8_UNORM
             && best_surface_format.format != vk::Format::B8G8R8A8_UNORM
         {
-            vxlogi!("VK_FORMAT_R8G8B8A8_UNORM not found in the surface.");
+            vx_log_i!("VK_FORMAT_R8G8B8A8_UNORM not found in the surface.");
             best_surface_format = surface_formats[0];
-            vxlogi!("The specified format is {:?}", best_surface_format);
+            vx_log_i!("The specified format is {:?}", best_surface_format);
         }
         let mut swapchain_images_count = surface_caps.min_image_count + 1;
         if surface_caps.max_image_count > 0 && swapchain_images_count > surface_caps.max_image_count
@@ -50,7 +50,7 @@ impl Swapchain {
             swapchain_images_count = surface_caps.max_image_count;
         }
         #[cfg(debug_mode)]
-        vxlogi!("Swapchain images count: {:?}", swapchain_images_count);
+        vx_log_i!("Swapchain images count: {:?}", swapchain_images_count);
         let mut image_usage = vk::ImageUsageFlags::COLOR_ATTACHMENT;
         let physical_device = logical_device.get_physical();
         let vk_physical_device = physical_device.get_data();
@@ -61,7 +61,7 @@ impl Swapchain {
                 best_surface_format.format,
             )
         };
-        if vxflagcheck!(
+        if vx_flag_check!(
             format_props.optimal_tiling_features,
             vk::FormatFeatureFlags::BLIT_DST
         ) {
@@ -92,35 +92,35 @@ impl Swapchain {
             .present_mode(vk::PresentModeKHR::FIFO)
             .clipped(true)
             .composite_alpha(
-                if vxflagcheck!(
+                if vx_flag_check!(
                     surface_caps.supported_composite_alpha,
                     vk::CompositeAlphaFlagsKHR::OPAQUE
                 ) {
                     vk::CompositeAlphaFlagsKHR::OPAQUE
-                } else if vxflagcheck!(
+                } else if vx_flag_check!(
                     surface_caps.supported_composite_alpha,
                     vk::CompositeAlphaFlagsKHR::INHERIT
                 ) {
                     vk::CompositeAlphaFlagsKHR::INHERIT
-                } else if vxflagcheck!(
+                } else if vx_flag_check!(
                     surface_caps.supported_composite_alpha,
                     vk::CompositeAlphaFlagsKHR::PRE_MULTIPLIED
                 ) {
                     vk::CompositeAlphaFlagsKHR::PRE_MULTIPLIED
-                } else if vxflagcheck!(
+                } else if vx_flag_check!(
                     surface_caps.supported_composite_alpha,
                     vk::CompositeAlphaFlagsKHR::POST_MULTIPLIED
                 ) {
                     vk::CompositeAlphaFlagsKHR::POST_MULTIPLIED
                 } else {
-                    vxlogf!("Error composite is unknown.");
+                    vx_log_f!("Error composite is unknown.");
                 },
             );
         let vk_dev = logical_device.get_data();
         let vk_instance = logical_device.get_vk_instance();
         let loader = SwapchainLoader::new(vk_instance, vk_dev);
-        let vk_data = vxresult!(unsafe { loader.create_swapchain(&swapchain_create_info, None) });
-        let images = vxresult!(unsafe { loader.get_swapchain_images(vk_data) });
+        let vk_data = vx_result!(unsafe { loader.create_swapchain(&swapchain_create_info, None) });
+        let images = vx_result!(unsafe { loader.get_swapchain_images(vk_data) });
         let mut image_views = Vec::with_capacity(images.len());
         for img in images {
             image_views.push(Arc::new(ImageView::new_with_vk_image(
@@ -133,7 +133,7 @@ impl Swapchain {
                 surface_caps.current_extent.height,
             )));
         }
-        vxlogi!("Swapchain created.");
+        vx_log_i!("Swapchain created.");
         Self {
             logical_device: logical_device.clone(),
             _surface_format: best_surface_format,
@@ -144,7 +144,7 @@ impl Swapchain {
     }
 
     pub(crate) fn get_next_image_index(&self, sem: &Arc<Semaphore>) -> NextImageResult {
-        let (image_index, is_suboptimal) = vxresult!(unsafe {
+        let (image_index, is_suboptimal) = vx_result!(unsafe {
             self.loader.acquire_next_image(
                 self.vk_data,
                 u64::max_value(),

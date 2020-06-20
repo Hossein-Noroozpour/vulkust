@@ -138,8 +138,8 @@ impl Base {
         let lights = BTreeMap::new();
         for node in scene.nodes() {
             if node.camera().is_some() {
-                let camera = vxresult!(camera_manager.write()).load_gltf(&node, engine);
-                let id = vxresult!(camera.read()).get_id();
+                let camera = vx_result!(camera_manager.write()).load_gltf(&node, engine);
+                let id = vx_result!(camera.read()).get_id();
                 let w = Arc::downgrade(&camera);
                 cameras.insert(id, camera);
                 active_camera = Some(w);
@@ -155,17 +155,17 @@ impl Base {
                 models.insert(id, model);
             } // todo read lights
         }
-        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
-        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+        let gapi_engine = vx_result!(engine.get_gapi_engine().read());
+        let uniform_buffer = vx_result!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let render_pass = gapi_engine.get_render_pass().clone();
         let framebuffers = gapi_engine.get_framebuffers().clone();
-        let unlit_pipeline = vxresult!(gapi_engine.get_pipeline_manager().write()).create(
+        let unlit_pipeline = vx_result!(gapi_engine.get_pipeline_manager().write()).create(
             render_pass.clone(),
             PipelineType::Unlit,
             engine.get_config(),
         );
-        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
+        let mut descriptor_manager = vx_result!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let frames_count = gapi_engine.get_frames_count();
         let kernels_count = num_cpus::get();
@@ -206,21 +206,21 @@ impl Base {
         let skybox = if reader.read_bool() {
             let skybox_id: Id = reader.read();
             let skyboxmgr = asset_manager.get_skybox_manager();
-            let mut skyboxmgr = vxresult!(skyboxmgr.write());
+            let mut skyboxmgr = vx_result!(skyboxmgr.write());
             Some(skyboxmgr.load_gx3d(eng, skybox_id))
         } else {
             None
         };
         let _constraits_ids = reader.read_array::<Id>(); // todo
         if reader.read_bool() {
-            vxunimplemented!(); // todo
+            vx_unimplemented!(); // todo
         }
         let camera_manager = asset_manager.get_camera_manager();
         let light_manager = asset_manager.get_light_manager();
         let model_manager = asset_manager.get_model_manager();
         let mut cameras = BTreeMap::new();
         let active_camera = {
-            let mut mgr = vxresult!(camera_manager.write());
+            let mut mgr = vx_result!(camera_manager.write());
             for id in &cameras_ids {
                 cameras.insert(*id, mgr.load_gx3d(eng, *id));
             }
@@ -233,11 +233,11 @@ impl Base {
         let mut models = BTreeMap::new();
         let mut all_models = BTreeMap::new();
         {
-            let mut mgr = vxresult!(model_manager.write());
+            let mut mgr = vx_result!(model_manager.write());
             for id in models_ids {
                 let model = mgr.load_gx3d(eng, id);
                 {
-                    let model = vxresult!(model.read());
+                    let model = vx_result!(model.read());
                     let child_models = model.bring_all_child_models();
                     for (id, model) in child_models {
                         all_models.insert(id, Arc::downgrade(&model));
@@ -250,10 +250,10 @@ impl Base {
         let mut lights = BTreeMap::new();
         let mut shadow_maker_lights = BTreeMap::new();
         {
-            let mut mgr = vxresult!(light_manager.write());
+            let mut mgr = vx_result!(light_manager.write());
             for id in lights_ids {
                 let light = mgr.load_gx3d(eng, id);
-                let is_shadow_maker = vxresult!(light.read()).to_shadow_maker().is_some();
+                let is_shadow_maker = vx_result!(light.read()).to_shadow_maker().is_some();
                 if is_shadow_maker {
                     shadow_maker_lights.insert(id, light);
                 } else {
@@ -262,17 +262,17 @@ impl Base {
             }
         }
         let uniform = Uniform::new();
-        let gapi_engine = vxresult!(eng.get_gapi_engine().read());
-        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+        let gapi_engine = vx_result!(eng.get_gapi_engine().read());
+        let uniform_buffer = vx_result!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let render_pass = gapi_engine.get_render_pass().clone();
         let framebuffers = gapi_engine.get_framebuffers().clone();
-        let unlit_pipeline = vxresult!(gapi_engine.get_pipeline_manager().write()).create(
+        let unlit_pipeline = vx_result!(gapi_engine.get_pipeline_manager().write()).create(
             render_pass.clone(),
             PipelineType::Unlit,
             eng.get_config(),
         );
-        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
+        let mut descriptor_manager = vx_result!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let frames_count = gapi_engine.get_frames_count();
         let kernels_count = num_cpus::get();
@@ -308,7 +308,7 @@ impl Base {
         let kernels_count = self.kernels_data.len();
         let mut kernels_data = Vec::with_capacity(kernels_count);
         for kd in &self.kernels_data {
-            kernels_data.push(vxresult!(kd.lock()));
+            kernels_data.push(vx_result!(kd.lock()));
         }
         let mut ds: Vec<&[(Real, Weak<RwLock<dyn Model>>)]> = Vec::with_capacity(kernels_count);
         for kd in &kernels_data {
@@ -346,7 +346,7 @@ impl Object for Base {
 
     fn set_name(&mut self, name: &str) {
         self.obj_base.set_name(name);
-        vxunimplemented!(); //it must update corresponding manager
+        vx_unimplemented!(); //it must update corresponding manager
     }
 
     fn disable_rendering(&mut self) {
@@ -361,7 +361,7 @@ impl Object for Base {
         if self.obj_base.is_renderable() {
             if let Some(camera) = &self.active_camera {
                 if let Some(camera) = camera.upgrade() {
-                    return vxresult!(camera.read()).is_renderable();
+                    return vx_result!(camera.read()).is_renderable();
                 }
             }
         }
@@ -371,7 +371,7 @@ impl Object for Base {
 
 impl Scene for Base {
     fn add_camera(&mut self, camera: Arc<RwLock<dyn Camera>>) {
-        let id = vxresult!(camera.read()).get_id();
+        let id = vx_result!(camera.read()).get_id();
         if self.active_camera.is_none() {
             self.active_camera = Some(Arc::downgrade(&camera));
         }
@@ -380,7 +380,7 @@ impl Scene for Base {
 
     fn add_model(&mut self, model: Arc<RwLock<dyn Model>>) {
         let id = {
-            let model = vxresult!(model.read());
+            let model = vx_result!(model.read());
             let child_models = model.bring_all_child_models();
             for (id, model) in child_models {
                 self.all_models.insert(id, Arc::downgrade(&model));
@@ -394,7 +394,7 @@ impl Scene for Base {
 
     fn add_light(&mut self, light: Arc<RwLock<dyn Light>>) {
         let (id, is_shadow_maker) = {
-            let light = vxresult!(light.read());
+            let light = vx_result!(light.read());
             let is_shadow_maker = light.to_shadow_maker().is_some();
             let id = light.get_id();
             (id, is_shadow_maker)
@@ -414,15 +414,15 @@ impl Scene for Base {
         if !self.is_renderable() {
             return;
         }
-        let camera = vxunwrap!(&self.active_camera);
-        let camera = vxunwrap!(camera.upgrade());
-        let camera = vxresult!(camera.read());
+        let camera = vx_unwrap!(&self.active_camera);
+        let camera = vx_unwrap!(camera.upgrade());
+        let camera = vx_result!(camera.read());
         camera.update_uniform(&mut self.uniform.camera);
         let mut last_directional_light_index = 0;
         let mut last_point_light_index = 0;
         let csmws = camera.get_cascaded_shadow_frustum_partitions();
         for (_, shm) in &self.shadow_maker_lights {
-            let mut shm = vxresult!(shm.write());
+            let mut shm = vx_result!(shm.write());
             if !shm.is_renderable() {
                 continue;
             }
@@ -450,7 +450,7 @@ impl Scene for Base {
             }
         }
         for (_, l) in &self.lights {
-            let l = vxresult!(l.read());
+            let l = vx_result!(l.read());
             if !l.is_renderable() {
                 continue;
             }
@@ -468,13 +468,13 @@ impl Scene for Base {
         self.uniform.lights_count.y = last_point_light_index as u32;
         self.uniform_buffer.update(&self.uniform, frame_number);
         if let Some(skybox) = &self.skybox {
-            vxresult!(skybox.write()).update(&*camera, frame_number);
+            vx_result!(skybox.write()).update(&*camera, frame_number);
         }
     }
 
     fn update_shadow_makers(&self) {
         for (_, shm) in &self.shadow_maker_lights {
-            let mut shm = vxresult!(shm.write());
+            let mut shm = vx_result!(shm.write());
             if !shm.is_renderable() {
                 continue;
             }
@@ -495,7 +495,7 @@ impl Scene for Base {
         }
         let frame_number = geng.get_frame_number();
         for (_, shm) in &self.shadow_maker_lights {
-            vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).begin_secondary_commands(
+            vx_unwrap!(vx_result!(shm.read()).to_shadow_maker()).begin_secondary_commands(
                 geng,
                 cmd_pool,
                 shadower,
@@ -504,7 +504,7 @@ impl Scene for Base {
             );
         }
         let kernels_count = self.kernels_data.len();
-        let mut kernel_data = vxresult!(self.kernels_data[kernel_index].lock());
+        let mut kernel_data = vx_result!(self.kernels_data[kernel_index].lock());
         if kernel_data.frames_data.len() < 1 {
             let frames_count = geng.get_frames_count();
             for _ in 0..frames_count {
@@ -518,12 +518,12 @@ impl Scene for Base {
             let cmd = &mut kernel_data.frames_data[frame_number].gbuff;
             g_buffer_filler.begin_secondary(cmd);
             let buffer = self.uniform_buffer.get_buffer(frame_number);
-            let buffer = vxresult!(buffer.read());
+            let buffer = vx_result!(buffer.read());
             cmd.bind_gbuff_scene_descriptor(&*self.descriptor_set, &*buffer);
         }
-        let camera = vxunwrap!(&self.active_camera).upgrade();
-        let camera = vxunwrap!(camera);
-        let camera = vxresult!(camera.read());
+        let camera = vx_unwrap!(&self.active_camera).upgrade();
+        let camera = vx_unwrap!(camera);
+        let camera = vx_result!(camera.read());
         let mut task_index = 0;
         for (_, mw) in &self.all_models {
             task_index += 1;
@@ -537,7 +537,7 @@ impl Scene for Base {
             } else {
                 continue;
             };
-            let mut model = vxresult!(m.write());
+            let mut model = vx_result!(m.write());
             if !model.is_renderable() {
                 continue;
             }
@@ -548,7 +548,7 @@ impl Scene for Base {
             );
             if model.has_shadow() {
                 for (_, shm) in &self.shadow_maker_lights {
-                    vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).shadow(
+                    vx_unwrap!(vx_result!(shm.read()).to_shadow_maker()).shadow(
                         &mut *model,
                         &m,
                         kernel_index,
@@ -570,7 +570,7 @@ impl Scene for Base {
 
     fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize) {
         for (_, shm) in &self.shadow_maker_lights {
-            vxunwrap!(vxresult!(shm.read()).to_shadow_maker()).render_shadow_mapper(
+            vx_unwrap!(vx_result!(shm.read()).to_shadow_maker()).render_shadow_mapper(
                 shadower,
                 kernel_index,
                 frame_number,
@@ -624,7 +624,7 @@ impl Scene for Base {
             cmd.begin();
             g_buffer_filler.begin_primary(cmd);
             for k in &self.kernels_data {
-                cmd.exe_cmd(&vxresult!(k.lock()).frames_data[frame_number].gbuff);
+                cmd.exe_cmd(&vx_result!(k.lock()).frames_data[frame_number].gbuff);
             }
             cmd.end_render_pass();
             cmd.end();
@@ -650,11 +650,11 @@ impl Scene for Base {
         );
         let mut last_sem = frame_data.preparation_semaphore.clone();
         for (_, sml) in &self.shadow_maker_lights {
-            let mut sml = vxresult!(sml.write());
-            let sml = vxunwrap!(sml.to_mut_shadow_maker());
+            let mut sml = vx_result!(sml.write());
+            let sml = vx_unwrap!(sml.to_mut_shadow_maker());
             last_sem = sml.submit_shadow_mapper(&last_sem, geng, shadower, frame_number);
         }
-        let uniform_buffer = vxresult!(self.uniform_buffer.get_buffer(frame_number).read());
+        let uniform_buffer = vx_result!(self.uniform_buffer.get_buffer(frame_number).read());
         // SSAO
         if let Some(ssao) = &ssao {
             ssao.begin_secondary(&mut frame_data.ssao_secondary);
@@ -707,17 +707,17 @@ impl Scene for Base {
 
 impl DefaultScene for Base {
     fn default(engine: &Engine) -> Self {
-        let gapi_engine = vxresult!(engine.get_gapi_engine().read());
-        let uniform_buffer = vxresult!(gapi_engine.get_buffer_manager().write())
+        let gapi_engine = vx_result!(engine.get_gapi_engine().read());
+        let uniform_buffer = vx_result!(gapi_engine.get_buffer_manager().write())
             .create_dynamic_buffer(size_of::<Uniform>() as isize);
         let render_pass = gapi_engine.get_render_pass().clone();
         let framebuffers = gapi_engine.get_framebuffers().clone();
-        let unlit_pipeline = vxresult!(gapi_engine.get_pipeline_manager().write()).create(
+        let unlit_pipeline = vx_result!(gapi_engine.get_pipeline_manager().write()).create(
             render_pass.clone(),
             PipelineType::Unlit,
             engine.get_config(),
         );
-        let mut descriptor_manager = vxresult!(gapi_engine.get_descriptor_manager().write());
+        let mut descriptor_manager = vx_result!(gapi_engine.get_descriptor_manager().write());
         let descriptor_set = descriptor_manager.create_buffer_only_set(&uniform_buffer);
         let frames_count = gapi_engine.get_frames_count();
         let kernels_count = num_cpus::get();

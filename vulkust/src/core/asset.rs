@@ -41,11 +41,11 @@ impl Manager {
         if let Some(gx3d_file) = &mut gx3d_file {
             let last_id: Id = gx3d_file.read();
             #[cfg(debug_gx3d)]
-            vxlogi!("GX3D last id is: {}", last_id);
+            vx_log_i!("GX3D last id is: {}", last_id);
             NEXT_ID.store(last_id, Ordering::Relaxed);
             macro_rules! set_table {
                 ($mgr:ident) => {{
-                    vxresult!($mgr.write()).set_gx3d_table(Gx3dTable::new(gx3d_file, config));
+                    vx_result!($mgr.write()).set_gx3d_table(Gx3dTable::new(gx3d_file, config));
                 }};
             }
             set_table!(camera_manager);
@@ -73,13 +73,13 @@ impl Manager {
     }
 
     pub(crate) fn set_engine(&self, engine: &Weak<RwLock<Engine>>) {
-        vxresult!(self.texture_manager.write()).set_engine(engine.clone());
-        vxresult!(self.scene_manager.write()).set_engine(engine.clone());
-        vxresult!(self.light_manager.write()).set_engine(engine.clone());
-        vxresult!(self.camera_manager.write()).set_engine(engine.clone());
-        vxresult!(self.mesh_manager.write()).set_engine(engine.clone());
-        vxresult!(self.model_manager.write()).set_engine(engine.clone());
-        vxresult!(self.skybox_manager.write()).set_engine(engine.clone());
+        vx_result!(self.texture_manager.write()).set_engine(engine.clone());
+        vx_result!(self.scene_manager.write()).set_engine(engine.clone());
+        vx_result!(self.light_manager.write()).set_engine(engine.clone());
+        vx_result!(self.camera_manager.write()).set_engine(engine.clone());
+        vx_result!(self.mesh_manager.write()).set_engine(engine.clone());
+        vx_result!(self.model_manager.write()).set_engine(engine.clone());
+        vx_result!(self.skybox_manager.write()).set_engine(engine.clone());
     }
 
     pub fn get_scene_manager(&self) -> &Arc<RwLock<SceneManager>> {

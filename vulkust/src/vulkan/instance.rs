@@ -26,22 +26,22 @@ mod debug {
         user_data: *mut c_void,
     ) -> u32 {
         let mut flg = String::new();
-        if vxflagcheck!(flags, vk::DebugReportFlagsEXT::INFORMATION) {
+        if vx_flag_check!(flags, vk::DebugReportFlagsEXT::INFORMATION) {
             flg += "info, ";
         }
-        if vxflagcheck!(flags, vk::DebugReportFlagsEXT::WARNING) {
+        if vx_flag_check!(flags, vk::DebugReportFlagsEXT::WARNING) {
             flg += "warn, ";
         }
-        if vxflagcheck!(flags, vk::DebugReportFlagsEXT::PERFORMANCE_WARNING) {
+        if vx_flag_check!(flags, vk::DebugReportFlagsEXT::PERFORMANCE_WARNING) {
             flg += "performance, ";
         }
-        if vxflagcheck!(flags, vk::DebugReportFlagsEXT::ERROR) {
+        if vx_flag_check!(flags, vk::DebugReportFlagsEXT::ERROR) {
             flg += "error, ";
         }
-        if vxflagcheck!(flags, vk::DebugReportFlagsEXT::DEBUG) {
+        if vx_flag_check!(flags, vk::DebugReportFlagsEXT::DEBUG) {
             flg += "debug, ";
         }
-        vxlogi!(
+        vx_log_i!(
             "flag: {}, obj_type: {}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: \
              {:?}, msg : {:?}, user_data {:?}",
             flg,
@@ -74,7 +74,7 @@ mod debug {
                 .pfn_callback(Some(vulkan_debug_callback));
             let loader = DebugReport::new(vk_entry, vk_instance);
             let vk_data =
-                vxresult!(unsafe { loader.create_debug_report_callback(&create_info, None) });
+                vx_result!(unsafe { loader.create_debug_report_callback(&create_info, None) });
             Self { loader, vk_data }
         }
 
@@ -91,7 +91,7 @@ mod debug {
         unsafe {
             entry.enumerate_instance_layer_properties(&mut layer_count, null_mut());
         }
-        vxlogi!("Number of layers found is: {}", layer_count);
+        vx_log_i!("Number of layers found is: {}", layer_count);
         let mut available_layers = vec![vk::LayerProperties::default(); layer_count as usize];
         unsafe {
             entry.enumerate_instance_layer_properties(
@@ -103,7 +103,7 @@ mod debug {
         for i in 0..available_layers.len() {
             let name = slice_to_string(&available_layers[i].layer_name);
             let des = slice_to_string(&available_layers[i].description);
-            vxlogi!("Layer {} with des: {} found.", name, des);
+            vx_log_i!("Layer {} with des: {} found.", name, des);
             found_layers.insert(name, true);
         }
         let mut layers_names = Vec::new();
@@ -125,7 +125,7 @@ mod debug {
         insert_layer!("VK_LAYER_LUNARG_swapchain");
         insert_layer!("VK_LAYER_RENDERDOC_Capture");
         insert_layer!("VK_LAYER_GOOGLE_unique_objects");
-        vxlogi!("Layers that gonna be imported {:?}.", layers_names);
+        vx_log_i!("Layers that gonna be imported {:?}.", layers_names);
         strings_to_cstrings(layers_names)
     }
 }
@@ -151,7 +151,7 @@ mod debug {
 }
 
 fn get_all_extensions(entry: &ash::Entry) -> Vec<vk::ExtensionProperties> {
-    return vxresult!(entry.enumerate_instance_extension_properties());
+    return vx_result!(entry.enumerate_instance_extension_properties());
 }
 
 fn enumerate_extensions(entry: &ash::Entry) -> Vec<String> {
@@ -168,16 +168,16 @@ fn enumerate_extensions(entry: &ash::Entry) -> Vec<String> {
             | "VK_MVK_macos_surface"
             | "VK_MVK_ios_surface"
             | "VK_MVK_moltenvk" => {
-                vxlogi!("Extension importing {}", name);
+                vx_log_i!("Extension importing {}", name);
                 extensions.push(name.to_string());
             }
             #[cfg(debug_mode)]
             "VK_EXT_debug_report" => {
-                vxlogi!("Extension importing {}", name);
+                vx_log_i!("Extension importing {}", name);
                 extensions.push(name.to_string());
             }
             _ => {
-                vxlogi!("Extension '{}' found", name);
+                vx_log_i!("Extension '{}' found", name);
             }
         }
     }
@@ -221,7 +221,7 @@ impl Instance {
             .application_info(&application_info)
             .enabled_layer_names(&vulkan_layers)
             .enabled_extension_names(&vulkan_extensions);
-        let vk_data = vxresult!(unsafe { entry.create_instance(&instance_create_info, None) });
+        let vk_data = vx_result!(unsafe { entry.create_instance(&instance_create_info, None) });
         let debugger = debug::Debugger::new(&entry, &vk_data);
         Self {
             entry,

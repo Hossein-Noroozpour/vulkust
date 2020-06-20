@@ -54,7 +54,7 @@ impl Sampler {
                     .max_lod(10.0)
             }
         }
-        let vk_data = vxresult!(unsafe { logical_device.get_data().create_sampler(&info, None) });
+        let vk_data = vx_result!(unsafe { logical_device.get_data().create_sampler(&info, None) });
         Self {
             logical_device,
             vk_data,

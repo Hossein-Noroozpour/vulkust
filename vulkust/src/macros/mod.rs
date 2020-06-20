@@ -12,15 +12,15 @@ macro_rules! vulkust_start {
             OsApp::initialize(&os_app);
             let renderer = Arc::new(RwLock::new(RenderEngine::new(core_app.clone(), &os_app)));
             let renderer_w = Arc::downgrade(&renderer);
-            vxresult!(renderer.write()).set_myself(renderer_w);
-            vxresult!(os_app.write()).set_renderer(renderer.clone());
+            vx_result!(renderer.write()).set_myself(renderer_w);
+            vx_result!(os_app.write()).set_renderer(renderer.clone());
             {
-                let mut core_app = vxresult!(core_app.write());
+                let mut core_app = vx_result!(core_app.write());
                 core_app.set_os_app(os_app.clone());
                 core_app.set_renderer(renderer);
                 core_app.initialize();
             }
-            vxresult!(os_app.read()).run();
+            vx_result!(os_app.read()).run();
         }
     };
 }
@@ -64,7 +64,7 @@ macro_rules! vulkust_start {
             let core_app: Arc<RwLock<CoreAppTrait>> = Arc::new(RwLock::new($App::new()));
             let os_app = Arc::new(RwLock::new(OsApp::new(core_app)));
             let os_app_clone = Arc::downgrade(&os_app);
-            vxresult!(os_app.write()).set_itself(os_app_clone);
+            vx_result!(os_app.write()).set_itself(os_app_clone);
             unsafe { transmute(Box::into_raw(Box::new(os_app))) }
         }
     };
@@ -72,7 +72,7 @@ macro_rules! vulkust_start {
 
 #[cfg(not(target_os = "android"))]
 #[macro_export]
-macro_rules! vxlogi {
+macro_rules! vx_log_i {
     ($fmt:expr) => {
         println!("{}", format!("Vulkust information message in: {}:{} {}", file!(), line!(), $fmt));
     };
@@ -83,7 +83,7 @@ macro_rules! vxlogi {
 
 #[cfg(not(target_os = "android"))]
 #[macro_export]
-macro_rules! vxloge {
+macro_rules! vx_log_e {
     ($fmt:expr) => {
         eprintln!("{}", format!("Vulkust error message in: {}:{} {}", file!(), line!(), $fmt));
     };
@@ -94,7 +94,7 @@ macro_rules! vxloge {
 
 #[cfg(not(target_os = "android"))]
 #[macro_export]
-macro_rules! vxlogf {
+macro_rules! vx_log_f {
     ($fmt:expr) => (
         panic!("{}", format!("Vulkust fatal message in: {}:{} {}", file!(), line!(), $fmt));
     );
@@ -105,7 +105,7 @@ macro_rules! vxlogf {
 
 #[cfg(target_os = "android")]
 #[macro_export]
-macro_rules! vxlogi {
+macro_rules! vx_log_i {
     ($fmt:expr) => {
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Info, &format!(
@@ -121,7 +121,7 @@ macro_rules! vxlogi {
 
 #[cfg(target_os = "android")]
 #[macro_export]
-macro_rules! vxloge {
+macro_rules! vx_log_e {
     ($fmt:expr) => {
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Error, &format!(
@@ -137,7 +137,7 @@ macro_rules! vxloge {
 
 #[cfg(target_os = "android")]
 #[macro_export]
-macro_rules! vxlogf {
+macro_rules! vx_log_f {
     ($fmt:expr) => ({
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Fatal, &format!(
@@ -154,47 +154,47 @@ macro_rules! vxlogf {
 }
 
 #[macro_export]
-macro_rules! vxunwrap {
+macro_rules! vx_unwrap {
     ($e:expr) => {
         match $e {
             Some(v) => v,
-            None => vxlogf!("Unwrap failed!"),
+            None => vx_log_f!("Unwrap failed!"),
         }
     };
 }
 
 #[macro_export]
-macro_rules! vxresult {
+macro_rules! vx_result {
     ($e:expr) => {
         match $e {
             Ok(v) => v,
-            Err(e) => vxlogf!("Unwrap failed! {:?}", e),
+            Err(e) => vx_log_f!("Unwrap failed! {:?}", e),
         }
     };
 }
 
 #[macro_export]
-macro_rules! vxunimplemented {
+macro_rules! vx_unimplemented {
     () => {
-        vxlogf!("Not implemented")
+        vx_log_f!("Not implemented")
     };
 }
 
 #[macro_export]
-macro_rules! vxunexpected {
+macro_rules! vx_unexpected {
     () => {
-        vxlogf!("Unexpected")
+        vx_log_f!("Unexpected")
     };
 }
 
 #[macro_export]
-macro_rules! vxtodo {
+macro_rules! vx_todo {
     () => {
-        vxloge!("TODO")
+        vx_log_e!("TODO")
     };
 }
 
-macro_rules! vxflagcheck {
+macro_rules! vx_flag_check {
     ($f:expr, $b:expr) => {
         $f & $b == $b
     };
