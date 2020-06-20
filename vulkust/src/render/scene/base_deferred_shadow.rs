@@ -57,7 +57,7 @@ struct BaseKernelFramedata {
 #[cfg_attr(debug_mode, derive(Debug))]
 struct BaseKernelData {
     frames_data: Vec<BaseKernelFramedata>,
-    distance_transparent_models: Vec<(Real, Weak<RwLock<Model>>)>,
+    distance_transparent_models: Vec<(Real, Weak<RwLock<dyn Model>>)>,
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -109,17 +109,17 @@ pub(super) struct Base {
     obj_base: ObjectBase,
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
-    cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
-    active_camera: Option<Weak<RwLock<Camera>>>,
-    shadow_maker_lights: BTreeMap<Id, Arc<RwLock<Light>>>,
-    lights: BTreeMap<Id, Arc<RwLock<Light>>>,
-    models: BTreeMap<Id, Arc<RwLock<Model>>>,
-    all_models: BTreeMap<Id, Weak<RwLock<Model>>>,
+    cameras: BTreeMap<Id, Arc<RwLock<dyn Camera>>>,
+    active_camera: Option<Weak<RwLock<dyn Camera>>>,
+    shadow_maker_lights: BTreeMap<Id, Arc<RwLock<dyn Light>>>,
+    lights: BTreeMap<Id, Arc<RwLock<dyn Light>>>,
+    models: BTreeMap<Id, Arc<RwLock<dyn Model>>>,
+    all_models: BTreeMap<Id, Weak<RwLock<dyn Model>>>,
     descriptor_set: Arc<DescriptorSet>,
     kernels_data: Vec<Arc<Mutex<BaseKernelData>>>,
-    distance_transparent_models: Vec<(Real, Weak<RwLock<Model>>)>,
+    distance_transparent_models: Vec<(Real, Weak<RwLock<dyn Model>>)>,
     frames_data: Vec<BaseFramedata>,
-    skybox: Option<Arc<RwLock<Skybox>>>,
+    skybox: Option<Arc<RwLock<dyn Skybox>>>,
     render_pass: Arc<RenderPass>,
     framebuffers: Vec<Arc<Framebuffer>>,
     unlit_pipeline: Arc<Pipeline>,
@@ -150,7 +150,7 @@ impl Base {
                     all_models.insert(id, Arc::downgrade(&model));
                 }
                 let id = model.get_id();
-                let model: Arc<RwLock<Model>> = Arc::new(RwLock::new(model));
+                let model: Arc<RwLock<dyn Model>> = Arc::new(RwLock::new(model));
                 all_models.insert(id, Arc::downgrade(&model));
                 models.insert(id, model);
             } // todo read lights
@@ -304,19 +304,19 @@ impl Base {
         }
     }
 
-    fn gather_all_transparent_models_sorted(&self) -> Vec<Weak<RwLock<Model>>> {
+    fn gather_all_transparent_models_sorted(&self) -> Vec<Weak<RwLock<dyn Model>>> {
         let kernels_count = self.kernels_data.len();
         let mut kernels_data = Vec::with_capacity(kernels_count);
         for kd in &self.kernels_data {
             kernels_data.push(vxresult!(kd.lock()));
         }
-        let mut ds: Vec<&[(Real, Weak<RwLock<Model>>)]> = Vec::with_capacity(kernels_count);
+        let mut ds: Vec<&[(Real, Weak<RwLock<dyn Model>>)]> = Vec::with_capacity(kernels_count);
         for kd in &kernels_data {
             ds.push(&kd.distance_transparent_models);
         }
         let sorted = merge_all_sorted(
             &ds,
-            &mut |b: &(Real, Weak<RwLock<Model>>), a: &(Real, Weak<RwLock<Model>>)| {
+            &mut |b: &(Real, Weak<RwLock<dyn Model>>), a: &(Real, Weak<RwLock<dyn Model>>)| {
                 a.0.partial_cmp(&b.0).unwrap()
             },
         );
@@ -370,7 +370,7 @@ impl Object for Base {
 }
 
 impl Scene for Base {
-    fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
+    fn add_camera(&mut self, camera: Arc<RwLock<dyn Camera>>) {
         let id = vxresult!(camera.read()).get_id();
         if self.active_camera.is_none() {
             self.active_camera = Some(Arc::downgrade(&camera));
@@ -378,7 +378,7 @@ impl Scene for Base {
         self.cameras.insert(id, camera);
     }
 
-    fn add_model(&mut self, model: Arc<RwLock<Model>>) {
+    fn add_model(&mut self, model: Arc<RwLock<dyn Model>>) {
         let id = {
             let model = vxresult!(model.read());
             let child_models = model.bring_all_child_models();
@@ -392,7 +392,7 @@ impl Scene for Base {
         self.models.insert(id, model);
     }
 
-    fn add_light(&mut self, light: Arc<RwLock<Light>>) {
+    fn add_light(&mut self, light: Arc<RwLock<dyn Light>>) {
         let (id, is_shadow_maker) = {
             let light = vxresult!(light.read());
             let is_shadow_maker = light.to_shadow_maker().is_some();
@@ -406,7 +406,7 @@ impl Scene for Base {
         }
     }
 
-    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
+    fn get_active_camera(&self) -> &Option<Weak<RwLock<dyn Camera>>> {
         return &self.active_camera;
     }
 
@@ -578,11 +578,11 @@ impl Scene for Base {
         }
     }
 
-    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
+    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<dyn Model>>> {
         return &self.models;
     }
 
-    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
+    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<dyn Model>>> {
         return &self.all_models;
     }
 

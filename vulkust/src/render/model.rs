@@ -19,23 +19,23 @@ use cgmath;
 use gltf;
 
 pub trait Model: Object + Transferable {
-    fn update(&mut self, &Scene, &Camera, usize);
-    fn add_mesh(&mut self, Arc<RwLock<Mesh>>, Material);
+    fn update(&mut self, scene: &dyn Scene, camera: &dyn Camera, frame_number: usize);
+    fn add_mesh(&mut self, mesh: Arc<RwLock<dyn Mesh>>, material: Material);
     fn clear_meshes(&mut self);
-    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)>;
-    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)>;
+    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<dyn Mesh>>, Material)>;
+    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<dyn Model>>)>;
     fn has_shadow(&self) -> bool;
     fn has_transparent(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
-    fn get_distance_from_camera(&self, &Camera) -> Real;
+    fn get_distance_from_camera(&self, camera: &dyn Camera) -> Real;
     fn get_uniform(&self) -> &Uniform;
-    fn render_gbuffer(&self, &mut CmdBuffer, usize);
-    fn render_shadow(&self, &mut CmdBuffer, usize);
-    fn render_unlit(&mut self, &mut CmdBuffer, &Camera, usize);
+    fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize);
+    fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize);
+    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &dyn Camera, frame_number: usize);
 }
 
 pub trait DefaultModel: Model + Sized {
-    fn default(&Engine) -> Self;
+    fn default(engine: &Engine) -> Self;
 }
 
 #[repr(u8)]
@@ -49,7 +49,7 @@ pub enum TypeId {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     engine: Option<Weak<RwLock<Engine>>>,
-    models: BTreeMap<Id, Weak<RwLock<Model>>>,
+    models: BTreeMap<Id, Weak<RwLock<dyn Model>>>,
     name_to_id: BTreeMap<String, Id>,
     gx3d_table: Option<Gx3dTable>,
 }
@@ -64,7 +64,7 @@ impl Manager {
         }
     }
 
-    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<Model>> {
+    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<dyn Model>> {
         if let Some(model) = self.models.get(&id) {
             if let Some(model) = model.upgrade() {
                 return model;
@@ -74,7 +74,7 @@ impl Manager {
         gx3d_table.goto(id);
         let reader = gx3d_table.get_mut_reader();
         let t = reader.read_type_id();
-        let model: Arc<RwLock<Model>> = if t == TypeId::Static as u8 {
+        let model: Arc<RwLock<dyn Model>> = if t == TypeId::Static as u8 {
             // maybe in future I will implement it defferently for static
             Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
         } else if t == TypeId::Dynamic as u8 {
@@ -97,7 +97,7 @@ impl Manager {
         let m = M::default(&*eng);
         let id = m.get_id();
         let m1 = Arc::new(RwLock::new(m));
-        let m2: Arc<RwLock<Model>> = m1.clone();
+        let m2: Arc<RwLock<dyn Model>> = m1.clone();
         self.models.insert(id, Arc::downgrade(&m2));
         return m1;
     }
@@ -182,12 +182,12 @@ pub struct Base {
     has_transparent_mesh: bool,
     occlusion_culling_radius: Real,
     is_visible: bool,
-    collider: Arc<RwLock<Collider>>,
+    collider: Arc<RwLock<dyn Collider>>,
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
     descriptor_set: Arc<DescriptorSet>,
-    meshes: BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)>,
-    children: BTreeMap<Id, Arc<RwLock<Model>>>,
+    meshes: BTreeMap<Id, (Arc<RwLock<dyn Mesh>>, Material)>,
+    children: BTreeMap<Id, Arc<RwLock<dyn Model>>>,
     scales: cgmath::Vector3<Real>,
 }
 
@@ -360,7 +360,7 @@ impl Transferable for Base {
 }
 
 impl Model for Base {
-    fn update(&mut self, _: &Scene, camera: &Camera, frame_number: usize) {
+    fn update(&mut self, _: &dyn Scene, camera: &dyn Camera, frame_number: usize) {
         let location = self.uniform.model.w.truncate();
         self.is_visible = camera.is_in_frustum(self.occlusion_culling_radius, &location);
         if !self.is_visible {
@@ -385,11 +385,11 @@ impl Model for Base {
         return &self.uniform;
     }
 
-    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)> {
+    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<dyn Mesh>>, Material)> {
         return &self.meshes;
     }
 
-    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>, mat: Material) {
+    fn add_mesh(&mut self, mesh: Arc<RwLock<dyn Mesh>>, mat: Material) {
         let id = {
             let mesh = vxresult!(mesh.read());
             let radius = mesh.get_occlusion_culling_radius();
@@ -401,7 +401,7 @@ impl Model for Base {
         self.meshes.insert(id, (mesh, mat));
     }
 
-    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)> {
+    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<dyn Model>>)> {
         let mut result = Vec::new();
         for (id, model) in &self.children {
             result.push((*id, model.clone()));
@@ -423,7 +423,7 @@ impl Model for Base {
         return self.occlusion_culling_radius;
     }
 
-    fn get_distance_from_camera(&self, c: &Camera) -> Real {
+    fn get_distance_from_camera(&self, c: &dyn Camera) -> Real {
         return c.get_distance(&self.uniform.model.w.truncate());
     }
 
@@ -446,7 +446,7 @@ impl Model for Base {
         }
     }
 
-    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &Camera, frame_number: usize) {
+    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &dyn Camera, frame_number: usize) {
         if !self.is_visible {
             return;
         }

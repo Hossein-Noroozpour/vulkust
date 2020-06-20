@@ -1,4 +1,3 @@
-use super::super::core::gx3d::Gx3DReader;
 use super::super::core::types::Id;
 use super::camera::Camera;
 use super::command::Pool as CmdPool;
@@ -12,6 +11,7 @@ use super::object::Object;
 use super::shadower::Shadower;
 use super::ssao::SSAO;
 use super::sync::Semaphore;
+use crate::core::gx3d::Gx3DReader;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock, Weak};
 
@@ -25,8 +25,6 @@ pub use self::game::Game;
 pub use self::manager::Manager;
 pub use self::ui::Ui;
 
-use gltf;
-
 #[repr(u8)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub enum TypeId {
@@ -35,41 +33,41 @@ pub enum TypeId {
 }
 
 pub trait Scene: Object {
-    fn add_camera(&mut self, Arc<RwLock<Camera>>);
-    fn add_model(&mut self, Arc<RwLock<Model>>);
-    fn add_light(&mut self, Arc<RwLock<Light>>);
-    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>>;
-    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>>;
-    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>>;
-    fn update(&mut self, usize);
+    fn add_camera(&mut self, camera: Arc<RwLock<dyn Camera>>);
+    fn add_model(&mut self, model: Arc<RwLock<dyn Model>>);
+    fn add_light(&mut self, light: Arc<RwLock<dyn Light>>);
+    fn get_active_camera(&self) -> &Option<Weak<RwLock<dyn Camera>>>;
+    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<dyn Model>>>;
+    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<dyn Model>>>;
+    fn update(&mut self, frame_number: usize);
     fn render_gbuffer_shadow_maps(
         &self,
-        &GraphicApiEngine,
-        &Arc<CmdPool>,
-        &GBufferFiller,
-        &Shadower,
-        usize,
+        gapi_engine: &GraphicApiEngine,
+        cmd_pool: &Arc<CmdPool>,
+        filler: &GBufferFiller,
+        shadower: &Shadower,
+        kernel_index: usize,
     );
     fn update_shadow_makers(&self);
-    fn render_shadow_maps(&self, &Shadower, usize, usize);
+    fn render_shadow_maps(&self, shadower: &Shadower, kernel_index: usize, frame_number: usize);
     fn clean(&mut self);
     fn submit(
         &mut self,
-        &GraphicApiEngine,
-        &Arc<Semaphore>,
-        &Arc<CmdPool>,
-        &GBufferFiller,
-        &mut Shadower,
-        &Deferred,
-        Option<&SSAO>,
+        gapi_engine: &GraphicApiEngine,
+        semaphore: &Arc<Semaphore>,
+        cmd_pool: &Arc<CmdPool>,
+        filler: &GBufferFiller,
+        shadower: &mut Shadower,
+        deferred: &Deferred,
+        ssao: Option<&SSAO>,
     ) -> Arc<Semaphore>;
 }
 
 pub trait Loadable: Scene + Sized {
-    fn new_with_gltf(&Engine, &gltf::Scene, &[u8]) -> Self;
-    fn new_with_gx3d(&Engine, &mut Gx3DReader, Id) -> Self;
+    fn new_with_gltf(engine: &Engine, gltf_obj: &gltf::Scene, data: &[u8]) -> Self;
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self;
 }
 
 pub trait DefaultScene: Scene + Sized {
-    fn default(&Engine) -> Self;
+    fn default(engine: &Engine) -> Self;
 }

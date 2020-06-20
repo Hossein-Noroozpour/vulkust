@@ -14,7 +14,7 @@ use gltf;
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     engine: Option<Weak<RwLock<Engine>>>,
-    textures: BTreeMap<Id, Weak<RwLock<Texture>>>,
+    textures: BTreeMap<Id, Weak<RwLock<dyn Texture>>>,
     name_to_id: BTreeMap<String, Id>,
     color_to_id: BTreeMap<[u8; 4], Id>,
     gx3d_table: Option<Gx3dTable>,
@@ -40,7 +40,7 @@ impl Manager {
         texture: &gltf::Texture,
         engine: &Engine,
         data: &[u8],
-    ) -> Arc<RwLock<Texture>>
+    ) -> Arc<RwLock<dyn Texture>>
     where
         T: 'static + Loadable + Texture,
     {
@@ -53,7 +53,7 @@ impl Manager {
                 }
             }
         }
-        let texture: Arc<RwLock<Texture>> =
+        let texture: Arc<RwLock<dyn Texture>> =
             Arc::new(RwLock::new(T::new_with_gltf(texture, engine, data)));
         let id = vxresult!(texture.read()).get_id();
         let weak = Arc::downgrade(&texture);
@@ -62,7 +62,7 @@ impl Manager {
         return texture;
     }
 
-    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<Texture>> {
+    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<dyn Texture>> {
         if let Some(t) = self.textures.get(&id) {
             if let Some(t) = t.upgrade() {
                 return t;
@@ -72,7 +72,7 @@ impl Manager {
         table.goto(id);
         let reader: &mut Gx3DReader = &mut table.get_mut_reader();
         let t = reader.read_type_id();
-        let texture: Arc<RwLock<Texture>> = if t == TextureType::T2D as TypeId {
+        let texture: Arc<RwLock<dyn Texture>> = if t == TextureType::T2D as TypeId {
             Arc::new(RwLock::new(Texture2D::new_with_gx3d(engine, reader, id)))
         } else if t == TextureType::Cube as TypeId {
             Arc::new(RwLock::new(Cube::new_with_gx3d(engine, reader, id)))
@@ -93,7 +93,7 @@ impl Manager {
         let tex = Texture2D::new_with_pixels(width, height, engine, data);
         let id = tex.get_id();
         let tex = Arc::new(RwLock::new(tex));
-        let t: Arc<RwLock<Texture>> = tex.clone();
+        let t: Arc<RwLock<dyn Texture>> = tex.clone();
         let t = Arc::downgrade(&t);
         self.textures.insert(id, t);
         return tex;
@@ -103,7 +103,7 @@ impl Manager {
         &mut self,
         engine: &GraphicApiEngine,
         color: [u8; 4],
-    ) -> Arc<RwLock<Texture>> {
+    ) -> Arc<RwLock<dyn Texture>> {
         if let Some(id) = self.color_to_id.get(&color) {
             if let Some(t) = self.textures.get(id) {
                 if let Some(t) = t.upgrade() {
@@ -114,7 +114,7 @@ impl Manager {
         }
         let tex = Texture2D::new_with_pixels(1, 1, engine, &color);
         let id = tex.get_id();
-        let tex: Arc<RwLock<Texture>> = Arc::new(RwLock::new(tex));
+        let tex: Arc<RwLock<dyn Texture>> = Arc::new(RwLock::new(tex));
         self.textures.insert(id, Arc::downgrade(&tex));
         self.color_to_id.insert(color, id);
         return tex;
@@ -124,10 +124,10 @@ impl Manager {
         &mut self,
         image_view: Arc<ImageView>,
         sampler: Arc<Sampler>,
-    ) -> Arc<RwLock<Texture>> {
+    ) -> Arc<RwLock<dyn Texture>> {
         let tex = Texture2D::new_with_view_sampler(image_view, sampler);
         let id = tex.get_id();
-        let tex: Arc<RwLock<Texture>> = Arc::new(RwLock::new(tex));
+        let tex: Arc<RwLock<dyn Texture>> = Arc::new(RwLock::new(tex));
         self.textures.insert(id, Arc::downgrade(&tex));
         // todo make a refrencable/hashable object based on the image-view and sampler
         // todo maybe this is something unnecessary

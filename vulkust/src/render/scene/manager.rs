@@ -12,7 +12,7 @@ use std::sync::{Arc, RwLock, Weak};
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     engine: Option<Weak<RwLock<Engine>>>,
-    scenes: BTreeMap<Id, Weak<RwLock<Scene>>>,
+    scenes: BTreeMap<Id, Weak<RwLock<dyn Scene>>>,
     name_to_id: BTreeMap<String, Id>,
     gx3d_table: Option<Gx3dTable>,
 }
@@ -53,13 +53,13 @@ impl Manager {
                 vxunwrap!(&file.blob),
             )))
         };
-        let s: Arc<RwLock<Scene>> = scene.clone();
+        let s: Arc<RwLock<dyn Scene>> = scene.clone();
         self.add_scene(&s);
         return scene;
     }
 
-    pub fn load_gx3d(&mut self, id: Id) -> Arc<RwLock<Scene>> {
-        let scene: Arc<RwLock<Scene>> = {
+    pub fn load_gx3d(&mut self, id: Id) -> Arc<RwLock<dyn Scene>> {
+        let scene: Arc<RwLock<dyn Scene>> = {
             let mut table = vxunwrap!(&mut self.gx3d_table);
             table.goto(id);
             let reader = table.get_mut_reader();
@@ -92,7 +92,7 @@ impl Manager {
             let engine = vxresult!(engine.read());
             Arc::new(RwLock::new(S::default(&engine)))
         };
-        let s: Arc<RwLock<Scene>> = scene.clone();
+        let s: Arc<RwLock<dyn Scene>> = scene.clone();
         self.add_scene(&s);
         scene
     }
@@ -115,7 +115,7 @@ impl Manager {
         return vxresult!(gltf::Gltf::from_reader_without_validation(file));
     }
 
-    pub fn add_scene(&mut self, scene: &Arc<RwLock<Scene>>) {
+    pub fn add_scene(&mut self, scene: &Arc<RwLock<dyn Scene>>) {
         let id = {
             let scene = vxresult!(scene.read());
             let id = scene.get_id();
@@ -131,11 +131,11 @@ impl Manager {
         self.scenes.remove(id);
     }
 
-    pub fn remove(&mut self, scene: Arc<RwLock<Scene>>) {
+    pub fn remove(&mut self, scene: Arc<RwLock<dyn Scene>>) {
         self.remove_with_id(&vxresult!(scene.read()).get_id());
     }
 
-    pub(crate) fn get_scenes(&self) -> &BTreeMap<Id, Weak<RwLock<Scene>>> {
+    pub(crate) fn get_scenes(&self) -> &BTreeMap<Id, Weak<RwLock<dyn Scene>>> {
         return &self.scenes;
     }
 }

@@ -14,7 +14,7 @@ pub struct Transparent {
     render_pass: Arc<RenderPass>,
     framebuffer: Arc<Framebuffer>,
     pipeline: Arc<Pipeline>,
-    color_texture: Arc<RwLock<Texture>>,
+    color_texture: Arc<RwLock<dyn Texture>>,
 }
 
 impl Transparent {
@@ -67,7 +67,7 @@ impl Transparent {
         pricmd.end();
     }
 
-    pub(crate) fn get_color_texture(&self) -> &Arc<RwLock<Texture>> {
+    pub(crate) fn get_color_texture(&self) -> &Arc<RwLock<dyn Texture>> {
         return &self.color_texture;
     }
 }

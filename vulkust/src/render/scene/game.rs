@@ -55,19 +55,19 @@ impl Object for Game {
 }
 
 impl Scene for Game {
-    fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
+    fn add_camera(&mut self, camera: Arc<RwLock<dyn Camera>>) {
         self.base.add_camera(camera);
     }
 
-    fn add_model(&mut self, model: Arc<RwLock<Model>>) {
+    fn add_model(&mut self, model: Arc<RwLock<dyn Model>>) {
         self.base.add_model(model);
     }
 
-    fn add_light(&mut self, light: Arc<RwLock<Light>>) {
+    fn add_light(&mut self, light: Arc<RwLock<dyn Light>>) {
         self.base.add_light(light);
     }
 
-    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
+    fn get_active_camera(&self) -> &Option<Weak<RwLock<dyn Camera>>> {
         return self.base.get_active_camera();
     }
 
@@ -101,11 +101,11 @@ impl Scene for Game {
             .render_shadow_maps(shadower, kernel_index, frame_number);
     }
 
-    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
+    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<dyn Model>>> {
         return self.base.get_models();
     }
 
-    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
+    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<dyn Model>>> {
         return self.base.get_all_models();
     }
 

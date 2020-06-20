@@ -16,9 +16,9 @@ pub trait Font: CoreObject {
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
-    fonts: BTreeMap<Id, Weak<RwLock<Font>>>,
+    fonts: BTreeMap<Id, Weak<RwLock<dyn Font>>>,
     name_to_id: BTreeMap<String, Id>,
-    default: Arc<RwLock<Font>>,
+    default: Arc<RwLock<dyn Font>>,
     gx3d_table: Option<Gx3dTable>,
 }
 
@@ -36,11 +36,11 @@ impl Manager {
         self.gx3d_table = Some(gx3d_table);
     }
 
-    pub(crate) fn get_default(&self) -> &Arc<RwLock<Font>> {
+    pub(crate) fn get_default(&self) -> &Arc<RwLock<dyn Font>> {
         return &self.default;
     }
 
-    pub fn load_ttf(&mut self, name: &str) -> Arc<RwLock<Font>> {
+    pub fn load_ttf(&mut self, name: &str) -> Arc<RwLock<dyn Font>> {
         if let Some(font) = self.name_to_id.get(name) {
             if let Some(font) = self.fonts.get(font) {
                 if let Some(font) = font.upgrade() {
@@ -52,7 +52,7 @@ impl Manager {
         let name = name.to_string();
         let id = font.get_id();
         self.name_to_id.insert(name, id);
-        let font: Arc<RwLock<Font>> = Arc::new(RwLock::new(font));
+        let font: Arc<RwLock<dyn Font>> = Arc::new(RwLock::new(font));
         self.fonts.insert(id, Arc::downgrade(&font));
         return font;
     }
@@ -84,7 +84,7 @@ impl Base {
         let mut file = vxresult!(File::open(&file));
         let mut data = Vec::new();
         vxresult!(file.read_to_end(&mut data));
-        let font = vxresult!(TypeFont::from_bytes(data));
+        let font = vxunwrap!(TypeFont::try_from_bytes(&data));
         let obj_base = ObjectBase::new();
         let name = Some(name.to_string());
         Base {
@@ -99,10 +99,10 @@ impl Default for Base {
     fn default() -> Self {
         let font = include_bytes!(concat!(env!("OUT_DIR"), "/render/fonts/Ubuntu-B.ttf"));
         let font = font.to_vec();
-        let font = vxresult!(TypeFont::from_bytes(font));
+        let font = vxunwrap!(TypeFont::try_from_bytes(&font));
         let obj_base = ObjectBase::new();
         let name = None;
-        Base {
+        Self {
             obj_base,
             name,
             font,

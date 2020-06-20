@@ -19,7 +19,7 @@ use std::sync::{Arc, RwLock};
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Application {
     renderer: Option<Arc<RwLock<RenderEngine>>>,
-    core_app: Option<Arc<RwLock<CoreAppTrait>>>,
+    core_app: Option<Arc<RwLock<dyn CoreAppTrait>>>,
     connection: *mut xcb::Connection,
     screen: *mut xcb::Screen,
     window: xcb::Window,
@@ -31,7 +31,7 @@ pub struct Application {
 }
 
 impl Application {
-    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>) -> Self {
+    pub fn new(core_app: Arc<RwLock<dyn CoreAppTrait>>) -> Self {
         let mut scr = 0 as c_int;
         let connection: *mut xcb::Connection = unsafe { xcb::xcb_connect(null_mut(), &mut scr) };
         if connection == null_mut() {

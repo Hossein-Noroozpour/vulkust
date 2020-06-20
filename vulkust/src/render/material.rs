@@ -61,13 +61,13 @@ impl Default for TranslucencyMode {
 #[derive(Clone)]
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Material {
-    base_color: Arc<RwLock<Texture>>,
-    base_color_factor: Arc<RwLock<Texture>>,
-    metallic_roughness: Arc<RwLock<Texture>>,
-    normal: Arc<RwLock<Texture>>,
-    occlusion: Arc<RwLock<Texture>>,
-    emissive: Arc<RwLock<Texture>>,
-    emissive_factor: Arc<RwLock<Texture>>,
+    base_color: Arc<RwLock<dyn Texture>>,
+    base_color_factor: Arc<RwLock<dyn Texture>>,
+    metallic_roughness: Arc<RwLock<dyn Texture>>,
+    normal: Arc<RwLock<dyn Texture>>,
+    occlusion: Arc<RwLock<dyn Texture>>,
+    emissive: Arc<RwLock<dyn Texture>>,
+    emissive_factor: Arc<RwLock<dyn Texture>>,
     translucency: TranslucencyMode,
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
@@ -499,7 +499,7 @@ impl Material {
             texmgr.create_2d_with_color(&*vxresult!(eng.get_gapi_engine().read()), [r, g, b, a]);
     }
 
-    pub fn set_base_color_texture(&mut self, base_color: Arc<RwLock<Texture>>) {
+    pub fn set_base_color_texture(&mut self, base_color: Arc<RwLock<dyn Texture>>) {
         self.base_color = base_color;
     }
 

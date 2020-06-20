@@ -23,7 +23,6 @@ pub extern crate bitflags;
 pub extern crate winapi;
 
 #[cfg(vulkan_api)]
-#[macro_use]
 pub extern crate ash;
 
 #[macro_use]

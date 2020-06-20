@@ -35,7 +35,7 @@ impl Buffer {
             self.vk_data,
             self.info.get_allocated_memory().get_offset_alignment(),
         )));
-        let obj: Arc<RwLock<Object>> = buffer.clone();
+        let obj: Arc<RwLock<dyn Object>> = buffer.clone();
         self.info.allocate(&obj);
         return buffer;
     }
@@ -56,7 +56,7 @@ impl Object for Buffer {
 }
 
 impl Allocator for Buffer {
-    fn allocate(&mut self, obj: &Arc<RwLock<Object>>) {
+    fn allocate(&mut self, obj: &Arc<RwLock<dyn Object>>) {
         self.info.allocate(obj);
         vxunimplemented!();
     }
@@ -153,7 +153,7 @@ impl RootBuffer {
                 _ => 1,
             },
         )));
-        let obj: Arc<RwLock<Object>> = buffer.clone();
+        let obj: Arc<RwLock<dyn Object>> = buffer.clone();
         self.container.allocate(&obj);
         return buffer;
     }

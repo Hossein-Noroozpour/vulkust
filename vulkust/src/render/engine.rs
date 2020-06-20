@@ -13,7 +13,7 @@ pub struct Engine {
     myself: Option<Weak<RwLock<Engine>>>,
     gapi_engine: Arc<RwLock<GraphicApiEngine>>,
     os_app: Weak<RwLock<OsApp>>,
-    core_app: Arc<RwLock<CoreAppTrait>>,
+    core_app: Arc<RwLock<dyn CoreAppTrait>>,
     asset_manager: AssetManager,
     timing: Arc<RwLock<Timing>>,
     config: Configurations,
@@ -21,7 +21,7 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn new(core_app: Arc<RwLock<CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
+    pub fn new(core_app: Arc<RwLock<dyn CoreAppTrait>>, os_app: &Arc<RwLock<OsApp>>) -> Self {
         let core_config = &vxresult!(core_app.read()).get_config();
         let asset_manager = AssetManager::new(&core_config);
         let config = core_config.get_render().clone();

@@ -1,14 +1,10 @@
 use super::super::command::Buffer as CmdBuffer;
 use super::super::config::Configurations;
-use super::super::engine::Engine;
 use super::super::framebuffer::Framebuffer;
-use super::super::g_buffer_filler::GBufferFiller;
 use super::super::gapi::GraphicApiEngine;
-use super::super::image::{AttachmentType, Format, View as ImageView};
 use super::super::pipeline::{Pipeline, PipelineType};
 use super::super::render_pass::RenderPass;
-use super::super::texture::{Manager as TextureManager, Texture};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Unlit {

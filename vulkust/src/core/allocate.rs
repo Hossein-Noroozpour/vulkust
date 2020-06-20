@@ -54,11 +54,11 @@ pub fn round_to_power_of_two(mut v: isize) -> isize {
 
 pub trait Object: Debug {
     fn get_allocated_memory(&self) -> &Memory;
-    fn place(&mut self, isize);
+    fn place(&mut self, offset: isize);
 }
 
 pub trait Allocator: Debug {
-    fn allocate(&mut self, obj: &Arc<RwLock<Object>>);
+    fn allocate(&mut self, obj: &Arc<RwLock<dyn Object>>);
     fn clean(&mut self);
 }
 
@@ -166,7 +166,7 @@ impl Object for Memory {
 pub struct Container {
     base: Memory,
     free_offset: isize,
-    objects: Vec<Weak<RwLock<Object>>>,
+    objects: Vec<Weak<RwLock<dyn Object>>>,
 }
 
 impl Container {
@@ -191,7 +191,7 @@ impl Object for Container {
 }
 
 impl Allocator for Container {
-    fn allocate(&mut self, obj: &Arc<RwLock<Object>>) {
+    fn allocate(&mut self, obj: &Arc<RwLock<dyn Object>>) {
         let aligned_offset = vxresult!(obj.read())
             .get_allocated_memory()
             .align(self.free_offset);

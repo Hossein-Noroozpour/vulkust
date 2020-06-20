@@ -30,7 +30,7 @@ pub struct Shadower {
     shadow_map_descriptor_set: Arc<DescriptorSet>,
     //---------------------------------------
     shadow_accumulator_flagbits_buffer: Arc<ImageView>,
-    shadow_accumulator_flagbits_texture: Arc<RwLock<Texture>>,
+    shadow_accumulator_flagbits_texture: Arc<RwLock<dyn Texture>>,
     shadow_accumulator_directional_pipeline: Arc<Pipeline>,
     shadow_accumulator_directional_descriptor_set: Arc<DescriptorSet>,
     shadow_accumulator_render_pass: Arc<RenderPass>,
@@ -199,7 +199,7 @@ impl Shadower {
         cmd.end();
     }
 
-    pub(super) fn get_shadow_accumulator_flagbits_texture(&self) -> &Arc<RwLock<Texture>> {
+    pub(super) fn get_shadow_accumulator_flagbits_texture(&self) -> &Arc<RwLock<dyn Texture>> {
         return &self.shadow_accumulator_flagbits_texture;
     }
 }

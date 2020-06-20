@@ -101,7 +101,7 @@ impl RootMemory {
             manager,
             itself,
         )));
-        let obj: Arc<RwLock<Object>> = memory.clone();
+        let obj: Arc<RwLock<dyn Object>> = memory.clone();
         self.container.allocate(&obj);
         return memory;
     }

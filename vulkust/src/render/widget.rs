@@ -83,15 +83,15 @@ impl Transferable for Base {
 }
 
 impl Model for Base {
-    fn update(&mut self, scene: &Scene, camera: &Camera, frame_number: usize) {
+    fn update(&mut self, scene: &dyn Scene, camera: &dyn Camera, frame_number: usize) {
         self.model_base.update(scene, camera, frame_number);
     }
 
-    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>, mat: Material) {
+    fn add_mesh(&mut self, mesh: Arc<RwLock<dyn Mesh>>, mat: Material) {
         self.model_base.add_mesh(mesh, mat);
     }
 
-    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)> {
+    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<dyn Mesh>>, Material)> {
         return self.model_base.get_meshes();
     }
 
@@ -99,7 +99,7 @@ impl Model for Base {
         self.model_base.clear_meshes();
     }
 
-    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)> {
+    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<dyn Model>>)> {
         return self.model_base.bring_all_child_models();
     }
 
@@ -115,7 +115,7 @@ impl Model for Base {
         return self.model_base.get_occlusion_culling_radius();
     }
 
-    fn get_distance_from_camera(&self, c: &Camera) -> Real {
+    fn get_distance_from_camera(&self, c: &dyn Camera) -> Real {
         return self.model_base.get_distance_from_camera(c);
     }
 
@@ -127,7 +127,7 @@ impl Model for Base {
         self.model_base.render_gbuffer(cmd, frame_number);
     }
 
-    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &Camera, frame_number: usize) {
+    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &dyn Camera, frame_number: usize) {
         self.model_base.render_unlit(cmd, camera, frame_number);
     }
 
@@ -151,7 +151,7 @@ impl Widget for Base {}
 pub struct Label {
     pub base: Base,
     pub background_color: [f32; 4],
-    pub font: Arc<RwLock<Font>>,
+    pub font: Arc<RwLock<dyn Font>>,
     pub text: String,
     pub text_size: f32,
     pub text_color: [f32; 4],
@@ -298,7 +298,7 @@ impl Label {
             let radius = cgmath::Vector2::new(w, h);
             let radius = cgmath::dot(radius, radius).sqrt();
             let mesh = MeshBase::new(&vertices, &indices, radius, engine);
-            let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
+            let mesh: Arc<RwLock<dyn Mesh>> = Arc::new(RwLock::new(mesh));
             vxresult!(asset_manager.get_mesh_manager().write()).add(&mesh);
             (mesh, material)
         };
@@ -366,11 +366,11 @@ impl Transferable for Label {
 }
 
 impl Model for Label {
-    fn update(&mut self, scene: &Scene, camera: &Camera, frame_number: usize) {
+    fn update(&mut self, scene: &dyn Scene, camera: &dyn Camera, frame_number: usize) {
         self.base.update(scene, camera, frame_number);
     }
 
-    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<Mesh>>, Material)> {
+    fn get_meshes(&self) -> &BTreeMap<Id, (Arc<RwLock<dyn Mesh>>, Material)> {
         return self.base.get_meshes();
     }
 
@@ -378,11 +378,11 @@ impl Model for Label {
         self.base.clear_meshes();
     }
 
-    fn add_mesh(&mut self, mesh: Arc<RwLock<Mesh>>, mat: Material) {
+    fn add_mesh(&mut self, mesh: Arc<RwLock<dyn Mesh>>, mat: Material) {
         self.base.add_mesh(mesh, mat);
     }
 
-    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<Model>>)> {
+    fn bring_all_child_models(&self) -> Vec<(Id, Arc<RwLock<dyn Model>>)> {
         return self.base.bring_all_child_models();
     }
 
@@ -398,7 +398,7 @@ impl Model for Label {
         return self.base.get_occlusion_culling_radius();
     }
 
-    fn get_distance_from_camera(&self, c: &Camera) -> Real {
+    fn get_distance_from_camera(&self, c: &dyn Camera) -> Real {
         return self.base.get_distance_from_camera(c);
     }
 
@@ -410,7 +410,7 @@ impl Model for Label {
         self.base.render_gbuffer(cmd, frame_number);
     }
 
-    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &Camera, frame_number: usize) {
+    fn render_unlit(&mut self, cmd: &mut CmdBuffer, camera: &dyn Camera, frame_number: usize) {
         self.base.render_unlit(cmd, camera, frame_number);
     }
 

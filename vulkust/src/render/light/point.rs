@@ -7,7 +7,7 @@ use super::{DefaultLighting, Directional, Light, ShadowMaker};
 use std::f32::consts::PI;
 
 pub trait Point: Light {
-    fn update_uniform(&self, &mut PointUniform);
+    fn update_uniform(&self, uniform: &mut PointUniform);
 }
 
 #[repr(C)]
@@ -127,27 +127,27 @@ impl Transferable for Base {
 }
 
 impl Light for Base {
-    fn to_directional(&self) -> Option<&Directional> {
+    fn to_directional(&self) -> Option<&dyn Directional> {
         return None;
     }
 
-    fn to_mut_directional(&mut self) -> Option<&mut Directional> {
+    fn to_mut_directional(&mut self) -> Option<&mut dyn Directional> {
         return None;
     }
 
-    fn to_point(&self) -> Option<&Point> {
+    fn to_point(&self) -> Option<&dyn Point> {
         return Some(self);
     }
 
-    fn to_mut_point(&mut self) -> Option<&mut Point> {
+    fn to_mut_point(&mut self) -> Option<&mut dyn Point> {
         return Some(self);
     }
 
-    fn to_shadow_maker(&self) -> Option<&ShadowMaker> {
+    fn to_shadow_maker(&self) -> Option<&dyn ShadowMaker> {
         return None;
     }
 
-    fn to_mut_shadow_maker(&mut self) -> Option<&mut ShadowMaker> {
+    fn to_mut_shadow_maker(&mut self) -> Option<&mut dyn ShadowMaker> {
         return None;
     }
 

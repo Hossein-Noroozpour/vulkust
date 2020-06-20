@@ -14,18 +14,18 @@ pub trait Object: CoreObject {
 }
 
 pub trait Loadable: Sized {
-    fn new_with_gltf(&gltf::Node, &Engine, &[u8]) -> Self;
-    fn new_with_gx3d(&Engine, &mut Gx3DReader, Id) -> Self;
+    fn new_with_gltf(node: &gltf::Node, engine: &Engine, data: &[u8]) -> Self;
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self;
 }
 
 pub trait Transferable {
-    fn set_orientation(&mut self, &cgmath::Quaternion<Real>);
-    fn set_location(&mut self, &cgmath::Vector3<Real>);
+    fn set_orientation(&mut self, quad: &cgmath::Quaternion<Real>);
+    fn set_location(&mut self, loc: &cgmath::Vector3<Real>);
     fn get_location(&self) -> cgmath::Vector3<Real>;
-    fn move_local_z(&mut self, Real);
-    fn move_local_x(&mut self, Real);
-    fn rotate_local_x(&mut self, Real);
-    fn rotate_global_z(&mut self, Real);
+    fn move_local_z(&mut self, degree: Real);
+    fn move_local_x(&mut self, degree: Real);
+    fn rotate_local_x(&mut self, degree: Real);
+    fn rotate_global_z(&mut self, degree: Real);
     fn translate(&mut self, _: &cgmath::Vector3<Real>) {
         // todo temporary
         vxunimplemented!();

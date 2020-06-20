@@ -1,13 +1,7 @@
 use super::super::super::core::storage::Storage;
-use super::super::command::Buffer as CmdBuffer;
 use super::super::config::Configurations;
-use super::super::framebuffer::Framebuffer;
-use super::super::g_buffer_filler::GBufferFiller;
 use super::super::gapi::GraphicApiEngine;
-use super::super::image::{AttachmentType, Format, View as ImageView};
-use super::super::pipeline::{Pipeline, PipelineType};
-use super::super::render_pass::RenderPass;
-use super::super::texture::{Manager as TextureManager, Texture};
+use super::super::texture::Manager as TextureManager;
 use super::Pass;
 
 /// A manager structure for passes
@@ -17,7 +11,7 @@ use super::Pass;
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
-    storage: Storage<Pass>,
+    storage: Storage<dyn Pass>,
 }
 
 impl Manager {

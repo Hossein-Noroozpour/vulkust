@@ -23,16 +23,16 @@ pub trait Mesh: Object {
     fn is_shadow_caster(&self) -> bool;
     fn is_transparent(&self) -> bool;
     fn get_occlusion_culling_radius(&self) -> Real;
-    fn update(&mut self, usize);
-    fn render_gbuffer(&self, &mut CmdBuffer, usize);
-    fn render_unlit(&self, &mut CmdBuffer, usize);
-    fn render_shadow(&self, &mut CmdBuffer, usize);
+    fn update(&mut self, frame_number: usize);
+    fn render_gbuffer(&self, cmd: &mut CmdBuffer, frame_number: usize);
+    fn render_unlit(&self, cmd: &mut CmdBuffer, frame_number: usize);
+    fn render_shadow(&self, cmd: &mut CmdBuffer, frame_number: usize);
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     engine: Option<Weak<RwLock<Engine>>>,
-    meshes: BTreeMap<Id, Weak<RwLock<Mesh>>>,
+    meshes: BTreeMap<Id, Weak<RwLock<dyn Mesh>>>,
     name_to_id: BTreeMap<String, Id>,
     gx3d_table: Option<Gx3dTable>,
 }
@@ -56,11 +56,11 @@ impl Manager {
         primitive: &gltf::Primitive,
         engine: &Engine,
         data: &[u8],
-    ) -> Arc<RwLock<Mesh>> {
+    ) -> Arc<RwLock<dyn Mesh>> {
         let mesh = Base::new_with_gltf_primitive(primitive, engine, data);
         let id = mesh.get_id();
         let name = mesh.get_name();
-        let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
+        let mesh: Arc<RwLock<dyn Mesh>> = Arc::new(RwLock::new(mesh));
         self.meshes.insert(id, Arc::downgrade(&mesh));
         if let Some(name) = name {
             self.name_to_id.insert(name, id);
@@ -68,7 +68,7 @@ impl Manager {
         return mesh;
     }
 
-    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<Mesh>> {
+    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<dyn Mesh>> {
         if let Some(mesh) = self.meshes.get(&id) {
             if let Some(mesh) = mesh.upgrade() {
                 return mesh;
@@ -78,7 +78,7 @@ impl Manager {
         gx3d_table.goto(id);
         let reader = gx3d_table.get_mut_reader();
         let t = reader.read_type_id();
-        let mesh: Arc<RwLock<Mesh>> = if t == TypeId::Base as u8 {
+        let mesh: Arc<RwLock<dyn Mesh>> = if t == TypeId::Base as u8 {
             Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
         } else {
             vxunimplemented!();
@@ -87,7 +87,7 @@ impl Manager {
         return mesh;
     }
 
-    pub fn add(&mut self, mesh: &Arc<RwLock<Mesh>>) {
+    pub fn add(&mut self, mesh: &Arc<RwLock<dyn Mesh>>) {
         let id = vxresult!(mesh.read()).get_id();
         self.meshes.insert(id, Arc::downgrade(&mesh));
     }
@@ -98,15 +98,15 @@ impl Manager {
         indices: &[u32],
         occlusion_culling_radius: Real,
         engine: &Engine,
-    ) -> Arc<RwLock<Mesh>> {
+    ) -> Arc<RwLock<dyn Mesh>> {
         let mesh = Base::new(vertices, indices, occlusion_culling_radius, engine);
         let mesh_id = mesh.get_id();
-        let mesh: Arc<RwLock<Mesh>> = Arc::new(RwLock::new(mesh));
+        let mesh: Arc<RwLock<dyn Mesh>> = Arc::new(RwLock::new(mesh));
         self.meshes.insert(mesh_id, Arc::downgrade(&mesh));
         return mesh;
     }
 
-    pub fn create_cube(&mut self, aspect: Real) -> Arc<RwLock<Mesh>> {
+    pub fn create_cube(&mut self, aspect: Real) -> Arc<RwLock<dyn Mesh>> {
         let eng = vxunwrap!(vxunwrap!(&self.engine).upgrade());
         let eng = vxresult!(eng.read());
         let vertices = [
@@ -200,7 +200,7 @@ impl Base {
             p1.distance(center)
         };
         for (sem, acc) in primitive.attributes() {
-            let view = acc.view();
+            let view = vxunwrap!(acc.view());
             match acc.data_type() {
                 gltf::accessor::DataType::F32 => {}
                 _ => vxlogf!("Only float data type is acceptable for vertex attributes"),
@@ -275,7 +275,7 @@ impl Base {
             gltf::accessor::DataType::U32 => {}
             _ => vxlogf!("Only u32 data type is acceptable for indices."),
         }
-        let view = indices.view();
+        let view = vxunwrap!(indices.view());
         let indices_count = indices.count();
         let offset = view.offset();
         let end = view.length() + offset;

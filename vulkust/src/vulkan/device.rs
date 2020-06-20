@@ -159,9 +159,9 @@ impl Physical {
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            let b = unsafe {
+            let b = vxresult!(unsafe {
                 surface_loader.get_physical_device_surface_support(device, i, *vk_surface)
-            };
+            });
             if queue_family.queue_count > 0
                 && b
                 && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::GRAPHICS)
@@ -174,9 +174,9 @@ impl Physical {
 
         for i in 0..(queue_family_properties.len() as u32) {
             let ref queue_family = queue_family_properties[i as usize];
-            let b = unsafe {
+            let b = vxresult!(unsafe {
                 surface_loader.get_physical_device_surface_support(device, i, *vk_surface)
-            };
+            });
             if queue_family.queue_count > 0
                 && b
                 && vxflagcheck!(queue_family.queue_flags, vk::QueueFlags::GRAPHICS)

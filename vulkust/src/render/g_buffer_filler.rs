@@ -10,7 +10,7 @@ use std::sync::{Arc, RwLock};
 
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct GBufferFiller {
-    textures: Vec<Arc<RwLock<Texture>>>,
+    textures: Vec<Arc<RwLock<dyn Texture>>>,
     render_pass: Arc<RenderPass>,
     framebuffer: Arc<Framebuffer>,
     pipeline: Arc<Pipeline>,
@@ -79,19 +79,19 @@ impl GBufferFiller {
         self.framebuffer.begin(cmd);
     }
 
-    pub(super) fn get_textures(&self) -> &Vec<Arc<RwLock<Texture>>> {
+    pub(super) fn get_textures(&self) -> &Vec<Arc<RwLock<dyn Texture>>> {
         return &self.textures;
     }
 
-    pub(super) fn get_normal_texture(&self) -> &Arc<RwLock<Texture>> {
+    pub(super) fn get_normal_texture(&self) -> &Arc<RwLock<dyn Texture>> {
         return &self.textures[1];
     }
 
-    pub(super) fn get_position_texture(&self) -> &Arc<RwLock<Texture>> {
+    pub(super) fn get_position_texture(&self) -> &Arc<RwLock<dyn Texture>> {
         return &self.textures[0];
     }
 
-    pub(super) fn get_depth_texture(&self) -> &Arc<RwLock<Texture>> {
+    pub(super) fn get_depth_texture(&self) -> &Arc<RwLock<dyn Texture>> {
         return &self.textures[3];
     }
 

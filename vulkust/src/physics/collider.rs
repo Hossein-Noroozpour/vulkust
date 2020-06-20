@@ -13,7 +13,7 @@ pub enum TypeId {
     Ghost = 1,
 }
 
-pub fn read(reader: &mut Gx3DReader) -> Arc<RwLock<Collider>> {
+pub fn read(reader: &mut Gx3DReader) -> Arc<RwLock<dyn Collider>> {
     let t = reader.read_type_id();
     if t == TypeId::Ghost as u8 {
         return Arc::new(RwLock::new(Ghost::new()));

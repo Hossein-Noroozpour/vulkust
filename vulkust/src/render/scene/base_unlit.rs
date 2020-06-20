@@ -50,10 +50,10 @@ impl BaseFramedata {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub(super) struct Base {
     obj_base: ObjectBase,
-    cameras: BTreeMap<Id, Arc<RwLock<Camera>>>,
-    active_camera: Option<Weak<RwLock<Camera>>>,
-    models: BTreeMap<Id, Arc<RwLock<Model>>>,
-    all_models: BTreeMap<Id, Weak<RwLock<Model>>>,
+    cameras: BTreeMap<Id, Arc<RwLock<dyn Camera>>>,
+    active_camera: Option<Weak<RwLock<dyn Camera>>>,
+    models: BTreeMap<Id, Arc<RwLock<dyn Model>>>,
+    all_models: BTreeMap<Id, Weak<RwLock<dyn Model>>>,
     kernels_data: Vec<Arc<Mutex<BaseKernelData>>>,
     frames_data: Vec<BaseFramedata>,
     render_pass: Arc<RenderPass>,
@@ -83,7 +83,7 @@ impl Base {
                     all_models.insert(id, Arc::downgrade(&model));
                 }
                 let id = model.get_id();
-                let model: Arc<RwLock<Model>> = Arc::new(RwLock::new(model));
+                let model: Arc<RwLock<dyn Model>> = Arc::new(RwLock::new(model));
                 all_models.insert(id, Arc::downgrade(&model));
                 models.insert(id, model);
             } // todo read lights
@@ -245,7 +245,7 @@ impl Object for Base {
 }
 
 impl Scene for Base {
-    fn add_camera(&mut self, camera: Arc<RwLock<Camera>>) {
+    fn add_camera(&mut self, camera: Arc<RwLock<dyn Camera>>) {
         let id = vxresult!(camera.read()).get_id();
         if self.active_camera.is_none() {
             self.active_camera = Some(Arc::downgrade(&camera));
@@ -253,7 +253,7 @@ impl Scene for Base {
         self.cameras.insert(id, camera);
     }
 
-    fn add_model(&mut self, model: Arc<RwLock<Model>>) {
+    fn add_model(&mut self, model: Arc<RwLock<dyn Model>>) {
         let id = {
             let model = vxresult!(model.read());
             let child_models = model.bring_all_child_models();
@@ -267,11 +267,11 @@ impl Scene for Base {
         self.models.insert(id, model);
     }
 
-    fn add_light(&mut self, _: Arc<RwLock<Light>>) {
+    fn add_light(&mut self, _: Arc<RwLock<dyn Light>>) {
         vxunexpected!();
     }
 
-    fn get_active_camera(&self) -> &Option<Weak<RwLock<Camera>>> {
+    fn get_active_camera(&self) -> &Option<Weak<RwLock<dyn Camera>>> {
         return &self.active_camera;
     }
 
@@ -330,11 +330,11 @@ impl Scene for Base {
 
     fn render_shadow_maps(&self, _: &Shadower, _: usize, _: usize) {}
 
-    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<Model>>> {
+    fn get_models(&self) -> &BTreeMap<Id, Arc<RwLock<dyn Model>>> {
         return &self.models;
     }
 
-    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<Model>>> {
+    fn get_all_models(&self) -> &BTreeMap<Id, Weak<RwLock<dyn Model>>> {
         return &self.all_models;
     }
 

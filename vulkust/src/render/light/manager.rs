@@ -9,7 +9,7 @@ use std::sync::{Arc, RwLock, Weak};
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     engine: Option<Weak<RwLock<Engine>>>,
-    lights: BTreeMap<Id, Weak<RwLock<Light>>>,
+    lights: BTreeMap<Id, Weak<RwLock<dyn Light>>>,
     name_to_id: BTreeMap<String, Id>,
     gx3d_table: Option<Gx3dTable>,
 }
@@ -37,12 +37,12 @@ impl Manager {
         let result = L::default(&*eng);
         let id = result.get_id();
         let result = Arc::new(RwLock::new(result));
-        let light: Arc<RwLock<Light>> = result.clone();
+        let light: Arc<RwLock<dyn Light>> = result.clone();
         self.lights.insert(id, Arc::downgrade(&light));
         return result;
     }
 
-    pub fn load_gx3d(&mut self, eng: &Engine, id: Id) -> Arc<RwLock<Light>> {
+    pub fn load_gx3d(&mut self, eng: &Engine, id: Id) -> Arc<RwLock<dyn Light>> {
         if let Some(light) = self.lights.get(&id) {
             if let Some(light) = light.upgrade() {
                 return light;
@@ -52,7 +52,7 @@ impl Manager {
         table.goto(id);
         let reader: &mut Gx3DReader = table.get_mut_reader();
         let type_id = reader.read_type_id();
-        let result: Arc<RwLock<Light>> = if type_id == TypeId::Sun as u8 {
+        let result: Arc<RwLock<dyn Light>> = if type_id == TypeId::Sun as u8 {
             if reader.read_bool() {
                 Arc::new(RwLock::new(Sun::new_with_gx3d(eng, reader, id)))
             } else {

@@ -68,7 +68,7 @@ pub struct SSAO {
     framebuffer: Arc<Framebuffer>,
     descriptor_set: Arc<DescriptorSet>,
     pipeline: Arc<Pipeline>,
-    textures: Vec<Arc<RwLock<Texture>>>,
+    textures: Vec<Arc<RwLock<dyn Texture>>>,
 }
 
 impl SSAO {
@@ -143,7 +143,7 @@ impl SSAO {
         self.uniform_buffer.update(&self.uniform, frame_number);
     }
 
-    pub(crate) fn get_ambient_occlusion_texture(&self) -> &Arc<RwLock<Texture>> {
+    pub(crate) fn get_ambient_occlusion_texture(&self) -> &Arc<RwLock<dyn Texture>> {
         return &self.textures[0];
     }
 }

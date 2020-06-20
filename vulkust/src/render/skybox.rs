@@ -18,13 +18,13 @@ use cgmath;
 use gltf;
 
 pub trait Skybox: Object {
-    fn update(&mut self, &Camera, usize);
+    fn update(&mut self, camera: &dyn Camera, frame_number: usize);
     fn get_uniform(&self) -> &Uniform;
-    fn render(&self, &mut CmdBuffer, usize);
+    fn render(&self, cmd: &mut CmdBuffer, frame_number: usize);
 }
 
 pub trait DefaultSkybox: Skybox + Sized {
-    fn default(&Engine) -> Self;
+    fn default(engine: &Engine) -> Self;
 }
 
 #[repr(u8)]
@@ -36,7 +36,7 @@ pub enum TypeId {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     engine: Option<Weak<RwLock<Engine>>>,
-    skyboxes: BTreeMap<Id, Weak<RwLock<Skybox>>>,
+    skyboxes: BTreeMap<Id, Weak<RwLock<dyn Skybox>>>,
     name_to_id: BTreeMap<String, Id>,
     gx3d_table: Option<Gx3dTable>,
 }
@@ -51,7 +51,7 @@ impl Manager {
         }
     }
 
-    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<Skybox>> {
+    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<dyn Skybox>> {
         if let Some(skybox) = self.skyboxes.get(&id) {
             if let Some(skybox) = skybox.upgrade() {
                 return skybox;
@@ -61,7 +61,7 @@ impl Manager {
         gx3d_table.goto(id);
         let reader = gx3d_table.get_mut_reader();
         let t = reader.read_type_id();
-        let skybox: Arc<RwLock<Skybox>> = if t == TypeId::Basic as u8 {
+        let skybox: Arc<RwLock<dyn Skybox>> = if t == TypeId::Basic as u8 {
             Arc::new(RwLock::new(Base::new_with_gx3d(engine, reader, id)))
         } else {
             vxunexpected!()
@@ -79,7 +79,7 @@ impl Manager {
         let m = M::default(&*eng);
         let id = m.get_id();
         let m1 = Arc::new(RwLock::new(m));
-        let m2: Arc<RwLock<Skybox>> = m1.clone();
+        let m2: Arc<RwLock<dyn Skybox>> = m1.clone();
         self.skyboxes.insert(id, Arc::downgrade(&m2));
         return m1;
     }
@@ -99,7 +99,7 @@ pub struct Base {
     uniform: Uniform,
     uniform_buffer: DynamicBuffer,
     descriptor_set: Arc<DescriptorSet>,
-    mesh: Arc<RwLock<Mesh>>,
+    mesh: Arc<RwLock<dyn Mesh>>,
     material: Material,
 }
 
@@ -166,7 +166,7 @@ impl Loadable for Base {
 }
 
 impl Skybox for Base {
-    fn update(&mut self, camera: &Camera, frame_number: usize) {
+    fn update(&mut self, camera: &dyn Camera, frame_number: usize) {
         let u = camera.get_uniform();
         let mvp = u.get_projection() * u.get_inversed_rotation();
         let s = (u.get_far() * (1.0 / 3.6)) + (u.get_near() * 0.9);

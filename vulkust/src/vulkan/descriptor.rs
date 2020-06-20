@@ -157,7 +157,7 @@ impl Drop for SetLayout {
 pub(crate) struct Set {
     pool: Arc<Pool>,
     layout: Arc<SetLayout>,
-    texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
+    texturess: Vec<Vec<Arc<RwLock<dyn Texture>>>>,
     vk_data: vk::DescriptorSet,
 }
 
@@ -174,7 +174,7 @@ impl Set {
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        textures: Vec<Arc<RwLock<Texture>>>,
+        textures: Vec<Arc<RwLock<dyn Texture>>>,
     ) -> Self {
         let mut texturess = Vec::new();
         for t in textures {
@@ -187,7 +187,7 @@ impl Set {
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        textures: Vec<Arc<RwLock<Texture>>>,
+        textures: Vec<Arc<RwLock<dyn Texture>>>,
     ) -> Self {
         #[cfg(debug_mode)]
         {
@@ -209,7 +209,7 @@ impl Set {
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        textures: Vec<Arc<RwLock<Texture>>>,
+        textures: Vec<Arc<RwLock<dyn Texture>>>,
     ) -> Self {
         #[cfg(debug_mode)]
         {
@@ -228,7 +228,7 @@ impl Set {
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
+        texturess: Vec<Vec<Arc<RwLock<dyn Texture>>>>,
     ) -> Self {
         #[cfg(debug_mode)]
         {
@@ -271,7 +271,7 @@ impl Set {
         pool: Arc<Pool>,
         layout: Arc<SetLayout>,
         uniform: &DynamicBuffer,
-        texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
+        texturess: Vec<Vec<Arc<RwLock<dyn Texture>>>>,
     ) -> Self {
         let vk_data = Self::allocate_set(&pool, &layout);
         let buff_info = Self::create_buffer_info(uniform);
@@ -373,7 +373,7 @@ impl Manager {
     pub(crate) fn create_gbuff_set(
         &mut self,
         uniform: &DynamicBuffer,
-        textures: Vec<Arc<RwLock<Texture>>>,
+        textures: Vec<Arc<RwLock<dyn Texture>>>,
     ) -> Arc<Set> {
         #[cfg(debug_mode)]
         {
@@ -427,7 +427,7 @@ impl Manager {
     pub(crate) fn create_deferred_set(
         &mut self,
         uniform: &DynamicBuffer,
-        textures: Vec<Arc<RwLock<Texture>>>,
+        textures: Vec<Arc<RwLock<dyn Texture>>>,
     ) -> Arc<Set> {
         if let Some(s) = &self.deferred_set {
             return s.clone();
@@ -445,7 +445,7 @@ impl Manager {
     pub(crate) fn create_ssao_set(
         &mut self,
         uniform: &DynamicBuffer,
-        textures: Vec<Arc<RwLock<Texture>>>,
+        textures: Vec<Arc<RwLock<dyn Texture>>>,
     ) -> Arc<Set> {
         if let Some(s) = &self.ssao_set {
             return s.clone();
@@ -463,7 +463,7 @@ impl Manager {
     pub(crate) fn create_shadow_accumulator_directional_set(
         &mut self,
         uniform: &DynamicBuffer,
-        texturess: Vec<Vec<Arc<RwLock<Texture>>>>,
+        texturess: Vec<Vec<Arc<RwLock<dyn Texture>>>>,
     ) -> Arc<Set> {
         if let Some(s) = &self.shadow_accumulator_directional_set {
             return s.clone();

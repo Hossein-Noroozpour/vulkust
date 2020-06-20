@@ -52,7 +52,7 @@ struct SunShadowMakerKernelFrameData {
 struct SunShadowMapperRenderData {
     uniform_buffer: DynamicBuffer,
     cascade_index: usize,
-    model: Option<Weak<RwLock<Model>>>,
+    model: Option<Weak<RwLock<dyn Model>>>,
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -120,7 +120,7 @@ impl SunShadowMakerKernelData {
         }
     }
 
-    fn shadow(&mut self, m: &mut Model, model: &Arc<RwLock<Model>>) {
+    fn shadow(&mut self, m: &mut dyn Model, model: &Arc<RwLock<dyn Model>>) {
         let rd = m.get_occlusion_culling_radius();
         let v = (self.zero_located_view * m.get_location().extend(1.0)).truncate();
         let b = Aabb3::new_with_center_radius(&v, rd);
@@ -341,27 +341,27 @@ impl Object for Sun {
 }
 
 impl Light for Sun {
-    fn to_directional(&self) -> Option<&Directional> {
+    fn to_directional(&self) -> Option<& dyn Directional> {
         return Some(self);
     }
 
-    fn to_mut_directional(&mut self) -> Option<&mut Directional> {
+    fn to_mut_directional(&mut self) -> Option<&mut dyn Directional> {
         return Some(self);
     }
 
-    fn to_point(&self) -> Option<&Point> {
+    fn to_point(&self) -> Option<&dyn Point> {
         return None;
     }
 
-    fn to_mut_point(&mut self) -> Option<&mut Point> {
+    fn to_mut_point(&mut self) -> Option<&mut dyn Point> {
         return None;
     }
 
-    fn to_shadow_maker(&self) -> Option<&ShadowMaker> {
+    fn to_shadow_maker(&self) -> Option<&dyn ShadowMaker> {
         return Some(self);
     }
 
-    fn to_mut_shadow_maker(&mut self) -> Option<&mut ShadowMaker> {
+    fn to_mut_shadow_maker(&mut self) -> Option<&mut dyn ShadowMaker> {
         return Some(self);
     }
 
@@ -395,7 +395,7 @@ impl Light for Sun {
 }
 
 impl ShadowMaker for Sun {
-    fn shadow(&self, m: &mut Model, mc: &Arc<RwLock<Model>>, kernel_index: usize) {
+    fn shadow(&self, m: &mut dyn Model, mc: &Arc<RwLock<dyn Model>>, kernel_index: usize) {
         vxresult!(self.kernels_data[kernel_index].lock()).shadow(m, mc);
     }
 

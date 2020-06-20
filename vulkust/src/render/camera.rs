@@ -81,14 +81,14 @@ impl Uniform {
 pub trait Camera: Object + Transferable {
     fn get_view_projection(&self) -> &cgmath::Matrix4<Real>;
     fn get_cascaded_shadow_frustum_partitions(&self) -> Vec<[cgmath::Vector3<Real>; 4]>;
-    fn is_in_frustum(&self, Real, &cgmath::Vector3<Real>) -> bool;
-    fn update_uniform(&self, &mut Uniform);
-    fn get_distance(&self, &cgmath::Vector3<Real>) -> Real;
+    fn is_in_frustum(&self, radius: Real, location: &cgmath::Vector3<Real>) -> bool;
+    fn update_uniform(&self, uniform: &mut Uniform);
+    fn get_distance(&self, location: &cgmath::Vector3<Real>) -> Real;
     fn get_uniform(&self) -> &Uniform;
 }
 
 pub trait DefaultCamera: Camera {
-    fn default(&Engine) -> Self;
+    fn default(engine: &Engine) -> Self;
 }
 
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -101,7 +101,7 @@ pub enum TypeId {
 #[cfg_attr(debug_mode, derive(Debug))]
 pub struct Manager {
     engine: Option<Weak<RwLock<Engine>>>,
-    cameras: BTreeMap<Id, Weak<RwLock<Camera>>>,
+    cameras: BTreeMap<Id, Weak<RwLock<dyn Camera>>>,
     name_to_id: BTreeMap<String, Id>,
     gx3d_table: Option<Gx3dTable>,
 }
@@ -126,17 +126,17 @@ impl Manager {
         self.gx3d_table = Some(gx3d_table);
     }
 
-    pub fn load_gltf(&mut self, n: &gltf::Node, eng: &Engine) -> Arc<RwLock<Camera>> {
+    pub fn load_gltf(&mut self, n: &gltf::Node, eng: &Engine) -> Arc<RwLock<dyn Camera>> {
         let c = vxunwrap!(n.camera());
-        let data = Vec::new();
+        let data: Vec<u8> = Vec::new();
         let camera = match c.projection() {
             gltf::camera::Projection::Perspective(_) => {
-                let camera: Arc<RwLock<Camera>> =
+                let camera: Arc<RwLock<dyn Camera>> =
                     Arc::new(RwLock::new(Perspective::new_with_gltf(n, eng, &data)));
                 camera
             }
             gltf::camera::Projection::Orthographic(_) => {
-                let camera: Arc<RwLock<Camera>> =
+                let camera: Arc<RwLock<dyn Camera>> =
                     Arc::new(RwLock::new(Orthographic::new_with_gltf(n, eng, &data)));
                 camera
             }
@@ -152,7 +152,7 @@ impl Manager {
         camera
     }
 
-    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<Camera>> {
+    pub fn load_gx3d(&mut self, engine: &Engine, id: Id) -> Arc<RwLock<dyn Camera>> {
         if let Some(camera) = self.cameras.get(&id) {
             if let Some(camera) = camera.upgrade() {
                 return camera;
@@ -162,7 +162,7 @@ impl Manager {
         table.goto(id);
         let reader: &mut Gx3DReader = table.get_mut_reader();
         let type_id = reader.read_type_id();
-        let camera: Arc<RwLock<Camera>> = if type_id == TypeId::Perspective as u8 {
+        let camera: Arc<RwLock<dyn Camera>> = if type_id == TypeId::Perspective as u8 {
             Arc::new(RwLock::new(Perspective::new_with_gx3d(engine, reader, id)))
         } else if type_id == TypeId::Orthographic as u8 {
             Arc::new(RwLock::new(Orthographic::new_with_gx3d(engine, reader, id)))
@@ -185,8 +185,8 @@ impl Manager {
             self.name_to_id.insert(name, id);
         }
         let camera = Arc::new(RwLock::new(camera));
-        let c: Arc<RwLock<Camera>> = camera.clone();
-        let c: Weak<RwLock<Camera>> = Arc::downgrade(&c);
+        let c: Arc<RwLock<dyn Camera>> = camera.clone();
+        let c: Weak<RwLock<dyn Camera>> = Arc::downgrade(&c);
         self.cameras.insert(id, c);
         camera
     }

@@ -41,6 +41,7 @@ mod debug {
         if vxflagcheck!(flags, vk::DebugReportFlagsEXT::DEBUG) {
             flg += "debug, ";
         }
+        let obj_type: usize = unsafe { std::mem::transmute(obj_type) };
         vxlogi!(
             "flag: {}, obj_type: {}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: \
              {:?}, msg : {:?}, user_data {:?}",
@@ -128,7 +129,6 @@ mod debug {
         vxlogi!("Layers that gonna be imported {:?}.", layers_names);
         strings_to_cstrings(layers_names)
     }
-
 }
 
 #[cfg(not(debug_mode))]
@@ -208,11 +208,11 @@ impl Instance {
         let application_name = CString::new(application_name).unwrap();
         let engine_name = CString::new("Vulkust").unwrap();
         let application_info = vk::ApplicationInfo::builder()
-            .api_version(vk_make_version!(1, 0, 0))
-            .application_version(vk_make_version!(0, 1, 0))
+            .api_version(vk::make_version(1, 0, 0))
+            .application_version(vk::make_version(0, 1, 0))
             .application_name(&application_name)
             .engine_name(&engine_name)
-            .engine_version(vk_make_version!(0, 1, 0));
+            .engine_version(vk::make_version(0, 1, 0));
         let vulkan_layers = debug::enumerate_layers(entry.fp_v1_0());
         let vulkan_layers = cstrings_to_ptrs(&vulkan_layers);
         let vulkan_extensions = enumerate_extensions(&entry);

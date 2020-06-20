@@ -1,7 +1,4 @@
-use super::super::core::gx3d::Gx3DReader;
 use super::super::core::object::Object as CoreObject;
-use super::super::core::types::Id;
-use super::engine::Engine;
 use super::image::View as ImageView;
 use super::sampler::Sampler;
 use std::sync::Arc;
@@ -10,11 +7,11 @@ pub mod cube;
 pub mod manager;
 pub mod t2d;
 
-use gltf;
-
 pub use self::cube::Cube;
 pub use self::manager::Manager;
 pub use self::t2d::Texture2D;
+use super::engine::Engine;
+use crate::core::{gx3d::Gx3DReader, types::Id};
 
 #[repr(u8)]
 #[cfg_attr(debug_mode, derive(Debug))]
@@ -30,6 +27,6 @@ pub trait Texture: CoreObject {
 }
 
 pub trait Loadable: Sized {
-    fn new_with_gltf(&gltf::Texture, &Engine, &[u8]) -> Self;
-    fn new_with_gx3d(&Engine, &mut Gx3DReader, Id) -> Self;
+    fn new_with_gltf(gltf: &gltf::Texture, engine: &Engine, data: &[u8]) -> Self;
+    fn new_with_gx3d(engine: &Engine, reader: &mut Gx3DReader, id: Id) -> Self;
 }

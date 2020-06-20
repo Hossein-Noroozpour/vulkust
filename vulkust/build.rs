@@ -4,6 +4,7 @@ use std::env;
 use std::fs;
 use std::fs::File;
 use std::path::Path;
+use std::io::Write;
 use std::process::Command;
 
 const DEFAULT_FONTS: [(&str, &str); 1] = [(
@@ -181,13 +182,18 @@ fn check_fonts() {
     }
 }
 
-fn download_fonts() {
+async fn download_fonts() {
     let out_dir = env::var("OUT_DIR").unwrap();
     let fonts_path = Path::new(&out_dir).join("render/fonts/");
     for font in &DEFAULT_FONTS {
         let font_path = Path::new(&fonts_path).join(font.0);
         let mut file = File::create(font_path).expect("can not create font file.");
-        let mut resp = reqwest::get(font.1).expect("can not connect to fonts server.");
-        resp.copy_to(&mut file).expect("can not download fonts");
+        let mut resp = reqwest::get(font.1)
+            .await
+            .expect("Can not receive the data.")
+            .bytes()
+            .await
+            .expect("Can not read the data.");
+        file.write(&resp).expect("can not download fonts");
     }
 }
