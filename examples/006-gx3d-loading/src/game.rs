@@ -31,8 +31,8 @@ struct KeysState {
 pub struct MyGame {
     os_app: Option<Arc<RwLock<OsApp>>>,
     renderer: Option<Arc<RwLock<Renderer>>>,
-    scene: Option<Arc<RwLock<Scene>>>,
-    camera: Option<Arc<RwLock<Camera>>>,
+    scene: Option<Arc<RwLock<dyn Scene>>>,
+    camera: Option<Arc<RwLock<dyn Camera>>>,
     keys_state: Arc<RwLock<KeysState>>,
 }
 

@@ -1,10 +1,13 @@
+#![feature(generators)]
+
 extern crate reqwest;
+extern crate tokio;
 
 use std::env;
 use std::fs;
 use std::fs::File;
-use std::path::Path;
 use std::io::Write;
+use std::path::Path;
 use std::process::Command;
 
 const DEFAULT_FONTS: [(&str, &str); 1] = [(
@@ -61,7 +64,9 @@ fn main() {
         println!("cargo:rustc-cfg=debug_texture");
     }
     check_shaders();
-    check_fonts();
+    tokio::runtime::Runtime::new()
+        .unwrap()
+        .block_on(check_fonts());
 }
 
 fn check_shaders() {
@@ -165,18 +170,18 @@ fn check_shaders() {
     }
 }
 
-fn check_fonts() {
+async fn check_fonts() {
     let out_dir = env::var("OUT_DIR").unwrap();
     let fonts_path = Path::new(&out_dir).join("render/fonts/");
     if !fonts_path.exists() {
         fs::create_dir_all(fonts_path.clone()).expect("can not create render path");
-        download_fonts();
+        download_fonts().await;
         return;
     }
     for font in &DEFAULT_FONTS {
         let font_path = Path::new(&fonts_path).join(font.0);
         if !font_path.is_file() {
-            download_fonts();
+            download_fonts().await;
             return;
         }
     }
@@ -188,7 +193,7 @@ async fn download_fonts() {
     for font in &DEFAULT_FONTS {
         let font_path = Path::new(&fonts_path).join(font.0);
         let mut file = File::create(font_path).expect("can not create font file.");
-        let mut resp = reqwest::get(font.1)
+        let resp = reqwest::get(font.1)
             .await
             .expect("Can not receive the data.")
             .bytes()

@@ -41,12 +41,11 @@ mod debug {
         if vxflagcheck!(flags, vk::DebugReportFlagsEXT::DEBUG) {
             flg += "debug, ";
         }
-        let obj_type: usize = unsafe { std::mem::transmute(obj_type) };
         vxlogi!(
             "flag: {}, obj_type: {}, src_obj: {:?}, location: {:?}, msg_code: {:?}, layer_prefix: \
              {:?}, msg : {:?}, user_data {:?}",
             flg,
-            obj_type,
+            obj_type.as_raw(),
             src_obj,
             location,
             msg_code,

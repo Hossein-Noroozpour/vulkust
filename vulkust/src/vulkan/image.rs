@@ -12,14 +12,9 @@ use std::sync::{Arc, RwLock};
 pub(super) fn convert_layout(f: &Layout) -> vk::ImageLayout {
     match f {
         &Layout::Uninitialized => return vk::ImageLayout::UNDEFINED,
-        &Layout::DepthStencil => {
-            return vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-        }
+        &Layout::DepthStencil => return vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         &Layout::Display => return vk::ImageLayout::PRESENT_SRC_KHR,
-        &Layout::ShaderReadOnly => {
-            return vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL
-        }
-        // _ => vxunexpected!(),
+        &Layout::ShaderReadOnly => return vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL, // _ => vxunexpected!(),
     }
 }
 

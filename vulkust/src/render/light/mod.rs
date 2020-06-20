@@ -1,7 +1,11 @@
+use super::command::Pool as CmdPool;
 use super::engine::Engine;
+use super::gapi::GraphicApiEngine;
+use super::model::Model;
 use super::object::{Object, Transferable};
+use super::shadower::Shadower;
 use super::sync::Semaphore;
-use std::sync::{Arc};
+use std::sync::{Arc, RwLock};
 
 pub mod directional;
 pub mod lamp;
@@ -34,14 +38,21 @@ pub trait Light: Object + Transferable {
 }
 
 pub trait ShadowMaker: Light {
-    fn shadow(&self, &mut Model, &Arc<RwLock<Model>>, usize);
-    fn begin_secondary_commands(&self, g_engine: &GraphicApiEngine, cmd_pool: &Arc<CmdPool>, shadower: &Shadower, usize, usize);
+    fn shadow(&self, model: &mut dyn Model, m: &Arc<RwLock<dyn Model>>, kernel_index: usize);
+    fn begin_secondary_commands(
+        &self,
+        g_engine: &GraphicApiEngine,
+        cmd_pool: &Arc<CmdPool>,
+        shadower: &Shadower,
+        kernel_index: usize,
+        frame_number: usize,
+    );
     fn render_shadow_mapper(&self, shadower: &Shadower, frame_number: usize, kernel_index: usize);
     fn submit_shadow_mapper(
         &mut self,
         semaphore: &Semaphore,
         g_engine: &GraphicApiEngine,
-        sadower: &Shadower,
+        shadower: &Shadower,
         frame_number: usize,
     ) -> Arc<Semaphore>;
 }

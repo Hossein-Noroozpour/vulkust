@@ -103,9 +103,9 @@ impl Engine {
         let buffer_manager = Arc::new(RwLock::new(BufferManager::new(
             &memory_manager,
             &graphic_cmd_pool,
-            32 * 1024 * 1024,
-            32 * 1024 * 1024,
-            32 * 1024 * 1024,
+            256 * 1024 * 1024,
+            256 * 1024 * 1024,
+            256 * 1024 * 1024,
             swapchain.get_image_views().len() as isize,
         )));
         let descriptor_manager = Arc::new(RwLock::new(DescriptorManager::new(

@@ -341,7 +341,7 @@ impl Object for Sun {
 }
 
 impl Light for Sun {
-    fn to_directional(&self) -> Option<& dyn Directional> {
+    fn to_directional(&self) -> Option<&dyn Directional> {
         return Some(self);
     }
 

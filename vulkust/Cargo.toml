@@ -46,3 +46,4 @@ objc = "*"
 
 [build-dependencies]
 reqwest = "*"
+tokio = "*"

@@ -84,7 +84,7 @@ impl Base {
         let mut file = vxresult!(File::open(&file));
         let mut data = Vec::new();
         vxresult!(file.read_to_end(&mut data));
-        let font = vxunwrap!(TypeFont::try_from_bytes(&data));
+        let font = vxunwrap!(TypeFont::try_from_vec(data));
         let obj_base = ObjectBase::new();
         let name = Some(name.to_string());
         Base {
@@ -99,7 +99,7 @@ impl Default for Base {
     fn default() -> Self {
         let font = include_bytes!(concat!(env!("OUT_DIR"), "/render/fonts/Ubuntu-B.ttf"));
         let font = font.to_vec();
-        let font = vxunwrap!(TypeFont::try_from_bytes(&font));
+        let font = vxunwrap!(TypeFont::try_from_vec(font));
         let obj_base = ObjectBase::new();
         let name = None;
         Self {

@@ -25,7 +25,7 @@ pub struct MyGame {
     renderer: Option<Arc<RwLock<Renderer>>>,
     scene: Option<Arc<RwLock<GameScene>>>,
     ui_scene: Option<Arc<RwLock<UiScene>>>,
-    camera: Option<Arc<RwLock<Camera>>>,
+    camera: Option<Arc<RwLock<dyn Camera>>>,
     keys_state: Arc<RwLock<KeysState>>,
 }
 
@@ -216,7 +216,7 @@ impl CoreAppTrait for MyGame {
     fn terminate(&mut self) {}
 }
 
-fn place_cubes(scn: &mut Scene, eng: &Renderer) {
+fn place_cubes(scn: &mut dyn Scene, eng: &Renderer) {
     let astmgr = eng.get_asset_manager();
     const GROUND_CUBE_ASPECT: Real = 2.0;
     const GROUND_CUBE_SPACING: Real = GROUND_CUBE_ASPECT * 0.1;
@@ -250,7 +250,7 @@ fn place_cubes(scn: &mut Scene, eng: &Renderer) {
     for _ in 0..GROUND_CUBE_ROW_COUNT {
         let mut x = ROW_START;
         for _ in 0..GROUND_CUBE_ROW_COUNT {
-            let m: Arc<RwLock<Model>> = mdlmgr.create::<ModelBase>();
+            let m: Arc<RwLock<dyn Model>> = mdlmgr.create::<ModelBase>();
             {
                 let mut m = vxresult!(m.write());
                 let (mesh, mat) = &ground_meshes[ground_mesh_index];
@@ -273,7 +273,7 @@ fn place_cubes(scn: &mut Scene, eng: &Renderer) {
         let x = rng.gen_range(RANGE, -RANGE);
         let z = rng.gen_range(0.0, 1.0);
         let s = rng.gen_range(0.25, 0.5);
-        let m: Arc<RwLock<Model>> = mdlmgr.create::<ModelBase>();
+        let m: Arc<RwLock<dyn Model>> = mdlmgr.create::<ModelBase>();
         {
             let mut m = vxresult!(m.write());
             let (mesh, mat) = &ground_meshes[ground_mesh_index];
