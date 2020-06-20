@@ -450,7 +450,7 @@ impl Scene for Base {
             }
         }
         for (_, l) in &self.lights {
-            let mut l = vxresult!(l.read());
+            let l = vxresult!(l.read());
             if !l.is_renderable() {
                 continue;
             }

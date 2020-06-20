@@ -269,7 +269,7 @@ impl Engine {
         let scenes = scnmgr.get_scenes();
         for (_, scene) in &*scenes {
             if let Some(scene) = scene.upgrade() {
-                let mut scene = vxresult!(scene.write());
+                let scene = vxresult!(scene.write());
                 if !scene.is_renderable() {
                     continue;
                 }

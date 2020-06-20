@@ -74,10 +74,10 @@ macro_rules! vulkust_start {
 #[macro_export]
 macro_rules! vxlogi {
     ($fmt:expr) => {
-        println!("{}", format!("Vulkust information message in file: {} line: {} {}", file!(), line!(), $fmt));
+        println!("{}", format!("Vulkust information message in: {}:{} {}", file!(), line!(), $fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        println!("{}", format!("Vulkust information message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*)));
+        println!("{}", format!("Vulkust information message in: {}:{} {}", file!(), line!(), format!($fmt, $($arg)*)));
     };
 }
 
@@ -85,10 +85,10 @@ macro_rules! vxlogi {
 #[macro_export]
 macro_rules! vxloge {
     ($fmt:expr) => {
-        eprintln!("{}", format!("Vulkust error message in file: {} line: {} {}", file!(), line!(), $fmt));
+        eprintln!("{}", format!("Vulkust error message in: {}:{} {}", file!(), line!(), $fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        eprintln!("{}", format!("Vulkust error message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*)));
+        eprintln!("{}", format!("Vulkust error message in: {}:{} {}", file!(), line!(), format!($fmt, $($arg)*)));
     };
 }
 
@@ -96,10 +96,10 @@ macro_rules! vxloge {
 #[macro_export]
 macro_rules! vxlogf {
     ($fmt:expr) => (
-        panic!("{}", format!("Vulkust fatal message in file: {} line: {} {}", file!(), line!(), $fmt));
+        panic!("{}", format!("Vulkust fatal message in: {}:{} {}", file!(), line!(), $fmt));
     );
     ($fmt:expr, $($arg:tt)*) => {
-        panic!("{}", format!("Vulkust fatal message in file: {} line: {} {}", file!(), line!(), format!($fmt, $($arg)*)));
+        panic!("{}", format!("Vulkust fatal message in: {}:{} {}", file!(), line!(), format!($fmt, $($arg)*)));
     };
 }
 
@@ -109,12 +109,12 @@ macro_rules! vxlogi {
     ($fmt:expr) => {
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Info, &format!(
-            "Vulkust Information MSG in file: {} line: {} {}", file!(), line!(), format!($fmt)));
+            "Vulkust Information MSG in: {}:{} {}", file!(), line!(), format!($fmt)));
     };
     ($fmt:expr, $($arg:tt)*) => {
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Info, &format!(
-            "Vulkust Information MSG in file: {} line: {} {}", file!(), line!(),
+            "Vulkust Information MSG in: {}:{} {}", file!(), line!(),
             format!($fmt, $($arg)*)));
     };
 }
@@ -125,12 +125,12 @@ macro_rules! vxloge {
     ($fmt:expr) => {
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Error, &format!(
-            "Vulkust Error MSG in file: {} line: {} {}", file!(), line!(), format!($fmt)));
+            "Vulkust Error MSG in: {}:{} {}", file!(), line!(), format!($fmt)));
     };
     ($fmt:expr, $($arg:tt)*) => {
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Error, &format!(
-            "Vulkust Error MSG in file: {} line: {} {}", file!(), line!(),
+            "Vulkust Error MSG in: {}:{} {}", file!(), line!(),
             format!($fmt, $($arg)*)));
     };
 }
@@ -141,13 +141,13 @@ macro_rules! vxlogf {
     ($fmt:expr) => ({
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Fatal, &format!(
-            "Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(), format!($fmt)));
+            "Vulkust Fatal MSG in: {}:{} {}", file!(), line!(), format!($fmt)));
         panic!("Terminated!");
     });
     ($fmt:expr, $($arg:tt)*) => ({
         $crate::system::android::log::print(
             $crate::system::android::log::Priority::Fatal,
-            &format!("Vulkust Fatal MSG in file: {} line: {} {}", file!(), line!(),
+            &format!("Vulkust Fatal MSG in: {}:{} {}", file!(), line!(),
             format!($fmt, $($arg)*)));
         panic!("Terminated!");
     });

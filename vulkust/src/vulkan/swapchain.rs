@@ -133,6 +133,7 @@ impl Swapchain {
                 surface_caps.current_extent.height,
             )));
         }
+        vxlogi!("Swapchain created.");
         Self {
             logical_device: logical_device.clone(),
             _surface_format: best_surface_format,

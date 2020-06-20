@@ -39,7 +39,7 @@ impl RenderPass {
             let img = vxresult!(v.get_image().read());
             vk_dev = Some(img.get_device().get_data().clone());
 
-            let mut attachment_description = vk::AttachmentDescription::builder()
+            let attachment_description = vk::AttachmentDescription::builder()
                 .format(img.get_vk_format())
                 .samples(vk::SampleCountFlags::TYPE_1)
                 .load_op(if clear {
@@ -54,7 +54,7 @@ impl RenderPass {
                 .final_layout(convert_layout(&end_layouts[view_index]))
                 .build();
             if vxflagcheck!(img.get_vk_usage(), vk::ImageUsageFlags::COLOR_ATTACHMENT) {
-                let mut color_attachment_ref = vk::AttachmentReference::builder()
+                let color_attachment_ref = vk::AttachmentReference::builder()
                     .attachment(attachment_descriptions.len() as u32)
                     .layout(vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL)
                     .build();

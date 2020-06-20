@@ -10,10 +10,6 @@ readme = "../README.md"
 keywords = ["game", "engine", "vulkan"]
 categories = ["game-engines"]
 
-[features]
-directx12 = []
-blank_gapi = [] # This is only for implementation template for future Graphic-APIs
-
 [dependencies]
 image = "*"
 cgmath = "*"
@@ -22,27 +18,29 @@ rusttype = "*"
 gltf = { version = "*", features = ["extras", "default"] }
 num_cpus = "*"
 rand = "*"
-
-[target.'cfg(all(not(feature = "directx12")))'.dependencies]
 ash = "*"
 
-[target.'cfg(all(target_os = "windows", not(feature = "directx12")))'.dependencies]
+[target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser"] }
-
-[target.'cfg(all(target_os = "windows", feature = "directx12", debug_assertions))'.dependencies]
-winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser", "basetsd", "d3d12", "dxgiformat", "dxgi", "dxgi1_3", "dxgi1_4", "dxgitype", "d3d12sdklayers"] }
-
-[target.'cfg(all(target_os = "windows", feature = "directx12", not(debug_assertions)))'.dependencies]
-winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser", "basetsd", "d3d12", "dxgiformat", "dxgi", "dxgi1_3", "dxgi1_4", "dxgitype"] }
 
 [target.'cfg(any(target_os = "android", target_os = "macos", target_os = "ios", target_os = "linux"))'.dependencies]
 bitflags = "*"
 
-[target.'cfg(all(any(target_os = "macos", target_os = "ios"), debug_assertions))'.dependencies]
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 objc = { version = "*", features = ["exception", "verify_message"] }
 
-[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-objc = "*"
+[features]
+directx12 = [
+    "winapi/basetsd", 
+    "winapi/d3d12", 
+    "winapi/dxgiformat", 
+    "winapi/dxgi", 
+    "winapi/dxgi1_3", 
+    "winapi/dxgi1_4", 
+    "winapi/dxgitype",
+    "winapi/d3d12sdklayers", # TODO remove this in release mode
+]
+blank_gapi = [] # This is only for implementation template for future Graphic-APIs
 
 [build-dependencies]
 reqwest = "*"

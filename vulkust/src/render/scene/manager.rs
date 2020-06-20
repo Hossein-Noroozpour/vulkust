@@ -60,7 +60,7 @@ impl Manager {
 
     pub fn load_gx3d(&mut self, id: Id) -> Arc<RwLock<dyn Scene>> {
         let scene: Arc<RwLock<dyn Scene>> = {
-            let mut table = vxunwrap!(&mut self.gx3d_table);
+            let table = vxunwrap!(&mut self.gx3d_table);
             table.goto(id);
             let reader = table.get_mut_reader();
             let type_id = reader.read_type_id();

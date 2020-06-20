@@ -16,9 +16,9 @@ pub struct Manager {
 
 impl Manager {
     pub fn new(
-        eng: &GraphicApiEngine,
-        texmgr: &mut TextureManager,
-        config: &Configurations,
+        _eng: &GraphicApiEngine,
+        _texmgr: &mut TextureManager,
+        _config: &Configurations,
     ) -> Self {
         Self {
             storage: Storage::new(),
