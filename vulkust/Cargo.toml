@@ -18,7 +18,7 @@ rusttype = "*"
 gltf = { version = "*", features = ["extras", "default"] }
 num_cpus = "*"
 rand = "*"
-ash = "*"
+ash = { version = "*", features = ["linked"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "*", features = ["libloaderapi", "minwindef",  "windef",  "winerror", "wingdi",  "winuser"] }
@@ -45,3 +45,4 @@ blank_gapi = [] # This is only for implementation template for future Graphic-AP
 [build-dependencies]
 reqwest = "*"
 tokio = "*"
+futures = "*"

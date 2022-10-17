@@ -1,24 +1,11 @@
 #[macro_use]
 extern crate vulkust;
 
-use vulkust::core::application::Application as CoreAppTrait;
-use vulkust::core::event::Event;
+use vulkust::core::application::Application;
 
-#[cfg_attr(debug_assertions, derive(Debug))]
-struct MyGame {}
-
-impl MyGame {
-    pub fn new() -> Self {
-        MyGame {}
-    }
+fn main() {
+    let mut app = Application::new();
+    vx_log_i!("Initialised.");
+    app.run();
+    vx_log_i!("Ended.");
 }
-
-impl CoreAppTrait for MyGame {
-    fn on_event(&self, _e: Event) {}
-
-    fn update(&mut self) {}
-
-    fn terminate(&mut self) {}
-}
-
-vulkust_start!(MyGame);

@@ -1,9 +1,8 @@
-use std::ffi::CString;
-use std::iter::once;
-use std::os::raw::c_char;
+use std::{ffi::CString, iter::once, os::raw::c_char};
 
 pub fn slice_to_string(s: &[i8]) -> String {
     let mut r = String::new();
+    r.reserve(s.len());
     for c in s {
         if *c == 0 {
             break;

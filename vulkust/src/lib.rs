@@ -31,12 +31,14 @@ pub mod macros;
 // pub mod audio;
 #[cfg(blank_gapi)]
 pub mod blank_gapi;
-pub mod collision;
+// pub mod collision;
 pub mod core;
 #[cfg(directx12_api)]
 pub mod d3d12;
-pub mod physics;
+// pub mod physics;
+pub mod platform;
 pub mod render;
-pub mod system;
 #[cfg(vulkan_api)]
 pub mod vulkan;
+#[cfg(vulkan_api)]
+pub use self::vulkan as gapi;

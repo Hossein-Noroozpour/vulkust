@@ -1,5 +1,7 @@
 #![feature(generators)]
+#![feature(future_join)]
 
+extern crate futures;
 extern crate reqwest;
 extern crate tokio;
 
@@ -64,9 +66,7 @@ fn main() {
         println!("cargo:rustc-cfg=debug_texture");
     }
     check_shaders();
-    tokio::runtime::Runtime::new()
-        .unwrap()
-        .block_on(check_fonts());
+    futures::executor::block_on(check_fonts());
 }
 
 fn check_shaders() {

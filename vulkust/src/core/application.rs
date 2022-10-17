@@ -1,18 +1,19 @@
-use super::super::render::engine::Engine as RenderEngine;
-use super::super::system::os::application::Application as OsApp;
-use super::config::Configurations;
-use super::debug::Debug;
-use super::event::Event;
-use std::sync::{Arc, RwLock};
+use crate::platform::{base::Base as BaseOsApp, os::application::Application as OsApp};
 
-pub trait Application: Debug {
-    fn set_os_app(&mut self, _app: Arc<RwLock<OsApp>>) {}
-    fn set_renderer(&mut self, _renderer: Arc<RwLock<RenderEngine>>) {}
-    fn initialize(&mut self) {}
-    fn on_event(&self, _e: Event) {}
-    fn update(&mut self) {}
-    fn terminate(&mut self) {}
-    fn get_config(&self) -> Configurations {
-        Configurations::default()
+pub struct Application {
+    pub os_app: OsApp,
+}
+
+impl Application {
+    pub fn new() -> Self {
+        let mut myself = Self {
+            os_app: OsApp::new(),
+        };
+        BaseOsApp::init(&mut myself.os_app);
+        myself
+    }
+
+    pub fn run(&mut self) {
+        self.os_app.run();
     }
 }

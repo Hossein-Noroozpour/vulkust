@@ -111,7 +111,7 @@ impl Loadable for Texture2D {
         let obj_base = ObjectBase::new_with_id(id);
         let size: Size = reader.read();
         let data = reader.read_bytes(size);
-        let img = vx_result!(image::load_from_memory(&data)).to_rgba();
+        let img = vx_result!(image::load_from_memory(&data)).to_rgba8();
         let (width, height) = img.dimensions();
         let img = img.into_raw();
         let geng = vx_result!(engine.get_gapi_engine().read());
